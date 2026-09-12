@@ -1,16 +1,20 @@
 # Phoenix Booking Skill
 
-Native Claude Code entrypoint. Read `skills/phoenix-booking/SKILL.md` and `docs/BOOKING_AVAILABILITY_ARCHITECTURE.md` before booking work.
+## Purpose
+Turn eligible offers into controlled, auditable commitments while preserving authoritative availability and concurrency safety.
+
+## Mandatory context
+Read `docs/BOOKING_AVAILABILITY_ARCHITECTURE.md` and relevant catalog/schedule rules before booking work.
 
 ## Rules
 - Availability and committed Booking state are authoritative domain data.
-- Never trust client/cached availability for finalization.
+- Never trust client or cached availability for finalization.
 - Every mutation is authenticated, tenant-scoped, permission-checked, and idempotent where retryable.
 - UTC instants are canonical; IANA timezone controls local rules; Jalali is presentation/adapter only.
 - Finalization requires authoritative re-read, transaction, concurrency/version check, booking + capacity update, audit/outbox.
-- AI can prepare/find/cancel/reschedule through approved tools but cannot independently confirm.
+- AI may prepare/find/cancel/reschedule through approved tools but cannot independently confirm or invent availability.
 - Notifications are asynchronous.
 - Medical booking stores minimum necessary data and is not clinical decision support.
 
 ## Done
-Test concurrent booking of the last capacity unit, idempotency, authorization, timezone/DST, stale availability, and failure isolation.
+Test concurrent booking of the last capacity unit, idempotency, authorization, timezone/DST, stale availability, rescheduling, and failure isolation.
