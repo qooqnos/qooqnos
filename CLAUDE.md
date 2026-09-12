@@ -17,11 +17,10 @@ Build Phoenix as a secure, modular, multilingual, multi-tenant AI marketplace. T
 - RTL/LTR and multilingual support are foundational.
 - Heavy work belongs in queues/background jobs.
 
-## Native Claude Code skills
-Repository skills live under `.claude/skills/<skill-name>/SKILL.md` and are the native Claude Code skill-discovery location.
+## Native Claude Code skills — single source of truth
+Repository skills live under `.claude/skills/<skill-name>/SKILL.md`. The `.claude/skills/` tree is the only canonical Claude Code skill source.
 
-Available Phoenix skills include:
-
+Available Phoenix skills:
 - `phoenix-architect`
 - `phoenix-ai`
 - `phoenix-admin-partner`
@@ -36,20 +35,19 @@ Available Phoenix skills include:
 - `phoenix-module`
 - `phoenix-onboarding`
 
-The legacy `skills/` tree remains the canonical reference during this migration. Native skill entrypoints must stay aligned with it until the legacy tree is intentionally retired.
+Do not reference or recreate the retired `skills/` tree. Architecture details belong in `docs/`; skill-specific operating rules belong in `.claude/skills/`.
 
 ## Before coding
-Read:
-1. `docs/PHOENIX_MASTER_RECOMMENDATIONS.md`
-2. `docs/DATABASE_ARCHITECTURE.md`
-3. the relevant native skill under `.claude/skills/`
-4. the canonical legacy skill under `skills/` when the native entrypoint directs you there
-5. existing implementation
+1. Read `docs/PHOENIX_MASTER_RECOMMENDATIONS.md`.
+2. Read `docs/DATABASE_MODEL.md` for persistence work.
+3. Read the relevant architecture document(s).
+4. Read the relevant native skill under `.claude/skills/`.
+5. Inspect existing implementation before introducing new structure.
 
 For substantial architectural changes, create an ADR.
 
 ## Git workflow
-- Work directly on `main` for this project unless the user explicitly requests another workflow.
+- Work directly on `main` unless the user explicitly requests another workflow.
 - Do not create Pull Requests unless the user explicitly asks for one.
 - Prefer focused, reviewable commits.
 - Never make destructive or irreversible changes without separate approval.
