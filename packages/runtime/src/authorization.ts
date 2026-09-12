@@ -32,6 +32,7 @@ export interface AuthorizationRequest {
   readonly permission: Permission;
   readonly resource?: AuthorizationResource;
   readonly subject: AuthorizationSubject;
+  readonly requiredEntitlement?: string;
   readonly requireAuthentication?: boolean;
   readonly requireWorkspace?: boolean;
 }
@@ -45,6 +46,7 @@ export interface AuthorizationDecision {
     | "missing_workspace"
     | "membership_denied"
     | "permission_denied"
+    | "entitlement_denied"
     | "tenant_denied"
     | "workspace_denied"
     | "resource_denied";
@@ -52,6 +54,7 @@ export interface AuthorizationDecision {
 }
 
 export type ResourcePolicy = (input: AuthorizationRequest) => boolean;
+export type EntitlementEvaluator = (entitlement: string, input: AuthorizationRequest) => boolean;
 
 export interface AuthorizationPolicyRegistry {
   registerPermission(permission: Permission, policy?: ResourcePolicy): void;
@@ -78,6 +81,8 @@ export class AuthorizationDeniedError extends AppError {
 export class AuthorizationRegistry implements AuthorizationPolicyRegistry {
   private readonly policies = new Map<Permission, ResourcePolicy | undefined>();
   private readonly roles = new Map<Role, ReadonlySet<Permission>>();
+
+  constructor(private readonly entitlementEvaluator?: EntitlementEvaluator) {}
 
   registerPermission(permission: Permission, policy?: ResourcePolicy): void {
     if (!permission.trim()) throw new Error("Permission cannot be empty");
@@ -115,6 +120,12 @@ export class AuthorizationRegistry implements AuthorizationPolicyRegistry {
     }
 
     if (!this.hasEffectivePermission(subject, permission)) return denied("permission_denied", permission);
+    if (input.requiredEntitlement && !this.entitlementEvaluator) {
+      return denied("entitlement_denied", permission);
+    }
+    if (input.requiredEntitlement && !this.entitlementEvaluator?.(input.requiredEntitlement, input)) {
+      return denied("entitlement_denied", permission);
+    }
     if (resource?.tenantId && subject.tenantId !== resource.tenantId) return denied("tenant_denied", permission);
     if (resource?.workspaceId && subject.workspaceId !== resource.workspaceId) return denied("workspace_denied", permission);
 
@@ -138,8 +149,9 @@ export class AuthorizationRegistry implements AuthorizationPolicyRegistry {
 export function createAuthorizationRegistry(
   permissions: Readonly<Record<Permission, ResourcePolicy | undefined>> = {},
   roles: readonly RoleDefinition[] = [],
+  entitlementEvaluator?: EntitlementEvaluator,
 ): AuthorizationRegistry {
-  const registry = new AuthorizationRegistry();
+  const registry = new AuthorizationRegistry(entitlementEvaluator);
   for (const [permission, policy] of Object.entries(permissions)) registry.registerPermission(permission, policy);
   for (const role of roles) registry.registerRole(role);
   return registry;
