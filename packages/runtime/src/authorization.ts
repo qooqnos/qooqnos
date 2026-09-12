@@ -1,15 +1,21 @@
 import { AppError, type EntityId, type RequestContext } from "@phoenix/core";
 
 export type Permission = string;
+export type Role = string;
 export type MembershipStatus = "invited" | "pending" | "active" | "suspended" | "removed";
+
+export interface RoleDefinition {
+  readonly id: Role;
+  readonly permissions: readonly Permission[];
+}
 
 export interface AuthorizationSubject {
   readonly actorId?: EntityId;
   readonly tenantId?: EntityId;
   readonly workspaceId?: EntityId;
   readonly membershipStatus?: MembershipStatus;
-  readonly roles: readonly string[];
-  readonly permissions: readonly Permission[];
+  readonly roles: readonly Role[];
+  readonly permissions?: readonly Permission[];
   readonly authenticated: boolean;
 }
 
@@ -48,8 +54,9 @@ export interface AuthorizationDecision {
 export type ResourcePolicy = (input: AuthorizationRequest) => boolean;
 
 export interface AuthorizationPolicyRegistry {
-  register(permission: Permission, policy?: ResourcePolicy): void;
-  has(permission: Permission): boolean;
+  registerPermission(permission: Permission, policy?: ResourcePolicy): void;
+  registerRole(role: RoleDefinition): void;
+  hasPermission(permission: Permission): boolean;
   evaluate(input: AuthorizationRequest): AuthorizationDecision;
   assert(input: AuthorizationRequest): void;
 }
@@ -70,14 +77,26 @@ export class AuthorizationDeniedError extends AppError {
 
 export class AuthorizationRegistry implements AuthorizationPolicyRegistry {
   private readonly policies = new Map<Permission, ResourcePolicy | undefined>();
+  private readonly roles = new Map<Role, ReadonlySet<Permission>>();
 
-  register(permission: Permission, policy?: ResourcePolicy): void {
+  registerPermission(permission: Permission, policy?: ResourcePolicy): void {
     if (!permission.trim()) throw new Error("Permission cannot be empty");
     if (this.policies.has(permission)) throw new Error(`Permission already registered: ${permission}`);
     this.policies.set(permission, policy);
   }
 
-  has(permission: Permission): boolean {
+  registerRole(role: RoleDefinition): void {
+    if (!role.id.trim()) throw new Error("Role cannot be empty");
+    if (this.roles.has(role.id)) throw new Error(`Role already registered: ${role.id}`);
+    for (const permission of role.permissions) {
+      if (!this.policies.has(permission)) {
+        throw new Error(`Role ${role.id} references unknown permission: ${permission}`);
+      }
+    }
+    this.roles.set(role.id, new Set(role.permissions));
+  }
+
+  hasPermission(permission: Permission): boolean {
     return this.policies.has(permission);
   }
 
@@ -86,38 +105,21 @@ export class AuthorizationRegistry implements AuthorizationPolicyRegistry {
     const requireAuthentication = input.requireAuthentication ?? true;
     const requireWorkspace = input.requireWorkspace ?? Boolean(context.workspaceId || resource?.workspaceId);
 
-    if (requireAuthentication && !subject.authenticated) {
-      return denied("unauthenticated", permission);
-    }
-    if (requireWorkspace && !context.workspaceId) {
-      return denied("missing_workspace", permission);
-    }
-    if (context.workspaceId && subject.workspaceId !== context.workspaceId) {
-      return denied("workspace_denied", permission);
-    }
-    if (context.tenantId && subject.tenantId !== context.tenantId) {
-      return denied("tenant_denied", permission);
-    }
-    if (requireWorkspace && !subject.tenantId) {
-      return denied("missing_tenant", permission);
-    }
+    if (requireAuthentication && !subject.authenticated) return denied("unauthenticated", permission);
+    if (requireWorkspace && !context.workspaceId) return denied("missing_workspace", permission);
+    if (context.workspaceId && subject.workspaceId !== context.workspaceId) return denied("workspace_denied", permission);
+    if (context.tenantId && subject.tenantId !== context.tenantId) return denied("tenant_denied", permission);
+    if (requireWorkspace && !subject.tenantId) return denied("missing_tenant", permission);
     if (requireWorkspace && (!subject.membershipStatus || !ACTIVE_MEMBERSHIP.has(subject.membershipStatus))) {
       return denied("membership_denied", permission);
     }
-    if (!subject.permissions.includes(permission)) {
-      return denied("permission_denied", permission);
-    }
-    if (resource?.tenantId && subject.tenantId !== resource.tenantId) {
-      return denied("tenant_denied", permission);
-    }
-    if (resource?.workspaceId && subject.workspaceId !== resource.workspaceId) {
-      return denied("workspace_denied", permission);
-    }
+
+    if (!this.hasEffectivePermission(subject, permission)) return denied("permission_denied", permission);
+    if (resource?.tenantId && subject.tenantId !== resource.tenantId) return denied("tenant_denied", permission);
+    if (resource?.workspaceId && subject.workspaceId !== resource.workspaceId) return denied("workspace_denied", permission);
 
     const policy = this.policies.get(permission);
-    if (policy && !policy(input)) {
-      return denied("resource_denied", permission);
-    }
+    if (policy && !policy(input)) return denied("resource_denied", permission);
 
     return { allowed: true, reason: "allowed", permission };
   }
@@ -126,13 +128,20 @@ export class AuthorizationRegistry implements AuthorizationPolicyRegistry {
     const decision = this.evaluate(input);
     if (!decision.allowed) throw new AuthorizationDeniedError(decision, input.context.requestId);
   }
+
+  private hasEffectivePermission(subject: AuthorizationSubject, permission: Permission): boolean {
+    if (subject.permissions?.includes(permission)) return true;
+    return subject.roles.some((role) => this.roles.get(role)?.has(permission) === true);
+  }
 }
 
 export function createAuthorizationRegistry(
-  definitions: Readonly<Record<Permission, ResourcePolicy | undefined>> = {},
+  permissions: Readonly<Record<Permission, ResourcePolicy | undefined>> = {},
+  roles: readonly RoleDefinition[] = [],
 ): AuthorizationRegistry {
   const registry = new AuthorizationRegistry();
-  for (const [permission, policy] of Object.entries(definitions)) registry.register(permission, policy);
+  for (const [permission, policy] of Object.entries(permissions)) registry.registerPermission(permission, policy);
+  for (const role of roles) registry.registerRole(role);
   return registry;
 }
 
