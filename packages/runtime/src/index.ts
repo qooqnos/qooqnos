@@ -1,6 +1,7 @@
 import type { RequestContext } from "@phoenix/core";
 
 export * from "./authorization";
+export * from "./boot";
 
 export interface ModuleManifest {
   readonly id: string;
