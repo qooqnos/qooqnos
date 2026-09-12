@@ -621,7 +621,7 @@ Every protected capability should have tests for:
 
 ```text
 authenticated + allowed
-enticated + denied
+authenticated + denied
 wrong tenant
 wrong workspace
 wrong branch
