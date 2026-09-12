@@ -1,5 +1,7 @@
 import type { RequestContext } from "@phoenix/core";
 
+export * from "./authorization";
+
 export interface ModuleManifest {
   readonly id: string;
   readonly version: string;
