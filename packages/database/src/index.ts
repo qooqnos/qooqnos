@@ -64,6 +64,11 @@ export interface RepositoryContext {
 export abstract class Repository {
   constructor(protected readonly database: D1Database) {}
 
+  protected requireOrganization(context: RepositoryContext): string {
+    if (!context.organizationId) throw new DatabaseError("Organization context is required");
+    return context.organizationId;
+  }
+
   protected requireWorkspace(context: RepositoryContext): string {
     if (!context.workspaceId) throw new DatabaseError("Workspace context is required");
     return context.workspaceId;
