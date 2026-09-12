@@ -4,6 +4,7 @@ export interface MigrationDefinition {
   readonly id: string;
   readonly version: number;
   readonly moduleId: string;
+  readonly sql: string;
   readonly checksum: string;
   /** SQL statements are kept separate so D1 batch can apply them transactionally. */
   readonly statements: readonly string[];
@@ -52,7 +53,7 @@ export class MigrationRunner {
       "SELECT id, version, checksum, module_id AS moduleId, applied_at AS appliedAt FROM schema_migrations ORDER BY version ASC",
     );
 
-    validateAppliedMigrations(applied, this.migrations);
+    await validateAppliedMigrations(applied, this.migrations);
 
     const appliedByVersion = new Map(applied.map((migration) => [migration.version, migration]));
     const results: MigrationResult[] = [];
@@ -75,13 +76,11 @@ export class MigrationRunner {
         throw new MigrationIntegrityError(`Migration ${migration.id} contains no SQL statements`);
       }
 
-      const statements = migration.statements.map((sql) => ({ sql }));
+      const statements: Array<{ sql: string; params?: unknown[] }> = migration.statements.map((sql) => ({ sql }));
       statements.push({
         sql: "INSERT INTO schema_migrations (id, version, checksum, module_id, applied_at) VALUES (?, ?, ?, ?, ?)",
-        // @ts-expect-error params are attached below to keep statement typing explicit.
+        params: [migration.id, migration.version, migration.checksum, migration.moduleId, this.clock.now()],
       });
-      const last = statements[statements.length - 1] as { sql: string; params?: unknown[] };
-      last.params = [migration.id, migration.version, migration.checksum, migration.moduleId, this.clock.now()];
 
       await this.database.transaction(statements);
       results.push({ version: migration.version, id: migration.id, status: "applied" });
@@ -100,6 +99,9 @@ export function validateMigrationDefinitions(migrations: readonly MigrationDefin
   for (const migration of [...migrations].sort((a, b) => a.version - b.version)) {
     if (!migration.id || !migration.moduleId || !migration.checksum) {
       throw new MigrationIntegrityError("Migration id, moduleId and checksum are required");
+    }
+    if (!migration.sql.trim()) {
+      throw new MigrationIntegrityError(`Migration ${migration.id} contains empty SQL`);
     }
     if (!Number.isInteger(migration.version) || migration.version < 1) {
       throw new MigrationIntegrityError(`Invalid migration version: ${migration.version}`);
@@ -121,10 +123,10 @@ export function validateMigrationDefinitions(migrations: readonly MigrationDefin
   }
 }
 
-function validateAppliedMigrations(
+async function validateAppliedMigrations(
   applied: readonly AppliedMigration[],
   definitions: readonly MigrationDefinition[],
-): void {
+): Promise<void> {
   const definitionsByVersion = new Map(definitions.map((migration) => [migration.version, migration]));
 
   let previous = 0;
@@ -141,9 +143,20 @@ function validateAppliedMigrations(
         `Database contains migration ${migration.version}, but this runtime has no matching definition`,
       );
     }
-    if (definition.id !== migration.id || definition.checksum !== migration.checksum || definition.moduleId !== migration.moduleId) {
-      throw new MigrationIntegrityError(`Migration checksum or identity mismatch at version ${migration.version}`);
+    if (definition.id !== migration.id || definition.moduleId !== migration.moduleId) {
+      throw new MigrationIntegrityError(`Migration identity mismatch at version ${migration.version}`);
+    }
+
+    const calculatedChecksum = await sha256(definition.sql);
+    if (definition.checksum !== calculatedChecksum || migration.checksum !== calculatedChecksum) {
+      throw new MigrationIntegrityError(`Migration checksum mismatch at version ${migration.version}`);
     }
     previous = migration.version;
   }
+}
+
+async function sha256(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
