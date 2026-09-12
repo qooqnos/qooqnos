@@ -49,6 +49,8 @@ export class MigrationRunner {
   }
 
   async run(): Promise<MigrationResult[]> {
+    await validateDefinitionChecksums(this.migrations);
+
     const applied = await this.database.all<AppliedMigration>(
       "SELECT id, version, checksum, module_id AS moduleId, applied_at AS appliedAt FROM schema_migrations ORDER BY version ASC",
     );
@@ -123,6 +125,15 @@ export function validateMigrationDefinitions(migrations: readonly MigrationDefin
   }
 }
 
+async function validateDefinitionChecksums(definitions: readonly MigrationDefinition[]): Promise<void> {
+  for (const definition of definitions) {
+    const calculatedChecksum = await sha256(definition.sql);
+    if (definition.checksum !== calculatedChecksum) {
+      throw new MigrationIntegrityError(`Migration checksum mismatch at version ${definition.version}`);
+    }
+  }
+}
+
 async function validateAppliedMigrations(
   applied: readonly AppliedMigration[],
   definitions: readonly MigrationDefinition[],
@@ -146,9 +157,7 @@ async function validateAppliedMigrations(
     if (definition.id !== migration.id || definition.moduleId !== migration.moduleId) {
       throw new MigrationIntegrityError(`Migration identity mismatch at version ${migration.version}`);
     }
-
-    const calculatedChecksum = await sha256(definition.sql);
-    if (definition.checksum !== calculatedChecksum || migration.checksum !== calculatedChecksum) {
+    if (migration.checksum !== definition.checksum) {
       throw new MigrationIntegrityError(`Migration checksum mismatch at version ${migration.version}`);
     }
     previous = migration.version;
