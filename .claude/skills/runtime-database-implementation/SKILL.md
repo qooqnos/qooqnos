@@ -1,3 +1,8 @@
+---
+name: runtime-database-implementation
+description: Rules for Phoenix runtime and D1 implementation, request context, migrations, outbox, idempotency, audit, Cloudflare boundaries, and testing.
+---
+
 # Phoenix Runtime + D1 Implementation Skill
 
 ## Purpose
