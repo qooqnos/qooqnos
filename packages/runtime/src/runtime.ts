@@ -1,4 +1,4 @@
-import type { RequestContext } from "@phoenix/core";
+import type { RequestContext } from "@qooqnos/core";
 
 export interface ModuleManifest {
   readonly id: string;
