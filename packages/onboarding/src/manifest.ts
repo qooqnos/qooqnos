@@ -1,4 +1,4 @@
-import type { AuthorizationPolicyRegistry } from "@phoenix/runtime";
+import type { AuthorizationPolicyRegistry } from "@qooqnos/runtime";
 import { registerOnboardingAuthorization } from "./authorization";
 
 export const ONBOARDING_PERMISSIONS = [
@@ -11,7 +11,7 @@ export const ONBOARDING_PERMISSIONS = [
 export const onboardingModule = {
   id: "onboarding",
   version: "1.0.0",
-  dependencies: [],
+  dependencies: ["runtime"],
   permissions: ONBOARDING_PERMISSIONS,
   registerAuthorization(registry: AuthorizationPolicyRegistry): void {
     registerOnboardingAuthorization(registry);
