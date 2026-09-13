@@ -1,3 +1,7 @@
+---
+name: phoenix-implementation
+description: Rules for implementing Phoenix architecture vertically with typed contracts, module ownership, security, testing, and release gates.
+---
 # Phoenix Implementation Skill
 
 ## Purpose
