@@ -1,0 +1,9 @@
+{
+  "common": {"appName":"ققنوس","home":"خانه","search":"جستجو","save":"ذخیره","cancel":"لغو","confirm":"تأیید","close":"بستن","back":"بازگشت","next":"بعدی","loading":"در حال بارگذاری…","retry":"تلاش مجدد","yes":"بله","no":"خیر","all":"همه","none":"هیچ‌کدام","view":"مشاهده","edit":"ویرایش","delete":"حذف","create":"ایجاد","update":"به‌روزرسانی","submit":"ثبت"},
+  "nav": {"home":"خانه","discover":"کشف","matching":"تطبیق","bookings":"رزروها","orders":"سفارش‌ها","messages":"پیام‌ها","notifications":"اعلان‌ها","business":"کسب‌وکار","catalog":"کاتالوگ","customers":"مشتریان","reviews":"نظرات","billing":"صورتحساب","settings":"تنظیمات","profile":"پروفایل","admin":"مدیریت","signOut":"خروج"},
+  "auth": {"signIn":"ورود","signUp":"ایجاد حساب","email":"ایمیل","password":"رمز عبور","forgotPassword":"رمز عبور را فراموش کرده‌اید؟","rememberMe":"مرا به خاطر بسپار"},
+  "language": {"label":"زبان","persian":"فارسی","english":"انگلیسی","arabic":"عربی"},
+  "status": {"active":"فعال","inactive":"غیرفعال","draft":"پیش‌نویس","pending":"در انتظار","confirmed":"تأیید شده","completed":"تکمیل شده","cancelled":"لغو شده","rejected":"رد شده","approved":"تأیید شده","published":"منتشر شده","paused":"متوقف شده","archived":"بایگانی شده","processing":"در حال پردازش","failed":"ناموفق","succeeded":"موفق"},
+  "errors": {"generic":"خطایی رخ داد.","validation":"اطلاعات واردشده را بررسی کنید.","unauthorized":"برای ادامه باید وارد شوید.","forbidden":"شما اجازه انجام این عملیات را ندارید.","notFound":"مورد درخواستی پیدا نشد.","conflict":"این عملیات با وضعیت فعلی سازگار نیست.","required":"این فیلد الزامی است."},
+  "messages": {"saved":"با موفقیت ذخیره شد.","created":"با موفقیت ایجاد شد.","updated":"با موفقیت به‌روزرسانی شد.","deleted":"با موفقیت حذف شد.","noResults":"نتیجه‌ای پیدا نشد.","confirmDelete":"آیا از حذف این مورد مطمئن هستید؟"}
+}
