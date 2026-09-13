@@ -1,11 +1,13 @@
-# Phoenix Booking Skill
+---
+name: phoenix-booking
+description: Rules for Phoenix booking, availability, commitments, concurrency, timezone handling, idempotency, and safe AI actions.
+---
 
+# Phoenix Booking Skill
 ## Purpose
 Turn eligible offers into controlled, auditable commitments while preserving authoritative availability and concurrency safety.
-
 ## Mandatory context
 Read `docs/BOOKING_AVAILABILITY_ARCHITECTURE.md` and relevant catalog/schedule rules before booking work.
-
 ## Rules
 - Availability and committed Booking state are authoritative domain data.
 - Never trust client or cached availability for finalization.
