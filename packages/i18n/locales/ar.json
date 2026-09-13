@@ -1,0 +1,9 @@
+{
+  "common": {"appName":"فينيكس","home":"الرئيسية","search":"بحث","save":"حفظ","cancel":"إلغاء","confirm":"تأكيد","close":"إغلاق","back":"رجوع","next":"التالي","loading":"جارٍ التحميل…","retry":"إعادة المحاولة","yes":"نعم","no":"لا","all":"الكل","none":"لا شيء","view":"عرض","edit":"تعديل","delete":"حذف","create":"إنشاء","update":"تحديث","submit":"إرسال"},
+  "nav": {"home":"الرئيسية","discover":"اكتشاف","matching":"مطابقة","bookings":"الحجوزات","orders":"الطلبات","messages":"الرسائل","notifications":"الإشعارات","business":"الأعمال","catalog":"الكتالوج","customers":"العملاء","reviews":"المراجعات","billing":"الفوترة","settings":"الإعدادات","profile":"الملف الشخصي","admin":"الإدارة","signOut":"تسجيل الخروج"},
+  "auth": {"signIn":"تسجيل الدخول","signUp":"إنشاء حساب","email":"البريد الإلكتروني","password":"كلمة المرور","forgotPassword":"هل نسيت كلمة المرور؟","rememberMe":"تذكرني"},
+  "language": {"label":"اللغة","persian":"الفارسية","english":"الإنجليزية","arabic":"العربية"},
+  "status": {"active":"نشط","inactive":"غير نشط","draft":"مسودة","pending":"قيد الانتظار","confirmed":"مؤكد","completed":"مكتمل","cancelled":"ملغى","rejected":"مرفوض","approved":"موافق عليه","published":"منشور","paused":"متوقف","archived":"مؤرشف","processing":"قيد المعالجة","failed":"فشل","succeeded":"نجح"},
+  "errors": {"generic":"حدث خطأ ما.","validation":"يرجى التحقق من المعلومات المدخلة.","unauthorized":"يجب تسجيل الدخول للمتابعة.","forbidden":"ليس لديك صلاحية لتنفيذ هذا الإجراء.","notFound":"لم يتم العثور على العنصر المطلوب.","conflict":"يتعارض هذا الإجراء مع الحالة الحالية.","required":"هذا الحقل مطلوب."},
+  "messages": {"saved":"تم الحفظ بنجاح.","created":"تم الإنشاء بنجاح.","updated":"تم التحديث بنجاح.","deleted":"تم الحذف بنجاح.","noResults":"لم يتم العثور على نتائج.","confirmDelete":"هل أنت متأكد من حذف هذا العنصر؟"}
+}
