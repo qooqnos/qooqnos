@@ -1,3 +1,8 @@
+---
+name: technology-language-standards
+description: Rules for Phoenix technology and language standards, TypeScript, SQL, contracts, frontend, module boundaries, database-first design, and architecture exceptions.
+---
+
 # Phoenix Technology & Language Standards Skill
 
 ## Purpose
