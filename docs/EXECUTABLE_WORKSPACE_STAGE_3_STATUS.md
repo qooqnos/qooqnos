@@ -6,34 +6,34 @@ Date: 2026-09-13
 
 Stage 3 turns the frozen package graph into a repository-level verification contract. The repository uses npm workspaces and the canonical `@qooqnos/*` package namespace.
 
-## Verified repository facts
+## Completed in this stage
 
-- Root workspace declares `packages/*` as workspaces.
-- Root lifecycle scripts exist for format, lint, typecheck, test, and build.
-- Canonical packages are `@qooqnos/core`, `@qooqnos/database`, `@qooqnos/i18n`, `@qooqnos/runtime`, and `@qooqnos/onboarding`.
-- Database depends on core.
-- Runtime depends on core and database.
-- Onboarding depends on core, database, and runtime.
-- No `@phoenix/*` namespace references remain in the indexed repository.
-- TypeScript solution references cover the five canonical packages.
+- Root npm workspace is defined over `packages/*`.
+- Root lifecycle scripts cover format, lint, typecheck, unit tests, and build.
+- The five canonical packages have package identities and dependency boundaries.
+- TypeScript project references cover the canonical package graph.
+- The legacy `@phoenix/*` runtime import was removed from executable source.
+- Root development tooling is now declared explicitly: TypeScript, ESLint, typescript-eslint, Prettier, Vitest, and Node types.
+- Repository ESLint and Prettier policies are committed.
+- CI defines the verification order: install, format check, lint, typecheck, test, build.
 
-## CI gate
+## Dependency direction
 
-`.github/workflows/ci.yml` now defines the non-negotiable repository verification order:
+`core` is foundational. `database` may depend on `core`. `runtime` may depend on `core` and `database`. `onboarding` may depend on `core`, `database`, and `runtime`. `i18n` remains independent until a concrete contract requires a dependency.
 
-1. install dependencies
-2. format check
-3. lint
-4. typecheck
-5. unit tests
-6. build
+## Verification status
 
-A future deployment gate must consume this verification result rather than duplicate package-level checks.
-
-## Important limitation
-
-The GitHub repository connector can author and inspect repository files, but it does not execute `npm install`, TypeScript, ESLint, Prettier, or Vitest inside the repository. Therefore this stage records and commits the executable CI gate; actual green execution must be established by GitHub Actions after the workflow runs.
+Configuration is now substantially executable, but it is not considered green until GitHub Actions successfully runs the complete gate. The repository connector can commit and inspect files but does not execute the Node toolchain itself.
 
 ## Next gate
 
-The next implementation step is to make the CI gate executable end-to-end by ensuring every referenced tool exists in the root dependency graph and every package has a coherent TypeScript build/test boundary. No deployment configuration should be treated as production-ready before that gate passes.
+1. Observe the first CI run and fix compiler/configuration failures from actual output.
+2. Add package-level smoke/unit tests where contracts are currently untested.
+3. Add contract-test execution to the CI lifecycle.
+4. Freeze the verified workspace baseline before deployment work.
+
+## Non-goals
+
+- no microservices split
+- no hidden cross-package imports
+- no production deployment before verification is green
