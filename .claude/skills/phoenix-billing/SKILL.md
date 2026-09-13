@@ -1,11 +1,13 @@
-# Phoenix Billing Skill
+---
+name: phoenix-billing
+description: Rules for Phoenix billing, plans, entitlements, usage, money, payments, reconciliation, and financial authorization.
+---
 
+# Phoenix Billing Skill
 ## Purpose
 Keep money, plans, entitlements, usage, and future marketplace fees authoritative, auditable, and isolated from unrelated domains.
-
 ## Mandatory context
 Read `docs/BILLING_PLANS_MONETIZATION_ARCHITECTURE.md` before billing work.
-
 ## Rules
 - Billing owns plans, prices, subscriptions, entitlements, usage, quotas, invoices when enabled, provider references, reconciliation, and future transaction fees.
 - Keep plans/prices separate; entitlements are not authorization permissions.
