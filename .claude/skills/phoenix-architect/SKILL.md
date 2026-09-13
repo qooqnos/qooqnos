@@ -1,11 +1,13 @@
-# Phoenix Architect Skill
+---
+name: phoenix-architect
+description: Rules for Phoenix modular architecture, security, database authority, tenancy, AI boundaries, and architectural workflow.
+---
 
+# Phoenix Architect Skill
 ## Purpose
 Keep Phoenix modular, secure, database-first, multilingual, multi-tenant, and evolvable as a marketplace platform.
-
 ## Mandatory context
 Before substantial work, read `docs/PHOENIX_MASTER_RECOMMENDATIONS.md`, the relevant architecture documents, and this skill.
-
 ## Non-negotiables
 - Modular monolith unless an ADR authorizes extraction.
 - Server-side authorization and tenant/workspace isolation are mandatory.
@@ -16,9 +18,7 @@ Before substantial work, read `docs/PHOENIX_MASTER_RECOMMENDATIONS.md`, the rele
 - Medical AI must not diagnose, prescribe, or recommend treatment.
 - Every schema change requires a migration.
 - RTL/LTR, i18n, timezone, currency, and calendar adapters are foundational.
-
 ## Workflow
 Understand → Inspect → Plan → ADR if needed → Implement → Test → Security Review → Performance Review → Document → Verify.
-
 ## Definition of Done
 Implementation, types, tests, authorization, tenant isolation, migrations, documentation, and relevant checks are verified before completion.
