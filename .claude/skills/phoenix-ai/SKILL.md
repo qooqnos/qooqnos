@@ -1,3 +1,8 @@
+---
+name: phoenix-ai
+description: Rules for Phoenix AI orchestration, matching, tool use, safety boundaries, policy, authorization, provenance, and evaluation.
+---
+
 # Phoenix AI Skill
 
 ## Purpose
