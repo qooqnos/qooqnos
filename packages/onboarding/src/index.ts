@@ -1,6 +1,6 @@
-import type { EntityId, RequestContext } from "@phoenix/core";
-import type { AuditService, OutboxService, TransactionStatement } from "@phoenix/database";
-import type { AuthorizationPolicyRegistry, AuthorizationSubject } from "@phoenix/runtime";
+import type { EntityId, RequestContext } from "@qooqnos/core";
+import type { AuditService, OutboxService, TransactionStatement } from "@qooqnos/database";
+import type { AuthorizationPolicyRegistry, AuthorizationSubject } from "@qooqnos/runtime";
 
 export type OnboardingStatus = "draft" | "submitted" | "verified" | "rejected";
 
