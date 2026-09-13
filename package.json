@@ -1,0 +1,22 @@
+{
+  "name": "qooqnos",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Phoenix AI Marketplace",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "tsc -b"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "npm@11"
+}
