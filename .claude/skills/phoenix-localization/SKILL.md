@@ -1,3 +1,7 @@
+---
+name: phoenix-localization
+description: Rules for Phoenix localization, i18n, RTL/LTR, country policy, legal constraints, calendars, currencies, consent, and regulated markets.
+---
 # Phoenix Localization / Country Policy Skill
 
 ## Purpose
