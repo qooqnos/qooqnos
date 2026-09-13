@@ -1,4 +1,4 @@
-import type { AuthorizationPolicyRegistry } from "@phoenix/runtime";
+import type { AuthorizationPolicyRegistry } from "@qooqnos/runtime";
 
 export const ONBOARDING_PERMISSIONS = [
   "onboarding.create",
