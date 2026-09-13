@@ -1,3 +1,7 @@
+---
+name: phoenix-security
+description: Rules for Phoenix security, privacy, consent, tenant isolation, authorization, AI security, sensitive data handling, and medical safety.
+---
 # Phoenix Security Skill
 
 ## Purpose
