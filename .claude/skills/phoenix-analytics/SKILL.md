@@ -1,3 +1,8 @@
+---
+name: phoenix-analytics
+description: Rules for Phoenix analytics, observability, data platform, privacy, event integrity, metrics, and AI evaluation.
+---
+
 # Phoenix Analytics Skill
 
 ## Purpose
@@ -17,9 +22,7 @@ Implement and review Analytics, Observability, and Data Platform work according 
 - Analytics failure must not block core marketplace transactions.
 
 ## Required Event Context
-
 Where applicable preserve:
-
 - event ID/version
 - occurrence time
 - source module
@@ -30,13 +33,10 @@ Where applicable preserve:
 - privacy classification
 
 ## AI Observability
-
 Record model/provider, prompt, policy, tool, retrieval/index versions, latency, usage/cost, and outcome categories without unnecessarily retaining sensitive content.
 
 ## Metrics
-
 Metric definitions must document formula, owner, source events, timezone/calendar semantics, attribution window, privacy class, and version.
 
 ## Completion Criteria
-
 Verify tenant isolation, consent/privacy enforcement, event idempotency, schema compatibility, timezone/Jalali boundaries, data-quality handling, analytics-outage resilience, dashboard authorization, and AI trace integrity before declaring work complete.
