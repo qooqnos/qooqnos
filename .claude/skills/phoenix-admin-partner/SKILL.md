@@ -1,3 +1,8 @@
+---
+name: phoenix-admin-partner
+description: Rules for Phoenix admin and partner dashboards, authorization, moderation, verification, audit, masking, and AI boundaries.
+---
+
 # Phoenix Admin & Partner Dashboard Skill
 
 Native Claude Code entrypoint. Read `skills/phoenix-admin-partner/SKILL.md` and `docs/ADMIN_PARTNER_DASHBOARD_ARCHITECTURE.md` before dashboard work.
