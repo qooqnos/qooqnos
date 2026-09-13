@@ -1,3 +1,7 @@
+---
+name: phoenix-reviews
+description: Rules for Phoenix reviews, reputation, moderation, trust, eligibility, anti-abuse controls, privacy, and derived ranking signals.
+---
 # Phoenix Reviews, Reputation & Trust Skill
 
 Use `docs/REVIEWS_REPUTATION_TRUST_ARCHITECTURE.md` as the canonical architecture reference before Reviews, reputation, moderation, or trust work.
