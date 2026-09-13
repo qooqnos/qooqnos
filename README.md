@@ -27,4 +27,4 @@ Phoenix is a modular, multilingual, multi-tenant AI marketplace designed to unde
 7. Medical partner/pilot
 8. Additional industries
 
-See `docs/` and `skills/` for the architecture contracts used by Claude Code.
+Architecture contracts are maintained in `docs/`. Claude Code implementation skills are maintained in `.claude/skills/`, which is the authoritative skills location.
