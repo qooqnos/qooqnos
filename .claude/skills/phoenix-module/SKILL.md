@@ -1,3 +1,7 @@
+---
+name: phoenix-module
+description: Rules for Phoenix module boundaries, ownership, dependency DAG, authorization, migrations, events, jobs, UI integration, and security.
+---
 # Phoenix Module Skill
 
 Native Claude Code entrypoint. Read `skills/phoenix-module/SKILL.md`, `docs/MODULE_ARCHITECTURE.md`, and `docs/AUTHORIZATION_IMPLEMENTATION.md` before module work.
