@@ -1,3 +1,7 @@
+---
+name: phoenix-infrastructure
+description: Rules for Phoenix Cloudflare infrastructure, environments, CI/CD, deployments, migrations, secrets, observability, and production safety.
+---
 # Phoenix Infrastructure Skill
 
 ## Purpose
