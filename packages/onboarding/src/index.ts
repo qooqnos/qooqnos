@@ -1,5 +1,5 @@
 import type { EntityId, RequestContext } from "@phoenix/core";
-import type { AuditService, OutboxService } from "@phoenix/database";
+import type { AuditService, OutboxService, TransactionStatement } from "@phoenix/database";
 import type { AuthorizationPolicyRegistry, AuthorizationSubject } from "@phoenix/runtime";
 
 export type OnboardingStatus = "draft" | "submitted" | "verified" | "rejected";
@@ -24,6 +24,16 @@ export interface OnboardingRepository {
   }): Promise<OnboardingProfile>;
   getById(context: RequestContext, id: EntityId): Promise<OnboardingProfile | null>;
   setStatus(context: RequestContext, id: EntityId, status: OnboardingStatus, now: string): Promise<OnboardingProfile>;
+  setStatusAndRecord?(
+    context: RequestContext,
+    id: EntityId,
+    transition: {
+      readonly status: OnboardingStatus;
+      readonly now: string;
+      readonly audit: TransactionStatement;
+      readonly outbox: TransactionStatement;
+    },
+  ): Promise<OnboardingProfile>;
 }
 
 export interface OnboardingServiceOptions {
@@ -71,8 +81,84 @@ export class OnboardingService {
     if (!current) throw new Error("Onboarding profile not found");
     this.authorize(context, permission, actorId, current);
     if (current.status !== expected) throw new Error(`Invalid onboarding transition: ${current.status} -> ${next}`);
-    const profile = await this.options.repository.setStatus(context, id, next, this.options.now());
-    await this.record(context, profile, eventType);
+
+    const now = this.options.now();
+    const auditId = this.options.id();
+    const outboxId = this.options.id();
+    const audit: TransactionStatement = {
+      sql: `INSERT INTO audit_events
+            (id, actor_id, organization_id, workspace_id, action, target_type, target_id,
+             outcome, request_id, correlation_id, metadata_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      params: [
+        auditId,
+        context.actorId ?? null,
+        current.organizationId,
+        current.workspaceId,
+        eventType,
+        "onboarding_profile",
+        current.id,
+        "success",
+        context.requestId,
+        context.correlationId,
+        null,
+        now,
+      ],
+    };
+    const outbox: TransactionStatement = {
+      sql: `INSERT INTO outbox_events
+            (id, event_type, event_version, aggregate_type, aggregate_id,
+             organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?)`,
+      params: [
+        outboxId,
+        eventType,
+        1,
+        "onboarding_profile",
+        current.id,
+        current.organizationId,
+        current.workspaceId,
+        JSON.stringify({ id: current.id, status: next }),
+        now,
+        now,
+      ],
+    };
+
+    if (this.options.repository.setStatusAndRecord) {
+      return this.options.repository.setStatusAndRecord(context, id, {
+        status: next,
+        now,
+        audit,
+        outbox,
+      });
+    }
+
+    const profile = await this.options.repository.setStatus(context, id, next, now);
+    await this.options.audit.append({
+      id: auditId,
+      actorId: context.actorId,
+      organizationId: current.organizationId,
+      workspaceId: current.workspaceId,
+      action: eventType,
+      targetType: "onboarding_profile",
+      targetId: current.id,
+      outcome: "success",
+      requestId: context.requestId,
+      correlationId: context.correlationId,
+      createdAt: now,
+    });
+    await this.options.outbox.enqueue({
+      id: outboxId,
+      eventType,
+      eventVersion: 1,
+      aggregateType: "onboarding_profile",
+      aggregateId: current.id,
+      organizationId: current.organizationId,
+      workspaceId: current.workspaceId,
+      payloadJson: JSON.stringify({ id: current.id, status: next }),
+      availableAt: now,
+      occurredAt: now,
+    });
     return profile;
   }
 
