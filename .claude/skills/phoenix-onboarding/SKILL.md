@@ -1,3 +1,7 @@
+---
+name: phoenix-onboarding
+description: Rules for Phoenix business onboarding, verification, evidence, publication gates, auditability, provenance, localization, and regulated activation.
+---
 # Phoenix Business Onboarding Skill
 
 Native Claude Code entrypoint. Read `skills/phoenix-onboarding/SKILL.md` and `docs/BUSINESS_ONBOARDING_VERIFICATION_ARCHITECTURE.md` before onboarding work.
