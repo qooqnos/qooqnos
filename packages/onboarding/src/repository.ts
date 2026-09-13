@@ -2,6 +2,16 @@ import type { EntityId, RequestContext } from "@phoenix/core";
 import { D1Database, Repository, type TransactionStatement } from "@phoenix/database";
 import type { OnboardingProfile, OnboardingRepository, OnboardingStatus } from "./index";
 
+export interface OnboardingCreateTransaction {
+  readonly id: EntityId;
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId;
+  readonly ownerId: EntityId;
+  readonly now: string;
+  readonly audit: TransactionStatement;
+  readonly outbox: TransactionStatement;
+}
+
 export interface OnboardingTransitionTransaction {
   readonly status: OnboardingStatus;
   readonly now: string;
@@ -32,6 +42,29 @@ export class D1OnboardingRepository extends Repository implements OnboardingRepo
       input.now,
       input.now,
     );
+
+    return {
+      id: input.id,
+      organizationId: input.organizationId,
+      workspaceId: input.workspaceId,
+      ownerId: input.ownerId,
+      status: "draft",
+      createdAt: input.now,
+      updatedAt: input.now,
+    };
+  }
+
+  async createAndRecord(input: OnboardingCreateTransaction): Promise<OnboardingProfile> {
+    await this.database.transaction([
+      {
+        sql: `INSERT INTO onboarding_profiles
+              (id, organization_id, workspace_id, owner_id, status, created_at, updated_at)
+              VALUES (?, ?, ?, ?, 'draft', ?, ?)`,
+        params: [input.id, input.organizationId, input.workspaceId, input.ownerId, input.now, input.now],
+      },
+      input.audit,
+      input.outbox,
+    ]);
 
     return {
       id: input.id,
