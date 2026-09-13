@@ -1,6 +1,13 @@
 import type { EntityId, RequestContext } from "@phoenix/core";
-import { D1Database, Repository } from "@phoenix/database";
+import { D1Database, Repository, type TransactionStatement } from "@phoenix/database";
 import type { OnboardingProfile, OnboardingRepository, OnboardingStatus } from "./index";
+
+export interface OnboardingTransitionTransaction {
+  readonly status: OnboardingStatus;
+  readonly now: string;
+  readonly audit: TransactionStatement;
+  readonly outbox: TransactionStatement;
+}
 
 export class D1OnboardingRepository extends Repository implements OnboardingRepository {
   constructor(database: D1Database) {
@@ -80,6 +87,30 @@ export class D1OnboardingRepository extends Repository implements OnboardingRepo
 
     const updated = await this.getById(context, id);
     if (!updated) throw new Error("Onboarding profile not found after status update");
+    return updated;
+  }
+
+  async setStatusAndRecord(
+    context: RequestContext,
+    id: EntityId,
+    transition: OnboardingTransitionTransaction,
+  ): Promise<OnboardingProfile> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+
+    await this.database.transaction([
+      {
+        sql: `UPDATE onboarding_profiles
+              SET status = ?, updated_at = ?
+              WHERE id = ? AND organization_id = ? AND workspace_id = ?`,
+        params: [transition.status, transition.now, id, organizationId, workspaceId],
+      },
+      transition.audit,
+      transition.outbox,
+    ]);
+
+    const updated = await this.getById(context, id);
+    if (!updated) throw new Error("Onboarding profile not found after transactional status update");
     return updated;
   }
 }
