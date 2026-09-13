@@ -35,7 +35,10 @@ function repository(): OnboardingRepository {
     async create() { return profile(); },
     async getById() { return profile(); },
     async setStatus() { return { ...profile(), status: "submitted" }; },
-  } as OnboardingRepository;
+    async setStatusAndRecord(_context, _id, transition) {
+      return { ...profile(), status: transition.status, updatedAt: transition.now };
+    },
+  };
 }
 
 function dependencies() {
