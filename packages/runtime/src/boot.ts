@@ -1,7 +1,13 @@
 import type { RequestContext } from "@phoenix/core";
-import { MigrationRunner, type MigrationDefinition, type MigrationResult } from "@phoenix/database";
+import {
+  loadMigrationCatalog,
+  MigrationRunner,
+  type MigrationDefinition,
+  type MigrationResult,
+  type MigrationSource,
+} from "@phoenix/database";
 import type { D1Database } from "@phoenix/database";
-import { createRuntime, type ModuleManifest, type RuntimeHealth } from "./index";
+import { createRuntime, orderManifestsByDependencies, type ModuleManifest, type RuntimeHealth } from "./runtime";
 import type { AuthorizationRegistry } from "./authorization";
 
 export type BootPhase = "database" | "migrations" | "modules" | "authorization" | "ready";
@@ -18,7 +24,10 @@ export interface RuntimeBootContext {
 
 export interface RuntimeBootOptions {
   readonly database: D1Database;
-  readonly migrations: readonly MigrationDefinition[];
+  /** Prebuilt definitions remain supported for tests and non-file deployment adapters. */
+  readonly migrations?: readonly MigrationDefinition[];
+  /** Preferred deployment input: exact SQL assets emitted by the build system. */
+  readonly migrationSources?: readonly MigrationSource[];
   readonly modules: readonly RuntimeModule[];
   readonly authorization?: AuthorizationRegistry;
   readonly requestContext: RequestContext;
@@ -46,10 +55,12 @@ export class RuntimeBootError extends Error {
 
 export class RuntimeBoot {
   private readonly runtime;
+  private readonly modules: readonly RuntimeModule[];
   private readonly startedModules: RuntimeModule[] = [];
 
   constructor(private readonly options: RuntimeBootOptions) {
-    this.runtime = createRuntime(options.modules);
+    this.modules = orderManifestsByDependencies(options.modules);
+    this.runtime = createRuntime(this.modules);
   }
 
   async start(): Promise<RuntimeBootResult> {
@@ -59,20 +70,18 @@ export class RuntimeBoot {
       assertDatabase(this.options.database);
 
       phase = "migrations";
-      const migrations = await new MigrationRunner(this.options.database, this.options.migrations).run();
+      const migrationDefinitions = await this.resolveMigrations();
+      const migrations = await new MigrationRunner(this.options.database, migrationDefinitions).run();
 
       phase = "modules";
-      for (const module of this.options.modules) {
-        if (module.boot) {
-          await module.boot({ phase, requestContext: this.options.requestContext });
-        }
+      for (const module of this.modules) {
+        if (module.boot) await module.boot({ phase, requestContext: this.options.requestContext });
         this.startedModules.push(module);
       }
 
       phase = "authorization";
-      // Authorization is constructed before boot; this phase is an explicit readiness boundary.
       if (this.options.authorization) {
-        for (const module of this.options.modules) {
+        for (const module of this.modules) {
           for (const permission of module.permissions) {
             if (!this.options.authorization.hasPermission(permission)) {
               throw new Error(`Module ${module.id} references unregistered permission: ${permission}`);
@@ -86,8 +95,8 @@ export class RuntimeBoot {
         status: "ready",
         phase,
         migrations,
-        modules: this.options.modules.map((module) => module.id),
-        health: { ...this.runtime.health(), status: "ok" },
+        modules: this.modules.map((module) => module.id),
+        health: { ...this.runtime.health(), database: "ok", status: "ok" },
       };
     } catch (error) {
       await this.rollback({ phase, requestContext: this.options.requestContext });
@@ -105,6 +114,14 @@ export class RuntimeBoot {
       if (module.shutdown) await module.shutdown(context);
     }
     this.startedModules.length = 0;
+  }
+
+  private async resolveMigrations(): Promise<readonly MigrationDefinition[]> {
+    if (this.options.migrationSources) {
+      return loadMigrationCatalog(this.options.migrationSources);
+    }
+    if (this.options.migrations) return this.options.migrations;
+    throw new Error("Runtime boot requires migrationSources or migrations");
   }
 
   private async rollback(context: RuntimeBootContext): Promise<void> {
