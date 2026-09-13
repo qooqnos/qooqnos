@@ -1,3 +1,8 @@
+---
+name: phoenix-frontend
+description: Rules for Phoenix frontend architecture, design system, localization, accessibility, state, security-aware UX, and AI actions.
+---
+
 # Phoenix Frontend Skill
 
 ## Purpose
