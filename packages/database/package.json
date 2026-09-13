@@ -12,7 +12,7 @@
     }
   },
   "dependencies": {
-    "@qooqnos/core": "workspace:*"
+    "@qooqnos/core": "*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"
