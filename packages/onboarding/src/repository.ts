@@ -1,5 +1,5 @@
-import type { EntityId, RequestContext } from "@phoenix/core";
-import { D1Database, DatabaseError, Repository, type TransactionStatement } from "@phoenix/database";
+import type { EntityId, RequestContext } from "@qooqnos/core";
+import { D1Database, DatabaseError, Repository, type TransactionStatement } from "@qooqnos/database";
 import type { OnboardingProfile, OnboardingRepository, OnboardingStatus } from "./index";
 
 export interface OnboardingCreateTransaction {
