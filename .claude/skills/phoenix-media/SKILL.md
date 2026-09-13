@@ -1,3 +1,7 @@
+---
+name: phoenix-media
+description: Rules for Phoenix media, files, assets, R2 storage, access control, scanning, derivatives, retention, and sensitive-data handling.
+---
 # Phoenix Media Skill
 
 ## Purpose
