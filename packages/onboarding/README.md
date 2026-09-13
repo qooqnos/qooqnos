@@ -1,0 +1,1 @@
+Onboarding business vertical. Lifecycle: draft -> submitted -> verified or rejected.
