@@ -75,6 +75,7 @@ export abstract class Repository {
   }
 }
 
+export * from "./transaction";
 export * from "./migrations";
 export * from "./migration-catalog";
 export * from "./identity-repository";
