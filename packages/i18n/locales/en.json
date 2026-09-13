@@ -1,0 +1,9 @@
+{
+  "common": {"appName":"Phoenix","home":"Home","search":"Search","save":"Save","cancel":"Cancel","confirm":"Confirm","close":"Close","back":"Back","next":"Next","loading":"Loading…","retry":"Retry","yes":"Yes","no":"No","all":"All","none":"None","view":"View","edit":"Edit","delete":"Delete","create":"Create","update":"Update","submit":"Submit"},
+  "nav": {"home":"Home","discover":"Discover","matching":"Matching","bookings":"Bookings","orders":"Orders","messages":"Messages","notifications":"Notifications","business":"Business","catalog":"Catalog","customers":"Customers","reviews":"Reviews","billing":"Billing","settings":"Settings","profile":"Profile","admin":"Administration","signOut":"Sign out"},
+  "auth": {"signIn":"Sign in","signUp":"Create account","email":"Email","password":"Password","forgotPassword":"Forgot password?","rememberMe":"Remember me"},
+  "language": {"label":"Language","persian":"Persian","english":"English","arabic":"Arabic"},
+  "status": {"active":"Active","inactive":"Inactive","draft":"Draft","pending":"Pending","confirmed":"Confirmed","completed":"Completed","cancelled":"Cancelled","rejected":"Rejected","approved":"Approved","published":"Published","paused":"Paused","archived":"Archived","processing":"Processing","failed":"Failed","succeeded":"Succeeded"},
+  "errors": {"generic":"Something went wrong.","validation":"Please check the entered information.","unauthorized":"You must sign in to continue.","forbidden":"You do not have permission to perform this action.","notFound":"The requested item was not found.","conflict":"This action conflicts with the current state.","required":"This field is required."},
+  "messages": {"saved":"Saved successfully.","created":"Created successfully.","updated":"Updated successfully.","deleted":"Deleted successfully.","noResults":"No results found.","confirmDelete":"Are you sure you want to delete this item?"}
+}
