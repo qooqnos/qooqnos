@@ -1,6 +1,6 @@
 import type { EntityId, RequestContext } from "@phoenix/core";
 import type { AuditService, OutboxService } from "@phoenix/database";
-import type { AuthorizationPolicyRegistry } from "@phoenix/runtime";
+import type { AuthorizationPolicyRegistry, AuthorizationSubject } from "@phoenix/runtime";
 
 export type OnboardingStatus = "draft" | "submitted" | "verified" | "rejected";
 
@@ -29,6 +29,7 @@ export interface OnboardingRepository {
 export interface OnboardingServiceOptions {
   readonly repository: OnboardingRepository;
   readonly authorization: AuthorizationPolicyRegistry;
+  readonly resolveSubject: (context: RequestContext, actorId: EntityId) => AuthorizationSubject;
   readonly audit: AuditService;
   readonly outbox: OutboxService;
   readonly id: () => EntityId;
@@ -41,7 +42,8 @@ export class OnboardingService {
   async create(context: RequestContext, ownerId: EntityId): Promise<OnboardingProfile> {
     const organizationId = requireContext(context.tenantId, "tenant");
     const workspaceId = requireContext(context.workspaceId, "workspace");
-    this.authorize(context, "onboarding.create", ownerId);
+    const actorId = requireContext(context.actorId, "actor");
+    this.authorize(context, "onboarding.create", actorId);
     const profile = await this.options.repository.create({
       id: this.options.id(), organizationId, workspaceId, ownerId, now: this.options.now(),
     });
@@ -75,12 +77,11 @@ export class OnboardingService {
   }
 
   private authorize(context: RequestContext, permission: string, actorId: EntityId, resource?: OnboardingProfile): void {
+    const subject = this.options.resolveSubject(context, actorId);
+    if (subject.actorId !== actorId) throw new Error("Authorization subject actor mismatch");
     this.options.authorization.assert({
       context, permission, requireAuthentication: true, requireWorkspace: true,
-      subject: {
-        actorId, tenantId: context.tenantId, workspaceId: context.workspaceId,
-        membershipStatus: "active", roles: [], permissions: [permission], authenticated: true,
-      },
+      subject,
       resource: resource ? { tenantId: resource.organizationId, workspaceId: resource.workspaceId, ownerId: resource.ownerId } : undefined,
     });
   }
