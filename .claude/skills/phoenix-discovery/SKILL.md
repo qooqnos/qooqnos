@@ -1,3 +1,8 @@
+---
+name: phoenix-discovery
+description: Rules for Phoenix discovery, matching, eligibility, ranking, personalization, cache isolation, and safety.
+---
+
 # Phoenix Discovery Skill
 
 Native Claude Code entrypoint. Read `skills/phoenix-discovery/SKILL.md` and `docs/DISCOVERY_MATCHING_ARCHITECTURE.md` before discovery work.
