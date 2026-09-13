@@ -1,3 +1,8 @@
+---
+name: phoenix-identity
+description: Rules for Phoenix identity, authentication, workspaces, memberships, teams, sessions, and authorization boundaries.
+---
+
 # Phoenix Identity Skill
 
 ## Purpose
