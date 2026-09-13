@@ -1,3 +1,7 @@
+---
+name: phoenix-search
+description: Rules for Phoenix search, indexing, lexical and semantic retrieval, tenant isolation, Persian normalization, freshness, replay, and safe degradation.
+---
 # Phoenix Search Skill
 
 ## Purpose
