@@ -23,12 +23,7 @@ export interface OnboardingRepository {
     readonly now: string;
   }): Promise<OnboardingProfile>;
   getById(context: RequestContext, id: EntityId): Promise<OnboardingProfile | null>;
-  setStatus(
-    context: RequestContext,
-    id: EntityId,
-    status: OnboardingStatus,
-    now: string,
-  ): Promise<OnboardingProfile>;
+  setStatus(context: RequestContext, id: EntityId, status: OnboardingStatus, now: string): Promise<OnboardingProfile>;
 }
 
 export interface OnboardingServiceOptions {
@@ -47,15 +42,9 @@ export class OnboardingService {
     const organizationId = requireContext(context.tenantId, "tenant");
     const workspaceId = requireContext(context.workspaceId, "workspace");
     this.authorize(context, "onboarding.create", ownerId);
-
     const profile = await this.options.repository.create({
-      id: this.options.id(),
-      organizationId,
-      workspaceId,
-      ownerId,
-      now: this.options.now(),
+      id: this.options.id(), organizationId, workspaceId, ownerId, now: this.options.now(),
     });
-
     await this.record(context, profile, "onboarding.created");
     return profile;
   }
@@ -73,82 +62,41 @@ export class OnboardingService {
   }
 
   private async transition(
-    context: RequestContext,
-    id: EntityId,
-    actorId: EntityId,
-    expected: OnboardingStatus,
-    next: OnboardingStatus,
-    permission: string,
-    eventType: string,
+    context: RequestContext, id: EntityId, actorId: EntityId, expected: OnboardingStatus,
+    next: OnboardingStatus, permission: string, eventType: string,
   ): Promise<OnboardingProfile> {
     const current = await this.options.repository.getById(context, id);
     if (!current) throw new Error("Onboarding profile not found");
     this.authorize(context, permission, actorId, current);
-    if (current.status !== expected) {
-      throw new Error(`Invalid onboarding transition: ${current.status} -> ${next}`);
-    }
-
+    if (current.status !== expected) throw new Error(`Invalid onboarding transition: ${current.status} -> ${next}`);
     const profile = await this.options.repository.setStatus(context, id, next, this.options.now());
     await this.record(context, profile, eventType);
     return profile;
   }
 
-  private authorize(
-    context: RequestContext,
-    permission: string,
-    actorId: EntityId,
-    resource?: OnboardingProfile,
-  ): void {
+  private authorize(context: RequestContext, permission: string, actorId: EntityId, resource?: OnboardingProfile): void {
     this.options.authorization.assert({
-      context,
-      permission,
-      requireAuthentication: true,
-      requireWorkspace: true,
+      context, permission, requireAuthentication: true, requireWorkspace: true,
       subject: {
-        actorId,
-        tenantId: context.tenantId,
-        workspaceId: context.workspaceId,
-        membershipStatus: "active",
-        roles: [],
-        permissions: [permission],
-        authenticated: true,
+        actorId, tenantId: context.tenantId, workspaceId: context.workspaceId,
+        membershipStatus: "active", roles: [], permissions: [permission], authenticated: true,
       },
-      resource: resource
-        ? {
-            tenantId: resource.organizationId,
-            workspaceId: resource.workspaceId,
-            ownerId: resource.ownerId,
-          }
-        : undefined,
+      resource: resource ? { tenantId: resource.organizationId, workspaceId: resource.workspaceId, ownerId: resource.ownerId } : undefined,
     });
   }
 
   private async record(context: RequestContext, profile: OnboardingProfile, eventType: string): Promise<void> {
     await this.options.audit.append({
-      id: this.options.id(),
-      actorId: context.actorId,
-      organizationId: profile.organizationId,
-      workspaceId: profile.workspaceId,
-      action: eventType,
-      targetType: "onboarding_profile",
-      targetId: profile.id,
-      outcome: "success",
-      requestId: context.requestId,
-      correlationId: context.correlationId,
-      createdAt: profile.updatedAt,
+      id: this.options.id(), actorId: context.actorId, organizationId: profile.organizationId,
+      workspaceId: profile.workspaceId, action: eventType, targetType: "onboarding_profile",
+      targetId: profile.id, outcome: "success", requestId: context.requestId,
+      correlationId: context.correlationId, createdAt: profile.updatedAt,
     });
-
     await this.options.outbox.enqueue({
-      id: this.options.id(),
-      eventType,
-      eventVersion: 1,
-      aggregateType: "onboarding_profile",
-      aggregateId: profile.id,
-      organizationId: profile.organizationId,
-      workspaceId: profile.workspaceId,
+      id: this.options.id(), eventType, eventVersion: 1, aggregateType: "onboarding_profile",
+      aggregateId: profile.id, organizationId: profile.organizationId, workspaceId: profile.workspaceId,
       payloadJson: JSON.stringify({ id: profile.id, status: profile.status }),
-      availableAt: profile.updatedAt,
-      occurredAt: profile.updatedAt,
+      availableAt: profile.updatedAt, occurredAt: profile.updatedAt,
     });
   }
 }
@@ -157,3 +105,7 @@ function requireContext(value: EntityId | undefined, name: string): EntityId {
   if (!value) throw new Error(`${name} context is required`);
   return value;
 }
+
+export * from "./repository";
+export * from "./authorization";
+export * from "./manifest";
