@@ -1,3 +1,8 @@
+---
+name: phoenix-api
+description: Rules for Phoenix API contracts, versioning, authorization, errors, idempotency, pagination, webhooks, and provider isolation.
+---
+
 # Phoenix API Skill
 
 ## Purpose
