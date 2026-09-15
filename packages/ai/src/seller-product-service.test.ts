@@ -32,6 +32,7 @@ function draft(): SellerProductDraft {
 function repository() {
   return {
     async create() {},
+    async getSession() { return null; },
     async addInput() {},
     async saveDraft() {},
     async getDraft() { return null; },
