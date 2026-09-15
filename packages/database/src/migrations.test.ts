@@ -10,6 +10,7 @@ function fakeDatabase(options: { hasRegistry: boolean; applied?: readonly Record
   const db = new D1Database({
     prepare(sql: string) {
       return {
+        sql,
         bind() {
           return this;
         },
@@ -31,7 +32,7 @@ function fakeDatabase(options: { hasRegistry: boolean; applied?: readonly Record
     async batch(statements) {
       batches.push(
         statements.map((statement) => ({
-          sql: statement.sql,
+          sql: (statement as unknown as { sql: string }).sql,
           params: [],
         })),
       );
