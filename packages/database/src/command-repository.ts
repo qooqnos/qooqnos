@@ -1,4 +1,4 @@
-import { DatabaseError, D1Database, Repository } from "./client";
+import { DatabaseError, D1Database, Repository, RepositoryContext } from "./client";
 
 export interface CommandStatement {
   readonly sql: string;
