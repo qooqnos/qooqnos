@@ -3,6 +3,7 @@
   "references": [
     { "path": "./apps/api" },
     { "path": "./packages/core" },
+    { "path": "./packages/api-contracts" },
     { "path": "./packages/database" },
     { "path": "./packages/i18n" },
     { "path": "./packages/auth" },
