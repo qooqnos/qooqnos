@@ -1,9 +1,8 @@
 import { ApiRouter } from "./router";
+import { createRequestContext } from "./context";
 import { html, json } from "./http";
-
-export interface ApiEnv {
-  readonly APP_VERSION?: string;
-}
+import type { ApiEnv } from "./env";
+import { checkDatabase } from "./readiness";
 
 const homePage = (version: string): string => `<!doctype html>
 <html lang="en">
@@ -45,7 +44,7 @@ const homePage = (version: string): string => `<!doctype html>
   </body>
 </html>`;
 
-function createRouter(version: string): ApiRouter {
+function createRouter(version: string, database: ApiEnv["DB"]): ApiRouter {
   const router = new ApiRouter();
 
   router.register({
@@ -62,8 +61,34 @@ function createRouter(version: string): ApiRouter {
     path: "/ready",
     module: "platform",
     operation: "readiness.read",
+    handler: async ({ context }) => {
+      const result = await checkDatabase(database);
+      const ready = result.database === "ok";
+      return json(
+        { status: ready ? "ready" : "not_ready", checks: result, timestamp: new Date().toISOString() },
+        ready ? 200 : 503,
+        context.requestId,
+      );
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/context",
+    module: "platform",
+    operation: "context.read",
     handler: ({ context }) =>
-      json({ status: "ready", timestamp: new Date().toISOString() }, 200, context.requestId),
+      json(
+        {
+          requestId: context.requestId,
+          correlationId: context.correlationId,
+          module: context.module,
+          operation: context.operation,
+          authenticated: context.authenticated,
+        },
+        200,
+        context.requestId,
+      ),
   });
 
   return router;
@@ -78,6 +103,8 @@ export default {
       return html(homePage(version));
     }
 
-    return createRouter(version).handle(request);
+    return createRouter(version, env.DB).handle(request);
   },
 };
+
+export { createRequestContext };
