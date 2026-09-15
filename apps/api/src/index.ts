@@ -70,10 +70,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     operation: "readiness.read",
     handler: async ({ context }) => {
       try {
-        await ensureRuntimeBoot({
-          APP_VERSION: version,
-          ...(database ? { DB: database } : {}),
-        });
+        await ensureRuntimeBoot(envForRuntime(version, database));
       } catch (error) {
         const message = error instanceof Error ? error.message : "Runtime boot failed.";
         return json(
@@ -87,7 +84,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
         );
       }
 
-      const result = await checkDatabase(database);
+      const result = await checkDatabase(database?.raw());
       const ready = result.database === "ok" && result.migrationRegistry === "ok";
       return json(
         { status: ready ? "ready" : "not_ready", checks: { runtime: "ok", ...result }, timestamp: new Date().toISOString() },
@@ -136,6 +133,14 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
   });
 
   return router;
+}
+
+function envForRuntime(version: string, database: D1Database | undefined): ApiEnv {
+  if (!database) return { APP_VERSION: version };
+  return {
+    APP_VERSION: version,
+    DB: database.raw(),
+  };
 }
 
 export default {
