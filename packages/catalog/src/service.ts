@@ -33,7 +33,7 @@ export class CatalogService {
         id: productId,
         businessId: command.businessId,
         name: command.name.trim(),
-        description: command.description?.trim(),
+        ...(command.description !== undefined ? { description: command.description.trim() } : {}),
         now,
         expiresAt,
         idempotencyKey: command.idempotencyKey,
@@ -51,7 +51,7 @@ export class CatalogService {
       ...command,
       id: productId,
       name: command.name.trim(),
-      description: command.description?.trim(),
+      ...(command.description !== undefined ? { description: command.description.trim() } : {}),
       now,
     });
   }
@@ -68,7 +68,7 @@ export class CatalogService {
       ...command,
       id: this.options.id(),
       title: command.title.trim(),
-      description: command.description?.trim(),
+      ...(command.description !== undefined ? { description: command.description.trim() } : {}),
       now: this.options.now(),
     });
   }
