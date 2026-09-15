@@ -31,7 +31,7 @@ function draft(): SellerProductDraft {
 describe("SellerProductService", () => {
   it("passes the trusted request context into the canonical AI runtime and persists only validated output", async () => {
     const saveDraft = vi.fn(async () => undefined);
-    const execute = vi.fn(async <TOutput>(request: AIRequest): Promise<AIResult<TOutput>> => ({
+    const executeImpl = async <TOutput>(request: AIRequest): Promise<AIResult<TOutput>> => ({
       operationId: request.operationId,
       operationType: request.operationType,
       operationVersion: 1,
@@ -41,7 +41,8 @@ describe("SellerProductService", () => {
       provenance: "ai_extracted",
       warnings: [],
       retryable: false,
-    }));
+    });
+    const execute = vi.fn(executeImpl);
 
     const service = new SellerProductService({
       repository: {
