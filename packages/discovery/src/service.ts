@@ -9,7 +9,6 @@ export class DiscoveryService {
   constructor(private readonly options: DiscoveryServiceOptions) {}
 
   upsertProjection(input: UpsertSearchDocumentInput): Promise<SearchDocumentRecord> {
-    if (input.eligibility !== "eligible") return this.options.repository.upsert(input);
     return this.options.repository.upsert(input);
   }
 
