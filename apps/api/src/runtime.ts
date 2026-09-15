@@ -35,6 +35,8 @@ const bootPromises = new WeakMap<D1Database, Promise<RuntimeBootResult>>();
 let authorizationRegistry: AuthorizationRegistry | undefined;
 
 export function createApiAuthorizationRegistry(): AuthorizationRegistry {
+  if (authorizationRegistry) return authorizationRegistry;
+
   const registry = createAuthorizationRegistry({
     "business:create": undefined,
     "context:read": undefined,
@@ -58,13 +60,12 @@ export function ensureRuntimeBoot(env: ApiEnv): Promise<RuntimeBootResult> {
     authenticated: false,
   });
 
-  const authorization = authorizationRegistry ?? createApiAuthorizationRegistry();
   const boot = new RuntimeBoot({
     database,
     migrationSources,
     migrationLock: migrationLockJson as MigrationLockManifest,
     modules,
-    authorization,
+    authorization: createApiAuthorizationRegistry(),
     requestContext,
   });
 
