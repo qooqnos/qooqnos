@@ -3,5 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "description": "Phoenix API application boundary",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@qooqnos/core": "*",
+    "@qooqnos/database": "*",
+    "@qooqnos/runtime": "*",
+    "@qooqnos/api-contracts": "*"
+  }
 }
