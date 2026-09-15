@@ -1,5 +1,4 @@
 import type { D1Database } from "@qooqnos/database";
-import { createAuthorizationRegistry } from "@qooqnos/runtime";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
