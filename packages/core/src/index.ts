@@ -31,14 +31,14 @@ export type AppErrorCode =
 export interface AppErrorShape {
   readonly code: AppErrorCode;
   readonly message: string;
-  readonly requestId?: RequestId;
-  readonly details?: Record<string, unknown>;
+  readonly requestId?: RequestId | undefined;
+  readonly details?: Record<string, unknown> | undefined;
 }
 
 export class AppError extends Error {
   readonly code: AppErrorCode;
-  readonly requestId?: RequestId;
-  readonly details?: Record<string, unknown>;
+  readonly requestId?: RequestId | undefined;
+  readonly details?: Record<string, unknown> | undefined;
 
   constructor(shape: AppErrorShape) {
     super(shape.message);
