@@ -1,5 +1,6 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
-import { CommandRepository, DatabaseError, D1Database, type AtomicCommandResult } from "./index";
+import { DatabaseError, D1Database } from "./client";
+import { CommandRepository, type AtomicCommandResult } from "./command-repository";
 
 export interface CreateProductCommandInput {
   readonly context: RequestContext;
@@ -51,9 +52,6 @@ export class CatalogCommandRepository {
                       AND status IN ('draft', 'active')
                   )`,
             params: [input.id, input.businessId, input.name, input.description ?? null, input.now, input.now, input.businessId, tenantId, workspaceId],
-          },
-          {
-            sql: `SELECT CASE WHEN changes() = 1 THEN 1 ELSE RAISE(ABORT, 'Business is not available for catalog changes') END`,
           },
         ],
         audit: {
