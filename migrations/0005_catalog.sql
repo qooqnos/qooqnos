@@ -101,7 +101,7 @@ CREATE INDEX idx_categories_parent ON categories(parent_id);
 CREATE INDEX idx_services_business_status ON services(business_id, status);
 CREATE INDEX idx_products_business_status ON products(business_id, status);
 CREATE INDEX idx_product_variants_product_status ON product_variants(product_id, status);
-CREATE UNIQUE INDEX uq_product_variants_sku ON product_variants(sku) WHERE sku IS NOT NULL;
+CREATE INDEX idx_product_variants_sku ON product_variants(sku);
 CREATE INDEX idx_offerings_business_status ON offerings(business_id, status, publication_status);
 CREATE INDEX idx_offerings_service ON offerings(service_id);
 CREATE INDEX idx_offerings_product ON offerings(product_id);
