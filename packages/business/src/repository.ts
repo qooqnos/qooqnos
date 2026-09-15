@@ -136,7 +136,7 @@ export class BusinessRepository extends Repository {
       ],
       audit: {
         id: options.auditId,
-        actorId: context.actorId,
+        ...(context.actorId ? { actorId: context.actorId } : {}),
         action: "business.created",
         targetType: "business",
         targetId: input.id,
