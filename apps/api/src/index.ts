@@ -1,4 +1,3 @@
-import { createAuthenticationService } from "@qooqnos/auth";
 import type { D1Database } from "@qooqnos/database";
 import { SessionRepository } from "@qooqnos/database";
 import { ApiRouter } from "./router";
@@ -154,10 +153,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
       if (!database || !authenticatedSessionId) {
         return json({ revoked: false }, 400, context.requestId);
       }
-      const authentication = createAuthenticationService(new SessionRepository(database), {
-        getUserById: async () => null,
-      } as never);
-      const revoked = await authentication.revokeSession(authenticatedSessionId);
+      const revoked = await new SessionRepository(database).revoke(authenticatedSessionId);
       return json({ revoked }, 200, context.requestId);
     },
   });
