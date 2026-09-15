@@ -1,4 +1,4 @@
-import { DatabaseError, D1Database, Repository, RepositoryContext } from "./client";
+import { DatabaseError, D1Database, Repository } from "./client";
 
 export interface CommandStatement {
   readonly sql: string;
@@ -151,7 +151,7 @@ export class CommandRepository extends Repository {
 
   private outboxStatements(
     context: RepositoryContext,
-    events: readonly NonNullable<AtomicCommandInput<unknown>["outbox"]>,
+    events: NonNullable<AtomicCommandInput<unknown>["outbox"]>,
   ): CommandStatement[] {
     return events.map((event) => ({
       sql: `INSERT INTO outbox_events

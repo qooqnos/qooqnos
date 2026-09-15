@@ -8,10 +8,10 @@ export type CausationId = Brand<string, "CausationId">;
 export interface RequestContext {
   readonly requestId: RequestId;
   readonly correlationId: CorrelationId;
-  readonly causationId?: CausationId;
-  readonly actorId?: EntityId;
-  readonly tenantId?: EntityId;
-  readonly workspaceId?: EntityId;
+  readonly causationId?: CausationId | undefined;
+  readonly actorId?: EntityId | undefined;
+  readonly tenantId?: EntityId | undefined;
+  readonly workspaceId?: EntityId | undefined;
   readonly module: string;
   readonly operation: string;
   readonly locale: string;

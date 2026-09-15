@@ -56,7 +56,7 @@ export class CatalogCommandRepository {
         ],
         audit: {
           id: input.auditId,
-          actorId: input.context.actorId,
+          ...(input.context.actorId ? { actorId: input.context.actorId } : {}),
           action: "catalog.product.create",
           targetType: "product",
           targetId: input.id,

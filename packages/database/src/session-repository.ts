@@ -53,12 +53,11 @@ export class SessionRepository extends Repository {
   }
 
   async findActiveByTokenHash(tokenHash: string, now: string): Promise<SessionRecord | null> {
-    const session = await this.database.first<SessionRecord>(
+    return this.database.first<SessionRecord>(
       "SELECT id, user_id AS userId, token_hash AS tokenHash, status, created_at AS createdAt, expires_at AS expiresAt, last_seen_at AS lastSeenAt FROM sessions WHERE token_hash = ? AND status = 'active' AND expires_at > ? LIMIT 1",
       tokenHash,
       now,
     );
-    return session;
   }
 
   async touch(sessionId: string, now: string): Promise<void> {
@@ -75,7 +74,7 @@ export class SessionRepository extends Repository {
       "UPDATE sessions SET status = 'revoked' WHERE id = ? AND status = 'active'",
       sessionId,
     );
-    return result.meta.changes > 0;
+    return (result.meta?.changes ?? 0) > 0;
   }
 
   async revokeAllForUser(userId: string): Promise<number> {
@@ -83,7 +82,7 @@ export class SessionRepository extends Repository {
       "UPDATE sessions SET status = 'revoked' WHERE user_id = ? AND status = 'active'",
       userId,
     );
-    return result.meta.changes;
+    return result.meta?.changes ?? 0;
   }
 
   async expire(now: string): Promise<number> {
@@ -91,6 +90,6 @@ export class SessionRepository extends Repository {
       "UPDATE sessions SET status = 'expired' WHERE status = 'active' AND expires_at <= ?",
       now,
     );
-    return result.meta.changes;
+    return result.meta?.changes ?? 0;
   }
 }
