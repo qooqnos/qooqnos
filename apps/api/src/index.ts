@@ -3,6 +3,7 @@ import { createRequestContext } from "./context";
 import { html, json } from "./http";
 import type { ApiEnv } from "./env";
 import { checkDatabase } from "./readiness";
+import { ensureRuntimeBoot } from "./runtime";
 
 const homePage = (version: string): string => `<!doctype html>
 <html lang="en">
@@ -62,10 +63,25 @@ function createRouter(version: string, database: ApiEnv["DB"]): ApiRouter {
     module: "platform",
     operation: "readiness.read",
     handler: async ({ context }) => {
+      try {
+        await ensureRuntimeBoot({ APP_VERSION: version, DB: database });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Runtime boot failed.";
+        return json(
+          {
+            status: "not_ready",
+            checks: { runtime: "unavailable", reason: message },
+            timestamp: new Date().toISOString(),
+          },
+          503,
+          context.requestId,
+        );
+      }
+
       const result = await checkDatabase(database);
       const ready = result.database === "ok" && result.migrationRegistry === "ok";
       return json(
-        { status: ready ? "ready" : "not_ready", checks: result, timestamp: new Date().toISOString() },
+        { status: ready ? "ready" : "not_ready", checks: { runtime: "ok", ...result }, timestamp: new Date().toISOString() },
         ready ? 200 : 503,
         context.requestId,
       );
