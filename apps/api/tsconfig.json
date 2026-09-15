@@ -11,6 +11,10 @@
     { "path": "../../packages/api-contracts" },
     { "path": "../../packages/database" },
     { "path": "../../packages/auth" },
+    { "path": "../../packages/business" },
+    { "path": "../../packages/catalog" },
+    { "path": "../../packages/onboarding" },
+    { "path": "../../packages/ai" },
     { "path": "../../packages/runtime" }
   ],
   "include": ["src/**/*.ts"]
