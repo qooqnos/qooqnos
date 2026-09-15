@@ -15,6 +15,7 @@ Before designing or coding a meaningful capability, read:
 - `docs/PHOENIX_PRODUCT_NORTH_STAR.md`
 - `docs/AI_PRODUCT_DIRECTION.md` when AI is involved
 - `docs/CAPABILITY_DECISION_RULES.md`
+- `docs/SELLER_AI_PRODUCT_CREATION_CONTRACT.md` when seller-side AI supply creation is involved
 
 A technically correct feature that does not strengthen the Phoenix marketplace loop requires explicit product justification.
 
@@ -69,7 +70,8 @@ Do not reference or recreate the retired `skills/` tree. Architecture details be
 4. Read the relevant architecture document(s).
 5. Read the relevant native skill under `.claude/skills/`.
 6. Read `docs/AI_PRODUCT_DIRECTION.md` and `docs/CAPABILITY_DECISION_RULES.md` when the work touches product strategy, AI, seller experience, catalog, discovery, or billing.
-7. Inspect existing implementation before introducing new structure.
+7. Read `docs/SELLER_AI_PRODUCT_CREATION_CONTRACT.md` for seller-side AI supply creation.
+8. Inspect existing implementation before introducing new structure.
 
 For substantial architectural changes, create an ADR.
 
