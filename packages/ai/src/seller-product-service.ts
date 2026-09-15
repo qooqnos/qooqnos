@@ -52,7 +52,6 @@ export class SellerProductService {
     const result = await this.options.runtime.execute<T>({
       ...request,
       context,
-      sessionId,
       operationType: SELLER_AI_OPERATION_TYPES.extract,
       operationVersion: 1,
     });
