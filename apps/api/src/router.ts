@@ -1,3 +1,4 @@
+import type { RequestId } from "@qooqnos/core";
 import type { ApiRequestContext } from "./context";
 import { createRequestContext, getCorrelationId, getRequestId } from "./context";
 import { errorResponse, json } from "./http";
@@ -34,10 +35,10 @@ export class ApiRouter {
     const route = this.routes.find(
       (item) => item.method === request.method.toUpperCase() && item.path === url.pathname,
     );
-    const requestId = getRequestId(request);
+    const requestId = getRequestId(request) as RequestId;
 
     if (!route) {
-      return json({ error: { code: "NOT_FOUND", message: "Route not found." } }, 404, requestId as never);
+      return json({ error: { code: "NOT_FOUND", message: "Route not found." } }, 404, requestId);
     }
 
     const context = createRequestContext({
