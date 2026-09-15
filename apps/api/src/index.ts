@@ -1,5 +1,7 @@
+import { BusinessService, BusinessRepository } from "@qooqnos/business";
 import type { D1Database } from "@qooqnos/database";
-import { SessionRepository } from "@qooqnos/database";
+import { SessionRepository, sha256Hex } from "@qooqnos/database";
+import { AppError, brandId } from "@qooqnos/core";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
@@ -150,11 +152,56 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     operation: "session.revoke",
     requireAuthentication: true,
     handler: async ({ context, authenticatedSessionId }) => {
-      if (!database || !authenticatedSessionId) {
-        return json({ revoked: false }, 400, context.requestId);
-      }
+      if (!database || !authenticatedSessionId) return json({ revoked: false }, 400, context.requestId);
       const revoked = await new SessionRepository(database).revoke(authenticatedSessionId);
       return json({ revoked }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/businesses",
+    module: "business",
+    operation: "business.create",
+    permission: "business.create",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const idempotencyKey = request.headers.get("idempotency-key")?.trim();
+      if (!idempotencyKey) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is required.", requestId: context.requestId });
+      }
+      if (idempotencyKey.length > 200) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is too long.", requestId: context.requestId });
+      }
+
+      let command: unknown;
+      try {
+        command = await request.json();
+      } catch {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "Request body must be valid JSON.", requestId: context.requestId });
+      }
+      if (!isCreateBusinessCommand(command)) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "Business create payload is invalid.", requestId: context.requestId });
+      }
+
+      const fingerprint = await sha256Hex(stableStringify(command));
+      const now = new Date().toISOString();
+      const expiresAt = new Date(Date.parse(now) + 24 * 60 * 60 * 1000).toISOString();
+      const service = new BusinessService({
+        repository: new BusinessRepository(database),
+        authorization,
+        id: () => brandId<"EntityId">(crypto.randomUUID()),
+        now: () => now,
+      });
+      const business = await service.createAtomic(context, command, {
+        idempotencyKey,
+        requestFingerprint: fingerprint,
+        idempotencyExpiresAt: expiresAt,
+        auditId: crypto.randomUUID(),
+      });
+      return json({ data: business }, 201, context.requestId);
     },
   });
 
@@ -171,6 +218,35 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
   });
 
   return router;
+}
+
+function isCreateBusinessCommand(value: unknown): value is {
+  name: string;
+  displayName: string;
+  businessType?: string;
+  primaryCategoryId?: string;
+  defaultLocale?: string;
+  timezone?: string;
+  defaultCurrency?: string;
+} {
+  if (!value || typeof value !== "object") return false;
+  const body = value as Record<string, unknown>;
+  return typeof body.name === "string" && typeof body.displayName === "string" && optionalStrings(body);
+}
+
+function optionalStrings(body: Record<string, unknown>): boolean {
+  return ["businessType", "primaryCategoryId", "defaultLocale", "timezone", "defaultCurrency"].every(
+    (key) => body[key] === undefined || typeof body[key] === "string",
+  );
+}
+
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  if (value && typeof value === "object") {
+    const object = value as Record<string, unknown>;
+    return `{${Object.keys(object).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(object[key])}`).join(",`)}}`;
+  }
+  return JSON.stringify(value);
 }
 
 function envForRuntime(version: string, database: D1Database | undefined): ApiEnv {
