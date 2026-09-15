@@ -29,7 +29,7 @@ function draft(): SellerProductDraft {
 }
 
 describe("SellerProductService", () => {
-  it("passes the trusted request context into the canonical AI runtime and never persists without output", async () => {
+  it("passes the trusted request context into the canonical AI runtime and persists only validated output", async () => {
     const saveDraft = vi.fn(async () => undefined);
     const execute = vi.fn(async (request: { context: RequestContext; operationType: string }) => ({
       operationId: "op-1",
@@ -57,6 +57,8 @@ describe("SellerProductService", () => {
 
     const result = await service.generateDraft(context(), brandId<"EntityId">("session-1"), {
       operationId: "op-1",
+      operationType: "caller.supplied.operation",
+      operationVersion: 99,
       idempotencyKey: "idem-1",
       input: { title: "Example" },
       dataClassification: "internal",
