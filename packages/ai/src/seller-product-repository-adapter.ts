@@ -1,20 +1,22 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
-import type { D1Database, SellerAIRepository } from "@qooqnos/database";
+import type { EntityId } from "@qooqnos/core";
+import { SellerAIRepository, sha256Hex, type D1Database } from "@qooqnos/database";
 import type { SellerProductDraft, SellerProductSessionRepository } from "./seller-product-service";
 
 export function createSellerProductSessionRepository(database: D1Database): SellerProductSessionRepository {
-  const repository = new (requireRepository())(database);
+  const repository = new SellerAIRepository(database);
   return {
     async create(input) {
       await repository.createSession(input.context, input.id, input.now);
     },
     async addInput(input) {
+      const rawText = input.rawText?.trim();
+      const inputHash = await sha256Hex(`${input.mediaAssetId ?? ""}\n${rawText ?? ""}`);
       await repository.addInput(input.context, {
         id: createId(),
         sessionId: input.sessionId,
         mediaAssetId: input.mediaAssetId,
-        rawText: input.rawText,
-        inputHash: hashInput(input.rawText, input.mediaAssetId),
+        rawText,
+        inputHash,
         now: input.now,
       });
     },
@@ -36,13 +38,5 @@ export function createSellerProductSessionRepository(database: D1Database): Sell
 
   function createId(): EntityId {
     return crypto.randomUUID() as EntityId;
-  }
-
-  function hashInput(rawText: string | undefined, mediaAssetId: EntityId | undefined): string {
-    return `${mediaAssetId ?? ""}:${rawText ?? ""}`;
-  }
-
-  function requireRepository(): typeof SellerAIRepository {
-    return SellerAIRepository;
   }
 }
