@@ -57,7 +57,7 @@ describe("SellerAIRepository", () => {
       bind() { return this; },
       async first<T>() { return session as T; },
       async all<T>() { return { results: [] as T[] }; },
-      async run() { return { success: true }; },
+      async run() { return { success: true, meta: { changes: 1 } }; },
     };
     const raw: D1DatabaseLike = {
       prepare(sql: string) { statements.push(sql); return statement; },
@@ -94,7 +94,7 @@ describe("SellerAIRepository", () => {
     };
     const raw: D1DatabaseLike = {
       prepare(sql: string) { statements.push(sql); return statement; },
-      async batch() { return []; },
+      async batch() { return [{ success: true, meta: { changes: 1 } }, { success: true, meta: { changes: 1 } }]; },
     };
 
     const repository = new SellerAIRepository(new D1Database(raw));

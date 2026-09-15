@@ -20,9 +20,14 @@ function context(): RequestContext {
 describe("CatalogRepository", () => {
   it("requires tenant and workspace predicates when resolving a product business", async () => {
     const statements: string[] = [];
+    let firstCalls = 0;
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
-      async first<T>() { return { id: "business-1" } as T; },
+      async first<T>() {
+        firstCalls += 1;
+        if (firstCalls === 1) return { id: "business-1" } as T;
+        return { id: "product-1", businessId: "business-1", name: "Phoenix product", description: null, status: "draft", createdAt: "2026-09-16T00:00:00.000Z", updatedAt: "2026-09-16T00:00:00.000Z" } as T;
+      },
       async all<T>() { return { results: [] as T[] }; },
       async run() { return { success: true }; },
     };
