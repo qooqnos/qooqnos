@@ -1,5 +1,5 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
-import type { AIResult, SellerProductDraft } from "./types";
+import type { AIRequest, AIResult, SellerProductDraft } from "./types";
 import type { AIRuntimeClient } from "./runtime-client";
 
 export const SELLER_AI_OPERATION_TYPES = {
@@ -12,7 +12,7 @@ export const SELLER_AI_OPERATION_TYPES = {
 export interface SellerProductSessionRepository {
   create(input: { readonly id: EntityId; readonly context: RequestContext; readonly now: string }): Promise<void>;
   addInput(input: { readonly sessionId: EntityId; readonly mediaAssetId?: EntityId; readonly rawText?: string; readonly now: string }): Promise<void>;
-  saveDraft(input: { readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly now: string }): Promise<void>;
+  saveDraft(input: { readonly id: EntityId; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly now: string }): Promise<void>;
   getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null>;
 }
 
@@ -40,7 +40,7 @@ export class SellerProductService {
   async generateDraft<T extends SellerProductDraft>(
     context: RequestContext,
     sessionId: EntityId,
-    request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId" | "operationType" | "operationVersion">,
+    request: Omit<AIRequest, "context" | "sessionId" | "operationType" | "operationVersion">,
   ): Promise<AIResult<T>> {
     const result = await this.options.runtime.execute<T>({
       ...request,
@@ -51,6 +51,7 @@ export class SellerProductService {
     });
     if (result.output) {
       await this.options.repository.saveDraft({
+        id: this.options.id(),
         sessionId,
         version: result.output.version,
         draft: result.output,
