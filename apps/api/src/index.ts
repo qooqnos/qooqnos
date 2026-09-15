@@ -1,7 +1,9 @@
 import { BusinessService, BusinessRepository } from "@qooqnos/business";
 import { AppError, brandId } from "@qooqnos/core";
+import { AuthorizationRepository } from "@qooqnos/database";
 import type { D1Database } from "@qooqnos/database";
 import { SessionRepository, sha256Hex } from "@qooqnos/database";
+import { createAuthorizationService } from "@qooqnos/runtime";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
@@ -153,7 +155,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
       const expiresAt = new Date(Date.parse(now) + 24 * 60 * 60 * 1000).toISOString();
       const service = new BusinessService({
         repository: new BusinessRepository(database),
-        authorization,
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
         id: () => brandId<"EntityId">(crypto.randomUUID()),
         now: () => now,
       });
@@ -163,7 +165,8 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
         idempotencyExpiresAt: expiresAt,
         auditId: crypto.randomUUID(),
       });
-      return json({ data: business }, 201, context.requestId);
+      const status = business.kind === "replayed" ? 200 : 201;
+      return json({ data: business.result, replayed: business.kind === "replayed" }, status, context.requestId);
     },
   });
 
