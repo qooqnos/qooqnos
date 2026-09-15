@@ -63,7 +63,7 @@ function createRouter(version: string, database: ApiEnv["DB"]): ApiRouter {
     operation: "readiness.read",
     handler: async ({ context }) => {
       const result = await checkDatabase(database);
-      const ready = result.database === "ok";
+      const ready = result.database === "ok" && result.migrationRegistry === "ok";
       return json(
         { status: ready ? "ready" : "not_ready", checks: result, timestamp: new Date().toISOString() },
         ready ? 200 : 503,
