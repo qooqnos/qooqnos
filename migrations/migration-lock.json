@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-09-15T00:00:00.000Z",
+  "migrations": [
+    {
+      "id": "0001_foundation",
+      "version": 1,
+      "moduleId": "foundation",
+      "checksum": "4989242437c0be2f6d6e4e9d94b4c647a614e67103eac11ee51010a25a9d8341",
+      "filename": "0001_foundation.sql"
+    },
+    {
+      "id": "0002_onboarding",
+      "version": 2,
+      "moduleId": "onboarding",
+      "checksum": "a557c00c814a15af6bbb3945c628cedcbca72c6b9024220c4f6136b743397a65",
+      "filename": "0002_onboarding.sql"
+    }
+  ]
+}
