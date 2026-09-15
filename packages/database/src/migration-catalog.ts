@@ -1,4 +1,5 @@
 import { MigrationDefinition } from "./migrations";
+import { sha256Hex } from "./hash";
 
 export interface MigrationSource {
   readonly path: string;
@@ -31,7 +32,7 @@ export async function loadMigrationCatalog(
         version,
         moduleId,
         sql: source.sql,
-        checksum: await sha256(source.sql),
+        checksum: await sha256Hex(source.sql),
         statements: splitSqlStatements(source.sql),
       } satisfies MigrationDefinition;
     }),
@@ -116,10 +117,4 @@ export function splitSqlStatements(sql: string): string[] {
   const tail = sql.slice(start).trim();
   if (tail) statements.push(tail);
   return statements;
-}
-
-async function sha256(value: string): Promise<string> {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }

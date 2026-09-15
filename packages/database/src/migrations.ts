@@ -1,4 +1,5 @@
 import { D1Database, DatabaseError } from "./client";
+import { sha256Hex } from "./hash";
 
 export interface MigrationDefinition {
   readonly id: string;
@@ -87,7 +88,7 @@ export function validateMigrationDefinitions(migrations: readonly MigrationDefin
 
 async function validateDefinitionChecksums(definitions: readonly MigrationDefinition[]): Promise<void> {
   for (const definition of definitions) {
-    const calculatedChecksum = await sha256(definition.sql);
+    const calculatedChecksum = await sha256Hex(definition.sql);
     if (definition.checksum !== calculatedChecksum) throw new MigrationIntegrityError(`Migration checksum mismatch at version ${definition.version}`);
   }
 }
@@ -104,7 +105,3 @@ async function validateAppliedMigrations(applied: readonly AppliedMigration[], d
   }
 }
 
-async function sha256(value: string): Promise<string> {
-  const bytes = new TextEncoder().encode(value); const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
