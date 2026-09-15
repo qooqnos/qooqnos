@@ -29,6 +29,18 @@ function draft(): SellerProductDraft {
   };
 }
 
+function repository() {
+  return {
+    async create() {},
+    async addInput() {},
+    async saveDraft() {},
+    async getDraft() { return null; },
+    async reviewDraft() {},
+    async confirmDraft() {},
+    async cancelSession() { return true; },
+  };
+}
+
 describe("SellerProductService", () => {
   it("passes the trusted request context into the canonical AI runtime and persists only validated output", async () => {
     const saveDraft = vi.fn(async () => undefined);
@@ -44,14 +56,11 @@ describe("SellerProductService", () => {
       retryable: false,
     }));
     const execute = executeMock as unknown as AIRuntimeClient["execute"];
+    const repo = repository();
+    repo.saveDraft = saveDraft;
 
     const service = new SellerProductService({
-      repository: {
-        async create() {},
-        async addInput() {},
-        saveDraft,
-        async getDraft() { return null; },
-      },
+      repository: repo,
       runtime: { execute },
       id: () => brandId<"EntityId">("session-1"),
       now: () => "2026-09-16T00:00:00.000Z",
@@ -80,13 +89,10 @@ describe("SellerProductService", () => {
 
   it("rejects inputs before persistence when neither media nor text is supplied", async () => {
     const addInput = vi.fn(async () => undefined);
+    const repo = repository();
+    repo.addInput = addInput;
     const service = new SellerProductService({
-      repository: {
-        async create() {},
-        addInput,
-        async saveDraft() {},
-        async getDraft() { return null; },
-      },
+      repository: repo,
       runtime: { execute: vi.fn() },
       id: () => brandId<"EntityId">("session-1"),
       now: () => "2026-09-16T00:00:00.000Z",
@@ -96,5 +102,54 @@ describe("SellerProductService", () => {
       "Seller product input requires media or raw text",
     );
     expect(addInput).not.toHaveBeenCalled();
+  });
+
+  it("delegates draft review and confirmation with the caller-visible draft version", async () => {
+    const reviewDraft = vi.fn(async () => undefined);
+    const confirmDraft = vi.fn(async () => undefined);
+    const repo = repository();
+    repo.reviewDraft = reviewDraft;
+    repo.confirmDraft = confirmDraft;
+    const service = new SellerProductService({
+      repository: repo,
+      runtime: { execute: vi.fn() },
+      id: () => brandId<"EntityId">("session-1"),
+      now: () => "2026-09-16T00:00:00.000Z",
+    });
+
+    await service.reviewDraft(context(), brandId<"EntityId">("session-1"), 3);
+    await service.confirmDraft(context(), brandId<"EntityId">("session-1"), 3);
+
+    expect(reviewDraft).toHaveBeenCalledWith({
+      context: context(),
+      sessionId: brandId<"EntityId">("session-1"),
+      version: 3,
+      now: "2026-09-16T00:00:00.000Z",
+    });
+    expect(confirmDraft).toHaveBeenCalledWith({
+      context: context(),
+      sessionId: brandId<"EntityId">("session-1"),
+      version: 3,
+      now: "2026-09-16T00:00:00.000Z",
+    });
+  });
+
+  it("returns cancellation outcome from the canonical repository", async () => {
+    const cancelSession = vi.fn(async () => false);
+    const repo = repository();
+    repo.cancelSession = cancelSession;
+    const service = new SellerProductService({
+      repository: repo,
+      runtime: { execute: vi.fn() },
+      id: () => brandId<"EntityId">("session-1"),
+      now: () => "2026-09-16T00:00:00.000Z",
+    });
+
+    await expect(service.cancelSession(context(), brandId<"EntityId">("session-1"))).resolves.toBe(false);
+    expect(cancelSession).toHaveBeenCalledWith({
+      context: context(),
+      sessionId: brandId<"EntityId">("session-1"),
+      now: "2026-09-16T00:00:00.000Z",
+    });
   });
 });
