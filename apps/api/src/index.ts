@@ -1,12 +1,12 @@
-import { createAuthorizationRegistry } from "@qooqnos/runtime";
 import type { D1Database } from "@qooqnos/database";
+import { createAuthorizationRegistry } from "@qooqnos/runtime";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
 import type { ApiEnv } from "./env";
 import { getDatabase } from "./database";
 import { checkDatabase } from "./readiness";
-import { ensureRuntimeBoot } from "./runtime";
+import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 
 const homePage = (version: string): string => `<!doctype html>
 <html lang="en">
@@ -49,10 +49,7 @@ const homePage = (version: string): string => `<!doctype html>
 </html>`;
 
 function createRouter(version: string, database: D1Database | undefined): ApiRouter {
-  const authorization = createAuthorizationRegistry({
-    "business:create": undefined,
-    "context:read": undefined,
-  });
+  const authorization = createApiAuthorizationRegistry();
   const router = new ApiRouter({
     authorization,
     ...(database ? { database } : {}),
