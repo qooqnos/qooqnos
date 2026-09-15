@@ -1,0 +1,9 @@
+{
+  "name": "@qooqnos/web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Phoenix customer and partner web experience",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}
