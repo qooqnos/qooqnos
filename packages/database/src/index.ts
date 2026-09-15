@@ -6,4 +6,5 @@ export * from "./identity-repository";
 export * from "./session-repository";
 export * from "./workspace-repository";
 export * from "./authorization-repository";
+export * from "./platform-repository";
 export * from "./services";
