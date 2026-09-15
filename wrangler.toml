@@ -6,10 +6,27 @@ workers_dev = true
 [vars]
 APP_VERSION = "0.1.0"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "phoenix"
+database_id = "00000000-0000-0000-0000-000000000000"
+preview_database_id = "00000000-0000-0000-0000-000000000000"
+
 [env.staging]
 name = "phoenix-api-staging"
 vars = { APP_VERSION = "staging" }
 
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "phoenix-staging"
+database_id = "00000000-0000-0000-0000-000000000000"
+preview_database_id = "00000000-0000-0000-0000-000000000000"
+
 [env.production]
 name = "phoenix-api-production"
 vars = { APP_VERSION = "production" }
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "phoenix-production"
+database_id = "00000000-0000-0000-0000-000000000000"
