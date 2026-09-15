@@ -1,4 +1,6 @@
+import { createAuthenticationService } from "@qooqnos/auth";
 import type { D1Database } from "@qooqnos/database";
+import { SessionRepository } from "@qooqnos/database";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
@@ -118,6 +120,46 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
         200,
         context.requestId,
       ),
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/session",
+    module: "identity",
+    operation: "session.read",
+    requireAuthentication: true,
+    handler: ({ context, authenticatedSessionId }) =>
+      json(
+        {
+          session: {
+            id: authenticatedSessionId,
+            actorId: context.actorId,
+            tenantId: context.tenantId,
+            workspaceId: context.workspaceId,
+            authenticated: context.authenticated,
+          },
+        },
+        200,
+        context.requestId,
+      ),
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/session/revoke",
+    module: "identity",
+    operation: "session.revoke",
+    requireAuthentication: true,
+    handler: async ({ context, authenticatedSessionId }) => {
+      if (!database || !authenticatedSessionId) {
+        return json({ revoked: false }, 400, context.requestId);
+      }
+      const authentication = createAuthenticationService(new SessionRepository(database), {
+        getUserById: async () => null,
+      } as never);
+      const revoked = await authentication.revokeSession(authenticatedSessionId);
+      return json({ revoked }, 200, context.requestId);
+    },
   });
 
   router.register({
