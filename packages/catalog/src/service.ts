@@ -1,26 +1,58 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
+import type { CatalogCommandRepository, CreateProductCommandInput } from "@qooqnos/database";
 import type { AuthorizationService } from "@qooqnos/runtime";
 import { CatalogRepository, type CreateOfferingInput, type CreateProductInput, type CreateProductVariantInput, type OfferingRecord, type ProductRecord, type ProductVariantRecord } from "./repository";
 
 export interface CatalogServiceOptions {
   readonly repository: CatalogRepository;
+  readonly commands?: CatalogCommandRepository;
   readonly authorization: AuthorizationService;
   readonly id: () => EntityId;
   readonly now: () => string;
+  readonly idempotencyExpiresAt?: (now: string) => string;
+}
+
+export interface CreateProductCommand extends Omit<CreateProductInput, "id" | "now"> {
+  readonly idempotencyKey?: string;
+  readonly requestFingerprint?: string;
 }
 
 export class CatalogService {
   constructor(private readonly options: CatalogServiceOptions) {}
 
-  async createProduct(context: RequestContext, command: Omit<CreateProductInput, "id" | "now">): Promise<ProductRecord> {
+  async createProduct(context: RequestContext, command: CreateProductCommand): Promise<ProductRecord> {
     await this.authorize(context, "catalog.product.create");
     validateText(command.name, "name");
+    const productId = this.options.id();
+    const now = this.options.now();
+
+    if (this.options.commands && command.idempotencyKey && command.requestFingerprint) {
+      const expiresAt = this.options.idempotencyExpiresAt?.(now) ?? new Date(Date.parse(now) + 24 * 60 * 60 * 1000).toISOString();
+      const result = await this.options.commands.createProduct({
+        context,
+        id: productId,
+        businessId: command.businessId,
+        name: command.name.trim(),
+        description: command.description?.trim(),
+        now,
+        expiresAt,
+        idempotencyKey: command.idempotencyKey,
+        requestFingerprint: command.requestFingerprint,
+        auditId: this.options.id(),
+        eventId: this.options.id(),
+      } satisfies CreateProductCommandInput);
+      return this.options.repository.getProduct(context, result.result.productId).then((product) => {
+        if (!product) throw new Error("Product not found after transactional creation");
+        return product;
+      });
+    }
+
     return this.options.repository.createProduct({
       ...command,
-      id: this.options.id(),
+      id: productId,
       name: command.name.trim(),
       description: command.description?.trim(),
-      now: this.options.now(),
+      now,
     });
   }
 
