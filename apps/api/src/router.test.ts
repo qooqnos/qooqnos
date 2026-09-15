@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createAuthorizationRegistry } from "@qooqnos/runtime";
 import { ApiRouter } from "./router";
 
 function router(): ApiRouter {
@@ -55,5 +56,26 @@ describe("ApiRouter", () => {
         handler: () => new Response("duplicate"),
       }),
     ).toThrow("Duplicate API route: GET /health");
+  });
+
+  it("denies a protected route before the handler when unauthenticated", async () => {
+    const authorization = createAuthorizationRegistry({ "business:create": undefined });
+    const instance = new ApiRouter({ authorization });
+    instance.register({
+      method: "GET",
+      path: "/protected",
+      module: "business",
+      operation: "business.access",
+      permission: "business:create",
+      requireAuthentication: true,
+      handler: () => new Response("must not execute"),
+    });
+
+    const response = await instance.handle(new Request("https://example.test/protected"));
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "UNAUTHORIZED" },
+    });
   });
 });
