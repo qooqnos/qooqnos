@@ -19,34 +19,33 @@ export interface CreateBusinessCommand {
   readonly defaultCurrency?: string | undefined;
 }
 
+export interface AtomicCreateBusinessOptions {
+  readonly idempotencyKey: string;
+  readonly requestFingerprint: string;
+  readonly idempotencyExpiresAt: string;
+  readonly auditId: string;
+}
+
 export class BusinessService {
   constructor(private readonly options: BusinessServiceOptions) {}
 
   async create(context: RequestContext, command: CreateBusinessCommand): Promise<BusinessRecord> {
-    const organizationId = requireContext(context.tenantId, "tenant");
-    const workspaceId = requireContext(context.workspaceId, "workspace");
-    await this.options.authorization.assert({
-      context,
-      permission: "business.create",
-      requireAuthentication: true,
-      requireWorkspace: true,
-    });
-    validateBusinessText(command.name, "name");
-    validateBusinessText(command.displayName, "displayName");
-    const input: CreateBusinessInput = {
-      id: this.options.id(),
-      organizationId,
-      workspaceId,
-      name: command.name.trim(),
-      displayName: command.displayName.trim(),
-      businessType: normalizeOptional(command.businessType),
-      primaryCategoryId: normalizeOptional(command.primaryCategoryId),
-      defaultLocale: normalizeOptional(command.defaultLocale),
-      timezone: normalizeOptional(command.timezone),
-      defaultCurrency: normalizeCurrency(command.defaultCurrency),
-      now: this.options.now(),
-    };
+    const input = await this.prepareCreate(context, command);
     return this.options.repository.create(input);
+  }
+
+  async createAtomic(
+    context: RequestContext,
+    command: CreateBusinessCommand,
+    atomic: AtomicCreateBusinessOptions,
+  ): Promise<BusinessRecord> {
+    const input = await this.prepareCreate(context, command);
+    const result = await this.options.repository.createAtomic(context, input, {
+      ...atomic,
+      requestId: context.requestId,
+      correlationId: context.correlationId,
+    });
+    return result.result;
   }
 
   async update(context: RequestContext, id: EntityId, patch: CreateBusinessCommand): Promise<BusinessRecord> {
@@ -100,6 +99,32 @@ export class BusinessService {
     });
     if (status === "published") throw new Error("Publication must pass the canonical publication policy before becoming published");
     return this.options.repository.setPublicationStatus(context, id, status, this.options.now());
+  }
+
+  private async prepareCreate(context: RequestContext, command: CreateBusinessCommand): Promise<CreateBusinessInput> {
+    const organizationId = requireContext(context.tenantId, "tenant");
+    const workspaceId = requireContext(context.workspaceId, "workspace");
+    await this.options.authorization.assert({
+      context,
+      permission: "business.create",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    validateBusinessText(command.name, "name");
+    validateBusinessText(command.displayName, "displayName");
+    return {
+      id: this.options.id(),
+      organizationId,
+      workspaceId,
+      name: command.name.trim(),
+      displayName: command.displayName.trim(),
+      businessType: normalizeOptional(command.businessType),
+      primaryCategoryId: normalizeOptional(command.primaryCategoryId),
+      defaultLocale: normalizeOptional(command.defaultLocale),
+      timezone: normalizeOptional(command.timezone),
+      defaultCurrency: normalizeCurrency(command.defaultCurrency),
+      now: this.options.now(),
+    };
   }
 }
 
