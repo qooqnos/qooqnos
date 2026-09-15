@@ -1,7 +1,32 @@
 # Phoenix AI Marketplace — Claude Code Project Instructions
 
 ## Mission
-Build Phoenix as a secure, modular, multilingual, multi-tenant AI marketplace. The platform understands customer needs and matches them to suitable businesses, services and products.
+Build Phoenix as a secure, modular, multilingual, multi-tenant AI marketplace. The platform understands customer needs, understands business supply, and makes useful decisions that connect customers with suitable businesses, services and products.
+
+## Product North Star — Mandatory
+Phoenix is fundamentally an **intelligent decision and connection layer between customers and businesses**.
+
+The canonical product loop is:
+`Understand Demand → Understand Supply → Decide → Match → Connect → Act → Learn`
+
+Marketplace, catalog, discovery, booking, CRM, billing and AI are capabilities that strengthen this loop; they are not independent product identities.
+
+Before designing or coding a meaningful capability, read:
+- `docs/PHOENIX_PRODUCT_NORTH_STAR.md`
+- `docs/AI_PRODUCT_DIRECTION.md` when AI is involved
+- `docs/CAPABILITY_DECISION_RULES.md`
+
+A technically correct feature that does not strengthen the Phoenix marketplace loop requires explicit product justification.
+
+## Seller AI Product Principle
+Phoenix should make it possible for a business to provide minimal raw input and receive marketplace-ready structured supply.
+
+Example:
+`Product photo → AI extraction → structured draft → title/description/enrichment → missing-information questions → seller confirmation → publication → discovery/matching`
+
+AI-generated content is proposed until validated by the owning domain and accepted according to policy. AI must not silently invent prices, inventory, credentials, compliance facts, ownership, or other authoritative commercial facts.
+
+AI-assisted seller operations are economic operations. Material AI usage must be measurable and integrate with the canonical Billing usage/entitlement/quotas model. Provider token cost is an internal cost signal, not the customer pricing authority.
 
 ## Mandatory architecture
 - Modular monolith first; no premature microservices.
@@ -38,11 +63,13 @@ Available Phoenix skills:
 Do not reference or recreate the retired `skills/` tree. Architecture details belong in `docs/`; skill-specific operating rules belong in `.claude/skills/`.
 
 ## Before coding
-1. Read `docs/PHOENIX_MASTER_RECOMMENDATIONS.md`.
-2. Read `docs/DATABASE_MODEL.md` for persistence work.
-3. Read the relevant architecture document(s).
-4. Read the relevant native skill under `.claude/skills/`.
-5. Inspect existing implementation before introducing new structure.
+1. Read `docs/PHOENIX_PRODUCT_NORTH_STAR.md`.
+2. Read `docs/PHOENIX_MASTER_RECOMMENDATIONS.md`.
+3. Read `docs/DATABASE_MODEL.md` for persistence work.
+4. Read the relevant architecture document(s).
+5. Read the relevant native skill under `.claude/skills/`.
+6. Read `docs/AI_PRODUCT_DIRECTION.md` and `docs/CAPABILITY_DECISION_RULES.md` when the work touches product strategy, AI, seller experience, catalog, discovery, or billing.
+7. Inspect existing implementation before introducing new structure.
 
 For substantial architectural changes, create an ADR.
 
@@ -53,4 +80,4 @@ For substantial architectural changes, create an ADR.
 - Never make destructive or irreversible changes without separate approval.
 
 ## Definition of Done
-Code + types + tests + migrations + authorization + tenant-isolation tests + documentation + lint/typecheck/build must be considered together. Never claim completion without relevant verification.
+Code + types + tests + migrations + authorization + tenant-isolation tests + documentation + product-direction alignment + lint/typecheck/build must be considered together. Never claim completion without relevant verification.
