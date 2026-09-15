@@ -71,19 +71,21 @@ export class ApiRouter {
       };
       const auth = this.options.authorization
         ? await resolveRequestAuth(initialContext, request, authOptions)
-        : { context: initialContext, subject: { roles: [], permissions: [], authenticated: false } as AuthorizationSubject };
+        : {
+            context: initialContext,
+            subject: { roles: [], permissions: [], authenticated: false } as AuthorizationSubject,
+          };
 
       const context = { ...auth.context, authenticated: auth.subject.authenticated };
       if (route.requireAuthentication || route.permission) {
         if (!this.options.authorization) throw new Error("Authorization registry is required for protected routes");
-        const authorizationInput = {
+        this.options.authorization.assert({
           context,
           permission: route.permission ?? `${route.module}:access`,
           subject: auth.subject,
           requireAuthentication: route.requireAuthentication ?? true,
           ...(route.requireWorkspace !== undefined ? { requireWorkspace: route.requireWorkspace } : {}),
-        };
-        this.options.authorization.assert(authorizationInput);
+        });
       }
 
       const response = await route.handler({ request, context, subject: auth.subject });
