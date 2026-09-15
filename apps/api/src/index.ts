@@ -1,23 +1,9 @@
+import { ApiRouter } from "./router";
+import { html, json } from "./http";
+
 export interface ApiEnv {
   readonly APP_VERSION?: string;
 }
-
-const json = (body: unknown, status = 200): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-    },
-  });
-
-const html = (body: string, status = 200): Response =>
-  new Response(body, {
-    status,
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      "cache-control": "no-store",
-    },
-  });
 
 const homePage = (version: string): string => `<!doctype html>
 <html lang="en">
@@ -59,6 +45,30 @@ const homePage = (version: string): string => `<!doctype html>
   </body>
 </html>`;
 
+function createRouter(version: string): ApiRouter {
+  const router = new ApiRouter();
+
+  router.register({
+    method: "GET",
+    path: "/health",
+    module: "platform",
+    operation: "health.read",
+    handler: ({ context }) =>
+      json({ status: "healthy", timestamp: new Date().toISOString(), version }, 200, context.requestId),
+  });
+
+  router.register({
+    method: "GET",
+    path: "/ready",
+    module: "platform",
+    operation: "readiness.read",
+    handler: ({ context }) =>
+      json({ status: "ready", timestamp: new Date().toISOString() }, 200, context.requestId),
+  });
+
+  return router;
+}
+
 export default {
   async fetch(request: Request, env: ApiEnv): Promise<Response> {
     const url = new URL(request.url);
@@ -68,27 +78,6 @@ export default {
       return html(homePage(version));
     }
 
-    if (request.method === "GET" && url.pathname === "/health") {
-      return json({
-        status: "healthy",
-        timestamp: new Date().toISOString(),
-        version,
-      });
-    }
-
-    if (request.method === "GET" && url.pathname === "/ready") {
-      return json({
-        status: "ready",
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    return json(
-      {
-        error: "not_found",
-        message: "Route not found",
-      },
-      404,
-    );
+    return createRouter(version).handle(request);
   },
 };
