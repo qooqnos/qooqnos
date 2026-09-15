@@ -2,7 +2,7 @@
 
 ## Status
 
-Architecture contract for production migration integrity. Initial implementation is intentionally deferred until the repository build/test foundation can verify the lock manifest deterministically.
+Architecture contract for production migration integrity. Initial implementation now exists in `packages/database/src/migration-lock.ts` (`generateMigrationLock`, `verifyMigrationLock`), covering verification rules 1-4 below, with a generated manifest committed at `migrations/migration-lock.json`. `packages/runtime/src/boot.ts` accepts an optional `migrationLock` and verifies it before the migration runner executes. Rule 5 (applied D1 checksum) remains `MigrationRunner`'s existing responsibility. Rule 8 (a lock change without a corresponding migration change) is a git/CI-history check and is not implemented by this module; it still belongs in the eventual CI gate below.
 
 ## Problem
 
@@ -42,8 +42,7 @@ Migration execution must not rely on application-level read/write races. Deploym
 ## CI gate
 
 The eventual CI pipeline must verify:
-
-```text
+```
 migration source
 → parse definitions
 → calculate SHA-256
@@ -52,8 +51,7 @@ migration source
 → typecheck/tests
 → build
 ```
-
-A failure must stop deployment.
+A failure must stop deployment. `verifyMigrationLock` implements the "compare lock manifest" and "verify sequence" steps for a given set of migration definitions; wiring an actual CI job around it (including rule 8's git-history check) is still open.
 
 ## Scope boundary
 
