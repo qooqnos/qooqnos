@@ -14,6 +14,9 @@ export interface SellerProductSessionRepository {
   addInput(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly mediaAssetId?: EntityId | undefined; readonly rawText?: string | undefined; readonly now: string }): Promise<void>;
   saveDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly now: string }): Promise<void>;
   getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null>;
+  reviewDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly now: string }): Promise<void>;
+  confirmDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly now: string }): Promise<void>;
+  cancelSession(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly now: string }): Promise<boolean>;
 }
 
 export interface SellerProductServiceOptions {
@@ -65,6 +68,18 @@ export class SellerProductService {
       });
     }
     return result;
+  }
+
+  async reviewDraft(context: RequestContext, sessionId: EntityId, version: number): Promise<void> {
+    await this.options.repository.reviewDraft({ context, sessionId, version, now: this.options.now() });
+  }
+
+  async confirmDraft(context: RequestContext, sessionId: EntityId, version: number): Promise<void> {
+    await this.options.repository.confirmDraft({ context, sessionId, version, now: this.options.now() });
+  }
+
+  async cancelSession(context: RequestContext, sessionId: EntityId): Promise<boolean> {
+    return this.options.repository.cancelSession({ context, sessionId, now: this.options.now() });
   }
 
   getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null> {
