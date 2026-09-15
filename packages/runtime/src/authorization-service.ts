@@ -1,4 +1,4 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
+import type { RequestContext } from "@qooqnos/core";
 import type { AuthorizationRepository } from "@qooqnos/database";
 import {
   AuthorizationDeniedError,
@@ -21,7 +21,6 @@ export interface AuthorizationService {
   assert(input: AuthorizationServiceInput): Promise<void>;
 }
 
-/** Bridges persisted Identity/Access facts into the canonical authorization evaluator. */
 export function createAuthorizationService(
   repository: AuthorizationRepository,
   registry: AuthorizationRegistry,
@@ -42,7 +41,7 @@ export function createAuthorizationService(
       }
 
       const requireWorkspace = input.requireWorkspace ?? Boolean(input.context.workspaceId || input.resource?.workspaceId);
-      const subject = requireWorkspace
+      const subject = requireWorkspace && input.context.workspaceId
         ? await repository.getSubject({ organizationId: input.context.tenantId, workspaceId: input.context.workspaceId }, actorId)
         : null;
 
@@ -51,7 +50,7 @@ export function createAuthorizationService(
         permission: input.permission,
         resource: input.resource,
         subject: {
-          actorId: actorId as EntityId,
+          actorId,
           tenantId: input.context.tenantId,
           workspaceId: input.context.workspaceId,
           membershipStatus: subject?.membership.status,
