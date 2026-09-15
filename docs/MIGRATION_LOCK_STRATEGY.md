@@ -2,7 +2,7 @@
 
 ## Status
 
-Architecture contract for production migration integrity. Initial implementation now exists in `packages/database/src/migration-lock.ts` (`generateMigrationLock`, `verifyMigrationLock`), covering verification rules 1-4 below, with a generated manifest committed at `migrations/migration-lock.json`. `packages/runtime/src/boot.ts` accepts an optional `migrationLock` and verifies it before the migration runner executes. Rule 5 (applied D1 checksum) remains `MigrationRunner`'s existing responsibility. Rule 8 (a lock change without a corresponding migration change) is a git/CI-history check and is not implemented by this module; it still belongs in the eventual CI gate below.
+Architecture contract for production migration integrity. Initial implementation exists in `packages/database/src/migration-lock.ts` (`generateMigrationLock`, `verifyMigrationLock`), covering verification rules 1-4 below, with a generated manifest committed at `migrations/migration-lock.json`. `packages/runtime/src/boot.ts` accepts an optional `migrationLock` and verifies it before the migration runner executes. Rule 5 (applied D1 checksum) remains `MigrationRunner`'s existing responsibility. The repository-level `scripts/verify-migration-lock.mjs` independently verifies the SQL files and manifest, and CI invokes it with a Git base SHA to enforce rule 8.
 
 ## Problem
 
@@ -42,6 +42,7 @@ Migration execution must not rely on application-level read/write races. Deploym
 ## CI gate
 
 The eventual CI pipeline must verify:
+
 ```
 migration source
 → parse definitions
@@ -51,7 +52,8 @@ migration source
 → typecheck/tests
 → build
 ```
-A failure must stop deployment. `verifyMigrationLock` implements the "compare lock manifest" and "verify sequence" steps for a given set of migration definitions; wiring an actual CI job around it (including rule 8's git-history check) is still open.
+
+A failure stops the CI pipeline before typechecking and build. `verifyMigrationLock` implements the in-process "compare lock manifest" and "verify sequence" steps for runtime boot; `npm run migration:check:changes` independently checks the committed source files and enforces the Git-history rule in CI.
 
 ## Scope boundary
 

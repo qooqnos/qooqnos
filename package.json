@@ -10,6 +10,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
+    "migration:check": "node scripts/verify-migration-lock.mjs",
+    "migration:check:changes": "node scripts/verify-migration-lock.mjs --check-changes",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",

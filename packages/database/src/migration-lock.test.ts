@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  generateMigrationLock,
-  verifyMigrationLock,
-  MigrationLockError,
-  type MigrationDefinition,
-} from "./index";
+import { generateMigrationLock, verifyMigrationLock, MigrationLockError, type MigrationDefinition } from "./index";
 
 function definition(overrides: Partial<MigrationDefinition> = {}): MigrationDefinition {
   return {
@@ -84,5 +79,16 @@ describe("verifyMigrationLock", () => {
     const renamedModule = [definition({ moduleId: "renamed" })];
 
     expect(() => verifyMigrationLock(renamedModule, manifest)).toThrow(MigrationLockError);
+  });
+
+  it("rejects a filename mismatch", () => {
+    const definitions = [definition()];
+    const manifest = generateMigrationLock(definitions);
+    const invalid = {
+      ...manifest,
+      migrations: manifest.migrations.map((entry) => ({ ...entry, filename: "0001_changed.sql" })),
+    };
+
+    expect(() => verifyMigrationLock(definitions, invalid)).toThrow(MigrationLockError);
   });
 });

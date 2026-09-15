@@ -46,15 +46,13 @@ export function generateMigrationLock(
 ): MigrationLockManifest {
   const migrations = [...definitions]
     .sort((a, b) => a.version - b.version)
-    .map(
-      (definition): MigrationLockEntry => ({
-        id: definition.id,
-        version: definition.version,
-        moduleId: definition.moduleId,
-        checksum: definition.checksum,
-        filename: `${definition.id}.sql`,
-      }),
-    );
+    .map((definition): MigrationLockEntry => ({
+      id: definition.id,
+      version: definition.version,
+      moduleId: definition.moduleId,
+      checksum: definition.checksum,
+      filename: `${definition.id}.sql`,
+    }));
   return { generatedAt: now(), migrations };
 }
 
@@ -110,6 +108,9 @@ export function verifyMigrationLock(
     }
     if (lockEntry.version !== definition.version || lockEntry.moduleId !== definition.moduleId) {
       throw new MigrationLockError(`Migration ${definition.id} identity mismatch between source and lock manifest`);
+    }
+    if (lockEntry.filename !== `${definition.id}.sql`) {
+      throw new MigrationLockError(`Migration ${definition.id} filename mismatch between source and lock manifest`);
     }
     if (lockEntry.checksum !== definition.checksum) {
       throw new MigrationLockError(
