@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
+    { "path": "./apps/api" },
     { "path": "./packages/core" },
     { "path": "./packages/database" },
     { "path": "./packages/i18n" },
