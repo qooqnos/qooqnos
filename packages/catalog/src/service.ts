@@ -12,7 +12,7 @@ export interface CatalogServiceOptions {
 export class CatalogService {
   constructor(private readonly options: CatalogServiceOptions) {}
 
-  async createProduct(context: RequestContext, command: Omit<CreateProductInput, "id" | "organizationId" | "now">): Promise<ProductRecord> {
+  async createProduct(context: RequestContext, command: Omit<CreateProductInput, "id" | "now">): Promise<ProductRecord> {
     await this.authorize(context, "catalog.product.create");
     validateText(command.name, "name");
     return this.options.repository.createProduct({
@@ -47,7 +47,7 @@ export class CatalogService {
     await this.options.authorization.assert({
       context,
       permission: "catalog.offering.publish",
-      resource: { tenantId: context.tenantId, workspaceId: context.workspaceId },
+      resource: { tenantId: current.businessId, workspaceId: context.workspaceId },
       requireAuthentication: true,
       requireWorkspace: true,
     });
