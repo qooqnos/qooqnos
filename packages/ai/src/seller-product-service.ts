@@ -1,5 +1,5 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
-import type { AIRequest, AIResult, SellerProductDraft } from "./types";
+import type { AIResult, SellerProductDraft } from "./types";
 import type { AIRuntimeClient } from "./runtime-client";
 
 export const SELLER_AI_OPERATION_TYPES = {
@@ -11,8 +11,8 @@ export const SELLER_AI_OPERATION_TYPES = {
 
 export interface SellerProductSessionRepository {
   create(input: { readonly id: EntityId; readonly context: RequestContext; readonly now: string }): Promise<void>;
-  addInput(input: { readonly sessionId: EntityId; readonly mediaAssetId?: EntityId; readonly rawText?: string; readonly now: string }): Promise<void>;
-  saveDraft(input: { readonly id: EntityId; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly now: string }): Promise<void>;
+  addInput(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly mediaAssetId?: EntityId; readonly rawText?: string; readonly now: string }): Promise<void>;
+  saveDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly now: string }): Promise<void>;
   getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null>;
 }
 
@@ -34,13 +34,13 @@ export class SellerProductService {
 
   async addInput(context: RequestContext, sessionId: EntityId, input: { readonly mediaAssetId?: EntityId; readonly rawText?: string }): Promise<void> {
     if (!input.mediaAssetId && !input.rawText?.trim()) throw new Error("Seller product input requires media or raw text");
-    await this.options.repository.addInput({ sessionId, ...input, rawText: input.rawText?.trim(), now: this.options.now() });
+    await this.options.repository.addInput({ context, sessionId, ...input, rawText: input.rawText?.trim(), now: this.options.now() });
   }
 
   async generateDraft<T extends SellerProductDraft>(
     context: RequestContext,
     sessionId: EntityId,
-    request: Omit<AIRequest, "context" | "sessionId" | "operationType" | "operationVersion">,
+    request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId">,
   ): Promise<AIResult<T>> {
     const result = await this.options.runtime.execute<T>({
       ...request,
@@ -51,7 +51,7 @@ export class SellerProductService {
     });
     if (result.output) {
       await this.options.repository.saveDraft({
-        id: this.options.id(),
+        context,
         sessionId,
         version: result.output.version,
         draft: result.output,
