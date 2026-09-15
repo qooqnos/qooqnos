@@ -1,6 +1,6 @@
 import { BusinessService, BusinessRepository } from "@qooqnos/business";
 import { CatalogService, CatalogRepository } from "@qooqnos/catalog";
-import { AppError, brandId } from "@qooqnos/core";
+import { AppError, brandId, type EntityId, type RequestId } from "@qooqnos/core";
 import { AuthorizationRepository, CatalogCommandRepository } from "@qooqnos/database";
 import type { D1Database } from "@qooqnos/database";
 import { SessionRepository, sha256Hex } from "@qooqnos/database";
@@ -183,6 +183,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
         ...command,
         idempotencyKey,
         requestFingerprint: await sha256Hex(stableStringify(command)),
+        businessId: brandId<"EntityId">(command.businessId),
       });
       return json({ data: result }, 201, context.requestId);
     },
@@ -203,14 +204,14 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
   return router;
 }
 
-function requiredIdempotencyKey(request: Request, requestId: string): string {
+function requiredIdempotencyKey(request: Request, requestId: RequestId): string {
   const value = request.headers.get("idempotency-key")?.trim();
   if (!value) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is required.", requestId });
   if (value.length > 200) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is too long.", requestId });
   return value;
 }
 
-async function parseJsonCommand<T>(request: Request, guard: (value: unknown) => value is T, message: string, requestId: string): Promise<T> {
+async function parseJsonCommand<T>(request: Request, guard: (value: unknown) => value is T, message: string, requestId: RequestId): Promise<T> {
   let command: unknown;
   try {
     command = await request.json();
