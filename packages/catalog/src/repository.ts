@@ -87,8 +87,7 @@ export class CatalogRepository extends Repository {
               p.created_at AS createdAt, p.updated_at AS updatedAt
        FROM products p
        INNER JOIN businesses b ON b.id = p.business_id
-       WHERE p.id = ? AND b.organization_id = ? AND b.workspace_id = ?
-       LIMIT 1`,
+       WHERE p.id = ? AND b.organization_id = ? AND b.workspace_id = ? LIMIT 1`,
       id, organizationId, workspaceId,
     );
   }
@@ -101,10 +100,8 @@ export class CatalogRepository extends Repository {
               o.title, o.description, o.service_id AS serviceId, o.product_id AS productId,
               o.status, o.publication_status AS publicationStatus,
               o.created_at AS createdAt, o.updated_at AS updatedAt
-       FROM offerings o
-       INNER JOIN businesses b ON b.id = o.business_id
-       WHERE o.id = ? AND b.organization_id = ? AND b.workspace_id = ?
-       LIMIT 1`,
+       FROM offerings o INNER JOIN businesses b ON b.id = o.business_id
+       WHERE o.id = ? AND b.organization_id = ? AND b.workspace_id = ? LIMIT 1`,
       id, organizationId, workspaceId,
     );
   }
@@ -127,34 +124,26 @@ export class CatalogRepository extends Repository {
     const sku = input.sku?.trim() || null;
     if (sku) {
       const duplicate = await this.database.first<{ id: string }>(
-        `SELECT pv.id FROM product_variants pv
-         INNER JOIN products p ON p.id = pv.product_id
-         WHERE p.business_id = ? AND pv.sku = ? LIMIT 1`,
-        product.businessId, sku,
+        `SELECT pv.id FROM product_variants pv INNER JOIN products p ON p.id = pv.product_id
+         WHERE p.business_id = ? AND pv.sku = ? LIMIT 1`, product.businessId, sku,
       );
       if (duplicate) throw new DatabaseError("SKU already exists in this business");
     }
     await this.database.run(
-      `INSERT INTO product_variants
-       (id, product_id, sku, attributes_json, status, created_at, updated_at)
+      `INSERT INTO product_variants (id, product_id, sku, attributes_json, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, 'draft', ?, ?)`,
       input.id, input.productId, sku, input.attributes ? JSON.stringify(input.attributes) : null, input.now, input.now,
     );
     const record = await this.database.first<ProductVariantRow>(
-      `SELECT id, product_id AS productId, sku, attributes_json AS attributesJson,
-              status, created_at AS createdAt, updated_at AS updatedAt
-       FROM product_variants WHERE id = ? LIMIT 1`,
+      `SELECT id, product_id AS productId, sku, attributes_json AS attributesJson, status,
+              created_at AS createdAt, updated_at AS updatedAt FROM product_variants WHERE id = ? LIMIT 1`,
       input.id,
     );
     if (!record) throw new DatabaseError("Product variant not found after creation");
     return {
-      id: record.id,
-      productId: record.productId,
-      sku: record.sku,
+      id: record.id, productId: record.productId, sku: record.sku,
       attributes: record.attributesJson ? JSON.parse(record.attributesJson) as Readonly<Record<string, unknown>> : null,
-      status: record.status,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
+      status: record.status, createdAt: record.createdAt, updatedAt: record.updatedAt,
     };
   }
 
@@ -165,9 +154,8 @@ export class CatalogRepository extends Repository {
     if (input.productId) await this.assertProductBelongsToBusiness(input.productId, input.businessId);
     if (input.serviceId) await this.assertServiceBelongsToBusiness(input.serviceId, input.businessId);
     await this.database.run(
-      `INSERT INTO offerings
-       (id, business_id, offering_type, title, description, service_id, product_id,
-        status, publication_status, created_at, updated_at)
+      `INSERT INTO offerings (id, business_id, offering_type, title, description, service_id, product_id,
+       status, publication_status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', 'unpublished', ?, ?)`,
       input.id, input.businessId, input.offeringType, input.title, input.description ?? null,
       input.serviceId ?? null, input.productId ?? null, input.now, input.now,
@@ -179,17 +167,12 @@ export class CatalogRepository extends Repository {
     const current = await this.getOffering(context, id);
     if (!current) throw new DatabaseError("Offering not found");
     if (status === "published") throw new DatabaseError("Offering publication requires the canonical publication policy");
-    await this.database.run(
-      `UPDATE offerings SET publication_status = ?, updated_at = ? WHERE id = ? AND business_id = ?`,
-      status, now, id, current.businessId,
-    );
+    await this.database.run(`UPDATE offerings SET publication_status = ?, updated_at = ? WHERE id = ? AND business_id = ?`, status, now, id, current.businessId);
     return this.requireOffering(id, current.businessId);
   }
 
   private async assertBusiness(businessId: EntityId): Promise<void> {
-    const business = await this.database.first<{ id: string }>(
-      `SELECT id FROM businesses WHERE id = ? AND status IN ('draft','active') LIMIT 1`, businessId,
-    );
+    const business = await this.database.first<{ id: string }>(`SELECT id FROM businesses WHERE id = ? AND status IN ('draft','active') LIMIT 1`, businessId);
     if (!business) throw new DatabaseError("Business is not available for catalog changes");
   }
 
@@ -204,21 +187,13 @@ export class CatalogRepository extends Repository {
   }
 
   private async requireProduct(id: EntityId, businessId: EntityId): Promise<ProductRecord> {
-    const record = await this.database.first<ProductRecord>(
-      `SELECT id, business_id AS businessId, name, description, status, created_at AS createdAt, updated_at AS updatedAt
-       FROM products WHERE id = ? AND business_id = ? LIMIT 1`, id, businessId,
-    );
+    const record = await this.database.first<ProductRecord>(`SELECT id, business_id AS businessId, name, description, status, created_at AS createdAt, updated_at AS updatedAt FROM products WHERE id = ? AND business_id = ? LIMIT 1`, id, businessId);
     if (!record) throw new DatabaseError("Product not found after creation");
     return record;
   }
 
   private async requireOffering(id: EntityId, businessId: EntityId): Promise<OfferingRecord> {
-    const record = await this.database.first<OfferingRecord>(
-      `SELECT id, business_id AS businessId, offering_type AS offeringType, title, description,
-              service_id AS serviceId, product_id AS productId, status,
-              publication_status AS publicationStatus, created_at AS createdAt, updated_at AS updatedAt
-       FROM offerings WHERE id = ? AND business_id = ? LIMIT 1`, id, businessId,
-    );
+    const record = await this.database.first<OfferingRecord>(`SELECT id, business_id AS businessId, offering_type AS offeringType, title, description, service_id AS serviceId, product_id AS productId, status, publication_status AS publicationStatus, created_at AS createdAt, updated_at AS updatedAt FROM offerings WHERE id = ? AND business_id = ? LIMIT 1`, id, businessId);
     if (!record) throw new DatabaseError("Offering not found after creation");
     return record;
   }
