@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { brandId, type RequestContext } from "@qooqnos/core";
-import { createAIRuntime, type AIRuntimeRequest } from "./ai-runtime";
+import { createAIRuntime, type AIRuntimeRequest, type AIProviderAdapter } from "./ai-runtime";
 
 function context(): RequestContext {
   return {
@@ -31,12 +31,16 @@ function request(): AIRuntimeRequest<{ title: string }> {
   };
 }
 
+function provider(execute: AIProviderAdapter["execute"]): AIProviderAdapter {
+  return { execute };
+}
+
 describe("createAIRuntime", () => {
   it("requires authorization before the provider is invoked", async () => {
     const execute = vi.fn(async () => ({ providerId: "test", modelId: "model", output: {} }));
     const authorize = vi.fn(async () => { throw new Error("AI permission denied"); });
 
-    const runtime = createAIRuntime(execute, {
+    const runtime = createAIRuntime(provider(execute), {
       authorize,
       async checkEntitlement() { return { allowed: true }; },
       validateOutput() {},
@@ -51,7 +55,7 @@ describe("createAIRuntime", () => {
   it("blocks before provider execution when entitlement is denied", async () => {
     const execute = vi.fn(async () => ({ providerId: "test", modelId: "model", output: {} }));
 
-    const runtime = createAIRuntime(execute, {
+    const runtime = createAIRuntime(provider(execute), {
       async authorize() {},
       async checkEntitlement() { return { allowed: false, reason: "quota exhausted" }; },
       validateOutput() {},
@@ -74,7 +78,7 @@ describe("createAIRuntime", () => {
       output: { title: "Validated" },
     }));
 
-    const runtime = createAIRuntime(execute, {
+    const runtime = createAIRuntime(provider(execute), {
       async authorize() {},
       async checkEntitlement() { return { allowed: true }; },
       validateOutput,
@@ -97,7 +101,7 @@ describe("createAIRuntime", () => {
 
   it("does not expose output when safety requires abstention", async () => {
     const runtime = createAIRuntime(
-      async () => ({ providerId: "test-provider", modelId: "test-model", output: { title: "Unsafe" } }),
+      provider(async () => ({ providerId: "test-provider", modelId: "test-model", output: { title: "Unsafe" } })),
       {
         async authorize() {},
         async checkEntitlement() { return { allowed: true }; },
