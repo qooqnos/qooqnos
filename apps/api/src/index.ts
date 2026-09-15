@@ -91,7 +91,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
         );
       }
 
-      const result = await checkDatabase(undefined);
+      const result = await checkDatabase(database);
       const ready = result.database === "ok" && result.migrationRegistry === "ok";
       return json(
         { status: ready ? "ready" : "not_ready", checks: { runtime: "ok", ...result }, timestamp: new Date().toISOString() },
