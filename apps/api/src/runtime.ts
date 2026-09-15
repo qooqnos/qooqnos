@@ -4,14 +4,16 @@ import { getDatabase } from "./database";
 import type { ApiEnv } from "./env";
 import { migrationSources } from "./migrations";
 import migrationLockJson from "../../migrations/migration-lock.json";
-import type { MigrationLockManifest } from "@qooqnos/database";
+import type { D1Database, MigrationLockManifest } from "@qooqnos/database";
 
-let bootPromise: Promise<RuntimeBootResult> | undefined;
+const bootPromises = new WeakMap<D1Database, Promise<RuntimeBootResult>>();
 
 export function ensureRuntimeBoot(env: ApiEnv): Promise<RuntimeBootResult> {
   const database = getDatabase(env);
   if (!database) return Promise.reject(new Error("D1 database binding is not configured"));
-  if (bootPromise) return bootPromise;
+
+  const existing = bootPromises.get(database);
+  if (existing) return existing;
 
   const requestContext = createRequestContext({
     module: "platform",
@@ -27,10 +29,11 @@ export function ensureRuntimeBoot(env: ApiEnv): Promise<RuntimeBootResult> {
     requestContext,
   });
 
-  bootPromise = boot.start().catch((error) => {
-    bootPromise = undefined;
+  const promise = boot.start().catch((error) => {
+    bootPromises.delete(database);
     throw error;
   });
 
-  return bootPromise;
+  bootPromises.set(database, promise);
+  return promise;
 }
