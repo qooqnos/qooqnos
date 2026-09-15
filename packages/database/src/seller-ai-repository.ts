@@ -112,6 +112,80 @@ export class SellerAIRepository extends Repository {
     return record;
   }
 
+  async reviewDraft(context: RequestContext, sessionId: EntityId, version: number, now: string): Promise<SellerAIDraftRecord> {
+    const session = await this.getSession(context, sessionId);
+    if (!session) throw new DatabaseError("Seller AI session not found");
+    if (session.currentDraftVersion !== version) throw new DatabaseError("Seller AI draft version is stale");
+    const result = await this.database.run(
+      `UPDATE seller_ai_drafts
+       SET status = 'seller_review', updated_at = ?
+       WHERE session_id = ? AND version = ? AND status = 'draft'`,
+      now,
+      sessionId,
+      version,
+    );
+    if (result.meta?.changes !== undefined && result.meta.changes !== 1) throw new DatabaseError("Seller AI draft is not reviewable");
+    await this.database.run(
+      `UPDATE seller_ai_creation_sessions SET status = 'seller_review', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?`,
+      now,
+      sessionId,
+      session.organizationId,
+      session.workspaceId,
+    );
+    const draft = await this.database.first<SellerAIDraftRecord>(
+      `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt
+       FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`,
+      sessionId,
+      version,
+    );
+    if (!draft) throw new DatabaseError("Seller AI draft not found after review transition");
+    return draft;
+  }
+
+  async confirmDraft(context: RequestContext, sessionId: EntityId, version: number, now: string): Promise<SellerAIDraftRecord> {
+    const session = await this.getSession(context, sessionId);
+    if (!session) throw new DatabaseError("Seller AI session not found");
+    if (session.currentDraftVersion !== version) throw new DatabaseError("Seller AI draft version is stale");
+    const result = await this.database.run(
+      `UPDATE seller_ai_drafts
+       SET status = 'confirmed', updated_at = ?
+       WHERE session_id = ? AND version = ? AND status = 'seller_review'`,
+      now,
+      sessionId,
+      version,
+    );
+    if (result.meta?.changes !== undefined && result.meta.changes !== 1) throw new DatabaseError("Seller AI draft must be reviewed before confirmation");
+    await this.database.run(
+      `UPDATE seller_ai_creation_sessions SET status = 'confirmed', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?`,
+      now,
+      sessionId,
+      session.organizationId,
+      session.workspaceId,
+    );
+    const draft = await this.database.first<SellerAIDraftRecord>(
+      `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt
+       FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`,
+      sessionId,
+      version,
+    );
+    if (!draft) throw new DatabaseError("Seller AI draft not found after confirmation");
+    return draft;
+  }
+
+  async cancelSession(context: RequestContext, sessionId: EntityId, now: string): Promise<boolean> {
+    const session = await this.getSession(context, sessionId);
+    if (!session) throw new DatabaseError("Seller AI session not found");
+    if (["published", "cancelled", "expired"].includes(session.status)) return false;
+    const result = await this.database.run(
+      `UPDATE seller_ai_creation_sessions SET status = 'cancelled', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND status NOT IN ('published','cancelled','expired')`,
+      now,
+      sessionId,
+      session.organizationId,
+      session.workspaceId,
+    );
+    return result.meta?.changes === undefined ? true : result.meta.changes === 1;
+  }
+
   async getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerAIDraftRecord | null> {
     const session = await this.getSession(context, sessionId);
     if (!session || session.currentDraftVersion === 0) return null;
