@@ -22,7 +22,7 @@ export function createSellerProductSessionRepository(database: D1Database): Sell
     },
     async saveDraft(input) {
       await repository.saveDraft(input.context, {
-        id: input.id,
+        id: createId(),
         sessionId: input.sessionId,
         version: input.version,
         draftJson: JSON.stringify(input.draft),
