@@ -180,7 +180,9 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
         now: () => now,
       });
       const result = await service.createProduct(context, {
-        ...command,
+        businessId: brandId<"EntityId">(command.businessId),
+        name: command.name,
+        ...(command.description !== undefined ? { description: command.description } : {}),
         idempotencyKey,
         requestFingerprint: await sha256Hex(stableStringify(command)),
       });
