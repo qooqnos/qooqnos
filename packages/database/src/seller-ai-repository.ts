@@ -75,23 +75,17 @@ export class SellerAIRepository extends Repository {
       if (!asset) throw new DatabaseError("Media asset is outside the seller AI session scope");
     }
     if (!input.mediaAssetId && !input.rawText?.trim()) throw new DatabaseError("Seller AI input is empty");
-    await this.database.run(
-      `INSERT INTO seller_ai_inputs (id, session_id, media_asset_id, raw_text, input_hash, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      input.id,
-      input.sessionId,
-      input.mediaAssetId ?? null,
-      input.rawText ?? null,
-      input.inputHash,
-      input.now,
-    );
-    await this.database.run(
-      `UPDATE seller_ai_creation_sessions SET status = 'analyzing', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?`,
-      input.now,
-      input.sessionId,
-      session.organizationId,
-      session.workspaceId,
-    );
+    await this.database.transaction([
+      {
+        sql: `INSERT INTO seller_ai_inputs (id, session_id, media_asset_id, raw_text, input_hash, created_at)
+              VALUES (?, ?, ?, ?, ?, ?)`,
+        params: [input.id, input.sessionId, input.mediaAssetId ?? null, input.rawText ?? null, input.inputHash, input.now],
+      },
+      {
+        sql: `UPDATE seller_ai_creation_sessions SET status = 'analyzing', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?`,
+        params: [input.now, input.sessionId, session.organizationId, session.workspaceId],
+      },
+    ]);
   }
 
   async saveDraft(context: RequestContext, input: { readonly id: EntityId; readonly sessionId: EntityId; readonly version: number; readonly draftJson: string; readonly now: string }): Promise<SellerAIDraftRecord> {
@@ -116,29 +110,23 @@ export class SellerAIRepository extends Repository {
     const session = await this.getSession(context, sessionId);
     if (!session) throw new DatabaseError("Seller AI session not found");
     if (session.currentDraftVersion !== version) throw new DatabaseError("Seller AI draft version is stale");
-    const result = await this.database.run(
-      `UPDATE seller_ai_drafts
-       SET status = 'seller_review', updated_at = ?
-       WHERE session_id = ? AND version = ? AND status = 'draft'`,
-      now,
-      sessionId,
-      version,
-    );
-    if (result.meta?.changes !== undefined && result.meta.changes !== 1) throw new DatabaseError("Seller AI draft is not reviewable");
-    await this.database.run(
-      `UPDATE seller_ai_creation_sessions SET status = 'seller_review', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?`,
-      now,
-      sessionId,
-      session.organizationId,
-      session.workspaceId,
-    );
+    await this.database.transaction([
+      {
+        sql: `UPDATE seller_ai_drafts SET status = 'seller_review', updated_at = ? WHERE session_id = ? AND version = ? AND status = 'draft'`,
+        params: [now, sessionId, version],
+      },
+      {
+        sql: `UPDATE seller_ai_creation_sessions SET status = 'seller_review', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND current_draft_version = ?`,
+        params: [now, sessionId, session.organizationId, session.workspaceId, version],
+      },
+    ]);
     const draft = await this.database.first<SellerAIDraftRecord>(
       `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt
        FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`,
       sessionId,
       version,
     );
-    if (!draft) throw new DatabaseError("Seller AI draft not found after review transition");
+    if (!draft || draft.status !== "seller_review") throw new DatabaseError("Seller AI draft is not reviewable");
     return draft;
   }
 
@@ -146,29 +134,23 @@ export class SellerAIRepository extends Repository {
     const session = await this.getSession(context, sessionId);
     if (!session) throw new DatabaseError("Seller AI session not found");
     if (session.currentDraftVersion !== version) throw new DatabaseError("Seller AI draft version is stale");
-    const result = await this.database.run(
-      `UPDATE seller_ai_drafts
-       SET status = 'confirmed', updated_at = ?
-       WHERE session_id = ? AND version = ? AND status = 'seller_review'`,
-      now,
-      sessionId,
-      version,
-    );
-    if (result.meta?.changes !== undefined && result.meta.changes !== 1) throw new DatabaseError("Seller AI draft must be reviewed before confirmation");
-    await this.database.run(
-      `UPDATE seller_ai_creation_sessions SET status = 'confirmed', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?`,
-      now,
-      sessionId,
-      session.organizationId,
-      session.workspaceId,
-    );
+    await this.database.transaction([
+      {
+        sql: `UPDATE seller_ai_drafts SET status = 'confirmed', updated_at = ? WHERE session_id = ? AND version = ? AND status = 'seller_review'`,
+        params: [now, sessionId, version],
+      },
+      {
+        sql: `UPDATE seller_ai_creation_sessions SET status = 'confirmed', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND current_draft_version = ?`,
+        params: [now, sessionId, session.organizationId, session.workspaceId, version],
+      },
+    ]);
     const draft = await this.database.first<SellerAIDraftRecord>(
       `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt
        FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`,
       sessionId,
       version,
     );
-    if (!draft) throw new DatabaseError("Seller AI draft not found after confirmation");
+    if (!draft || draft.status !== "confirmed") throw new DatabaseError("Seller AI draft must be reviewed before confirmation");
     return draft;
   }
 
