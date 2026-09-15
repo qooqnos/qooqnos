@@ -1,4 +1,4 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
+import type { RequestContext } from "@qooqnos/core";
 
 export type AIDataClassification = "public" | "internal" | "confidential" | "personal" | "sensitive" | "regulated";
 export type AIOperationStatus = "succeeded" | "failed" | "blocked" | "abstained";
@@ -83,9 +83,7 @@ export function createAIRuntime(provider: AIProviderAdapter, policy: AIRuntimePo
     async execute<TOutput, TInput>(request: AIRuntimeRequest<TInput>): Promise<AIRuntimeResult<TOutput>> {
       await policy.authorize(request.context, request.operationType);
       const entitlement = await policy.checkEntitlement(request.context, request.operationType);
-      if (!entitlement.allowed) {
-        return blockedResult(request, entitlement.reason ?? "AI entitlement denied");
-      }
+      if (!entitlement.allowed) return blockedResult(request, entitlement.reason ?? "AI entitlement denied");
 
       const response = await provider.execute({
         operationType: request.operationType,
