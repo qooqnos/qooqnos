@@ -44,7 +44,7 @@ describe("createAIRuntime", () => {
       authorize,
       async checkEntitlement() { return { allowed: true }; },
       validateOutput() {},
-      async validateSafety() { return "allowed"; },
+      async validateSafety() { return "allowed" as const; },
     });
 
     await expect(runtime.execute(request())).rejects.toThrow("AI permission denied");
@@ -59,7 +59,7 @@ describe("createAIRuntime", () => {
       async authorize() {},
       async checkEntitlement() { return { allowed: false, reason: "quota exhausted" }; },
       validateOutput() {},
-      async validateSafety() { return "allowed"; },
+      async validateSafety() { return "allowed" as const; },
     });
 
     const result = await runtime.execute(request());
@@ -106,7 +106,7 @@ describe("createAIRuntime", () => {
         async authorize() {},
         async checkEntitlement() { return { allowed: true }; },
         validateOutput() {},
-        async validateSafety() { return "abstained"; },
+        async validateSafety() { return "abstained" as const; },
       },
     );
 
