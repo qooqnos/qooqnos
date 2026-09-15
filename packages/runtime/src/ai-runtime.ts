@@ -81,6 +81,14 @@ export interface AIRuntime {
 export function createAIRuntime(provider: AIProviderAdapter, policy: AIRuntimePolicy): AIRuntime {
   return {
     async execute<TOutput, TInput>(request: AIRuntimeRequest<TInput>): Promise<AIRuntimeResult<TOutput>> {
+      if (!request.operationId.trim()) throw new Error("AI operationId is required");
+      if (!request.operationType.trim()) throw new Error("AI operationType is required");
+      if (request.operationVersion < 1) throw new Error("AI operationVersion must be positive");
+      if (!request.idempotencyKey.trim()) throw new Error("AI idempotencyKey is required");
+      if (!request.promptVersion.trim() || !request.outputSchemaVersion.trim() || !request.policyVersion.trim()) {
+        throw new Error("AI prompt, schema and policy versions are required");
+      }
+
       await policy.authorize(request.context, request.operationType);
       const entitlement = await policy.checkEntitlement(request.context, request.operationType);
       if (!entitlement.allowed) return blockedResult(request, entitlement.reason ?? "AI entitlement denied");
