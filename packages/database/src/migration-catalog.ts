@@ -56,13 +56,18 @@ export function parseMigrationPath(path: string): ParsedMigrationPath {
     throw new Error(`Invalid migration filename: ${path}`);
   }
 
-  const version = Number(match[1]);
+  const versionSegment = match[1];
+  const moduleId = match[2];
+  if (versionSegment === undefined || moduleId === undefined) {
+    throw new Error(`Invalid migration filename: ${path}`);
+  }
+
+  const version = Number(versionSegment);
   if (!Number.isSafeInteger(version) || version < 1) {
     throw new Error(`Invalid migration version in filename: ${path}`);
   }
 
   const id = filename.slice(0, -4);
-  const moduleId = match[2];
   return { id, version, moduleId };
 }
 

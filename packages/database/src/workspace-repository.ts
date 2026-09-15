@@ -1,4 +1,4 @@
-import { DatabaseError, D1Database, Repository, RepositoryContext } from "./index";
+import { DatabaseError, D1Database, Repository, RepositoryContext } from "./client";
 
 export type WorkspaceStatus = "active" | "suspended" | "archived";
 export type MembershipStatus = "active" | "invited" | "suspended" | "removed";

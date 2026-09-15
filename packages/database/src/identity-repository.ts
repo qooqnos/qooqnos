@@ -1,4 +1,4 @@
-import { DatabaseError, D1Database, Repository } from "./index";
+import { DatabaseError, D1Database, Repository } from "./client";
 
 export type UserStatus = "active" | "suspended" | "deleted";
 

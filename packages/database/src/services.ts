@@ -1,17 +1,17 @@
-import { D1Database, DatabaseError } from "./index";
+import { D1Database, DatabaseError } from "./client";
 
 export interface AuditInput {
   id: string;
-  actorId?: string;
-  organizationId?: string;
-  workspaceId?: string;
+  actorId?: string | undefined;
+  organizationId?: string | undefined;
+  workspaceId?: string | undefined;
   action: string;
-  targetType?: string;
-  targetId?: string;
+  targetType?: string | undefined;
+  targetId?: string | undefined;
   outcome: "success" | "failure" | "denied";
-  requestId?: string;
-  correlationId?: string;
-  metadataJson?: string;
+  requestId?: string | undefined;
+  correlationId?: string | undefined;
+  metadataJson?: string | undefined;
   createdAt: string;
 }
 
@@ -83,10 +83,10 @@ export interface OutboxInput {
   id: string;
   eventType: string;
   eventVersion: number;
-  aggregateType?: string;
-  aggregateId?: string;
-  organizationId?: string;
-  workspaceId?: string;
+  aggregateType?: string | undefined;
+  aggregateId?: string | undefined;
+  organizationId?: string | undefined;
+  workspaceId?: string | undefined;
   payloadJson: string;
   availableAt: string;
   occurredAt: string;

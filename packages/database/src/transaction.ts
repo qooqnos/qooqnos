@@ -1,4 +1,4 @@
-import { D1Database, type D1ResultLike } from "./index";
+import { D1Database, type D1ResultLike } from "./client";
 
 export interface TransactionStatement {
   readonly sql: string;

@@ -1,4 +1,4 @@
-import { D1Database, DatabaseError } from "./index";
+import { D1Database, DatabaseError } from "./client";
 
 export interface MigrationDefinition {
   readonly id: string;
@@ -44,7 +44,8 @@ export class MigrationRunner {
     await validateAppliedMigrations(applied, this.migrations);
     const appliedByVersion = new Map(applied.map((migration) => [migration.version, migration]));
     const results: MigrationResult[] = [];
-    let expectedVersion = applied.length === 0 ? 1 : applied[applied.length - 1].version + 1;
+    const lastApplied = applied[applied.length - 1];
+    let expectedVersion = lastApplied ? lastApplied.version + 1 : 1;
 
     for (const migration of this.migrations) {
       const existing = appliedByVersion.get(migration.version);
