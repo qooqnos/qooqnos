@@ -117,38 +117,32 @@ Historical transaction snapshots preserve title, quantity, price, tax, discount,
 | `agents` | AI | agent definition/configuration |
 | `ai_conversations` | AI | AI interaction context |
 | `ai_messages` | AI | AI messages |
-| `ai_runs` | AI | model execution metadata |
-| `ai_tool_calls` | AI | typed capability/tool invocation |
+| `ai_operations` | AI Runtime | canonical model operation identity/lifecycle |
+| `ai_provider_attempts` | AI Runtime | provider execution attempts |
+| `ai_runtime_results` | AI Runtime | normalized validated execution results |
 | `ai_memories` | AI | explicitly approved durable memory |
 | `workflows` | Automation | automation definition |
 | `workflow_triggers` | Automation | event/condition triggers |
 | `workflow_actions` | Automation | capability actions |
 | `workflow_executions` | Automation | execution lifecycle |
 
-AI and Automation never bypass Domain Capabilities to mutate authoritative state.
-
-### Billing / Media / Integration / Platform
+### AI Runtime Registry / Governance
 
 | Table | Owner | Responsibility |
 |---|---|---|
-| `plans` | Billing | plan definition |
-| `subscriptions` | Billing | subscription lifecycle |
-| `entitlements` | Billing | tenant/user service rights |
-| `usage_records` | Billing | metered usage |
-| `media_assets` | Media | stored media metadata |
-| `media_variants` | Media | derived media variants |
-| `media_attachments` | Media | generic resource attachment |
-| `integrations` | Integration | external integration definition |
-| `external_accounts` | Integration | external account reference |
-| `webhooks` | Integration | webhook registration/delivery state |
-| `sync_jobs` | Integration | synchronization execution |
-| `modules` | Platform | installed module metadata |
-| `module_versions` | Platform | module/runtime/schema compatibility |
-| `tenant_modules` | Platform | tenant module enablement |
-| `feature_flags` | Platform | controlled rollout |
-| `audit_events` | Platform | immutable audit trail |
-| `idempotency_records` | Platform | idempotent command state |
-| `outbox_events` | Platform | reliable event publication |
+| `ai_operation_types` | AI Runtime | semantic operation taxonomy/version |
+| `ai_models` | AI Runtime Governance | approved model registry |
+| `ai_providers` | AI Runtime Governance | approved provider registry |
+| `ai_model_routing_decisions` | AI Runtime Governance | reproducible routing evidence |
+| `ai_prompts` | AI Runtime | prompt logical identity |
+| `ai_prompt_versions` | AI Runtime | immutable prompt versions |
+| `ai_schemas` | AI Runtime | output/input schema logical identity |
+| `ai_schema_versions` | AI Runtime | immutable schema versions |
+| `ai_policies` | AI Policy/Governance | AI policy metadata/version |
+| `ai_policy_decisions` | AI Policy/Governance | execution policy decisions |
+| `ai_usage_records` | AI Runtime | canonical execution usage telemetry |
+
+These tables represent the canonical Runtime data dictionary. They are not a second AI domain model. Exact physical decomposition may combine or separate records only when semantic ownership and one-to-one mapping remain explicit.
 
 ## 3. Schema field contract
 
@@ -181,6 +175,7 @@ No one layer is a substitute for another.
 9. `Request` is a need; `Match` is an evaluated candidate relation; `Recommendation` is a presentation/selection result.
 10. `Permission` is access control; `Entitlement` is a commercial/service right.
 11. `Capability` is reusable behavior; API, AI Tool, Workflow, UI, and Plugin are consumers/adapters.
+12. AI Runtime records are operational execution records and must not be duplicated as feature-local `ai_runs`, `ai_requests`, or provider-specific ledgers.
 
 ### Explicit unresolved decisions
 
@@ -612,11 +607,13 @@ Representative canonical events:
 `commerce.refund.created`
 `trust.review.created`
 `trust.verification.completed`
-`ai.run.started`
-`ai.run.completed`
+`ai.operation.started`
+`ai.operation.completed`
 `ai.tool.called`
 `billing.subscription.created`
 `billing.subscription.cancelled`
+
+Legacy event names such as `ai.run.started` and `ai.run.completed` are compatibility aliases only; they must not imply a second execution ledger.
 
 Event consumers must be idempotent and must not assume delivery is exactly once.
 
@@ -625,7 +622,7 @@ Event consumers must be idempotent and must not assume delivery is exactly once.
 There are three logical data layers:
 
 1. **Canonical Domain Data** — source of truth.
-2. **Operational Data** — sessions, idempotency, outbox, audit, AI runs, jobs.
+2. **Operational Data** — sessions, idempotency, outbox, audit, AI Runtime execution records, jobs.
 3. **Projection Data** — search, recommendations, analytics, AI context.
 
 A projection must record enough source/version metadata to be rebuilt. A projection cannot be used as the authoritative state merely because it is faster to query.
@@ -634,4 +631,4 @@ A projection must record enough source/version metadata to be rebuilt. A project
 
 The architecture is considered violated if any new feature introduces a second implementation of an existing capability, a second source of truth, a direct cross-module repository/table dependency, an AI direct-write path around domain rules, or a plugin implementation of an already-owned core capability.
 
-This document and `docs/DATABASE_MODEL.md` together define the pre-implementation canonical architecture baseline.
+This document, `docs/DATABASE_MODEL.md`, `docs/AI_RUNTIME_ARCHITECTURE.md`, and `docs/AI_RUNTIME_DATA_DICTIONARY.md` together define the pre-implementation canonical architecture baseline.
