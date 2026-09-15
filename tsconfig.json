@@ -10,6 +10,7 @@
     { "path": "./packages/onboarding" },
     { "path": "./packages/runtime" },
     { "path": "./packages/media" },
-    { "path": "./packages/discovery" }
+    { "path": "./packages/discovery" },
+    { "path": "./packages/ai" }
   ]
 }
