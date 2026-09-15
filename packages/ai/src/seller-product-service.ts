@@ -9,8 +9,20 @@ export const SELLER_AI_OPERATION_TYPES = {
   validate: "seller.product.validate_ai",
 } as const;
 
+export interface SellerProductSessionRecord {
+  readonly id: EntityId;
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId;
+  readonly actorId: EntityId | null;
+  readonly status: string;
+  readonly currentDraftVersion: number;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export interface SellerProductSessionRepository {
   create(input: { readonly id: EntityId; readonly context: RequestContext; readonly now: string }): Promise<void>;
+  getSession(context: RequestContext, sessionId: EntityId): Promise<SellerProductSessionRecord | null>;
   addInput(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly mediaAssetId?: EntityId | undefined; readonly rawText?: string | undefined; readonly now: string }): Promise<void>;
   saveDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly now: string }): Promise<void>;
   getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null>;
@@ -19,32 +31,65 @@ export interface SellerProductSessionRepository {
   cancelSession(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly now: string }): Promise<boolean>;
 }
 
-export interface SellerProductServiceOptions {
+export interface SellerProductSessionServiceOptions {
   readonly repository: SellerProductSessionRepository;
-  readonly runtime: AIRuntimeClient;
   readonly id: () => EntityId;
   readonly now: () => string;
 }
 
-export class SellerProductService {
-  constructor(private readonly options: SellerProductServiceOptions) {}
+export class SellerProductSessionService {
+  constructor(protected readonly sessionOptions: SellerProductSessionServiceOptions) {}
 
   async createSession(context: RequestContext): Promise<EntityId> {
-    const id = this.options.id();
-    await this.options.repository.create({ id, context, now: this.options.now() });
+    const id = this.sessionOptions.id();
+    await this.sessionOptions.repository.create({ id, context, now: this.sessionOptions.now() });
     return id;
   }
 
-  async addInput(context: RequestContext, sessionId: EntityId, input: { readonly mediaAssetId?: EntityId; readonly rawText?: string }): Promise<void> {
+  getSession(context: RequestContext, sessionId: EntityId): Promise<SellerProductSessionRecord | null> {
+    return this.sessionOptions.repository.getSession(context, sessionId);
+  }
+
+  async addInput(
+    context: RequestContext,
+    sessionId: EntityId,
+    input: { readonly mediaAssetId?: EntityId; readonly rawText?: string },
+  ): Promise<void> {
     if (!input.mediaAssetId && !input.rawText?.trim()) throw new Error("Seller product input requires media or raw text");
     const rawText = input.rawText?.trim();
-    await this.options.repository.addInput({
+    await this.sessionOptions.repository.addInput({
       context,
       sessionId,
       ...(input.mediaAssetId !== undefined ? { mediaAssetId: input.mediaAssetId } : {}),
       ...(rawText !== undefined ? { rawText } : {}),
-      now: this.options.now(),
+      now: this.sessionOptions.now(),
     });
+  }
+
+  async reviewDraft(context: RequestContext, sessionId: EntityId, version: number): Promise<void> {
+    await this.sessionOptions.repository.reviewDraft({ context, sessionId, version, now: this.sessionOptions.now() });
+  }
+
+  async confirmDraft(context: RequestContext, sessionId: EntityId, version: number): Promise<void> {
+    await this.sessionOptions.repository.confirmDraft({ context, sessionId, version, now: this.sessionOptions.now() });
+  }
+
+  async cancelSession(context: RequestContext, sessionId: EntityId): Promise<boolean> {
+    return this.sessionOptions.repository.cancelSession({ context, sessionId, now: this.sessionOptions.now() });
+  }
+
+  getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null> {
+    return this.sessionOptions.repository.getDraft(context, sessionId);
+  }
+}
+
+export interface SellerProductServiceOptions extends SellerProductSessionServiceOptions {
+  readonly runtime: AIRuntimeClient;
+}
+
+export class SellerProductService extends SellerProductSessionService {
+  constructor(private readonly productOptions: SellerProductServiceOptions) {
+    super(productOptions);
   }
 
   async generateDraft<T extends SellerProductDraft>(
@@ -52,37 +97,21 @@ export class SellerProductService {
     sessionId: EntityId,
     request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId">,
   ): Promise<AIResult<T>> {
-    const result = await this.options.runtime.execute<T>({
+    const result = await this.productOptions.runtime.execute<T>({
       ...request,
       context,
       operationType: SELLER_AI_OPERATION_TYPES.extract,
       operationVersion: 1,
     });
     if (result.output) {
-      await this.options.repository.saveDraft({
+      await this.productOptions.repository.saveDraft({
         context,
         sessionId,
         version: result.output.version,
         draft: result.output,
-        now: this.options.now(),
+        now: this.productOptions.now(),
       });
     }
     return result;
-  }
-
-  async reviewDraft(context: RequestContext, sessionId: EntityId, version: number): Promise<void> {
-    await this.options.repository.reviewDraft({ context, sessionId, version, now: this.options.now() });
-  }
-
-  async confirmDraft(context: RequestContext, sessionId: EntityId, version: number): Promise<void> {
-    await this.options.repository.confirmDraft({ context, sessionId, version, now: this.options.now() });
-  }
-
-  async cancelSession(context: RequestContext, sessionId: EntityId): Promise<boolean> {
-    return this.options.repository.cancelSession({ context, sessionId, now: this.options.now() });
-  }
-
-  getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null> {
-    return this.options.repository.getDraft(context, sessionId);
   }
 }
