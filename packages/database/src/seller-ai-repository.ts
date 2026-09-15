@@ -110,7 +110,7 @@ export class SellerAIRepository extends Repository {
     const session = await this.getSession(context, sessionId);
     if (!session) throw new DatabaseError("Seller AI session not found");
     if (session.currentDraftVersion !== version) throw new DatabaseError("Seller AI draft version is stale");
-    await this.database.transaction([
+    const results = await this.database.transaction([
       {
         sql: `UPDATE seller_ai_drafts SET status = 'seller_review', updated_at = ? WHERE session_id = ? AND version = ? AND status = 'draft'`,
         params: [now, sessionId, version],
@@ -120,6 +120,7 @@ export class SellerAIRepository extends Repository {
         params: [now, sessionId, session.organizationId, session.workspaceId, version],
       },
     ]);
+    if (results[0]?.meta?.changes !== 1 || results[1]?.meta?.changes !== 1) throw new DatabaseError("Seller AI draft is not reviewable");
     const draft = await this.database.first<SellerAIDraftRecord>(
       `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt
        FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`,
@@ -134,7 +135,7 @@ export class SellerAIRepository extends Repository {
     const session = await this.getSession(context, sessionId);
     if (!session) throw new DatabaseError("Seller AI session not found");
     if (session.currentDraftVersion !== version) throw new DatabaseError("Seller AI draft version is stale");
-    await this.database.transaction([
+    const results = await this.database.transaction([
       {
         sql: `UPDATE seller_ai_drafts SET status = 'confirmed', updated_at = ? WHERE session_id = ? AND version = ? AND status = 'seller_review'`,
         params: [now, sessionId, version],
@@ -144,6 +145,7 @@ export class SellerAIRepository extends Repository {
         params: [now, sessionId, session.organizationId, session.workspaceId, version],
       },
     ]);
+    if (results[0]?.meta?.changes !== 1 || results[1]?.meta?.changes !== 1) throw new DatabaseError("Seller AI draft must be reviewed before confirmation");
     const draft = await this.database.first<SellerAIDraftRecord>(
       `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt
        FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`,
