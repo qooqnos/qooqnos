@@ -44,6 +44,52 @@ describe("CatalogRepository", () => {
     expect(businessLookup).toContain("workspace_id = ?");
   });
 
+  it("scopes product reads through the owning business", async () => {
+    const statements: string[] = [];
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { statements.push(sql); return statement; },
+      async batch() { return []; },
+    };
+
+    const repository = new CatalogRepository(new D1Database(raw));
+    const product = await repository.getProduct(context(), brandId<"EntityId">("product-foreign"));
+
+    expect(product).toBeNull();
+    const productLookup = statements.find((sql) => sql.includes("FROM products p"));
+    expect(productLookup).toContain("INNER JOIN businesses b ON b.id = p.business_id");
+    expect(productLookup).toContain("b.organization_id = ?");
+    expect(productLookup).toContain("b.workspace_id = ?");
+  });
+
+  it("scopes offering reads through the owning business", async () => {
+    const statements: string[] = [];
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { statements.push(sql); return statement; },
+      async batch() { return []; },
+    };
+
+    const repository = new CatalogRepository(new D1Database(raw));
+    const offering = await repository.getOffering(context(), brandId<"EntityId">("offering-foreign"));
+
+    expect(offering).toBeNull();
+    const offeringLookup = statements.find((sql) => sql.includes("FROM offerings o"));
+    expect(offeringLookup).toContain("INNER JOIN businesses b ON b.id = o.business_id");
+    expect(offeringLookup).toContain("b.organization_id = ?");
+    expect(offeringLookup).toContain("b.workspace_id = ?");
+  });
+
   it("rejects product variants that resolve outside the trusted scope", async () => {
     const statements: string[] = [];
     const statement: D1PreparedStatementLike = {
