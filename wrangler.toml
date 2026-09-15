@@ -1,6 +1,6 @@
 name = "phoenix-api"
 main = "apps/api/src/index.ts"
-compatibility_date = "2026-09-16"
+compatibility_date = "2026-09-15"
 workers_dev = true
 
 [vars]
