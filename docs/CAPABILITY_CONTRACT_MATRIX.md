@@ -227,18 +227,31 @@ Channel-specific functions are adapters under the canonical notification/message
 
 AI Tool definitions map to capabilities. An AI Tool must not contain a second implementation of the domain behavior it exposes.
 
-## 16. Automation capabilities
+## 16. Seller AI Product Creation capabilities
+
+Seller AI Product Creation is an orchestration capability. It owns the creation-session workflow, not the authoritative product, media, billing, or discovery state.
 
 | Capability | Type | Owner | Scope | Dependencies | Events |
 |---|---|---|---|---|---|
-| `CAP.AUTOMATION.CREATE_WORKFLOW` | COMMAND | Automation | WORKSPACE | Access | `automation.workflow.created` |
-| `CAP.AUTOMATION.ENABLE_WORKFLOW` | COMMAND | Automation | WORKSPACE | policy | `automation.workflow.enabled` |
-| `CAP.AUTOMATION.DISABLE_WORKFLOW` | COMMAND | Automation | WORKSPACE | Access | `automation.workflow.disabled` |
-| `CAP.AUTOMATION.TRIGGER_WORKFLOW` | ORCHESTRATION | Automation | WORKSPACE | event/trigger policy | execution events |
-| `CAP.AUTOMATION.EXECUTE_WORKFLOW` | ORCHESTRATION | Automation | WORKSPACE | capabilities | execution events |
-| `CAP.AUTOMATION.EXECUTE_ACTION` | ORCHESTRATION | Automation | WORKSPACE | target capability | delegated events |
+| `CAP.AI.SELLER.CREATE_PRODUCT_SESSION` | COMMAND | AI | BUSINESS | Access, Business, Media | `ai.seller.product_session.created` |
+| `CAP.AI.SELLER.ADD_PRODUCT_INPUT` | COMMAND | AI | BUSINESS | Access, Media | `ai.seller.product_input.added` |
+| `CAP.AI.SELLER.GENERATE_PRODUCT_DRAFT` | ORCHESTRATION | AI | BUSINESS | AI extraction/generation, Catalog schema, Media, Billing entitlement | `ai.seller.product_draft.ready` |
+| `CAP.AI.SELLER.GET_PRODUCT_DRAFT` | QUERY | AI | BUSINESS | visibility, session ownership | none |
+| `CAP.AI.SELLER.CONFIRM_PRODUCT_DRAFT` | COMMAND | AI | BUSINESS | Access, Catalog, Policy, Billing usage | `ai.seller.product_draft.confirmed` |
+| `CAP.AI.SELLER.REQUEST_MISSING_INFORMATION` | DECISION | AI | BUSINESS | draft state, Catalog required-field policy | none |
+| `CAP.AI.SELLER.CANCEL_PRODUCT_SESSION` | COMMAND | AI | BUSINESS | Access, session state | `ai.seller.product_session.cancelled` |
+| `CAP.AI.SELLER.RETRY_PRODUCT_OPERATION` | COMMAND | AI | BUSINESS | idempotency, usage policy | `ai.seller.product_operation.retried` |
 
-Workflow actions reference capability contracts, never service implementation names.
+### Seller AI capability rules
+
+1. `GENERATE_PRODUCT_DRAFT` may call `CAP.AI.EXTRACT`, `CAP.AI.CLASSIFY`, and `CAP.AI.GENERATE`; it must not duplicate their model execution logic.
+2. Product persistence must delegate to `CAP.CATALOG.CREATE_PRODUCT` / `CAP.CATALOG.UPDATE_PRODUCT`.
+3. Price must delegate to `CAP.CATALOG.SET_PRICE`; inventory must delegate to the inventory authority; availability must delegate to Booking/availability contracts where applicable.
+4. Media processing must delegate to `CAP.MEDIA.*` capabilities.
+5. Entitlement and customer-facing usage decisions must delegate to `CAP.BILLING.CHECK_ENTITLEMENT` / `CAP.BILLING.RECORD_USAGE`.
+6. Publication must delegate to the canonical Catalog/policy publication contract; Seller AI cannot publish by directly changing status.
+7. Discovery projection occurs through the existing Catalog/Discovery event path.
+8. Seller AI does not own a second product or media repository.
 
 ## 17. Billing capabilities
 
@@ -278,139 +291,54 @@ Entitlement checks may be consumed by Access but remain commercially owned by Bi
 
 Platform capabilities are infrastructure contracts and must not become a second domain service layer.
 
-## 20. Event contract rules
-
-Each canonical event has:
+## 20. Cross-capability Seller AI flow
 
 ```text
-Event ID
-Version
-Producer Module
-Aggregate Type
-Aggregate ID
-Tenant Context
-Occurred At (UTC)
-Correlation ID
-Causation ID
-Payload Schema Version
-Idempotency Key
+CAP.AI.SELLER.CREATE_PRODUCT_SESSION
+        ↓
+CAP.MEDIA.UPLOAD / existing media reference
+        ↓
+CAP.AI.SELLER.ADD_PRODUCT_INPUT
+        ↓
+CAP.BILLING.CHECK_ENTITLEMENT
+        ↓
+CAP.AI.SELLER.GENERATE_PRODUCT_DRAFT
+        ├── CAP.AI.EXTRACT
+        ├── CAP.AI.CLASSIFY
+        ├── CAP.AI.GENERATE
+        └── CAP.MEDIA.CREATE_VARIANT (when needed)
+        ↓
+CAP.AI.SELLER.REQUEST_MISSING_INFORMATION
+        ↓
+Seller confirmation
+        ↓
+CAP.AI.SELLER.CONFIRM_PRODUCT_DRAFT
+        ├── CAP.CATALOG.CREATE_PRODUCT / UPDATE_PRODUCT
+        ├── CAP.CATALOG.MANAGE_VARIANT
+        ├── CAP.CATALOG.SET_PRICE (only when seller supplies/confirms price)
+        └── CAP.BILLING.RECORD_USAGE
+        ↓
+Catalog publication contract
+        ↓
+Catalog event
+        ↓
+Discovery projection
+        ↓
+Matching / customer connection
 ```
 
-Rules:
+The flow is deliberately orchestration-only: each authoritative concern remains owned by its canonical capability.
 
-- one producer/owner;
-- many consumers;
-- immutable event identity;
-- versioned payload;
-- tenant context is explicit;
-- consumers are retry-safe;
-- projections and integrations consume events without becoming the source of truth.
+## 21. Anti-duplication checklist
 
-## 21. Plugin contract
+Before adding a Seller AI capability, verify:
 
-A plugin declares:
+- Does an existing Catalog capability already own the requested mutation?
+- Does an existing Media capability already perform the media operation?
+- Does an existing AI capability already provide extraction/classification/generation?
+- Does Billing already own the usage/entitlement decision?
+- Does Platform already own idempotency/audit/event publication?
+- Does Discovery already own search projection?
+- Does Trust/Policy already own verification or moderation?
 
-```text
-Plugin ID
-Plugin Version
-Required Capabilities + compatible versions
-Provided Capabilities + versions
-Required Permissions
-Subscribed Events + versions
-Tenant Scope
-Lifecycle
-```
-
-Plugin lifecycle:
-
-```text
-registered → validated → installed → enabled → disabled → uninstalled
-```
-
-Disabled/uninstalled plugins cannot execute capabilities or receive active subscriptions.
-
-A plugin may provide a new capability, but may not provide a second implementation of an existing canonical capability.
-
-## 22. Anti-duplication decision tree
-
-For every proposed feature:
-
-```text
-Does a canonical capability already exist?
-       │
-      yes ──→ reuse it
-       │
-       no
-       ↓
-Is the behavior semantically an extension of an existing capability?
-       │
-      yes ──→ extend/version the canonical contract
-       │
-       no
-       ↓
-Define a new capability with one owner
-       ↓
-Register dependencies/events/permissions
-       ↓
-Implement exactly once
-       ↓
-Expose through API / AI / Plugin / Workflow adapters
-```
-
-Forbidden examples:
-
-```text
-AIBookingService.create()
-PluginBookingService.create()
-AdminBookingService.create()
-```
-
-Canonical pattern:
-
-```text
-CAP.BOOKING.CREATE
-      ↑
-  Booking owner
-      ↑
- ┌────┼──────────┬──────────┐
- API  AI Agent   Plugin    Workflow
-```
-
-## 23. Traceability requirement
-
-Every major domain feature must be traceable:
-
-```text
-Domain Term
-  → Aggregate/Entity
-  → Capability
-  → Permission
-  → Entitlement (if applicable)
-  → Event
-  → Projection/Consumer
-  → AI Tool (if applicable)
-  → Plugin contract (if applicable)
-```
-
-A feature without a single owner or traceable capability contract is not architecture-complete.
-
-## 24. Contract Definition of Done
-
-A capability is architecture-complete only when:
-
-- [ ] unique ID assigned;
-- [ ] owner assigned;
-- [ ] classification assigned;
-- [ ] input/output contract defined;
-- [ ] preconditions/postconditions defined;
-- [ ] permission and tenant scope defined;
-- [ ] entitlement requirement defined or explicitly none;
-- [ ] dependencies identified;
-- [ ] transaction boundary identified;
-- [ ] idempotency behavior identified;
-- [ ] produced/consumed events identified;
-- [ ] error contract identified;
-- [ ] AI access identified;
-- [ ] plugin access identified;
-- [ ] compatibility/version policy identified;
-- [ ] no duplicate owner or implementation exists.
+If yes, Seller AI must orchestrate/reuse it rather than implement a second version.
