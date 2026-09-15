@@ -1,8 +1,8 @@
-import type { EntityId } from "@qooqnos/core";
 import { createAuthenticationService } from "@qooqnos/auth";
-import { D1Database, IdentityRepository, RequestAuthorizationRepository, SessionRepository } from "@qooqnos/database";
-import { AuthorizationRegistry, type AuthorizationSubject } from "@qooqnos/runtime";
+import type { EntityId } from "@qooqnos/core";
 import { brandId } from "@qooqnos/core";
+import { D1Database, IdentityRepository, RequestAuthorizationRepository, SessionRepository } from "@qooqnos/database";
+import type { AuthorizationSubject } from "@qooqnos/runtime";
 import type { ApiRequestContext } from "./context";
 
 export interface RequestAuthResult {
@@ -14,7 +14,6 @@ export interface RequestAuthResult {
 export interface RequestAuthOptions {
   readonly database?: D1Database;
   readonly workspaceId?: string;
-  readonly authorization: AuthorizationRegistry;
 }
 
 export async function resolveRequestAuth(
@@ -46,10 +45,9 @@ export async function resolveRequestAuth(
     authenticated: true,
   };
 
-  const workspaceId = options.workspaceId;
-  if (workspaceId) {
+  if (options.workspaceId) {
     const scoped = await new RequestAuthorizationRepository(options.database).resolveWorkspaceSubject(
-      workspaceId,
+      options.workspaceId,
       session.userId,
     );
     if (scoped) {
