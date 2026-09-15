@@ -3,9 +3,30 @@
 > Status: Proposed architecture baseline
 
 ## Vision
-Phoenix is a modular, multi-tenant AI marketplace. It understands a customer's natural-language need, converts it to structured constraints, discovers suitable businesses/services/products, ranks candidates, explains the match and connects the customer to the provider.
+Phoenix is an intelligent decision and connection layer between customers and businesses. It understands customer natural-language needs, understands and structures business supply, discovers suitable businesses/services/products, ranks candidates, explains the match and connects the customer to the provider.
 
-Beauty and Fashion can launch first; Medical and future industries must be addable as modules without redesigning Phoenix Core.
+Phoenix is not primarily a CRM, ERP, directory, booking system, storefront, or generic AI chatbot. Those are capabilities that strengthen the marketplace decision loop.
+
+## Product loop
+`Understand Demand → Understand Supply → Decide → Match → Connect → Act → Learn`
+
+Demand intelligence and supply intelligence are equally important. A business should be able to provide minimal raw information and have Phoenix help turn it into structured, trustworthy, discoverable marketplace supply.
+
+## AI-assisted supply creation
+Seller AI may accept product/service photos, text, documents, imports, or other approved raw inputs and propose structured catalog drafts, titles, descriptions, attributes, variants, localized content, media improvements and missing-information questions.
+
+AI-generated commercial content remains proposed until the owning domain validates and the seller/policy workflow accepts it. AI must not silently invent price, inventory, credentials, compliance facts, ownership, or other authoritative facts.
+
+The target seller loop is:
+`Raw Seller Input → AI Extraction → Enrichment → Validation → Seller Review → Publication → Discovery/Matching`
+
+## AI operation economics
+Material AI operations consume provider/model resources and therefore are measurable economic activity. AI usage must integrate with the canonical Billing usage/entitlement/quota model.
+
+Support:
+`AI Operation → Usage Event → Quota/Credit/Entitlement → Pricing Rule → Charge or Included Usage`
+
+Provider token/model cost is an internal cost signal, not the customer pricing authority.
 
 ## Architecture
 Use a **Modular Monolith on Cloudflare Edge** initially. Avoid premature microservices. Preserve module boundaries through domain interfaces, permissions, events, manifests, migrations and tests. A module may later be extracted only when measurable scaling, reliability, deployment or ownership needs justify it.
@@ -39,7 +60,7 @@ Each module should define a manifest containing id, version, dependencies, permi
 Hard constraints cannot be overridden by semantic similarity. Match runs must be versioned so ranking/model changes are measurable and reversible.
 
 ## AI safety boundary
-`LLM → schema validation → policy validation → authorization → domain service → database`.
+`LLM/Image Model → schema validation → provenance → policy validation → authorization → domain service → database`.
 
 AI never gets arbitrary SQL access and never bypasses authorization. For Medical, AI must not diagnose, prescribe or recommend treatment. Provider credentials must be verified before activation and sensitive health data requires consent/privacy controls.
 
@@ -58,17 +79,23 @@ Strict tenant isolation, server authorization, input validation, secure cookies,
 Use indexes, pagination, caching for safe public reads, image variants, background jobs, streaming where useful and read replication where appropriate. Establish measurable budgets rather than assuming performance.
 
 ## Observability
-Measure request/API latency, errors, DB/query latency, queues, cache hit rate, search latency, AI latency/cost, module failures and business KPIs. Propagate request/correlation IDs.
+Measure request/API latency, errors, DB/query latency, queues, cache hit rate, search latency, AI latency/cost, AI-assisted seller operation success, match quality, conversion and module failures. Propagate request/correlation IDs.
 
 ## Delivery order
 1. Foundation: repo, CI/CD, Workers/D1/R2, auth, tenancy, RBAC/ABAC, i18n, theme, audit
 2. Marketplace core: businesses, categories, services/products, media, search, reviews
-3. AI: intent, semantic retrieval, matching, ranking, explanations, conversation
+3. AI: seller supply creation/enrichment, intent, semantic retrieval, matching, ranking, explanations, conversation
 4. Beauty
 5. Fashion
 6. Commerce
 7. Medical partner/pilot with verification, consent and compliance
 8. Additional industries
 
+## Product governance
+Before adding a meaningful capability, read:
+- `docs/PHOENIX_PRODUCT_NORTH_STAR.md`
+- `docs/AI_PRODUCT_DIRECTION.md` for AI work
+- `docs/CAPABILITY_DECISION_RULES.md`
+
 ## Principles
-Security before convenience. Database integrity before AI convenience. AI proposes; policy and domain services decide. Measure before optimizing. Keep providers replaceable. Keep industry-specific logic out of Phoenix Core. Avoid premature microservices.
+Security before convenience. Database integrity before AI convenience. AI proposes; policy and domain services decide. Measure before optimizing. Keep providers replaceable. Keep industry-specific logic out of Phoenix Core. Avoid premature microservices. Build toward the intelligent decision and connection layer, not feature count.
