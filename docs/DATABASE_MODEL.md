@@ -250,17 +250,58 @@ Hard constraints eliminate candidates; semantic similarity never overrides them.
 
 ## 12. AI domain
 
-- `ai_conversations`: conversation aggregate.
-- `ai_messages`: ordered conversation messages.
-- `ai_tool_calls`: typed tool invocation records.
-- `ai_safety_events`: safety/policy events.
-- `ai_runs`: model execution metadata.
-- `ai_prompt_versions`: production prompt/version registry.
-- `ai_evaluations`: evaluation results.
-- `ai_memories`: explicitly approved durable memory with provenance/retention.
-- `ai_usage_events`: token/cost accounting.
+AI has two distinct but connected storage layers:
 
-AI records must retain request/correlation identifiers and policy/model versions where operationally relevant. Sensitive content is classified/redacted.
+### 12.1 AI interaction/orchestration data
+
+- `ai_conversations`: AI interaction context.
+- `ai_messages`: ordered AI conversation messages.
+- `agents`: Agent definition/configuration.
+- `ai_memories`: explicitly approved durable AI memory with provenance/retention.
+- Agent-run/step/tool-invocation concepts are orchestration evidence and map to the canonical AI vocabulary defined by `AI_DATA_DICTIONARY.md`.
+
+### 12.2 Canonical AI Runtime data
+
+The Runtime is the sole model execution boundary. Runtime data must use the canonical objects from `AI_RUNTIME_DATA_DICTIONARY.md`, including:
+
+- `ai_operation_types`: semantic operation taxonomy/version.
+- `ai_operations`: operation identity, tenant/actor context, lifecycle, idempotency and execution references.
+- `ai_models`: approved model registry records.
+- `ai_providers`: provider registry records.
+- `ai_model_routing_decisions`: reproducible model/provider selection evidence.
+- `ai_prompts` and `ai_prompt_versions`: versioned prompt registry.
+- `ai_schemas` and `ai_schema_versions`: versioned output/input schema registry.
+- `ai_policies`: AI policy registry/version metadata.
+- `ai_policy_decisions`: policy decisions attached to execution.
+- `ai_provider_attempts`: provider execution attempts.
+- `ai_runtime_results`: normalized validated Runtime results.
+- `ai_usage_records`: canonical Runtime usage telemetry.
+
+These Runtime records are operational/execution state, not business-domain truth.
+
+### 12.3 Important reconciliation rule
+
+Legacy names such as `ai_runs`, `ai_tool_calls`, `ai_prompt_versions`, and `ai_usage_events` must not be interpreted as parallel canonical Runtime entities.
+
+Where a physical migration needs AI execution storage, it must map to the canonical Runtime objects and relationships rather than create duplicate tables with overlapping semantics.
+
+Conceptually:
+
+```text
+AI Capability / Agent
+      ↓
+ai_operation
+      ↓
+Prompt + Schema + Policy + Routing Decision
+      ↓
+Provider Attempt(s)
+      ↓
+ai_runtime_result
+      ↓
+ai_usage_record
+```
+
+Tool invocation and Agent Step evidence may reference Runtime operation/result IDs; they do not become a second execution ledger.
 
 ## 13. Moderation, consent and privacy
 
@@ -323,7 +364,7 @@ Outbox events are versioned, tenant-aware, idempotent and retryable.
 | Verification | requirements/checks/evidence/decisions | catalog internals |
 | Discovery | derived search/index state | authoritative business state |
 | Booking | appointments/availability | verification evidence |
-| AI | runs/tools/prompts/memory | arbitrary domain writes |
+| AI | agent/orchestration/runtime execution state | arbitrary domain writes |
 | Billing | plans/subscriptions/usage | domain authorization decisions |
 | Moderation | cases/actions/policy outcomes | raw business ownership data |
 
@@ -341,7 +382,8 @@ Minimum invariants include:
 - review uniqueness according to configured review policy;
 - idempotency key uniqueness within its actor/scope;
 - outbox event IDs unique;
-- verification requirement/check identifiers unique within their case/version.
+- verification requirement/check identifiers unique within their case/version;
+- AI operation identity/idempotency uniqueness according to the canonical Runtime contract.
 
 Exact indexes and foreign keys are defined by module migrations, not by this logical document alone.
 
