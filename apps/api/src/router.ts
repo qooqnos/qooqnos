@@ -1,9 +1,9 @@
 import type { RequestId } from "@qooqnos/core";
 import type { AuthorizationRegistry, AuthorizationSubject } from "@qooqnos/runtime";
+import type { D1Database } from "@qooqnos/database";
 import type { ApiRequestContext } from "./context";
 import { createRequestContext, getCorrelationId, getRequestId } from "./context";
 import { resolveRequestAuth } from "./auth-context";
-import type { D1Database } from "@qooqnos/database";
 import { errorResponse, json } from "./http";
 
 export interface ApiRouteContext {
@@ -64,25 +64,26 @@ export class ApiRouter {
     });
 
     try {
-      const workspaceHeader = request.headers.get("x-workspace-id")?.trim() || undefined;
+      const workspaceHeader = request.headers.get("x-workspace-id")?.trim();
+      const authOptions = {
+        ...(this.options.database ? { database: this.options.database } : {}),
+        ...(workspaceHeader ? { workspaceId: workspaceHeader } : {}),
+      };
       const auth = this.options.authorization
-        ? await resolveRequestAuth(initialContext, request, {
-            database: this.options.database,
-            workspaceId: workspaceHeader,
-            authorization: this.options.authorization,
-          })
+        ? await resolveRequestAuth(initialContext, request, authOptions)
         : { context: initialContext, subject: { roles: [], permissions: [], authenticated: false } as AuthorizationSubject };
 
       const context = { ...auth.context, authenticated: auth.subject.authenticated };
       if (route.requireAuthentication || route.permission) {
         if (!this.options.authorization) throw new Error("Authorization registry is required for protected routes");
-        this.options.authorization.assert({
+        const authorizationInput = {
           context,
           permission: route.permission ?? `${route.module}:access`,
           subject: auth.subject,
           requireAuthentication: route.requireAuthentication ?? true,
-          requireWorkspace: route.requireWorkspace,
-        });
+          ...(route.requireWorkspace !== undefined ? { requireWorkspace: route.requireWorkspace } : {}),
+        };
+        this.options.authorization.assert(authorizationInput);
       }
 
       const response = await route.handler({ request, context, subject: auth.subject });
