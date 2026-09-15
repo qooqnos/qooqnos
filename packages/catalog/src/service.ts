@@ -47,7 +47,7 @@ export class CatalogService {
     await this.options.authorization.assert({
       context,
       permission: "catalog.offering.publish",
-      resource: { tenantId: current.businessId, workspaceId: context.workspaceId },
+      resource: { tenantId: context.tenantId, workspaceId: context.workspaceId },
       requireAuthentication: true,
       requireWorkspace: true,
     });
