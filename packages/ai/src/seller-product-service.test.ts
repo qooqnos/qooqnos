@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { brandId, type RequestContext } from "@qooqnos/core";
 import { SellerProductService, SELLER_AI_OPERATION_TYPES } from "./seller-product-service";
+import type { AIRuntimeClient } from "./runtime-client";
 import type { AIRequest, AIResult, SellerProductDraft } from "./types";
 
 function context(): RequestContext {
@@ -31,18 +32,18 @@ function draft(): SellerProductDraft {
 describe("SellerProductService", () => {
   it("passes the trusted request context into the canonical AI runtime and persists only validated output", async () => {
     const saveDraft = vi.fn(async () => undefined);
-    const executeImpl = async <TOutput>(request: AIRequest): Promise<AIResult<TOutput>> => ({
+    const executeMock = vi.fn(async (request: AIRequest): Promise<AIResult<unknown>> => ({
       operationId: request.operationId,
       operationType: request.operationType,
       operationVersion: 1,
       status: "succeeded",
-      output: draft() as TOutput,
+      output: draft(),
       safetyDecision: "allowed",
       provenance: "ai_extracted",
       warnings: [],
       retryable: false,
-    });
-    const execute = vi.fn(executeImpl);
+    }));
+    const execute = executeMock as unknown as AIRuntimeClient["execute"];
 
     const service = new SellerProductService({
       repository: {
@@ -68,7 +69,7 @@ describe("SellerProductService", () => {
       policyVersion: "seller-product-policy-v1",
     });
 
-    expect(execute).toHaveBeenCalledWith(expect.objectContaining({
+    expect(executeMock).toHaveBeenCalledWith(expect.objectContaining({
       context: context(),
       operationType: SELLER_AI_OPERATION_TYPES.extract,
       operationVersion: 1,
