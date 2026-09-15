@@ -82,17 +82,15 @@ describe("SellerAIRepository", () => {
   it("requires draft review before confirmation and scopes both transitions", async () => {
     const statements: string[] = [];
     const draft = { id: brandId<"EntityId">("draft-1"), sessionId: session.id, version: 3, status: "seller_review", draftJson: "{}", createdAt: session.createdAt, updatedAt: session.updatedAt };
+    let firstCalls = 0;
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
       async first<T>() {
-        const cast = (draft.status === "seller_review" ? draft : session) as unknown as T;
-        return cast;
+        firstCalls += 1;
+        return (firstCalls % 2 === 1 ? session : draft) as unknown as T;
       },
       async all<T>() { return { results: [] as T[] }; },
-      async run(sql?: string) {
-        if (sql?.includes("status = 'seller_review'")) return { success: true, meta: { changes: 1 } };
-        return { success: true, meta: { changes: 1 } };
-      },
+      async run() { return { success: true, meta: { changes: 1 } }; },
     };
     const raw: D1DatabaseLike = {
       prepare(sql: string) { statements.push(sql); return statement; },
