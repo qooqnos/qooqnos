@@ -5,9 +5,13 @@
   "description": "Phoenix API application boundary",
   "type": "module",
   "dependencies": {
+    "@qooqnos/ai": "*",
     "@qooqnos/auth": "*",
+    "@qooqnos/business": "*",
+    "@qooqnos/catalog": "*",
     "@qooqnos/core": "*",
     "@qooqnos/database": "*",
+    "@qooqnos/onboarding": "*",
     "@qooqnos/runtime": "*",
     "@qooqnos/api-contracts": "*"
   }
