@@ -1,7 +1,7 @@
 import { BusinessService, BusinessRepository } from "@qooqnos/business";
+import { AppError, brandId } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import { SessionRepository, sha256Hex } from "@qooqnos/database";
-import { AppError, brandId } from "@qooqnos/core";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
@@ -52,10 +52,7 @@ const homePage = (version: string): string => `<!doctype html>
 
 function createRouter(version: string, database: D1Database | undefined): ApiRouter {
   const authorization = createApiAuthorizationRegistry();
-  const router = new ApiRouter({
-    authorization,
-    ...(database ? { database } : {}),
-  });
+  const router = new ApiRouter({ authorization, ...(database ? { database } : {}) });
 
   router.register({
     method: "GET",
@@ -76,24 +73,11 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
         await ensureRuntimeBoot(envForRuntime(version, database));
       } catch (error) {
         const message = error instanceof Error ? error.message : "Runtime boot failed.";
-        return json(
-          {
-            status: "not_ready",
-            checks: { runtime: "unavailable", reason: message },
-            timestamp: new Date().toISOString(),
-          },
-          503,
-          context.requestId,
-        );
+        return json({ status: "not_ready", checks: { runtime: "unavailable", reason: message }, timestamp: new Date().toISOString() }, 503, context.requestId);
       }
-
       const result = await checkDatabase(database?.raw());
       const ready = result.database === "ok" && result.migrationRegistry === "ok";
-      return json(
-        { status: ready ? "ready" : "not_ready", checks: { runtime: "ok", ...result }, timestamp: new Date().toISOString() },
-        ready ? 200 : 503,
-        context.requestId,
-      );
+      return json({ status: ready ? "ready" : "not_ready", checks: { runtime: "ok", ...result }, timestamp: new Date().toISOString() }, ready ? 200 : 503, context.requestId);
     },
   });
 
@@ -105,22 +89,18 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     permission: "context:read",
     requireAuthentication: true,
     handler: ({ context, subject }) =>
-      json(
-        {
-          requestId: context.requestId,
-          correlationId: context.correlationId,
-          actorId: context.actorId,
-          tenantId: context.tenantId,
-          workspaceId: context.workspaceId,
-          module: context.module,
-          operation: context.operation,
-          authenticated: context.authenticated,
-          roles: subject.roles,
-          permissions: subject.permissions,
-        },
-        200,
-        context.requestId,
-      ),
+      json({
+        requestId: context.requestId,
+        correlationId: context.correlationId,
+        actorId: context.actorId,
+        tenantId: context.tenantId,
+        workspaceId: context.workspaceId,
+        module: context.module,
+        operation: context.operation,
+        authenticated: context.authenticated,
+        roles: subject.roles,
+        permissions: subject.permissions,
+      }, 200, context.requestId),
   });
 
   router.register({
@@ -130,19 +110,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     operation: "session.read",
     requireAuthentication: true,
     handler: ({ context, authenticatedSessionId }) =>
-      json(
-        {
-          session: {
-            id: authenticatedSessionId,
-            actorId: context.actorId,
-            tenantId: context.tenantId,
-            workspaceId: context.workspaceId,
-            authenticated: context.authenticated,
-          },
-        },
-        200,
-        context.requestId,
-      ),
+      json({ session: { id: authenticatedSessionId, actorId: context.actorId, tenantId: context.tenantId, workspaceId: context.workspaceId, authenticated: context.authenticated } }, 200, context.requestId),
   });
 
   router.register({
@@ -169,12 +137,8 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     handler: async ({ context, request }) => {
       if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
       const idempotencyKey = request.headers.get("idempotency-key")?.trim();
-      if (!idempotencyKey) {
-        throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is required.", requestId: context.requestId });
-      }
-      if (idempotencyKey.length > 200) {
-        throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is too long.", requestId: context.requestId });
-      }
+      if (!idempotencyKey) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is required.", requestId: context.requestId });
+      if (idempotencyKey.length > 200) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is too long.", requestId: context.requestId });
 
       let command: unknown;
       try {
@@ -182,9 +146,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
       } catch {
         throw new AppError({ code: "VALIDATION_ERROR", message: "Request body must be valid JSON.", requestId: context.requestId });
       }
-      if (!isCreateBusinessCommand(command)) {
-        throw new AppError({ code: "VALIDATION_ERROR", message: "Business create payload is invalid.", requestId: context.requestId });
-      }
+      if (!isCreateBusinessCommand(command)) throw new AppError({ code: "VALIDATION_ERROR", message: "Business create payload is invalid.", requestId: context.requestId });
 
       const fingerprint = await sha256Hex(stableStringify(command));
       const now = new Date().toISOString();
@@ -244,17 +206,14 @@ function stableStringify(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
   if (value && typeof value === "object") {
     const object = value as Record<string, unknown>;
-    return `{${Object.keys(object).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(object[key])}`).join(",`)}}`;
+    return `{${Object.keys(object).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(object[key])}`).join(",")}}`;
   }
   return JSON.stringify(value);
 }
 
 function envForRuntime(version: string, database: D1Database | undefined): ApiEnv {
   if (!database) return { APP_VERSION: version };
-  return {
-    APP_VERSION: version,
-    DB: database.raw(),
-  };
+  return { APP_VERSION: version, DB: database.raw() };
 }
 
 export default {
@@ -262,11 +221,7 @@ export default {
     const url = new URL(request.url);
     const version = env.APP_VERSION ?? "development";
     const database = getDatabase(env);
-
-    if (request.method === "GET" && url.pathname === "/") {
-      return html(homePage(version));
-    }
-
+    if (request.method === "GET" && url.pathname === "/") return html(homePage(version));
     return createRouter(version, database ?? undefined).handle(request);
   },
 };
