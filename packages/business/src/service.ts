@@ -1,6 +1,7 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
+import type { AtomicCommandResult } from "@qooqnos/database";
 import type { AuthorizationService } from "@qooqnos/runtime";
-import { BusinessRepository, type BusinessRecord, type CreateBusinessInput, type PublicationStatus } from "./repository";
+import { BusinessRepository, type BusinessRecord, type CreateBusinessInput, type AtomicBusinessCreateOptions, type PublicationStatus } from "./repository";
 
 export interface BusinessServiceOptions {
   readonly repository: BusinessRepository;
@@ -19,33 +20,43 @@ export interface CreateBusinessCommand {
   readonly defaultCurrency?: string | undefined;
 }
 
-export interface AtomicCreateBusinessOptions {
-  readonly idempotencyKey: string;
-  readonly requestFingerprint: string;
-  readonly idempotencyExpiresAt: string;
-  readonly auditId: string;
-}
-
 export class BusinessService {
   constructor(private readonly options: BusinessServiceOptions) {}
 
   async create(context: RequestContext, command: CreateBusinessCommand): Promise<BusinessRecord> {
-    const input = await this.prepareCreate(context, command);
+    const organizationId = requireContext(context.tenantId, "tenant");
+    const workspaceId = requireContext(context.workspaceId, "workspace");
+    await this.options.authorization.assert({
+      context,
+      permission: "business.create",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    const input = this.normalizeCreateInput(organizationId, workspaceId, command);
     return this.options.repository.create(input);
   }
 
   async createAtomic(
     context: RequestContext,
     command: CreateBusinessCommand,
-    atomic: AtomicCreateBusinessOptions,
-  ): Promise<BusinessRecord> {
-    const input = await this.prepareCreate(context, command);
-    const result = await this.options.repository.createAtomic(context, input, {
-      ...atomic,
+    idempotency: Omit<AtomicBusinessCreateOptions, "auditId" | "requestId" | "correlationId"> & {
+      readonly auditId: string;
+    },
+  ): Promise<AtomicCommandResult<BusinessRecord>> {
+    const organizationId = requireContext(context.tenantId, "tenant");
+    const workspaceId = requireContext(context.workspaceId, "workspace");
+    await this.options.authorization.assert({
+      context,
+      permission: "business.create",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    const input = this.normalizeCreateInput(organizationId, workspaceId, command);
+    return this.options.repository.createAtomic(context, input, {
+      ...idempotency,
       requestId: context.requestId,
       correlationId: context.correlationId,
     });
-    return result.result;
   }
 
   async update(context: RequestContext, id: EntityId, patch: CreateBusinessCommand): Promise<BusinessRecord> {
@@ -101,15 +112,11 @@ export class BusinessService {
     return this.options.repository.setPublicationStatus(context, id, status, this.options.now());
   }
 
-  private async prepareCreate(context: RequestContext, command: CreateBusinessCommand): Promise<CreateBusinessInput> {
-    const organizationId = requireContext(context.tenantId, "tenant");
-    const workspaceId = requireContext(context.workspaceId, "workspace");
-    await this.options.authorization.assert({
-      context,
-      permission: "business.create",
-      requireAuthentication: true,
-      requireWorkspace: true,
-    });
+  private normalizeCreateInput(
+    organizationId: EntityId,
+    workspaceId: EntityId,
+    command: CreateBusinessCommand,
+  ): CreateBusinessInput {
     validateBusinessText(command.name, "name");
     validateBusinessText(command.displayName, "displayName");
     return {
