@@ -1,7 +1,10 @@
+import { createAuthorizationRegistry } from "@qooqnos/runtime";
+import { D1Database } from "@qooqnos/database";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
 import type { ApiEnv } from "./env";
+import { getDatabase } from "./database";
 import { checkDatabase } from "./readiness";
 import { ensureRuntimeBoot } from "./runtime";
 
@@ -45,8 +48,12 @@ const homePage = (version: string): string => `<!doctype html>
   </body>
 </html>`;
 
-function createRouter(version: string, database: ApiEnv["DB"]): ApiRouter {
-  const router = new ApiRouter();
+function createRouter(version: string, database: D1Database | undefined): ApiRouter {
+  const authorization = createAuthorizationRegistry({
+    "business:create": undefined,
+    "context:read": undefined,
+  });
+  const router = new ApiRouter({ database, authorization });
 
   router.register({
     method: "GET",
@@ -68,11 +75,7 @@ function createRouter(version: string, database: ApiEnv["DB"]): ApiRouter {
       } catch (error) {
         const message = error instanceof Error ? error.message : "Runtime boot failed.";
         return json(
-          {
-            status: "not_ready",
-            checks: { runtime: "unavailable", reason: message },
-            timestamp: new Date().toISOString(),
-          },
+          { status: "not_ready", checks: { runtime: "unavailable", reason: message }, timestamp: new Date().toISOString() },
           503,
           context.requestId,
         );
@@ -93,18 +96,37 @@ function createRouter(version: string, database: ApiEnv["DB"]): ApiRouter {
     path: "/api/v1/context",
     module: "platform",
     operation: "context.read",
-    handler: ({ context }) =>
+    permission: "context:read",
+    requireAuthentication: true,
+    handler: ({ context, subject }) =>
       json(
         {
           requestId: context.requestId,
           correlationId: context.correlationId,
+          actorId: context.actorId,
+          tenantId: context.tenantId,
+          workspaceId: context.workspaceId,
           module: context.module,
           operation: context.operation,
           authenticated: context.authenticated,
+          roles: subject.roles,
+          permissions: subject.permissions,
         },
         200,
         context.requestId,
       ),
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/business-access",
+    module: "business",
+    operation: "business.access",
+    permission: "business:create",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: ({ context }) =>
+      json({ status: "authorized", tenantId: context.tenantId, workspaceId: context.workspaceId }, 200, context.requestId),
   });
 
   return router;
@@ -119,7 +141,7 @@ export default {
       return html(homePage(version));
     }
 
-    return createRouter(version, env.DB).handle(request);
+    return createRouter(version, getDatabase(env) ?? undefined).handle(request);
   },
 };
 
