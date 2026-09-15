@@ -1,0 +1,7 @@
+{
+  "name": "@qooqnos/api",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Phoenix API application boundary",
+  "type": "module"
+}
