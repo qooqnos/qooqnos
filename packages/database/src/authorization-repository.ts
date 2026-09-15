@@ -32,17 +32,29 @@ export class AuthorizationRepository extends Repository {
   }
 
   async getSubject(context: RepositoryContext, userId: string): Promise<AuthorizationSubjectRecord | null> {
+    const organizationId = this.requireOrganization(context);
     const workspaceId = this.requireWorkspace(context);
     const membership = await this.database.first<AuthorizationMembershipRecord>(
-      "SELECT id, workspace_id AS workspaceId, user_id AS userId, status FROM memberships WHERE workspace_id = ? AND user_id = ? LIMIT 1",
+      `SELECT m.id, m.workspace_id AS workspaceId, m.user_id AS userId, m.status
+       FROM memberships m
+       INNER JOIN workspaces w ON w.id = m.workspace_id
+       WHERE m.workspace_id = ? AND m.user_id = ? AND w.organization_id = ?
+       LIMIT 1`,
       workspaceId,
       userId,
+      organizationId,
     );
     if (!membership) return null;
 
     const roles = await this.database.all<AuthorizationRoleRecord>(
-      "SELECT r.id, r.name, r.workspace_id AS workspaceId FROM roles r INNER JOIN membership_roles mr ON mr.role_id = r.id WHERE mr.membership_id = ? ORDER BY r.id ASC",
+      `SELECT r.id, r.name, r.workspace_id AS workspaceId
+       FROM roles r
+       INNER JOIN membership_roles mr ON mr.role_id = r.id
+       WHERE mr.membership_id = ?
+         AND (r.workspace_id IS NULL OR r.workspace_id = ?)
+       ORDER BY r.id ASC`,
       membership.id,
+      workspaceId,
     );
 
     const permissions = roles.length === 0
@@ -52,9 +64,12 @@ export class AuthorizationRepository extends Repository {
            FROM permissions p
            INNER JOIN role_permissions rp ON rp.permission_id = p.id
            INNER JOIN membership_roles mr ON mr.role_id = rp.role_id
+           INNER JOIN roles r ON r.id = rp.role_id
            WHERE mr.membership_id = ?
-           ORDER BY p.resource ASC, p.action ASC`,
+             AND (r.workspace_id IS NULL OR r.workspace_id = ?)
+           ORDER BY p.id ASC`,
           membership.id,
+          workspaceId,
         );
 
     return { membership, roles, permissions };
