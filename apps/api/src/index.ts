@@ -1,5 +1,5 @@
 import { createAuthorizationRegistry } from "@qooqnos/runtime";
-import { D1Database } from "@qooqnos/database";
+import type { D1Database } from "@qooqnos/database";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
@@ -53,7 +53,10 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     "business:create": undefined,
     "context:read": undefined,
   });
-  const router = new ApiRouter({ database, authorization });
+  const router = new ApiRouter({
+    authorization,
+    ...(database ? { database } : {}),
+  });
 
   router.register({
     method: "GET",
@@ -71,17 +74,24 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     operation: "readiness.read",
     handler: async ({ context }) => {
       try {
-        await ensureRuntimeBoot({ APP_VERSION: version, DB: database });
+        await ensureRuntimeBoot({
+          APP_VERSION: version,
+          ...(database ? { DB: database } : {}),
+        });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Runtime boot failed.";
         return json(
-          { status: "not_ready", checks: { runtime: "unavailable", reason: message }, timestamp: new Date().toISOString() },
+          {
+            status: "not_ready",
+            checks: { runtime: "unavailable", reason: message },
+            timestamp: new Date().toISOString(),
+          },
           503,
           context.requestId,
         );
       }
 
-      const result = await checkDatabase(database);
+      const result = await checkDatabase(undefined);
       const ready = result.database === "ok" && result.migrationRegistry === "ok";
       return json(
         { status: ready ? "ready" : "not_ready", checks: { runtime: "ok", ...result }, timestamp: new Date().toISOString() },
@@ -136,12 +146,13 @@ export default {
   async fetch(request: Request, env: ApiEnv): Promise<Response> {
     const url = new URL(request.url);
     const version = env.APP_VERSION ?? "development";
+    const database = getDatabase(env);
 
     if (request.method === "GET" && url.pathname === "/") {
       return html(homePage(version));
     }
 
-    return createRouter(version, getDatabase(env) ?? undefined).handle(request);
+    return createRouter(version, database ?? undefined).handle(request);
   },
 };
 
