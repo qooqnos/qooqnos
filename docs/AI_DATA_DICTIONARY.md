@@ -1,14 +1,20 @@
 # Phoenix AI Data Dictionary
 
-> Status: Architecture-defined / canonical data dictionary
-> Scope: AI Gateway, intent, retrieval, ranking, tools, agents, memory, safety, evaluation, observability, and cost governance
-> Rule: This dictionary defines shared AI data concepts once. Domain modules own their authoritative business facts; AI references them and never duplicates them as source-of-truth records.
+> Status: Canonical architecture contract
+> Scope: AI intent, retrieval, ranking, explanation, tools, agents, memory, evaluation, observability, and the shared AI Runtime vocabulary.
+> Rule: This dictionary defines shared AI data concepts once. Domain modules own authoritative business facts; AI references them and never duplicates them as source-of-truth records.
 
 ## 1. Purpose
 
-This document is the canonical data dictionary for Phoenix AI. It refines `AI_ARCHITECTURE.md` into stable data concepts, ownership rules, invariants, provenance requirements, lifecycle semantics, and cross-module contracts.
+This document is the canonical data dictionary for Phoenix AI capabilities that sit above the shared AI Runtime. It defines intelligence/orchestration concepts and their ownership boundaries.
 
-The governing boundary is:
+The canonical execution model is:
+
+**AI Capability / Orchestrator -> Canonical AI Runtime -> Provider Adapter -> AI Provider -> validated runtime result -> owning capability/domain contract.**
+
+The Runtime owns model execution mechanics, operation identity, provider attempts, prompt/schema resolution, runtime safety integration, usage telemetry, retries, and routing. This dictionary does not create a second execution model.
+
+The governing domain boundary remains:
 
 **LLM proposes; policy validates; domain services decide and execute.**
 
@@ -20,21 +26,22 @@ AI data is an intelligence/orchestration representation, not a replacement for d
 |---|---|---|
 | Customer/person identity | Identity / Customer | Reference only |
 | Business/provider identity | Business / Identity | Reference only |
-| Authorization | Authorization | Enforced externally |
+| Authorization | Access / Authorization | Enforced externally |
 | Service/product facts | Catalog | Retrieve/reference |
 | Availability/booking facts | Booking | Retrieve/reference |
 | Order/payment facts | Commerce / Billing | Retrieve/reference |
 | Loyalty points/rewards | Loyalty | Retrieve/reference |
 | Promotion eligibility/discount policy | Promotion | Evaluate/reference |
-| Relationship/customer history | CRM | Retrieve/reference |
-| Reputation/reviews | Reviews / Trust | Retrieve/reference |
-| Communication delivery | Communications | Invoke through capability |
+| Relationship/customer history | CRM / Customer | Retrieve/reference |
+| Reputation/reviews | Trust / Reviews | Retrieve/reference |
+| Communication delivery | Communication | Invoke through capability |
 | Analytics facts | Analytics | Consume/emit |
-| AI request/context | AI | Own |
-| AI prompt/model policy | AI | Own |
-| AI retrieval/ranking state | AI | Own, non-authoritative |
-| AI tool manifest/execution trace | AI | Own |
-| AI memory | AI, subject to privacy ownership rules | Own within policy |
+| AI intent/context | AI | Own |
+| AI retrieval/ranking state | AI / Discovery contract | Non-authoritative |
+| AI tool manifest/execution orchestration | AI | Own; delegates domain behavior |
+| AI memory | AI, subject to privacy policy | Own within policy |
+| AI operation/model/provider/prompt/schema/usage runtime records | AI Runtime | Own; see canonical Runtime contracts |
+| Customer entitlement, quota, credit, price and financial state | Billing | Reference/decision only |
 
 AI must reference canonical IDs and versions instead of copying mutable domain facts into private authoritative tables.
 
@@ -54,52 +61,40 @@ All persistent or traceable AI records that can affect tenant isolation should c
 
 Tenant and authorization context are mandatory inputs to retrieval and tool execution, not model-generated fields.
 
-## 4. AI Request
+## 4. AI Request — Compatibility Concept
 
-Represents one normalized request entering the AI Gateway.
+Historically, `AIRequest` represented a normalized request entering the AI Gateway. The canonical implementation is now the **AI Runtime operation request** defined by `docs/AI_RUNTIME_ARCHITECTURE.md` and `docs/AI_RUNTIME_DATA_DICTIONARY.md`.
 
-### Canonical fields
+The legacy `AIRequest` concept must therefore not create a second request entity. Its semantic fields map to:
 
-- request ID;
-- task type;
-- input payload reference;
+- `operation_id` / `operation_type` / `operation_version`;
+- input reference/hash;
 - output schema reference;
-- actor context reference;
-- tenant/workspace scope;
-- risk level: low, medium, high, regulated;
-- model policy reference;
+- actor and tenant/workspace context;
+- risk and policy context;
 - locale/language;
-- correlation/trace ID;
-- created timestamp;
-- idempotency key where side effects may occur.
+- correlation/request IDs;
+- idempotency key;
+- model-selection policy.
 
-### Invariants
+**Rule:** Features do not bypass the canonical Runtime by creating feature-local provider requests.
 
-- A request cannot bypass the Gateway.
-- Provider SDK details are not exposed to application features.
-- Risk level cannot be lowered by model output.
-- Sensitive input classification must be established before model routing.
+## 5. AI Response — Compatibility Concept
 
-## 5. AI Response
+Historically, `AIResponse` represented a model result after Gateway processing. The canonical implementation is now `ai_runtime_result` plus its related operation/attempt/usage records.
 
-Represents a model result after Gateway processing.
+A caller-facing AI response may expose:
 
-### Canonical fields
-
-- request ID;
-- typed output;
+- typed validated output;
 - output schema/version;
-- model/provider reference;
-- token usage;
-- latency;
-- safety result;
-- trace ID;
-- grounding/provenance references where applicable;
+- model/provider reference where appropriate;
+- usage summary where permitted;
+- safety/policy outcome;
+- grounding/provenance references;
+- warnings/abstention;
 - outcome/error classification.
 
-### Invariants
-
-A model response is never authoritative merely because it is valid JSON or has high confidence.
+Provider-specific response structures never become Phoenix domain contracts.
 
 ## 6. Intent
 
@@ -114,7 +109,7 @@ Represents structured interpretation of natural-language input.
 - locale/language;
 - confidence metadata;
 - provenance per field;
-- source request ID;
+- source operation/request ID;
 - schema version.
 
 ### Provenance values
@@ -124,7 +119,7 @@ Represents structured interpretation of natural-language input.
 - `retrieved_fact`;
 - `system_policy`.
 
-Explicit constraints always outrank inferred preferences.
+Explicit constraints always outrank inferred preferences. Intent is a proposal/interpretation and does not become authoritative domain state.
 
 ## 7. Retrieval Query
 
@@ -146,6 +141,8 @@ Represents a policy-scoped retrieval operation.
 - timestamp.
 
 Retrieval must apply authorization, tenant visibility, verification, legal and other hard filters before semantic ranking.
+
+Retrieval infrastructure may use the shared AI Runtime for model-backed query transformation/embedding where applicable, but retrieval remains its own capability and does not create a provider execution stack.
 
 ## 8. Retrieval Candidate
 
@@ -169,7 +166,7 @@ Vector/index records are accelerators. They never become the authoritative busin
 
 ## 9. Ranking Decision
 
-Represents the deterministic decision context used to order eligible candidates.
+Represents the decision context used to order eligible candidates.
 
 ### Signals
 
@@ -185,7 +182,7 @@ Represents the deterministic decision context used to order eligible candidates.
 
 `hardEligibility` is binary. Ineligible candidates are removed, not merely assigned a lower score.
 
-The decision stores the policy/model/ranking version sufficient to reproduce the decision.
+The decision stores the policy/model/ranking version sufficient to reproduce the decision. If model-backed scoring is used, execution goes through the canonical Runtime.
 
 ## 10. Grounding / Provenance
 
@@ -256,6 +253,8 @@ Represents one attempted AI tool execution.
 
 A successful model message is not evidence of successful execution; the domain tool result is authoritative.
 
+The tool invocation may call `CAP.AI.EXECUTE_TOOL` / the AI tool orchestration contract, but actual business behavior is always delegated to the owning capability.
+
 ## 13. Agent Run
 
 Represents a bounded multi-step AI workflow.
@@ -283,6 +282,8 @@ Represents a bounded multi-step AI workflow.
 
 An agent must stop on missing required information, denied policy, exhausted budget, ambiguous tool execution, safety boundary, cancellation, or completion.
 
+Every model-backed agent step uses the canonical AI Runtime. The Agent capability remains orchestration; it is not a second runtime.
+
 ## 14. Agent Step
 
 Represents one bounded observe/plan/tool/observe transition.
@@ -294,6 +295,7 @@ Represents one bounded observe/plan/tool/observe transition.
 - action type;
 - input/context reference;
 - selected tool reference if any;
+- Runtime operation reference when model execution occurs;
 - validation result;
 - execution result;
 - policy result;
@@ -330,6 +332,8 @@ Explicit, useful, non-sensitive preferences permitted to persist under policy.
 
 Sensitive information must not become durable memory merely because it appeared in conversation.
 
+Memory retrieval/generation that uses models is executed through the canonical Runtime; memory remains an AI data/feature concern and does not own provider execution.
+
 ## 16. Data Classification
 
 Minimum classification vocabulary:
@@ -344,6 +348,8 @@ Classification governs:
 - retrieval scope;
 - human review;
 - tool availability.
+
+The canonical Runtime evaluates provider/model eligibility using this classification before provider execution.
 
 ## 17. Safety Decision
 
@@ -363,33 +369,23 @@ Represents policy evaluation applied to an AI request, output, retrieval, memory
 
 Safety decisions are deterministic policy evidence, not model confidence.
 
+Runtime-level policy execution and evidence use the canonical Runtime policy contracts. Feature-level safety decisions may reference that evidence but must not establish a competing safety authority.
+
 ## 18. Prompt Definition / Version
 
-A production prompt is a versioned artifact.
+Prompts are canonical Runtime artifacts defined by `docs/AI_RUNTIME_DATA_DICTIONARY.md`.
 
-### Canonical fields
+This dictionary may reference a prompt version for AI capabilities, but must not define a second prompt registry.
 
-- stable prompt ID;
-- semantic version;
-- owner/module;
-- task;
-- input contract;
-- output contract;
-- safety policy reference;
-- evaluation status;
-- release timestamp;
-- rollback target;
-- immutable content reference.
-
-A production prompt change creates a new version.
+A production prompt change creates a new immutable version. Untrusted user, seller, retrieved, uploaded, and tool content remains data and cannot silently become higher-priority instructions.
 
 ## 19. Model Policy
 
-Defines permitted model-routing behavior.
+Defines permitted model-routing behavior at the AI policy layer.
 
 ### Canonical dimensions
 
-- task class;
+- task/operation class;
 - permitted providers/models;
 - risk class;
 - language/locale;
@@ -398,9 +394,12 @@ Defines permitted model-routing behavior.
 - cost ceiling;
 - tenant plan/quota constraints;
 - provider health/fallback rules;
-- output requirements.
+- output requirements;
+- data classification and residency restrictions.
 
-Features must reference policy rather than hard-code model selection.
+The policy selects from centrally registered models/providers through the Runtime. Features must reference policy rather than hard-code provider SDKs or provider model names.
+
+The detailed model/provider records and routing decision vocabulary are owned by `docs/AI_RUNTIME_DATA_DICTIONARY.md`; this section is a semantic AI-policy reference only.
 
 ## 20. Evaluation Case / Evaluation Run
 
@@ -409,7 +408,7 @@ Features must reference policy rather than hard-code model selection.
 Contains:
 
 - case ID;
-- task type;
+- task/operation type;
 - input;
 - expected schema/constraints;
 - expected safety boundary;
@@ -423,7 +422,7 @@ Contains:
 
 - run ID;
 - dataset/version;
-- model/prompt/policy versions;
+- operation/model/prompt/policy versions;
 - metrics;
 - failures;
 - regression status;
@@ -431,9 +430,11 @@ Contains:
 
 Required evaluation dimensions include schema correctness, retrieval relevance, ranking quality, tool selection, policy compliance, grounding, multilingual behavior, latency/cost, adversarial resistance, and medical/regulatory safety where applicable.
 
+Production model/prompt/schema changes must not bypass the evaluation/versioning contract of the canonical Runtime.
+
 ## 21. AI Trace
 
-One trace links a complete AI interaction across Gateway, retrieval, tools, policy, and domain outcomes.
+One trace links a complete AI interaction across capabilities, Runtime operations, retrieval, tools, policy, and domain outcomes.
 
 ### Minimum fields
 
@@ -441,40 +442,42 @@ One trace links a complete AI interaction across Gateway, retrieval, tools, poli
 - tenant/workspace;
 - actor class;
 - task;
-- prompt/policy version;
-- model/provider;
+- operation IDs;
+- prompt/policy/schema versions;
+- model/provider references;
 - retrieval identifiers;
 - tool invocations;
 - policy decisions;
 - latency;
-- token usage;
-- estimated cost;
+- token/resource usage;
+- estimated internal cost;
 - outcome/error class;
 - redaction/classification metadata.
 
 Sensitive content must be redacted according to Security/Data Classification policy.
 
-## 22. Usage / Cost Record
+## 22. Usage / Cost Record — Compatibility Concept
 
-Represents AI consumption for metering and governance.
+AI usage is canonicalized by `ai_usage_record` in the AI Runtime data dictionary and the AI Operation Economics contract.
 
-### Dimensions
+Feature-level records may summarize usage, but must not create a competing financial or usage authority.
+
+Canonical dimensions include:
 
 - tenant;
 - workspace;
-- feature/task;
+- actor;
+- operation/feature;
+- operation type/version;
 - model/provider;
-- request/run reference;
-- input tokens;
-- output tokens;
-- embedding units;
-- model calls;
-- tool calls;
-- cache hits;
-- estimated monetary cost;
-- timestamp.
+- operation/attempt reference;
+- meter unit and quantity;
+- usage status;
+- entitlement decision reference;
+- Billing usage/charge reference where applicable;
+- internal provider cost estimate.
 
-Quotas are enforced outside the model and before expensive execution.
+**Usage is not automatically a customer charge. Billing remains the only authority for entitlement, quota, credits, pricing, charges, refunds, and reversals.**
 
 ## 23. Cache Entry
 
@@ -483,6 +486,8 @@ Represents reusable AI output or retrieval acceleration under explicit freshness
 ### Canonical key dimensions
 
 `tenant + locale + task + normalized_input + policy_version + data_version`
+
+For model-backed AI output, prompt/schema/model/operation contract versions must also participate where they materially affect validity.
 
 ### Invariants
 
@@ -503,7 +508,7 @@ Represents deferred work such as extraction, classification, embedding generatio
 - job ID/type;
 - input/output references;
 - tenant/workspace scope;
-- policy/model version;
+- policy/model/operation version references;
 - idempotency key;
 - retry state;
 - attempt count;
@@ -511,7 +516,7 @@ Represents deferred work such as extraction, classification, embedding generatio
 - outcome/error class;
 - trace ID.
 
-Workers must be idempotent and observable.
+Workers execute model-backed work through the canonical Runtime and remain idempotent and observable.
 
 ## 25. Medical Safety Boundary
 
@@ -525,53 +530,66 @@ Sensitive health information requires consent and privacy controls from the owni
 
 ## 26. Canonical Events
 
-AI events are operational/intelligence events, not replacements for domain events.
+AI capability events are operational/intelligence events, not replacements for domain events.
 
-Recommended vocabulary:
+Runtime operation/usage events are canonicalized by `AI_OPERATION_ECONOMICS_ARCHITECTURE.md` and `AI_RUNTIME_ARCHITECTURE.md`.
 
-- `ai.request.created`
-- `ai.response.completed`
-- `ai.retrieval.completed`
-- `ai.ranking.completed`
-- `ai.tool.invocation.requested`
-- `ai.tool.invocation.completed`
-- `ai.tool.invocation.denied`
-- `ai.agent.run.started`
-- `ai.agent.run.completed`
-- `ai.agent.run.failed`
-- `ai.memory.created`
-- `ai.memory.updated`
-- `ai.memory.expired`
-- `ai.safety.denied`
-- `ai.safety.escalated`
-- `ai.evaluation.completed`
-- `ai.usage.recorded`
-- `ai.job.completed`
+Capability-level events may include:
 
-Event payloads should carry stable IDs, tenant/workspace scope, schema version, timestamps, and correlation IDs.
+- `ai.request.created`;
+- `ai.response.completed`;
+- `ai.retrieval.completed`;
+- `ai.ranking.completed`;
+- `ai.tool.invocation.requested`;
+- `ai.tool.invocation.completed`;
+- `ai.tool.invocation.denied`;
+- `ai.agent.run.started`;
+- `ai.agent.run.completed`;
+- `ai.agent.run.failed`;
+- `ai.memory.created`;
+- `ai.memory.updated`;
+- `ai.memory.expired`;
+- `ai.safety.denied`;
+- `ai.safety.escalated`;
+- `ai.evaluation.completed`;
+- `ai.job.completed`.
+
+Runtime events remain:
+
+- `ai.operation.created.v1`;
+- `ai.operation.started.v1`;
+- `ai.operation.succeeded.v1`;
+- `ai.operation.failed.v1`;
+- `ai.operation.partially_succeeded.v1`;
+- `ai.operation.retried.v1`;
+- `ai.operation.cancelled.v1`;
+- `ai.usage.recorded.v1`.
+
+The same logical event must not be emitted twice by separate layers merely because both observed the same operation.
 
 ## 27. Canonical Capabilities
 
-AI exposes infrastructure capabilities; domain modules expose domain capabilities.
+AI capabilities are business/intelligence contracts. The shared Runtime is an internal execution boundary, not a parallel business capability.
 
-Canonical AI capabilities include:
+Canonical AI capability families include:
 
-- `CAP.AI.REQUEST`
-- `CAP.AI.INTENT.EXTRACT`
-- `CAP.AI.RETRIEVE`
-- `CAP.AI.RANK`
-- `CAP.AI.EXPLAIN`
-- `CAP.AI.TOOL.INVOKE`
-- `CAP.AI.AGENT.RUN`
-- `CAP.AI.MEMORY.READ`
-- `CAP.AI.MEMORY.WRITE`
-- `CAP.AI.MEMORY.UPDATE`
-- `CAP.AI.MEMORY.EXPIRE`
-- `CAP.AI.EVALUATE`
-- `CAP.AI.TRACE.READ`
-- `CAP.AI.USAGE.READ`
+- `CAP.AI.CLASSIFY`;
+- `CAP.AI.EXTRACT`;
+- `CAP.AI.GENERATE`;
+- `CAP.AI.EVALUATE`;
+- `CAP.AI.APPLY_SAFETY_POLICY`;
+- `CAP.AI.CREATE_AGENT`;
+- `CAP.AI.RUN_AGENT`;
+- `CAP.AI.EXECUTE_TOOL`;
+- `CAP.AI.MANAGE_MEMORY`;
+- `CAP.AI.SELLER.*` capabilities defined by the Seller AI contract;
+- intent, retrieval, ranking, explanation, trace, and usage capabilities defined in the Capability Contract Matrix.
 
-Authorization remains the canonical authority for who may invoke each capability.
+`CAP.AI.REQUEST` is a compatibility/legacy term and must not be implemented as a second provider execution entry point. New implementation must use the canonical Runtime operation contract.
+
+There is deliberately no generic public `CAP.AI.EXECUTE_OPERATION`. Model/provider execution is an internal Runtime responsibility.
+
+Authorization remains the canonical authority for who may invoke each capability. Billing remains the authority for entitlement and usage economics.
 
 ## 28. Cross-Module Contract Rules
 
@@ -580,18 +598,22 @@ Authorization remains the canonical authority for who may invoke each capability
 3. AI never calculates authoritative price, availability, payment status, inventory, credential validity, or promotion eligibility independently.
 4. AI never bypasses Authorization.
 5. AI never writes directly to domain-private tables.
-6. AI tool execution always passes through the owning domain service.
+6. AI tool execution always passes through the owning domain capability.
 7. Domain services return authoritative results to AI.
 8. AI-generated explanations must be grounded in actual evidence/signals.
 9. Explicit user constraints outrank inferred preferences.
 10. Tenant isolation applies to retrieval, memory, cache, tools, traces, and evaluations.
-11. Prompt/model/policy versions required for reproducibility are immutable references.
+11. Prompt/model/policy/schema versions required for reproducibility are immutable references.
 12. Sensitive/regulated data follows classification and retention policy.
 13. Medical safety restrictions are hard policy boundaries.
+14. Every model-backed operation uses the canonical AI Runtime.
+15. No feature may import a provider SDK directly.
+16. No feature may create a feature-local prompt registry, model registry, provider adapter, usage ledger, retry identity, or execution runtime.
+17. Runtime output remains untrusted until schema/policy validation and appropriate domain authorization.
 
 ## 29. Anti-Duplication Rule
 
-There is one shared AI engine.
+There is one shared AI execution runtime and one canonical runtime data model.
 
 Do not create:
 
@@ -600,15 +622,18 @@ Do not create:
 - Medical AI engine;
 - separate ranking engines per vertical;
 - separate memory engines per dashboard;
-- separate tool registries per feature.
+- separate tool registries per feature;
+- feature-local provider clients;
+- feature-local model/prompt/schema registries;
+- feature-local AI billing or usage authorities.
 
-Vertical differences are expressed through typed intents, domain data, policies, prompts, evaluation cases, and module-owned tools.
+Vertical differences are expressed through typed intents, domain data, policies, prompts, evaluation cases, and module-owned tools while model execution remains centralized.
 
 ## 30. Canonical Data Objects Summary
 
+### AI capability-layer objects
+
 ```text
-AIRequest
-AIResponse
 Intent
 RetrievalQuery
 RetrievalCandidate
@@ -621,29 +646,58 @@ AgentStep
 MemoryEntry
 DataClassification
 SafetyDecision
-PromptVersion
 ModelPolicy
 EvaluationCase
 EvaluationRun
 AITrace
-AIUsageRecord
 AICacheEntry
 AIJob
 ```
 
-## 31. Completion Gate
+### Canonical Runtime objects
 
-The AI data model is considered complete when:
+Defined once in `docs/AI_RUNTIME_DATA_DICTIONARY.md`:
 
-- every AI-owned persistent concept has a defined owner and scope;
-- every model/tool decision has policy and provenance references;
-- retrieval candidates cannot become authoritative by accident;
+```text
+AI Operation
+AI Operation Type
+AI Model
+AI Provider
+AI Model Routing Decision
+AI Prompt
+AI Prompt Version
+AI Schema
+AI Schema Version
+AI Policy
+AI Policy Decision
+AI Provider Attempt
+AI Runtime Result
+AI Usage Record
+```
+
+This separation is intentional: capability-layer concepts compose the Runtime; they do not redefine it.
+
+## 31. Canonical References and Completion Gate
+
+This dictionary must remain consistent with:
+
+- `docs/AI_ARCHITECTURE.md` — broad AI architecture baseline;
+- `docs/AI_RUNTIME_ARCHITECTURE.md` — canonical execution boundary;
+- `docs/AI_RUNTIME_DATA_DICTIONARY.md` — canonical Runtime data vocabulary;
+- `docs/AI_OPERATION_ECONOMICS_ARCHITECTURE.md` — canonical AI economics boundary;
+- `docs/SELLER_AI_PRODUCT_CREATION_DATA_DICTIONARY.md` — Seller AI workflow vocabulary;
+- `docs/CAPABILITY_CONTRACT_MATRIX.md` — capability ownership contract;
+- `docs/AI_CAPABILITY_RUNTIME_RECONCILIATION.md` — Capability/Runtime reconciliation.
+
+The AI data architecture is considered complete for this layer when:
+
+- no feature owns a parallel provider execution path;
+- AI capabilities compose the single Runtime;
+- legacy Gateway/request/response concepts map to Runtime concepts without creating duplicate entities;
+- model/provider/prompt/schema/routing records have one canonical vocabulary;
+- usage and customer economics have one canonical ownership boundary;
+- tool and agent execution remain bounded and auditable;
 - domain facts remain owned by domain modules;
-- memory has explicit privacy/retention semantics;
-- agent execution is bounded and auditable;
-- usage and cost are attributable;
-- medical safety is represented as a hard policy boundary;
-- verticals reuse the same canonical objects;
-- future changes require a module-level ADR rather than a second competing data model.
-
-**Decision:** This document is the canonical AI data dictionary. Future changes extend it through explicit AI module ADRs; new verticals must reuse these objects rather than introduce parallel AI data models.
+- tenant, authorization, provenance, safety, and privacy boundaries are explicit;
+- historical Runtime executions can be explained through immutable version references;
+- new vertical AI features require configuration/contracts, not a new AI engine.
