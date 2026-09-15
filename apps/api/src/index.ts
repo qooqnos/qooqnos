@@ -1,6 +1,7 @@
 import { BusinessService, BusinessRepository } from "@qooqnos/business";
+import { CatalogService, CatalogRepository } from "@qooqnos/catalog";
 import { AppError, brandId } from "@qooqnos/core";
-import { AuthorizationRepository } from "@qooqnos/database";
+import { AuthorizationRepository, CatalogCommandRepository } from "@qooqnos/database";
 import type { D1Database } from "@qooqnos/database";
 import { SessionRepository, sha256Hex } from "@qooqnos/database";
 import { createAuthorizationService } from "@qooqnos/runtime";
@@ -138,35 +139,52 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     requireWorkspace: true,
     handler: async ({ context, request }) => {
       if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
-      const idempotencyKey = request.headers.get("idempotency-key")?.trim();
-      if (!idempotencyKey) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is required.", requestId: context.requestId });
-      if (idempotencyKey.length > 200) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is too long.", requestId: context.requestId });
-
-      let command: unknown;
-      try {
-        command = await request.json();
-      } catch {
-        throw new AppError({ code: "VALIDATION_ERROR", message: "Request body must be valid JSON.", requestId: context.requestId });
-      }
-      if (!isCreateBusinessCommand(command)) throw new AppError({ code: "VALIDATION_ERROR", message: "Business create payload is invalid.", requestId: context.requestId });
-
+      const idempotencyKey = requiredIdempotencyKey(request, context.requestId);
+      const command = await parseJsonCommand(request, isCreateBusinessCommand, "Business create payload is invalid.", context.requestId);
       const fingerprint = await sha256Hex(stableStringify(command));
       const now = new Date().toISOString();
-      const expiresAt = new Date(Date.parse(now) + 24 * 60 * 60 * 1000).toISOString();
       const service = new BusinessService({
         repository: new BusinessRepository(database),
         authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
         id: () => brandId<"EntityId">(crypto.randomUUID()),
         now: () => now,
       });
-      const business = await service.createAtomic(context, command, {
+      const result = await service.createAtomic(context, command, {
         idempotencyKey,
         requestFingerprint: fingerprint,
-        idempotencyExpiresAt: expiresAt,
+        idempotencyExpiresAt: expiresAt(now),
         auditId: crypto.randomUUID(),
       });
-      const status = business.kind === "replayed" ? 200 : 201;
-      return json({ data: business.result, replayed: business.kind === "replayed" }, status, context.requestId);
+      return json({ data: result.result, replayed: result.kind === "replayed" }, result.kind === "replayed" ? 200 : 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/catalog/products",
+    module: "catalog",
+    operation: "catalog.product.create",
+    permission: "catalog.product.create",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const idempotencyKey = requiredIdempotencyKey(request, context.requestId);
+      const command = await parseJsonCommand(request, isCreateProductCommand, "Product create payload is invalid.", context.requestId);
+      const now = new Date().toISOString();
+      const service = new CatalogService({
+        repository: new CatalogRepository(database),
+        commands: new CatalogCommandRepository(database),
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
+        id: () => brandId<"EntityId">(crypto.randomUUID()),
+        now: () => now,
+      });
+      const result = await service.createProduct(context, {
+        ...command,
+        idempotencyKey,
+        requestFingerprint: await sha256Hex(stableStringify(command)),
+      });
+      return json({ data: result }, 201, context.requestId);
     },
   });
 
@@ -175,7 +193,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     path: "/api/v1/business-access",
     module: "business",
     operation: "business.access",
-    permission: "business:create",
+    permission: "business.create",
     requireAuthentication: true,
     requireWorkspace: true,
     handler: ({ context }) =>
@@ -183,6 +201,28 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
   });
 
   return router;
+}
+
+function requiredIdempotencyKey(request: Request, requestId: string): string {
+  const value = request.headers.get("idempotency-key")?.trim();
+  if (!value) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is required.", requestId });
+  if (value.length > 200) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is too long.", requestId });
+  return value;
+}
+
+async function parseJsonCommand<T>(request: Request, guard: (value: unknown) => value is T, message: string, requestId: string): Promise<T> {
+  let command: unknown;
+  try {
+    command = await request.json();
+  } catch {
+    throw new AppError({ code: "VALIDATION_ERROR", message: "Request body must be valid JSON.", requestId });
+  }
+  if (!guard(command)) throw new AppError({ code: "VALIDATION_ERROR", message, requestId });
+  return command;
+}
+
+function expiresAt(now: string): string {
+  return new Date(Date.parse(now) + 24 * 60 * 60 * 1000).toISOString();
 }
 
 function isCreateBusinessCommand(value: unknown): value is {
@@ -196,13 +236,21 @@ function isCreateBusinessCommand(value: unknown): value is {
 } {
   if (!value || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;
-  return typeof body.name === "string" && typeof body.displayName === "string" && optionalStrings(body);
+  return typeof body.name === "string" && typeof body.displayName === "string" && optionalStrings(body, ["businessType", "primaryCategoryId", "defaultLocale", "timezone", "defaultCurrency"]);
 }
 
-function optionalStrings(body: Record<string, unknown>): boolean {
-  return ["businessType", "primaryCategoryId", "defaultLocale", "timezone", "defaultCurrency"].every(
-    (key) => body[key] === undefined || typeof body[key] === "string",
-  );
+function isCreateProductCommand(value: unknown): value is {
+  businessId: string;
+  name: string;
+  description?: string;
+} {
+  if (!value || typeof value !== "object") return false;
+  const body = value as Record<string, unknown>;
+  return typeof body.businessId === "string" && typeof body.name === "string" && optionalStrings(body, ["description"]);
+}
+
+function optionalStrings(body: Record<string, unknown>, keys: readonly string[]): boolean {
+  return keys.every((key) => body[key] === undefined || typeof body[key] === "string");
 }
 
 function stableStringify(value: unknown): string {
