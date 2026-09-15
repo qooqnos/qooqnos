@@ -47,7 +47,7 @@ export class CatalogService {
       });
     }
 
-    return this.options.repository.createProduct({
+    return this.options.repository.createProduct(context, {
       ...command,
       id: productId,
       name: command.name.trim(),
@@ -58,13 +58,13 @@ export class CatalogService {
 
   async createProductVariant(context: RequestContext, command: Omit<CreateProductVariantInput, "id" | "now">): Promise<ProductVariantRecord> {
     await this.authorize(context, "catalog.product_variant.create");
-    return this.options.repository.createProductVariant({ ...command, id: this.options.id(), now: this.options.now() });
+    return this.options.repository.createProductVariant(context, { ...command, id: this.options.id(), now: this.options.now() });
   }
 
   async createOffering(context: RequestContext, command: Omit<CreateOfferingInput, "id" | "now">): Promise<OfferingRecord> {
     await this.authorize(context, "catalog.offering.create");
     validateText(command.title, "title");
-    return this.options.repository.createOffering({
+    return this.options.repository.createOffering(context, {
       ...command,
       id: this.options.id(),
       title: command.title.trim(),
