@@ -35,6 +35,15 @@ export function createSellerProductSessionRepository(database: D1Database): Sell
       if (!record) return null;
       return JSON.parse(record.draftJson) as SellerProductDraft;
     },
+    async reviewDraft(input) {
+      await repository.reviewDraft(input.context, input.sessionId, input.version, input.now);
+    },
+    async confirmDraft(input) {
+      await repository.confirmDraft(input.context, input.sessionId, input.version, input.now);
+    },
+    async cancelSession(input) {
+      return repository.cancelSession(input.context, input.sessionId, input.now);
+    },
   };
 
   function createId(): EntityId {
