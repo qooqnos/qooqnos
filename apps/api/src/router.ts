@@ -10,6 +10,7 @@ export interface ApiRouteContext {
   readonly request: Request;
   readonly context: ApiRequestContext;
   readonly subject: AuthorizationSubject;
+  readonly authenticatedSessionId?: string | undefined;
 }
 
 export type ApiRouteHandler = (input: ApiRouteContext) => Response | Promise<Response>;
@@ -88,7 +89,12 @@ export class ApiRouter {
         });
       }
 
-      const response = await route.handler({ request, context, subject: auth.subject });
+      const response = await route.handler({
+        request,
+        context,
+        subject: auth.subject,
+        ...(auth.authenticatedSessionId ? { authenticatedSessionId: auth.authenticatedSessionId } : {}),
+      });
       const headers = new Headers(response.headers);
       headers.set("x-request-id", context.requestId);
       headers.set("x-correlation-id", context.correlationId);
