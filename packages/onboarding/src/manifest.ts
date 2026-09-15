@@ -1,12 +1,5 @@
 import type { AuthorizationPolicyRegistry } from "@qooqnos/runtime";
-import { registerOnboardingAuthorization } from "./authorization";
-
-export const ONBOARDING_PERMISSIONS = [
-  "onboarding.create",
-  "onboarding.submit",
-  "onboarding.verify",
-  "onboarding.reject",
-] as const;
+import { ONBOARDING_PERMISSIONS, registerOnboardingAuthorization } from "./authorization";
 
 export const onboardingModule = {
   id: "onboarding",

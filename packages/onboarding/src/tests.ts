@@ -1,12 +1,19 @@
-import type { EntityId, RequestContext } from "@phoenix/core";
-import { OnboardingService, type OnboardingProfile, type OnboardingRepository } from "./index";
+import type { CorrelationId, EntityId, RequestContext, RequestId } from "@qooqnos/core";
+import {
+  OnboardingService,
+  type OnboardingProfile,
+  type OnboardingRepository,
+  type OnboardingStatus,
+} from "./index";
 
 const id = (value: string) => value as EntityId;
+const reqId = (value: string) => value as RequestId;
+const corId = (value: string) => value as CorrelationId;
 
 function context(tenantId: string, workspaceId: string, actorId: string): RequestContext {
   return {
-    requestId: id("req-test"),
-    correlationId: id("cor-test"),
+    requestId: reqId("req-test"),
+    correlationId: corId("cor-test"),
     actorId: id(actorId),
     tenantId: id(tenantId),
     workspaceId: id(workspaceId),
@@ -80,9 +87,11 @@ export async function assertOnboardingLifecycle(): Promise<void> {
   const ctx = context("org-1", "ws-1", "user-1");
 
   await service.submit(ctx, id("profile-1"), id("user-1"));
-  if (current.status !== "submitted") throw new Error("draft -> submitted failed");
+  const statusAfterSubmit: OnboardingStatus = current.status;
+  if (statusAfterSubmit !== "submitted") throw new Error("draft -> submitted failed");
   await service.verify(ctx, id("profile-1"), id("user-1"));
-  if (current.status !== "verified") throw new Error("submitted -> verified failed");
+  const statusAfterVerify: OnboardingStatus = current.status;
+  if (statusAfterVerify !== "verified") throw new Error("submitted -> verified failed");
 }
 
 export async function assertOnboardingTenantIsolation(): Promise<void> {

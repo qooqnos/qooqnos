@@ -1,13 +1,15 @@
-import type { EntityId, RequestContext } from "@phoenix/core";
-import { AuthorizationRegistry, type AuthorizationSubject } from "@phoenix/runtime";
+import type { CorrelationId, EntityId, RequestContext, RequestId } from "@qooqnos/core";
+import { AuthorizationRegistry, type AuthorizationSubject } from "@qooqnos/runtime";
 import { OnboardingService, type OnboardingProfile, type OnboardingRepository } from "./index";
 
 const id = (value: string) => value as EntityId;
+const reqId = (value: string) => value as RequestId;
+const corId = (value: string) => value as CorrelationId;
 
 function context(): RequestContext {
   return {
-    requestId: id("req-atomic"),
-    correlationId: id("cor-atomic"),
+    requestId: reqId("req-atomic"),
+    correlationId: corId("cor-atomic"),
     actorId: id("user-1"),
     tenantId: id("org-1"),
     workspaceId: id("ws-1"),
