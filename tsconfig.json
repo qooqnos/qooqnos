@@ -9,6 +9,7 @@
     { "path": "./packages/catalog" },
     { "path": "./packages/onboarding" },
     { "path": "./packages/runtime" },
-    { "path": "./packages/media" }
+    { "path": "./packages/media" },
+    { "path": "./packages/discovery" }
   ]
 }
