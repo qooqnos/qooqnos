@@ -78,9 +78,9 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
         const message = error instanceof Error ? error.message : "Runtime boot failed.";
         return json({ status: "not_ready", checks: { runtime: "unavailable", reason: message }, timestamp: new Date().toISOString() }, 503, context.requestId);
       }
-      const checks = await checkDatabase(database);
-      const ready = checks.database === "ok" && checks.migrationRegistry === "ok";
-      return json({ status: ready ? "ready" : "not_ready", checks, timestamp: new Date().toISOString(), version }, ready ? 200 : 503, context.requestId);
+      const result = await checkDatabase(database?.raw());
+      const ready = result.database === "ok" && result.migrationRegistry === "ok";
+      return json({ status: ready ? "ready" : "not_ready", checks: { runtime: "ok", ...result }, timestamp: new Date().toISOString() }, ready ? 200 : 503, context.requestId);
     },
   });
 
@@ -91,37 +91,41 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     operation: "context.read",
     permission: "context:read",
     requireAuthentication: true,
-    handler: ({ context }) => json({ context }, 200, context.requestId),
+    handler: ({ context, subject }) =>
+      json({
+        requestId: context.requestId,
+        correlationId: context.correlationId,
+        actorId: context.actorId,
+        tenantId: context.tenantId,
+        workspaceId: context.workspaceId,
+        module: context.module,
+        operation: context.operation,
+        authenticated: context.authenticated,
+        roles: subject.roles,
+        permissions: subject.permissions,
+      }, 200, context.requestId),
   });
 
   router.register({
     method: "GET",
     path: "/api/v1/session",
-    module: "auth",
+    module: "identity",
     operation: "session.read",
     requireAuthentication: true,
-    handler: ({ context }) =>
-      json({
-        session: {
-          id: context.authenticatedSessionId,
-          actorId: context.actorId,
-          tenantId: context.tenantId,
-          workspaceId: context.workspaceId,
-        },
-      }, 200, context.requestId),
+    handler: ({ context, authenticatedSessionId }) =>
+      json({ session: { id: authenticatedSessionId, actorId: context.actorId, tenantId: context.tenantId, workspaceId: context.workspaceId, authenticated: context.authenticated } }, 200, context.requestId),
   });
 
   router.register({
     method: "POST",
     path: "/api/v1/session/revoke",
-    module: "auth",
+    module: "identity",
     operation: "session.revoke",
     requireAuthentication: true,
     handler: async ({ context, authenticatedSessionId }) => {
-      if (!database || !authenticatedSessionId) throw new AppError("DATABASE_UNAVAILABLE", "Database is unavailable", { status: 503 });
-      const sessionRepository = new SessionRepository(database);
-      await sessionRepository.revokeById(context, authenticatedSessionId, new Date().toISOString());
-      return json({ revoked: true, sessionId: authenticatedSessionId }, 200, context.requestId);
+      if (!database || !authenticatedSessionId) return json({ revoked: false }, 400, context.requestId);
+      const revoked = await new SessionRepository(database).revoke(authenticatedSessionId);
+      return json({ revoked }, 200, context.requestId);
     },
   });
 
@@ -133,23 +137,25 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     permission: "business.create",
     requireAuthentication: true,
     requireWorkspace: true,
-    handler: async ({ request, context }) => {
-      if (!database || !context.tenantId || !context.workspaceId) throw new AppError("DATABASE_UNAVAILABLE", "Database is unavailable", { status: 503 });
-      const idempotencyKey = requiredIdempotencyKey(request);
-      const payload = await parseJsonCommand(request);
-      if (!isCreateBusinessCommand(payload)) throw new AppError("VALIDATION_ERROR", "Invalid business command", { status: 400 });
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const idempotencyKey = requiredIdempotencyKey(request, context.requestId);
+      const command = await parseJsonCommand(request, isCreateBusinessCommand, "Business create payload is invalid.", context.requestId);
+      const fingerprint = await sha256Hex(stableStringify(command));
+      const now = new Date().toISOString();
       const service = new BusinessService({
         repository: new BusinessRepository(database),
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
         id: () => brandId<"EntityId">(crypto.randomUUID()),
-        now: () => new Date().toISOString(),
+        now: () => now,
       });
-      const command = {
-        ...payload,
+      const result = await service.createAtomic(context, command, {
         idempotencyKey,
-        requestFingerprint: await sha256Hex(stableStringify(payload)),
-      };
-      const result = await service.createAtomic(context, command);
-      return json({ business: result.business, auditId: result.auditId }, 201, context.requestId);
+        requestFingerprint: fingerprint,
+        idempotencyExpiresAt: expiresAt(now),
+        auditId: crypto.randomUUID(),
+      });
+      return json({ data: result.result, replayed: result.kind === "replayed" }, result.kind === "replayed" ? 200 : 201, context.requestId);
     },
   });
 
@@ -161,27 +167,24 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     permission: "catalog.product.create",
     requireAuthentication: true,
     requireWorkspace: true,
-    handler: async ({ request, context }) => {
-      if (!database || !context.tenantId || !context.workspaceId) throw new AppError("DATABASE_UNAVAILABLE", "Database is unavailable", { status: 503 });
-      const idempotencyKey = requiredIdempotencyKey(request);
-      const payload = await parseJsonCommand(request);
-      if (!isCreateProductCommand(payload)) throw new AppError("VALIDATION_ERROR", "Invalid product command", { status: 400 });
-      const authorization = createAuthorizationService(new AuthorizationRepository(database), createApiAuthorizationRegistry());
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const idempotencyKey = requiredIdempotencyKey(request, context.requestId);
+      const command = await parseJsonCommand(request, isCreateProductCommand, "Product create payload is invalid.", context.requestId);
+      const now = new Date().toISOString();
       const service = new CatalogService({
         repository: new CatalogRepository(database),
         commands: new CatalogCommandRepository(database),
-        authorization,
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
         id: () => brandId<"EntityId">(crypto.randomUUID()),
-        now: () => new Date().toISOString(),
+        now: () => now,
       });
       const result = await service.createProduct(context, {
-        businessId: brandId<"EntityId">(payload.businessId),
-        name: payload.name,
-        ...(payload.description !== undefined ? { description: payload.description } : {}),
+        ...command,
         idempotencyKey,
-        requestFingerprint: await sha256Hex(stableStringify(payload)),
+        requestFingerprint: await sha256Hex(stableStringify(command)),
       });
-      return json({ product: result }, 201, context.requestId);
+      return json({ data: result }, 201, context.requestId);
     },
   });
 
@@ -189,79 +192,89 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     method: "GET",
     path: "/api/v1/business-access",
     module: "business",
-    operation: "business.access.read",
+    operation: "business.access",
     permission: "business.create",
     requireAuthentication: true,
     requireWorkspace: true,
-    handler: ({ context }) => json({ tenantId: context.tenantId, workspaceId: context.workspaceId, actorId: context.actorId }, 200, context.requestId),
-  });
-
-  router.register({
-    method: "GET",
-    path: "/",
-    module: "platform",
-    operation: "platform.home",
-    handler: () => html(homePage(version), 200),
+    handler: ({ context }) =>
+      json({ status: "authorized", tenantId: context.tenantId, workspaceId: context.workspaceId }, 200, context.requestId),
   });
 
   return router;
 }
 
-function requiredIdempotencyKey(request: Request): string {
+function requiredIdempotencyKey(request: Request, requestId: string): string {
   const value = request.headers.get("idempotency-key")?.trim();
-  if (!value) throw new AppError("IDEMPOTENCY_REQUIRED", "Idempotency-Key header is required", { status: 400 });
-  if (value.length > 200) throw new AppError("VALIDATION_ERROR", "Idempotency-Key is too long", { status: 400 });
+  if (!value) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is required.", requestId });
+  if (value.length > 200) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is too long.", requestId });
   return value;
 }
 
-async function parseJsonCommand(request: Request): Promise<Record<string, unknown>> {
-  let payload: unknown;
+async function parseJsonCommand<T>(request: Request, guard: (value: unknown) => value is T, message: string, requestId: string): Promise<T> {
+  let command: unknown;
   try {
-    payload = await request.json();
+    command = await request.json();
   } catch {
-    throw new AppError("VALIDATION_ERROR", "Request body must be valid JSON", { status: 400 });
+    throw new AppError({ code: "VALIDATION_ERROR", message: "Request body must be valid JSON.", requestId });
   }
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new AppError("VALIDATION_ERROR", "Request body must be a JSON object", { status: 400 });
-  return payload as Record<string, unknown>;
+  if (!guard(command)) throw new AppError({ code: "VALIDATION_ERROR", message, requestId });
+  return command;
 }
 
-function isCreateBusinessCommand(payload: Record<string, unknown>): payload is { name: string; slug?: string; description?: string } {
-  return typeof payload.name === "string" && payload.name.trim().length > 0 && (payload.slug === undefined || typeof payload.slug === "string") && (payload.description === undefined || typeof payload.description === "string");
+function expiresAt(now: string): string {
+  return new Date(Date.parse(now) + 24 * 60 * 60 * 1000).toISOString();
 }
 
-function isCreateProductCommand(payload: Record<string, unknown>): payload is { businessId: string; name: string; description?: string } {
-  return typeof payload.businessId === "string" && payload.businessId.trim().length > 0 && typeof payload.name === "string" && payload.name.trim().length > 0 && (payload.description === undefined || typeof payload.description === "string");
+function isCreateBusinessCommand(value: unknown): value is {
+  name: string;
+  displayName: string;
+  businessType?: string;
+  primaryCategoryId?: string;
+  defaultLocale?: string;
+  timezone?: string;
+  defaultCurrency?: string;
+} {
+  if (!value || typeof value !== "object") return false;
+  const body = value as Record<string, unknown>;
+  return typeof body.name === "string" && typeof body.displayName === "string" && optionalStrings(body, ["businessType", "primaryCategoryId", "defaultLocale", "timezone", "defaultCurrency"]);
+}
+
+function isCreateProductCommand(value: unknown): value is {
+  businessId: string;
+  name: string;
+  description?: string;
+} {
+  if (!value || typeof value !== "object") return false;
+  const body = value as Record<string, unknown>;
+  return typeof body.businessId === "string" && typeof body.name === "string" && optionalStrings(body, ["description"]);
+}
+
+function optionalStrings(body: Record<string, unknown>, keys: readonly string[]): boolean {
+  return keys.every((key) => body[key] === undefined || typeof body[key] === "string");
 }
 
 function stableStringify(value: unknown): string {
-  if (value === null || typeof value !== "object") return JSON.stringify(value);
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
-  const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
-  return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${stableStringify(entry)}`).join(",")}}`;
+  if (value && typeof value === "object") {
+    const object = value as Record<string, unknown>;
+    return `{${Object.keys(object).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(object[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
 }
 
 function envForRuntime(version: string, database: D1Database | undefined): ApiEnv {
-  return {
-    APP_VERSION: version,
-    DB: database?.raw,
-  };
+  if (!database) return { APP_VERSION: version };
+  return { APP_VERSION: version, DB: database.raw() };
 }
 
 export default {
   async fetch(request: Request, env: ApiEnv): Promise<Response> {
-    const database = getDatabase(env.DB);
-    const router = createRouter(env.APP_VERSION ?? "0.1.0", database);
-    const requestId = request.headers.get("x-request-id")?.trim() ?? crypto.randomUUID();
-    const correlationId = request.headers.get("x-correlation-id")?.trim() ?? requestId;
-    const workspaceId = request.headers.get("x-workspace-id")?.trim();
-    const context = createRequestContext({
-      requestId,
-      correlationId,
-      workspaceId,
-      module: "platform",
-      operation: "request.handle",
-      authenticated: false,
-    });
-    return router.handle(request, context);
+    const url = new URL(request.url);
+    const version = env.APP_VERSION ?? "development";
+    const database = getDatabase(env);
+    if (request.method === "GET" && url.pathname === "/") return html(homePage(version));
+    return createRouter(version, database ?? undefined).handle(request);
   },
 };
+
+export { createRequestContext };
