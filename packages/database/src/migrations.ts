@@ -38,10 +38,12 @@ export class MigrationRunner {
 
   async run(): Promise<MigrationResult[]> {
     await validateDefinitionChecksums(this.migrations);
-    await ensureMigrationMetadataTable(this.database);
-    const applied = await this.database.all<AppliedMigration>(
-      "SELECT id, version, checksum, module_id AS moduleId, applied_at AS appliedAt FROM schema_migrations ORDER BY version ASC",
-    );
+    const hasMetadataTable = await hasMigrationMetadataTable(this.database);
+    const applied = hasMetadataTable
+      ? await this.database.all<AppliedMigration>(
+          "SELECT id, version, checksum, module_id AS moduleId, applied_at AS appliedAt FROM schema_migrations ORDER BY version ASC",
+        )
+      : [];
     await validateAppliedMigrations(applied, this.migrations);
     const appliedByVersion = new Map(applied.map((migration) => [migration.version, migration]));
     const results: MigrationResult[] = [];
@@ -63,14 +65,11 @@ export class MigrationRunner {
   }
 }
 
-async function ensureMigrationMetadataTable(database: D1Database): Promise<void> {
-  await database.run(`CREATE TABLE IF NOT EXISTS schema_migrations (
-    id TEXT PRIMARY KEY,
-    version INTEGER NOT NULL UNIQUE,
-    checksum TEXT NOT NULL,
-    module_id TEXT NOT NULL,
-    applied_at TEXT NOT NULL
-  )`);
+async function hasMigrationMetadataTable(database: D1Database): Promise<boolean> {
+  const result = await database.first<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'",
+  );
+  return result?.name === "schema_migrations";
 }
 
 export function validateMigrationDefinitions(migrations: readonly MigrationDefinition[]): void {
