@@ -106,21 +106,26 @@ export class CatalogRepository extends Repository {
     );
   }
 
-  async createProduct(input: CreateProductInput): Promise<ProductRecord> {
-    await this.assertBusiness(input.businessId);
+  async createProduct(context: RequestContext, input: CreateProductInput): Promise<ProductRecord> {
+    await this.assertBusiness(context, input.businessId);
     await this.database.run(
       `INSERT INTO products (id, business_id, name, description, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, 'draft', ?, ?)`,
       input.id, input.businessId, input.name, input.description ?? null, input.now, input.now,
     );
-    return this.requireProduct(input.id, input.businessId);
+    return this.requireProduct(context, input.id, input.businessId);
   }
 
-  async createProductVariant(input: CreateProductVariantInput): Promise<ProductVariantRecord> {
+  async createProductVariant(context: RequestContext, input: CreateProductVariantInput): Promise<ProductVariantRecord> {
     const product = await this.database.first<{ businessId: EntityId }>(
-      `SELECT business_id AS businessId FROM products WHERE id = ? LIMIT 1`, input.productId,
+      `SELECT p.business_id AS businessId
+       FROM products p INNER JOIN businesses b ON b.id = p.business_id
+       WHERE p.id = ? AND b.organization_id = ? AND b.workspace_id = ? LIMIT 1`,
+      input.productId,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      this.requireWorkspace({ workspaceId: context.workspaceId }),
     );
-    if (!product) throw new DatabaseError("Product not found");
+    if (!product) throw new DatabaseError("Product is not available in the current workspace");
     const sku = input.sku?.trim() || null;
     if (sku) {
       const duplicate = await this.database.first<{ id: string }>(
@@ -147,12 +152,12 @@ export class CatalogRepository extends Repository {
     };
   }
 
-  async createOffering(input: CreateOfferingInput): Promise<OfferingRecord> {
-    await this.assertBusiness(input.businessId);
+  async createOffering(context: RequestContext, input: CreateOfferingInput): Promise<OfferingRecord> {
+    await this.assertBusiness(context, input.businessId);
     if (input.offeringType === "service" && (!input.serviceId || input.productId)) throw new DatabaseError("Service offering requires only serviceId");
     if (input.offeringType === "product" && (!input.productId || input.serviceId)) throw new DatabaseError("Product offering requires only productId");
-    if (input.productId) await this.assertProductBelongsToBusiness(input.productId, input.businessId);
-    if (input.serviceId) await this.assertServiceBelongsToBusiness(input.serviceId, input.businessId);
+    if (input.productId) await this.assertProductBelongsToBusiness(context, input.productId, input.businessId);
+    if (input.serviceId) await this.assertServiceBelongsToBusiness(context, input.serviceId, input.businessId);
     await this.database.run(
       `INSERT INTO offerings (id, business_id, offering_type, title, description, service_id, product_id,
        status, publication_status, created_at, updated_at)
@@ -160,7 +165,7 @@ export class CatalogRepository extends Repository {
       input.id, input.businessId, input.offeringType, input.title, input.description ?? null,
       input.serviceId ?? null, input.productId ?? null, input.now, input.now,
     );
-    return this.requireOffering(input.id, input.businessId);
+    return this.requireOffering(context, input.id, input.businessId);
   }
 
   async setOfferingPublicationStatus(context: RequestContext, id: EntityId, status: PublicationStatus, now: string): Promise<OfferingRecord> {
@@ -168,33 +173,55 @@ export class CatalogRepository extends Repository {
     if (!current) throw new DatabaseError("Offering not found");
     if (status === "published") throw new DatabaseError("Offering publication requires the canonical publication policy");
     await this.database.run(`UPDATE offerings SET publication_status = ?, updated_at = ? WHERE id = ? AND business_id = ?`, status, now, id, current.businessId);
-    return this.requireOffering(id, current.businessId);
+    return this.requireOffering(context, id, current.businessId);
   }
 
-  private async assertBusiness(businessId: EntityId): Promise<void> {
-    const business = await this.database.first<{ id: string }>(`SELECT id FROM businesses WHERE id = ? AND status IN ('draft','active') LIMIT 1`, businessId);
-    if (!business) throw new DatabaseError("Business is not available for catalog changes");
+  private async assertBusiness(context: RequestContext, businessId: EntityId): Promise<void> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const business = await this.database.first<{ id: string }>(
+      `SELECT id FROM businesses
+       WHERE id = ? AND organization_id = ? AND workspace_id = ? AND status IN ('draft','active') LIMIT 1`,
+      businessId, organizationId, workspaceId,
+    );
+    if (!business) throw new DatabaseError("Business is not available in the current workspace");
   }
 
-  private async assertProductBelongsToBusiness(productId: EntityId, businessId: EntityId): Promise<void> {
-    const row = await this.database.first<{ id: string }>(`SELECT id FROM products WHERE id = ? AND business_id = ? LIMIT 1`, productId, businessId);
+  private async assertProductBelongsToBusiness(context: RequestContext, productId: EntityId, businessId: EntityId): Promise<void> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const row = await this.database.first<{ id: string }>(
+      `SELECT p.id FROM products p
+       INNER JOIN businesses b ON b.id = p.business_id
+       WHERE p.id = ? AND p.business_id = ? AND b.organization_id = ? AND b.workspace_id = ? LIMIT 1`,
+      productId, businessId, organizationId, workspaceId,
+    );
     if (!row) throw new DatabaseError("Product does not belong to the offering business");
   }
 
-  private async assertServiceBelongsToBusiness(serviceId: EntityId, businessId: EntityId): Promise<void> {
-    const row = await this.database.first<{ id: string }>(`SELECT id FROM services WHERE id = ? AND (business_id IS NULL OR business_id = ?) LIMIT 1`, serviceId, businessId);
+  private async assertServiceBelongsToBusiness(context: RequestContext, serviceId: EntityId, businessId: EntityId): Promise<void> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const row = await this.database.first<{ id: string }>(
+      `SELECT s.id FROM services s
+       WHERE s.id = ? AND (s.business_id IS NULL OR s.business_id = ?)
+         AND (s.business_id IS NULL OR EXISTS (
+           SELECT 1 FROM businesses b WHERE b.id = s.business_id AND b.organization_id = ? AND b.workspace_id = ?
+         )) LIMIT 1`,
+      serviceId, businessId, organizationId, workspaceId,
+    );
     if (!row) throw new DatabaseError("Service does not belong to the offering business");
   }
 
-  private async requireProduct(id: EntityId, businessId: EntityId): Promise<ProductRecord> {
-    const record = await this.database.first<ProductRecord>(`SELECT id, business_id AS businessId, name, description, status, created_at AS createdAt, updated_at AS updatedAt FROM products WHERE id = ? AND business_id = ? LIMIT 1`, id, businessId);
-    if (!record) throw new DatabaseError("Product not found after creation");
+  private async requireProduct(context: RequestContext, id: EntityId, businessId: EntityId): Promise<ProductRecord> {
+    const record = await this.getProduct(context, id);
+    if (!record || record.businessId !== businessId) throw new DatabaseError("Product not found after creation");
     return record;
   }
 
-  private async requireOffering(id: EntityId, businessId: EntityId): Promise<OfferingRecord> {
-    const record = await this.database.first<OfferingRecord>(`SELECT id, business_id AS businessId, offering_type AS offeringType, title, description, service_id AS serviceId, product_id AS productId, status, publication_status AS publicationStatus, created_at AS createdAt, updated_at AS updatedAt FROM offerings WHERE id = ? AND business_id = ? LIMIT 1`, id, businessId);
-    if (!record) throw new DatabaseError("Offering not found after creation");
+  private async requireOffering(context: RequestContext, id: EntityId, businessId: EntityId): Promise<OfferingRecord> {
+    const record = await this.getOffering(context, id);
+    if (!record || record.businessId !== businessId) throw new DatabaseError("Offering not found after creation");
     return record;
   }
 }
