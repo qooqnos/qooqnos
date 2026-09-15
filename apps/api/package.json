@@ -5,6 +5,7 @@
   "description": "Phoenix API application boundary",
   "type": "module",
   "dependencies": {
+    "@qooqnos/auth": "*",
     "@qooqnos/core": "*",
     "@qooqnos/database": "*",
     "@qooqnos/runtime": "*",
