@@ -9,6 +9,7 @@
     { "path": "../../packages/core" },
     { "path": "../../packages/api-contracts" },
     { "path": "../../packages/database" },
+    { "path": "../../packages/auth" },
     { "path": "../../packages/runtime" }
   ],
   "include": ["src/**/*.ts"]
