@@ -5,6 +5,7 @@
     { "path": "./packages/database" },
     { "path": "./packages/i18n" },
     { "path": "./packages/auth" },
+    { "path": "./packages/business" },
     { "path": "./packages/onboarding" },
     { "path": "./packages/runtime" }
   ]
