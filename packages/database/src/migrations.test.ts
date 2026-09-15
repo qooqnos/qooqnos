@@ -61,13 +61,14 @@ describe("MigrationRunner", () => {
     const { db, batches } = fakeDatabase({ hasRegistry: false });
 
     const results = await new MigrationRunner(db, [first, second]).run();
+    const firstBatch = batches[0];
 
     expect(results).toEqual([
       { version: 1, id: "0001_test", status: "applied" },
       { version: 2, id: "0002_test", status: "applied" },
     ]);
-    expect(batches[0]?.[0]?.sql).toBe("CREATE TABLE example (id TEXT PRIMARY KEY)");
-    expect(batches[0]?.[batches[0].length - 1]?.sql).toContain("INSERT INTO schema_migrations");
+    expect(firstBatch?.[0]?.sql).toBe("CREATE TABLE example (id TEXT PRIMARY KEY)");
+    expect(firstBatch?.at(-1)?.sql).toContain("INSERT INTO schema_migrations");
   });
 
   it("does not reapply recorded migrations", async () => {
