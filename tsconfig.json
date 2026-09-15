@@ -6,6 +6,7 @@
     { "path": "./packages/i18n" },
     { "path": "./packages/auth" },
     { "path": "./packages/business" },
+    { "path": "./packages/catalog" },
     { "path": "./packages/onboarding" },
     { "path": "./packages/runtime" }
   ]
