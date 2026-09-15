@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { brandId, type RequestContext } from "@qooqnos/core";
 import { SellerProductService, SELLER_AI_OPERATION_TYPES } from "./seller-product-service";
-import type { SellerProductDraft } from "./types";
+import type { AIRequest, AIResult, SellerProductDraft } from "./types";
 
 function context(): RequestContext {
   return {
@@ -31,14 +31,14 @@ function draft(): SellerProductDraft {
 describe("SellerProductService", () => {
   it("passes the trusted request context into the canonical AI runtime and persists only validated output", async () => {
     const saveDraft = vi.fn(async () => undefined);
-    const execute = vi.fn(async (request: { context: RequestContext; operationType: string }) => ({
-      operationId: "op-1",
+    const execute = vi.fn(async <TOutput>(request: AIRequest): Promise<AIResult<TOutput>> => ({
+      operationId: request.operationId,
       operationType: request.operationType,
       operationVersion: 1,
-      status: "succeeded" as const,
-      output: draft(),
-      safetyDecision: "allowed" as const,
-      provenance: "ai_extracted" as const,
+      status: "succeeded",
+      output: draft() as TOutput,
+      safetyDecision: "allowed",
+      provenance: "ai_extracted",
       warnings: [],
       retryable: false,
     }));
