@@ -55,7 +55,7 @@ export function createAuthorizationService(
           workspaceId: input.context.workspaceId,
           membershipStatus: subject?.membership.status,
           roles: subject?.roles.map((role) => role.id) ?? [],
-          permissions: subject?.permissions.map((permission) => `${permission.resource}:${permission.action}`) ?? [],
+          permissions: subject?.permissions.map((permission) => permission.id) ?? [],
           authenticated: true,
         },
         requiredEntitlement: input.requiredEntitlement,
