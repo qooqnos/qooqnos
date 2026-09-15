@@ -29,8 +29,8 @@ export interface CreateMediaAssetInput {
   readonly storageKey: string;
   readonly mimeType: string;
   readonly byteSize: number;
-  readonly checksum?: string;
-  readonly metadata?: Readonly<Record<string, unknown>>;
+  readonly checksum?: string | undefined;
+  readonly metadata?: Readonly<Record<string, unknown>> | undefined;
   readonly now: string;
 }
 
@@ -38,8 +38,8 @@ export interface CreateMediaProcessingJobInput {
   readonly id: EntityId;
   readonly assetId: EntityId;
   readonly operation: string;
-  readonly operationVersion?: number;
-  readonly input?: Readonly<Record<string, unknown>>;
+  readonly operationVersion?: number | undefined;
+  readonly input?: Readonly<Record<string, unknown>> | undefined;
   readonly availableAt: string;
   readonly now: string;
 }

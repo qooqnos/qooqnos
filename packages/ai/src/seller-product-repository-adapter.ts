@@ -1,6 +1,7 @@
 import type { EntityId } from "@qooqnos/core";
 import { SellerAIRepository, sha256Hex, type D1Database } from "@qooqnos/database";
-import type { SellerProductDraft, SellerProductSessionRepository } from "./seller-product-service";
+import type { SellerProductDraft } from "./types";
+import type { SellerProductSessionRepository } from "./seller-product-service";
 
 export function createSellerProductSessionRepository(database: D1Database): SellerProductSessionRepository {
   const repository = new SellerAIRepository(database);
@@ -14,8 +15,8 @@ export function createSellerProductSessionRepository(database: D1Database): Sell
       await repository.addInput(input.context, {
         id: createId(),
         sessionId: input.sessionId,
-        mediaAssetId: input.mediaAssetId,
-        rawText,
+        ...(input.mediaAssetId !== undefined ? { mediaAssetId: input.mediaAssetId } : {}),
+        ...(rawText !== undefined ? { rawText } : {}),
         inputHash,
         now: input.now,
       });

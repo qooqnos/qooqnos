@@ -12,11 +12,11 @@ export interface BusinessServiceOptions {
 export interface CreateBusinessCommand {
   readonly name: string;
   readonly displayName: string;
-  readonly businessType?: string;
-  readonly primaryCategoryId?: string;
-  readonly defaultLocale?: string;
-  readonly timezone?: string;
-  readonly defaultCurrency?: string;
+  readonly businessType?: string | undefined;
+  readonly primaryCategoryId?: string | undefined;
+  readonly defaultLocale?: string | undefined;
+  readonly timezone?: string | undefined;
+  readonly defaultCurrency?: string | undefined;
 }
 
 export class BusinessService {
@@ -49,11 +49,7 @@ export class BusinessService {
     return this.options.repository.create(input);
   }
 
-  async update(
-    context: RequestContext,
-    id: EntityId,
-    patch: CreateBusinessCommand,
-  ): Promise<BusinessRecord> {
+  async update(context: RequestContext, id: EntityId, patch: CreateBusinessCommand): Promise<BusinessRecord> {
     const current = await this.options.repository.get(context, id);
     if (!current) throw new Error("Business not found");
     await this.options.authorization.assert({

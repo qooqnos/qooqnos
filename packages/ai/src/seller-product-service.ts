@@ -11,7 +11,7 @@ export const SELLER_AI_OPERATION_TYPES = {
 
 export interface SellerProductSessionRepository {
   create(input: { readonly id: EntityId; readonly context: RequestContext; readonly now: string }): Promise<void>;
-  addInput(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly mediaAssetId?: EntityId; readonly rawText?: string; readonly now: string }): Promise<void>;
+  addInput(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly mediaAssetId?: EntityId | undefined; readonly rawText?: string | undefined; readonly now: string }): Promise<void>;
   saveDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly now: string }): Promise<void>;
   getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null>;
 }
@@ -34,7 +34,14 @@ export class SellerProductService {
 
   async addInput(context: RequestContext, sessionId: EntityId, input: { readonly mediaAssetId?: EntityId; readonly rawText?: string }): Promise<void> {
     if (!input.mediaAssetId && !input.rawText?.trim()) throw new Error("Seller product input requires media or raw text");
-    await this.options.repository.addInput({ context, sessionId, ...input, rawText: input.rawText?.trim(), now: this.options.now() });
+    const rawText = input.rawText?.trim();
+    await this.options.repository.addInput({
+      context,
+      sessionId,
+      ...(input.mediaAssetId !== undefined ? { mediaAssetId: input.mediaAssetId } : {}),
+      ...(rawText !== undefined ? { rawText } : {}),
+      now: this.options.now(),
+    });
   }
 
   async generateDraft<T extends SellerProductDraft>(

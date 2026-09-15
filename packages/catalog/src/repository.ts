@@ -43,15 +43,15 @@ export interface CreateProductInput {
   readonly id: EntityId;
   readonly businessId: EntityId;
   readonly name: string;
-  readonly description?: string;
+  readonly description?: string | undefined;
   readonly now: string;
 }
 
 export interface CreateProductVariantInput {
   readonly id: EntityId;
   readonly productId: EntityId;
-  readonly sku?: string;
-  readonly attributes?: Readonly<Record<string, unknown>>;
+  readonly sku?: string | undefined;
+  readonly attributes?: Readonly<Record<string, unknown>> | undefined;
   readonly now: string;
 }
 
@@ -60,9 +60,9 @@ export interface CreateOfferingInput {
   readonly businessId: EntityId;
   readonly offeringType: OfferingType;
   readonly title: string;
-  readonly description?: string;
-  readonly serviceId?: EntityId;
-  readonly productId?: EntityId;
+  readonly description?: string | undefined;
+  readonly serviceId?: EntityId | undefined;
+  readonly productId?: EntityId | undefined;
   readonly now: string;
 }
 

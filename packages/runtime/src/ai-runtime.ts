@@ -14,17 +14,17 @@ export interface AIRuntimeRequest<TInput = unknown> {
   readonly promptVersion: string;
   readonly outputSchemaVersion: string;
   readonly policyVersion: string;
-  readonly timeoutMs?: number;
-  readonly budgetUnits?: number;
+  readonly timeoutMs?: number | undefined;
+  readonly budgetUnits?: number | undefined;
 }
 
 export interface AIRuntimeUsage {
-  readonly inputTokens?: number;
-  readonly outputTokens?: number;
-  readonly imageUnits?: number;
-  readonly audioSeconds?: number;
-  readonly embeddingUnits?: number;
-  readonly providerUnits?: number;
+  readonly inputTokens?: number | undefined;
+  readonly outputTokens?: number | undefined;
+  readonly imageUnits?: number | undefined;
+  readonly audioSeconds?: number | undefined;
+  readonly embeddingUnits?: number | undefined;
+  readonly providerUnits?: number | undefined;
 }
 
 export interface AIRuntimeResult<TOutput = unknown> {
@@ -32,10 +32,10 @@ export interface AIRuntimeResult<TOutput = unknown> {
   readonly operationType: string;
   readonly operationVersion: number;
   readonly status: AIOperationStatus;
-  readonly output?: TOutput;
-  readonly providerId?: string;
-  readonly modelId?: string;
-  readonly usage?: AIRuntimeUsage;
+  readonly output?: TOutput | undefined;
+  readonly providerId?: string | undefined;
+  readonly modelId?: string | undefined;
+  readonly usage?: AIRuntimeUsage | undefined;
   readonly safetyDecision: "allowed" | "blocked" | "abstained";
   readonly provenance: "ai_generated" | "ai_extracted" | "system_derived" | "none";
   readonly warnings: readonly string[];
@@ -47,14 +47,14 @@ export interface AIProviderRequest {
   readonly promptVersion: string;
   readonly input: unknown;
   readonly outputSchemaVersion: string;
-  readonly timeoutMs?: number;
+  readonly timeoutMs?: number | undefined;
 }
 
 export interface AIProviderResponse {
   readonly providerId: string;
   readonly modelId: string;
   readonly output: unknown;
-  readonly usage?: AIRuntimeUsage;
+  readonly usage?: AIRuntimeUsage | undefined;
 }
 
 export interface AIProviderAdapter {
@@ -63,7 +63,7 @@ export interface AIProviderAdapter {
 
 export interface AIEntitlementDecision {
   readonly allowed: boolean;
-  readonly reason?: string;
+  readonly reason?: string | undefined;
 }
 
 export interface AIRuntimePolicy {
@@ -93,13 +93,14 @@ export function createAIRuntime(provider: AIProviderAdapter, policy: AIRuntimePo
       const entitlement = await policy.checkEntitlement(request.context, request.operationType);
       if (!entitlement.allowed) return blockedResult(request, entitlement.reason ?? "AI entitlement denied");
 
-      const response = await provider.execute({
+      const providerRequest: AIProviderRequest = {
         operationType: request.operationType,
         promptVersion: request.promptVersion,
         input: request.input,
         outputSchemaVersion: request.outputSchemaVersion,
-        timeoutMs: request.timeoutMs,
-      });
+        ...(request.timeoutMs !== undefined ? { timeoutMs: request.timeoutMs } : {}),
+      };
+      const response = await provider.execute(providerRequest);
 
       await policy.validateOutput(response.output, request.outputSchemaVersion);
       const safety = await policy.validateSafety(response.output, request.operationType);
@@ -111,7 +112,7 @@ export function createAIRuntime(provider: AIProviderAdapter, policy: AIRuntimePo
           status: safety,
           providerId: response.providerId,
           modelId: response.modelId,
-          usage: response.usage,
+          ...(response.usage !== undefined ? { usage: response.usage } : {}),
           safetyDecision: safety,
           provenance: "none",
           warnings: [safety === "blocked" ? "AI output was blocked by safety policy" : "AI output requires abstention"],
@@ -127,7 +128,7 @@ export function createAIRuntime(provider: AIProviderAdapter, policy: AIRuntimePo
         output: response.output as TOutput,
         providerId: response.providerId,
         modelId: response.modelId,
-        usage: response.usage,
+        ...(response.usage !== undefined ? { usage: response.usage } : {}),
         safetyDecision: "allowed",
         provenance: "ai_generated",
         warnings: [],

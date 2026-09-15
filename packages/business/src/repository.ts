@@ -27,11 +27,11 @@ export interface CreateBusinessInput {
   readonly workspaceId: EntityId;
   readonly name: string;
   readonly displayName: string;
-  readonly businessType?: string;
-  readonly primaryCategoryId?: string;
-  readonly defaultLocale?: string;
-  readonly timezone?: string;
-  readonly defaultCurrency?: string;
+  readonly businessType?: string | undefined;
+  readonly primaryCategoryId?: string | undefined;
+  readonly defaultLocale?: string | undefined;
+  readonly timezone?: string | undefined;
+  readonly defaultCurrency?: string | undefined;
   readonly now: string;
 }
 
