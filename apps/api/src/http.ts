@@ -1,6 +1,16 @@
 import type { ApiErrorCode } from "@qooqnos/api-contracts";
 import { AppError, type RequestContext } from "@qooqnos/core";
 
+export function html(body: string, status = 200): Response {
+  return new Response(body, {
+    status,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
+}
+
 export function json(body: unknown, status = 200, requestId?: RequestContext["requestId"]): Response {
   const headers = new Headers({ "content-type": "application/json; charset=utf-8" });
   if (requestId) headers.set("x-request-id", requestId);
