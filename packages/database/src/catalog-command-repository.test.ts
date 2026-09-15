@@ -1,14 +1,18 @@
-import { strict as assert } from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import { D1Database, type D1DatabaseLike, type D1PreparedStatementLike } from "./client";
 import { CatalogCommandRepository } from "./catalog-command-repository";
 
-function database(): { database: D1Database; batches: Array<Array<{ sql: string; params: readonly unknown[] }>> } {
+function createDatabase(): {
+  database: D1Database;
+  batches: Array<Array<{ sql: string; params: readonly unknown[] }>>;
+} {
   const batches: Array<Array<{ sql: string; params: readonly unknown[] }>> = [];
   const db: D1DatabaseLike = {
     prepare(sql: string): D1PreparedStatementLike {
+      void sql;
       return {
         bind(...values: unknown[]) {
+          void values;
           return {
             bind: (...next: unknown[]) => this.bind(...next),
             first: async () => null,
@@ -22,7 +26,7 @@ function database(): { database: D1Database; batches: Array<Array<{ sql: string;
       } as D1PreparedStatementLike;
     },
     async batch(statements) {
-      batches.push(statements.map((statement) => ({ sql: "", params: [] })));
+      batches.push(statements.map(() => ({ sql: "", params: [] })));
       return statements.map(() => ({ success: true, meta: { changes: 1 } }));
     },
   };
@@ -31,7 +35,7 @@ function database(): { database: D1Database; batches: Array<Array<{ sql: string;
 
 describe("CatalogCommandRepository", () => {
   it("persists product, audit, outbox and idempotency in one batch", async () => {
-    const { database, batches } = database();
+    const { database, batches } = createDatabase();
     const repository = new CatalogCommandRepository(database);
     const result = await repository.createProduct({
       context: {
@@ -56,8 +60,8 @@ describe("CatalogCommandRepository", () => {
       eventId: "event_1",
     });
 
-    assert.equal(result.kind, "executed");
-    assert.equal(batches.length, 1);
-    assert.equal(batches[0]?.length, 5);
+    expect(result.kind).toBe("executed");
+    expect(batches).toHaveLength(1);
+    expect(batches[0]).toHaveLength(5);
   });
 });

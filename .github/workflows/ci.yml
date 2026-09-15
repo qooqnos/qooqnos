@@ -15,6 +15,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Rule 8 needs the merge-base commit in order to compare migration
+          # and lock-manifest changes on both pull requests and pushes.
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -30,6 +34,11 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Verify migration lock
+        run: npm run migration:check:changes
+        env:
+          MIGRATION_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
 
       - name: Typecheck
         run: npm run typecheck
