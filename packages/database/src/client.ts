@@ -25,6 +25,10 @@ export class DatabaseError extends Error {
 export class D1Database {
   constructor(private readonly db: D1DatabaseLike) {}
 
+  raw(): D1DatabaseLike {
+    return this.db;
+  }
+
   statement(sql: string, ...params: unknown[]): D1PreparedStatementLike {
     if (!sql.trim()) throw new DatabaseError("SQL statement cannot be empty");
     return this.db.prepare(sql).bind(...params);
