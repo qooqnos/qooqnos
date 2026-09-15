@@ -1,3 +1,4 @@
+import type { ApiErrorCode } from "@qooqnos/api-contracts";
 import { AppError, type RequestContext } from "@qooqnos/core";
 
 export function json(body: unknown, status = 200, requestId?: RequestContext["requestId"]): Response {
@@ -34,7 +35,7 @@ export function errorResponse(error: unknown, requestId: RequestContext["request
   );
 }
 
-function appErrorStatus(code: AppError["code"]): number {
+function appErrorStatus(code: ApiErrorCode): number {
   switch (code) {
     case "VALIDATION_ERROR":
       return 400;
