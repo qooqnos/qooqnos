@@ -13,7 +13,6 @@
     "lint": "eslint .",
     "migration:check": "node scripts/verify-migration-lock.mjs",
     "migration:check:changes": "node scripts/verify-migration-lock.mjs --check-changes",
-    "db:migrate:remote": "wrangler d1 migrations apply --remote",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
