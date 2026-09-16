@@ -71,7 +71,12 @@ export class CatalogCommandRepository {
             eventVersion: 1,
             aggregateType: "product",
             aggregateId: input.id,
-            payload: { productId: input.id, businessId: input.businessId },
+            payload: {
+              productId: input.id,
+              businessId: input.businessId,
+              name: input.name,
+              description: input.description ?? null,
+            },
             availableAt: input.now,
             occurredAt: input.now,
           },
