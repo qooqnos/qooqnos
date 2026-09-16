@@ -1,89 +1,18 @@
 {
-  "generatedAt": "2026-09-16T04:45:00.000Z",
+  "generatedAt": "2026-09-16T04:46:00.000Z",
   "migrations": [
-    {
-      "id": "0001_foundation",
-      "version": 1,
-      "moduleId": "foundation",
-      "checksum": "4989242437c0be2f6d6e4e9d94b4c647a614e67103eac11ee51010a25a9d8341",
-      "filename": "0001_foundation.sql"
-    },
-    {
-      "id": "0002_onboarding",
-      "version": 2,
-      "moduleId": "onboarding",
-      "checksum": "a557c00c814a15af6bbb3945c628cedcbca72c6b9024220c4f6136b743397a65",
-      "filename": "0002_onboarding.sql"
-    },
-    {
-      "id": "0003_identity_sessions",
-      "version": 3,
-      "moduleId": "identity",
-      "checksum": "becc5672f722bfd617887ace7b2220d27902c1c32d0e537b82b7e108e88f8441",
-      "filename": "0003_identity_sessions.sql"
-    },
-    {
-      "id": "0004_business",
-      "version": 4,
-      "moduleId": "business",
-      "checksum": "281fccca4f607bf3f6b312c4b249f56349b065aba9954cd3dd46f2a7cdddf60b",
-      "filename": "0004_business.sql"
-    },
-    {
-      "id": "0005_catalog",
-      "version": 5,
-      "moduleId": "catalog",
-      "checksum": "8d80b24aee067764ac76fd4dcfb5582d0ea0eb0e944eb2422e4eff85e2bd833e",
-      "filename": "0005_catalog.sql"
-    },
-    {
-      "id": "0006_catalog_product_guards",
-      "version": 6,
-      "moduleId": "catalog",
-      "checksum": "0e5ccc00fa3ba5275654f9c178b39316e7e96a5e9a5968281c830807bad8f209",
-      "filename": "0006_catalog_product_guards.sql"
-    },
-    {
-      "id": "0007_catalog_integrity_guards",
-      "version": 7,
-      "moduleId": "catalog",
-      "checksum": "90a04b77abf209992820278f3570fee7dab6b49218c8dd8271f2979f8cabb4cb",
-      "filename": "0007_catalog_integrity_guards.sql"
-    },
-    {
-      "id": "0008_permission_catalog",
-      "version": 8,
-      "moduleId": "permission",
-      "checksum": "b5e161e255dd1de76c7b6b19f66bae676aff7c5e094760be1a4e1a4f35c5de96",
-      "filename": "0008_permission_catalog.sql"
-    },
-    {
-      "id": "0009_media",
-      "version": 9,
-      "moduleId": "media",
-      "checksum": "ee3ad90407346f74cf077110633aea383769405bfea6be09fd11f3cbbfc6ad38",
-      "filename": "0009_media.sql"
-    },
-    {
-      "id": "0010_discovery",
-      "version": 10,
-      "moduleId": "discovery",
-      "checksum": "e574e1bfca32a82f30d34420dcdb5113f2ddd214dc1dfdf8be3f20b42a9bed08",
-      "filename": "0010_discovery.sql"
-    },
-    {
-      "id": "0011_ai_seller_creation",
-      "version": 11,
-      "moduleId": "ai",
-      "checksum": "de3bebc30288aa64f5590bfa19d21be210a8664e9de4af25a9ccfb4c2c9417b6",
-      "filename": "0011_ai_seller_creation.sql"
-    },
-    {
-      "id": "0012_ai_seller_catalog_link",
-      "version": 12,
-      "moduleId": "ai",
-      "checksum": "4adad90af1a0fbee18d8a948fe881cf12c7f787dc1452f0feed3d11eb172e247",
-      "filename": "0012_ai_seller_catalog_link.sql"
-    }
+    {"id":"0001_foundation","version":1,"moduleId":"foundation","checksum":"4989242437c0be2f6d6e4e9d94b4c647a614e67103eac11ee51010a25a9d8341","filename":"0001_foundation.sql"},
+    {"id":"0002_onboarding","version":2,"moduleId":"onboarding","checksum":"a557c00c814a15af6bbb3945c628cedcbca72c6b9024220c4f6136b743397a65","filename":"0002_onboarding.sql"},
+    {"id":"0003_identity_sessions","version":3,"moduleId":"identity","checksum":"becc5672f722bfd617887ace7b2220d27902c1c32d0e537b82b7e108e88f8441","filename":"0003_identity_sessions.sql"},
+    {"id":"0004_business","version":4,"moduleId":"business","checksum":"281fccca4f607bf3f6b312c4b249f56349b065aba9954cd3dd46f2a7cdddf60b","filename":"0004_business.sql"},
+    {"id":"0005_catalog","version":5,"moduleId":"catalog","checksum":"8d80b24aee067764ac76fd4dcfb5582d0ea0eb0e944eb2422e4eff85e2bd833e","filename":"0005_catalog.sql"},
+    {"id":"0006_catalog_product_guards","version":6,"moduleId":"catalog","checksum":"0e5ccc00fa3ba5275654f9c178b39316e7e96a5e9a5968281c830807bad8f209","filename":"0006_catalog_product_guards.sql"},
+    {"id":"0007_catalog_integrity_guards","version":7,"moduleId":"catalog","checksum":"90a04b77abf209992820278f3570fee7dab6b49218c8dd8271f2979f8cabb4cb","filename":"0007_catalog_integrity_guards.sql"},
+    {"id":"0008_permission_catalog","version":8,"moduleId":"permission","checksum":"b5e161e255dd1de76c7b6b19f66bae676aff7c5e094760be1a4e1a4f35c5de96","filename":"0008_permission_catalog.sql"},
+    {"id":"0009_media","version":9,"moduleId":"media","checksum":"ee3ad90407346f74cf077110633aea383769405bfea6be09fd11f3cbbfc6ad38","filename":"0009_media.sql"},
+    {"id":"0010_discovery","version":10,"moduleId":"discovery","checksum":"e574e1bfca32a82f30d34420dcdb5113f2ddd214dc1dfdf8be3f20b42a9bed08","filename":"0010_discovery.sql"},
+    {"id":"0011_ai_seller_creation","version":11,"moduleId":"ai","checksum":"de3bebc30288aa64f5590bfa19d21be210a8664e9de4af25a9ccfb4c2c9417b6","filename":"0011_ai_seller_creation.sql"},
+    {"id":"0012_ai_seller_catalog_link","version":12,"moduleId":"ai","checksum":"4adad90af1a0fbee18d8a948fe881cf12c7f787dc1452f0feed3d11eb172e247","filename":"0012_ai_seller_catalog_link.sql"},
+    {"id":"0013_ai_seller_idempotency_fingerprint","version":13,"moduleId":"ai","checksum":"de6b77f3221bb8838f6c5b26746298938ce2015803e928faf1877764c5048ce7","filename":"0013_ai_seller_idempotency_fingerprint.sql"}
   ]
 }
