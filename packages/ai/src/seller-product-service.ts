@@ -131,6 +131,7 @@ export class SellerProductService extends SellerProductSessionService {
     const inputs = await this.getInputs(context, sessionId);
     if (inputs.length === 0) throw new Error("Seller product creation session has no persisted inputs");
 
+    const aggregateInputHash = inputs.map((input) => input.inputHash).join("|");
     const result = await this.productOptions.runtime.execute<T>({
       ...request,
       context,
@@ -141,7 +142,8 @@ export class SellerProductService extends SellerProductSessionService {
         sessionId,
         inputs,
       },
-      ...(inputs.length === 1 ? { inputReference: inputs[0]?.id, inputHash: inputs[0]?.inputHash } : {}),
+      inputHash: aggregateInputHash,
+      ...(inputs.length === 1 ? { inputReference: inputs[0]?.id } : {}),
     });
     if (result.output) {
       const productFields = result.output.product as Readonly<Record<string, SellerProductField>>;
