@@ -1,14 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 import { createCloudflareAIProvider, type CloudflareAIBinding } from "./cloudflare-ai-provider";
 
-type MockRun = ReturnType<typeof vi.fn>;
-
 describe("createCloudflareAIProvider", () => {
   it("delegates an explicit model to the real binding and preserves output", async () => {
-    const runMock = vi.fn(async (_model: string, _input: unknown, _options?: Record<string, unknown>) => ({
-      response: { title: "Result" },
-      usage: { input_tokens: 11, output_tokens: 7 },
-    }));
+    const runMock = vi.fn(async (model: string, input: unknown, options?: Record<string, unknown>) => {
+      void model;
+      void input;
+      void options;
+      return {
+        response: { title: "Result" },
+        usage: { input_tokens: 11, output_tokens: 7 },
+      };
+    });
     const provider = createCloudflareAIProvider({ run: runMock as unknown as CloudflareAIBinding["run"] }, {
       providerId: "cloudflare",
       buildInput: (request) => ({ prompt: JSON.stringify(request.input) }),
@@ -28,7 +31,12 @@ describe("createCloudflareAIProvider", () => {
   });
 
   it("supports an AI Gateway binding option", async () => {
-    const runMock = vi.fn(async (_model: string, _input: unknown, _options?: Record<string, unknown>) => ({ response: "ok" }));
+    const runMock = vi.fn(async (model: string, input: unknown, options?: Record<string, unknown>) => {
+      void model;
+      void input;
+      void options;
+      return { response: "ok" };
+    });
     const provider = createCloudflareAIProvider({ run: runMock as unknown as CloudflareAIBinding["run"] }, {
       gatewayId: "default",
       buildInput: (request) => request.input,
@@ -39,7 +47,12 @@ describe("createCloudflareAIProvider", () => {
   });
 
   it("fails closed when no model is selected", async () => {
-    const runMock = vi.fn(async (_model: string, _input: unknown, _options?: Record<string, unknown>) => ({}));
+    const runMock = vi.fn(async (model: string, input: unknown, options?: Record<string, unknown>) => {
+      void model;
+      void input;
+      void options;
+      return {};
+    });
     const provider = createCloudflareAIProvider({ run: runMock as unknown as CloudflareAIBinding["run"] }, { buildInput: () => ({}) });
     await expect(provider.execute({ operationType: "ai.generate", promptVersion: "v1", input: {}, outputSchemaVersion: "v1" })).rejects.toThrow(
       "requires an explicit modelId",
