@@ -1,5 +1,5 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
-import { DiscoveryRepository, type SearchDocumentRecord, type UpsertSearchDocumentInput } from "./repository";
+import { DiscoveryRepository, type SearchDocumentRecord, type SearchDocumentsInput, type UpsertSearchDocumentInput } from "./repository";
 
 export interface DiscoveryServiceOptions {
   readonly repository: DiscoveryRepository;
@@ -14,5 +14,9 @@ export class DiscoveryService {
 
   async getProjection(context: RequestContext, id: EntityId): Promise<SearchDocumentRecord | null> {
     return this.options.repository.get(context, id);
+  }
+
+  search(input: SearchDocumentsInput): Promise<SearchDocumentRecord[]> {
+    return this.options.repository.search(input);
   }
 }
