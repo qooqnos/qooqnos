@@ -29,8 +29,8 @@ function createDatabase(results: unknown[] = []): { db: D1Database; calls: unkno
     prepare() { return statement; },
     async batch() { return []; },
   };
-  const database: D1Database = new D1Database(rawDatabase);
-  return { db: database, calls };
+  const db: D1Database = new D1Database(rawDatabase);
+  return { db, calls };
 }
 
 describe("DiscoveryRepository search", () => {
