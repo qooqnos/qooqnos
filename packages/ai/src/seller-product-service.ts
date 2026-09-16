@@ -1,5 +1,5 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
-import type { AIResult, SellerProductDraft } from "./types";
+import type { AIResult, SellerProductDraft, SellerProductField } from "./types";
 import type { AIRuntimeClient } from "./runtime-client";
 
 export const SELLER_AI_OPERATION_TYPES = {
@@ -112,7 +112,13 @@ export class SellerProductService extends SellerProductSessionService {
   async generateDraft<T extends SellerProductDraft>(context: RequestContext, sessionId: EntityId, request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId">): Promise<AIResult<T>> {
     const result = await this.productOptions.runtime.execute<T>({ ...request, context, operationType: SELLER_AI_OPERATION_TYPES.extract, operationVersion: 1 });
     if (result.output) {
-      const provenance = Object.entries(result.output.product).map(([fieldPath, field]) => ({ fieldPath, provenance: field.provenance, confidence: field.confidence, sourceRefs: field.sourceRefs }));
+      const productFields = result.output.product as Readonly<Record<string, SellerProductField>>;
+      const provenance = Object.entries(productFields).map(([fieldPath, field]) => ({
+        fieldPath,
+        provenance: field.provenance,
+        confidence: field.confidence,
+        sourceRefs: field.sourceRefs,
+      }));
       await this.productOptions.repository.saveDraft({ context, sessionId, version: result.output.version, draft: result.output, provenance, now: this.productOptions.now() });
     }
     return result;
