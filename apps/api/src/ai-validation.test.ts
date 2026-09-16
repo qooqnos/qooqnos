@@ -32,7 +32,7 @@ describe("Seller AI validation", () => {
     );
   });
 
-  it("blocks unsafe content markers in otherwise valid draft structure", async () => {
+  it("blocks unsafe content markers in otherwise valid draft structure", () => {
     const draft = validDraft();
     const unsafeDraft: SellerProductDraft = {
       ...draft,
@@ -46,10 +46,10 @@ describe("Seller AI validation", () => {
         },
       },
     };
-    await expect(validateSellerProductSafety(unsafeDraft, "seller.product.extract")).resolves.toBe("blocked");
+    expect(validateSellerProductSafety(unsafeDraft, "seller.product.extract")).toBe("blocked");
   });
 
-  it("allows ordinary validated draft content", async () => {
-    await expect(validateSellerProductSafety(validDraft(), "seller.product.extract")).resolves.toBe("allowed");
+  it("allows ordinary validated draft content", () => {
+    expect(validateSellerProductSafety(validDraft(), "seller.product.extract")).toBe("allowed");
   });
 });
