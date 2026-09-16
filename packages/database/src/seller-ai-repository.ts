@@ -19,6 +19,15 @@ export interface SellerAICreationSessionRecord {
   readonly updatedAt: string;
 }
 
+export interface SellerAIInputRecord {
+  readonly id: EntityId;
+  readonly sessionId: EntityId;
+  readonly mediaAssetId: EntityId | null;
+  readonly rawText: string | null;
+  readonly inputHash: string;
+  readonly createdAt: string;
+}
+
 export interface SellerAIDraftRecord {
   readonly id: EntityId;
   readonly sessionId: EntityId;
@@ -120,6 +129,23 @@ export class SellerAIRepository extends Repository {
       id,
       organizationId,
       workspaceId,
+    );
+  }
+
+  async getInputs(context: RequestContext, sessionId: EntityId): Promise<readonly SellerAIInputRecord[]> {
+    const session = await this.getSession(context, sessionId);
+    if (!session) throw new DatabaseError("Seller AI session not found");
+    return this.database.all<SellerAIInputRecord>(
+      `SELECT id,
+              session_id AS sessionId,
+              media_asset_id AS mediaAssetId,
+              raw_text AS rawText,
+              input_hash AS inputHash,
+              created_at AS createdAt
+       FROM seller_ai_inputs
+       WHERE session_id = ?
+       ORDER BY created_at ASC, id ASC`,
+      sessionId,
     );
   }
 
