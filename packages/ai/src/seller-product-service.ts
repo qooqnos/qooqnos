@@ -19,6 +19,7 @@ export interface SellerProductSessionRecord {
   readonly status: string;
   readonly currentDraftVersion: number;
   readonly idempotencyKey: string | null;
+  readonly requestFingerprint: string | null;
   readonly requestId: string | null;
   readonly correlationId: string | null;
   readonly expiresAt: string | null;
@@ -34,7 +35,7 @@ export interface SellerProductProvenanceRecord {
 }
 
 export interface SellerProductSessionRepository {
-  create(input: { readonly id: EntityId; readonly context: RequestContext; readonly now: string; readonly businessId: EntityId; readonly idempotencyKey: string; readonly expiresAt?: string | undefined }): Promise<SellerProductSessionRecord>;
+  create(input: { readonly id: EntityId; readonly context: RequestContext; readonly now: string; readonly businessId: EntityId; readonly idempotencyKey: string; readonly requestFingerprint: string; readonly expiresAt?: string | undefined }): Promise<SellerProductSessionRecord>;
   getSession(context: RequestContext, sessionId: EntityId): Promise<SellerProductSessionRecord | null>;
   addInput(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly mediaAssetId?: EntityId | undefined; readonly rawText?: string | undefined; readonly now: string }): Promise<void>;
   saveDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly provenance: readonly SellerProductProvenanceRecord[]; readonly now: string }): Promise<void>;
@@ -54,13 +55,17 @@ export interface SellerProductSessionServiceOptions {
 export class SellerProductSessionService {
   constructor(protected readonly sessionOptions: SellerProductSessionServiceOptions) {}
 
-  async createSession(context: RequestContext, input: { readonly businessId: EntityId; readonly idempotencyKey: string; readonly expiresAt?: string }): Promise<SellerProductSessionRecord> {
+  async createSession(
+    context: RequestContext,
+    input: { readonly businessId: EntityId; readonly idempotencyKey: string; readonly requestFingerprint: string; readonly expiresAt?: string },
+  ): Promise<SellerProductSessionRecord> {
     const id = this.sessionOptions.id();
     return this.sessionOptions.repository.create({
       id,
       context,
       businessId: input.businessId,
       idempotencyKey: input.idempotencyKey,
+      requestFingerprint: input.requestFingerprint,
       ...(input.expiresAt !== undefined ? { expiresAt: input.expiresAt } : {}),
       now: this.sessionOptions.now(),
     });
@@ -70,20 +75,10 @@ export class SellerProductSessionService {
     return this.sessionOptions.repository.getSession(context, sessionId);
   }
 
-  async addInput(
-    context: RequestContext,
-    sessionId: EntityId,
-    input: { readonly mediaAssetId?: EntityId; readonly rawText?: string },
-  ): Promise<void> {
+  async addInput(context: RequestContext, sessionId: EntityId, input: { readonly mediaAssetId?: EntityId; readonly rawText?: string }): Promise<void> {
     if (!input.mediaAssetId && !input.rawText?.trim()) throw new Error("Seller product input requires media or raw text");
     const rawText = input.rawText?.trim();
-    await this.sessionOptions.repository.addInput({
-      context,
-      sessionId,
-      ...(input.mediaAssetId !== undefined ? { mediaAssetId: input.mediaAssetId } : {}),
-      ...(rawText !== undefined ? { rawText } : {}),
-      now: this.sessionOptions.now(),
-    });
+    await this.sessionOptions.repository.addInput({ context, sessionId, ...(input.mediaAssetId !== undefined ? { mediaAssetId: input.mediaAssetId } : {}), ...(rawText !== undefined ? { rawText } : {}), now: this.sessionOptions.now() });
   }
 
   async reviewDraft(context: RequestContext, sessionId: EntityId, version: number): Promise<void> {
@@ -95,13 +90,7 @@ export class SellerProductSessionService {
   }
 
   async markCatalogSaved(context: RequestContext, sessionId: EntityId, version: number, productId: EntityId): Promise<boolean> {
-    return this.sessionOptions.repository.markCatalogSaved({
-      context,
-      sessionId,
-      version,
-      productId,
-      now: this.sessionOptions.now(),
-    });
+    return this.sessionOptions.repository.markCatalogSaved({ context, sessionId, version, productId, now: this.sessionOptions.now() });
   }
 
   async cancelSession(context: RequestContext, sessionId: EntityId): Promise<boolean> {
@@ -118,36 +107,17 @@ export interface SellerProductServiceOptions extends SellerProductSessionService
 }
 
 export class SellerProductService extends SellerProductSessionService {
-  constructor(private readonly productOptions: SellerProductServiceOptions) {
-    super(productOptions);
-  }
+  constructor(private readonly productOptions: SellerProductServiceOptions) { super(productOptions); }
 
   async generateDraft<T extends SellerProductDraft>(
     context: RequestContext,
     sessionId: EntityId,
     request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId">,
   ): Promise<AIResult<T>> {
-    const result = await this.productOptions.runtime.execute<T>({
-      ...request,
-      context,
-      operationType: SELLER_AI_OPERATION_TYPES.extract,
-      operationVersion: 1,
-    });
+    const result = await this.productOptions.runtime.execute<T>({ ...request, context, operationType: SELLER_AI_OPERATION_TYPES.extract, operationVersion: 1 });
     if (result.output) {
-      const provenance = Object.entries(result.output.product).map(([fieldPath, field]) => ({
-        fieldPath,
-        provenance: field.provenance,
-        confidence: field.confidence,
-        sourceRefs: field.sourceRefs,
-      }));
-      await this.productOptions.repository.saveDraft({
-        context,
-        sessionId,
-        version: result.output.version,
-        draft: result.output,
-        provenance,
-        now: this.productOptions.now(),
-      });
+      const provenance = Object.entries(result.output.product).map(([fieldPath, field]) => ({ fieldPath, provenance: field.provenance, confidence: field.confidence, sourceRefs: field.sourceRefs }));
+      await this.productOptions.repository.saveDraft({ context, sessionId, version: result.output.version, draft: result.output, provenance, now: this.productOptions.now() });
     }
     return result;
   }
