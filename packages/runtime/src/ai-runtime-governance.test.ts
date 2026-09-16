@@ -75,7 +75,7 @@ describe("AI runtime governance boundary", () => {
         models: ["seller-extract-primary", "unapproved-model"],
         adapter: {
           async execute(providerRequest) {
-            return execute({ modelId: providerRequest.modelId });
+            return execute(providerRequest.modelId === undefined ? {} : { modelId: providerRequest.modelId });
           },
         },
       },
