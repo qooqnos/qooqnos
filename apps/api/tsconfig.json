@@ -13,6 +13,7 @@
     { "path": "../../packages/auth" },
     { "path": "../../packages/business" },
     { "path": "../../packages/catalog" },
+    { "path": "../../packages/discovery" },
     { "path": "../../packages/onboarding" },
     { "path": "../../packages/ai" },
     { "path": "../../packages/billing" },
