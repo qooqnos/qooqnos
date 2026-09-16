@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { brandId, type RequestContext } from "@qooqnos/core";
-import { SellerProductService, type SellerProductSessionRepository, SELLER_AI_OPERATION_TYPES } from "./seller-product-service";
+import { SellerProductService, SellerProductSessionService, type SellerProductSessionRepository, SELLER_AI_OPERATION_TYPES } from "./seller-product-service";
 import type { AIRuntimeClient } from "./runtime-client";
 import type { AIRequest, AIResult, SellerProductDraft } from "./types";
 
@@ -38,22 +38,22 @@ function draft(): SellerProductDraft {
 
 function repository(): SellerProductSessionRepository {
   return {
-    async create() {
+    async create(input) {
       return {
-        id: brandId<"EntityId">("session-1"),
+        id: input.id,
         organizationId: brandId<"EntityId">("tenant-1"),
         workspaceId: brandId<"EntityId">("workspace-1"),
-        businessId: brandId<"EntityId">("business-1"),
+        businessId: input.businessId,
         catalogProductId: null,
         actorId: brandId<"EntityId">("user-1"),
         status: "initiated",
         currentDraftVersion: 0,
-        idempotencyKey: "idem-1",
-        requestId: "req-1",
-        correlationId: "corr-1",
-        expiresAt: null,
-        createdAt: "2026-09-16T00:00:00.000Z",
-        updatedAt: "2026-09-16T00:00:00.000Z",
+        idempotencyKey: input.idempotencyKey,
+        requestId: input.context.requestId,
+        correlationId: input.context.correlationId,
+        expiresAt: input.expiresAt ?? null,
+        createdAt: input.now,
+        updatedAt: input.now,
       };
     },
     async getSession() { return null; },
@@ -70,7 +70,7 @@ function repository(): SellerProductSessionRepository {
 describe("SellerProductSessionService", () => {
   it("creates a scoped seller session with explicit business ownership and idempotency", async () => {
     const create = vi.fn(async (input: Parameters<SellerProductSessionRepository["create"]>[0]) => ({
-      id: brandId<"EntityId">("session-1"),
+      id: input.id,
       organizationId: brandId<"EntityId">("tenant-1"),
       workspaceId: brandId<"EntityId">("workspace-1"),
       businessId: input.businessId,
@@ -87,14 +87,27 @@ describe("SellerProductSessionService", () => {
     }));
     const repo = repository();
     repo.create = create;
-    const service = new (class {
-      constructor(private readonly options: { readonly repository: SellerProductSessionRepository; readonly id: () => SellerProductSessionRepository extends never ? never : ReturnType<() => import("@qooqnos/core")["brandId"]>; readonly now: () => string }) {}
-    }) as never;
-    void service;
+    const service = new SellerProductSessionService({
+      repository: repo,
+      id: () => brandId<"EntityId">("session-1"),
+      now: () => "2026-09-16T00:00:00.000Z",
+    });
 
-    const sessionId = brandId<"EntityId">("session-1");
-    expect(sessionId).toBeTruthy();
-    expect(create).not.toHaveBeenCalled();
+    const result = await service.createSession(context(), {
+      businessId: brandId<"EntityId">("business-1"),
+      idempotencyKey: "idem-1",
+      expiresAt: "2026-09-17T00:00:00.000Z",
+    });
+
+    expect(result.businessId).toBe(brandId<"EntityId">("business-1"));
+    expect(create).toHaveBeenCalledWith({
+      id: brandId<"EntityId">("session-1"),
+      context: context(),
+      businessId: brandId<"EntityId">("business-1"),
+      idempotencyKey: "idem-1",
+      expiresAt: "2026-09-17T00:00:00.000Z",
+      now: "2026-09-16T00:00:00.000Z",
+    });
   });
 });
 
