@@ -13,9 +13,15 @@ export interface SellerProductSessionRecord {
   readonly id: EntityId;
   readonly organizationId: EntityId;
   readonly workspaceId: EntityId;
+  readonly businessId: EntityId | null;
+  readonly catalogProductId: EntityId | null;
   readonly actorId: EntityId | null;
   readonly status: string;
   readonly currentDraftVersion: number;
+  readonly idempotencyKey: string | null;
+  readonly requestId: string | null;
+  readonly correlationId: string | null;
+  readonly expiresAt: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -28,13 +34,14 @@ export interface SellerProductProvenanceRecord {
 }
 
 export interface SellerProductSessionRepository {
-  create(input: { readonly id: EntityId; readonly context: RequestContext; readonly now: string }): Promise<void>;
+  create(input: { readonly id: EntityId; readonly context: RequestContext; readonly now: string; readonly businessId: EntityId; readonly idempotencyKey: string; readonly expiresAt?: string | undefined }): Promise<SellerProductSessionRecord>;
   getSession(context: RequestContext, sessionId: EntityId): Promise<SellerProductSessionRecord | null>;
   addInput(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly mediaAssetId?: EntityId | undefined; readonly rawText?: string | undefined; readonly now: string }): Promise<void>;
   saveDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly provenance: readonly SellerProductProvenanceRecord[]; readonly now: string }): Promise<void>;
   getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null>;
   reviewDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly now: string }): Promise<void>;
   confirmDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly now: string }): Promise<void>;
+  markCatalogSaved(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly productId: EntityId; readonly now: string }): Promise<boolean>;
   cancelSession(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly now: string }): Promise<boolean>;
 }
 
@@ -47,10 +54,16 @@ export interface SellerProductSessionServiceOptions {
 export class SellerProductSessionService {
   constructor(protected readonly sessionOptions: SellerProductSessionServiceOptions) {}
 
-  async createSession(context: RequestContext): Promise<EntityId> {
+  async createSession(context: RequestContext, input: { readonly businessId: EntityId; readonly idempotencyKey: string; readonly expiresAt?: string }): Promise<SellerProductSessionRecord> {
     const id = this.sessionOptions.id();
-    await this.sessionOptions.repository.create({ id, context, now: this.sessionOptions.now() });
-    return id;
+    return this.sessionOptions.repository.create({
+      id,
+      context,
+      businessId: input.businessId,
+      idempotencyKey: input.idempotencyKey,
+      ...(input.expiresAt !== undefined ? { expiresAt: input.expiresAt } : {}),
+      now: this.sessionOptions.now(),
+    });
   }
 
   getSession(context: RequestContext, sessionId: EntityId): Promise<SellerProductSessionRecord | null> {
@@ -79,6 +92,16 @@ export class SellerProductSessionService {
 
   async confirmDraft(context: RequestContext, sessionId: EntityId, version: number): Promise<void> {
     await this.sessionOptions.repository.confirmDraft({ context, sessionId, version, now: this.sessionOptions.now() });
+  }
+
+  async markCatalogSaved(context: RequestContext, sessionId: EntityId, version: number, productId: EntityId): Promise<boolean> {
+    return this.sessionOptions.repository.markCatalogSaved({
+      context,
+      sessionId,
+      version,
+      productId,
+      now: this.sessionOptions.now(),
+    });
   }
 
   async cancelSession(context: RequestContext, sessionId: EntityId): Promise<boolean> {
