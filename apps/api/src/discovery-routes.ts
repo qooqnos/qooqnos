@@ -1,5 +1,5 @@
 import { DiscoveryRepository, DiscoveryService } from "@qooqnos/discovery";
-import { AppError } from "@qooqnos/core";
+import { AppError, type RequestId } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
@@ -28,7 +28,7 @@ export function registerDiscoveryRoutes(router: ApiRouter, database: D1Database 
   });
 }
 
-function parseInteger(value: string | null, name: string, requestId: string): number | undefined {
+function parseInteger(value: string | null, name: string, requestId: RequestId): number | undefined {
   if (value === null || value.trim() === "") return undefined;
   if (!/^\d+$/.test(value.trim())) throw new AppError({ code: "VALIDATION_ERROR", message: `${name} must be a non-negative integer.`, requestId });
   const parsed = Number(value);
