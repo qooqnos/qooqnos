@@ -13,16 +13,6 @@ export interface AuditEventInput {
   readonly createdAt: string;
 }
 
-export interface IdempotencyRecord {
-  readonly scope: string;
-  readonly key: string;
-  readonly requestFingerprint: string;
-  readonly status: "processing" | "succeeded" | "failed";
-  readonly resultJson: string | null;
-  readonly createdAt: string;
-  readonly expiresAt: string;
-}
-
 export interface OutboxEventInput {
   readonly id: string;
   readonly eventType: string;
@@ -62,9 +52,9 @@ export class PlatformRepository extends Repository {
     );
   }
 
-  async getIdempotency(context: RepositoryContext, key: string): Promise<IdempotencyRecord | null> {
+  async getIdempotency(context: RepositoryContext, key: string): Promise<import("./command-repository").IdempotencyRecord | null> {
     const scope = this.scope(context);
-    return this.database.first<IdempotencyRecord>(
+    return this.database.first<import("./command-repository").IdempotencyRecord>(
       `SELECT scope, key, request_fingerprint AS requestFingerprint, status,
               result_json AS resultJson, created_at AS createdAt, expires_at AS expiresAt
        FROM idempotency_records WHERE scope = ? AND key = ? LIMIT 1`,
