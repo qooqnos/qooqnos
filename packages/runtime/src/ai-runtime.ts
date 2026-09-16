@@ -1,4 +1,12 @@
 import type { RequestContext } from "@qooqnos/core";
+import {
+  createOperationIdentity,
+  usageMeasurements,
+  type AIEconomicsSink,
+  type AIEntitlementDecision,
+  type AIOperationLifecycleStatus,
+  type AIProviderCostTelemetry,
+} from "./ai-economics";
 
 export type AIDataClassification = "public" | "internal" | "confidential" | "personal" | "sensitive" | "regulated";
 export type AIOperationStatus = "succeeded" | "failed" | "blocked" | "abstained";
@@ -14,6 +22,10 @@ export interface AIRuntimeRequest<TInput = unknown> {
   readonly promptVersion: string;
   readonly outputSchemaVersion: string;
   readonly policyVersion: string;
+  readonly sessionId?: string | undefined;
+  readonly inputReference?: string | undefined;
+  readonly inputHash?: string | undefined;
+  readonly attemptNumber?: number | undefined;
   readonly timeoutMs?: number | undefined;
   readonly budgetUnits?: number | undefined;
 }
@@ -50,21 +62,28 @@ export interface AIProviderRequest {
   readonly timeoutMs?: number | undefined;
 }
 
+export interface AIProviderCost {
+  readonly inputUnits?: number | undefined;
+  readonly outputUnits?: number | undefined;
+  readonly estimatedProviderCost?: number | undefined;
+  readonly costCurrency?: string | undefined;
+  readonly costEstimationVersion?: string | undefined;
+  readonly latencyMs?: number | undefined;
+}
+
 export interface AIProviderResponse {
   readonly providerId: string;
   readonly modelId: string;
   readonly output: unknown;
   readonly usage?: AIRuntimeUsage | undefined;
+  readonly cost?: AIProviderCost | undefined;
 }
 
 export interface AIProviderAdapter {
   execute(request: AIProviderRequest): Promise<AIProviderResponse>;
 }
 
-export interface AIEntitlementDecision {
-  readonly allowed: boolean;
-  readonly reason?: string | undefined;
-}
+export type { AIEntitlementDecision };
 
 export interface AIRuntimePolicy {
   authorize(context: RequestContext, operationType: string): Promise<void>;
@@ -78,67 +97,149 @@ export interface AIRuntime {
 }
 
 /** Shared internal AI execution boundary. It does not own domain persistence, billing state, or provider SDKs. */
-export function createAIRuntime(provider: AIProviderAdapter, policy: AIRuntimePolicy): AIRuntime {
+export function createAIRuntime(
+  provider: AIProviderAdapter,
+  policy: AIRuntimePolicy,
+  economics?: AIEconomicsSink,
+): AIRuntime {
   return {
     async execute<TOutput, TInput>(request: AIRuntimeRequest<TInput>): Promise<AIRuntimeResult<TOutput>> {
-      if (!request.operationId.trim()) throw new Error("AI operationId is required");
-      if (!request.operationType.trim()) throw new Error("AI operationType is required");
-      if (request.operationVersion < 1) throw new Error("AI operationVersion must be positive");
-      if (!request.idempotencyKey.trim()) throw new Error("AI idempotencyKey is required");
-      if (!request.promptVersion.trim() || !request.outputSchemaVersion.trim() || !request.policyVersion.trim()) {
-        throw new Error("AI prompt, schema and policy versions are required");
+      validateRequest(request);
+      await policy.authorize(request.context, request.operationType);
+
+      const identity = createOperationIdentity(request);
+      await economics?.operationCreated(identity);
+
+      const entitlement = await policy.checkEntitlement(request.context, request.operationType);
+      await economics?.entitlementDecisionRecorded(request.operationId, entitlement);
+      await economics?.operationStatusChanged(
+        request.operationId,
+        entitlement.allowed ? "entitlement_checked" : "blocked_by_entitlement",
+      );
+
+      if (!entitlement.allowed) {
+        return blockedResult(
+          request,
+          entitlement.reason ?? "AI entitlement denied",
+          entitlement.decision === "temporary_unavailable",
+        );
       }
 
-      await policy.authorize(request.context, request.operationType);
-      const entitlement = await policy.checkEntitlement(request.context, request.operationType);
-      if (!entitlement.allowed) return blockedResult(request, entitlement.reason ?? "AI entitlement denied");
+      await economics?.operationStatusChanged(request.operationId, "running");
 
-      const providerRequest: AIProviderRequest = {
-        operationType: request.operationType,
-        promptVersion: request.promptVersion,
-        input: request.input,
-        outputSchemaVersion: request.outputSchemaVersion,
-        ...(request.timeoutMs !== undefined ? { timeoutMs: request.timeoutMs } : {}),
-      };
-      const response = await provider.execute(providerRequest);
+      try {
+        const startedAt = Date.now();
+        const providerRequest: AIProviderRequest = {
+          operationType: request.operationType,
+          promptVersion: request.promptVersion,
+          input: request.input,
+          outputSchemaVersion: request.outputSchemaVersion,
+          ...(request.timeoutMs !== undefined ? { timeoutMs: request.timeoutMs } : {}),
+        };
+        const response = await provider.execute(providerRequest);
 
-      await policy.validateOutput(response.output, request.outputSchemaVersion);
-      const safety = await policy.validateSafety(response.output, request.operationType);
-      if (safety !== "allowed") {
+        await recordEconomics(
+          economics,
+          request,
+          response,
+          response.cost !== undefined
+            ? {
+                operationId: request.operationId,
+                providerId: response.providerId,
+                modelId: response.modelId,
+                ...response.cost,
+                ...(response.cost.latencyMs === undefined ? { latencyMs: Date.now() - startedAt } : {}),
+                occurredAt: new Date().toISOString(),
+              }
+            : undefined,
+          entitlement,
+        );
+
+        await policy.validateOutput(response.output, request.outputSchemaVersion);
+        const safety = await policy.validateSafety(response.output, request.operationType);
+        if (safety !== "allowed") {
+          const lifecycleStatus: AIOperationLifecycleStatus = safety === "blocked" ? "blocked_by_safety" : "abstained";
+          await economics?.operationStatusChanged(request.operationId, lifecycleStatus);
+          return {
+            operationId: request.operationId,
+            operationType: request.operationType,
+            operationVersion: request.operationVersion,
+            status: safety,
+            providerId: response.providerId,
+            modelId: response.modelId,
+            ...(response.usage !== undefined ? { usage: response.usage } : {}),
+            safetyDecision: safety,
+            provenance: "none",
+            warnings: [safety === "blocked" ? "AI output was blocked by safety policy" : "AI output requires abstention"],
+            retryable: false,
+          };
+        }
+
+        await economics?.operationStatusChanged(request.operationId, "succeeded");
         return {
           operationId: request.operationId,
           operationType: request.operationType,
           operationVersion: request.operationVersion,
-          status: safety,
+          status: "succeeded",
+          output: response.output as TOutput,
           providerId: response.providerId,
           modelId: response.modelId,
           ...(response.usage !== undefined ? { usage: response.usage } : {}),
-          safetyDecision: safety,
-          provenance: "none",
-          warnings: [safety === "blocked" ? "AI output was blocked by safety policy" : "AI output requires abstention"],
+          safetyDecision: "allowed",
+          provenance: "ai_generated",
+          warnings: [],
           retryable: false,
         };
+      } catch (error) {
+        await economics?.operationStatusChanged(request.operationId, "failed");
+        throw error;
       }
-
-      return {
-        operationId: request.operationId,
-        operationType: request.operationType,
-        operationVersion: request.operationVersion,
-        status: "succeeded",
-        output: response.output as TOutput,
-        providerId: response.providerId,
-        modelId: response.modelId,
-        ...(response.usage !== undefined ? { usage: response.usage } : {}),
-        safetyDecision: "allowed",
-        provenance: "ai_generated",
-        warnings: [],
-        retryable: false,
-      };
     },
   };
 }
 
-function blockedResult<TInput>(request: AIRuntimeRequest<TInput>, reason: string): AIRuntimeResult<never> {
+async function recordEconomics(
+  economics: AIEconomicsSink | undefined,
+  request: AIRuntimeRequest,
+  response: AIProviderResponse,
+  cost: AIProviderCostTelemetry | undefined,
+  entitlement: AIEntitlementDecision,
+): Promise<void> {
+  if (economics === undefined) return;
+
+  const occurredAt = new Date().toISOString();
+  if (response.usage !== undefined) {
+    const measurements = usageMeasurements(
+      request.operationId,
+      request.operationType,
+      request.idempotencyKey,
+      response.usage,
+      entitlement.entitlementDecisionId,
+      occurredAt,
+    );
+    for (const measurement of measurements) await economics.usageMeasured(measurement);
+  }
+  if (cost !== undefined) await economics.providerCostRecorded(cost);
+}
+
+function validateRequest(request: AIRuntimeRequest): void {
+  if (!request.operationId.trim()) throw new Error("AI operationId is required");
+  if (!request.operationType.trim()) throw new Error("AI operationType is required");
+  if (request.operationVersion < 1) throw new Error("AI operationVersion must be positive");
+  if (!request.idempotencyKey.trim()) throw new Error("AI idempotencyKey is required");
+  if (request.attemptNumber !== undefined && request.attemptNumber < 1) {
+    throw new Error("AI attemptNumber must be positive");
+  }
+  if (!request.promptVersion.trim() || !request.outputSchemaVersion.trim() || !request.policyVersion.trim()) {
+    throw new Error("AI prompt, schema and policy versions are required");
+  }
+}
+
+function blockedResult<TInput>(
+  request: AIRuntimeRequest<TInput>,
+  reason: string,
+  retryable: boolean,
+): AIRuntimeResult<never> {
   return {
     operationId: request.operationId,
     operationType: request.operationType,
@@ -147,6 +248,6 @@ function blockedResult<TInput>(request: AIRuntimeRequest<TInput>, reason: string
     safetyDecision: "blocked",
     provenance: "none",
     warnings: [reason],
-    retryable: false,
+    retryable,
   };
 }
