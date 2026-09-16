@@ -92,8 +92,15 @@ export interface OutboxInput {
   occurredAt: string;
 }
 
+export interface OutboxEventRecord extends OutboxInput {
+  status: "pending" | "published" | "failed";
+  attempts: number;
+  publishedAt: string | null;
+}
+
 export class OutboxService {
   constructor(private readonly database: D1Database) {}
+
   async enqueue(event: OutboxInput): Promise<void> {
     await this.database.run(
       `INSERT INTO outbox_events
@@ -104,4 +111,56 @@ export class OutboxService {
       event.organizationId ?? null, event.workspaceId ?? null, event.payloadJson, event.availableAt, event.occurredAt,
     );
   }
+
+  async listPending(now: string, limit = 50): Promise<OutboxEventRecord[]> {
+    if (!Number.isInteger(limit) || limit < 1) throw new DatabaseError("Outbox limit must be a positive integer");
+    const rows = await this.database.all<OutboxEventRow>(
+      `SELECT id, event_type AS eventType, event_version AS eventVersion,
+              aggregate_type AS aggregateType, aggregate_id AS aggregateId,
+              organization_id AS organizationId, workspace_id AS workspaceId,
+              payload_json AS payloadJson, status, attempts,
+              available_at AS availableAt, occurred_at AS occurredAt,
+              published_at AS publishedAt
+       FROM outbox_events
+       WHERE status = 'pending' AND available_at <= ?
+       ORDER BY available_at ASC, occurred_at ASC, id ASC
+       LIMIT ?`,
+      now, Math.min(limit, 100),
+    );
+    return rows;
+  }
+
+  async markPublished(id: string, publishedAt: string): Promise<void> {
+    await this.database.run(
+      `UPDATE outbox_events
+       SET status = 'published', published_at = ?, attempts = attempts + 1
+       WHERE id = ? AND status = 'pending'`,
+      publishedAt, id,
+    );
+  }
+
+  async markFailed(id: string): Promise<void> {
+    await this.database.run(
+      `UPDATE outbox_events
+       SET status = 'failed', attempts = attempts + 1
+       WHERE id = ? AND status = 'pending'`,
+      id,
+    );
+  }
+}
+
+interface OutboxEventRow {
+  readonly id: string;
+  readonly eventType: string;
+  readonly eventVersion: number;
+  readonly aggregateType: string | null;
+  readonly aggregateId: string | null;
+  readonly organizationId: string | null;
+  readonly workspaceId: string | null;
+  readonly payloadJson: string;
+  readonly status: "pending" | "published" | "failed";
+  readonly attempts: number;
+  readonly availableAt: string;
+  readonly occurredAt: string;
+  readonly publishedAt: string | null;
 }
