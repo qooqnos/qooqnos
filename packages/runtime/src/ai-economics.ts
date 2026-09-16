@@ -3,6 +3,7 @@ import type { RequestContext } from "@qooqnos/core";
 export type AIOperationLifecycleStatus =
   | "created"
   | "entitlement_checked"
+  | "routing_selected"
   | "running"
   | "succeeded"
   | "failed"
@@ -48,6 +49,19 @@ export interface AIEntitlementDecision {
   readonly reason?: string | undefined;
 }
 
+export interface AIRoutingDecisionTelemetry {
+  readonly routingDecisionId: string;
+  readonly operationId: string;
+  readonly policyId: string;
+  readonly policyVersion: string;
+  readonly providerId: string;
+  readonly modelId: string;
+  readonly providerVersion: string;
+  readonly modelVersion: string;
+  readonly fallbackGroup?: string | undefined;
+  readonly occurredAt: string;
+}
+
 export interface AIUsageMeasurement {
   readonly usageEventId: string;
   readonly operationId: string;
@@ -85,6 +99,7 @@ export interface AIEconomicsSink {
     operationId: string,
     decision: AIEntitlementDecision,
   ): Promise<void> | void;
+  routingDecisionRecorded?(decision: AIRoutingDecisionTelemetry): Promise<void> | void;
   usageMeasured(measurement: AIUsageMeasurement): Promise<void> | void;
   providerCostRecorded(telemetry: AIProviderCostTelemetry): Promise<void> | void;
 }
