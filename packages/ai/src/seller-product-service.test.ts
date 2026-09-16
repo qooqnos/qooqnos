@@ -116,7 +116,7 @@ describe("SellerProductSessionService", () => {
 });
 
 describe("SellerProductService", () => {
-  it("passes trusted request context into the canonical AI runtime and persists field provenance", async () => {
+  it("passes trusted request context and session identity into the canonical AI runtime and persists field provenance", async () => {
     const saveDraft = vi.fn(async () => undefined);
     const executeMock = vi.fn(async (request: AIRequest): Promise<AIResult<unknown>> => ({
       operationId: request.operationId,
@@ -154,6 +154,7 @@ describe("SellerProductService", () => {
 
     expect(executeMock).toHaveBeenCalledWith(expect.objectContaining({
       context: context(),
+      sessionId: brandId<"EntityId">("session-1"),
       operationType: SELLER_AI_OPERATION_TYPES.extract,
       operationVersion: 1,
     }));
