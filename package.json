@@ -16,7 +16,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "tsc -b",
+    "prepare:web-fonts": "node scripts/prepare-web-fonts.mjs",
+    "build": "npm run prepare:web-fonts && tsc -b",
     "deploy:staging": "wrangler deploy --env staging",
     "deploy:production": "wrangler deploy --env production",
     "deploy": "npm run deploy:production"
