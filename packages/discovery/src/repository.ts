@@ -131,7 +131,8 @@ export class DiscoveryRepository extends Repository {
          body = excluded.body,
          metadata_json = excluded.metadata_json,
          eligibility = excluded.eligibility,
-         updated_at = excluded.updated_at`,
+         updated_at = excluded.updated_at
+       WHERE excluded.document_version >= search_documents.document_version`,
       input.id, organizationId, workspaceId, sourceType, input.sourceId,
       input.documentVersion, input.title.trim(), input.body ?? null,
       input.metadata ? JSON.stringify(input.metadata) : null, input.eligibility, input.now, input.now,
