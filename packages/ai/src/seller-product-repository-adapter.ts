@@ -17,6 +17,9 @@ export function createSellerProductSessionRepository(database: D1Database): Sell
     async getSession(context, sessionId) {
       return repository.getSession(context, sessionId);
     },
+    async getInputs(context, sessionId) {
+      return repository.getInputs(context, sessionId);
+    },
     async addInput(input) {
       const rawText = input.rawText?.trim();
       const inputHash = await sha256Hex(`${input.mediaAssetId ?? ""}\n${rawText ?? ""}`);
