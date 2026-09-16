@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T00:00:00.000Z",
+  "generatedAt": "2026-09-16T04:45:00.000Z",
   "migrations": [
     {
       "id": "0001_foundation",
@@ -77,6 +77,13 @@
       "moduleId": "ai",
       "checksum": "de3bebc30288aa64f5590bfa19d21be210a8664e9de4af25a9ccfb4c2c9417b6",
       "filename": "0011_ai_seller_creation.sql"
+    },
+    {
+      "id": "0012_ai_seller_catalog_link",
+      "version": 12,
+      "moduleId": "ai",
+      "checksum": "4adad90af1a0fbee18d8a948fe881cf12c7f787dc1452f0feed3d11eb172e247",
+      "filename": "0012_ai_seller_catalog_link.sql"
     }
   ]
 }
