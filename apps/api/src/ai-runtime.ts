@@ -29,16 +29,21 @@ export function createApiAIRuntime(
 
   const modelVersion = env.AI_SELLER_EXTRACT_MODEL_VERSION?.trim() || "1";
   const providerId = "cloudflare-workers-ai";
-  const provider = createCloudflareAIProvider(requireAI(env), {
-    providerId,
-    ...(env.AI_GATEWAY_ID?.trim() ? { gatewayId: env.AI_GATEWAY_ID.trim() } : {}),
-    buildInput: (request) => ({
-      operationType: request.operationType,
-      promptVersion: request.promptVersion,
-      input: request.input,
-      outputSchemaVersion: request.outputSchemaVersion,
-    }),
-  });
+  const provider = {
+    async execute(request: Parameters<ReturnType<typeof createCloudflareAIProvider>["execute"]>[0]) {
+      const adapter = createCloudflareAIProvider(requireAI(env), {
+        providerId,
+        ...(env.AI_GATEWAY_ID?.trim() ? { gatewayId: env.AI_GATEWAY_ID.trim() } : {}),
+        buildInput: (providerRequest) => ({
+          operationType: providerRequest.operationType,
+          promptVersion: providerRequest.promptVersion,
+          input: providerRequest.input,
+          outputSchemaVersion: providerRequest.outputSchemaVersion,
+        }),
+      });
+      return adapter.execute(request);
+    },
+  };
 
   const providers = createAIProviderRegistry([
     {
