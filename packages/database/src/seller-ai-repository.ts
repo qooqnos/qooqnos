@@ -11,6 +11,7 @@ export interface SellerAICreationSessionRecord {
   readonly status: string;
   readonly currentDraftVersion: number;
   readonly idempotencyKey: string | null;
+  readonly requestFingerprint: string | null;
   readonly requestId: string | null;
   readonly correlationId: string | null;
   readonly expiresAt: string | null;
@@ -44,7 +45,12 @@ export class SellerAIRepository extends Repository {
     context: RequestContext,
     id: EntityId,
     now: string,
-    input: { readonly businessId: EntityId; readonly idempotencyKey: string; readonly expiresAt?: string | undefined },
+    input: {
+      readonly businessId: EntityId;
+      readonly idempotencyKey: string;
+      readonly requestFingerprint: string;
+      readonly expiresAt?: string | undefined;
+    },
   ): Promise<SellerAICreationSessionRecord> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
@@ -59,14 +65,15 @@ export class SellerAIRepository extends Repository {
     await this.database.run(
       `INSERT OR IGNORE INTO seller_ai_creation_sessions
        (id, organization_id, workspace_id, business_id, actor_id, status, current_draft_version,
-        idempotency_key, request_id, correlation_id, expires_at, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'initiated', 0, ?, ?, ?, ?, ?, ?)`,
+        idempotency_key, request_fingerprint, request_id, correlation_id, expires_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'initiated', 0, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       organizationId,
       workspaceId,
       input.businessId,
       context.actorId ?? null,
       input.idempotencyKey,
+      input.requestFingerprint,
       context.requestId,
       context.correlationId,
       input.expiresAt ?? null,
@@ -80,8 +87,8 @@ export class SellerAIRepository extends Repository {
       `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
               business_id AS businessId, catalog_product_id AS catalogProductId,
               actor_id AS actorId, status, current_draft_version AS currentDraftVersion,
-              idempotency_key AS idempotencyKey, request_id AS requestId,
-              correlation_id AS correlationId, expires_at AS expiresAt,
+              idempotency_key AS idempotencyKey, request_fingerprint AS requestFingerprint,
+              request_id AS requestId, correlation_id AS correlationId, expires_at AS expiresAt,
               created_at AS createdAt, updated_at AS updatedAt
        FROM seller_ai_creation_sessions
        WHERE idempotency_key = ? AND organization_id = ? AND workspace_id = ?
@@ -91,6 +98,9 @@ export class SellerAIRepository extends Repository {
       workspaceId,
     );
     if (!replay) throw new DatabaseError("Seller AI session not found after creation");
+    if (replay.requestFingerprint !== input.requestFingerprint) {
+      throw new DatabaseError("Seller AI idempotency key was reused with a different request");
+    }
     return replay;
   }
 
@@ -101,8 +111,8 @@ export class SellerAIRepository extends Repository {
       `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
               business_id AS businessId, catalog_product_id AS catalogProductId,
               actor_id AS actorId, status, current_draft_version AS currentDraftVersion,
-              idempotency_key AS idempotencyKey, request_id AS requestId,
-              correlation_id AS correlationId, expires_at AS expiresAt,
+              idempotency_key AS idempotencyKey, request_fingerprint AS requestFingerprint,
+              request_id AS requestId, correlation_id AS correlationId, expires_at AS expiresAt,
               created_at AS createdAt, updated_at AS updatedAt
        FROM seller_ai_creation_sessions
        WHERE id = ? AND organization_id = ? AND workspace_id = ?
@@ -115,14 +125,7 @@ export class SellerAIRepository extends Repository {
 
   async addInput(
     context: RequestContext,
-    input: {
-      readonly id: EntityId;
-      readonly sessionId: EntityId;
-      readonly mediaAssetId?: EntityId;
-      readonly rawText?: string;
-      readonly inputHash: string;
-      readonly now: string;
-    },
+    input: { readonly id: EntityId; readonly sessionId: EntityId; readonly mediaAssetId?: EntityId; readonly rawText?: string; readonly inputHash: string; readonly now: string },
   ): Promise<void> {
     const session = await this.getSession(context, input.sessionId);
     if (!session) throw new DatabaseError("Seller AI session not found");
@@ -137,28 +140,14 @@ export class SellerAIRepository extends Repository {
     }
     if (!input.mediaAssetId && !input.rawText?.trim()) throw new DatabaseError("Seller AI input is empty");
     await this.database.transaction([
-      {
-        sql: `INSERT INTO seller_ai_inputs (id, session_id, media_asset_id, raw_text, input_hash, created_at)
-              VALUES (?, ?, ?, ?, ?, ?)`,
-        params: [input.id, input.sessionId, input.mediaAssetId ?? null, input.rawText ?? null, input.inputHash, input.now],
-      },
-      {
-        sql: `UPDATE seller_ai_creation_sessions SET status = 'analyzing', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?`,
-        params: [input.now, input.sessionId, session.organizationId, session.workspaceId],
-      },
+      { sql: `INSERT INTO seller_ai_inputs (id, session_id, media_asset_id, raw_text, input_hash, created_at) VALUES (?, ?, ?, ?, ?, ?)`, params: [input.id, input.sessionId, input.mediaAssetId ?? null, input.rawText ?? null, input.inputHash, input.now] },
+      { sql: `UPDATE seller_ai_creation_sessions SET status = 'analyzing', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?`, params: [input.now, input.sessionId, session.organizationId, session.workspaceId] },
     ]);
   }
 
   async saveDraft(
     context: RequestContext,
-    input: {
-      readonly id: EntityId;
-      readonly sessionId: EntityId;
-      readonly version: number;
-      readonly draftJson: string;
-      readonly provenance: readonly SellerAIProvenanceRecord[];
-      readonly now: string;
-    },
+    input: { readonly id: EntityId; readonly sessionId: EntityId; readonly version: number; readonly draftJson: string; readonly provenance: readonly SellerAIProvenanceRecord[]; readonly now: string },
   ): Promise<SellerAIDraftRecord> {
     const session = await this.getSession(context, input.sessionId);
     if (!session) throw new DatabaseError("Seller AI session not found");
@@ -171,10 +160,7 @@ export class SellerAIRepository extends Repository {
     const statements = [
       { sql: `UPDATE seller_ai_drafts SET status = 'superseded', updated_at = ? WHERE session_id = ? AND status IN ('draft','seller_review')`, params: [input.now, input.sessionId] },
       { sql: `INSERT INTO seller_ai_drafts (id, session_id, version, status, draft_json, created_at, updated_at) VALUES (?, ?, ?, 'draft', ?, ?, ?)`, params: [input.id, input.sessionId, input.version, input.draftJson, input.now, input.now] },
-      ...input.provenance.map((record) => ({
-        sql: `INSERT INTO seller_ai_field_provenance (id, draft_id, field_path, provenance, confidence, source_refs_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        params: [crypto.randomUUID(), input.id, record.fieldPath, record.provenance, record.confidence, JSON.stringify(record.sourceRefs), input.now],
-      })),
+      ...input.provenance.map((record) => ({ sql: `INSERT INTO seller_ai_field_provenance (id, draft_id, field_path, provenance, confidence, source_refs_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, params: [crypto.randomUUID(), input.id, record.fieldPath, record.provenance, record.confidence, JSON.stringify(record.sourceRefs), input.now] })),
       { sql: `UPDATE seller_ai_creation_sessions SET status = 'draft_ready', current_draft_version = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?`, params: [input.version, input.now, input.sessionId, session.organizationId, session.workspaceId] },
     ];
     const results = await this.database.transaction(statements);
@@ -198,11 +184,7 @@ export class SellerAIRepository extends Repository {
       { sql: `UPDATE seller_ai_creation_sessions SET status = 'seller_review', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND current_draft_version = ?`, params: [now, sessionId, session.organizationId, session.workspaceId, version] },
     ]);
     if (results[0]?.meta?.changes !== 1 || results[1]?.meta?.changes !== 1) throw new DatabaseError("Seller AI draft is not reviewable");
-    const draft = await this.database.first<SellerAIDraftRecord>(
-      `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`,
-      sessionId,
-      version,
-    );
+    const draft = await this.database.first<SellerAIDraftRecord>(`SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`, sessionId, version);
     if (!draft || draft.status !== "seller_review") throw new DatabaseError("Seller AI draft is not reviewable");
     return draft;
   }
@@ -212,11 +194,7 @@ export class SellerAIRepository extends Repository {
     if (!session) throw new DatabaseError("Seller AI session not found");
     if (session.currentDraftVersion !== version) throw new DatabaseError("Seller AI draft version is stale");
     if (session.status === "confirmed" || session.status === "catalog_saved") {
-      const current = await this.database.first<SellerAIDraftRecord>(
-        `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`,
-        sessionId,
-        version,
-      );
+      const current = await this.database.first<SellerAIDraftRecord>(`SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`, sessionId, version);
       if (current?.status === "confirmed") return current;
     }
     const results = await this.database.transaction([
@@ -224,11 +202,7 @@ export class SellerAIRepository extends Repository {
       { sql: `UPDATE seller_ai_creation_sessions SET status = 'confirmed', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND current_draft_version = ?`, params: [now, sessionId, session.organizationId, session.workspaceId, version] },
     ]);
     if (results[0]?.meta?.changes !== 1 || results[1]?.meta?.changes !== 1) throw new DatabaseError("Seller AI draft must be reviewed before confirmation");
-    const draft = await this.database.first<SellerAIDraftRecord>(
-      `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`,
-      sessionId,
-      version,
-    );
+    const draft = await this.database.first<SellerAIDraftRecord>(`SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`, sessionId, version);
     if (!draft || draft.status !== "confirmed") throw new DatabaseError("Seller AI draft must be reviewed before confirmation");
     return draft;
   }
@@ -236,16 +210,7 @@ export class SellerAIRepository extends Repository {
   async markCatalogSaved(context: RequestContext, sessionId: EntityId, version: number, productId: EntityId, now: string): Promise<boolean> {
     const session = await this.getSession(context, sessionId);
     if (!session) throw new DatabaseError("Seller AI session not found");
-    const result = await this.database.run(
-      `UPDATE seller_ai_creation_sessions SET status = 'catalog_saved', catalog_product_id = ?, updated_at = ?
-       WHERE id = ? AND organization_id = ? AND workspace_id = ? AND current_draft_version = ? AND status IN ('confirmed','catalog_saved')`,
-      productId,
-      now,
-      sessionId,
-      session.organizationId,
-      session.workspaceId,
-      version,
-    );
+    const result = await this.database.run(`UPDATE seller_ai_creation_sessions SET status = 'catalog_saved', catalog_product_id = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND current_draft_version = ? AND status IN ('confirmed','catalog_saved')`, productId, now, sessionId, session.organizationId, session.workspaceId, version);
     return result.meta?.changes === undefined ? true : result.meta.changes === 1;
   }
 
@@ -253,23 +218,13 @@ export class SellerAIRepository extends Repository {
     const session = await this.getSession(context, sessionId);
     if (!session) throw new DatabaseError("Seller AI session not found");
     if (["published", "cancelled", "expired", "catalog_saved"].includes(session.status)) return false;
-    const result = await this.database.run(
-      `UPDATE seller_ai_creation_sessions SET status = 'cancelled', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND status NOT IN ('published','cancelled','expired','catalog_saved')`,
-      now,
-      sessionId,
-      session.organizationId,
-      session.workspaceId,
-    );
+    const result = await this.database.run(`UPDATE seller_ai_creation_sessions SET status = 'cancelled', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND status NOT IN ('published','cancelled','expired','catalog_saved')`, now, sessionId, session.organizationId, session.workspaceId);
     return result.meta?.changes === undefined ? true : result.meta.changes === 1;
   }
 
   async getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerAIDraftRecord | null> {
     const session = await this.getSession(context, sessionId);
     if (!session || session.currentDraftVersion === 0) return null;
-    return this.database.first<SellerAIDraftRecord>(
-      `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`,
-      sessionId,
-      session.currentDraftVersion,
-    );
+    return this.database.first<SellerAIDraftRecord>(`SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt FROM seller_ai_drafts WHERE session_id = ? AND version = ? LIMIT 1`, sessionId, session.currentDraftVersion);
   }
 }
