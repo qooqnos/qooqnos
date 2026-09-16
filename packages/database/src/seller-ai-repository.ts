@@ -22,6 +22,13 @@ export interface SellerAIDraftRecord {
   readonly updatedAt: string;
 }
 
+export interface SellerAIProvenanceRecord {
+  readonly fieldPath: string;
+  readonly provenance: "seller_input" | "seller_confirmed" | "ai_extracted" | "ai_generated" | "system_derived" | "external_verified" | "policy_validated";
+  readonly confidence: "confirmed" | "high_confidence" | "needs_review" | "unknown" | "conflicting" | "rejected";
+  readonly sourceRefs: readonly string[];
+}
+
 export class SellerAIRepository extends Repository {
   constructor(database: D1Database) {
     super(database);
@@ -88,15 +95,35 @@ export class SellerAIRepository extends Repository {
     ]);
   }
 
-  async saveDraft(context: RequestContext, input: { readonly id: EntityId; readonly sessionId: EntityId; readonly version: number; readonly draftJson: string; readonly now: string }): Promise<SellerAIDraftRecord> {
+  async saveDraft(context: RequestContext, input: { readonly id: EntityId; readonly sessionId: EntityId; readonly version: number; readonly draftJson: string; readonly provenance: readonly SellerAIProvenanceRecord[]; readonly now: string }): Promise<SellerAIDraftRecord> {
     const session = await this.getSession(context, input.sessionId);
     if (!session) throw new DatabaseError("Seller AI session not found");
     if (input.version !== session.currentDraftVersion + 1) throw new DatabaseError("Seller AI draft version is not the next expected version");
-    await this.database.transaction([
+    const fieldPaths = new Set<string>();
+    for (const record of input.provenance) {
+      if (!record.fieldPath.trim() || fieldPaths.has(record.fieldPath)) throw new DatabaseError("Seller AI draft provenance contains duplicate field paths");
+      fieldPaths.add(record.fieldPath);
+    }
+    const statements = [
       { sql: `UPDATE seller_ai_drafts SET status = 'superseded', updated_at = ? WHERE session_id = ? AND status IN ('draft','seller_review')`, params: [input.now, input.sessionId] },
       { sql: `INSERT INTO seller_ai_drafts (id, session_id, version, status, draft_json, created_at, updated_at) VALUES (?, ?, ?, 'draft', ?, ?, ?)`, params: [input.id, input.sessionId, input.version, input.draftJson, input.now, input.now] },
+      ...input.provenance.map((record) => ({
+        sql: `INSERT INTO seller_ai_field_provenance (id, draft_id, field_path, provenance, confidence, source_refs_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        params: [
+          crypto.randomUUID(),
+          input.id,
+          record.fieldPath,
+          record.provenance,
+          record.confidence,
+          JSON.stringify(record.sourceRefs),
+          input.now,
+        ],
+      })),
       { sql: `UPDATE seller_ai_creation_sessions SET status = 'draft_ready', current_draft_version = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?`, params: [input.version, input.now, input.sessionId, session.organizationId, session.workspaceId] },
-    ]);
+    ];
+    const results = await this.database.transaction(statements);
+    const sessionUpdate = results[results.length - 1];
+    if (sessionUpdate?.meta?.changes !== 1) throw new DatabaseError("Seller AI session was not updated after draft creation");
     const record = await this.database.first<SellerAIDraftRecord>(
       `SELECT id, session_id AS sessionId, version, status, draft_json AS draftJson, created_at AS createdAt, updated_at AS updatedAt FROM seller_ai_drafts WHERE id = ? AND session_id = ? LIMIT 1`,
       input.id,
