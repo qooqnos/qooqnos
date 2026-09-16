@@ -13,10 +13,14 @@
     "lint": "eslint .",
     "migration:check": "node scripts/verify-migration-lock.mjs",
     "migration:check:changes": "node scripts/verify-migration-lock.mjs --check-changes",
+    "db:migrate:remote": "wrangler d1 migrations apply --remote",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy --env production",
+    "deploy": "npm run deploy:production"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
