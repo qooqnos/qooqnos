@@ -8,6 +8,11 @@ import {
   type AIProviderCostTelemetry,
 } from "./ai-economics";
 import type { AIProviderRegistry } from "./ai-provider-registry";
+import type {
+  AIProviderGovernanceRegistry,
+  AIRoutingPolicy,
+  AIRoutingRequirements,
+} from "./ai-provider-governance";
 
 export type AIDataClassification = "public" | "internal" | "confidential" | "personal" | "sensitive" | "regulated";
 export type AIOperationStatus = "succeeded" | "failed" | "blocked" | "abstained";
@@ -118,6 +123,31 @@ export function createAIRuntimeWithRegistry(
     ...(request.providerId !== undefined ? { providerId: request.providerId } : {}),
     ...(request.modelId !== undefined ? { modelId: request.modelId } : {}),
   }), policy, economics);
+}
+
+export function createAIRuntimeWithGovernance(
+  providers: AIProviderRegistry,
+  governance: AIProviderGovernanceRegistry,
+  policy: AIRuntimePolicy,
+  routingPolicy: AIRoutingPolicy,
+  requirements?: (request: AIRuntimeRequest) => AIRoutingRequirements,
+  economics?: AIEconomicsSink,
+): AIRuntime {
+  return buildRuntime((request) => {
+    const routingRequirements = requirements?.(request) ?? defaultRoutingRequirements(request);
+    const decision = governance.select(request, routingRequirements, routingPolicy);
+    return providers.execute(request, {
+      providerId: decision.selectedProviderId,
+      modelId: decision.selectedModelId,
+    });
+  }, policy, economics);
+}
+
+function defaultRoutingRequirements(request: AIRuntimeRequest): AIRoutingRequirements {
+  return {
+    operationType: request.operationType,
+    dataClassification: request.dataClassification,
+  };
 }
 
 function buildRuntime(
