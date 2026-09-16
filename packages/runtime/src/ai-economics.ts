@@ -18,9 +18,9 @@ export interface AIOperationIdentity {
   readonly operationType: string;
   readonly operationVersion: number;
   readonly sessionId?: string | undefined;
-  readonly tenantId: RequestContext["tenantId"];
-  readonly workspaceId: RequestContext["workspaceId"];
-  readonly actorId: RequestContext["actorId"];
+  readonly tenantId?: RequestContext["tenantId"];
+  readonly workspaceId?: RequestContext["workspaceId"];
+  readonly actorId?: RequestContext["actorId"];
   readonly requestId: RequestContext["requestId"];
   readonly correlationId: RequestContext["correlationId"];
   readonly idempotencyKey: string;
@@ -114,9 +114,9 @@ export function createOperationIdentity(request: {
     operationType: request.operationType,
     operationVersion: request.operationVersion,
     ...(request.sessionId !== undefined ? { sessionId: request.sessionId } : {}),
-    tenantId: request.context.tenantId,
-    workspaceId: request.context.workspaceId,
-    actorId: request.context.actorId,
+    ...(request.context.tenantId !== undefined ? { tenantId: request.context.tenantId } : {}),
+    ...(request.context.workspaceId !== undefined ? { workspaceId: request.context.workspaceId } : {}),
+    ...(request.context.actorId !== undefined ? { actorId: request.context.actorId } : {}),
     requestId: request.context.requestId,
     correlationId: request.context.correlationId,
     idempotencyKey: request.idempotencyKey,
