@@ -12,6 +12,7 @@
     "@qooqnos/catalog": "*",
     "@qooqnos/core": "*",
     "@qooqnos/database": "*",
+    "@qooqnos/discovery": "*",
     "@qooqnos/onboarding": "*",
     "@qooqnos/runtime": "*",
     "@qooqnos/api-contracts": "*"
