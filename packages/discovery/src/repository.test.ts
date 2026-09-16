@@ -20,17 +20,29 @@ function context(tenant = "tenant-1", workspace = "workspace-1"): RequestContext
 function makeDatabase(results: unknown[] = []): { db: D1Database; calls: unknown[][] } {
   const calls: unknown[][] = [];
   const statement: D1PreparedStatementLike = {
-    bind(...values: unknown[]) { calls.push(values); return this; },
-    async first<T>() { return null as T | null; },
-    async all<T>() { return { results: results as T[] }; },
-    async run() { return { success: true }; },
+    bind(...values: unknown[]) {
+      calls.push(values);
+      return this;
+    },
+    async first<T>() {
+      return null as T | null;
+    },
+    async all<T>() {
+      return { results: results as T[] };
+    },
+    async run() {
+      return { success: true };
+    },
   };
   const rawDatabase: D1DatabaseLike = {
-    prepare() { return statement; },
-    async batch() { return []; },
+    prepare() {
+      return statement;
+    },
+    async batch() {
+      return [];
+    },
   };
-  const db: D1Database = new D1Database(rawDatabase);
-  return { db, calls };
+  return { db: new D1Database(rawDatabase), calls };
 }
 
 describe("DiscoveryRepository search", () => {
