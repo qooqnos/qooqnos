@@ -58,6 +58,16 @@ function repository(): SellerProductSessionRepository {
       };
     },
     async getSession() { return null; },
+    async getInputs() {
+      return [{
+        id: brandId<"EntityId">("input-1"),
+        sessionId: brandId<"EntityId">("session-1"),
+        mediaAssetId: null,
+        rawText: "Example product",
+        inputHash: "hash-1",
+        createdAt: "2026-09-16T00:00:00.000Z",
+      }];
+    },
     async addInput() {},
     async saveDraft() {},
     async getDraft() { return null; },
@@ -116,7 +126,7 @@ describe("SellerProductSessionService", () => {
 });
 
 describe("SellerProductService", () => {
-  it("passes trusted request context and session identity into the canonical AI runtime and persists field provenance", async () => {
+  it("passes trusted request context and persisted session inputs into the canonical AI runtime and persists field provenance", async () => {
     const saveDraft = vi.fn(async () => undefined);
     const executeMock = vi.fn(async (request: AIRequest): Promise<AIResult<unknown>> => ({
       operationId: request.operationId,
@@ -143,7 +153,6 @@ describe("SellerProductService", () => {
     const result = await service.generateDraft(context(), brandId<"EntityId">("session-1"), {
       operationId: "op-1",
       idempotencyKey: "idem-1",
-      input: { title: "Example" },
       dataClassification: "internal",
       promptVersion: "seller-product-v1",
       outputSchemaVersion: "seller-product-draft-v1",
@@ -155,11 +164,46 @@ describe("SellerProductService", () => {
       sessionId: brandId<"EntityId">("session-1"),
       operationType: SELLER_AI_OPERATION_TYPES.extract,
       operationVersion: 1,
+      input: {
+        sessionId: brandId<"EntityId">("session-1"),
+        inputs: [{
+          id: brandId<"EntityId">("input-1"),
+          sessionId: brandId<"EntityId">("session-1"),
+          mediaAssetId: null,
+          rawText: "Example product",
+          inputHash: "hash-1",
+          createdAt: "2026-09-16T00:00:00.000Z",
+        }],
+      },
+      inputReference: brandId<"EntityId">("input-1"),
+      inputHash: "hash-1",
     }));
     expect(saveDraft).toHaveBeenCalledWith(expect.objectContaining({
       provenance: [{ fieldPath: "name", provenance: "seller_input", confidence: "confirmed", sourceRefs: ["input-1"] }],
     }));
     expect(result.output).toEqual(draft());
+  });
+
+  it("rejects execution before provider runtime when a session has no persisted inputs", async () => {
+    const repo = repository();
+    repo.getInputs = vi.fn(async () => []);
+    const execute = vi.fn();
+    const service = new SellerProductService({
+      repository: repo,
+      runtime: { execute },
+      id: () => brandId<"EntityId">("session-1"),
+      now: () => "2026-09-16T00:00:00.000Z",
+    });
+
+    await expect(service.generateDraft(context(), brandId<"EntityId">("session-1"), {
+      operationId: "op-empty",
+      idempotencyKey: "idem-empty",
+      dataClassification: "internal",
+      promptVersion: "seller-product-v1",
+      outputSchemaVersion: "seller-product-draft-v1",
+      policyVersion: "seller-product-policy-v1",
+    })).rejects.toThrow("has no persisted inputs");
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it("rejects inputs before persistence when neither media nor text is supplied", async () => {
