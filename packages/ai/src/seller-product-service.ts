@@ -57,7 +57,7 @@ export class SellerProductSessionService {
 
   async createSession(
     context: RequestContext,
-    input: { readonly businessId: EntityId; readonly idempotencyKey: string; readonly requestFingerprint: string; readonly expiresAt?: string },
+    input: { readonly businessId: EntityId; readonly idempotencyKey: string; readonly expiresAt?: string },
   ): Promise<SellerProductSessionRecord> {
     const id = this.sessionOptions.id();
     return this.sessionOptions.repository.create({
@@ -65,7 +65,7 @@ export class SellerProductSessionService {
       context,
       businessId: input.businessId,
       idempotencyKey: input.idempotencyKey,
-      requestFingerprint: input.requestFingerprint,
+      requestFingerprint: input.businessId,
       ...(input.expiresAt !== undefined ? { expiresAt: input.expiresAt } : {}),
       now: this.sessionOptions.now(),
     });
@@ -109,11 +109,7 @@ export interface SellerProductServiceOptions extends SellerProductSessionService
 export class SellerProductService extends SellerProductSessionService {
   constructor(private readonly productOptions: SellerProductServiceOptions) { super(productOptions); }
 
-  async generateDraft<T extends SellerProductDraft>(
-    context: RequestContext,
-    sessionId: EntityId,
-    request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId">,
-  ): Promise<AIResult<T>> {
+  async generateDraft<T extends SellerProductDraft>(context: RequestContext, sessionId: EntityId, request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId">): Promise<AIResult<T>> {
     const result = await this.productOptions.runtime.execute<T>({ ...request, context, operationType: SELLER_AI_OPERATION_TYPES.extract, operationVersion: 1 });
     if (result.output) {
       const provenance = Object.entries(result.output.product).map(([fieldPath, field]) => ({ fieldPath, provenance: field.provenance, confidence: field.confidence, sourceRefs: field.sourceRefs }));
