@@ -97,7 +97,7 @@ export type { AIEntitlementDecision };
 
 export interface AIRuntimePolicy {
   authorize(context: RequestContext, operationType: string): Promise<void>;
-  checkEntitlement(context: RequestContext, operationType: string): Promise<AIEntitlementDecision>;
+  checkEntitlement(request: AIRuntimeRequest): Promise<AIEntitlementDecision>;
   validateOutput(output: unknown, schemaVersion: string): Promise<void> | void;
   validateSafety(output: unknown, operationType: string): Promise<"allowed" | "blocked" | "abstained"> | "allowed" | "blocked" | "abstained";
 }
@@ -189,7 +189,7 @@ function buildRuntime(
       const identity = createOperationIdentity(request);
       await economics?.operationCreated(identity);
 
-      const entitlement = await policy.checkEntitlement(request.context, request.operationType);
+      const entitlement = await policy.checkEntitlement(request);
       await economics?.entitlementDecisionRecorded(request.operationId, entitlement);
       await economics?.operationStatusChanged(
         request.operationId,
