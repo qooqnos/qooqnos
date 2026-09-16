@@ -49,6 +49,7 @@ function repository(): SellerProductSessionRepository {
         status: "initiated",
         currentDraftVersion: 0,
         idempotencyKey: input.idempotencyKey,
+        requestFingerprint: input.requestFingerprint,
         requestId: input.context.requestId,
         correlationId: input.context.correlationId,
         expiresAt: input.expiresAt ?? null,
@@ -79,6 +80,7 @@ describe("SellerProductSessionService", () => {
       status: "initiated",
       currentDraftVersion: 0,
       idempotencyKey: input.idempotencyKey,
+      requestFingerprint: input.requestFingerprint,
       requestId: input.context.requestId,
       correlationId: input.context.correlationId,
       expiresAt: input.expiresAt ?? null,
@@ -100,11 +102,13 @@ describe("SellerProductSessionService", () => {
     });
 
     expect(result.businessId).toBe(brandId<"EntityId">("business-1"));
+    expect(result.requestFingerprint).toBe(brandId<"EntityId">("business-1"));
     expect(create).toHaveBeenCalledWith({
       id: brandId<"EntityId">("session-1"),
       context: context(),
       businessId: brandId<"EntityId">("business-1"),
       idempotencyKey: "idem-1",
+      requestFingerprint: brandId<"EntityId">("business-1"),
       expiresAt: "2026-09-17T00:00:00.000Z",
       now: "2026-09-16T00:00:00.000Z",
     });
@@ -192,18 +196,8 @@ describe("SellerProductService", () => {
     await service.reviewDraft(context(), brandId<"EntityId">("session-1"), 3);
     await service.confirmDraft(context(), brandId<"EntityId">("session-1"), 3);
 
-    expect(reviewDraft).toHaveBeenCalledWith({
-      context: context(),
-      sessionId: brandId<"EntityId">("session-1"),
-      version: 3,
-      now: "2026-09-16T00:00:00.000Z",
-    });
-    expect(confirmDraft).toHaveBeenCalledWith({
-      context: context(),
-      sessionId: brandId<"EntityId">("session-1"),
-      version: 3,
-      now: "2026-09-16T00:00:00.000Z",
-    });
+    expect(reviewDraft).toHaveBeenCalledWith({ context: context(), sessionId: brandId<"EntityId">("session-1"), version: 3, now: "2026-09-16T00:00:00.000Z" });
+    expect(confirmDraft).toHaveBeenCalledWith({ context: context(), sessionId: brandId<"EntityId">("session-1"), version: 3, now: "2026-09-16T00:00:00.000Z" });
   });
 
   it("returns cancellation outcome from the canonical repository", async () => {
@@ -218,10 +212,6 @@ describe("SellerProductService", () => {
     });
 
     await expect(service.cancelSession(context(), brandId<"EntityId">("session-1"))).resolves.toBe(false);
-    expect(cancelSession).toHaveBeenCalledWith({
-      context: context(),
-      sessionId: brandId<"EntityId">("session-1"),
-      now: "2026-09-16T00:00:00.000Z",
-    });
+    expect(cancelSession).toHaveBeenCalledWith({ context: context(), sessionId: brandId<"EntityId">("session-1"), now: "2026-09-16T00:00:00.000Z" });
   });
 });
