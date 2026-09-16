@@ -1,19 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import { createCloudflareAIProvider, type CloudflareAIBinding } from "./cloudflare-ai-provider";
 
-function genericRun<TOutput>(output: TOutput) {
-  return vi.fn(async <T = unknown>(model: string, input: unknown, options?: Record<string, unknown>) => {
-    void model;
-    void input;
-    void options;
-    return output as T;
-  });
-}
+type MockRun = ReturnType<typeof vi.fn>;
 
 describe("createCloudflareAIProvider", () => {
   it("delegates an explicit model to the real binding and preserves output", async () => {
-    const run = genericRun({ response: { title: "Result" }, usage: { input_tokens: 11, output_tokens: 7 } });
-    const provider = createCloudflareAIProvider({ run } as CloudflareAIBinding, {
+    const runMock = vi.fn(async (_model: string, _input: unknown, _options?: Record<string, unknown>) => ({
+      response: { title: "Result" },
+      usage: { input_tokens: 11, output_tokens: 7 },
+    }));
+    const provider = createCloudflareAIProvider({ run: runMock as unknown as CloudflareAIBinding["run"] }, {
       providerId: "cloudflare",
       buildInput: (request) => ({ prompt: JSON.stringify(request.input) }),
     });
@@ -26,24 +22,25 @@ describe("createCloudflareAIProvider", () => {
       modelId: "@cf/example/model",
     });
 
-    expect(run).toHaveBeenCalledWith("@cf/example/model", { prompt: JSON.stringify({ name: "Example" }) }, undefined);
+    expect(runMock).toHaveBeenCalledWith("@cf/example/model", { prompt: JSON.stringify({ name: "Example" }) }, undefined);
     expect(result).toMatchObject({ providerId: "cloudflare", modelId: "@cf/example/model", output: { title: "Result" } });
     expect(result.usage).toEqual({ inputTokens: 11, outputTokens: 7 });
   });
 
   it("supports an AI Gateway binding option", async () => {
-    const run = genericRun({ response: "ok" });
-    const provider = createCloudflareAIProvider({ run }, {
+    const runMock = vi.fn(async (_model: string, _input: unknown, _options?: Record<string, unknown>) => ({ response: "ok" }));
+    const provider = createCloudflareAIProvider({ run: runMock as unknown as CloudflareAIBinding["run"] }, {
       gatewayId: "default",
       buildInput: (request) => request.input,
     });
 
     await provider.execute({ operationType: "ai.generate", promptVersion: "v1", input: { prompt: "hi" }, outputSchemaVersion: "v1", modelId: "model-1" });
-    expect(run).toHaveBeenCalledWith("model-1", { prompt: "hi" }, { gateway: { id: "default" } });
+    expect(runMock).toHaveBeenCalledWith("model-1", { prompt: "hi" }, { gateway: { id: "default" } });
   });
 
   it("fails closed when no model is selected", async () => {
-    const provider = createCloudflareAIProvider({ run: genericRun({}) }, { buildInput: () => ({}) });
+    const runMock = vi.fn(async (_model: string, _input: unknown, _options?: Record<string, unknown>) => ({}));
+    const provider = createCloudflareAIProvider({ run: runMock as unknown as CloudflareAIBinding["run"] }, { buildInput: () => ({}) });
     await expect(provider.execute({ operationType: "ai.generate", promptVersion: "v1", input: {}, outputSchemaVersion: "v1" })).rejects.toThrow(
       "requires an explicit modelId",
     );
