@@ -75,5 +75,12 @@ export function createApiAIRuntime(
     routingPriority: 100,
   });
 
-  return createAIRuntimeWithGovernance(providers, governance, policy, SELLER_EXTRACT_ROUTING_POLICY);
+  return createAIRuntimeWithGovernance(
+    providers,
+    governance,
+    policy,
+    SELLER_EXTRACT_ROUTING_POLICY,
+    undefined,
+    economics,
+  );
 }
