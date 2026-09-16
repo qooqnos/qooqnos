@@ -17,7 +17,7 @@ function context(tenant = "tenant-1", workspace = "workspace-1"): RequestContext
   };
 }
 
-function createDatabase(results: unknown[] = []): { db: D1Database; calls: unknown[][] } {
+function makeDatabase(results: unknown[] = []): { db: D1Database; calls: unknown[][] } {
   const calls: unknown[][] = [];
   const statement: D1PreparedStatementLike = {
     bind(...values: unknown[]) { calls.push(values); return this; },
@@ -35,7 +35,7 @@ function createDatabase(results: unknown[] = []): { db: D1Database; calls: unkno
 
 describe("DiscoveryRepository search", () => {
   it("enforces tenant/workspace scope and eligible projection filtering", async () => {
-    const fixture = createDatabase([
+    const fixture = makeDatabase([
       {
         id: "doc-1", organizationId: "tenant-1", workspaceId: "workspace-1",
         sourceType: "product", sourceId: "product-1", documentVersion: 1,
@@ -53,7 +53,7 @@ describe("DiscoveryRepository search", () => {
   });
 
   it("escapes LIKE wildcards instead of treating user input as patterns", async () => {
-    const fixture = createDatabase([]);
+    const fixture = makeDatabase([]);
 
     await new DiscoveryRepository(fixture.db).search({ context: context(), query: "50%_off\\deal" });
 
@@ -61,7 +61,7 @@ describe("DiscoveryRepository search", () => {
   });
 
   it("does not broaden an empty query beyond the current tenant/workspace", async () => {
-    const fixture = createDatabase([]);
+    const fixture = makeDatabase([]);
 
     await new DiscoveryRepository(fixture.db).search({ context: context("tenant-2", "workspace-9") });
 
