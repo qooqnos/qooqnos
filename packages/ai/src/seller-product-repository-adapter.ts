@@ -10,6 +10,7 @@ export function createSellerProductSessionRepository(database: D1Database): Sell
       return repository.createSession(input.context, input.id, input.now, {
         businessId: input.businessId,
         idempotencyKey: input.idempotencyKey,
+        requestFingerprint: input.requestFingerprint,
         ...(input.expiresAt !== undefined ? { expiresAt: input.expiresAt } : {}),
       });
     },
@@ -20,28 +21,21 @@ export function createSellerProductSessionRepository(database: D1Database): Sell
       const rawText = input.rawText?.trim();
       const inputHash = await sha256Hex(`${input.mediaAssetId ?? ""}\n${rawText ?? ""}`);
       await repository.addInput(input.context, {
-        id: createId(),
-        sessionId: input.sessionId,
+        id: createId(), sessionId: input.sessionId,
         ...(input.mediaAssetId !== undefined ? { mediaAssetId: input.mediaAssetId } : {}),
         ...(rawText !== undefined ? { rawText } : {}),
-        inputHash,
-        now: input.now,
+        inputHash, now: input.now,
       });
     },
     async saveDraft(input) {
       await repository.saveDraft(input.context, {
-        id: createId(),
-        sessionId: input.sessionId,
-        version: input.version,
-        draftJson: JSON.stringify(input.draft),
-        provenance: input.provenance,
-        now: input.now,
+        id: createId(), sessionId: input.sessionId, version: input.version,
+        draftJson: JSON.stringify(input.draft), provenance: input.provenance, now: input.now,
       });
     },
     async getDraft(context, sessionId) {
       const record = await repository.getDraft(context, sessionId);
-      if (!record) return null;
-      return JSON.parse(record.draftJson) as SellerProductDraft;
+      return record ? JSON.parse(record.draftJson) as SellerProductDraft : null;
     },
     async reviewDraft(input) {
       await repository.reviewDraft(input.context, input.sessionId, input.version, input.now);
