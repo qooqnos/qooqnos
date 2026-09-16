@@ -10,6 +10,7 @@ export interface ApiRouteContext {
   readonly request: Request;
   readonly context: ApiRequestContext;
   readonly subject: AuthorizationSubject;
+  readonly params: Readonly<Record<string, string>>;
   readonly authenticatedSessionId?: string | undefined;
 }
 
@@ -31,6 +32,11 @@ export interface ApiRouterOptions {
   readonly authorization?: AuthorizationRegistry;
 }
 
+interface MatchedRoute {
+  readonly route: ApiRoute;
+  readonly params: Readonly<Record<string, string>>;
+}
+
 export class ApiRouter {
   private readonly routes: ApiRoute[] = [];
 
@@ -47,15 +53,17 @@ export class ApiRouter {
 
   async handle(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    const route = this.routes.find(
-      (item) => item.method === request.method.toUpperCase() && item.path === url.pathname,
-    );
+    const match = this.routes
+      .filter((item) => item.method === request.method.toUpperCase())
+      .map((route) => matchPath(route, url.pathname))
+      .find((candidate): candidate is MatchedRoute => candidate !== null);
     const requestId = getRequestId(request) as RequestId;
 
-    if (!route) {
+    if (!match) {
       return json({ error: { code: "NOT_FOUND", message: "Route not found." } }, 404, requestId);
     }
 
+    const { route, params } = match;
     const initialContext = createRequestContext({
       requestId,
       correlationId: getCorrelationId(request, requestId),
@@ -93,6 +101,7 @@ export class ApiRouter {
         request,
         context,
         subject: auth.subject,
+        params,
         ...(auth.authenticatedSessionId ? { authenticatedSessionId: auth.authenticatedSessionId } : {}),
       });
       const headers = new Headers(response.headers);
@@ -103,4 +112,34 @@ export class ApiRouter {
       return errorResponse(error, initialContext.requestId);
     }
   }
+}
+
+function matchPath(route: ApiRoute, pathname: string): MatchedRoute | null {
+  const routeSegments = splitPath(route.path);
+  const requestSegments = splitPath(pathname);
+  if (routeSegments.length !== requestSegments.length) return null;
+
+  const params: Record<string, string> = {};
+  for (let index = 0; index < routeSegments.length; index += 1) {
+    const routeSegment = routeSegments[index];
+    const requestSegment = requestSegments[index];
+    if (routeSegment.startsWith(":")) {
+      const name = routeSegment.slice(1);
+      if (!name || name.includes(":")) return null;
+      try {
+        params[name] = decodeURIComponent(requestSegment);
+      } catch {
+        return null;
+      }
+      continue;
+    }
+    if (routeSegment !== requestSegment) return null;
+  }
+
+  return { route, params };
+}
+
+function splitPath(pathname: string): string[] {
+  if (pathname === "/") return [];
+  return pathname.replace(/^\/+|\/+$/g, "").split("/");
 }
