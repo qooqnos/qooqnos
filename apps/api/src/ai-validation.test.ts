@@ -39,8 +39,10 @@ describe("Seller AI validation", () => {
       product: {
         ...draft.product,
         name: {
-          ...draft.product.name,
           value: "<script>alert(1)</script>",
+          provenance: "ai_extracted",
+          confidence: "high_confidence",
+          sourceRefs: ["input-1"],
         },
       },
     };
