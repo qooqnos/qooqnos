@@ -17,7 +17,7 @@ function context(tenant = "tenant-1", workspace = "workspace-1"): RequestContext
   };
 }
 
-function createDatabase(results: unknown[] = []) {
+function createDatabase(results: unknown[] = []): { db: D1Database; calls: unknown[][] } {
   const calls: unknown[][] = [];
   const statement: D1PreparedStatementLike = {
     bind(...values: unknown[]) { calls.push(values); return this; },
@@ -25,11 +25,12 @@ function createDatabase(results: unknown[] = []) {
     async all<T>() { return { results: results as T[] }; },
     async run() { return { success: true }; },
   };
-  const raw: D1DatabaseLike = {
+  const rawDatabase: D1DatabaseLike = {
     prepare() { return statement; },
     async batch() { return []; },
   };
-  return { db: new D1Database(raw), calls };
+  const database: D1Database = new D1Database(rawDatabase);
+  return { db: database, calls };
 }
 
 describe("DiscoveryRepository search", () => {
