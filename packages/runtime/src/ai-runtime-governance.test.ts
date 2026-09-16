@@ -127,4 +127,36 @@ describe("AI runtime governance boundary", () => {
     await expect(runtime.execute({ ...request(), modelId: "unapproved-model" })).rejects.toThrow("No eligible AI provider/model remains");
     expect(execute).not.toHaveBeenCalled();
   });
+
+  it("fails closed when a provider returns an identity different from the governance decision", async () => {
+    const execute = vi.fn(async () => ({
+      providerId: "cloudflare",
+      modelId: "different-model",
+      output: { title: "Untrusted" },
+    }));
+    const providers = createAIProviderRegistry([
+      {
+        providerId: "cloudflare",
+        models: ["seller-extract-primary"],
+        adapter: { execute },
+      },
+    ]);
+    const governance = createAIProviderGovernanceRegistry();
+    governance.registerProvider(providerProfile);
+    governance.registerModel(modelProfile);
+    const runtime = createAIRuntimeWithGovernance(
+      providers,
+      governance,
+      {
+        async authorize() {},
+        async checkEntitlement() { return { allowed: true, decision: "included" as const }; },
+        validateOutput() {},
+        async validateSafety() { return "allowed" as const; },
+      },
+      routingPolicy,
+    );
+
+    await expect(runtime.execute(request())).rejects.toThrow("AI provider response identity mismatch");
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
 });
