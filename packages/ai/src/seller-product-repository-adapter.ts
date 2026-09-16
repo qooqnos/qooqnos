@@ -30,6 +30,7 @@ export function createSellerProductSessionRepository(database: D1Database): Sell
         sessionId: input.sessionId,
         version: input.version,
         draftJson: JSON.stringify(input.draft),
+        provenance: input.provenance,
         now: input.now,
       });
     },
