@@ -337,7 +337,7 @@ function getSellerProductSessionService(database: D1Database | undefined, reques
 }
 
 function getCatalogService(database: D1Database | undefined, authorization: ReturnType<typeof createApiAuthorizationRegistry>): CatalogService {
-  if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: brandId<RequestId>(crypto.randomUUID()) });
+  if (!database) throw new Error("Database is not configured.");
   return new CatalogService({
     repository: new CatalogRepository(database),
     commands: new CatalogCommandRepository(database),
