@@ -158,7 +158,14 @@ export function createAIRuntimeWithGovernance(
     ).then(() => providers.execute(routedProviderRequest, {
       providerId: decision.selectedProviderId,
       modelId: decision.selectedModelId,
-    }));
+    })).then((response) => {
+      if (response.providerId !== decision.selectedProviderId || response.modelId !== decision.selectedModelId) {
+        throw new Error(
+          `AI provider response identity mismatch: expected ${decision.selectedProviderId}/${decision.selectedModelId}`,
+        );
+      }
+      return response;
+    });
   }, policy, economics);
 }
 
