@@ -6,3 +6,4 @@ export * from "./ai-runtime";
 export * from "./ai-economics";
 export * from "./ai-provider-registry";
 export * from "./cloudflare-ai-provider";
+export * from "./ai-provider-governance";
