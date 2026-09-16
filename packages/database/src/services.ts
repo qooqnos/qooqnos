@@ -127,7 +127,13 @@ export class OutboxService {
        LIMIT ?`,
       now, Math.min(limit, 100),
     );
-    return rows;
+    return rows.map((row) => ({
+      ...row,
+      ...(row.aggregateType === null ? {} : { aggregateType: row.aggregateType }),
+      ...(row.aggregateId === null ? {} : { aggregateId: row.aggregateId }),
+      ...(row.organizationId === null ? {} : { organizationId: row.organizationId }),
+      ...(row.workspaceId === null ? {} : { workspaceId: row.workspaceId }),
+    }));
   }
 
   async markPublished(id: string, publishedAt: string): Promise<void> {
