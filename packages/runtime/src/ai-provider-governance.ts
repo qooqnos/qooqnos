@@ -117,6 +117,8 @@ export function createAIProviderGovernanceRegistry(options?: {
       const candidates = [...models.values()]
         .map((model) => ({ model, provider: providers.get(model.providerId) }))
         .filter((entry): entry is { model: AIModelProfile; provider: AIProviderProfile } => entry.provider !== undefined)
+        .filter((entry) => request.providerId === undefined || entry.provider.providerId === request.providerId)
+        .filter((entry) => request.modelId === undefined || entry.model.modelId === request.modelId)
         .filter(() => policy.operationTypes.length === 0 || policy.operationTypes.includes(requirements.operationType))
         .map((entry) => ({ ...entry, eligibility: evaluateEligibility(entry.provider, entry.model, requirements, policy) }))
         .filter((entry) => entry.eligibility.eligible)
@@ -124,7 +126,7 @@ export function createAIProviderGovernanceRegistry(options?: {
 
       const selected = candidates[0];
       if (!selected) {
-        throw new AIModelGovernanceError("No eligible AI provider/model remains", collectIneligibleReasons([...models.values()], providers, requirements, policy));
+        throw new AIModelGovernanceError("No eligible AI provider/model remains", collectIneligibleReasons([...models.values()], providers, requirements, policy, request));
       }
 
       return {
@@ -170,15 +172,22 @@ function collectIneligibleReasons(
   providers: ReadonlyMap<string, AIProviderProfile>,
   requirements: AIRoutingRequirements,
   policy: AIRoutingPolicy,
+  request: AIRuntimeRequest,
 ): string[] {
   const reasons = new Set<string>();
   for (const model of models) {
+    if (request.modelId !== undefined && model.modelId !== request.modelId) continue;
+    if (request.providerId !== undefined && model.providerId !== request.providerId) continue;
     const provider = providers.get(model.providerId);
     if (!provider) {
       reasons.add("provider_not_registered");
       continue;
     }
     for (const reason of evaluateEligibility(provider, model, requirements, policy).reasons) reasons.add(reason);
+  }
+  if (reasons.size === 0) {
+    if (request.providerId !== undefined) reasons.add("requested_provider_not_registered_or_eligible");
+    if (request.modelId !== undefined) reasons.add("requested_model_not_registered_or_eligible");
   }
   return [...reasons];
 }
