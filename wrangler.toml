@@ -1,4 +1,4 @@
-name = "phoenix-api"
+name = "qooqnos"
 main = "apps/api/src/index.ts"
 compatibility_date = "2026-09-15"
 workers_dev = true
@@ -15,9 +15,9 @@ binding = "AI"
 APP_VERSION = "0.1.0"
 
 [env.staging]
-name = "phoenix-api-staging"
+name = "qooqnos-staging"
 vars = { APP_VERSION = "staging" }
 
 [env.production]
-name = "phoenix-api-production"
+name = "qooqnos-production"
 vars = { APP_VERSION = "production" }
