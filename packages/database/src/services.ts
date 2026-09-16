@@ -1,6 +1,6 @@
 import { DatabaseError, D1Database } from "./client";
 
-export interface IdempotencyRecord {
+interface ServiceIdempotencyRecord {
   scope: string;
   key: string;
   requestFingerprint: string;
@@ -12,7 +12,7 @@ export class IdempotencyService {
   constructor(private readonly database: D1Database) {}
 
   async claim(scope: string, key: string, requestFingerprint: string): Promise<boolean> {
-    const existing = await this.database.first<IdempotencyRecord>(
+    const existing = await this.database.first<ServiceIdempotencyRecord>(
       `SELECT scope, key, request_fingerprint AS requestFingerprint, status, result_json AS resultJson
        FROM idempotency_records WHERE scope = ? AND key = ?`,
       scope, key,
@@ -28,7 +28,7 @@ export class IdempotencyService {
        VALUES (?, ?, ?, 'running')`,
       scope, key, requestFingerprint,
     );
-    const inserted = await this.database.first<IdempotencyRecord>(
+    const inserted = await this.database.first<ServiceIdempotencyRecord>(
       `SELECT scope, key, request_fingerprint AS requestFingerprint, status, result_json AS resultJson
        FROM idempotency_records WHERE scope = ? AND key = ?`,
       scope, key,
