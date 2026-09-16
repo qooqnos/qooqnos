@@ -121,8 +121,8 @@ function matchPath(route: ApiRoute, pathname: string): MatchedRoute | null {
 
   const params: Record<string, string> = {};
   for (let index = 0; index < routeSegments.length; index += 1) {
-    const routeSegment = routeSegments[index];
-    const requestSegment = requestSegments[index];
+    const routeSegment = routeSegments[index]!;
+    const requestSegment = requestSegments[index]!;
     if (routeSegment.startsWith(":")) {
       const name = routeSegment.slice(1);
       if (!name || name.includes(":")) return null;
