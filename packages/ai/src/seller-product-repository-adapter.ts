@@ -7,7 +7,11 @@ export function createSellerProductSessionRepository(database: D1Database): Sell
   const repository = new SellerAIRepository(database);
   return {
     async create(input) {
-      await repository.createSession(input.context, input.id, input.now);
+      return repository.createSession(input.context, input.id, input.now, {
+        businessId: input.businessId,
+        idempotencyKey: input.idempotencyKey,
+        ...(input.expiresAt !== undefined ? { expiresAt: input.expiresAt } : {}),
+      });
     },
     async getSession(context, sessionId) {
       return repository.getSession(context, sessionId);
@@ -44,6 +48,9 @@ export function createSellerProductSessionRepository(database: D1Database): Sell
     },
     async confirmDraft(input) {
       await repository.confirmDraft(input.context, input.sessionId, input.version, input.now);
+    },
+    async markCatalogSaved(input) {
+      return repository.markCatalogSaved(input.context, input.sessionId, input.version, input.productId, input.now);
     },
     async cancelSession(input) {
       return repository.cancelSession(input.context, input.sessionId, input.now);
