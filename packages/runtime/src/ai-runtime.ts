@@ -133,9 +133,9 @@ export function createAIRuntimeWithGovernance(
   requirements?: (request: AIRuntimeRequest) => AIRoutingRequirements,
   economics?: AIEconomicsSink,
 ): AIRuntime {
-  return buildRuntime((request) => {
-    const routingRequirements = requirements?.(request) ?? defaultRoutingRequirements(request);
-    const decision = governance.select(request, routingRequirements, routingPolicy);
+  return buildRuntime((providerRequest, runtimeRequest) => {
+    const routingRequirements = requirements?.(runtimeRequest) ?? defaultRoutingRequirements(runtimeRequest);
+    const decision = governance.select(runtimeRequest, routingRequirements, routingPolicy);
     const routingRecordedAt = new Date().toISOString();
     return Promise.resolve(
       economics?.routingDecisionRecorded?.({
@@ -150,7 +150,7 @@ export function createAIRuntimeWithGovernance(
         ...(decision.fallbackGroup !== undefined ? { fallbackGroup: decision.fallbackGroup } : {}),
         occurredAt: routingRecordedAt,
       }),
-    ).then(() => providers.execute(request, {
+    ).then(() => providers.execute(providerRequest, {
       providerId: decision.selectedProviderId,
       modelId: decision.selectedModelId,
     }));
@@ -165,7 +165,7 @@ function defaultRoutingRequirements(request: AIRuntimeRequest): AIRoutingRequire
 }
 
 function buildRuntime(
-  executeProvider: (request: AIProviderRequest) => Promise<AIProviderResponse>,
+  executeProvider: (request: AIProviderRequest, runtimeRequest: AIRuntimeRequest) => Promise<AIProviderResponse>,
   policy: AIRuntimePolicy,
   economics: AIEconomicsSink | undefined,
 ): AIRuntime {
@@ -205,7 +205,7 @@ function buildRuntime(
           ...(request.modelId !== undefined ? { modelId: request.modelId } : {}),
           ...(request.timeoutMs !== undefined ? { timeoutMs: request.timeoutMs } : {}),
         };
-        const response = await executeProvider(providerRequest);
+        const response = await executeProvider(providerRequest, request);
 
         await recordEconomics(
           economics,
