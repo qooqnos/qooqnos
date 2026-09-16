@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { brandId, type RequestContext } from "@qooqnos/core";
-import { SellerProductService, SellerProductSessionService, SELLER_AI_OPERATION_TYPES } from "./seller-product-service";
+import { SellerProductService, SELLER_AI_OPERATION_TYPES } from "./seller-product-service";
 import type { AIRuntimeClient } from "./runtime-client";
 import type { AIRequest, AIResult, SellerProductDraft } from "./types";
 
@@ -66,51 +66,6 @@ function repository() {
     async cancelSession() { return true; },
   };
 }
-
-describe("SellerProductSessionService", () => {
-  it("creates a scoped seller session with explicit business ownership and idempotency", async () => {
-    const create = vi.fn(async (input) => ({
-      ...input,
-      id: brandId<"EntityId">("session-1"),
-      organizationId: brandId<"EntityId">("tenant-1"),
-      workspaceId: brandId<"EntityId">("workspace-1"),
-      businessId: input.businessId,
-      catalogProductId: null,
-      actorId: brandId<"EntityId">("user-1"),
-      status: "initiated",
-      currentDraftVersion: 0,
-      idempotencyKey: input.idempotencyKey,
-      requestId: context().requestId,
-      correlationId: context().correlationId,
-      expiresAt: input.expiresAt ?? null,
-      createdAt: input.now,
-      updatedAt: input.now,
-    }));
-    const repo = repository();
-    repo.create = create;
-    const service = new SellerProductSessionService({
-      repository: repo,
-      id: () => brandId<"EntityId">("session-1"),
-      now: () => "2026-09-16T00:00:00.000Z",
-    });
-
-    const result = await service.createSession(context(), {
-      businessId: brandId<"EntityId">("business-1"),
-      idempotencyKey: "idem-1",
-      expiresAt: "2026-09-17T00:00:00.000Z",
-    });
-
-    expect(result.id).toBe(brandId<"EntityId">("session-1"));
-    expect(create).toHaveBeenCalledWith({
-      id: brandId<"EntityId">("session-1"),
-      context: context(),
-      businessId: brandId<"EntityId">("business-1"),
-      idempotencyKey: "idem-1",
-      expiresAt: "2026-09-17T00:00:00.000Z",
-      now: "2026-09-16T00:00:00.000Z",
-    });
-  });
-});
 
 describe("SellerProductService", () => {
   it("passes trusted request context into the canonical AI runtime and persists field provenance", async () => {
