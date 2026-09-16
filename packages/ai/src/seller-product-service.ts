@@ -27,6 +27,15 @@ export interface SellerProductSessionRecord {
   readonly updatedAt: string;
 }
 
+export interface SellerProductInputRecord {
+  readonly id: EntityId;
+  readonly sessionId: EntityId;
+  readonly mediaAssetId: EntityId | null;
+  readonly rawText: string | null;
+  readonly inputHash: string;
+  readonly createdAt: string;
+}
+
 export interface SellerProductProvenanceRecord {
   readonly fieldPath: string;
   readonly provenance: "seller_input" | "seller_confirmed" | "ai_extracted" | "ai_generated" | "system_derived" | "external_verified" | "policy_validated";
@@ -37,6 +46,7 @@ export interface SellerProductProvenanceRecord {
 export interface SellerProductSessionRepository {
   create(input: { readonly id: EntityId; readonly context: RequestContext; readonly now: string; readonly businessId: EntityId; readonly idempotencyKey: string; readonly requestFingerprint: string; readonly expiresAt?: string | undefined }): Promise<SellerProductSessionRecord>;
   getSession(context: RequestContext, sessionId: EntityId): Promise<SellerProductSessionRecord | null>;
+  getInputs(context: RequestContext, sessionId: EntityId): Promise<readonly SellerProductInputRecord[]>;
   addInput(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly mediaAssetId?: EntityId | undefined; readonly rawText?: string | undefined; readonly now: string }): Promise<void>;
   saveDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly provenance: readonly SellerProductProvenanceRecord[]; readonly now: string }): Promise<void>;
   getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null>;
@@ -73,6 +83,10 @@ export class SellerProductSessionService {
 
   getSession(context: RequestContext, sessionId: EntityId): Promise<SellerProductSessionRecord | null> {
     return this.sessionOptions.repository.getSession(context, sessionId);
+  }
+
+  getInputs(context: RequestContext, sessionId: EntityId): Promise<readonly SellerProductInputRecord[]> {
+    return this.sessionOptions.repository.getInputs(context, sessionId);
   }
 
   async addInput(context: RequestContext, sessionId: EntityId, input: { readonly mediaAssetId?: EntityId; readonly rawText?: string }): Promise<void> {
@@ -112,16 +126,23 @@ export class SellerProductService extends SellerProductSessionService {
   async generateDraft<T extends SellerProductDraft>(
     context: RequestContext,
     sessionId: EntityId,
-    request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId" | "operationType" | "operationVersion">,
+    request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId" | "operationType" | "operationVersion" | "input">,
   ): Promise<AIResult<T>> {
-    const runtimeRequest = {
+    const inputs = await this.getInputs(context, sessionId);
+    if (inputs.length === 0) throw new Error("Seller product creation session has no persisted inputs");
+
+    const result = await this.productOptions.runtime.execute<T>({
       ...request,
       context,
       sessionId,
       operationType: SELLER_AI_OPERATION_TYPES.extract,
       operationVersion: 1,
-    };
-    const result = await this.productOptions.runtime.execute<T>(runtimeRequest);
+      input: {
+        sessionId,
+        inputs,
+      },
+      ...(inputs.length === 1 ? { inputReference: inputs[0]?.id, inputHash: inputs[0]?.inputHash } : {}),
+    });
     if (result.output) {
       const productFields = result.output.product as Readonly<Record<string, SellerProductField>>;
       const provenance = Object.entries(productFields).map(([fieldPath, field]) => ({
