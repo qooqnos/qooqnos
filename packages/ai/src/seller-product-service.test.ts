@@ -142,8 +142,6 @@ describe("SellerProductService", () => {
 
     const result = await service.generateDraft(context(), brandId<"EntityId">("session-1"), {
       operationId: "op-1",
-      operationType: "caller.supplied.operation",
-      operationVersion: 99,
       idempotencyKey: "idem-1",
       input: { title: "Example" },
       dataClassification: "internal",
