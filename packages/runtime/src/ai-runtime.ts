@@ -137,6 +137,11 @@ export function createAIRuntimeWithGovernance(
     const routingRequirements = requirements?.(runtimeRequest) ?? defaultRoutingRequirements(runtimeRequest);
     const decision = governance.select(runtimeRequest, routingRequirements, routingPolicy);
     const routingRecordedAt = new Date().toISOString();
+    const routedProviderRequest: AIProviderRequest = {
+      ...providerRequest,
+      providerId: decision.selectedProviderId,
+      modelId: decision.selectedModelId,
+    };
     return Promise.resolve(
       economics?.routingDecisionRecorded?.({
         routingDecisionId: decision.routingDecisionId,
@@ -150,7 +155,7 @@ export function createAIRuntimeWithGovernance(
         ...(decision.fallbackGroup !== undefined ? { fallbackGroup: decision.fallbackGroup } : {}),
         occurredAt: routingRecordedAt,
       }),
-    ).then(() => providers.execute(providerRequest, {
+    ).then(() => providers.execute(routedProviderRequest, {
       providerId: decision.selectedProviderId,
       modelId: decision.selectedModelId,
     }));
