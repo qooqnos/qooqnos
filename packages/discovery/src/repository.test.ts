@@ -29,7 +29,7 @@ function makeDatabase(results: unknown[] = []): { db: D1Database; calls: unknown
     prepare() { return statement; },
     async batch() { return []; },
   };
-  const db: D1Database = new D1Database(rawDatabase);
+  const db = new D1Database(rawDatabase);
   return { db, calls };
 }
 
