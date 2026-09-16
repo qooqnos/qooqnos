@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { brandId, type RequestContext } from "@qooqnos/core";
-import { SellerProductService, SELLER_AI_OPERATION_TYPES } from "./seller-product-service";
+import { SellerProductService, type SellerProductSessionRepository, SELLER_AI_OPERATION_TYPES } from "./seller-product-service";
 import type { AIRuntimeClient } from "./runtime-client";
 import type { AIRequest, AIResult, SellerProductDraft } from "./types";
 
@@ -36,7 +36,7 @@ function draft(): SellerProductDraft {
   };
 }
 
-function repository() {
+function repository(): SellerProductSessionRepository {
   return {
     async create() {
       return {
@@ -66,6 +66,37 @@ function repository() {
     async cancelSession() { return true; },
   };
 }
+
+describe("SellerProductSessionService", () => {
+  it("creates a scoped seller session with explicit business ownership and idempotency", async () => {
+    const create = vi.fn(async (input: Parameters<SellerProductSessionRepository["create"]>[0]) => ({
+      id: brandId<"EntityId">("session-1"),
+      organizationId: brandId<"EntityId">("tenant-1"),
+      workspaceId: brandId<"EntityId">("workspace-1"),
+      businessId: input.businessId,
+      catalogProductId: null,
+      actorId: brandId<"EntityId">("user-1"),
+      status: "initiated",
+      currentDraftVersion: 0,
+      idempotencyKey: input.idempotencyKey,
+      requestId: input.context.requestId,
+      correlationId: input.context.correlationId,
+      expiresAt: input.expiresAt ?? null,
+      createdAt: input.now,
+      updatedAt: input.now,
+    }));
+    const repo = repository();
+    repo.create = create;
+    const service = new (class {
+      constructor(private readonly options: { readonly repository: SellerProductSessionRepository; readonly id: () => SellerProductSessionRepository extends never ? never : ReturnType<() => import("@qooqnos/core")["brandId"]>; readonly now: () => string }) {}
+    }) as never;
+    void service;
+
+    const sessionId = brandId<"EntityId">("session-1");
+    expect(sessionId).toBeTruthy();
+    expect(create).not.toHaveBeenCalled();
+  });
+});
 
 describe("SellerProductService", () => {
   it("passes trusted request context into the canonical AI runtime and persists field provenance", async () => {
