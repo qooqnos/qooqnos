@@ -27,6 +27,7 @@ const session = {
   status: "draft_ready",
   currentDraftVersion: 3,
   idempotencyKey: "idem-1",
+  requestFingerprint: brandId<"EntityId">("business-1"),
   requestId: "req-1",
   correlationId: "corr-1",
   expiresAt: null,
