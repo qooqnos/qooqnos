@@ -1,10 +1,50 @@
 import { DatabaseError, D1Database } from "./client";
 
+export interface AuditInput {
+  id: string;
+  actorId?: string | undefined;
+  organizationId?: string | undefined;
+  workspaceId?: string | undefined;
+  action: string;
+  targetType?: string | undefined;
+  targetId?: string | undefined;
+  outcome: string;
+  requestId?: string | undefined;
+  correlationId?: string | undefined;
+  metadataJson?: string | undefined;
+  createdAt: string;
+}
+
+export class AuditService {
+  constructor(private readonly database: D1Database) {}
+
+  async append(event: AuditInput): Promise<void> {
+    await this.database.run(
+      `INSERT INTO audit_events
+       (id, actor_id, organization_id, workspace_id, action, target_type, target_id,
+        outcome, request_id, correlation_id, metadata_json, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      event.id,
+      event.actorId ?? null,
+      event.organizationId ?? null,
+      event.workspaceId ?? null,
+      event.action,
+      event.targetType ?? null,
+      event.targetId ?? null,
+      event.outcome,
+      event.requestId ?? null,
+      event.correlationId ?? null,
+      event.metadataJson ?? null,
+      event.createdAt,
+    );
+  }
+}
+
 interface ServiceIdempotencyRecord {
   scope: string;
   key: string;
   requestFingerprint: string;
-  status: "running" | "succeeded" | "failed";
+  status: "processing" | "succeeded" | "failed";
   resultJson?: string | null;
 }
 
@@ -24,19 +64,11 @@ export class IdempotencyService {
       return false;
     }
     await this.database.run(
-      `INSERT INTO idempotency_records (scope, key, request_fingerprint, status)
-       VALUES (?, ?, ?, 'running')`,
-      scope, key, requestFingerprint,
+      `INSERT INTO idempotency_records
+       (scope, key, request_fingerprint, status, created_at, expires_at)
+       VALUES (?, ?, ?, 'processing', ?, ?)`,
+      scope, key, requestFingerprint, new Date().toISOString(), new Date(Date.now() + 86400000).toISOString(),
     );
-    const inserted = await this.database.first<ServiceIdempotencyRecord>(
-      `SELECT scope, key, request_fingerprint AS requestFingerprint, status, result_json AS resultJson
-       FROM idempotency_records WHERE scope = ? AND key = ?`,
-      scope, key,
-    );
-    if (!inserted) throw new DatabaseError("Idempotency claim disappeared after atomic claim");
-    if (inserted.requestFingerprint !== requestFingerprint) {
-      throw new DatabaseError("Idempotency key reused with a different request");
-    }
     return true;
   }
 
