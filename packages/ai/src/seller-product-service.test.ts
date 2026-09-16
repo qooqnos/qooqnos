@@ -153,6 +153,7 @@ describe("SellerProductService", () => {
     const result = await service.generateDraft(context(), brandId<"EntityId">("session-1"), {
       operationId: "op-1",
       idempotencyKey: "idem-1",
+      input: { callerPayloadMustBeIgnored: true },
       dataClassification: "internal",
       promptVersion: "seller-product-v1",
       outputSchemaVersion: "seller-product-draft-v1",
@@ -198,6 +199,7 @@ describe("SellerProductService", () => {
     await expect(service.generateDraft(context(), brandId<"EntityId">("session-1"), {
       operationId: "op-empty",
       idempotencyKey: "idem-empty",
+      input: { callerPayloadMustBeIgnored: true },
       dataClassification: "internal",
       promptVersion: "seller-product-v1",
       outputSchemaVersion: "seller-product-draft-v1",
