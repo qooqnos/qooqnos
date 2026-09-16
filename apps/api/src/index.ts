@@ -1,9 +1,9 @@
 import { BusinessService, BusinessRepository } from "@qooqnos/business";
 import { CatalogService, CatalogRepository } from "@qooqnos/catalog";
+import { SellerProductSessionService, createSellerProductSessionRepository } from "@qooqnos/ai";
 import { AppError, brandId, type RequestId } from "@qooqnos/core";
-import { AuthorizationRepository, CatalogCommandRepository } from "@qooqnos/database";
+import { AuthorizationRepository, CatalogCommandRepository, SessionRepository, sha256Hex } from "@qooqnos/database";
 import type { D1Database } from "@qooqnos/database";
-import { SessionRepository, sha256Hex } from "@qooqnos/database";
 import { createAuthorizationService } from "@qooqnos/runtime";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
@@ -202,7 +202,115 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
       json({ status: "authorized", tenantId: context.tenantId, workspaceId: context.workspaceId }, 200, context.requestId),
   });
 
+  router.register({
+    method: "POST",
+    path: "/api/v1/ai/seller/product-creation-sessions",
+    module: "ai",
+    operation: "seller.product.create_session",
+    permission: "ai.seller_product.create_session",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context }) => {
+      const service = getSellerProductSessionService(database, context.requestId);
+      const sessionId = await service.createSession(context);
+      return json({ sessionId }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/ai/seller/product-creation-sessions/:sessionId",
+    module: "ai",
+    operation: "seller.product.read_session",
+    permission: "ai.seller_product.read_draft",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params }) => {
+      const service = getSellerProductSessionService(database, context.requestId);
+      const sessionId = brandId<"EntityId">(params.sessionId);
+      const session = await service.getSession(context, sessionId);
+      if (!session) throw new AppError({ code: "NOT_FOUND", message: "Seller product creation session not found.", requestId: context.requestId });
+      const draft = await service.getDraft(context, sessionId);
+      return json({ session, draft }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/ai/seller/product-creation-sessions/:sessionId/inputs",
+    module: "ai",
+    operation: "seller.product.add_input",
+    permission: "ai.seller_product.add_input",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      const command = await parseJsonCommand(request, isSellerProductInputCommand, "Seller product input payload is invalid.", context.requestId);
+      const service = getSellerProductSessionService(database, context.requestId);
+      await service.addInput(context, brandId<"EntityId">(params.sessionId), {
+        ...(command.mediaAssetId !== undefined ? { mediaAssetId: brandId<"EntityId">(command.mediaAssetId) } : {}),
+        ...(command.rawText !== undefined ? { rawText: command.rawText } : {}),
+      });
+      return json({ accepted: true }, 202, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/ai/seller/product-creation-sessions/:sessionId/review",
+    module: "ai",
+    operation: "seller.product.review_draft",
+    permission: "ai.seller_product.read_draft",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      const command = await parseJsonCommand(request, isSellerProductVersionCommand, "Seller product review payload is invalid.", context.requestId);
+      const service = getSellerProductSessionService(database, context.requestId);
+      await service.reviewDraft(context, brandId<"EntityId">(params.sessionId), command.version);
+      return json({ reviewed: true, version: command.version }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/ai/seller/product-creation-sessions/:sessionId/confirm",
+    module: "ai",
+    operation: "seller.product.confirm_draft",
+    permission: "ai.seller_product.confirm_draft",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      const command = await parseJsonCommand(request, isSellerProductVersionCommand, "Seller product confirmation payload is invalid.", context.requestId);
+      const service = getSellerProductSessionService(database, context.requestId);
+      await service.confirmDraft(context, brandId<"EntityId">(params.sessionId), command.version);
+      return json({ confirmed: true, version: command.version }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/ai/seller/product-creation-sessions/:sessionId/cancel",
+    module: "ai",
+    operation: "seller.product.cancel_session",
+    permission: "ai.seller_product.cancel_session",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params }) => {
+      const service = getSellerProductSessionService(database, context.requestId);
+      const cancelled = await service.cancelSession(context, brandId<"EntityId">(params.sessionId));
+      return json({ cancelled }, 200, context.requestId);
+    },
+  });
+
   return router;
+}
+
+function getSellerProductSessionService(database: D1Database | undefined, requestId: RequestId): SellerProductSessionService {
+  if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId });
+  return new SellerProductSessionService({
+    repository: createSellerProductSessionRepository(database),
+    id: () => brandId<"EntityId">(crypto.randomUUID()),
+    now: () => new Date().toISOString(),
+  });
 }
 
 function requiredIdempotencyKey(request: Request, requestId: RequestId): string {
@@ -249,6 +357,23 @@ function isCreateProductCommand(value: unknown): value is {
   if (!value || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;
   return typeof body.businessId === "string" && typeof body.name === "string" && optionalStrings(body, ["description"]);
+}
+
+function isSellerProductInputCommand(value: unknown): value is {
+  mediaAssetId?: string;
+  rawText?: string;
+} {
+  if (!value || typeof value !== "object") return false;
+  const body = value as Record<string, unknown>;
+  const hasMedia = typeof body.mediaAssetId === "string";
+  const hasText = typeof body.rawText === "string";
+  return (hasMedia || hasText) && optionalStrings(body, ["mediaAssetId", "rawText"]);
+}
+
+function isSellerProductVersionCommand(value: unknown): value is { version: number } {
+  if (!value || typeof value !== "object") return false;
+  const body = value as Record<string, unknown>;
+  return typeof body.version === "number" && Number.isInteger(body.version) && body.version > 0;
 }
 
 function optionalStrings(body: Record<string, unknown>, keys: readonly string[]): boolean {
