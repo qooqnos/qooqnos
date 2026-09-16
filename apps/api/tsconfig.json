@@ -4,7 +4,11 @@
     "outDir": "dist",
     "rootDir": "src",
     "lib": ["ES2022", "DOM"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": "../..",
+    "paths": {
+      "@qooqnos/discovery": ["packages/discovery/src/index.ts"]
+    }
   },
   "references": [
     { "path": "../../packages/core" },
