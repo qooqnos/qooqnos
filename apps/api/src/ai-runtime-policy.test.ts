@@ -16,7 +16,10 @@ const context: RequestContext = {
 
 describe("Seller AI runtime policy", () => {
   it("passes the full AI operation identity to Billing and translates the decision", async () => {
-    const authorization = { assert: vi.fn(async () => undefined) };
+    const authorization = {
+      evaluate: vi.fn(async () => ({ allowed: true })),
+      assert: vi.fn(async () => undefined),
+    };
     const billing = {
       evaluate: vi.fn(async () => ({
         allowed: true,
@@ -71,7 +74,10 @@ describe("Seller AI runtime policy", () => {
   });
 
   it("uses the canonical AI permission with authentication and workspace requirements", async () => {
-    const authorization = { assert: vi.fn(async () => undefined) };
+    const authorization = {
+      evaluate: vi.fn(async () => ({ allowed: true })),
+      assert: vi.fn(async () => undefined),
+    };
     const billing = { evaluate: vi.fn() };
     const policy = createSellerProductAIRuntimePolicy({
       authorization,
