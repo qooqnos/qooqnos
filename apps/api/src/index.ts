@@ -5,6 +5,9 @@ import { AppError, brandId, type RequestId } from "@qooqnos/core";
 import { AuthorizationRepository, CatalogCommandRepository, SessionRepository, sha256Hex } from "@qooqnos/database";
 import type { D1Database } from "@qooqnos/database";
 import { createAuthorizationService } from "@qooqnos/runtime";
+import { createSellerProductService } from "./ai-composition";
+import { validateSellerProductOutput, validateSellerProductSafety } from "./ai-validation";
+import { createUnavailableBillingAIEntitlementService } from "./billing";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
@@ -53,7 +56,7 @@ const homePage = (version: string): string => `<!doctype html>
   </body>
 </html>`;
 
-function createRouter(version: string, database: D1Database | undefined): ApiRouter {
+function createRouter(version: string, database: D1Database | undefined, env: ApiEnv): ApiRouter {
   const authorization = createApiAuthorizationRegistry();
   const router = new ApiRouter({ authorization, ...(database ? { database } : {}) });
 
@@ -256,6 +259,50 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
 
   router.register({
     method: "POST",
+    path: "/api/v1/ai/seller/product-creation-sessions/:sessionId/run",
+    module: "ai",
+    operation: "seller.product.run",
+    permission: "ai.seller_product.generate_draft",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const sessionId = brandId<"EntityId">(requiredRouteParam(params, "sessionId", context.requestId));
+      const sessionService = getSellerProductSessionService(database, context.requestId);
+      const session = await sessionService.getSession(context, sessionId);
+      if (!session) throw new AppError({ code: "NOT_FOUND", message: "Seller product creation session not found.", requestId: context.requestId });
+      if (session.status === "cancelled" || session.catalogProductId) throw new AppError({ code: "CONFLICT", message: "Seller product creation session is no longer runnable.", requestId: context.requestId });
+
+      const idempotencyKey = requiredIdempotencyKey(request, context.requestId);
+      const command = await parseJsonCommand(request, isSellerProductRunCommand, "Seller product run payload is invalid.", context.requestId);
+      const service = createSellerProductService({
+        env,
+        database,
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
+        billing: createUnavailableBillingAIEntitlementService(),
+        validateOutput: validateSellerProductOutput,
+        validateSafety: validateSellerProductSafety,
+      });
+      const operationId = `seller.product.extract:${sessionId}:${idempotencyKey}`;
+      const result = await service.generateDraft(context, sessionId, {
+        operationId,
+        idempotencyKey,
+        input: command.input,
+        dataClassification: command.dataClassification ?? "internal",
+        promptVersion: command.promptVersion ?? "seller-product-v1",
+        outputSchemaVersion: command.outputSchemaVersion ?? "seller-product-draft-v1",
+        policyVersion: command.policyVersion ?? "seller-product-policy-v1",
+        ...(command.inputReference !== undefined ? { inputReference: command.inputReference } : {}),
+        ...(command.inputHash !== undefined ? { inputHash: command.inputHash } : {}),
+        ...(command.budgetUnits !== undefined ? { budgetUnits: command.budgetUnits } : {}),
+      });
+      const status = result.status === "succeeded" ? 200 : result.retryable ? 503 : 422;
+      return json({ data: result }, status, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/ai/seller/product-creation-sessions/:sessionId/review",
     module: "ai",
     operation: "seller.product.review_draft",
@@ -416,6 +463,24 @@ function isSellerProductInputCommand(value: unknown): value is {
   return (hasMedia || hasText) && optionalStrings(body, ["mediaAssetId", "rawText"]);
 }
 
+function isSellerProductRunCommand(value: unknown): value is {
+  input: Readonly<Record<string, unknown>>;
+  dataClassification?: "public" | "internal";
+  promptVersion?: string;
+  outputSchemaVersion?: string;
+  policyVersion?: string;
+  inputReference?: string;
+  inputHash?: string;
+  budgetUnits?: number;
+} {
+  if (!value || typeof value !== "object") return false;
+  const body = value as Record<string, unknown>;
+  if (!body.input || typeof body.input !== "object" || Array.isArray(body.input)) return false;
+  if (body.budgetUnits !== undefined && (typeof body.budgetUnits !== "number" || !Number.isFinite(body.budgetUnits) || body.budgetUnits <= 0)) return false;
+  if (body.dataClassification !== undefined && body.dataClassification !== "public" && body.dataClassification !== "internal") return false;
+  return optionalStrings(body, ["promptVersion", "outputSchemaVersion", "policyVersion", "inputReference", "inputHash"]);
+}
+
 function isSellerProductVersionCommand(value: unknown): value is { version: number } {
   if (!value || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;
@@ -447,13 +512,25 @@ function envForRuntime(version: string, database: D1Database | undefined): ApiEn
   return { APP_VERSION: version, DB: database.raw() };
 }
 
+function createSellerProductServiceForRequest(database: D1Database | undefined, env: ApiEnv, authorization: ReturnType<typeof createApiAuthorizationRegistry>, requestId: RequestId) {
+  if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId });
+  return createSellerProductService({
+    env,
+    database,
+    authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
+    billing: createUnavailableBillingAIEntitlementService(),
+    validateOutput: validateSellerProductOutput,
+    validateSafety: validateSellerProductSafety,
+  });
+}
+
 export default {
   async fetch(request: Request, env: ApiEnv): Promise<Response> {
     const url = new URL(request.url);
     const version = env.APP_VERSION ?? "development";
     const database = getDatabase(env);
     if (request.method === "GET" && url.pathname === "/") return html(homePage(version));
-    return createRouter(version, database ?? undefined).handle(request);
+    return createRouter(version, database ?? undefined, env).handle(request);
   },
 };
 
