@@ -1,21 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 import { createCloudflareAIProvider, type CloudflareAIBinding } from "./cloudflare-ai-provider";
 
+function genericRun<TOutput>(output: TOutput) {
+  return vi.fn(async <T = unknown>(model: string, input: unknown, options?: Record<string, unknown>) => {
+    void model;
+    void input;
+    void options;
+    return output as T;
+  });
+}
+
 describe("createCloudflareAIProvider", () => {
   it("delegates an explicit model to the real binding and preserves output", async () => {
-    const run = vi.fn(async <T = unknown>(
-      model: string,
-      input: unknown,
-      options?: Record<string, unknown>,
-    ) => {
-      void model;
-      void input;
-      void options;
-      return {
-        response: { title: "Result" },
-        usage: { input_tokens: 11, output_tokens: 7 },
-      } as T;
-    });
+    const run = genericRun({ response: { title: "Result" }, usage: { input_tokens: 11, output_tokens: 7 } });
     const provider = createCloudflareAIProvider({ run } as CloudflareAIBinding, {
       providerId: "cloudflare",
       buildInput: (request) => ({ prompt: JSON.stringify(request.input) }),
@@ -35,7 +32,7 @@ describe("createCloudflareAIProvider", () => {
   });
 
   it("supports an AI Gateway binding option", async () => {
-    const run = vi.fn(async () => ({ response: "ok" }));
+    const run = genericRun({ response: "ok" });
     const provider = createCloudflareAIProvider({ run }, {
       gatewayId: "default",
       buildInput: (request) => request.input,
@@ -46,7 +43,7 @@ describe("createCloudflareAIProvider", () => {
   });
 
   it("fails closed when no model is selected", async () => {
-    const provider = createCloudflareAIProvider({ run: vi.fn() }, { buildInput: () => ({}) });
+    const provider = createCloudflareAIProvider({ run: genericRun({}) }, { buildInput: () => ({}) });
     await expect(provider.execute({ operationType: "ai.generate", promptVersion: "v1", input: {}, outputSchemaVersion: "v1" })).rejects.toThrow(
       "requires an explicit modelId",
     );
