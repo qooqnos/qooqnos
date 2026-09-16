@@ -34,6 +34,22 @@ describe("ApiRouter", () => {
     await expect(response.json()).resolves.toEqual({ requestId: "req-test-1" });
   });
 
+  it("matches dynamic route parameters and decodes them", async () => {
+    const instance = new ApiRouter();
+    instance.register({
+      method: "GET",
+      path: "/api/v1/seller/sessions/:sessionId",
+      module: "ai",
+      operation: "seller.session.read",
+      handler: ({ params }) => new Response(JSON.stringify({ params })),
+    });
+
+    const response = await instance.handle(new Request("https://example.test/api/v1/seller/sessions/session%2F42"));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ params: { sessionId: "session/42" } });
+  });
+
   it("returns a structured 404 for an unregistered route", async () => {
     const response = await router().handle(new Request("https://example.test/missing"));
 
