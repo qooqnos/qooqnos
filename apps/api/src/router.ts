@@ -5,6 +5,7 @@ import type { ApiRequestContext } from "./context";
 import { createRequestContext, getCorrelationId, getRequestId } from "./context";
 import { resolveRequestAuth } from "./auth-context";
 import { errorResponse, json } from "./http";
+import { registerDiscoveryRoutes } from "./discovery-routes";
 
 export interface ApiRouteContext {
   readonly request: Request;
@@ -40,7 +41,9 @@ interface MatchedRoute {
 export class ApiRouter {
   private readonly routes: ApiRoute[] = [];
 
-  constructor(private readonly options: ApiRouterOptions = {}) {}
+  constructor(private readonly options: ApiRouterOptions = {}) {
+    registerDiscoveryRoutes(this, options.database);
+  }
 
   register(route: ApiRoute): void {
     const method = route.method.toUpperCase();
