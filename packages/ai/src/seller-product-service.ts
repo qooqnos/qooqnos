@@ -126,7 +126,7 @@ export class SellerProductService extends SellerProductSessionService {
   async generateDraft<T extends SellerProductDraft>(
     context: RequestContext,
     sessionId: EntityId,
-    request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId" | "operationType" | "operationVersion" | "input">,
+    request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId" | "operationType" | "operationVersion">,
   ): Promise<AIResult<T>> {
     const inputs = await this.getInputs(context, sessionId);
     if (inputs.length === 0) throw new Error("Seller product creation session has no persisted inputs");
