@@ -275,14 +275,7 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
 
       const idempotencyKey = requiredIdempotencyKey(request, context.requestId);
       const command = await parseJsonCommand(request, isSellerProductRunCommand, "Seller product run payload is invalid.", context.requestId);
-      const service = createSellerProductService({
-        env,
-        database,
-        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
-        billing: createUnavailableBillingAIEntitlementService(),
-        validateOutput: validateSellerProductOutput,
-        validateSafety: validateSellerProductSafety,
-      });
+      const service = createSellerProductServiceForRequest(database, env, authorization, context.requestId);
       const operationId = `seller.product.extract:${sessionId}:${idempotencyKey}`;
       const result = await service.generateDraft(context, sessionId, {
         operationId,
