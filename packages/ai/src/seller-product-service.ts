@@ -20,11 +20,18 @@ export interface SellerProductSessionRecord {
   readonly updatedAt: string;
 }
 
+export interface SellerProductProvenanceRecord {
+  readonly fieldPath: string;
+  readonly provenance: "seller_input" | "seller_confirmed" | "ai_extracted" | "ai_generated" | "system_derived" | "external_verified" | "policy_validated";
+  readonly confidence: "confirmed" | "high_confidence" | "needs_review" | "unknown" | "conflicting" | "rejected";
+  readonly sourceRefs: readonly string[];
+}
+
 export interface SellerProductSessionRepository {
   create(input: { readonly id: EntityId; readonly context: RequestContext; readonly now: string }): Promise<void>;
   getSession(context: RequestContext, sessionId: EntityId): Promise<SellerProductSessionRecord | null>;
   addInput(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly mediaAssetId?: EntityId | undefined; readonly rawText?: string | undefined; readonly now: string }): Promise<void>;
-  saveDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly now: string }): Promise<void>;
+  saveDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly draft: SellerProductDraft; readonly provenance: readonly SellerProductProvenanceRecord[]; readonly now: string }): Promise<void>;
   getDraft(context: RequestContext, sessionId: EntityId): Promise<SellerProductDraft | null>;
   reviewDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly now: string }): Promise<void>;
   confirmDraft(input: { readonly context: RequestContext; readonly sessionId: EntityId; readonly version: number; readonly now: string }): Promise<void>;
@@ -104,11 +111,18 @@ export class SellerProductService extends SellerProductSessionService {
       operationVersion: 1,
     });
     if (result.output) {
+      const provenance = Object.entries(result.output.product).map(([fieldPath, field]) => ({
+        fieldPath,
+        provenance: field.provenance,
+        confidence: field.confidence,
+        sourceRefs: field.sourceRefs,
+      }));
       await this.productOptions.repository.saveDraft({
         context,
         sessionId,
         version: result.output.version,
         draft: result.output,
+        provenance,
         now: this.productOptions.now(),
       });
     }
