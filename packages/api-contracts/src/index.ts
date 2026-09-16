@@ -41,3 +41,5 @@ export function isApiErrorBody(value: unknown): value is ApiErrorBody {
   const candidate = error as { code?: unknown; message?: unknown };
   return typeof candidate.code === "string" && typeof candidate.message === "string";
 }
+
+export * from "./seller-ai";
