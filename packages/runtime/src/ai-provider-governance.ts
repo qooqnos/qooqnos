@@ -1,4 +1,3 @@
-import type { RequestContext } from "@qooqnos/core";
 import type { AIRuntimeRequest, AIDataClassification } from "./ai-runtime";
 
 export type AIProviderLifecycle = "proposed" | "evaluated" | "approved" | "active" | "restricted" | "deprecated" | "retired";
