@@ -58,6 +58,39 @@ describe("SellerAIRepository", () => {
     expect(lookup).toContain("workspace_id = ?");
   });
 
+  it("retrieves only inputs belonging to the scoped seller AI session", async () => {
+    const statements: string[] = [];
+    const inputs = [{
+      id: brandId<"EntityId">("input-1"),
+      sessionId: session.id,
+      mediaAssetId: null,
+      rawText: "Example product",
+      inputHash: "hash-1",
+      createdAt: "2026-09-16T00:00:01.000Z",
+    }];
+    let firstCalls = 0;
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        firstCalls += 1;
+        return (firstCalls === 1 ? session : null) as unknown as T | null;
+      },
+      async all<T>() { return { results: inputs as unknown as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { statements.push(sql); return statement; },
+      async batch() { return []; },
+    };
+
+    const repository = new SellerAIRepository(new D1Database(raw));
+    await expect(repository.getInputs(context(), session.id)).resolves.toEqual(inputs);
+
+    const inputLookup = statements.find((sql) => sql.includes("FROM seller_ai_inputs"));
+    expect(inputLookup).toContain("WHERE session_id = ?");
+    expect(inputLookup).toContain("ORDER BY created_at ASC, id ASC");
+  });
+
   it("checks media assets against the session scope before inserting input", async () => {
     const statements: string[] = [];
     const statement: D1PreparedStatementLike = {
