@@ -64,9 +64,9 @@ function request(): AIRuntimeRequest {
 
 describe("AI runtime governance boundary", () => {
   it("routes only through a governance-approved provider and model", async () => {
-    const execute = vi.fn(async (input: { modelId?: string }) => ({
+    const execute = vi.fn(async (input: { modelId: string }) => ({
       providerId: "cloudflare",
-      modelId: input.modelId ?? "unknown",
+      modelId: input.modelId,
       output: { title: "Validated" },
     }));
     const providers = createAIProviderRegistry([
@@ -75,7 +75,8 @@ describe("AI runtime governance boundary", () => {
         models: ["seller-extract-primary", "unapproved-model"],
         adapter: {
           async execute(providerRequest) {
-            return execute(providerRequest.modelId === undefined ? {} : { modelId: providerRequest.modelId });
+            if (providerRequest.modelId === undefined) throw new Error("Provider modelId is required");
+            return execute({ modelId: providerRequest.modelId });
           },
         },
       },
