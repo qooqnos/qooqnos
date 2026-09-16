@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { brandId, type RequestContext } from "@qooqnos/core";
-import { SellerProductService, SELLER_AI_OPERATION_TYPES } from "./seller-product-service";
+import { SellerProductService, SellerProductSessionService, SELLER_AI_OPERATION_TYPES } from "./seller-product-service";
 import type { AIRuntimeClient } from "./runtime-client";
 import type { AIRequest, AIResult, SellerProductDraft } from "./types";
 
@@ -22,7 +22,14 @@ function draft(): SellerProductDraft {
   return {
     sessionId: brandId<"EntityId">("session-1"),
     version: 1,
-    product: {},
+    product: {
+      name: {
+        value: "Example product",
+        provenance: "seller_input",
+        confidence: "confirmed",
+        sourceRefs: ["input-1"],
+      },
+    },
     missingRequiredFields: [],
     conflicts: [],
     readyForSellerReview: true,
@@ -31,19 +38,82 @@ function draft(): SellerProductDraft {
 
 function repository() {
   return {
-    async create() {},
+    async create() {
+      return {
+        id: brandId<"EntityId">("session-1"),
+        organizationId: brandId<"EntityId">("tenant-1"),
+        workspaceId: brandId<"EntityId">("workspace-1"),
+        businessId: brandId<"EntityId">("business-1"),
+        catalogProductId: null,
+        actorId: brandId<"EntityId">("user-1"),
+        status: "initiated",
+        currentDraftVersion: 0,
+        idempotencyKey: "idem-1",
+        requestId: "req-1",
+        correlationId: "corr-1",
+        expiresAt: null,
+        createdAt: "2026-09-16T00:00:00.000Z",
+        updatedAt: "2026-09-16T00:00:00.000Z",
+      };
+    },
     async getSession() { return null; },
     async addInput() {},
     async saveDraft() {},
     async getDraft() { return null; },
     async reviewDraft() {},
     async confirmDraft() {},
+    async markCatalogSaved() { return true; },
     async cancelSession() { return true; },
   };
 }
 
+describe("SellerProductSessionService", () => {
+  it("creates a scoped seller session with explicit business ownership and idempotency", async () => {
+    const create = vi.fn(async (input) => ({
+      ...input,
+      id: brandId<"EntityId">("session-1"),
+      organizationId: brandId<"EntityId">("tenant-1"),
+      workspaceId: brandId<"EntityId">("workspace-1"),
+      businessId: input.businessId,
+      catalogProductId: null,
+      actorId: brandId<"EntityId">("user-1"),
+      status: "initiated",
+      currentDraftVersion: 0,
+      idempotencyKey: input.idempotencyKey,
+      requestId: context().requestId,
+      correlationId: context().correlationId,
+      expiresAt: input.expiresAt ?? null,
+      createdAt: input.now,
+      updatedAt: input.now,
+    }));
+    const repo = repository();
+    repo.create = create;
+    const service = new SellerProductSessionService({
+      repository: repo,
+      id: () => brandId<"EntityId">("session-1"),
+      now: () => "2026-09-16T00:00:00.000Z",
+    });
+
+    const result = await service.createSession(context(), {
+      businessId: brandId<"EntityId">("business-1"),
+      idempotencyKey: "idem-1",
+      expiresAt: "2026-09-17T00:00:00.000Z",
+    });
+
+    expect(result.id).toBe(brandId<"EntityId">("session-1"));
+    expect(create).toHaveBeenCalledWith({
+      id: brandId<"EntityId">("session-1"),
+      context: context(),
+      businessId: brandId<"EntityId">("business-1"),
+      idempotencyKey: "idem-1",
+      expiresAt: "2026-09-17T00:00:00.000Z",
+      now: "2026-09-16T00:00:00.000Z",
+    });
+  });
+});
+
 describe("SellerProductService", () => {
-  it("passes the trusted request context into the canonical AI runtime and persists only validated output", async () => {
+  it("passes trusted request context into the canonical AI runtime and persists field provenance", async () => {
     const saveDraft = vi.fn(async () => undefined);
     const executeMock = vi.fn(async (request: AIRequest): Promise<AIResult<unknown>> => ({
       operationId: request.operationId,
@@ -84,7 +154,9 @@ describe("SellerProductService", () => {
       operationType: SELLER_AI_OPERATION_TYPES.extract,
       operationVersion: 1,
     }));
-    expect(saveDraft).toHaveBeenCalledOnce();
+    expect(saveDraft).toHaveBeenCalledWith(expect.objectContaining({
+      provenance: [{ fieldPath: "name", provenance: "seller_input", confidence: "confirmed", sourceRefs: ["input-1"] }],
+    }));
     expect(result.output).toEqual(draft());
   });
 
