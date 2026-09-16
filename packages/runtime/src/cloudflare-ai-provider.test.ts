@@ -4,13 +4,18 @@ import { createCloudflareAIProvider, type CloudflareAIBinding } from "./cloudfla
 describe("createCloudflareAIProvider", () => {
   it("delegates an explicit model to the real binding and preserves output", async () => {
     const run = vi.fn(async <T = unknown>(
-      _model: string,
-      _input: unknown,
-      _options?: Record<string, unknown>,
-    ) => ({
-      response: { title: "Result" },
-      usage: { input_tokens: 11, output_tokens: 7 },
-    } as T));
+      model: string,
+      input: unknown,
+      options?: Record<string, unknown>,
+    ) => {
+      void model;
+      void input;
+      void options;
+      return {
+        response: { title: "Result" },
+        usage: { input_tokens: 11, output_tokens: 7 },
+      } as T;
+    });
     const provider = createCloudflareAIProvider({ run } as CloudflareAIBinding, {
       providerId: "cloudflare",
       buildInput: (request) => ({ prompt: JSON.stringify(request.input) }),
