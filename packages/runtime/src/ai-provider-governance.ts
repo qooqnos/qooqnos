@@ -1,3 +1,4 @@
+import type { RequestContext } from "@qooqnos/core";
 import type { AIRuntimeRequest, AIDataClassification } from "./ai-runtime";
 
 export type AIProviderLifecycle = "proposed" | "evaluated" | "approved" | "active" | "restricted" | "deprecated" | "retired";
@@ -116,7 +117,7 @@ export function createAIProviderGovernanceRegistry(options?: {
       const candidates = [...models.values()]
         .map((model) => ({ model, provider: providers.get(model.providerId) }))
         .filter((entry): entry is { model: AIModelProfile; provider: AIProviderProfile } => entry.provider !== undefined)
-        .filter((entry) => policy.operationTypes.length === 0 || policy.operationTypes.includes(requirements.operationType))
+        .filter(() => policy.operationTypes.length === 0 || policy.operationTypes.includes(requirements.operationType))
         .map((entry) => ({ ...entry, eligibility: evaluateEligibility(entry.provider, entry.model, requirements, policy) }))
         .filter((entry) => entry.eligibility.eligible)
         .sort((left, right) => right.model.routingPriority - left.model.routingPriority);
