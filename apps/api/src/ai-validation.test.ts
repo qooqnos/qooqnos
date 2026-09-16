@@ -23,22 +23,28 @@ function validDraft(): SellerProductDraft {
 
 describe("Seller AI validation", () => {
   it("accepts a canonical SellerProductDraft", () => {
-    expect(() => validateSellerProductOutput(validDraft())).not.toThrow();
+    expect(() => validateSellerProductOutput(validDraft(), "seller-product-draft-v1")).not.toThrow();
   });
 
   it("rejects malformed model output before draft persistence", () => {
-    expect(() => validateSellerProductOutput({ sessionId: "session-1", version: 1 })).toThrow(
+    expect(() => validateSellerProductOutput({ sessionId: "session-1", version: 1 }, "seller-product-draft-v1")).toThrow(
       "canonical draft contract",
     );
   });
 
   it("blocks unsafe content markers in otherwise valid draft structure", async () => {
     const draft = validDraft();
-    draft.product.name = {
-      ...draft.product.name,
-      value: "<script>alert(1)</script>",
+    const unsafeDraft: SellerProductDraft = {
+      ...draft,
+      product: {
+        ...draft.product,
+        name: {
+          ...draft.product.name,
+          value: "<script>alert(1)</script>",
+        },
+      },
     };
-    await expect(validateSellerProductSafety(draft, "seller.product.extract")).resolves.toBe("blocked");
+    await expect(validateSellerProductSafety(unsafeDraft, "seller.product.extract")).resolves.toBe("blocked");
   });
 
   it("allows ordinary validated draft content", async () => {
