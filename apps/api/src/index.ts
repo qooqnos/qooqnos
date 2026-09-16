@@ -227,7 +227,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     requireWorkspace: true,
     handler: async ({ context, params }) => {
       const service = getSellerProductSessionService(database, context.requestId);
-      const sessionId = brandId<"EntityId">(params.sessionId);
+      const sessionId = brandId<"EntityId">(requiredRouteParam(params, "sessionId", context.requestId));
       const session = await service.getSession(context, sessionId);
       if (!session) throw new AppError({ code: "NOT_FOUND", message: "Seller product creation session not found.", requestId: context.requestId });
       const draft = await service.getDraft(context, sessionId);
@@ -246,7 +246,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     handler: async ({ context, request, params }) => {
       const command = await parseJsonCommand(request, isSellerProductInputCommand, "Seller product input payload is invalid.", context.requestId);
       const service = getSellerProductSessionService(database, context.requestId);
-      await service.addInput(context, brandId<"EntityId">(params.sessionId), {
+      await service.addInput(context, brandId<"EntityId">(requiredRouteParam(params, "sessionId", context.requestId)), {
         ...(command.mediaAssetId !== undefined ? { mediaAssetId: brandId<"EntityId">(command.mediaAssetId) } : {}),
         ...(command.rawText !== undefined ? { rawText: command.rawText } : {}),
       });
@@ -265,7 +265,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     handler: async ({ context, request, params }) => {
       const command = await parseJsonCommand(request, isSellerProductVersionCommand, "Seller product review payload is invalid.", context.requestId);
       const service = getSellerProductSessionService(database, context.requestId);
-      await service.reviewDraft(context, brandId<"EntityId">(params.sessionId), command.version);
+      await service.reviewDraft(context, brandId<"EntityId">(requiredRouteParam(params, "sessionId", context.requestId)), command.version);
       return json({ reviewed: true, version: command.version }, 200, context.requestId);
     },
   });
@@ -281,7 +281,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     handler: async ({ context, request, params }) => {
       const command = await parseJsonCommand(request, isSellerProductVersionCommand, "Seller product confirmation payload is invalid.", context.requestId);
       const service = getSellerProductSessionService(database, context.requestId);
-      await service.confirmDraft(context, brandId<"EntityId">(params.sessionId), command.version);
+      await service.confirmDraft(context, brandId<"EntityId">(requiredRouteParam(params, "sessionId", context.requestId)), command.version);
       return json({ confirmed: true, version: command.version }, 200, context.requestId);
     },
   });
@@ -296,7 +296,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     requireWorkspace: true,
     handler: async ({ context, params }) => {
       const service = getSellerProductSessionService(database, context.requestId);
-      const cancelled = await service.cancelSession(context, brandId<"EntityId">(params.sessionId));
+      const cancelled = await service.cancelSession(context, brandId<"EntityId">(requiredRouteParam(params, "sessionId", context.requestId)));
       return json({ cancelled }, 200, context.requestId);
     },
   });
@@ -311,6 +311,12 @@ function getSellerProductSessionService(database: D1Database | undefined, reques
     id: () => brandId<"EntityId">(crypto.randomUUID()),
     now: () => new Date().toISOString(),
   });
+}
+
+function requiredRouteParam(params: Readonly<Record<string, string>>, name: string, requestId: RequestId): string {
+  const value = params[name];
+  if (!value) throw new AppError({ code: "NOT_FOUND", message: `Route parameter '${name}' is missing.`, requestId });
+  return value;
 }
 
 function requiredIdempotencyKey(request: Request, requestId: RequestId): string {
