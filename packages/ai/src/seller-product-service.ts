@@ -112,7 +112,7 @@ export class SellerProductService extends SellerProductSessionService {
   async generateDraft<T extends SellerProductDraft>(
     context: RequestContext,
     sessionId: EntityId,
-    request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId">,
+    request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId" | "operationType" | "operationVersion">,
   ): Promise<AIResult<T>> {
     const runtimeRequest = {
       ...request,
