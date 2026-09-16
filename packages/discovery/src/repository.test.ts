@@ -29,12 +29,12 @@ function createDatabase(results: unknown[] = []) {
     prepare() { return statement; },
     async batch() { return []; },
   };
-  return { database: new D1Database(raw), calls };
+  return { db: new D1Database(raw), calls };
 }
 
 describe("DiscoveryRepository search", () => {
   it("enforces tenant/workspace scope and eligible projection filtering", async () => {
-    const { database, calls } = createDatabase([
+    const fixture = createDatabase([
       {
         id: "doc-1", organizationId: "tenant-1", workspaceId: "workspace-1",
         sourceType: "product", sourceId: "product-1", documentVersion: 1,
@@ -43,27 +43,27 @@ describe("DiscoveryRepository search", () => {
       },
     ]);
 
-    const result = await new DiscoveryRepository(database).search({ context: context(), query: "Product", limit: 10, offset: 0 });
+    const result = await new DiscoveryRepository(fixture.db).search({ context: context(), query: "Product", limit: 10, offset: 0 });
 
     expect(result).toHaveLength(1);
     expect(result[0]?.organizationId).toBe("tenant-1");
     expect(result[0]?.workspaceId).toBe("workspace-1");
-    expect(calls[0]).toEqual(["tenant-1", "workspace-1", "%Product%", "%Product%", "Product%", 10, 0]);
+    expect(fixture.calls[0]).toEqual(["tenant-1", "workspace-1", "%Product%", "%Product%", "Product%", 10, 0]);
   });
 
   it("escapes LIKE wildcards instead of treating user input as patterns", async () => {
-    const { database, calls } = createDatabase([]);
+    const fixture = createDatabase([]);
 
-    await new DiscoveryRepository(database).search({ context: context(), query: "50%_off\\deal" });
+    await new DiscoveryRepository(fixture.db).search({ context: context(), query: "50%_off\\deal" });
 
-    expect(calls[0]).toEqual(["tenant-1", "workspace-1", "%50\\%\\_off\\\\deal%", "%50\\%\\_off\\\\deal%", "50\\%\\_off\\\\deal%", 20, 0]);
+    expect(fixture.calls[0]).toEqual(["tenant-1", "workspace-1", "%50\\%\\_off\\\\deal%", "%50\\%\\_off\\\\deal%", "50\\%\\_off\\\\deal%", 20, 0]);
   });
 
   it("does not broaden an empty query beyond the current tenant/workspace", async () => {
-    const { database, calls } = createDatabase([]);
+    const fixture = createDatabase([]);
 
-    await new DiscoveryRepository(database).search({ context: context("tenant-2", "workspace-9") });
+    await new DiscoveryRepository(fixture.db).search({ context: context("tenant-2", "workspace-9") });
 
-    expect(calls[0]).toEqual(["tenant-2", "workspace-9", 20, 0]);
+    expect(fixture.calls[0]).toEqual(["tenant-2", "workspace-9", 20, 0]);
   });
 });
