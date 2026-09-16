@@ -109,8 +109,19 @@ export interface SellerProductServiceOptions extends SellerProductSessionService
 export class SellerProductService extends SellerProductSessionService {
   constructor(private readonly productOptions: SellerProductServiceOptions) { super(productOptions); }
 
-  async generateDraft<T extends SellerProductDraft>(context: RequestContext, sessionId: EntityId, request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId">): Promise<AIResult<T>> {
-    const result = await this.productOptions.runtime.execute<T>({ ...request, context, operationType: SELLER_AI_OPERATION_TYPES.extract, operationVersion: 1 });
+  async generateDraft<T extends SellerProductDraft>(
+    context: RequestContext,
+    sessionId: EntityId,
+    request: Omit<Parameters<AIRuntimeClient["execute"]>[0], "context" | "sessionId">,
+  ): Promise<AIResult<T>> {
+    const runtimeRequest = {
+      ...request,
+      context,
+      sessionId,
+      operationType: SELLER_AI_OPERATION_TYPES.extract,
+      operationVersion: 1,
+    };
+    const result = await this.productOptions.runtime.execute<T>(runtimeRequest);
     if (result.output) {
       const productFields = result.output.product as Readonly<Record<string, SellerProductField>>;
       const provenance = Object.entries(productFields).map(([fieldPath, field]) => ({
