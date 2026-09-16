@@ -171,14 +171,7 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
       if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
       const idempotencyKey = requiredIdempotencyKey(request, context.requestId);
       const command = await parseJsonCommand(request, isCreateProductCommand, "Product create payload is invalid.", context.requestId);
-      const now = new Date().toISOString();
-      const service = new CatalogService({
-        repository: new CatalogRepository(database),
-        commands: new CatalogCommandRepository(database),
-        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
-        id: () => brandId<"EntityId">(crypto.randomUUID()),
-        now: () => now,
-      });
+      const service = getCatalogService(database, authorization);
       const result = await service.createProduct(context, {
         businessId: brandId<"EntityId">(command.businessId),
         name: command.name,
@@ -210,10 +203,17 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     permission: "ai.seller_product.create_session",
     requireAuthentication: true,
     requireWorkspace: true,
-    handler: async ({ context }) => {
+    handler: async ({ context, request }) => {
+      const businessCommand = await parseJsonCommand(request, isSellerProductSessionCommand, "Seller product creation session payload is invalid.", context.requestId);
+      const idempotencyKey = requiredIdempotencyKey(request, context.requestId);
+      const now = new Date().toISOString();
       const service = getSellerProductSessionService(database, context.requestId);
-      const sessionId = await service.createSession(context);
-      return json({ sessionId }, 201, context.requestId);
+      const session = await service.createSession(context, {
+        businessId: brandId<"EntityId">(businessCommand.businessId),
+        idempotencyKey,
+        expiresAt: expiresAt(now),
+      });
+      return json({ session }, session.idempotencyKey === idempotencyKey && session.createdAt === session.updatedAt ? 201 : 200, context.requestId);
     },
   });
 
@@ -278,11 +278,34 @@ function createRouter(version: string, database: D1Database | undefined): ApiRou
     permission: "ai.seller_product.confirm_draft",
     requireAuthentication: true,
     requireWorkspace: true,
-    handler: async ({ context, request, params }) => {
+    handler: async ({ context, params, request }) => {
       const command = await parseJsonCommand(request, isSellerProductVersionCommand, "Seller product confirmation payload is invalid.", context.requestId);
-      const service = getSellerProductSessionService(database, context.requestId);
-      await service.confirmDraft(context, brandId<"EntityId">(requiredRouteParam(params, "sessionId", context.requestId)), command.version);
-      return json({ confirmed: true, version: command.version }, 200, context.requestId);
+      const sessionId = brandId<"EntityId">(requiredRouteParam(params, "sessionId", context.requestId));
+      const sessionService = getSellerProductSessionService(database, context.requestId);
+      const session = await sessionService.getSession(context, sessionId);
+      if (!session) throw new AppError({ code: "NOT_FOUND", message: "Seller product creation session not found.", requestId: context.requestId });
+      if (session.currentDraftVersion !== command.version) throw new AppError({ code: "CONFLICT", message: "Seller product draft version is stale.", requestId: context.requestId });
+      if (!session.businessId) throw new AppError({ code: "UNPROCESSABLE", message: "Seller product session has no owning business.", requestId: context.requestId });
+      if (session.catalogProductId) {
+        return json({ confirmed: true, catalogSaved: true, catalogProductId: session.catalogProductId, version: command.version }, 200, context.requestId);
+      }
+
+      if (session.status !== "confirmed") await sessionService.confirmDraft(context, sessionId, command.version);
+      const draft = await sessionService.getDraft(context, sessionId);
+      const name = sellerProductTextField(draft, "name");
+      if (!name) throw new AppError({ code: "UNPROCESSABLE", message: "Confirmed seller product draft is missing a product name.", requestId: context.requestId });
+      const description = sellerProductTextField(draft, "description");
+      const catalogService = getCatalogService(database, authorization);
+      const product = await catalogService.createProduct(context, {
+        businessId: session.businessId,
+        name,
+        ...(description ? { description } : {}),
+        idempotencyKey: `seller-ai:${session.id}:${command.version}`,
+        requestFingerprint: await sha256Hex(stableStringify({ sessionId: session.id, version: command.version, businessId: session.businessId, name, description })),
+      });
+      const catalogSaved = await sessionService.markCatalogSaved(context, sessionId, command.version, product.id);
+      if (!catalogSaved) throw new AppError({ code: "CONFLICT", message: "Seller product catalog linkage could not be committed.", requestId: context.requestId });
+      return json({ confirmed: true, catalogSaved: true, catalogProductId: product.id, version: command.version }, 200, context.requestId);
     },
   });
 
@@ -308,6 +331,17 @@ function getSellerProductSessionService(database: D1Database | undefined, reques
   if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId });
   return new SellerProductSessionService({
     repository: createSellerProductSessionRepository(database),
+    id: () => brandId<"EntityId">(crypto.randomUUID()),
+    now: () => new Date().toISOString(),
+  });
+}
+
+function getCatalogService(database: D1Database | undefined, authorization: ReturnType<typeof createApiAuthorizationRegistry>): CatalogService {
+  if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: brandId<RequestId>(crypto.randomUUID()) });
+  return new CatalogService({
+    repository: new CatalogRepository(database),
+    commands: new CatalogCommandRepository(database),
+    authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
     id: () => brandId<"EntityId">(crypto.randomUUID()),
     now: () => new Date().toISOString(),
   });
@@ -365,6 +399,12 @@ function isCreateProductCommand(value: unknown): value is {
   return typeof body.businessId === "string" && typeof body.name === "string" && optionalStrings(body, ["description"]);
 }
 
+function isSellerProductSessionCommand(value: unknown): value is { businessId: string } {
+  if (!value || typeof value !== "object") return false;
+  const body = value as Record<string, unknown>;
+  return typeof body.businessId === "string" && body.businessId.trim().length > 0;
+}
+
 function isSellerProductInputCommand(value: unknown): value is {
   mediaAssetId?: string;
   rawText?: string;
@@ -380,6 +420,13 @@ function isSellerProductVersionCommand(value: unknown): value is { version: numb
   if (!value || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;
   return typeof body.version === "number" && Number.isInteger(body.version) && body.version > 0;
+}
+
+function sellerProductTextField(draft: Awaited<ReturnType<SellerProductSessionService["getDraft"]>>, fieldName: string): string | undefined {
+  const field = draft?.product[fieldName];
+  if (!field || typeof field.value !== "string") return undefined;
+  const value = field.value.trim();
+  return value || undefined;
 }
 
 function optionalStrings(body: Record<string, unknown>, keys: readonly string[]): boolean {
