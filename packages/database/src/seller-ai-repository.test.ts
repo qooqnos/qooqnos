@@ -21,9 +21,15 @@ const session = {
   id: brandId<"EntityId">("session-1"),
   organizationId: brandId<"EntityId">("tenant-1"),
   workspaceId: brandId<"EntityId">("workspace-1"),
+  businessId: brandId<"EntityId">("business-1"),
+  catalogProductId: null,
   actorId: brandId<"EntityId">("user-1"),
   status: "draft_ready",
   currentDraftVersion: 3,
+  idempotencyKey: "idem-1",
+  requestId: "req-1",
+  correlationId: "corr-1",
+  expiresAt: null,
   createdAt: "2026-09-16T00:00:00.000Z",
   updatedAt: "2026-09-16T00:00:00.000Z",
 };
@@ -32,27 +38,14 @@ describe("SellerAIRepository", () => {
   it("scopes seller AI sessions to tenant and workspace", async () => {
     const statements: string[] = [];
     const statement: D1PreparedStatementLike = {
-      bind() {
-        return this;
-      },
-      async first<T>() {
-        return null as T | null;
-      },
-      async all<T>() {
-        return { results: [] as T[] };
-      },
-      async run() {
-        return { success: true };
-      },
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
     };
     const raw: D1DatabaseLike = {
-      prepare(sql: string) {
-        statements.push(sql);
-        return statement;
-      },
-      async batch() {
-        return [];
-      },
+      prepare(sql: string) { statements.push(sql); return statement; },
+      async batch() { return []; },
     };
 
     const repository = new SellerAIRepository(new D1Database(raw));
@@ -67,27 +60,14 @@ describe("SellerAIRepository", () => {
   it("checks media assets against the session scope before inserting input", async () => {
     const statements: string[] = [];
     const statement: D1PreparedStatementLike = {
-      bind() {
-        return this;
-      },
-      async first<T>() {
-        return session as T;
-      },
-      async all<T>() {
-        return { results: [] as T[] };
-      },
-      async run() {
-        return { success: true, meta: { changes: 1 } };
-      },
+      bind() { return this; },
+      async first<T>() { return session as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true, meta: { changes: 1 } }; },
     };
     const raw: D1DatabaseLike = {
-      prepare(sql: string) {
-        statements.push(sql);
-        return statement;
-      },
-      async batch() {
-        return [];
-      },
+      prepare(sql: string) { statements.push(sql); return statement; },
+      async batch() { return []; },
     };
 
     const repository = new SellerAIRepository(new D1Database(raw));
@@ -119,26 +99,17 @@ describe("SellerAIRepository", () => {
     const confirmedDraft = { ...draft, status: "confirmed" };
     let firstCalls = 0;
     const statement: D1PreparedStatementLike = {
-      bind() {
-        return this;
-      },
+      bind() { return this; },
       async first<T>() {
         firstCalls += 1;
         const result = firstCalls === 1 || firstCalls === 3 ? session : firstCalls === 2 ? draft : confirmedDraft;
         return result as unknown as T;
       },
-      async all<T>() {
-        return { results: [] as T[] };
-      },
-      async run() {
-        return { success: true, meta: { changes: 1 } };
-      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true, meta: { changes: 1 } }; },
     };
     const raw: D1DatabaseLike = {
-      prepare(sql: string) {
-        statements.push(sql);
-        return statement;
-      },
+      prepare(sql: string) { statements.push(sql); return statement; },
       async batch() {
         return [
           { success: true, meta: { changes: 1 } },
@@ -162,34 +133,22 @@ describe("SellerAIRepository", () => {
   it("cancels only live sessions and preserves terminal lifecycle states", async () => {
     const statements: string[] = [];
     const statement: D1PreparedStatementLike = {
-      bind() {
-        return this;
-      },
-      async first<T>() {
-        return session as T;
-      },
-      async all<T>() {
-        return { results: [] as T[] };
-      },
-      async run() {
-        return { success: true, meta: { changes: 1 } };
-      },
+      bind() { return this; },
+      async first<T>() { return session as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true, meta: { changes: 1 } }; },
     };
     const raw: D1DatabaseLike = {
-      prepare(sql: string) {
-        statements.push(sql);
-        return statement;
-      },
-      async batch() {
-        return [];
-      },
+      prepare(sql: string) { statements.push(sql); return statement; },
+      async batch() { return []; },
     };
 
     const repository = new SellerAIRepository(new D1Database(raw));
     await expect(repository.cancelSession(context(), session.id, "2026-09-16T00:03:00.000Z")).resolves.toBe(true);
 
     const cancelSql = statements.find((sql) => sql.includes("status = 'cancelled'"));
-    expect(cancelSql).toContain("status NOT IN ('published','cancelled','expired')");
+    expect(cancelSql).toContain("status NOT IN ('published','cancelled','expired','catalog_saved')");
+    expect(cancelSql).toContain("catalog_saved");
     expect(cancelSql).toContain("organization_id = ?");
     expect(cancelSql).toContain("workspace_id = ?");
   });
