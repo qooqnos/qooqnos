@@ -16,7 +16,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "tsc -b",
+    "build": "tsc -b --force",
     "deploy:staging": "npm run build && wrangler deploy --env staging",
     "deploy:production": "npm run build && wrangler deploy --env production",
     "deploy": "npm run deploy:production"
