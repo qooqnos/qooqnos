@@ -14,12 +14,16 @@ const context: RequestContext = {
   timezone: "UTC",
 };
 
+function authorizationMock() {
+  return {
+    evaluate: vi.fn(async () => ({ allowed: true, reason: "allowed" as const, permission: "ai.seller_product.generate_draft" })),
+    assert: vi.fn(async () => undefined),
+  };
+}
+
 describe("Seller AI runtime policy", () => {
   it("passes the full AI operation identity to Billing and translates the decision", async () => {
-    const authorization = {
-      evaluate: vi.fn(async () => ({ allowed: true })),
-      assert: vi.fn(async () => undefined),
-    };
+    const authorization = authorizationMock();
     const billing = {
       evaluate: vi.fn(async () => ({
         allowed: true,
@@ -74,10 +78,7 @@ describe("Seller AI runtime policy", () => {
   });
 
   it("uses the canonical AI permission with authentication and workspace requirements", async () => {
-    const authorization = {
-      evaluate: vi.fn(async () => ({ allowed: true })),
-      assert: vi.fn(async () => undefined),
-    };
+    const authorization = authorizationMock();
     const billing = { evaluate: vi.fn() };
     const policy = createSellerProductAIRuntimePolicy({
       authorization,
