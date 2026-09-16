@@ -5,6 +5,16 @@ export interface CommandStatement {
   readonly params?: readonly unknown[];
 }
 
+export interface IdempotencyRecord {
+  readonly scope: string;
+  readonly key: string;
+  readonly requestFingerprint: string;
+  readonly status: "processing" | "succeeded" | "failed";
+  readonly resultJson: string | null;
+  readonly createdAt: string;
+  readonly expiresAt: string;
+}
+
 export interface AtomicCommandInput<TResult> {
   readonly key: string;
   readonly requestFingerprint: string;
@@ -56,14 +66,9 @@ export class CommandRepository extends Repository {
     if (!input.requestFingerprint.trim()) throw new DatabaseError("Request fingerprint cannot be empty");
 
     const scope = this.scope(context);
-    const existing = await this.database.first<{
-      requestFingerprint: string;
-      status: "processing" | "succeeded" | "failed";
-      resultJson: string | null;
-      expiresAt: string;
-    }>(
-      `SELECT request_fingerprint AS requestFingerprint, status,
-              result_json AS resultJson, expires_at AS expiresAt
+    const existing = await this.database.first<IdempotencyRecord>(
+      `SELECT scope, key, request_fingerprint AS requestFingerprint, status,
+              result_json AS resultJson, created_at AS createdAt, expires_at AS expiresAt
        FROM idempotency_records
        WHERE scope = ? AND key = ?
        LIMIT 1`,
@@ -114,14 +119,9 @@ export class CommandRepository extends Repository {
       await this.database.transaction(statements);
       return { kind: "executed", result: input.result };
     } catch (error) {
-      const concurrent = await this.database.first<{
-        requestFingerprint: string;
-        status: "processing" | "succeeded" | "failed";
-        resultJson: string | null;
-        expiresAt: string;
-      }>(
-        `SELECT request_fingerprint AS requestFingerprint, status,
-                result_json AS resultJson, expires_at AS expiresAt
+      const concurrent = await this.database.first<IdempotencyRecord>(
+        `SELECT scope, key, request_fingerprint AS requestFingerprint, status,
+                result_json AS resultJson, created_at AS createdAt, expires_at AS expiresAt
          FROM idempotency_records
          WHERE scope = ? AND key = ?
          LIMIT 1`,
@@ -133,10 +133,7 @@ export class CommandRepository extends Repository {
     }
   }
 
-  private replayOrReject<TResult>(
-    existing: { requestFingerprint: string; status: "processing" | "succeeded" | "failed"; resultJson: string | null; expiresAt: string },
-    requestFingerprint: string,
-  ): AtomicCommandResult<TResult> {
+  private replayOrReject<TResult>(existing: IdempotencyRecord, requestFingerprint: string): AtomicCommandResult<TResult> {
     if (existing.requestFingerprint !== requestFingerprint) {
       throw new DatabaseError("Idempotency key is already bound to a different request fingerprint");
     }
