@@ -13,6 +13,7 @@
     { "path": "./packages/media" },
     { "path": "./packages/discovery" },
     { "path": "./packages/ai" },
+    { "path": "./packages/billing" },
     { "path": "./apps/api" },
     { "path": "./apps/web" }
   ]
