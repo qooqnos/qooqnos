@@ -7,6 +7,7 @@ import {
   type AIOperationLifecycleStatus,
   type AIProviderCostTelemetry,
 } from "./ai-economics";
+import type { AIProviderRegistry } from "./ai-provider-registry";
 
 export type AIDataClassification = "public" | "internal" | "confidential" | "personal" | "sensitive" | "regulated";
 export type AIOperationStatus = "succeeded" | "failed" | "blocked" | "abstained";
@@ -26,6 +27,8 @@ export interface AIRuntimeRequest<TInput = unknown> {
   readonly inputReference?: string | undefined;
   readonly inputHash?: string | undefined;
   readonly attemptNumber?: number | undefined;
+  readonly providerId?: string | undefined;
+  readonly modelId?: string | undefined;
   readonly timeoutMs?: number | undefined;
   readonly budgetUnits?: number | undefined;
 }
@@ -59,6 +62,8 @@ export interface AIProviderRequest {
   readonly promptVersion: string;
   readonly input: unknown;
   readonly outputSchemaVersion: string;
+  readonly providerId?: string | undefined;
+  readonly modelId?: string | undefined;
   readonly timeoutMs?: number | undefined;
 }
 
@@ -96,11 +101,29 @@ export interface AIRuntime {
   execute<TOutput = unknown, TInput = unknown>(request: AIRuntimeRequest<TInput>): Promise<AIRuntimeResult<TOutput>>;
 }
 
-/** Shared internal AI execution boundary. It does not own domain persistence, billing state, or provider SDKs. */
 export function createAIRuntime(
   provider: AIProviderAdapter,
   policy: AIRuntimePolicy,
   economics?: AIEconomicsSink,
+): AIRuntime {
+  return buildRuntime((request) => provider.execute(request), policy, economics);
+}
+
+export function createAIRuntimeWithRegistry(
+  registry: AIProviderRegistry,
+  policy: AIRuntimePolicy,
+  economics?: AIEconomicsSink,
+): AIRuntime {
+  return buildRuntime((request) => registry.execute(request, {
+    ...(request.providerId !== undefined ? { providerId: request.providerId } : {}),
+    ...(request.modelId !== undefined ? { modelId: request.modelId } : {}),
+  }), policy, economics);
+}
+
+function buildRuntime(
+  executeProvider: (request: AIProviderRequest) => Promise<AIProviderResponse>,
+  policy: AIRuntimePolicy,
+  economics: AIEconomicsSink | undefined,
 ): AIRuntime {
   return {
     async execute<TOutput, TInput>(request: AIRuntimeRequest<TInput>): Promise<AIRuntimeResult<TOutput>> {
@@ -134,9 +157,11 @@ export function createAIRuntime(
           promptVersion: request.promptVersion,
           input: request.input,
           outputSchemaVersion: request.outputSchemaVersion,
+          ...(request.providerId !== undefined ? { providerId: request.providerId } : {}),
+          ...(request.modelId !== undefined ? { modelId: request.modelId } : {}),
           ...(request.timeoutMs !== undefined ? { timeoutMs: request.timeoutMs } : {}),
         };
-        const response = await provider.execute(providerRequest);
+        const response = await executeProvider(providerRequest);
 
         await recordEconomics(
           economics,
@@ -206,7 +231,6 @@ async function recordEconomics(
   entitlement: AIEntitlementDecision,
 ): Promise<void> {
   if (economics === undefined) return;
-
   const occurredAt = new Date().toISOString();
   if (response.usage !== undefined) {
     const measurements = usageMeasurements(
@@ -227,19 +251,13 @@ function validateRequest(request: AIRuntimeRequest): void {
   if (!request.operationType.trim()) throw new Error("AI operationType is required");
   if (request.operationVersion < 1) throw new Error("AI operationVersion must be positive");
   if (!request.idempotencyKey.trim()) throw new Error("AI idempotencyKey is required");
-  if (request.attemptNumber !== undefined && request.attemptNumber < 1) {
-    throw new Error("AI attemptNumber must be positive");
-  }
+  if (request.attemptNumber !== undefined && request.attemptNumber < 1) throw new Error("AI attemptNumber must be positive");
   if (!request.promptVersion.trim() || !request.outputSchemaVersion.trim() || !request.policyVersion.trim()) {
     throw new Error("AI prompt, schema and policy versions are required");
   }
 }
 
-function blockedResult<TInput>(
-  request: AIRuntimeRequest<TInput>,
-  reason: string,
-  retryable: boolean,
-): AIRuntimeResult<never> {
+function blockedResult<TInput>(request: AIRuntimeRequest<TInput>, reason: string, retryable: boolean): AIRuntimeResult<never> {
   return {
     operationId: request.operationId,
     operationType: request.operationType,
