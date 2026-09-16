@@ -13,4 +13,5 @@ export * from "./platform-repository";
 export * from "./command-repository";
 export * from "./catalog-command-repository";
 export * from "./seller-ai-repository";
-export * from "./services";
+export { AuditService, IdempotencyService, OutboxService } from "./services";
+export type { AuditInput, IdempotencyClaim, OutboxInput } from "./services";
