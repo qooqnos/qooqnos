@@ -1,74 +1,43 @@
-import { D1Database, DatabaseError } from "./client";
+import { DatabaseError, D1Database } from "./client";
 
-export interface AuditInput {
-  id: string;
-  actorId?: string | undefined;
-  organizationId?: string | undefined;
-  workspaceId?: string | undefined;
-  action: string;
-  targetType?: string | undefined;
-  targetId?: string | undefined;
-  outcome: "success" | "failure" | "denied";
-  requestId?: string | undefined;
-  correlationId?: string | undefined;
-  metadataJson?: string | undefined;
-  createdAt: string;
-}
-
-export class AuditService {
-  constructor(private readonly database: D1Database) {}
-  async append(event: AuditInput): Promise<void> {
-    await this.database.run(
-      `INSERT INTO audit_events
-       (id, actor_id, organization_id, workspace_id, action, target_type, target_id,
-        outcome, request_id, correlation_id, metadata_json, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      event.id, event.actorId ?? null, event.organizationId ?? null, event.workspaceId ?? null,
-      event.action, event.targetType ?? null, event.targetId ?? null, event.outcome,
-      event.requestId ?? null, event.correlationId ?? null, event.metadataJson ?? null, event.createdAt,
-    );
-  }
-}
-
-export interface IdempotencyClaim {
+export interface IdempotencyRecord {
   scope: string;
   key: string;
   requestFingerprint: string;
-  createdAt: string;
-  expiresAt: string;
+  status: "running" | "succeeded" | "failed";
+  resultJson?: string | null;
 }
 
 export class IdempotencyService {
   constructor(private readonly database: D1Database) {}
 
-  async claim(input: IdempotencyClaim): Promise<boolean> {
-    const result = await this.database.run(
-      `INSERT INTO idempotency_records
-       (scope, key, request_fingerprint, status, created_at, expires_at)
-       VALUES (?, ?, ?, 'processing', ?, ?)
-       ON CONFLICT(scope, key) DO UPDATE SET
-         request_fingerprint = excluded.request_fingerprint,
-         status = 'processing',
-         result_json = NULL,
-         created_at = excluded.created_at,
-         expires_at = excluded.expires_at
-       WHERE idempotency_records.expires_at <= excluded.created_at`,
-      input.scope, input.key, input.requestFingerprint, input.createdAt, input.expiresAt,
+  async claim(scope: string, key: string, requestFingerprint: string): Promise<boolean> {
+    const existing = await this.database.first<IdempotencyRecord>(
+      `SELECT scope, key, request_fingerprint AS requestFingerprint, status, result_json AS resultJson
+       FROM idempotency_records WHERE scope = ? AND key = ?`,
+      scope, key,
     );
-
-    if ((result.meta?.changes ?? 0) === 1) return true;
-
-    const existing = await this.database.first<{ request_fingerprint: string; status: string }>(
-      `SELECT request_fingerprint, status
-       FROM idempotency_records
-       WHERE scope = ? AND key = ?`,
-      input.scope, input.key,
+    if (existing) {
+      if (existing.requestFingerprint !== requestFingerprint) {
+        throw new DatabaseError("Idempotency key reused with a different request");
+      }
+      return false;
+    }
+    await this.database.run(
+      `INSERT INTO idempotency_records (scope, key, request_fingerprint, status)
+       VALUES (?, ?, ?, 'running')`,
+      scope, key, requestFingerprint,
     );
-    if (!existing) throw new DatabaseError("Idempotency claim disappeared after atomic claim");
-    if (existing.request_fingerprint !== input.requestFingerprint) {
+    const inserted = await this.database.first<IdempotencyRecord>(
+      `SELECT scope, key, request_fingerprint AS requestFingerprint, status, result_json AS resultJson
+       FROM idempotency_records WHERE scope = ? AND key = ?`,
+      scope, key,
+    );
+    if (!inserted) throw new DatabaseError("Idempotency claim disappeared after atomic claim");
+    if (inserted.requestFingerprint !== requestFingerprint) {
       throw new DatabaseError("Idempotency key reused with a different request");
     }
-    return false;
+    return true;
   }
 
   async complete(scope: string, key: string, status: "succeeded" | "failed", resultJson?: string): Promise<void> {
@@ -95,6 +64,22 @@ export interface OutboxInput {
 export interface OutboxEventRecord extends OutboxInput {
   status: "pending" | "published" | "failed";
   attempts: number;
+  publishedAt: string | null;
+}
+
+interface OutboxEventRow {
+  id: string;
+  eventType: string;
+  eventVersion: number;
+  aggregateType: string | null;
+  aggregateId: string | null;
+  organizationId: string | null;
+  workspaceId: string | null;
+  payloadJson: string;
+  status: "pending" | "published" | "failed";
+  attempts: number;
+  availableAt: string;
+  occurredAt: string;
   publishedAt: string | null;
 }
 
@@ -127,13 +112,16 @@ export class OutboxService {
        LIMIT ?`,
       now, Math.min(limit, 100),
     );
-    return rows.map((row) => ({
-      ...row,
-      ...(row.aggregateType === null ? {} : { aggregateType: row.aggregateType }),
-      ...(row.aggregateId === null ? {} : { aggregateId: row.aggregateId }),
-      ...(row.organizationId === null ? {} : { organizationId: row.organizationId }),
-      ...(row.workspaceId === null ? {} : { workspaceId: row.workspaceId }),
-    }));
+    return rows.map((row) => {
+      const { aggregateType, aggregateId, organizationId, workspaceId, ...base } = row;
+      return {
+        ...base,
+        ...(aggregateType === null ? {} : { aggregateType }),
+        ...(aggregateId === null ? {} : { aggregateId }),
+        ...(organizationId === null ? {} : { organizationId }),
+        ...(workspaceId === null ? {} : { workspaceId }),
+      };
+    });
   }
 
   async markPublished(id: string, publishedAt: string): Promise<void> {
@@ -153,20 +141,4 @@ export class OutboxService {
       id,
     );
   }
-}
-
-interface OutboxEventRow {
-  readonly id: string;
-  readonly eventType: string;
-  readonly eventVersion: number;
-  readonly aggregateType: string | null;
-  readonly aggregateId: string | null;
-  readonly organizationId: string | null;
-  readonly workspaceId: string | null;
-  readonly payloadJson: string;
-  readonly status: "pending" | "published" | "failed";
-  readonly attempts: number;
-  readonly availableAt: string;
-  readonly occurredAt: string;
-  readonly publishedAt: string | null;
 }
