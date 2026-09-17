@@ -66,3 +66,5 @@ export interface Money {
 export function brandId<T extends string>(value: string): Brand<string, T> {
   return value as Brand<string, T>;
 }
+
+export * from "./discovery";
