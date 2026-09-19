@@ -1,103 +1,249 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
-import type { AuditService, OutboxService, TransactionStatement } from "@qooqnos/database";
-import type { AuthorizationPolicyRegistry, AuthorizationSubject } from "@qooqnos/runtime";
+import {
+  EntityId,
+  OnboardingStatus,
+  VerificationStatus,
+  Result,
+  Ok,
+  Err,
+  UserId,
+  WorkspaceId,
+} from "@qooqnos/core";
+import { InMemoryDatabase, User } from "@qooqnos/database";
 
-export type OnboardingStatus = "draft" | "submitted" | "verified" | "rejected";
+// ============================================================================
+// ONBOARDING TYPES
+// ============================================================================
 
-export interface OnboardingProfile {
-  readonly id: EntityId;
-  readonly organizationId: EntityId;
-  readonly workspaceId: EntityId;
-  readonly ownerId: EntityId;
+export interface OnboardingSession {
+  readonly userId: UserId;
   readonly status: OnboardingStatus;
-  readonly createdAt: string;
-  readonly updatedAt: string;
+  readonly verificationStatus: VerificationStatus;
+  readonly currentStep: number;
+  readonly completedSteps: readonly number[];
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
 }
 
-export interface OnboardingRepository {
-  create(input: { readonly id: EntityId; readonly organizationId: EntityId; readonly workspaceId: EntityId; readonly ownerId: EntityId; readonly now: string; }): Promise<OnboardingProfile>;
-  createAndRecord?(input: { readonly id: EntityId; readonly organizationId: EntityId; readonly workspaceId: EntityId; readonly ownerId: EntityId; readonly now: string; readonly audit: TransactionStatement; readonly outbox: TransactionStatement; }): Promise<OnboardingProfile>;
-  getById(context: RequestContext, id: EntityId): Promise<OnboardingProfile | null>;
-  setStatus(context: RequestContext, id: EntityId, status: OnboardingStatus, now: string): Promise<OnboardingProfile>;
-  setStatusAndRecord?(context: RequestContext, id: EntityId, transition: { readonly expectedStatus: OnboardingStatus; readonly status: OnboardingStatus; readonly now: string; readonly audit: TransactionStatement; readonly outbox: TransactionStatement; }): Promise<OnboardingProfile>;
+export interface OnboardingStep {
+  readonly id: number;
+  readonly name: string;
+  readonly description: string;
+  readonly required: boolean;
+  readonly validator: (data: unknown) => Result<unknown>;
 }
 
-export interface OnboardingServiceOptions {
-  readonly repository: OnboardingRepository;
-  readonly authorization: AuthorizationPolicyRegistry;
-  readonly resolveSubject: (context: RequestContext, actorId: EntityId) => AuthorizationSubject;
-  readonly audit: AuditService;
-  readonly outbox: OutboxService;
-  readonly id: () => EntityId;
-  readonly now: () => string;
+// ============================================================================
+// ONBOARDING WORKFLOW
+// ============================================================================
+
+export class OnboardingWorkflow {
+  private steps: OnboardingStep[] = [
+    {
+      id: 1,
+      name: "Email Verification",
+      description: "Verify your email address",
+      required: true,
+      validator: this.validateEmailStep.bind(this),
+    },
+    {
+      id: 2,
+      name: "Profile Setup",
+      description: "Complete your profile information",
+      required: true,
+      validator: this.validateProfileStep.bind(this),
+    },
+    {
+      id: 3,
+      name: "Workspace Creation",
+      description: "Create your first workspace",
+      required: true,
+      validator: this.validateWorkspaceStep.bind(this),
+    },
+    {
+      id: 4,
+      name: "Service Setup",
+      description: "List your first service (optional)",
+      required: false,
+      validator: this.validateServiceStep.bind(this),
+    },
+  ];
+
+  constructor(private db: InMemoryDatabase) {}
+
+  getSteps(): readonly OnboardingStep[] {
+    return this.steps;
+  }
+
+  getStep(stepId: number): OnboardingStep | undefined {
+    return this.steps.find((s) => s.id === stepId);
+  }
+
+  async startOnboarding(
+    userId: UserId
+  ): Promise<Result<OnboardingSession>> {
+    try {
+      const session: OnboardingSession = {
+        userId,
+        status: "incomplete",
+        verificationStatus: "pending",
+        currentStep: 1,
+        completedSteps: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      return Ok(session);
+    } catch (error) {
+      return Err(
+        error instanceof Error ? error : new Error("Failed to start onboarding")
+      );
+    }
+  }
+
+  async completeStep(
+    session: OnboardingSession,
+    stepId: number,
+    data: unknown
+  ): Promise<Result<OnboardingSession>> {
+    const step = this.getStep(stepId);
+    if (!step) {
+      return Err(new Error(`Step ${stepId} not found`));
+    }
+
+    const validation = step.validator(data);
+    if (!validation.ok) {
+      return validation as Result<OnboardingSession>;
+    }
+
+    if (session.completedSteps.includes(stepId)) {
+      return Err(new Error(`Step ${stepId} already completed`));
+    }
+
+    const completedSteps = [...session.completedSteps, stepId].sort(
+      (a, b) => a - b
+    );
+    const requiredSteps = this.steps.filter((s) => s.required).map((s) => s.id);
+    const allRequired = requiredSteps.every((id) => completedSteps.includes(id));
+
+    const updatedSession: OnboardingSession = {
+      ...session,
+      completedSteps,
+      currentStep: stepId + 1,
+      status: allRequired ? "complete" : "incomplete",
+      verificationStatus: allRequired ? "verified" : session.verificationStatus,
+      updatedAt: new Date(),
+    };
+
+    return Ok(updatedSession);
+  }
+
+  private validateEmailStep(data: unknown): Result<unknown> {
+    if (!data || typeof data !== "object") {
+      return Err(new Error("Invalid email data"));
+    }
+    const { email } = data as Record<string, unknown>;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email as string)) {
+      return Err(new Error("Invalid email format"));
+    }
+    return Ok(data);
+  }
+
+  private validateProfileStep(data: unknown): Result<unknown> {
+    if (!data || typeof data !== "object") {
+      return Err(new Error("Invalid profile data"));
+    }
+    const { name, phone, country } = data as Record<string, unknown>;
+    if (!name || !phone || !country) {
+      return Err(new Error("Name, phone, and country are required"));
+    }
+    return Ok(data);
+  }
+
+  private validateWorkspaceStep(data: unknown): Result<unknown> {
+    if (!data || typeof data !== "object") {
+      return Err(new Error("Invalid workspace data"));
+    }
+    const { workspaceName, industry } = data as Record<string, unknown>;
+    if (!workspaceName || !industry) {
+      return Err(new Error("Workspace name and industry are required"));
+    }
+    return Ok(data);
+  }
+
+  private validateServiceStep(data: unknown): Result<unknown> {
+    if (!data || typeof data !== "object") {
+      return Err(new Error("Invalid service data"));
+    }
+    const { serviceName, price } = data as Record<string, unknown>;
+    if (!serviceName || price === undefined) {
+      return Err(new Error("Service name and price are required"));
+    }
+    if (typeof price !== "number" || price < 0) {
+      return Err(new Error("Price must be a non-negative number"));
+    }
+    return Ok(data);
+  }
+
+  async getProgress(
+    session: OnboardingSession
+  ): Promise<{ readonly completed: number; readonly total: number }> {
+    return {
+      completed: session.completedSteps.length,
+      total: this.steps.length,
+    };
+  }
 }
 
-export class OnboardingService {
-  constructor(private readonly options: OnboardingServiceOptions) {}
+// ============================================================================
+// ONBOARDING MANAGER
+// ============================================================================
 
-  async create(context: RequestContext, ownerId: EntityId): Promise<OnboardingProfile> {
-    const organizationId = requireContext(context.tenantId, "tenant");
-    const workspaceId = requireContext(context.workspaceId, "workspace");
-    const actorId = requireContext(context.actorId, "actor");
-    this.authorize(context, "onboarding.create", actorId);
-    const now = this.options.now(); const profileId = this.options.id(); const auditId = this.options.id(); const outboxId = this.options.id();
-    const audit: TransactionStatement = { sql: `INSERT INTO audit_events
-      (id, actor_id, organization_id, workspace_id, action, target_type, target_id, outcome, request_id, correlation_id, metadata_json, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, params: [auditId, context.actorId ?? null, organizationId, workspaceId, "onboarding.created", "onboarding_profile", profileId, "success", context.requestId, context.correlationId, null, now] };
-    const outbox: TransactionStatement = { sql: `INSERT INTO outbox_events
-      (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?)`, params: [outboxId, "onboarding.created", 1, "onboarding_profile", profileId, organizationId, workspaceId, JSON.stringify({ id: profileId, status: "draft" }), now, now] };
-    if (this.options.repository.createAndRecord) return this.options.repository.createAndRecord({ id: profileId, organizationId, workspaceId, ownerId, now, audit, outbox });
-    const profile = await this.options.repository.create({ id: profileId, organizationId, workspaceId, ownerId, now });
-    await this.record(context, profile, "onboarding.created"); return profile;
+export class OnboardingManager {
+  private sessions: Map<UserId, OnboardingSession> = new Map();
+  private workflow: OnboardingWorkflow;
+
+  constructor(private db: InMemoryDatabase) {
+    this.workflow = new OnboardingWorkflow(db);
   }
 
-  async submit(context: RequestContext, id: EntityId, actorId: EntityId): Promise<OnboardingProfile> {
-    return this.transition(context, id, actorId, "draft", "submitted", "onboarding.submit", "onboarding.submitted");
-  }
-  async verify(context: RequestContext, id: EntityId, actorId: EntityId): Promise<OnboardingProfile> {
-    return this.transition(context, id, actorId, "submitted", "verified", "onboarding.verify", "onboarding.verified");
-  }
-  async reject(context: RequestContext, id: EntityId, actorId: EntityId): Promise<OnboardingProfile> {
-    return this.transition(context, id, actorId, "submitted", "rejected", "onboarding.reject", "onboarding.rejected");
+  async initializeUser(
+    user: User
+  ): Promise<Result<OnboardingSession>> {
+    const existing = this.sessions.get(user.id);
+    if (existing) {
+      return Ok(existing);
+    }
+
+    const result = await this.workflow.startOnboarding(user.id);
+    if (result.ok) {
+      this.sessions.set(user.id, result.value);
+    }
+    return result;
   }
 
-  private async transition(context: RequestContext, id: EntityId, actorId: EntityId, expected: OnboardingStatus, next: OnboardingStatus, permission: string, eventType: string): Promise<OnboardingProfile> {
-    const current = await this.options.repository.getById(context, id);
-    if (!current) throw new Error("Onboarding profile not found");
-    this.authorize(context, permission, actorId, current);
-    if (current.status !== expected) throw new Error(`Invalid onboarding transition: ${current.status} -> ${next}`);
-    const now = this.options.now(); const auditId = this.options.id(); const outboxId = this.options.id();
-    const audit: TransactionStatement = { sql: `INSERT INTO audit_events
-      (id, actor_id, organization_id, workspace_id, action, target_type, target_id, outcome, request_id, correlation_id, metadata_json, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, params: [auditId, context.actorId ?? null, current.organizationId, current.workspaceId, eventType, "onboarding_profile", current.id, "success", context.requestId, context.correlationId, null, now] };
-    const outbox: TransactionStatement = { sql: `INSERT INTO outbox_events
-      (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?)`, params: [outboxId, eventType, 1, "onboarding_profile", current.id, current.organizationId, current.workspaceId, JSON.stringify({ id: current.id, status: next }), now, now] };
-    if (this.options.repository.setStatusAndRecord) return this.options.repository.setStatusAndRecord(context, id, { expectedStatus: expected, status: next, now, audit, outbox });
-    const profile = await this.options.repository.setStatus(context, id, next, now);
-    await this.options.audit.append({ id: auditId, actorId: context.actorId, organizationId: current.organizationId, workspaceId: current.workspaceId, action: eventType, targetType: "onboarding_profile", targetId: current.id, outcome: "success", requestId: context.requestId, correlationId: context.correlationId, createdAt: now });
-    await this.options.outbox.enqueue({ id: outboxId, eventType, eventVersion: 1, aggregateType: "onboarding_profile", aggregateId: current.id, organizationId: current.organizationId, workspaceId: current.workspaceId, payloadJson: JSON.stringify({ id: current.id, status: next }), availableAt: now, occurredAt: now });
-    return profile;
+  async completeStep(
+    userId: UserId,
+    stepId: number,
+    data: unknown
+  ): Promise<Result<OnboardingSession>> {
+    const session = this.sessions.get(userId);
+    if (!session) {
+      return Err(new Error("Onboarding session not found"));
+    }
+
+    const result = await this.workflow.completeStep(session, stepId, data);
+    if (result.ok) {
+      this.sessions.set(userId, result.value);
+    }
+    return result;
   }
 
-  private authorize(context: RequestContext, permission: string, actorId: EntityId, resource?: OnboardingProfile): void {
-    const subject = this.options.resolveSubject(context, actorId);
-    if (subject.actorId !== actorId) throw new Error("Authorization subject actor mismatch");
-    this.options.authorization.assert({ context, permission, requireAuthentication: true, requireWorkspace: true, subject, resource: resource ? { tenantId: resource.organizationId, workspaceId: resource.workspaceId, ownerId: resource.ownerId } : undefined });
+  getSession(userId: UserId): OnboardingSession | undefined {
+    return this.sessions.get(userId);
   }
 
-  private async record(context: RequestContext, profile: OnboardingProfile, eventType: string): Promise<void> {
-    await this.options.audit.append({ id: this.options.id(), actorId: context.actorId, organizationId: profile.organizationId, workspaceId: profile.workspaceId, action: eventType, targetType: "onboarding_profile", targetId: profile.id, outcome: "success", requestId: context.requestId, correlationId: context.correlationId, createdAt: profile.updatedAt });
-    await this.options.outbox.enqueue({ id: this.options.id(), eventType, eventVersion: 1, aggregateType: "onboarding_profile", aggregateId: profile.id, organizationId: profile.organizationId, workspaceId: profile.workspaceId, payloadJson: JSON.stringify({ id: profile.id, status: profile.status }), availableAt: profile.updatedAt, occurredAt: profile.updatedAt });
+  getWorkflow(): OnboardingWorkflow {
+    return this.workflow;
   }
 }
-
-function requireContext(value: EntityId | undefined, name: string): EntityId {
-  if (!value) throw new Error(`${name} context is required`);
-  return value;
-}
-
-export * from "./repository";
-export * from "./authorization";
-export * from "./manifest";

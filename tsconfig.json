@@ -1,20 +1,18 @@
 {
-  "files": [],
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist"
+  },
   "references": [
     { "path": "./packages/core" },
-    { "path": "./packages/api-contracts" },
     { "path": "./packages/database" },
-    { "path": "./packages/i18n" },
-    { "path": "./packages/auth" },
-    { "path": "./packages/business" },
-    { "path": "./packages/catalog" },
-    { "path": "./packages/onboarding" },
     { "path": "./packages/runtime" },
-    { "path": "./packages/media" },
-    { "path": "./packages/discovery" },
-    { "path": "./packages/ai" },
-    { "path": "./packages/billing" },
-    { "path": "./apps/api" },
-    { "path": "./apps/web" }
+    { "path": "./packages/api" },
+    { "path": "./packages/i18n" },
+    { "path": "./packages/onboarding" }
   ]
 }

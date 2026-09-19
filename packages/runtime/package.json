@@ -3,19 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+    ".": "./dist/index.js",
+    "./server": "./dist/server.js"
   },
-  "dependencies": {
-    "@qooqnos/core": "*",
-    "@qooqnos/database": "*"
+  "files": ["dist"],
+  "bin": {
+    "qooqnos": "./dist/cli.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@qooqnos/core": "file:../core",
+    "@qooqnos/database": "file:../database",
+    "@qooqnos/api": "file:../api"
   }
 }

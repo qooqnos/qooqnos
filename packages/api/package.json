@@ -1,5 +1,5 @@
 {
-  "name": "@qooqnos/onboarding",
+  "name": "@qooqnos/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,14 +9,13 @@
   "files": ["dist"],
   "scripts": {
     "build": "tsc",
-    "clean": "rm -rf dist",
-    "test": "vitest run"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@qooqnos/core": "file:../core",
     "@qooqnos/database": "file:../database"
   },
   "devDependencies": {
-    "vitest": "^1.0.0"
+    "hono": "^3.0.0"
   }
 }

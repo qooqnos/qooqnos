@@ -1,10 +1,29 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
+import js from "@eslint/js";
+import tsPlugin from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
 
-export default tseslint.config(
+export default [
   {
-    ignores: ["dist/**", "coverage/**", "node_modules/**", "*.generated.*"],
+    ignores: ["node_modules/**", "dist/**", "build/**"],
   },
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
-);
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    languageOptions: {
+      parser: tsParser,
+      sourceType: "module",
+    },
+    plugins: {
+      "@typescript-eslint": tsPlugin,
+    },
+    rules: {
+      ...tsPlugin.configs.recommended.rules,
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/no-explicit-any": "error",
+    },
+  },
+];
