@@ -1,104 +1,322 @@
 import {
-  InMemoryDatabase,
-  createUser,
-  createWorkspace,
-  createService,
-} from "@qooqnos/database";
-import { HttpServer } from "./server";
+  EntityId,
+  Repository,
+  UserId,
+  WorkspaceId,
+  ServiceId,
+  BookingId,
+  TimestampedEntity,
+  createEntityId,
+  createUserId,
+  createWorkspaceId,
+  createServiceId,
+  createBookingId,
+} from "@qooqnos/core";
 
 // ============================================================================
-// APPLICATION STARTUP
+// DOMAIN ENTITIES
 // ============================================================================
 
-async function startServer(): Promise<void> {
-  const db = new InMemoryDatabase();
-  
-  // Pre-populate test data
-  await seedDatabase(db);
-
-  const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-  const LOG_LEVEL = (process.env.LOG_LEVEL as any) ?? "info";
-
-  // Create and start HTTP server
-  const server = new HttpServer(db, {
-    port: PORT,
-    hostname: "0.0.0.0",
-    logLevel: LOG_LEVEL,
-  });
-
-  await server.start();
-
-  console.log("");
-  console.log("════════════════════════════════════════════");
-  console.log("✨ Phoenix API Server Ready");
-  console.log("════════════════════════════════════════════");
-  console.log("");
-  console.log("📡 Server running on http://localhost:" + PORT);
-  console.log("");
-  console.log("Example requests:");
-  console.log(`  curl http://localhost:${PORT}/health`);
-  console.log(`  curl -X POST http://localhost:${PORT}/users -H "Content-Type: application/json" -d '{"email":"test@example.com","name":"Test"}'`);
-  console.log("");
+export interface User extends TimestampedEntity {
+  readonly id: UserId;
+  readonly email: string;
+  readonly name: string;
+  readonly workspaceIds: readonly WorkspaceId[];
 }
 
-async function seedDatabase(db: InMemoryDatabase): Promise<void> {
-  try {
-    // Create test users
-    const user1 = createUser("user_1", "alice@phoenix.com", "Alice");
-    const user2 = createUser("user_2", "bob@phoenix.com", "Bob");
+export interface Workspace extends TimestampedEntity {
+  readonly id: WorkspaceId;
+  readonly name: string;
+  readonly ownerId: UserId;
+  readonly memberIds: readonly UserId[];
+}
 
-    await db.getUserRepository().create(user1);
-    await db.getUserRepository().create(user2);
+export interface Service extends TimestampedEntity {
+  readonly id: ServiceId;
+  readonly workspaceId: WorkspaceId;
+  readonly name: string;
+  readonly description: string;
+  readonly price: number;
+  readonly currency: string;
+  readonly providerId: UserId;
+}
 
-    // Create a workspace
-    const workspace = createWorkspace(
-      "workspace_1",
-      "Tech Services",
-      user1.id
+export interface Booking extends TimestampedEntity {
+  readonly id: BookingId;
+  readonly serviceId: ServiceId;
+  readonly buyerId: UserId;
+  readonly providerId: UserId;
+  readonly workspaceId: WorkspaceId;
+  readonly startTime: Date;
+  readonly endTime: Date;
+  readonly status: "pending" | "confirmed" | "completed" | "cancelled";
+  readonly totalPrice: number;
+}
+
+// ============================================================================
+// IN-MEMORY DATABASE
+// ============================================================================
+
+export class InMemoryDatabase {
+  private users: Map<UserId, User> = new Map();
+  private workspaces: Map<WorkspaceId, Workspace> = new Map();
+  private services: Map<ServiceId, Service> = new Map();
+  private bookings: Map<BookingId, Booking> = new Map();
+
+  getUserRepository(): Repository<User> {
+    return {
+      create: async (user: User) => {
+        if (this.users.has(user.id)) {
+          throw new Error(`User ${user.id} already exists`);
+        }
+        this.users.set(user.id, user);
+      },
+      read: async (id: EntityId) => {
+        return this.users.get(id as UserId) ?? null;
+      },
+      update: async (user: User) => {
+        if (!this.users.has(user.id)) {
+          throw new Error(`User ${user.id} not found`);
+        }
+        this.users.set(user.id, user);
+      },
+      delete: async (id: EntityId) => {
+        this.users.delete(id as UserId);
+      },
+    };
+  }
+
+  getWorkspaceRepository(): Repository<Workspace> {
+    return {
+      create: async (workspace: Workspace) => {
+        if (this.workspaces.has(workspace.id)) {
+          throw new Error(`Workspace ${workspace.id} already exists`);
+        }
+        this.workspaces.set(workspace.id, workspace);
+      },
+      read: async (id: EntityId) => {
+        return this.workspaces.get(id as WorkspaceId) ?? null;
+      },
+      update: async (workspace: Workspace) => {
+        if (!this.workspaces.has(workspace.id)) {
+          throw new Error(`Workspace ${workspace.id} not found`);
+        }
+        this.workspaces.set(workspace.id, workspace);
+      },
+      delete: async (id: EntityId) => {
+        this.workspaces.delete(id as WorkspaceId);
+      },
+    };
+  }
+
+  getServiceRepository(): Repository<Service> {
+    return {
+      create: async (service: Service) => {
+        if (this.services.has(service.id)) {
+          throw new Error(`Service ${service.id} already exists`);
+        }
+        this.services.set(service.id, service);
+      },
+      read: async (id: EntityId) => {
+        return this.services.get(id as ServiceId) ?? null;
+      },
+      update: async (service: Service) => {
+        if (!this.services.has(service.id)) {
+          throw new Error(`Service ${service.id} not found`);
+        }
+        this.services.set(service.id, service);
+      },
+      delete: async (id: EntityId) => {
+        this.services.delete(id as ServiceId);
+      },
+    };
+  }
+
+  getBookingRepository(): Repository<Booking> {
+    return {
+      create: async (booking: Booking) => {
+        if (this.bookings.has(booking.id)) {
+          throw new Error(`Booking ${booking.id} already exists`);
+        }
+        this.bookings.set(booking.id, booking);
+      },
+      read: async (id: EntityId) => {
+        return this.bookings.get(id as BookingId) ?? null;
+      },
+      update: async (booking: Booking) => {
+        if (!this.bookings.has(booking.id)) {
+          throw new Error(`Booking ${booking.id} not found`);
+        }
+        this.bookings.set(booking.id, booking);
+      },
+      delete: async (id: EntityId) => {
+        this.bookings.delete(id as BookingId);
+      },
+    };
+  }
+
+  async findServicesByWorkspace(
+    workspaceId: WorkspaceId
+  ): Promise<readonly Service[]> {
+    return Array.from(this.services.values()).filter(
+      (s) => s.workspaceId === workspaceId
     );
-    await db.getWorkspaceRepository().create(workspace);
+  }
 
-    // Create some services
-    const service1 = createService(
-      "service_1",
-      workspace.id,
-      "Web Development",
-      "Build modern web applications",
-      500,
-      "USD",
-      user1.id
+  async findBookingsByUser(userId: UserId): Promise<readonly Booking[]> {
+    return Array.from(this.bookings.values()).filter(
+      (b) => b.buyerId === userId || b.providerId === userId
     );
-    const service2 = createService(
-      "service_2",
-      workspace.id,
-      "UI/UX Design",
-      "Create beautiful user interfaces",
-      400,
-      "USD",
-      user1.id
-    );
+  }
 
-    await db.getServiceRepository().create(service1);
-    await db.getServiceRepository().create(service2);
-
-    console.log("✅ Database seeded with test data");
-  } catch (error) {
-    console.error(
-      "⚠️  Database seeding failed:",
-      error instanceof Error ? error.message : "Unknown error"
+  async findWorkspacesByUser(userId: UserId): Promise<readonly Workspace[]> {
+    return Array.from(this.workspaces.values()).filter(
+      (w) =>
+        w.ownerId === userId ||
+        (w.memberIds as readonly UserId[]).includes(userId)
     );
+  }
+
+  clear(): void {
+    this.users.clear();
+    this.workspaces.clear();
+    this.services.clear();
+    this.bookings.clear();
   }
 }
 
-export { startServer, seedDatabase };
-
 // ============================================================================
-// MAIN ENTRY POINT
+// FACTORY FUNCTIONS
 // ============================================================================
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  startServer().catch((error) => {
-    console.error("❌ Server startup failed:", error);
-    process.exit(1);
-  });
+export function createUser(
+  id: string,
+  email: string,
+  name: string
+): User {
+  const now = new Date();
+  return {
+    id: createUserId(id),
+    email,
+    name,
+    workspaceIds: [],
+    createdAt: now,
+    updatedAt: now,
+  };
 }
+
+export function createWorkspace(
+  id: string,
+  name: string,
+  ownerId: UserId
+): Workspace {
+  const now = new Date();
+  return {
+    id: createWorkspaceId(id),
+    name,
+    ownerId,
+    memberIds: [ownerId],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+export function createService(
+  id: string,
+  workspaceId: WorkspaceId,
+  name: string,
+  description: string,
+  price: number,
+  currency: string,
+  providerId: UserId
+): Service {
+  const now = new Date();
+  return {
+    id: createServiceId(id),
+    workspaceId,
+    name,
+    description,
+    price,
+    currency,
+    providerId,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+export function createBooking(
+  id: string,
+  serviceId: ServiceId,
+  buyerId: UserId,
+  providerId: UserId,
+  workspaceId: WorkspaceId,
+  startTime: Date,
+  endTime: Date,
+  totalPrice: number
+): Booking {
+  const now = new Date();
+  return {
+    id: createBookingId(id),
+    serviceId,
+    buyerId,
+    providerId,
+    workspaceId,
+    startTime,
+    endTime,
+    status: "pending",
+    totalPrice,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+// ============================================================================
+// POSTGRES ADAPTER EXPORTS
+// ============================================================================
+
+export {
+  createDatabaseConnection,
+  SQL,
+  type DatabaseConfig,
+  type DatabaseConnection,
+  type Transaction,
+  type QueryResult,
+  DatabaseError,
+  ConnectionError,
+  QueryError,
+} from "./postgres-adapter";
+
+// ============================================================================
+// MIGRATION EXPORTS
+// ============================================================================
+
+export {
+  MigrationRunner,
+  BUILTIN_MIGRATIONS,
+  type Migration,
+  type MigrationStatus,
+  MigrationError,
+} from "./migrations";
+
+// ============================================================================
+// DATABASE REPOSITORY EXPORTS
+// ============================================================================
+
+export {
+  UserRepository,
+  WorkspaceRepository,
+  ServiceRepository,
+  BookingRepository,
+} from "./database-repository";
+
+// ============================================================================
+// DATABASE FACTORY EXPORTS
+// ============================================================================
+
+export { DatabaseFactory } from "./database-factory";
+
+// ============================================================================
+// POSTGRES DATABASE EXPORTS
+// ============================================================================
+
+export { PostgresDatabase } from "./postgres-database";
