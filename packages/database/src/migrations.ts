@@ -1,106 +1,321 @@
-import { D1Database, DatabaseError } from "./client";
-import { sha256Hex } from "./hash";
+/**
+ * Database Migration System
+ * 
+ * Handles schema versioning and progressive application of database changes.
+ * Migrations are SQL files executed in order with a tracking mechanism.
+ */
 
-export interface MigrationDefinition {
-  readonly id: string;
+import { DatabaseConnection, QueryResult } from "./postgres-adapter";
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export interface Migration {
+  readonly id: string; // e.g., "001_initial_schema"
   readonly version: number;
-  readonly moduleId: string;
-  readonly sql: string;
-  readonly checksum: string;
-  readonly statements: readonly string[];
+  readonly name: string;
+  readonly up: string; // SQL to apply migration
+  readonly down: string; // SQL to rollback migration
 }
 
-export interface AppliedMigration {
+export interface MigrationStatus {
   readonly id: string;
-  readonly version: number;
-  readonly checksum: string;
-  readonly moduleId: string;
-  readonly appliedAt: string;
+  readonly name: string;
+  readonly appliedAt: Date;
+  readonly duration: number; // milliseconds
 }
 
-export interface MigrationResult {
-  readonly version: number;
-  readonly id: string;
-  readonly status: "applied" | "already_applied";
+export class MigrationError extends Error {
+  constructor(message: string, readonly id: string) {
+    super(message);
+    this.name = "MigrationError";
+  }
 }
 
-export interface MigrationClock { now(): string; }
-const utcClock: MigrationClock = { now: () => new Date().toISOString() };
-
-export class MigrationIntegrityError extends DatabaseError {
-  constructor(message: string) { super(message); this.name = "MigrationIntegrityError"; }
-}
+// ============================================================================
+// MIGRATION RUNNER
+// ============================================================================
 
 export class MigrationRunner {
-  constructor(private readonly database: D1Database, private readonly migrations: readonly MigrationDefinition[], private readonly clock: MigrationClock = utcClock) {
-    validateMigrationDefinitions(migrations);
+  private db: DatabaseConnection;
+  private migrations: Map<string, Migration> = new Map();
+  private applied: Set<string> = new Set();
+
+  constructor(db: DatabaseConnection) {
+    this.db = db;
   }
 
-  async run(): Promise<MigrationResult[]> {
-    await validateDefinitionChecksums(this.migrations);
-    const hasMetadataTable = await hasMigrationMetadataTable(this.database);
-    const applied = hasMetadataTable
-      ? await this.database.all<AppliedMigration>(
-          "SELECT id, version, checksum, module_id AS moduleId, applied_at AS appliedAt FROM schema_migrations ORDER BY version ASC",
-        )
-      : [];
-    await validateAppliedMigrations(applied, this.migrations);
-    const appliedByVersion = new Map(applied.map((migration) => [migration.version, migration]));
-    const results: MigrationResult[] = [];
-    const lastApplied = applied[applied.length - 1];
-    let expectedVersion = lastApplied ? lastApplied.version + 1 : 1;
-
-    for (const migration of this.migrations) {
-      const existing = appliedByVersion.get(migration.version);
-      if (existing) { results.push({ version: migration.version, id: migration.id, status: "already_applied" }); continue; }
-      if (migration.version !== expectedVersion) throw new MigrationIntegrityError(`Migration sequence is not contiguous: expected ${expectedVersion}, received ${migration.version}`);
-      if (migration.statements.length === 0) throw new MigrationIntegrityError(`Migration ${migration.id} contains no SQL statements`);
-      const statements: Array<{ sql: string; params?: unknown[] }> = migration.statements.map((sql) => ({ sql }));
-      statements.push({ sql: "INSERT INTO schema_migrations (id, version, checksum, module_id, applied_at) VALUES (?, ?, ?, ?, ?)", params: [migration.id, migration.version, migration.checksum, migration.moduleId, this.clock.now()] });
-      await this.database.transaction(statements);
-      results.push({ version: migration.version, id: migration.id, status: "applied" });
-      expectedVersion += 1;
+  /**
+   * Register a migration
+   */
+  register(migration: Migration): void {
+    if (this.migrations.has(migration.id)) {
+      throw new MigrationError(`Migration ${migration.id} already registered`, migration.id);
     }
+    this.migrations.set(migration.id, migration);
+  }
+
+  /**
+   * Initialize migration tracking table
+   */
+  async initialize(): Promise<void> {
+    const createTableSQL = `
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        duration_ms INTEGER NOT NULL
+      );
+    `;
+
+    try {
+      await this.db.query(createTableSQL);
+    } catch (error) {
+      // Table might already exist, which is fine
+    }
+
+    // Load already-applied migrations
+    const result = await this.db.query<{ id: string }>(
+      "SELECT id FROM schema_migrations ORDER BY applied_at"
+    );
+    result.rows.forEach((row) => {
+      this.applied.add(row.id);
+    });
+  }
+
+  /**
+   * Get pending migrations
+   */
+  getPending(): Migration[] {
+    return Array.from(this.migrations.values())
+      .filter((m) => !this.applied.has(m.id))
+      .sort((a, b) => a.version - b.version);
+  }
+
+  /**
+   * Get applied migrations
+   */
+  getApplied(): Migration[] {
+    return Array.from(this.migrations.values())
+      .filter((m) => this.applied.has(m.id))
+      .sort((a, b) => a.version - b.version);
+  }
+
+  /**
+   * Apply a single migration
+   */
+  async apply(id: string): Promise<MigrationStatus> {
+    const migration = this.migrations.get(id);
+    if (!migration) {
+      throw new MigrationError(`Migration ${id} not found`, id);
+    }
+
+    if (this.applied.has(id)) {
+      throw new MigrationError(`Migration ${id} already applied`, id);
+    }
+
+    const startTime = Date.now();
+
+    try {
+      await this.db.transaction(async (tx) => {
+        // Execute migration SQL
+        const statements = migration.up.split(";").filter((s) => s.trim());
+        for (const statement of statements) {
+          if (statement.trim()) {
+            await tx.query(statement);
+          }
+        }
+
+        // Record in migrations table
+        const duration = Date.now() - startTime;
+        await tx.query(
+          `INSERT INTO schema_migrations (id, name, duration_ms) VALUES ($1, $2, $3)`,
+          [id, migration.name, duration]
+        );
+
+        await tx.commit();
+      });
+
+      this.applied.add(id);
+
+      return {
+        id,
+        name: migration.name,
+        appliedAt: new Date(),
+        duration: Date.now() - startTime,
+      };
+    } catch (error) {
+      throw new MigrationError(
+        `Failed to apply migration ${id}: ${error}`,
+        id
+      );
+    }
+  }
+
+  /**
+   * Apply all pending migrations
+   */
+  async migrateUp(): Promise<MigrationStatus[]> {
+    const pending = this.getPending();
+    const results: MigrationStatus[] = [];
+
+    for (const migration of pending) {
+      const status = await this.apply(migration.id);
+      results.push(status);
+    }
+
     return results;
   }
-}
 
-async function hasMigrationMetadataTable(database: D1Database): Promise<boolean> {
-  const result = await database.first<{ name: string }>(
-    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'",
-  );
-  return result?.name === "schema_migrations";
-}
+  /**
+   * Rollback a migration
+   */
+  async rollback(id: string): Promise<void> {
+    const migration = this.migrations.get(id);
+    if (!migration) {
+      throw new MigrationError(`Migration ${id} not found`, id);
+    }
 
-export function validateMigrationDefinitions(migrations: readonly MigrationDefinition[]): void {
-  const ids = new Set<string>(); const versions = new Set<number>(); let previous = 0;
-  for (const migration of [...migrations].sort((a, b) => a.version - b.version)) {
-    if (!migration.id || !migration.moduleId || !migration.checksum) throw new MigrationIntegrityError("Migration id, moduleId and checksum are required");
-    if (!migration.sql.trim()) throw new MigrationIntegrityError(`Migration ${migration.id} contains empty SQL`);
-    if (!Number.isInteger(migration.version) || migration.version < 1) throw new MigrationIntegrityError(`Invalid migration version: ${migration.version}`);
-    if (ids.has(migration.id)) throw new MigrationIntegrityError(`Duplicate migration id: ${migration.id}`);
-    if (versions.has(migration.version)) throw new MigrationIntegrityError(`Duplicate migration version: ${migration.version}`);
-    if (migration.version !== previous + 1) throw new MigrationIntegrityError(`Migration definitions must be contiguous: expected ${previous + 1}, received ${migration.version}`);
-    ids.add(migration.id); versions.add(migration.version); previous = migration.version;
+    if (!this.applied.has(id)) {
+      throw new MigrationError(`Migration ${id} not applied`, id);
+    }
+
+    try {
+      await this.db.transaction(async (tx) => {
+        // Execute rollback SQL
+        const statements = migration.down.split(";").filter((s) => s.trim());
+        for (const statement of statements) {
+          if (statement.trim()) {
+            await tx.query(statement);
+          }
+        }
+
+        // Remove from migrations table
+        await tx.query("DELETE FROM schema_migrations WHERE id = $1", [id]);
+
+        await tx.commit();
+      });
+
+      this.applied.delete(id);
+    } catch (error) {
+      throw new MigrationError(
+        `Failed to rollback migration ${id}: ${error}`,
+        id
+      );
+    }
+  }
+
+  /**
+   * Get migration status
+   */
+  async status(): Promise<{
+    readonly total: number;
+    readonly applied: number;
+    readonly pending: number;
+    readonly migrations: Array<{
+      readonly id: string;
+      readonly name: string;
+      readonly status: "pending" | "applied";
+    }>;
+  }> {
+    const migrations = Array.from(this.migrations.values())
+      .sort((a, b) => a.version - b.version)
+      .map((m) => ({
+        id: m.id,
+        name: m.name,
+        status: this.applied.has(m.id) ? ("applied" as const) : ("pending" as const),
+      }));
+
+    return {
+      total: this.migrations.size,
+      applied: this.applied.size,
+      pending: this.migrations.size - this.applied.size,
+      migrations,
+    };
   }
 }
 
-async function validateDefinitionChecksums(definitions: readonly MigrationDefinition[]): Promise<void> {
-  for (const definition of definitions) {
-    const calculatedChecksum = await sha256Hex(definition.sql);
-    if (definition.checksum !== calculatedChecksum) throw new MigrationIntegrityError(`Migration checksum mismatch at version ${definition.version}`);
-  }
-}
+// ============================================================================
+// BUILT-IN MIGRATIONS
+// ============================================================================
 
-async function validateAppliedMigrations(applied: readonly AppliedMigration[], definitions: readonly MigrationDefinition[]): Promise<void> {
-  const definitionsByVersion = new Map(definitions.map((migration) => [migration.version, migration])); let previous = 0;
-  for (const migration of applied) {
-    if (migration.version !== previous + 1) throw new MigrationIntegrityError(`Applied migration history is not contiguous at version ${migration.version}`);
-    const definition = definitionsByVersion.get(migration.version);
-    if (!definition) throw new MigrationIntegrityError(`Database contains migration ${migration.version}, but this runtime has no matching definition`);
-    if (definition.id !== migration.id || definition.moduleId !== migration.moduleId) throw new MigrationIntegrityError(`Migration identity mismatch at version ${migration.version}`);
-    if (migration.checksum !== definition.checksum) throw new MigrationIntegrityError(`Migration checksum mismatch at version ${migration.version}`);
-    previous = migration.version;
-  }
-}
+export const BUILTIN_MIGRATIONS: readonly Migration[] = [
+  {
+    id: "001_initial_schema",
+    version: 1,
+    name: "Create initial schema",
+    up: `
+      -- Users table
+      CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR(36) PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        name VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
 
+      -- Workspaces table
+      CREATE TABLE IF NOT EXISTS workspaces (
+        id VARCHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        owner_id VARCHAR(36) NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Services table
+      CREATE TABLE IF NOT EXISTS services (
+        id VARCHAR(36) PRIMARY KEY,
+        workspace_id VARCHAR(36) NOT NULL REFERENCES workspaces(id),
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(10, 2) NOT NULL,
+        currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+        provider_id VARCHAR(36) NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Bookings table
+      CREATE TABLE IF NOT EXISTS bookings (
+        id VARCHAR(36) PRIMARY KEY,
+        service_id VARCHAR(36) NOT NULL REFERENCES services(id),
+        buyer_id VARCHAR(36) NOT NULL REFERENCES users(id),
+        provider_id VARCHAR(36) NOT NULL REFERENCES users(id),
+        workspace_id VARCHAR(36) NOT NULL REFERENCES workspaces(id),
+        start_time TIMESTAMP NOT NULL,
+        end_time TIMESTAMP NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'pending',
+        total_price DECIMAL(10, 2) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Workspace members table
+      CREATE TABLE IF NOT EXISTS workspace_members (
+        workspace_id VARCHAR(36) NOT NULL REFERENCES workspaces(id),
+        user_id VARCHAR(36) NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (workspace_id, user_id)
+      );
+
+      -- Create indexes for common queries
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE INDEX IF NOT EXISTS idx_workspaces_owner_id ON workspaces(owner_id);
+      CREATE INDEX IF NOT EXISTS idx_services_workspace_id ON services(workspace_id);
+      CREATE INDEX IF NOT EXISTS idx_services_provider_id ON services(provider_id);
+      CREATE INDEX IF NOT EXISTS idx_bookings_service_id ON bookings(service_id);
+      CREATE INDEX IF NOT EXISTS idx_bookings_buyer_id ON bookings(buyer_id);
+      CREATE INDEX IF NOT EXISTS idx_bookings_provider_id ON bookings(provider_id);
+      CREATE INDEX IF NOT EXISTS idx_workspace_members_user_id ON workspace_members(user_id);
+    `,
+    down: `
+      DROP TABLE IF EXISTS workspace_members;
+      DROP TABLE IF EXISTS bookings;
+      DROP TABLE IF EXISTS services;
+      DROP TABLE IF EXISTS workspaces;
+      DROP TABLE IF EXISTS users;
+    `,
+  },
+];
