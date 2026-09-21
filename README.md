@@ -1,406 +1,255 @@
-# 🔥 Phoenix (ققنوس) - AI Marketplace Platform
+# Phoenix Phase 4 Implementation - File Structure
 
-A production-grade TypeScript monorepo implementing a complete AI services marketplace platform with strict type safety, domain-driven architecture, and comprehensive API layer.
+## 📋 Quick Reference
 
-## 📋 Project Overview
-
-Phoenix is a multi-package TypeScript monorepo designed for building an AI marketplace where:
-
-- **Providers** can list their services
-- **Buyers** can discover and book services
-- **Workspaces** organize multi-tenant business logic
-- **Complete onboarding** flow for new users
-- **RESTful API** for all operations
-
-## 📦 Package Structure
+### ✨ NEW FILES (Phase 4 Implementation)
+These are the files created for Phase 4:
 
 ```
-packages/
-├── core/           # Domain types & branded types
-├── database/       # Data layer with repositories
-├── api/            # HTTP API handlers & routing
-├── runtime/        # Application bootstrapping
-├── i18n/           # Internationalization
-└── onboarding/     # User onboarding flow
+PHASE4_SUMMARY.md                      - Detailed implementation summary
+database-factory.ts                    - Database initialization factory
+database-repository.ts                 - Repository implementations (CRUD)
+postgres-adapter.ts                    - PostgreSQL connection adapter
+postgres-database.ts                   - Database compatibility layer
+migrations.ts                          - Migration system
+runtime-index.ts                       - Updated runtime with DB support
 ```
 
-## 🏗️ Architecture
-
-### Core Principles
-
-1. **Strict TypeScript**: `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noImplicitOverride`
-2. **Branded Types**: Type-safe entity IDs (`UserId`, `WorkspaceId`, `ServiceId`, `BookingId`)
-3. **Layered Architecture**: Clear separation between domain, data, and API layers
-4. **Result Type**: Explicit error handling with `Result<T, E>` pattern
-5. **In-Memory Database**: Testable and development-friendly data storage
-
-### Domain Model
-
-```typescript
-User
-  ├─ userId (branded type)
-  ├─ email
-  ├─ name
-  └─ workspaceIds[]
-
-Workspace
-  ├─ id
-  ├─ name
-  ├─ ownerId
-  └─ memberIds[]
-
-Service
-  ├─ id
-  ├─ workspaceId
-  ├─ name
-  ├─ description
-  ├─ price
-  └─ providerId
-
-Booking
-  ├─ id
-  ├─ serviceId
-  ├─ buyerId
-  ├─ providerId
-  ├─ startTime/endTime
-  └─ status
+### 📝 DOCUMENTATION & CONFIG
+```
+IMPLEMENTATION_LEDGER.md               - Phase tracking and status
+CLAUDE.md                              - Project rules and guidelines
+CHANGES.diff                           - Full git diff of all changes
 ```
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js >= 20.0.0
-- TypeScript 5.9.2+
-
-### Installation
-
-```bash
-# Install dependencies
-npm install
-
-# Build all packages
-npm run build
-
-# Run tests
-npm run test
-
-# Development watch mode
-npm run dev
+### 📦 EXISTING DATABASE FILES (Not modified by Phase 4)
+These files already existed but are included for reference:
 ```
-
-### Running the Server
-
-```bash
-# Start development server
-npm run dev
-
-# The API will be available at http://localhost:3000
+index.ts                               - Database package exports
+client.ts                              - Database client
+services.ts                            - Service definitions
+transaction.ts                         - Transaction handling
+hash.ts                                - Hashing utilities
+workspace-repository.ts                - Original workspace repo
+identity-repository.ts                 - Identity repo
+authorization-repository.ts            - Authorization repo
+platform-repository.ts                 - Platform repo
+session-repository.ts                  - Session repo
+command-repository.ts                  - Command repo
+catalog-command-repository.ts          - Catalog command repo
+request-authorization-repository.ts    - Request auth repo
+seller-ai-repository.ts                - Seller AI repo
+migration-lock.ts                      - Migration lock system
+migration-catalog.ts                   - Migration catalog
++ *.test.ts files                      - Test files
 ```
-
-### Example API Calls
-
-```bash
-# Health check
-curl http://localhost:3000/health
-
-# Create a user
-curl -X POST http://localhost:3000/users \
-  -H "Content-Type: application/json" \
-  -d '{"email":"alice@example.com","name":"Alice"}'
-
-# Create a workspace (requires auth)
-curl -X POST http://localhost:3000/workspaces \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer TOKEN" \
-  -d '{"name":"Tech Services"}'
-
-# List workspace services
-curl http://localhost:3000/workspaces/workspace_1/services
-
-# Create a booking (requires auth)
-curl -X POST http://localhost:3000/bookings \
-  -H "Authorization: Bearer TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "serviceId":"service_1",
-    "workspaceId":"workspace_1",
-    "providerId":"user_1",
-    "startTime":"2024-09-19T10:00:00Z",
-    "endTime":"2024-09-19T11:00:00Z",
-    "totalPrice":500
-  }'
-```
-
-## 📚 Package Documentation
-
-### @qooqnos/core
-
-Domain types and interfaces:
-
-```typescript
-import {
-  UserId, WorkspaceId, ServiceId, BookingId,
-  createUserId, createWorkspaceId,
-  AuthContext, ApiResponse, Result
-} from "@qooqnos/core";
-```
-
-**Key Features:**
-- Branded types for type-safe entity IDs
-- API response/error types
-- Authorization context
-- Result type for error handling
-- Validation utilities
-
-### @qooqnos/database
-
-Data layer with in-memory storage:
-
-```typescript
-import {
-  InMemoryDatabase,
-  User, Workspace, Service, Booking,
-  createUser, createWorkspace
-} from "@qooqnos/database";
-
-const db = new InMemoryDatabase();
-const userRepo = db.getUserRepository();
-await userRepo.create(user);
-```
-
-**Key Features:**
-- Repository pattern for all entities
-- Type-safe data access
-- In-memory storage (easily replaceable with SQL)
-- Query methods (findServicesByWorkspace, etc.)
-
-### @qooqnos/api
-
-HTTP API handlers and routing:
-
-```typescript
-import { ApiRouter, ApiHandlers } from "@qooqnos/api";
-
-const router = new ApiRouter(db);
-router.registerHandlers();
-const response = await router.handleRequest(request);
-```
-
-**Endpoints:**
-- `GET /health` - Health check
-- `POST /users` - Create user
-- `GET /users/:id` - Get user
-- `POST /workspaces` - Create workspace
-- `GET /workspaces/:id` - Get workspace
-- `POST /services` - Create service
-- `GET /services/:id` - Get service
-- `GET /workspaces/:id/services` - List services
-- `POST /bookings` - Create booking
-- `GET /bookings/:id` - Get booking
-- `GET /bookings` - List user bookings (requires auth)
-
-### @qooqnos/onboarding
-
-User onboarding workflow:
-
-```typescript
-import { OnboardingManager } from "@qooqnos/onboarding";
-
-const manager = new OnboardingManager(db);
-await manager.initializeUser(user);
-await manager.completeStep(userId, 1, { email: "..." });
-```
-
-**Steps:**
-1. Email Verification (required)
-2. Profile Setup (required)
-3. Workspace Creation (required)
-4. Service Setup (optional)
-
-### @qooqnos/i18n
-
-Multi-language support:
-
-```typescript
-import { I18nManager } from "@qooqnos/i18n";
-
-const i18n = new I18nManager("en");
-i18n.setLanguage("fa"); // Persian
-const text = i18n.t("common.welcome");
-```
-
-**Supported Languages:**
-- English (en)
-- Farsi (fa)
-- Arabic (ar)
-
-## ✅ Testing
-
-### Unit Tests
-
-```bash
-# Run all tests
-npm run test
-
-# Watch mode
-npm run test:watch
-
-# Run specific package tests
-npm run -w @qooqnos/onboarding test
-```
-
-### Test Coverage
-
-Tests are organized by package using Vitest. Each package can have:
-- Unit tests (`*.test.ts`)
-- Integration tests
-- Contract tests
-
-## 🔒 Security & Type Safety
-
-### Strict Compiler Settings
-
-All packages are compiled with TypeScript strict mode:
-
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "exactOptionalPropertyTypes": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true
-  }
-}
-```
-
-### Branded Types
-
-Prevent ID mixups:
-
-```typescript
-const userId: UserId = ...;
-const workspaceId: WorkspaceId = ...;
-// Type error: userId cannot be assigned to workspaceId
-```
-
-### Result Type
-
-Explicit error handling:
-
-```typescript
-const result = await service.create(entity);
-if (result.ok) {
-  console.log(result.value);
-} else {
-  console.error(result.error);
-}
-```
-
-## 🛠️ Development Workflow
-
-### Build
-
-```bash
-# Build all packages
-npm run build
-
-# Clean build artifacts
-npm run clean
-```
-
-### Code Quality
-
-```bash
-# Type check
-npm run typecheck
-
-# Lint
-npm run lint
-
-# Format
-npm run format
-```
-
-### Adding New Packages
-
-```bash
-# Create new package
-mkdir -p packages/newpkg/{src,src/__tests__}
-
-# Create package.json, tsconfig.json, src/index.ts
-# Update root tsconfig.json references
-# Run: npm install
-```
-
-## 📖 Design Patterns
-
-### Repository Pattern
-
-```typescript
-interface Repository<T> {
-  create(entity: T): Promise<void>;
-  read(id: EntityId): Promise<T | null>;
-  update(entity: T): Promise<void>;
-  delete(id: EntityId): Promise<void>;
-}
-```
-
-### Handler Pattern
-
-```typescript
-type HandlerFunction<T> = (
-  ctx: ApiRequestContext,
-  db: InMemoryDatabase
-) => Promise<ApiResponse<T>>;
-```
-
-### Validation Pattern
-
-```typescript
-function validateEmail(email: string): ValidationResult<string> {
-  // returns Result<string, ValidationError[]>
-}
-```
-
-## 🚢 Deployment
-
-### Build for Production
-
-```bash
-npm run build
-npm run typecheck
-npm run test
-```
-
-### Environment Variables
-
-```bash
-PORT=3000
-NODE_ENV=production
-LOG_LEVEL=info
-```
-
-## 🤝 Contributing
-
-1. Ensure strict TypeScript compliance
-2. Add tests for new features
-3. Update types and interfaces
-4. Document API changes
-
-## 📝 License
-
-Proprietary - Phoenix AI Marketplace
-
-## 🔗 Related Documentation
-
-- [Architecture Overview](./docs/ARCHITECTURE_COMPLETE.md)
-- [API Contracts](./docs/API_CONTRACT_ERROR_VERSIONING_ARCHITECTURE.md)
-- [Database Model](./docs/DATABASE_MODEL.md)
-- [Technology Standards](./docs/TECHNOLOGY_AND_LANGUAGE_STANDARDS.md)
 
 ---
 
-**Status**: Production-Ready  
-**Last Updated**: September 19, 2026  
-**Version**: 0.1.0
+## 🚀 How to Apply Changes
+
+### Option 1: Manual File Placement
+1. Extract this zip file
+2. Copy the ✨ NEW FILES to their destination:
+   ```
+   database-factory.ts                → packages/database/src/
+   database-repository.ts             → packages/database/src/
+   postgres-adapter.ts                → packages/database/src/
+   postgres-database.ts               → packages/database/src/
+   migrations.ts                      → packages/database/src/
+   runtime-index.ts                   → packages/runtime/src/index.ts
+   ```
+3. Update package files:
+   ```
+   packages/database/src/index.ts     (add exports for new classes)
+   packages/database/tsconfig.json    (add composite: true)
+   packages/runtime/tsconfig.json     (add composite: true)
+   packages/core/tsconfig.json        (add composite: true)
+   packages/api/tsconfig.json         (add composite: true)
+   packages/i18n/tsconfig.json        (add composite: true)
+   packages/onboarding/tsconfig.json  (add composite: true)
+   tsconfig.json                      (root level fixes)
+   ```
+
+### Option 2: Use Git Patch
+```bash
+# In your repository directory:
+cd /path/to/qooqnos
+patch -p1 < CHANGES.diff
+```
+
+---
+
+## 📊 What's New in Phase 4
+
+### Database Adapter
+- ✅ PostgreSQL connection management
+- ✅ Transaction support (BEGIN/COMMIT/ROLLBACK)
+- ✅ SQL query builders
+- ✅ Error handling
+
+### Migration System
+- ✅ Automatic migration tracking
+- ✅ Built-in initial schema (5 tables)
+- ✅ Version control
+- ✅ Apply/rollback support
+
+### Repository Layer
+- ✅ UserRepository
+- ✅ WorkspaceRepository
+- ✅ ServiceRepository
+- ✅ BookingRepository
+- ✅ Full CRUD operations
+
+### Runtime Integration
+- ✅ Dual-mode support (in-memory & PostgreSQL)
+- ✅ Environment variable configuration
+- ✅ Automatic fallback mechanism
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+```bash
+# Use PostgreSQL (default: false = in-memory)
+USE_POSTGRES=true
+
+# PostgreSQL Connection Details
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=qooqnos
+DB_USER=postgres
+DB_PASSWORD=yourpassword
+DB_SSL=false
+```
+
+### Start Server (In-Memory - Default)
+```bash
+npm run build
+npx tsx packages/runtime/src/index.ts
+# Output: Using in-memory database
+```
+
+### Start Server (PostgreSQL)
+```bash
+USE_POSTGRES=true npx tsx packages/runtime/src/index.ts
+# Output: Connecting to PostgreSQL...
+```
+
+---
+
+## 📋 Database Schema
+
+### users
+```sql
+CREATE TABLE users (
+  id VARCHAR(36) PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  name VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL
+);
+```
+
+### workspaces
+```sql
+CREATE TABLE workspaces (
+  id VARCHAR(36) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  owner_id VARCHAR(36) NOT NULL REFERENCES users(id),
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL
+);
+```
+
+### services
+```sql
+CREATE TABLE services (
+  id VARCHAR(36) PRIMARY KEY,
+  workspace_id VARCHAR(36) NOT NULL REFERENCES workspaces(id),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  price DECIMAL(10, 2) NOT NULL,
+  currency VARCHAR(3) NOT NULL,
+  provider_id VARCHAR(36) NOT NULL REFERENCES users(id),
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL
+);
+```
+
+### bookings
+```sql
+CREATE TABLE bookings (
+  id VARCHAR(36) PRIMARY KEY,
+  service_id VARCHAR(36) NOT NULL REFERENCES services(id),
+  buyer_id VARCHAR(36) NOT NULL REFERENCES users(id),
+  provider_id VARCHAR(36) NOT NULL REFERENCES users(id),
+  workspace_id VARCHAR(36) NOT NULL REFERENCES workspaces(id),
+  start_time TIMESTAMP NOT NULL,
+  end_time TIMESTAMP NOT NULL,
+  status VARCHAR(50) NOT NULL DEFAULT 'pending',
+  total_price DECIMAL(10, 2) NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL
+);
+```
+
+### workspace_members
+```sql
+CREATE TABLE workspace_members (
+  workspace_id VARCHAR(36) NOT NULL REFERENCES workspaces(id),
+  user_id VARCHAR(36) NOT NULL REFERENCES users(id),
+  created_at TIMESTAMP NOT NULL,
+  PRIMARY KEY (workspace_id, user_id)
+);
+```
+
+---
+
+## ✅ Verification
+
+After applying changes:
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Build project
+npm run build
+
+# 3. Start server
+npx tsx packages/runtime/src/index.ts
+
+# 4. Test API
+curl http://localhost:3000/health
+
+# Expected response:
+# {
+#   "success": true,
+#   "data": { "status": "ok" }
+# }
+```
+
+---
+
+## 📖 Documentation Files
+
+- **PHASE4_SUMMARY.md** - Detailed breakdown of all changes
+- **IMPLEMENTATION_LEDGER.md** - Phase tracking across the project
+- **CLAUDE.md** - Project rules and Claude session guidelines
+- **CHANGES.diff** - Raw git diff (for reference)
+
+---
+
+## 🎯 Remaining Phase 4 Tasks
+
+- [ ] Add query methods (findByWorkspace, findByUser)
+- [ ] Full environment configuration (.env support)
+- [ ] Unit tests for repository layer
+- [ ] Connection pooling optimization
+
+---
+
+**Implementation Date**: 2026-09-21  
+**Commits**: 2024bdb, 312f9c7  
+**Progress**: Phase 4 (60% complete)
