@@ -269,3 +269,33 @@ export function createBooking(
     updatedAt: now,
   };
 }
+export {
+  createDatabaseConnection,
+  SQL,
+  type DatabaseConfig,
+  type DatabaseConnection,
+  type Transaction,
+  type QueryResult,
+  DatabaseError,
+  ConnectionError,
+  QueryError,
+} from "./postgres-adapter";
+
+export {
+  MigrationRunner,
+  BUILTIN_MIGRATIONS,
+  type Migration,
+  type MigrationStatus,
+  MigrationError,
+} from "./migrations";
+
+export {
+  UserRepository,
+  WorkspaceRepository,
+  ServiceRepository,
+  BookingRepository,
+} from "./database-repository";
+
+export { DatabaseFactory } from "./database-factory";
+
+export { PostgresDatabase } from "./postgres-database";
