@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0039**.
+The current API migration catalog references versions **0001 through 0041**.
 
 ### Foundation — 0001
 
@@ -253,6 +253,22 @@ These migrations add integrity triggers only.
 
 ### Privacy / Consent — 0039
 
+### Demand / Matching core — 0040
+
+- demand_requests
+- demand_profiles
+- match_requests
+- match_candidates
+- match_decisions
+
+0040 establishes Phoenix's canonical Demand → Match persistence boundary. Catalog/Business/Offering remain authoritative for the matched supply targets.
+
+### Demand / Matching integrity — 0041
+
+- no new tables
+
+0041 hardens typed candidate uniqueness and makes match decisions append-only.
+
 - privacy_consents
 - privacy_requests
 - privacy_processing_records
@@ -291,7 +307,7 @@ These migrations add integrity triggers only.
 
 0035 establishes provider-neutral Communication conversation, message, notification and delivery-attempt storage with notification idempotency and tenant/workspace scope.
 
-**Total currently defined physical tables: 138.**
+**Total currently defined physical tables: 143.**
 
 
 - no new tables
