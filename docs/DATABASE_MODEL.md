@@ -175,7 +175,14 @@ Reviews and trust signals are not authoritative verification evidence.
 
 ## 8. Booking and availability domain
 
-- `appointment_slots`: bookable availability projections/rules.
+- `bookings`: authoritative reservation/commitment aggregate.
+- `booking_items`: immutable commercial snapshots at booking commit.
+- `appointments`: scheduled occurrences belonging to a Booking.
+- `resources`: schedulable capacity entities.
+- `schedules`: reusable availability definitions.
+- `availability_rules`: recurring availability rules.
+- `availability_exceptions`: closure/override records.
+- `appointment_slots`: rebuildable bookable-slot projections only.
 - `appointments`: booking aggregate.
 - `appointment_participants`: participants/actors.
 - `appointment_events`: immutable lifecycle events.
