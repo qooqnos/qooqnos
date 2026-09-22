@@ -16,6 +16,7 @@ import { consumeOutbox, publishPendingOutbox, type QueueBatchLike, type Schedule
 import type { OutboxEventRecord } from "@qooqnos/database";
 import { getDatabase } from "./database";
 import { checkDatabase } from "./readiness";
+import { processPendingTrustExpiries } from "./trust-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 
 const homePage = (version: string): string => `<!doctype html>
@@ -533,7 +534,9 @@ export default {
   },
 
   async scheduled(controller: ScheduledControllerLike, env: ApiEnv): Promise<void> {
-    await publishPendingOutbox(env, new Date(controller.scheduledTime).toISOString());
+    const now = new Date(controller.scheduledTime).toISOString();
+    await publishPendingOutbox(env, now);
+    await processPendingTrustExpiries(env, now);
   },
 
   async queue(
