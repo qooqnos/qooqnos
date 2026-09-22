@@ -60,6 +60,56 @@ export class IntegrationRepository extends Repository {
     return row;
   }
 
+  async createSyncJob(context: RequestContext, input: {
+    readonly id: EntityId;
+    readonly integrationAccountId: EntityId;
+    readonly syncType: string;
+    readonly direction: "inbound"|"outbound"|"bidirectional";
+    readonly correlationId: string;
+    readonly nextRunAt?: string;
+    readonly now: string;
+  }) {
+    await this.getAccount(context, input.integrationAccountId);
+    await this.database.run(
+      "INSERT INTO integration_sync_jobs (id, integration_account_id, sync_type, direction, status, next_run_at, correlation_id, created_at, updated_at) VALUES (?, ?, ?, ?, 'queued', ?, ?, ?, ?)",
+      input.id,input.integrationAccountId,input.syncType.trim(),input.direction,input.nextRunAt??null,input.correlationId,input.now,input.now);
+    return this.database.first(
+      "SELECT id, integration_account_id AS integrationAccountId, sync_type AS syncType, direction, status, cursor_reference AS cursorReference, checkpoint_reference AS checkpointReference, item_count AS itemCount, error_count AS errorCount, started_at AS startedAt, completed_at AS completedAt, next_run_at AS nextRunAt, correlation_id AS correlationId, created_at AS createdAt, updated_at AS updatedAt FROM integration_sync_jobs WHERE id = ? LIMIT 1",
+      input.id,
+    );
+  }
+
+  async setSyncJobStatus(context: RequestContext, id: EntityId, status: "queued"|"running"|"paused"|"completed"|"failed"|"cancelled", now: string) {
+    const row = await this.database.first<{ accountId: EntityId }>(
+      "SELECT integration_account_id AS accountId FROM integration_sync_jobs WHERE id = ? LIMIT 1",
+      id,
+    );
+    if (!row) throw new DatabaseError("Integration sync job not found");
+    await this.getAccount(context,row.accountId);
+    await this.database.run(
+      "UPDATE integration_sync_jobs SET status = ?, started_at = CASE WHEN ? = 'running' AND started_at IS NULL THEN ? ELSE started_at END, completed_at = CASE WHEN ? IN ('completed','failed','cancelled') THEN ? ELSE completed_at END, updated_at = ? WHERE id = ?",
+      status,status,now,status,now,now,id);
+  }
+
+  async upsertExternalReference(context: RequestContext,input:{
+    readonly id: EntityId;
+    readonly resourceType:string;
+    readonly resourceId:EntityId;
+    readonly externalType:string;
+    readonly externalReference:string;
+    readonly integrationAccountId?:EntityId;
+    readonly status?:string;
+    readonly metadata?:Readonly<Record<string,unknown>>;
+    readonly now:string;
+  }) {
+    const organizationId=this.requireOrganization({organizationId:context.tenantId});
+    if(input.integrationAccountId) await this.getAccount(context,input.integrationAccountId);
+    await this.database.run(
+      "INSERT INTO integration_external_references (id,organization_id,workspace_id,integration_account_id,resource_type,resource_id,external_type,external_reference,status,metadata_json,first_seen_at,last_seen_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(integration_account_id,external_type,external_reference) DO UPDATE SET status=excluded.status, metadata_json=excluded.metadata_json, last_seen_at=excluded.last_seen_at, updated_at=excluded.updated_at",
+      input.id,organizationId,context.workspaceId??null,input.integrationAccountId??null,input.resourceType.trim(),input.resourceId,
+      input.externalType.trim(),input.externalReference.trim(),input.status??null,input.metadata?JSON.stringify(input.metadata):null,input.now,input.now,input.now,input.now);
+  }
+
   async updateWebhookStatus(context:RequestContext,id:EntityId,status:string,now:string,errorReference?:string){
     const row=await this.database.first<{accountId:EntityId}>(
       "SELECT integration_account_id AS accountId FROM integration_webhooks WHERE id = ? LIMIT 1",id);
