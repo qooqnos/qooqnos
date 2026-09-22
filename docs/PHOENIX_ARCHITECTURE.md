@@ -166,6 +166,7 @@ The API migration catalog currently references the canonical SQL sequence throug
 0011_ai_seller_creation
 0012_ai_seller_catalog_link
 0013_ai_seller_idempotency_fingerprint
+0014_catalog_offering_integrity
 ```
 
 This is the current migration source sequence visible in apps/api/src/migrations.ts.
