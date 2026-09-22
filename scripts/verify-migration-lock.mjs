@@ -5,6 +5,19 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
+const root = process.cwd();
+const migrationDirectory = path.join(root, "migrations");
+const lockPath = path.join(migrationDirectory, "migration-lock.json");
+const migrationFilename = /^(\d+)_([a-z0-9-]+)(?:_[a-z0-9-]+)*\.sql$/i;
+
+function fail(message) {
+  throw new Error(`Migration lock verification failed: ${message}`);
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
 async function sourceMigrations() {
   const filenames = (await readdir(migrationDirectory)).filter((filename) => migrationFilename.test(filename)).sort();
 
