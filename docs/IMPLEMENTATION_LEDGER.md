@@ -24,7 +24,9 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Foundation / onboarding / identity / business / catalog SQL | 🟢 Implemented in migration sequence | migrations/0001–0005 |
 | Catalog guard/integrity migrations | 🟢 Implemented in migration sequence | migrations/0006–0008, 0014 |
 | Business category integrity hardening | 🟢 Implemented | migrations/0015_business_primary_category_integrity.sql |
-| Catalog Attribute vocabulary | 🟢 Foundation implemented | migrations/0016_catalog_attribute_vocabulary.sql; attribute value cutover remains gated |
+| Catalog Attribute vocabulary | 🟢 Foundation implemented | migrations/0016_catalog_attribute_vocabulary.sql |
+| Catalog AttributeValue storage | 🟡 Expand phase implemented | migrations/0017_catalog_attribute_values.sql; JSON backfill/cutover remains gated |
+| Catalog Attribute repositories | 🟢 Implemented | packages/catalog/src/attribute-repository.ts; packages/catalog/src/attribute-value-repository.ts |
 | Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
 | Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
 | Final physical D1 schema | ⏳ In progress | requires table-by-table reconciliation |
@@ -118,17 +120,30 @@ Commits:
 - 2a1cbae — Route legacy onboarding tests through explicit legacy boundary
 - f584d3b — Expose legacy database compatibility as explicit subpath
 - 736af81 — Map explicit legacy database subpath in TypeScript
+- e7c8b44 — Register Catalog AttributeValue migration 0017
+- 39b042d — Lock Catalog AttributeValue migration checksum
+- 97cf355 — Define canonical AttributeValue physical contract
+- 81ea5b2 — Reconcile AttributeValue storage and cutover gate
+- 11a884c — Record AttributeValue canonical data model
+- b166def — Implement Catalog AttributeValue repository
+- 6053bb8 — Export Catalog AttributeValue repository
+- b664c41 — Add Catalog AttributeValue repository tests
+- 216ccf7 — Harden migration SQL splitting for SQLite triggers
+- 0efbe5f — Add migration splitter trigger/comment tests
+- 34333c5 — Fix AttributeValue option key generation
 
 Migration safety:
-- canonical migrations 0001–0015 were not edited, renumbered or replaced;
-- migration 0016_catalog_attribute_vocabulary was added as a new Catalog-owned schema migration;
+- canonical migrations 0001–0016 were not edited, renumbered or replaced;
+- migration 0017_catalog_attribute_values was added as a new Catalog-owned expand-phase schema migration;
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
 
-Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.sql; 0015_business_primary_category_integrity.sql adds three integrity triggers and no tables; 0016_catalog_attribute_vocabulary.sql adds three Catalog Attribute tables and preserves all prior migration identities/checksums.
+Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.sql; 0015_business_primary_category_integrity.sql adds three integrity triggers and no tables; 0016_catalog_attribute_vocabulary.sql adds three Catalog Attribute tables; 0017_catalog_attribute_values.sql adds two AttributeValue tables and preserves all prior migration identities/checksums.
 
 The old in-memory database implementation is retained only as an explicit legacy compatibility module and is no longer part of the canonical @qooqnos/database root API.
+
+Migration runtime hardening: splitSqlStatements now keeps SQLite CREATE TRIGGER bodies intact across internal semicolons and rejects unterminated trigger/comment/literal blocks. Trigger-splitting regression tests were added.
 
 ## 4. Current canonical migration inventory
 
@@ -151,6 +166,7 @@ The API runtime references these migration sources:
 0014_catalog_offering_integrity.sql
 0015_business_primary_category_integrity.sql
 0016_catalog_attribute_vocabulary.sql
+0017_catalog_attribute_values.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
