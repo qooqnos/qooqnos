@@ -36,6 +36,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Booking holds / lifecycle history | 🟢 Schema/repository implemented | migrations/0030_booking_holds_history.sql; packages/booking/src/repository.ts |
 | Commerce transaction core | 🟢 Schema/package/repository implemented | migrations/0031_commerce_transaction_core.sql; migrations/0032_commerce_integrity_hardening.sql; packages/commerce/src/repository.ts; packages/commerce/src/service.ts |
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
+| Communication core | 🟢 Schema/package/repository/service implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts |
 | Trust VerificationCase / evidence | 🟢 Schema/repository implemented | migrations/0021_verification_case_and_documents.sql; packages/database/src/verification-repository.ts |
 | Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
 | Trust checks / evidence links | 🟢 Schema implemented | migrations/0023_verification_checks.sql; runtime methods in verification-repository.ts |
@@ -264,6 +265,20 @@ Commits:
 - 6eb13be — Register Billing dependency in API
 - fa9a38c — Register Billing module in API runtime
 - a552486 — Add Billing entitlement tests
+- e96ffe7 — Add Communication core migration 0035
+- fc8331f — Register Communication core migration
+- 43c4489 — Lock Communication core migration checksum
+- c8c35bf — Add Communication package manifest
+- 57c3208 — Add Communication TypeScript project
+- e162117 — Implement Communication repository
+- 4b3b275 — Implement Communication service
+- 3a40f74 — Add Communication runtime manifest
+- a8ef171 — Export Communication package
+- df51676 — Register Communication project in root graph
+- b6af4a2 — Register Communication project in API graph
+- fd73f97 — Register Communication dependency in API
+- 92ee4c2 — Register Communication module in API runtime
+- 42f8063 — Test Communication message and notification idempotency
 - 2310529 — Refresh physical reconciliation after Trust review/expiry
 - 3458d50 — Document Trust review/expiry physical contracts
 - 3ba47ec — Record Trust physical implementation status
@@ -272,8 +287,8 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0032 were not edited after registration; new schema evolution was added through new numbered migrations;
-- migrations 0024–0032 are preserved in the canonical lock sequence.
+- canonical migrations 0001–0035 remain numbered and are extended only through new migrations;
+- migrations 0024–0035 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
@@ -284,9 +299,11 @@ The old in-memory database implementation is retained only as an explicit legacy
 
 Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0032 are registered and locked in sequence. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0035 are registered and locked in sequence. Full external D1 application has not yet been executed.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
+
+Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Consent/policy/template registry and provider adapters remain operational follow-up gates.
 
 Billing note: migrations 0033–0034 establish plan/price/subscription/entitlement/usage/provider-reference/reconciliation storage plus an atomic quota counter. Billing is the commercial entitlement authority; payment execution, invoices and financial ledger remain gated.
 
@@ -341,6 +358,7 @@ The API runtime references these migration sources:
 0032_commerce_integrity_hardening.sql
 0033_billing_core.sql
 0034_billing_usage_counters.sql
+0035_communication_core.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
