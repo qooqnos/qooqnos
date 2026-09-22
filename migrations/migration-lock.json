@@ -138,7 +138,7 @@
       "id": "0020_crm_timeline_events",
       "version": 20,
       "moduleId": "crm",
-      "checksum": "eeda7d6cb21b5064d5cf6722256be51b13ac3236572cd8a73d2dae0d0c235325",
+      "checksum": "4e47590893bdc8c11e45171664f7badbb3e202ef3b35dee74a2bc39251595fa5",
       "filename": "0020_crm_timeline_events.sql"
     },
     {
