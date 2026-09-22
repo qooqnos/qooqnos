@@ -81,16 +81,26 @@ export async function dispatchQueuedNotifications(
       },
     );
 
-    await repository.markDispatchResult(
-      notification.id,
-      notification.organizationId,
-      notification.workspaceId,
-      result.status === "failed" ? "failed" : result.status === "delivered" ? "delivered" : "sent",
-      now,
-    );
-
-    if (result.status === "failed") failed += 1;
-    else delivered += 1;
+    if (result.status === "failed" && result.failureClass === "transient") {
+      await repository.requeueNotification(
+        notification.id,
+        notification.organizationId,
+        notification.workspaceId,
+        retryAt(now, notification.priority),
+        now,
+      );
+      failed += 1;
+    } else {
+      await repository.markDispatchResult(
+        notification.id,
+        notification.organizationId,
+        notification.workspaceId,
+        result.status === "failed" ? "failed" : result.status === "delivered" ? "delivered" : "sent",
+        now,
+      );
+      if (result.status === "failed") failed += 1;
+      else delivered += 1;
+    }
   }
 
   return { processed: notifications.length, delivered, failed, skipped };
@@ -109,4 +119,10 @@ function systemContext(notification: NotificationRecord) {
     timezone: "UTC",
     authenticated: true,
   };
+}
+
+
+function retryAt(now: string, priority: NotificationRecord["priority"]): string {
+  const baseMinutes = priority === "urgent" ? 1 : priority === "high" ? 2 : priority === "normal" ? 5 : 10;
+  return new Date(Date.parse(now) + baseMinutes * 60_000).toISOString();
 }
