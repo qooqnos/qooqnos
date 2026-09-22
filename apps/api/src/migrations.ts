@@ -30,6 +30,7 @@ import availabilitySchedules from "../../../migrations/0029_availability_schedul
 import bookingHoldsHistory from "../../../migrations/0030_booking_holds_history.sql";
 import commerceTransactionCore from "../../../migrations/0031_commerce_transaction_core.sql";
 import commerceIntegrityHardening from "../../../migrations/0032_commerce_integrity_hardening.sql";
+import billingCore from "../../../migrations/0033_billing_core.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -65,4 +66,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0030_booking_holds_history.sql", sql: bookingHoldsHistory },
   { path: "migrations/0031_commerce_transaction_core.sql", sql: commerceTransactionCore },
   { path: "migrations/0032_commerce_integrity_hardening.sql", sql: commerceIntegrityHardening },
+  { path: "migrations/0033_billing_core.sql", sql: billingCore },
 ];
