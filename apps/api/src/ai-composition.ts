@@ -1,7 +1,9 @@
 import {
   SellerProductService,
+  AiRuntimeRepository,
   createSellerProductSessionRepository,
   createAIRuntimeClient,
+  createPersistentAIRuntimeClient,
 } from "@qooqnos/ai";
 import type { BillingAIEntitlementService } from "@qooqnos/billing";
 import { brandId, type EntityId } from "@qooqnos/core";
@@ -39,10 +41,18 @@ export function createSellerProductService(
   });
   const runtime = createApiAIRuntime(options.env, policy, options.economics);
 
+  const id = options.id ?? (() => brandId<"EntityId">(crypto.randomUUID()));
+  const now = options.now ?? (() => new Date().toISOString());
+  const persistentRuntime = createPersistentAIRuntimeClient(
+    createAIRuntimeClient(runtime.execute),
+    new AiRuntimeRepository(options.database),
+    { id, now },
+  );
+
   return new SellerProductService({
     repository: createSellerProductSessionRepository(options.database),
-    runtime: createAIRuntimeClient(runtime.execute),
-    id: options.id ?? (() => brandId<"EntityId">(crypto.randomUUID())),
-    now: options.now ?? (() => new Date().toISOString()),
+    runtime: persistentRuntime,
+    id,
+    now,
   });
 }
