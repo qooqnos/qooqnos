@@ -408,7 +408,9 @@ Business lifecycle note: migration 0027 records immutable transitions for the ex
 
 CRM timeline note: normalized event storage and idempotent source-event handling are implemented. A separate timeline projection table remains gated pending a field-level read-model/rebuild contract.
 
-Trust note: migrations 0021–0025 implement the canonical VerificationCase → Policy/Requirement → Check/Evidence → append-only Decision → Review/Expiry chain. Reviewer authorization integration, expiry workers/events and TrustSignal projections remain gated.
+Trust note: migrations 0021–0025 implement the canonical VerificationCase → Policy/Requirement → Check/Evidence → append-only Decision → Review/Expiry chain. Reviewer authorization integration and TrustSignal projections remain gated.
+
+Trust expiry worker: scheduled Trust expiry processing is now idempotent; expired work creates an append-only system Policy Decision, marks the expiry/case state and emits `trust.verification.expired` through Outbox in one D1 batch.
 
 Migration runtime hardening: splitSqlStatements now keeps SQLite CREATE TRIGGER bodies intact across internal semicolons and rejects unterminated trigger/comment/literal blocks. Trigger-splitting regression tests were added.
 
