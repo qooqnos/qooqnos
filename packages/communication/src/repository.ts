@@ -198,7 +198,9 @@ export class CommunicationRepository extends Repository {
       "UPDATE communication_notifications SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND ((workspace_id IS NULL AND ? IS NULL) OR workspace_id = ?)",
       status, now, id, current.organizationId, current.workspaceId, current.workspaceId,
     );
-    return this.getNotification(context, id);
+    const updated = await this.getNotification(context, id);
+    if (!updated) throw new DatabaseError("Communication notification not found after status update");
+    return updated;
   }
 
   async getNotification(context: RequestContext, id: EntityId): Promise<NotificationRecord | null> {
