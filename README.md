@@ -30,7 +30,7 @@ SQL migrations live under migrations/ and are the only source of migration conte
 The current API migration sequence is:
 
 ```text
-0001_foundation … 0047_booking_capacity_update_guards
+0001_foundation … 0048_reviews_moderation_reputation
 ```
 
 See `apps/api/src/migrations.ts` and `migrations/migration-lock.json` for the authoritative ordered sequence.
@@ -61,6 +61,6 @@ Do not add a parallel TypeScript migration source.
 
 ## Current database state
 
-The logical model is broader than the physically migrated schema, but the current canonical D1 sequence now covers the core platform domains through migration `0047`. Remaining work is primarily operational execution, derived projections, provider adapters and explicitly gated contracts.
+The logical model is broader than the physically migrated schema, but the current canonical D1 sequence now covers the core platform domains through migration `0048`. Remaining work is primarily operational execution, derived projections, provider adapters and explicitly gated contracts.
 
 Do not treat historical phase documents as current architecture.
