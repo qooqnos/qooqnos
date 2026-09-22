@@ -267,19 +267,20 @@ Communication consumes domain events/capabilities. It must not create shadow Boo
 
 | Relationship | Cardinality | Owner | Physical shape | Delete | Tenant rule |
 |---|---|---|---|---|---|
-| Agent → AIRun | 1:0..N | AI | `ai_runs.agent_id` | RETAIN/retention policy | workspace scope |
-| AIConversation → AIMessage | 1:0..N | AI | FK | retention policy | conversation scope |
-| AIRun → ToolCall | 1:0..N | AI | `ai_tool_calls.ai_run_id` | RETAIN/audit policy | same run |
-| Agent → Tool | N:N | AI | junction | remove junction | same scope/approved tool |
-| Tool → Capability | N:1 | AI/Platform contract | capability ID/version | RESTRICT | canonical capability |
-| AI Memory → owner scope | N:1 | AI | explicit owner scope | expiry/delete | tenant isolation |
+| AI Operation → ProviderAttempt | 1:0..N | AI Runtime | `ai_provider_attempts.operation_id` | RETAIN/retention policy | same operation scope |
+| AI Operation → RuntimeResult | 1:0..1 | AI Runtime | `ai_runtime_results.operation_id` UNIQUE | RETAIN/audit policy | same operation |
+| AI Operation → UsageRecord | 1:0..N | AI Runtime | `ai_usage_records.operation_id` | RETAIN/usage policy | same tenant |
+| AI Operation → PolicyDecision | 1:0..N | AI Runtime | `ai_policy_decisions.operation_id` | RETAIN/audit policy | same tenant |
+| AI Operation → RoutingDecision | 1:0..N | AI Runtime | `ai_model_routing_decisions.operation_id` | RETAIN/audit policy | same tenant |
+| AI Prompt → PromptVersion | 1:1..N | AI Runtime | `ai_prompt_versions.prompt_id` | RETAIN/HISTORICAL | platform/runtime scope |
+| AI Schema → SchemaVersion | 1:1..N | AI Runtime | `ai_schema_versions.schema_id` | RETAIN/HISTORICAL | platform/runtime scope |
 
 ### AI invariants
 
 - AI has no direct authoritative relationship to mutate Booking/Order/Business/etc.
-- ToolCall identifies the Capability contract invoked.
-- AI memory can reference domain entities for context, but memory itself is never domain truth.
-- Model/prompt/policy versions needed for auditability are captured on AI runs.
+- Capability invocations are recorded as operation/provenance evidence; they do not create a second execution ledger.
+- Durable AI memory remains a separate gated contract.
+- Model/prompt/schema/policy versions needed for auditability are captured on the canonical Runtime records.
 
 ---
 
@@ -287,11 +288,12 @@ Communication consumes domain events/capabilities. It must not create shadow Boo
 
 | Relationship | Cardinality | Owner | Physical shape | Delete | Tenant rule |
 |---|---|---|---|---|---|
-| Workflow → Trigger | 1:1..N | Automation | FK | CASCADE before enable; retain history | workspace |
-| Workflow → Action | 1:1..N | Automation | FK | controlled lifecycle | workspace |
-| Workflow → Execution | 1:0..N | Automation | FK | RETAIN/operational policy | workspace |
-| Event → Trigger | 1:0..N | Automation | event key/version reference | no ownership transfer | tenant validated |
-| Action → Capability | N:1 | Automation | capability ID/version | RESTRICT | canonical capability |
+| Workflow → Version | 1:1..N | Automation | `automation_workflow_versions.workflow_id` | RETAIN/HISTORICAL | scope of workflow |
+| WorkflowVersion → Trigger | 1:0..N | Automation | `automation_triggers.workflow_version_id` | RETAIN | workflow scope |
+| WorkflowVersion → Action | 1:0..N | Automation | `automation_actions.workflow_version_id` | RETAIN | workflow scope |
+| Workflow → Execution | 1:0..N | Automation | `automation_executions.workflow_id` | RETAIN | workflow scope |
+| StepExecution → Attempt | 1:0..N | Automation | `automation_execution_attempts.step_execution_id` | RETAIN | execution scope |
+| Execution → ApprovalReference | 1:0..N | Automation | `automation_approval_references.execution_id` | RETAIN | execution scope |
 
 Automation orchestrates capabilities; it never becomes a second implementation of their business rules.
 
