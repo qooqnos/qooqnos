@@ -2,7 +2,7 @@ import type { EntityId, RequestContext } from "@qooqnos/core";
 import { VerificationRepository } from "@qooqnos/database";
 import { DatabaseError } from "@qooqnos/database";
 import type { AuthorizationService } from "@qooqnos/runtime";
-import { TrustReviewRepository } from "./repository";
+import { TrustReviewRepository, type ReviewTargetType } from "./repository";
 
 export interface TrustServiceOptions {
   readonly repository: TrustReviewRepository;
