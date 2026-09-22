@@ -117,6 +117,7 @@ export function splitSqlStatements(sql: string): string[] {
 
   for (let index = 0; index < sql.length; index += 1) {
     const character = sql[index];
+    if (character === undefined) continue;
     const next = sql[index + 1];
 
     if (lineComment) {
