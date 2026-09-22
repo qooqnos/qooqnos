@@ -98,6 +98,8 @@ Commits:
 - a10e19a — Remove PostgreSQL adapter
 - aa595ad — Remove PostgreSQL database compatibility layer
 - 4b3eee2 — Restore canonical runtime public exports
+- 0a99e24 — Add canonical physical database reconciliation
+- 0ff5dac — Reference physical database reconciliation gate
 
 Migration safety:
 - canonical migrations 0001–0013 were not edited, renumbered or replaced;
