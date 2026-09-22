@@ -50,5 +50,6 @@
     {
       "path": "./packages/onboarding"
     }
-  ]
+  ],
+  "files": []
 }
