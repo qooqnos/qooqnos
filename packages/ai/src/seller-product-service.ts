@@ -134,6 +134,24 @@ export class SellerProductService extends SellerProductSessionService {
     if (!session) throw new Error("Seller product creation session not found");
 
     const aggregateInputHash = inputs.map((input) => input.inputHash).join("|");
+
+    if (session.currentDraftVersion > 0) {
+      const persistedDraft = await this.getDraft(context, sessionId);
+      if (persistedDraft) {
+        return {
+          operationId: request.operationId,
+          operationType: SELLER_AI_OPERATION_TYPES.extract,
+          operationVersion: 1,
+          status: "succeeded",
+          output: persistedDraft as T,
+          safetyDecision: "allowed",
+          provenance: "ai_extracted",
+          warnings: ["replayed_from_persisted_draft"],
+          retryable: false,
+        };
+      }
+    }
+
     const result = await this.productOptions.runtime.execute<T>({
       ...request,
       context,
