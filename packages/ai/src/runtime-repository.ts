@@ -1,0 +1,150 @@
+import type { EntityId, RequestContext } from "@qooqnos/core";
+import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
+
+export interface AiOperationRecord {
+  readonly id: EntityId;
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId | null;
+  readonly operationType: string;
+  readonly operationVersion: number;
+  readonly requestId: string;
+  readonly correlationId: string;
+  readonly idempotencyKey: string;
+  readonly status: string;
+  readonly inputReference: string | null;
+  readonly outputReference: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface AiProviderAttemptRecord {
+  readonly id: EntityId;
+  readonly operationId: EntityId;
+  readonly attemptNumber: number;
+  readonly providerId: EntityId;
+  readonly modelId: EntityId | null;
+  readonly status: string;
+  readonly providerRequestId: string | null;
+  readonly startedAt: string;
+  readonly completedAt: string | null;
+  readonly latencyMs: number | null;
+  readonly inputUnits: number | null;
+  readonly outputUnits: number | null;
+}
+
+export interface CreateAiOperationInput {
+  readonly id: EntityId;
+  readonly operationTypeId: EntityId;
+  readonly operationType: string;
+  readonly operationVersion: number;
+  readonly requestId: string;
+  readonly correlationId: string;
+  readonly idempotencyKey: string;
+  readonly inputReference?: string;
+  readonly inputHash?: string;
+  readonly promptReference?: string;
+  readonly schemaReference?: string;
+  readonly policyReference?: string;
+  readonly modelSelectionReference?: string;
+  readonly now: string;
+}
+
+export class AiRuntimeRepository extends Repository {
+  constructor(database: D1Database) { super(database); }
+
+  async createOperation(context: RequestContext, input: CreateAiOperationInput): Promise<AiOperationRecord> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const existing = await this.database.first<AiOperationRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE organization_id = ? AND idempotency_key = ? LIMIT 1",
+      organizationId,
+      input.idempotencyKey,
+    );
+    if (existing) return existing;
+    await this.database.run(
+      "INSERT INTO ai_operations (id, operation_type_id, operation_type, operation_version, organization_id, workspace_id, actor_id, request_id, correlation_id, idempotency_key, status, input_reference, input_hash, prompt_reference, schema_reference, policy_reference, model_selection_reference, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created', ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id, input.operationTypeId, input.operationType, input.operationVersion, organizationId, context.workspaceId ?? null, context.actorId ?? null,
+      input.requestId, input.correlationId, input.idempotencyKey, input.inputReference ?? null, input.inputHash ?? null,
+      input.promptReference ?? null, input.schemaReference ?? null, input.policyReference ?? null, input.modelSelectionReference ?? null,
+      input.now, input.now,
+    );
+    return this.getOperation(context, input.id);
+  }
+
+  async getOperation(context: RequestContext, id: EntityId): Promise<AiOperationRecord> {
+    const row = await this.database.first<AiOperationRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
+      id,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+    );
+    if (!row) throw new DatabaseError("AI operation not found");
+    return row;
+  }
+
+  async setOperationStatus(context: RequestContext, id: EntityId, status: string, now: string, outputReference?: string) {
+    const current = await this.getOperation(context, id);
+    await this.database.run(
+      "UPDATE ai_operations SET status = ?, output_reference = COALESCE(?, output_reference), updated_at = ? WHERE id = ?",
+      status, outputReference ?? null, now, id,
+    );
+    return this.getOperation(context, current.id);
+  }
+
+  async recordProviderAttempt(context: RequestContext, input: {
+    readonly id: EntityId; readonly operationId: EntityId; readonly attemptNumber: number;
+    readonly providerId: EntityId; readonly modelId?: EntityId; readonly status: string;
+    readonly providerRequestId?: string; readonly requestReference?: string; readonly responseReference?: string;
+    readonly startedAt: string; readonly completedAt?: string; readonly latencyMs?: number;
+    readonly inputUnits?: number; readonly outputUnits?: number;
+    readonly now: string;
+  }): Promise<AiProviderAttemptRecord> {
+    const operation = await this.getOperation(context, input.operationId);
+    await this.database.run(
+      "INSERT INTO ai_provider_attempts (id, operation_id, attempt_number, provider_id, model_id, provider_request_id, request_reference, response_reference, status, started_at, completed_at, latency_ms, input_units, output_units) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id, operation.id, input.attemptNumber, input.providerId, input.modelId ?? null, input.providerRequestId ?? null,
+      input.requestReference ?? null, input.responseReference ?? null, input.status, input.startedAt, input.completedAt ?? null,
+      input.latencyMs ?? null, input.inputUnits ?? null, input.outputUnits ?? null,
+    );
+    const row = await this.database.first<AiProviderAttemptRecord>(
+      "SELECT id, operation_id AS operationId, attempt_number AS attemptNumber, provider_id AS providerId, model_id AS modelId, status, provider_request_id AS providerRequestId, started_at AS startedAt, completed_at AS completedAt, latency_ms AS latencyMs, input_units AS inputUnits, output_units AS outputUnits FROM ai_provider_attempts WHERE id = ? LIMIT 1",
+      input.id,
+    );
+    if (!row) throw new DatabaseError("AI provider attempt not found after creation");
+    return row;
+  }
+
+  async recordResult(context: RequestContext, input: {
+    readonly id: EntityId; readonly operationId: EntityId; readonly status: "succeeded"|"partially_succeeded"|"failed"|"blocked"|"abstained";
+    readonly validatedOutputReference?: string; readonly schemaVersionReference?: string;
+    readonly providerId?: EntityId; readonly modelId?: EntityId; readonly safetyOutcome?: string;
+    readonly provenance?: readonly string[]; readonly warnings?: readonly string[]; readonly abstention?: Readonly<Record<string, unknown>>;
+    readonly attemptSummary?: Readonly<Record<string, unknown>>; readonly errorClassification?: string; readonly now: string;
+  }) {
+    await this.getOperation(context, input.operationId);
+    await this.database.run(
+      "INSERT INTO ai_runtime_results (id, operation_id, status, validated_output_reference, schema_version_reference, provider_id, model_id, safety_outcome, provenance_json, warnings_json, abstention_json, attempt_summary_json, error_classification, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id, input.operationId, input.status, input.validatedOutputReference ?? null, input.schemaVersionReference ?? null,
+      input.providerId ?? null, input.modelId ?? null, input.safetyOutcome ?? null,
+      input.provenance ? JSON.stringify(input.provenance) : null, input.warnings ? JSON.stringify(input.warnings) : null,
+      input.abstention ? JSON.stringify(input.abstention) : null, input.attemptSummary ? JSON.stringify(input.attemptSummary) : null,
+      input.errorClassification ?? null, input.now,
+    );
+    await this.setOperationStatus(context, input.operationId, input.status === "succeeded" ? "succeeded" : input.status, input.now, input.validatedOutputReference);
+  }
+
+  async recordUsage(context: RequestContext, input: {
+    readonly id: EntityId; readonly operationId: EntityId; readonly attemptId?: EntityId;
+    readonly operationType: string; readonly operationVersion: number; readonly meterUnit: string; readonly quantity: number;
+    readonly providerId?: EntityId; readonly modelId?: EntityId; readonly entitlementDecisionReference?: string;
+    readonly billingUsageReference?: string; readonly idempotencyKey: string; readonly now: string;
+  }): Promise<void> {
+    const operation = await this.getOperation(context, input.operationId);
+    if (!Number.isSafeInteger(input.quantity) || input.quantity < 0) throw new DatabaseError("AI usage quantity must be a non-negative integer");
+    await this.database.run(
+      "INSERT OR IGNORE INTO ai_usage_records (id, operation_id, attempt_id, organization_id, workspace_id, actor_id, operation_type, operation_version, meter_unit, quantity, provider_id, model_id, usage_status, idempotency_key, entitlement_decision_reference, billing_usage_reference, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'recorded', ?, ?, ?, ?)",
+      input.id, input.operationId, input.attemptId ?? null, operation.organizationId, operation.workspaceId ?? null, context.actorId ?? null,
+      input.operationType, input.operationVersion, input.meterUnit, input.quantity, input.providerId ?? null, input.modelId ?? null,
+      input.idempotencyKey, input.entitlementDecisionReference ?? null, input.billingUsageReference ?? null, input.now,
+    );
+  }
+}
