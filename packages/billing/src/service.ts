@@ -87,6 +87,7 @@ export class BillingService implements BillingAIEntitlementService {
       periodKey,
       sourceEventId: input.idempotencyKey,
       correlationId: input.context.correlationId,
+      fallbackLimit: Number(snapshot.value),
       now: this.options.now(),
     });
 
