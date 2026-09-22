@@ -903,8 +903,8 @@ function normalizeCurrency(value: string): string {
 }
 
 function validateMoney(value: number, field: string, allowNegative = false): void {
-  if (!Number.isSafeInteger(value)) throw new DatabaseError(\`Commerce \${field} must be an integer minor-unit value\`);
-  if (!allowNegative && value < 0) throw new DatabaseError(\`Commerce \${field} cannot be negative\`);
+  if (!Number.isSafeInteger(value)) throw new DatabaseError(`Commerce ${field} must be an integer minor-unit value`);
+  if (!allowNegative && value < 0) throw new DatabaseError(`Commerce ${field} cannot be negative`);
 }
 
 function isTerminalOrderStatus(status: OrderStatus): boolean {
