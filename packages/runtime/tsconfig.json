@@ -18,6 +18,7 @@
   ],
   "exclude": [
     "src/server.ts",
-    "src/server.test.ts"
+    "src/server.test.ts",
+    "src/legacy-server.ts"
   ]
 }
