@@ -24,6 +24,6 @@
     {"id":"0021_verification_case_and_documents","version":21,"moduleId":"trust","checksum":"badbd2be394b7e79dc9c73384babedf32baac694b6f03cbfb0fbafcf764bc814","filename":"0021_verification_case_and_documents.sql"},
     {"id":"0022_verification_policy_requirements","version":22,"moduleId":"trust","checksum":"c12aa0bb7798e81e6256890ff7268d0b58a69874d1420d29e25e0800119f13fc","filename":"0022_verification_policy_requirements.sql"},
     {"id":"0023_verification_checks","version":23,"moduleId":"trust","checksum":"20826f965b790d7a20098ec3f974518280a1171f64af03d3143375afe71b6a6e","filename":"0023_verification_checks.sql"},
-    {"id":"0024_verification_decisions","version":24,"moduleId":"trust","checksum":"7641cd12310b68e8bf08e27acd1bcb31728560f67c4c9bb8beb3208ad52a5f37","filename":"0024_verification_decisions.sql"}
+    {"id":"0024_verification_decisions","version":24,"moduleId":"trust","checksum":"bb43d2316a51f547e453f5f9ee710a03927a091bf6857f5774e7374eb6232e48","filename":"0024_verification_decisions.sql"}
   ]
 }
