@@ -314,6 +314,12 @@ A separate `crm_timeline_projections` table is intentionally not physicalized ye
 
 ## 8. Booking / Availability
 
+### `booking_status_history`
+
+`id`, booking_id, from_status?, to_status, changed_at, created_at.
+
+Immutable lifecycle history belongs to Booking and must not replace the authoritative current `bookings.status` field.
+
 ### `bookings`
 
 Required canonical fields:
