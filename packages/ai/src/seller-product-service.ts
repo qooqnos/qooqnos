@@ -130,11 +130,14 @@ export class SellerProductService extends SellerProductSessionService {
   ): Promise<AIResult<T>> {
     const inputs = await this.getInputs(context, sessionId);
     if (inputs.length === 0) throw new Error("Seller product creation session has no persisted inputs");
+    const session = await this.getSession(context, sessionId);
+    if (!session) throw new Error("Seller product creation session not found");
 
     const aggregateInputHash = inputs.map((input) => input.inputHash).join("|");
     const result = await this.productOptions.runtime.execute<T>({
       ...request,
       context,
+      ...(session.businessId ? { businessId: session.businessId } : {}),
       sessionId,
       operationType: SELLER_AI_OPERATION_TYPES.extract,
       operationVersion: 1,
