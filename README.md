@@ -51,16 +51,9 @@ The runtime derives migration metadata from the canonical SQL, verifies the migr
 
 Do not create a second database architecture.
 
-The following old PostgreSQL-oriented files are historical compatibility artifacts:
+The old PostgreSQL-oriented database implementation has been removed from the active source tree. References to it remain only in historical commits and superseded phase documents.
 
-- packages/database/src/postgres-adapter.ts
-- packages/database/src/postgres-database.ts
-- the old PostgreSQL-style migration implementation
-- old USE_POSTGRES / SQLite instructions
-
-Do not extend them for new capabilities.
-
-Do not recreate migrations/0001_schema.sql.
+Do not recreate the PostgreSQL adapter, USE_POSTGRES production switch, SQLite schema path, or migrations/0001_schema.sql.
 
 Do not add a parallel TypeScript migration source.
 

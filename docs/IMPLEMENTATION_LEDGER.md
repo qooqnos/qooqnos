@@ -73,6 +73,34 @@ Required future sequence:
 5. remove or isolate the legacy PostgreSQL files;
 6. update this ledger with the resulting commit.
 
+## 3.1 Database runtime reconciliation — 2026-09-22
+
+**Status:** ✅ Completed
+
+The database package has been converged onto the canonical D1 runtime contract.
+
+Implemented:
+- MigrationDefinition and MigrationResult are now the sole migration runtime model.
+- MigrationRunner executes canonical SQL statements through D1 batches.
+- Applied migration history is checked for contiguous versions, identity, module ownership and checksum integrity.
+- Missing schema_migrations is supported for the first migration bootstrap without creating a competing registry.
+- packages/database/src/index.ts exposes the canonical D1 database, repository, migration-catalog and migration-lock APIs.
+- Legacy PostgreSQL adapter, PostgreSQL compatibility layer, legacy database repository and legacy database factory were removed from the active source tree.
+
+Commits:
+- 7b9d28c — Converge migration runner on D1 contract
+- fe3bf8f — Expose canonical D1 database APIs
+- f6960d8 — Remove legacy database exports from runtime
+- eb5be40 — Remove legacy database factory
+- b128b12 — Remove legacy database repository
+- a10e19a — Remove PostgreSQL adapter
+- aa595ad — Remove PostgreSQL database compatibility layer
+
+Migration safety:
+- canonical migrations 0001–0013 were not edited, renumbered or replaced;
+- the committed migration lock remains the integrity source for canonical SQL;
+- no second schema registry was introduced.
+
 ## 4. Current canonical migration inventory
 
 The API runtime references these migration sources:

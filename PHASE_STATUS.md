@@ -72,19 +72,13 @@ The API runtime currently references:
 
 Do not renumber or replace these migrations.
 
-## 5. Legacy implementation that must not be extended
+## 5. Legacy implementation reconciliation
 
-The following are retained only as reconciliation targets:
+The historical PostgreSQL-oriented implementation has been removed from the active source tree after consumer inspection.
 
-- packages/database/src/postgres-adapter.ts
-- packages/database/src/postgres-database.ts
-- the legacy PostgreSQL/SQLite migration implementation
-- old README/phase instructions for USE_POSTGRES
-- old references to migrations/0001_schema.sql
+Historical references remain only in git history and superseded phase documents. They are not part of the current database API and must not be recreated.
 
-Their existence does not authorize new database work against them.
-
-A future cleanup task must first identify active consumers, replace them with the D1 boundary, verify tests/build/runtime, and only then delete or archive the legacy surface.
+The reconciliation did not modify, renumber, or rewrite any canonical migration in migrations/.
 
 ## 6. Current architecture gate for database work
 
