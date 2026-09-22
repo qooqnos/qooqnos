@@ -131,7 +131,7 @@
       "id": "0019_crm_customer_relationships",
       "version": 19,
       "moduleId": "crm",
-      "checksum": "20a6c3212b6e19beeaa960f3c569008638399574807a30c1708bbb0e2bf1a976",
+      "checksum": "88643d1daa67dd0a0fb6055f9a7e8a84d713ea74b8367b9ca426fbe7b5ad49b1",
       "filename": "0019_crm_customer_relationships.sql"
     },
     {
