@@ -28,6 +28,7 @@
     {"id":"0025_verification_review_expiry","version":25,"moduleId":"trust","checksum":"9ec06e6ab162fa8953b0c1c1f10fb6c5ce9a6353b40197f4a0cd72bb6dda2a4f","filename":"0025_verification_review_expiry.sql"},
     {"id":"0026_customer_addresses","version":26,"moduleId":"customer","checksum":"05a010c736c414bd5cf2851e83f0f7454678a34a3d21d21b6db11b7af80b9b43","filename":"0026_customer_addresses.sql"},
     {"id":"0027_business_status_history","version":27,"moduleId":"business","checksum":"1d3189e9b1060d73fff1934672404d61d5ff7f5f7c5951fa20f42f0b6ff533af","filename":"0027_business_status_history.sql"},
-    {"id":"0028_booking_core","version":28,"moduleId":"booking","checksum":"eac7d712995052dd58a99b675fddc7302bb4451c841f9810c83454a1120e79e3","filename":"0028_booking_core.sql"}
+    {"id":"0028_booking_core","version":28,"moduleId":"booking","checksum":"eac7d712995052dd58a99b675fddc7302bb4451c841f9810c83454a1120e79e3","filename":"0028_booking_core.sql"},
+    {"id":"0029_availability_schedules","version":29,"moduleId":"booking","checksum":"e92cb816e25a5b4a8ece94f71f06e248a4e1801f85d465ea919053731d9ec8d5","filename":"0029_availability_schedules.sql"}
   ]
 }
