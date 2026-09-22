@@ -7,7 +7,7 @@ import type { D1Database } from "@qooqnos/database";
 import { createAuthorizationService } from "@qooqnos/runtime";
 import { createSellerProductService } from "./ai-composition";
 import { validateSellerProductOutput, validateSellerProductSafety } from "./ai-validation";
-import { createUnavailableBillingAIEntitlementService } from "./billing";
+import { BillingRepository, BillingService } from "@qooqnos/billing";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
@@ -511,7 +511,11 @@ function createSellerProductServiceForRequest(database: D1Database | undefined, 
     env,
     database,
     authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
-    billing: createUnavailableBillingAIEntitlementService(),
+    billing: new BillingService({
+      repository: new BillingRepository(database),
+      id: () => crypto.randomUUID(),
+      now: () => new Date().toISOString(),
+    }),
     validateOutput: validateSellerProductOutput,
     validateSafety: validateSellerProductSafety,
   });
