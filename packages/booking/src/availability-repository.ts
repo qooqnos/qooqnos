@@ -95,8 +95,6 @@ export class AvailabilityRepository extends Repository {
   }
 
   async createSchedule(context: RequestContext, input: CreateScheduleInput): Promise<ScheduleRecord> {
-    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
-    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
     await this.database.run(
       "INSERT INTO schedules (id, business_id, location_id, resource_id, timezone, recurrence_definition, booking_horizon_minutes, lead_time_minutes, buffer_before_seconds, buffer_after_seconds, status, version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?)",
       input.id,
