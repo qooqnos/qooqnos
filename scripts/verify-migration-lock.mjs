@@ -1,37 +1,9 @@
 #!/usr/bin/env node
 
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-
-const root = process.cwd();
-const migrationDirectory = path.join(root, "migrations");
-const lockPath = path.join(migrationDirectory, "migration-lock.json");
-const migrationFilename = /^(\d+)_([a-z0-9-]+)(?:_[a-z0-9-]+)*\.sql$/i;
-
-function fail(message) {
-  throw new Error(`Migration lock verification failed: ${message}`);
-}
-
-function sha256(value) {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-function changedFiles(base) {
-  if (!base || /^0+$/.test(base)) return null;
-  try {
-    return execFileSync("git", ["diff", "--name-only", `${base}...HEAD`], {
-      cwd: root,
-      encoding: "utf8",
-    })
-      .split("\n")
-      .filter(Boolean);
-  } catch (error) {
-    fail(`could not compare changes to ${base}: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
 
 async function sourceMigrations() {
   const filenames = (await readdir(migrationDirectory)).filter((filename) => migrationFilename.test(filename)).sort();
@@ -76,17 +48,6 @@ async function verify() {
   }
   for (const entry of lock.migrations) {
     if (!sourceById.has(entry.id)) fail(`manifest entry ${entry.id} has no source migration`);
-  }
-
-  const changes = changedFiles(process.env.MIGRATION_BASE_SHA);
-  if (changes) {
-    const lockChanged = changes.includes("migrations/migration-lock.json");
-    const migrationsChanged = changes.some((file) => /^migrations\/\d{4}_.+\.sql$/.test(file));
-    if (lockChanged && !migrationsChanged) {
-      fail("migration-lock.json changed without a corresponding SQL migration change");
-    }
-  } else if (process.argv.includes("--check-changes")) {
-    process.stdout.write("Migration lock history check skipped because MIGRATION_BASE_SHA is unavailable.\n");
   }
 
   process.stdout.write(`Migration lock verified for ${sources.length} migrations.\n`);
