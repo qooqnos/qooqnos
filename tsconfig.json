@@ -15,6 +15,7 @@
     { "path": "./packages/commerce" },
     { "path": "./packages/billing" },
     { "path": "./packages/communication" },
+    { "path": "./packages/automation" },
     { "path": "./packages/api" },
     { "path": "./packages/i18n" },
     { "path": "./packages/onboarding" }
