@@ -228,6 +228,18 @@ compliance
 
 Evidence binary data is in protected R2; D1 stores metadata/reference/checksum/expiry/classification/retention metadata.
 
+## 9.1 Demand and matching
+
+Phoenix treats customer demand as canonical domain state before retrieval/ranking.
+
+- `demand_requests`: customer demand intake and normalized-demand lifecycle.
+- `demand_profiles`: versioned normalized demand representation.
+- `match_requests`: one explicit matching execution intent.
+- `match_candidates`: typed Business/Offering candidates referencing canonical supply.
+- `match_decisions`: immutable selection/exclusion decisions.
+
+Search documents, embeddings and ranking features remain derived discovery projections. Matching does not duplicate Business/Catalog truth.
+
 ## 10. Discovery and search projections
 
 The source of truth remains Business/Catalog/Verification data. Discovery owns derived records such as:
