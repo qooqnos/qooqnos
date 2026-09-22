@@ -22,6 +22,15 @@ export interface BusinessRecord {
   readonly updatedAt: string;
 }
 
+export interface BusinessStatusHistoryRecord {
+  readonly id: EntityId;
+  readonly businessId: EntityId;
+  readonly fromStatus: BusinessStatus | null;
+  readonly toStatus: BusinessStatus;
+  readonly changedAt: string;
+  readonly createdAt: string;
+}
+
 export interface CreateBusinessInput {
   readonly id: EntityId;
   readonly organizationId: EntityId;
@@ -180,6 +189,56 @@ export class BusinessRepository extends Repository {
     const updated = await this.get(context, id);
     if (!updated) throw new DatabaseError("Business not found after update");
     return updated;
+  }
+
+  async setStatus(
+    context: RequestContext,
+    id: EntityId,
+    status: BusinessStatus,
+    now: string,
+    historyId: EntityId = id + ":status:" + now,
+  ): Promise<BusinessRecord> {
+    const current = await this.get(context, id);
+    if (!current) throw new DatabaseError("Business not found");
+    if (current.status === status) return current;
+
+    await this.database.run(
+      "UPDATE businesses SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?",
+      status,
+      now,
+      id,
+      current.organizationId,
+      current.workspaceId,
+    );
+
+    await this.database.run(
+      "INSERT INTO business_status_history (id, business_id, from_status, to_status, changed_at, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+      historyId,
+      id,
+      current.status,
+      status,
+      now,
+      now,
+    );
+
+    const updated = await this.get(context, id);
+    if (!updated) throw new DatabaseError("Business not found after status update");
+    return updated;
+  }
+
+  async listStatusHistory(
+    context: RequestContext,
+    id: EntityId,
+    limit = 100,
+  ): Promise<readonly BusinessStatusHistoryRecord[]> {
+    const current = await this.get(context, id);
+    if (!current) throw new DatabaseError("Business not found");
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+    return this.database.all<BusinessStatusHistoryRecord>(
+      "SELECT id, business_id AS businessId, from_status AS fromStatus, to_status AS toStatus, changed_at AS changedAt, created_at AS createdAt FROM business_status_history WHERE business_id = ? ORDER BY changed_at DESC, id DESC LIMIT ?",
+      id,
+      safeLimit,
+    );
   }
 
   async setPublicationStatus(context: RequestContext, id: EntityId, status: PublicationStatus, now: string): Promise<BusinessRecord> {
