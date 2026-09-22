@@ -197,6 +197,13 @@ export interface VerificationExpiryRecord {
   readonly updatedAt: string;
 }
 
+
+export interface VerificationExpiryWorkItem extends VerificationExpiryRecord {
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId | null;
+  readonly policyVersion: string;
+}
+
 export interface CreateVerificationReviewInput {
   readonly id: EntityId;
   readonly caseId: EntityId;
@@ -586,6 +593,83 @@ export class VerificationRepository extends Repository {
       this.requireWorkspace({ workspaceId: context.workspaceId }),
       safeLimit,
     );
+  }
+
+
+  async listPendingExpiryWorkItems(limit = 100): Promise<readonly VerificationExpiryWorkItem[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+    return this.database.all<VerificationExpiryWorkItem>(
+      "SELECT ve.id, ve.case_id AS caseId, ve.requirement_id AS requirementId, ve.evidence_id AS evidenceId, ve.expires_at AS expiresAt, ve.detected_at AS detectedAt, ve.reevaluation_status AS reevaluationStatus, ve.resulting_decision_id AS resultingDecisionId, ve.created_at AS createdAt, ve.updated_at AS updatedAt, vc.organization_id AS organizationId, vc.workspace_id AS workspaceId, vc.policy_version AS policyVersion FROM verification_expiries ve INNER JOIN verification_cases vc ON vc.id = ve.case_id WHERE ve.reevaluation_status = 'pending' AND ve.expires_at <= CURRENT_TIMESTAMP ORDER BY ve.expires_at ASC, ve.id ASC LIMIT ?",
+      safeLimit,
+    );
+  }
+
+  async resolveExpiryAsExpired(
+    input: {
+      readonly expiryId: EntityId;
+      readonly decisionId: EntityId;
+      readonly detectedAt: string;
+      readonly rationaleReference: string;
+      readonly now: string;
+      readonly correlationId: string;
+      readonly actorReference?: string | undefined;
+    },
+  ): Promise<boolean> {
+    const expiry = await this.database.first<VerificationExpiryWorkItem>(
+      "SELECT ve.id, ve.case_id AS caseId, ve.requirement_id AS requirementId, ve.evidence_id AS evidenceId, ve.expires_at AS expiresAt, ve.detected_at AS detectedAt, ve.reevaluation_status AS reevaluationStatus, ve.resulting_decision_id AS resultingDecisionId, ve.created_at AS createdAt, ve.updated_at AS updatedAt, vc.organization_id AS organizationId, vc.workspace_id AS workspaceId, vc.policy_version AS policyVersion FROM verification_expiries ve INNER JOIN verification_cases vc ON vc.id = ve.case_id WHERE ve.id = ? LIMIT 1",
+      input.expiryId,
+    );
+    if (!expiry) throw new DatabaseError("Verification expiry not found");
+    if (expiry.reevaluationStatus !== "pending") return false;
+    if (input.detectedAt < expiry.expiresAt) throw new DatabaseError("Verification expiry cannot be resolved before expiry");
+
+    const statements = [
+      {
+        sql: "INSERT OR IGNORE INTO verification_decisions (id, case_id, requirement_id, outcome, actor_type, actor_id, rationale_reference, policy_version, decided_at, created_at) VALUES (?, ?, ?, 'expired', 'system_policy', ?, ?, ?, ?, ?)",
+        params: [
+          input.decisionId,
+          expiry.caseId,
+          expiry.requirementId,
+          input.actorReference ?? null,
+          input.rationaleReference,
+          expiry.policyVersion,
+          input.detectedAt,
+          input.now,
+        ],
+      },
+      {
+        sql: "UPDATE verification_expiries SET reevaluation_status = 'evaluated', resulting_decision_id = ?, updated_at = ? WHERE id = ? AND reevaluation_status = 'pending'",
+        params: [input.decisionId, input.now, input.expiryId],
+      },
+      {
+        sql: "UPDATE verification_cases SET status = 'expired', resolved_at = ?, updated_at = ? WHERE id = ? AND status NOT IN ('expired','rejected')",
+        params: [input.detectedAt, input.now, expiry.caseId],
+      },
+      {
+        sql: "INSERT INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at) VALUES (?, 'trust.verification.expired', 1, 'VerificationCase', ?, ?, ?, ?, 'pending', 0, ?, ?)",
+        params: [
+          expiry.expiryId + ":expired",
+          expiry.caseId,
+          expiry.organizationId,
+          expiry.workspaceId,
+          JSON.stringify({
+            expiryId: expiry.id,
+            caseId: expiry.caseId,
+            requirementId: expiry.requirementId,
+            evidenceId: expiry.evidenceId,
+            decisionId: input.decisionId,
+            expiresAt: expiry.expiresAt,
+            detectedAt: input.detectedAt,
+            correlationId: input.correlationId,
+          }),
+          input.now,
+          input.detectedAt,
+        ],
+      },
+    ];
+
+    await this.database.transaction(statements);
+    return true;
   }
 
   async createCase(
