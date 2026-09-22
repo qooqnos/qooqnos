@@ -34,6 +34,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Booking core | 🟢 Schema/package/repository implemented | migrations/0028_booking_core.sql; packages/booking/src/repository.ts; packages/booking/src/service.ts |
 | Booking availability rules | 🟢 Schema/repository implemented | migrations/0029_availability_schedules.sql; packages/booking/src/availability-repository.ts |
 | Booking holds / lifecycle history | 🟢 Schema/repository implemented | migrations/0030_booking_holds_history.sql; packages/booking/src/repository.ts |
+| Booking transactional finalization | 🟢 Schema/service/API implemented | migrations/0046_booking_finalization_guards.sql; migrations/0047_booking_capacity_update_guards.sql; packages/booking/src/repository.ts; packages/booking/src/service.ts; apps/api/src/booking-routes.ts |
 | Commerce transaction core | 🟢 Schema/package/repository implemented | migrations/0031_commerce_transaction_core.sql; migrations/0032_commerce_integrity_hardening.sql; packages/commerce/src/repository.ts; packages/commerce/src/service.ts |
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
 | Communication core | 🟢 Schema/package/repository/service implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts |
@@ -352,6 +353,8 @@ Customer address note: migration 0026 stores the structured Address value object
 
 Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Durable scheduler/worker infrastructure remains the next operational layer.
 
+Booking finalization note: migrations 0046–0047 establish idempotent Booking creation, transactional hold consumption, appointment/resource commitment and capacity mutation guards. Availability calculation and schedule-derived slot generation remain separate.
+
 Trust Review note: migration 0042 physicalizes the canonical Review target from Gate 05 (Business/Offering/Product); 0045 adds target-scope integrity on insert/update and the Trust package exposes the same three-target creation boundary.
 
 Matching note: migrations 0040–0041 establish the canonical Demand→Match persistence boundary with typed Business/Offering targets and append-only decisions. Retrieval/ranking/learning execution remains operational follow-up.
@@ -370,7 +373,7 @@ Billing note: migrations 0033–0034 establish plan/price/subscription/entitleme
 
 Commerce note: migrations 0031–0032 establish the Commerce-owned Cart/Checkout/PriceSnapshot/Order transaction boundary and integrity hardening. Billing/Payment remains authoritative for payment execution, financial settlement, refunds and invoices.
 
-Booking note: migrations 0028–0030 establish the canonical Booking/Availability physical core, short-lived holds and immutable booking/appointment history. Final availability calculation, hold consumption and atomic finalization remain the next Booking capability layer; no second reservation model or authoritative slots table is permitted.
+Booking note: migrations 0028–0030 establish the canonical Booking/Availability physical core and short-lived holds. Migrations 0046–0047 complete the transactional finalization/idempotency/capacity-guard layer. No second reservation model or authoritative slots table is permitted.
 
 Business lifecycle note: migration 0027 records immutable transitions for the existing physical `draft/active/suspended/archived` Business statuses. It intentionally does not invent a new status vocabulary.
 
@@ -430,6 +433,8 @@ The API runtime references these migration sources:
 0043_integrity_update_guards.sql
 0044_billing_counter_scope.sql
 0045_review_target_integrity.sql
+0046_booking_finalization_guards.sql
+0047_booking_capacity_update_guards.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
