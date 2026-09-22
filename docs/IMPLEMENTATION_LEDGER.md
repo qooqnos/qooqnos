@@ -100,6 +100,7 @@ Migration safety:
 - canonical migrations 0001–0013 were not edited, renumbered or replaced;
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
+- Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
 
 ## 4. Current canonical migration inventory
 
