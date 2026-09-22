@@ -113,7 +113,7 @@ export class AvailabilityRepository extends Repository {
       input.now,
     );
     const schedule = await this.getSchedule(context, input.id);
-    if (!schedule || schedule.businessId === organizationId) throw new DatabaseError("Schedule not available after creation");
+    if (!schedule) throw new DatabaseError("Schedule not available after creation");
     return schedule;
   }
 
