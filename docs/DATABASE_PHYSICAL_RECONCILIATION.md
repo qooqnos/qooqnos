@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0024.
+The current API migration catalog references versions 0001 through 0026.
 
 ### Foundation — 0001
 
@@ -150,6 +150,19 @@ This migration seeds persisted permission vocabulary.
 
 0021 establishes the VerificationCase aggregate and protected evidence metadata/reference layer.
 
+### Trust review / expiry — 0025
+
+- verification_reviews
+- verification_expiries
+
+0025 completes the operational human-review assignment and expiry/re-evaluation records. Authorization remains the source of reviewer permission; expiry processing must remain resumable/idempotent.
+
+### Customer addresses — 0026
+
+- customer_addresses
+
+0026 implements the canonical structured Address value object in the Customer persistence context. The table stores decomposed address fields; CustomerProfile remains gated because its field-level contract is still intentionally open.
+
 ### Trust policy / requirements — 0022
 
 - verification_policies
@@ -171,7 +184,7 @@ This migration seeds persisted permission vocabulary.
 
 0024 establishes append-only authoritative verification decisions and controlled supporting-check links.
 
-**Total currently defined physical tables: 60.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers; migration 0021 adds two Trust tables; migration 0022 adds two Trust policy tables; migration 0023 adds two Trust check tables plus integrity triggers; migration 0024 adds two Trust decision tables plus append-only/integrity triggers.
+**Total currently defined physical tables: 62.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers; migration 0021 adds two Trust tables; migration 0022 adds two Trust policy tables; migration 0023 adds two Trust check tables plus integrity triggers; migration 0024 adds two Trust decision tables plus append-only/integrity triggers.
 
 This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
 
@@ -188,10 +201,10 @@ This count includes only canonical SQL migration sources. It does not include th
 | Media | assets, variants, links, processing jobs | Core implemented |
 | Discovery | search documents, embeddings, ranking features, indexing jobs | Core projection implemented; index-version registry is missing |
 | Seller AI Creation | creation sessions, raw inputs, drafts, field provenance | Implemented for seller-side creation slice |
-| Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events | Customer core, CRM relationship and timeline event storage implemented; profile/address/timeline projection/workflow layers remain |
+| Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events, customer_addresses | Customer core, CRM relationship and structured Address storage implemented; CustomerProfile, timeline projection and workflow layers remain |
 | Matching | no user request / match execution tables | Missing |
 | Booking / Availability | no booking/appointment/resource/schedule tables | Missing |
-| Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries | Core verification chain + review/expiry records implemented; reviewer authorization, expiry workers/events and TrustSignal projections remain |
+| Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries | Core verification chain + review/expiry records implemented; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
 | Moderation / Privacy / Consent | no canonical workflow tables | Missing |
 | Communication | no conversation/message/notification/delivery tables | Missing |
 | Commerce | no cart/order/payment/refund tables | Missing |
