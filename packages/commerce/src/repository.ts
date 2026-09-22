@@ -366,34 +366,64 @@ export class CommerceRepository extends Repository {
     if (!input.policyVersion.trim()) throw new DatabaseError("Commerce policy version is required");
 
     const existing = await this.getOrderByIdempotency(context, input.idempotencyKey);
-    if (existing) return existing;
+    if (existing) {
+      await this.database.run(
+        "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'commerce.order.created', 1, 'commerce_order', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        existing.id + ":created",
+        existing.id,
+        existing.organizationId,
+        existing.workspaceId,
+        JSON.stringify({ orderId: existing.id, sourceChannel: existing.sourceChannel }),
+        existing.createdAt,
+        existing.createdAt,
+      );
+      return existing;
+    }
 
-    await this.database.run(
-      "INSERT INTO commerce_orders (id, organization_id, workspace_id, business_id, customer_id, price_snapshot_id, status, currency, subtotal_minor, adjustment_total_minor, tax_total_minor, fee_total_minor, grand_total_minor, source_channel, policy_version, idempotency_key, correlation_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      input.id,
-      organizationId,
-      workspaceId,
-      input.businessId,
-      input.customerId,
-      input.priceSnapshotId ?? null,
-      normalizeCurrency(input.currency),
-      input.subtotalMinor,
-      input.adjustmentTotalMinor,
-      input.taxTotalMinor,
-      input.feeTotalMinor,
-      input.grandTotalMinor,
-      input.sourceChannel,
-      input.policyVersion.trim(),
-      input.idempotencyKey.trim(),
-      input.correlationId,
-      input.now,
-      input.now,
-    );
-    const order = await this.getOrder(context, input.id);
+    const now = input.now;
+    const orderId = input.id;
+    await this.database.transaction([
+      {
+        sql: "INSERT OR IGNORE INTO commerce_orders (id, organization_id, workspace_id, business_id, customer_id, price_snapshot_id, status, currency, subtotal_minor, adjustment_total_minor, tax_total_minor, fee_total_minor, grand_total_minor, source_channel, policy_version, idempotency_key, correlation_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params: [
+          orderId,
+          organizationId,
+          workspaceId,
+          input.businessId,
+          input.customerId,
+          input.priceSnapshotId ?? null,
+          normalizeCurrency(input.currency),
+          input.subtotalMinor,
+          input.adjustmentTotalMinor,
+          input.taxTotalMinor,
+          input.feeTotalMinor,
+          input.grandTotalMinor,
+          input.sourceChannel,
+          input.policyVersion.trim(),
+          input.idempotencyKey.trim(),
+          input.correlationId,
+          now,
+          now,
+        ],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'commerce.order.created', 1, 'commerce_order', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          orderId + ":created",
+          orderId,
+          organizationId,
+          workspaceId,
+          JSON.stringify({ orderId, sourceChannel: input.sourceChannel }),
+          now,
+          now,
+        ],
+      },
+    ]);
+
+    const order = await this.getOrder(context, orderId);
     if (!order) throw new DatabaseError("Commerce order not found after creation");
     return order;
   }
-
   async getOrderByIdempotency(context: RequestContext, idempotencyKey: string): Promise<OrderRecord | null> {
     if (!idempotencyKey.trim()) return null;
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
