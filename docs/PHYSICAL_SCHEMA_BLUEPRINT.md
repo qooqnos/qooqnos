@@ -371,6 +371,24 @@ Appointment is a scheduled occurrence. It is not the Booking aggregate replaceme
 
 Resource taxonomy remains extensible; no Provider entity is introduced merely to represent staff.
 
+### `booking_holds`
+
+`id`, organization_id, workspace_id, business_id, resource_id?, slot_reference, actor_reference?, status, expires_at, created_at, updated_at.
+
+A Hold is short-lived operational state. Active uniqueness is enforced at the business/resource/slot boundary; expired holds are reclaimable. Holds never become historical booking truth.
+
+### `booking_status_history`
+
+`id`, booking_id, from_status?, to_status, changed_at, created_at.
+
+Append-only lifecycle history for Booking.
+
+### `appointment_events`
+
+`id`, appointment_id, event_type, event_version, payload_json?, occurred_at, created_at.
+
+Appointment events are immutable history/evidence and do not replace Appointment current state.
+
 ### Slot
 
 No authoritative `slots` table in the canonical first implementation. A materialized slot table is permitted only as a rebuildable optimization with schedule/version references, expiration/invalidation semantics, and no authority over booking truth.
@@ -658,18 +676,18 @@ A future migration may create a table only after this checklist is complete:
 
 ## 19. Explicit gates still open
 
-The following must be finalized before their concrete SQL migrations:
+The following remain controlled architecture gates before their concrete SQL migrations:
 
-2. final Role scope matrix;
-3. Resource taxonomy;
-4. exact BookingItem snapshots;
-5. Review typed-target matrix;
-6. Offering Package/Bundle composition;
-7. tax/discount ownership and snapshots;
-8. Payment provider reference contract;
-9. search/vector projection storage;
-10. AI Memory storage/retention;
-11. Integration/Webhook/Sync retention and retry rules.
+1. CustomerProfile field-level contract.
+2. CRM timeline projection read-model/rebuild contract.
+3. Tax/discount transaction snapshot semantics beyond the existing Commerce ownership decision.
+4. Payment provider reference contract.
+5. Search/vector projection versioning/storage details.
+6. AI Memory physical storage/retention contract.
+7. Integration/Webhook/Sync retention and retry details.
+8. Business conceptual lifecycle vocabulary reconciliation.
+9. Booking availability calculation, hold consumption and atomic finalization contract.
+10. Review physical target implementation beyond the canonical typed-target matrix.
 
 These are controlled architecture gates, not provisional implementation instructions.
 
