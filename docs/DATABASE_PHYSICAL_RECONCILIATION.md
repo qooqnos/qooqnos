@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0019.
+The current API migration catalog references versions 0001 through 0020.
 
 ### Foundation — 0001
 
@@ -137,7 +137,13 @@ This migration seeds persisted permission vocabulary.
 
 0019 establishes the canonical Customer↔Business relationship aggregate owned by CRM and enforces same-organization integrity.
 
-**Total currently defined physical tables: 51.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers.
+### CRM timeline events — 0020
+
+- crm_timeline_events
+
+0020 establishes the canonical normalized CRM event store for relationship timelines. It is idempotent by source module/event identifier and enforces organization/workspace/relationship scope. The originating module remains authoritative for the underlying business fact.
+
+**Total currently defined physical tables: 52.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers.
 
 This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
 
@@ -154,7 +160,7 @@ This count includes only canonical SQL migration sources. It does not include th
 | Media | assets, variants, links, processing jobs | Core implemented |
 | Discovery | search documents, embeddings, ranking features, indexing jobs | Core projection implemented; index-version registry is missing |
 | Seller AI Creation | creation sessions, raw inputs, drafts, field provenance | Implemented for seller-side creation slice |
-| Customer / CRM | customers, customer_preferences, customer_relationships | Core identity/preference/relationship storage implemented; profile/address/timeline/CRM workflow layers remain |
+| Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events | Customer core, CRM relationship and timeline event storage implemented; profile/address/timeline projection/workflow layers remain |
 | Matching | no user request / match execution tables | Missing |
 | Booking / Availability | no booking/appointment/resource/schedule tables | Missing |
 | Trust / Verification | no verification case/check/evidence/decision tables | Missing |
@@ -268,6 +274,14 @@ Preference records retain source, confidence, persistence and consent scope; the
 Migration 0019 establishes `customer_relationships` as the canonical Customer↔Business relationship table. Relationship status follows the Customer data contract (prospect, active, inactive).
 
 The database rejects cross-organization Customer/Business relationships. CRM remains the owner of relationship workflows and does not duplicate booking, commerce, communication or reputation truth.
+
+## 3.14 CRM Timeline events — 0020
+
+Migration 0020 implements \`crm_timeline_events\` as the canonical CRM timeline event store.
+
+The table stores normalized event references rather than duplicating source-domain facts. Idempotency is based on \`source_module + source_event_id\`. Scope is validated against the Customer relationship and Business workspace.
+
+\`crm_timeline_projections\` remains intentionally unimplemented. Its physical read-model fields, rebuild semantics and projection ownership are not sufficiently specified to justify another table.
 
 ## 4. Seller AI versus canonical AI Runtime
 
