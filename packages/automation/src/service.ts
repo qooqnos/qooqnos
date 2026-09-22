@@ -27,6 +27,54 @@ export class AutomationService {
     return this.options.repository.createVersion(context,{...input,id:this.options.id(),now:this.options.now()});
   }
 
+  async activateVersion(context: RequestContext, input: {
+    readonly workflowId: EntityId;
+    readonly versionId: EntityId;
+  }) {
+    await this.options.authorization.assert({
+      context,
+      permission:"automation.workflow.manage",
+      requireAuthentication:true,
+      requireWorkspace:false,
+    });
+    return this.options.repository.activateVersion(
+      context,
+      input.workflowId,
+      input.versionId,
+      this.options.now(),
+    );
+  }
+
+  async pauseWorkflow(context: RequestContext, workflowId: EntityId) {
+    await this.options.authorization.assert({
+      context,
+      permission:"automation.workflow.manage",
+      requireAuthentication:true,
+      requireWorkspace:false,
+    });
+    return this.options.repository.setWorkflowStatus(
+      context,
+      workflowId,
+      "paused",
+      this.options.now(),
+    );
+  }
+
+  async retireWorkflow(context: RequestContext, workflowId: EntityId) {
+    await this.options.authorization.assert({
+      context,
+      permission:"automation.workflow.manage",
+      requireAuthentication:true,
+      requireWorkspace:false,
+    });
+    return this.options.repository.setWorkflowStatus(
+      context,
+      workflowId,
+      "retired",
+      this.options.now(),
+    );
+  }
+
   async startExecution(context: RequestContext, input: {
     readonly workflowId: EntityId; readonly workflowVersionId: EntityId; readonly triggerId: EntityId; readonly correlationId: string; readonly inputReference?: string;
   }) {
