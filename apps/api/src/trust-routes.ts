@@ -100,6 +100,141 @@ export function registerTrustRoutes(
 
   router.register({
     method: "POST",
+    path: "/api/v1/trust/reviews/:reviewId/report",
+    module: "trust",
+    operation: "trust.review.report",
+    permission: "trust.review.report",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const report = await service.reportReview(context, {
+        reviewId: brandId<"EntityId">(requiredParam(params.reviewId, context.requestId)),
+        reporterReference: requiredString(body.reporterReference, "reporterReference", context.requestId),
+        reasonCode: requiredString(body.reasonCode, "reasonCode", context.requestId),
+        ...(body.details !== undefined ? { details: requiredString(body.details, "details", context.requestId) } : {}),
+      });
+      return json({ data: report }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/trust/reviews/:reviewId/response",
+    module: "trust",
+    operation: "trust.review.respond",
+    permission: "trust.review.respond",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const response = await service.respondToReview(context, {
+        reviewId: brandId<"EntityId">(requiredParam(params.reviewId, context.requestId)),
+        businessId: requiredId(body.businessId, "businessId", context.requestId),
+        actorReference: requiredString(body.actorReference, "actorReference", context.requestId),
+        content: requiredString(body.content, "content", context.requestId),
+        policyVersion: requiredString(body.policyVersion, "policyVersion", context.requestId),
+      });
+      return json({ data: response }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/trust/reviews/:reviewId/moderation-cases",
+    module: "trust",
+    operation: "trust.review.moderate",
+    permission: "trust.review.moderate",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const moderationCase = await service.openModerationCase(context, {
+        reviewId: brandId<"EntityId">(requiredParam(params.reviewId, context.requestId)),
+        ...(body.reasonCode !== undefined ? { reasonCode: requiredString(body.reasonCode, "reasonCode", context.requestId) } : {}),
+        policyVersion: requiredString(body.policyVersion, "policyVersion", context.requestId),
+        ...(body.assignedTo !== undefined ? { assignedTo: requiredString(body.assignedTo, "assignedTo", context.requestId) } : {}),
+      });
+      return json({ data: moderationCase }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/trust/moderation-cases/:caseId/decisions",
+    module: "trust",
+    operation: "trust.review.moderate",
+    permission: "trust.review.moderate",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const decisions = ["approve", "reject", "remove", "restrict", "restore"] as const;
+      if (typeof body.decision !== "string" || !decisions.includes(body.decision as typeof decisions[number])) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "decision is invalid.", requestId: context.requestId });
+      }
+      const review = await service.recordModerationDecision(context, {
+        moderationCaseId: brandId<"EntityId">(requiredParam(params.caseId, context.requestId)),
+        decision: body.decision as typeof decisions[number],
+        actorReference: requiredString(body.actorReference, "actorReference", context.requestId),
+        reasonCode: requiredString(body.reasonCode, "reasonCode", context.requestId),
+        policyVersion: requiredString(body.policyVersion, "policyVersion", context.requestId),
+      });
+      return json({ data: review }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/trust/reviews/:reviewId/risk-signals",
+    module: "trust",
+    operation: "trust.review.moderate",
+    permission: "trust.review.moderate",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      await service.recordRiskSignal(context, {
+        reviewId: brandId<"EntityId">(requiredParam(params.reviewId, context.requestId)),
+        signalType: requiredString(body.signalType, "signalType", context.requestId),
+        ...(body.value !== undefined ? { value: body.value } : {}),
+        ...(body.confidence !== undefined ? { confidence: requiredConfidence(body.confidence, context.requestId) } : {}),
+        source: requiredString(body.source, "source", context.requestId),
+        ...(body.modelVersion !== undefined ? { modelVersion: requiredString(body.modelVersion, "modelVersion", context.requestId) } : {}),
+        ...(body.policyVersion !== undefined ? { policyVersion: requiredString(body.policyVersion, "policyVersion", context.requestId) } : {}),
+      });
+      return json({ data: { recorded: true } }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/trust/reputation/rebuild",
+    module: "trust",
+    operation: "trust.reputation.rebuild",
+    permission: "trust.reputation.rebuild",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const targetType = requiredTargetType(body.targetType, context.requestId);
+      const summary = await service.rebuildReputation(context, {
+        targetType,
+        targetId: requiredId(body.targetId, "targetId", context.requestId),
+        policyVersion: requiredString(body.policyVersion, "policyVersion", context.requestId),
+      });
+      return json({ data: summary }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/trust/reviews/:reviewId/moderate",
     module: "trust",
     operation: "trust.review.moderate",
@@ -180,4 +315,16 @@ function requiredSubjectType(
     return value as typeof values[number];
   }
   throw new AppError({ code: "VALIDATION_ERROR", message: "subjectType is invalid.", requestId });
+}
+
+function requiredConfidence(value: unknown, requestId: EntityId): number {
+  if (typeof value !== "number" || value < 0 || value > 1 || !Number.isFinite(value)) {
+    throw new AppError({ code: "VALIDATION_ERROR", message: "confidence must be between 0 and 1.", requestId });
+  }
+  return value;
+}
+
+function requiredTargetType(value: unknown, requestId: EntityId): "business" | "offering" | "product" {
+  if (value === "business" || value === "offering" || value === "product") return value;
+  throw new AppError({ code: "VALIDATION_ERROR", message: "targetType is invalid.", requestId });
 }
