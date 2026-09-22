@@ -1,4 +1,5 @@
 import { CommunicationRepository } from "@qooqnos/communication";
+import { brandId } from "@qooqnos/core";
 import { OutboxService, type OutboxEventRecord } from "@qooqnos/database";
 import { getDatabase } from "./database";
 import type { ApiEnv, CloudflareQueueBinding } from "./env";
@@ -75,9 +76,9 @@ export async function consumeOutbox(
         }
 
         await communication.queueNotificationFromSystem({
-          organizationId: event.organizationId as never,
-          workspaceId: event.workspaceId ?? null,
-          notificationId: notificationId as never,
+          organizationId: brandId<"EntityId">(event.organizationId),
+          workspaceId: event.workspaceId ? brandId<"EntityId">(event.workspaceId) : null,
+          notificationId: brandId<"EntityId">(notificationId),
           now: new Date().toISOString(),
         });
       }
