@@ -87,6 +87,11 @@ Commits:
 - 4b3eee2 — Restore canonical runtime public exports
 - 0a99e24 — Add canonical physical database reconciliation
 - 0ff5dac — Reference physical database reconciliation gate
+- 7547eb2 — Add catalog offering integrity migration 0014
+- c2fa85b — Register migration 0014 in API catalog
+- fbc467b — Lock migration 0014 checksum
+- d79eed0 — Resolve offering-level pricing source of truth
+- 9288240 — Resolve service/offering physical model
 
 Migration safety:
 - canonical migrations 0001–0013 were not edited, renumbered or replaced;
