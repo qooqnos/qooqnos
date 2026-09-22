@@ -30,6 +30,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | CRM Customer relationships | 🟢 Schema/repository implemented | migrations/0019_crm_customer_relationships.sql; packages/database/src/customer-relationship-repository.ts |
 | CRM timeline events | 🟢 Schema/repository implemented | migrations/0020_crm_timeline_events.sql; packages/database/src/crm-timeline-repository.ts; projections remain gated |
 | Customer addresses | 🟢 Schema/repository implemented | migrations/0026_customer_addresses.sql; packages/database/src/customer-address-repository.ts |
+| Business status history | 🟢 Schema/repository implemented | migrations/0027_business_status_history.sql; packages/business/src/repository.ts |
 | Trust VerificationCase / evidence | 🟢 Schema/repository implemented | migrations/0021_verification_case_and_documents.sql; packages/database/src/verification-repository.ts |
 | Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
 | Trust checks / evidence links | 🟢 Schema implemented | migrations/0023_verification_checks.sql; runtime methods in verification-repository.ts |
@@ -189,6 +190,11 @@ Commits:
 - c8c1468 — Implement customer address repository
 - 4b6db9e — Export customer address repository
 - 2422486 — Test customer address tenant isolation
+- 94a61eb — Add business status history migration 0027
+- 819f19c — Register business status history migration
+- 1311c39 — Lock business status history checksum
+- 8cd05c8 — Implement business lifecycle status history
+- c9ebe65 — Test business lifecycle status history
 - 2310529 — Refresh physical reconciliation after Trust review/expiry
 - 3458d50 — Document Trust review/expiry physical contracts
 - 3ba47ec — Record Trust physical implementation status
@@ -212,6 +218,8 @@ Customer/CRM verification note: repositories and scope-focused tests were added;
 Migration lock note: 0021 was refreshed after a pre-apply SQL cleanup; 0022–0024 remain locked to their canonical SHA-256 values recorded during implementation.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
+
+Business lifecycle note: migration 0027 records immutable transitions for the existing physical `draft/active/suspended/archived` Business statuses. It intentionally does not invent a new status vocabulary.
 
 CRM timeline note: normalized event storage and idempotent source-event handling are implemented. A separate timeline projection table remains gated pending a field-level read-model/rebuild contract.
 
@@ -250,6 +258,7 @@ The API runtime references these migration sources:
 0024_verification_decisions.sql
 0025_verification_review_expiry.sql
 0026_customer_addresses.sql
+0027_business_status_history.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
