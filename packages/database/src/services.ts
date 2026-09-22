@@ -156,6 +156,18 @@ export class OutboxService {
     });
   }
 
+  async claimPending(id: string, now: string, leaseUntil: string): Promise<boolean> {
+    const result = await this.database.run(
+      `UPDATE outbox_events
+       SET available_at = ?
+       WHERE id = ? AND status = 'pending' AND available_at <= ?`,
+      leaseUntil,
+      id,
+      now,
+    );
+    return (result.meta?.changes ?? 0) === 1;
+  }
+
   async markPublished(id: string, publishedAt: string): Promise<void> {
     await this.database.run(
       `UPDATE outbox_events
