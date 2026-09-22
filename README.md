@@ -29,22 +29,11 @@ SQL migrations live under migrations/ and are the only source of migration conte
 
 The current API migration sequence is:
 
+```text
+0001_foundation … 0047_booking_capacity_update_guards
 ```
-0001_foundation
-0002_onboarding
-0003_identity_sessions
-0004_business
-0005_catalog
-0006_catalog_product_guards
-0007_catalog_integrity_guards
-0008_permission_catalog
-0009_media
-0010_discovery
-0011_ai_seller_creation
-0012_ai_seller_catalog_link
-0013_ai_seller_idempotency_fingerprint
-0014_catalog_offering_integrity
-```
+
+See `apps/api/src/migrations.ts` and `migrations/migration-lock.json` for the authoritative ordered sequence.
 
 The runtime derives migration metadata from the canonical SQL, verifies the migration lock and executes the resulting definitions against D1.
 
@@ -72,6 +61,6 @@ Do not add a parallel TypeScript migration source.
 
 ## Current database state
 
-The logical data model is intentionally broader than the physically migrated schema. Missing modules must be implemented incrementally and only after table-by-table reconciliation.
+The logical model is broader than the physically migrated schema, but the current canonical D1 sequence now covers the core platform domains through migration `0047`. Remaining work is primarily operational execution, derived projections, provider adapters and explicitly gated contracts.
 
 Do not treat historical phase documents as current architecture.
