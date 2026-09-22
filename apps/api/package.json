@@ -11,6 +11,7 @@
     "@qooqnos/communication": "*",
     "@qooqnos/automation": "*",
     "@qooqnos/integration": "*",
+    "@qooqnos/privacy": "*",
     "@qooqnos/business": "*",
     "@qooqnos/booking": "*",
     "@qooqnos/commerce": "*",
