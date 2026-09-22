@@ -44,6 +44,53 @@ describe("VerificationRepository", () => {
     })).rejects.toThrow("does not match request context");
   });
 
+  it("assigns a reviewer and moves submitted cases into under_review", async () => {
+    const calls: string[] = [];
+    const firstRows = [
+      {
+        id: "case-1",
+        organizationId: "tenant-1",
+        workspaceId: "workspace-1",
+        subjectType: "business",
+        subjectId: "business-1",
+        policyId: "business-verification",
+        policyVersion: "2026-09",
+        status: "submitted",
+        riskClass: "standard",
+        submittedAt: "2026-09-22T00:00:00.000Z",
+        resolvedAt: null,
+        expiresAt: null,
+        createdAt: "2026-09-22T00:00:00.000Z",
+        updatedAt: "2026-09-22T00:00:00.000Z",
+      },
+    ];
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>(..._args: unknown[]) {
+        calls.push("first");
+        return firstRows[0] as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run(..._args: unknown[]) { calls.push("run"); return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new VerificationRepository(new D1Database(raw));
+
+    const result = await repository.assignReview(context(), {
+      id: brandId<"EntityId">("review-1"),
+      caseId: brandId<"EntityId">("case-1"),
+      reviewerId: "reviewer-1",
+      assignedAt: "2026-09-22T00:01:00.000Z",
+      now: "2026-09-22T00:01:00.000Z",
+    });
+
+    expect(result.id).toBe("case-1");
+    expect(calls.filter((value) => value === "run")).toHaveLength(2);
+  });
+
   it("requires case submission before later review states are introduced", async () => {
     let call = 0;
     const statement: D1PreparedStatementLike = {
