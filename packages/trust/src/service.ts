@@ -69,13 +69,13 @@ export class TrustService {
       readonly ratingValue: number;
       readonly content?: string;
       readonly moderationState?: string;
-  readonly business_id: EntityId | undefined;
-  readonly offering_id: EntityId | undefined;
-  readonly booking_id: EntityId | undefined;
-  readonly appointment_id: EntityId | undefined;
-  readonly service_id: EntityId | undefined;
-  readonly product_id: EntityId | undefined;
-  readonly location_id: EntityId | undefined;
+  readonly businessId?: EntityId;
+  readonly offeringId?: EntityId;
+  readonly bookingId?: EntityId;
+  readonly appointmentId?: EntityId;
+  readonly serviceId?: EntityId;
+  readonly productId?: EntityId;
+  readonly locationId?: EntityId;
     },
   ) {
     await this.options.authorization.assert({
