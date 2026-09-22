@@ -632,9 +632,8 @@ The next implementation work should proceed in this order:
 8. Complete Integration provider adapters and durable sync workers.
 9. Complete Privacy retention/export/delete workers and subject-level identity validation.
 10. Complete Matching retrieval/ranking execution, learning signals and Connect/Act integration.
-11. Complete Review moderation/reporting and reputation projection contracts.
-12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
-13. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
+11. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
+12. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
 Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables; 0048 completes the Review-owned moderation/reputation projection layer.
 
@@ -651,6 +650,8 @@ The database is ready for production provisioning only when:
 - critical invariants are enforced by schema or domain transactions;
 - migration history and lock integrity pass;
 - repositories and services cover implemented domains;
+- canonical API routes expose all frozen runtime capabilities that are intended for external use;
+- CI and migration verification are green on the current main commit;
 - tenant-isolation and integrity tests pass.
 
 Until then, adding another generic database schema would create unnecessary divergence.
