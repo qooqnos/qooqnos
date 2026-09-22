@@ -68,6 +68,7 @@ The API runtime currently references:
 0011_ai_seller_creation
 0012_ai_seller_catalog_link
 0013_ai_seller_idempotency_fingerprint
+0014_catalog_offering_integrity
 ```
 
 Do not renumber or replace these migrations.
