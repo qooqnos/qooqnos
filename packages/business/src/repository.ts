@@ -165,6 +165,9 @@ export class BusinessRepository extends Repository {
             businessId: input.id,
             organizationId: input.organizationId,
             workspaceId: input.workspaceId,
+            name: input.name,
+            displayName: input.displayName,
+            publicationStatus: "unpublished",
           },
           availableAt: input.now,
           occurredAt: input.now,
@@ -242,17 +245,94 @@ export class BusinessRepository extends Repository {
   }
 
   async setPublicationStatus(context: RequestContext, id: EntityId, status: PublicationStatus, now: string): Promise<BusinessRecord> {
-    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
-    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
-    const result = await this.database.run(
-      `UPDATE businesses SET publication_status = ?, updated_at = ?
-       WHERE id = ? AND organization_id = ? AND workspace_id = ?`,
-      status, now, id, organizationId, workspaceId,
+    return this.setPublicationStatusAndRecord(context, id, status, now);
+  }
+
+  async setPublicationStatusAndRecord(
+    context: RequestContext,
+    id: EntityId,
+    status: PublicationStatus,
+    now: string,
+  ): Promise<BusinessRecord> {
+    const current = await this.get(context, id);
+    if (!current) throw new DatabaseError("Business not found");
+    if (current.publicationStatus === status) return current;
+
+    const updated = {
+      ...current,
+      publicationStatus: status,
+      updatedAt: now,
+    } satisfies BusinessRecord;
+
+    const eventId = `${id}:business.publication.changed.v1:${now}`;
+    await this.database.transaction([
+      {
+        sql: `UPDATE businesses SET publication_status = ?, updated_at = ?
+              WHERE id = ? AND organization_id = ? AND workspace_id = ? AND publication_status = ?`,
+        params: [status, now, id, current.organizationId, current.workspaceId, current.publicationStatus],
+      },
+      {
+        sql: `INSERT INTO audit_events
+              (id, actor_id, organization_id, workspace_id, action, target_type, target_id,
+               outcome, request_id, correlation_id, metadata_json, created_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        params: [
+          eventId + ":audit",
+          context.actorId ?? null,
+          current.organizationId,
+          current.workspaceId,
+          "business.publication.changed",
+          "business",
+          id,
+          "succeeded",
+          context.requestId,
+          context.correlationId,
+          JSON.stringify({ fromStatus: current.publicationStatus, toStatus: status }),
+          now,
+        ],
+      },
+      {
+        sql: `INSERT INTO outbox_events
+              (id, event_type, event_version, aggregate_type, aggregate_id,
+               organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)`,
+        params: [
+          eventId,
+          "business.publication.changed.v1",
+          1,
+          "business",
+          id,
+          current.organizationId,
+          current.workspaceId,
+          JSON.stringify({
+            businessId: id,
+            organizationId: current.organizationId,
+            workspaceId: current.workspaceId,
+            name: current.name,
+            displayName: current.displayName,
+            publicationStatus: status,
+            updatedAt: now,
+          }),
+          now,
+          now,
+        ],
+      },
+    ]);
+
+    const result = await this.database.first<BusinessRecord>(
+      `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
+              name, display_name AS displayName, status, publication_status AS publicationStatus,
+              business_type AS businessType, primary_category_id AS primaryCategoryId,
+              default_locale AS defaultLocale, timezone, default_currency AS defaultCurrency,
+              created_at AS createdAt, updated_at AS updatedAt
+       FROM businesses
+       WHERE id = ? AND organization_id = ? AND workspace_id = ? LIMIT 1`,
+      id,
+      current.organizationId,
+      current.workspaceId,
     );
-    if ((result.meta?.changes ?? 0) !== 1) throw new DatabaseError("Business publication update was rejected");
-    const updated = await this.get(context, id);
-    if (!updated) throw new DatabaseError("Business not found after publication update");
-    return updated;
+    if (!result) throw new DatabaseError("Business not found after publication update");
+    return result;
   }
 
   private async assertWorkspace(organizationId: EntityId, workspaceId: EntityId): Promise<void> {
