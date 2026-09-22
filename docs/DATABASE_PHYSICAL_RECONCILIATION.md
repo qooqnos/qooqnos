@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0042**.
+The current API migration catalog references versions **0001 through 0043**.
 
 ### Foundation — 0001
 
@@ -266,6 +266,12 @@ These migrations add integrity triggers only.
 ### Demand / Matching integrity — 0041
 
 ### Trust Reviews — 0042
+
+### Integrity update guards — 0043
+
+- no new tables
+
+0043 adds database-level update-time tenant guards for Match candidates and Review customer scope.
 
 - reviews
 
