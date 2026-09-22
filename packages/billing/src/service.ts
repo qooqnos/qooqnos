@@ -94,13 +94,13 @@ export class BillingService implements BillingAIEntitlementService {
     if (!quota.allowed) {
       return {
         allowed: false,
-        decision: "denied",
+        decision: quota.reason ? "temporary_unavailable" : "denied",
         entitlementDecisionId: this.options.id(),
         entitlementKey: snapshot.entitlementKey,
         quotaKey: meterKey,
         quotaLimit: quota.limit ?? Number(snapshot.value),
         quotaRemaining: quota.remaining ?? 0,
-        reason: "Billing quota exhausted",
+        reason: quota.reason ?? "Billing quota exhausted",
       };
     }
 
