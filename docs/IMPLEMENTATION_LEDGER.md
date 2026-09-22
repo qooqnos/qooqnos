@@ -379,9 +379,11 @@ Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete
 
 Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0048 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
 
+Deployment readiness note: `wrangler.toml` now documents environment-specific D1/Queue/R2 bindings without inventing remote resource IDs. Remote D1 provisioning and real Cloudflare binding configuration remain the final infrastructure gate.
+
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
 
-Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Durable scheduler/worker infrastructure remains the next operational layer.
+Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Workflow version activation plus pause/retire lifecycle controls are now canonical repository/service/API operations. Durable scheduler/worker action execution remains gated until the capability invocation contract is executable.
 
 Booking finalization note: migrations 0046–0047 establish idempotent Booking creation, transactional hold consumption, appointment/resource commitment and capacity mutation guards. Availability calculation and schedule-derived slot generation remain separate.
 
@@ -392,6 +394,10 @@ Review reputation note: migration 0048 completes Review lifecycle/report/respons
 Automation/Integration API note: Automation workflow/version/execution and Integration account/webhook/sync-job capabilities are now registered in the canonical API router; durable worker execution remains gated by provider/capability contracts.
 
 Latest verified commits:
+- 793b494 — Test Automation workflow lifecycle controls
+- 1cc6cba — Expose Automation workflow activate/pause/retire routes
+- 085805e — Expose Automation lifecycle service
+- 5c8219f — Complete Automation workflow activation and lifecycle control
 - 5869597 — Test canonical Matching Connect flow
 - 421a91c — Keep Matching Connect dependency optional for non-connect consumers
 - a06eb07 — Make Match Connect selection-bound and replay-safe
