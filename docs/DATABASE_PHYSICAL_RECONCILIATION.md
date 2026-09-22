@@ -191,7 +191,7 @@ This count includes only canonical SQL migration sources. It does not include th
 | Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events | Customer core, CRM relationship and timeline event storage implemented; profile/address/timeline projection/workflow layers remain |
 | Matching | no user request / match execution tables | Missing |
 | Booking / Availability | no booking/appointment/resource/schedule tables | Missing |
-| Trust / Verification | no verification case/check/evidence/decision tables | Missing |
+| Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries | Core verification chain + review/expiry records implemented; reviewer authorization, expiry workers/events and TrustSignal projections remain |
 | Moderation / Privacy / Consent | no canonical workflow tables | Missing |
 | Communication | no conversation/message/notification/delivery tables | Missing |
 | Commerce | no cart/order/payment/refund tables | Missing |
@@ -415,7 +415,7 @@ The database is neither empty nor complete.
 The accurate state is:
 
 ```
-43 physical tables defined
+60 physical tables defined
         ↓
 foundation + onboarding + identity + business + catalog
 + media + discovery + seller-AI slices implemented
@@ -431,10 +431,10 @@ new migrations must follow ownership + no-duplication gates
 
 The next implementation work should proceed in this order:
 
-1. Define AttributeValue repository/write semantics and explicit backfill/cutover rules without duplicating current JSON-backed state.
+1. Define AttributeValue backfill/conflict/cutover rules without duplicating current JSON-backed state.
 2. Complete Business lifecycle support only where the logical model requires it.
-4. Introduce Customer/CRM identity and relationship structures.
-5. Introduce Verification/Trust/Moderation structures.
+3. Complete Customer profile/address field-level persistence where contracts are closed; keep timeline projections gated until projection rebuild contracts are explicit.
+4. Complete Trust reviewer authorization integration, expiry processing/events, and TrustSignal projections only after their operational contracts are explicit.
 6. Introduce Booking/Availability structures.
 7. Introduce Commerce/Billing structures.
 8. Introduce Communication/Automation/Integration structures.
