@@ -1,5 +1,5 @@
 import type { CorrelationId, EntityId, RequestContext, RequestId } from "@qooqnos/core";
-import { AuthorizationRegistry, type AuthorizationSubject } from "@qooqnos/runtime";
+import type { AuthorizationSubject } from "@qooqnos/runtime";
 import { OnboardingService, type OnboardingProfile, type OnboardingRepository } from "./index";
 
 const id = (value: string) => value as EntityId;
@@ -64,8 +64,12 @@ export async function assertOnboardingTransitionUsesAtomicRepositoryPath(): Prom
     },
   };
 
-  const authorization = new AuthorizationRegistry();
-  authorization.registerPermission("onboarding.submit");
+  const authorization = {
+    async evaluate() {
+      return { allowed: true, reason: "allowed" as const, permission: "onboarding.submit" };
+    },
+    async assert() {},
+  };
   const service = new OnboardingService({
     repository,
     authorization,
@@ -95,8 +99,12 @@ export async function assertOnboardingAtomicFailureDoesNotFallback(): Promise<vo
     },
   };
 
-  const authorization = new AuthorizationRegistry();
-  authorization.registerPermission("onboarding.submit");
+  const authorization = {
+    async evaluate() {
+      return { allowed: true, reason: "allowed" as const, permission: "onboarding.submit" };
+    },
+    async assert() {},
+  };
   const service = new OnboardingService({
     repository,
     authorization,
