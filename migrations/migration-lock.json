@@ -334,7 +334,7 @@
       "id": "0048_reviews_moderation_reputation",
       "version": 48,
       "moduleId": "trust",
-      "checksum": "ad46f3d8046415fbab72659e1e21f4fbc40a399ee2bf8bfa8c72c9dbecf652a7",
+      "checksum": "4dfef1fbee5f51783fd9a3ed5404cf58906270b39480f3bb501b57c448b9ee7e",
       "filename": "0048_reviews_moderation_reputation.sql"
     }
   ]
