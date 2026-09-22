@@ -44,7 +44,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | AI Runtime persistence | 🟢 Schema/repository implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts |
 | Integration core | 🟢 Schema/package/repository/service/API implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; apps/api/src/integration-routes.ts; integration sync-job API |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
-| Demand / Matching core | 🟢 Schema/package/repository/service implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts |
+| Demand / Matching core | 🟢 Schema/package/repository/service implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts; apps/api/src/matching-routes.ts |
 | Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts; Review lifecycle fields exposed from repository |
 | Billing counter scope integrity | 🟢 Integrity migration implemented | migrations/0044_billing_counter_scope.sql; packages/billing/src/repository.ts |
 | Review target integrity | 🟢 Canonical three-target schema/service/integrity implemented | migrations/0042_reviews_core.sql; migrations/0045_review_target_integrity.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts |
@@ -402,7 +402,9 @@ CI verification: GitHub Actions CI and Phoenix verification both pass on current
 
 Review moderation note: migration 0048 completes moderation/reporting/reputation projection storage and API/service behavior. Review target types remain canonical Business/Offering/Product only.
 
-Matching note: migrations 0040–0041 establish the canonical Demand→Match persistence boundary with typed Business/Offering targets and append-only decisions. Retrieval/ranking/learning execution remains operational follow-up.
+Matching execution note: retrieval/ranking is now wired through Discovery projections with deterministic eligibility-first ranking and replay-safe candidate reuse. Connect/Act integrations and learning signals remain the next operational layers.
+
+Discovery projection note: Business creation/publication outbox events are now consumed by the Discovery projector; indexed eligibility follows authoritative Business publication state. Catalog/product projection remains derived and non-authoritative.
 
 Privacy note: migration 0039 establishes consent, privacy-request and per-module processing persistence. Durable export/delete/retention workers remain follow-up operational capabilities.
 
