@@ -15,6 +15,7 @@ import catalogOfferingIntegrity from "../../../migrations/0014_catalog_offering_
 import businessPrimaryCategoryIntegrity from "../../../migrations/0015_business_primary_category_integrity.sql";
 import catalogAttributeVocabulary from "../../../migrations/0016_catalog_attribute_vocabulary.sql";
 import catalogAttributeValues from "../../../migrations/0017_catalog_attribute_values.sql";
+import customerCore from "../../../migrations/0018_customer_core.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -35,4 +36,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0015_business_primary_category_integrity.sql", sql: businessPrimaryCategoryIntegrity },
   { path: "migrations/0016_catalog_attribute_vocabulary.sql", sql: catalogAttributeVocabulary },
   { path: "migrations/0017_catalog_attribute_values.sql", sql: catalogAttributeValues },
+  { path: "migrations/0018_customer_core.sql", sql: customerCore },
 ];
