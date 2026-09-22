@@ -288,6 +288,22 @@ Preferences are distinct from AI memory and centralized consent authority. Sourc
 
 One canonical relationship table; do not create separate CRM/partner/customer relationship tables for the same semantics.
 
+## 7.1 CRM Timeline
+
+### `crm_timeline_events`
+
+Canonical normalized CRM event references consumed from the platform Outbox/event infrastructure.
+
+Required fields:
+
+`id`, organization_id, workspace_id, relationship_id, source_module, source_event_id, event_type, event_version, occurred_at, received_at, actor_reference?, visibility, redaction_class, payload_json?, projection_version.
+
+Uniqueness is enforced on `source_module + source_event_id` for idempotent event consumption.
+
+The relationship, organization and workspace scope must agree. The originating domain remains authoritative for the underlying business fact.
+
+A separate `crm_timeline_projections` table is intentionally not physicalized yet because its read-model fields, rebuild contract and projection ownership are not sufficiently specified.
+
 ## 8. Booking / Availability
 
 ### `bookings`
