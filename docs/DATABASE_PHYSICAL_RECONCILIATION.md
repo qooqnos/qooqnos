@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0041**.
+The current API migration catalog references versions **0001 through 0042**.
 
 ### Foundation — 0001
 
@@ -265,6 +265,12 @@ These migrations add integrity triggers only.
 
 ### Demand / Matching integrity — 0041
 
+### Trust Reviews — 0042
+
+- reviews
+
+0042 physicalizes the canonical Review target selected by the repository's Review target contract, with exactly one typed target and Customer/tenant scope integrity.
+
 - no new tables
 
 0041 hardens typed candidate uniqueness and makes match decisions append-only.
@@ -307,7 +313,7 @@ These migrations add integrity triggers only.
 
 0035 establishes provider-neutral Communication conversation, message, notification and delivery-attempt storage with notification idempotency and tenant/workspace scope.
 
-**Total currently defined physical tables: 143.**
+**Total currently defined physical tables: 144.**
 
 
 - no new tables
