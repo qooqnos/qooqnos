@@ -85,6 +85,7 @@ Implemented:
 - Applied migration history is checked for contiguous versions, identity, module ownership and checksum integrity.
 - Missing schema_migrations is supported for the first migration bootstrap without creating a competing registry.
 - packages/database/src/index.ts exposes the canonical D1 database, repository, migration-catalog and migration-lock APIs.
+- packages/runtime/src/index.ts now exposes the actual canonical runtime, authorization, boot and AI runtime APIs instead of the removed PostgreSQL compatibility exports.
 - Legacy PostgreSQL adapter, PostgreSQL compatibility layer, legacy database repository and legacy database factory were removed from the active source tree.
 
 Commits:
@@ -95,6 +96,7 @@ Commits:
 - b128b12 — Remove legacy database repository
 - a10e19a — Remove PostgreSQL adapter
 - aa595ad — Remove PostgreSQL database compatibility layer
+- 4b3eee2 — Restore canonical runtime public exports
 
 Migration safety:
 - canonical migrations 0001–0013 were not edited, renumbered or replaced;
