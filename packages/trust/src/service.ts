@@ -61,6 +61,92 @@ export class TrustService {
     );
   }
 
+  async reportReview(
+    context: RequestContext,
+    input: { readonly reviewId: EntityId; readonly reporterReference: string; readonly reasonCode: string; readonly details?: string },
+  ) {
+    await this.options.authorization.assert({ context, permission: "trust.review.report", requireAuthentication: true, requireWorkspace: false });
+    return this.options.repository.reportReview(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async respondToReview(
+    context: RequestContext,
+    input: { readonly reviewId: EntityId; readonly businessId: EntityId; readonly actorReference: string; readonly content: string; readonly policyVersion: string },
+  ) {
+    await this.options.authorization.assert({ context, permission: "trust.review.respond", requireAuthentication: true, requireWorkspace: true });
+    return this.options.repository.createResponse(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async openModerationCase(
+    context: RequestContext,
+    input: { readonly reviewId: EntityId; readonly reasonCode?: string; readonly policyVersion: string; readonly assignedTo?: string },
+  ) {
+    await this.options.authorization.assert({ context, permission: "trust.review.moderate", requireAuthentication: true, requireWorkspace: false });
+    return this.options.repository.createModerationCase(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async recordModerationDecision(
+    context: RequestContext,
+    input: {
+      readonly moderationCaseId: EntityId;
+      readonly decision: "approve" | "reject" | "remove" | "restrict" | "restore";
+      readonly actorReference: string;
+      readonly reasonCode: string;
+      readonly policyVersion: string;
+    },
+  ) {
+    await this.options.authorization.assert({ context, permission: "trust.review.moderate", requireAuthentication: true, requireWorkspace: false });
+    return this.options.repository.recordModerationDecision(context, {
+      ...input,
+      id: this.options.id(),
+      decidedAt: this.options.now(),
+      now: this.options.now(),
+    });
+  }
+
+  async recordRiskSignal(
+    context: RequestContext,
+    input: {
+      readonly reviewId: EntityId;
+      readonly signalType: string;
+      readonly value?: unknown;
+      readonly confidence?: number;
+      readonly source: string;
+      readonly modelVersion?: string;
+      readonly policyVersion?: string;
+    },
+  ) {
+    await this.options.authorization.assert({ context, permission: "trust.review.moderate", requireAuthentication: true, requireWorkspace: false });
+    return this.options.repository.recordRiskSignal(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async rebuildReputation(
+    context: RequestContext,
+    input: { readonly targetType: ReviewTargetType; readonly targetId: EntityId; readonly policyVersion: string },
+  ) {
+    await this.options.authorization.assert({ context, permission: "trust.reputation.rebuild", requireAuthentication: true, requireWorkspace: false });
+    return this.options.repository.rebuildReputation(context, {
+      ...input,
+      now: this.options.now(),
+    });
+  }
+
   async moderateReview(context: RequestContext, id: EntityId, moderationState: string) {
     await this.options.authorization.assert({
       context,
@@ -101,6 +187,10 @@ export const TRUST_PERMISSIONS = [
   "trust.review.read",
   "trust.review.create",
   "trust.review.moderate",
+  "trust.review.report",
+  "trust.review.respond",
+  "trust.reputation.read",
+  "trust.reputation.rebuild",
   "trust.verification.read",
   "trust.verification.manage",
 ] as const;
