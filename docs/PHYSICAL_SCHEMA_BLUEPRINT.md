@@ -399,23 +399,51 @@ Invoice header and immutable line snapshots. Marketplace transaction invoices ar
 
 ### `verification_cases`
 
-`id`, organization/business/user subject reference, verification_type, status, policy_version, timestamps.
+`id`, organization_id, workspace_id?, subject_type, subject_id, policy_id, policy_version, status, risk_class, submitted_at?, resolved_at?, expires_at?, created_at, updated_at.
 
-The subject model must use an approved typed-target strategy or explicitly controlled polymorphism.
+The subject model uses a controlled subject-type vocabulary; it is not an unconstrained generic polymorphic target.
 
 ### `verification_documents`
 
-`id`, verification_case_id, protected media reference, checksum, classification, retention/expiry metadata, timestamps.
+`id`, case_id, evidence_type, storage_reference, content_hash, issuer?, submitted_at, expires_at?, processing_status, classification, provenance, retention_policy, created_at, updated_at.
 
-Raw evidence belongs in protected storage; D1 stores metadata/reference.
+Raw evidence belongs in protected storage; D1 stores metadata and an opaque storage reference.
+
+### `verification_policies`
+
+`id`, version, jurisdiction?, industry?, subject_type, risk_class, effective_from?, effective_to?, human_review_rules?, expiry_rules?, status, created_at, updated_at.
+
+Active policy versions are immutable.
+
+### `verification_requirements`
+
+`id`, policy_id, policy_version, subject_type, jurisdiction?, industry?, requirement_type, required, evidence_types, human_review_required, effective_from?, effective_to?, expiry_rule?, created_at, updated_at.
+
+A Requirement belongs to one immutable Policy version.
 
 ### `verification_checks`
 
-`id`, verification_case_id, requirement key, status, evidence reference?, evaluated_at, policy/version.
+`id`, case_id, requirement_id, check_type, method, result, confidence?, reviewer_id?, policy_version, performed_at, created_at, updated_at.
+
+Checks are evaluations, not final verification decisions.
+
+### `verification_check_documents`
+
+`check_id`, document_id, created_at.
+
+The linked document must belong to the same VerificationCase as the Check.
 
 ### `verification_decisions`
 
-`id`, verification_case_id, decision, actor/system reference, reason code, policy version, created_at.
+`id`, case_id, requirement_id, outcome, actor_type, actor_id?, rationale_reference, policy_version, decided_at, created_at.
+
+Decisions are append-only historical facts; corrections create a new Decision.
+
+### `verification_decision_checks`
+
+`decision_id`, check_id, created_at.
+
+The linked Check must belong to the same VerificationCase as the Decision.
 
 ### `reviews`
 
