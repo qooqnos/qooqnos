@@ -95,6 +95,7 @@ export class TrustReviewRepository extends Repository {
   ) {
     const review = await this.getReview(context, input.reviewId);
     if (!input.content.trim()) throw new DatabaseError("Review response content is required");
+    if (!input.policyVersion.trim()) throw new DatabaseError("Review response policy version is required");
     await this.database.run(
       "INSERT INTO review_responses (id, review_id, business_id, actor_reference, content, status, moderation_state, policy_version, content_version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'submitted', 'pending', ?, 1, ?, ?)",
       input.id, review.id, input.businessId, input.actorReference.trim(), input.content.trim(), input.policyVersion.trim(), input.now, input.now,
