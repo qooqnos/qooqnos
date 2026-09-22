@@ -34,10 +34,11 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Booking core | 🟢 Schema/package/repository implemented | migrations/0028_booking_core.sql; packages/booking/src/repository.ts; packages/booking/src/service.ts |
 | Booking availability rules | 🟢 Schema/repository implemented | migrations/0029_availability_schedules.sql; packages/booking/src/availability-repository.ts |
 | Booking holds / lifecycle history | 🟢 Schema/repository implemented | migrations/0030_booking_holds_history.sql; packages/booking/src/repository.ts |
-| Booking transactional finalization | 🟢 Schema/service/API implemented | migrations/0046_booking_finalization_guards.sql; migrations/0047_booking_capacity_update_guards.sql; packages/booking/src/repository.ts; packages/booking/src/service.ts; apps/api/src/booking-routes.ts |
-| Commerce transaction core | 🟢 Schema/package/repository implemented | migrations/0031_commerce_transaction_core.sql; migrations/0032_commerce_integrity_hardening.sql; packages/commerce/src/repository.ts; packages/commerce/src/service.ts |
+| Booking transactional finalization | 🟢 Schema/service/API/outbox implemented | migrations/0046_booking_finalization_guards.sql; migrations/0047_booking_capacity_update_guards.sql; packages/booking/src/repository.ts; packages/booking/src/service.ts; apps/api/src/booking-routes.ts |
+| Platform Outbox / Queue boundary | 🟢 Publisher/lease/worker boundary implemented | packages/database/src/services.ts; apps/api/src/outbox-worker.ts; apps/api/src/index.ts; apps/api/src/env.ts |
+| Commerce transaction core | 🟢 Schema/package/repository/service/API implemented | migrations/0031_commerce_transaction_core.sql; migrations/0032_commerce_integrity_hardening.sql; packages/commerce/src/repository.ts; packages/commerce/src/service.ts; apps/api/src/commerce-routes.ts |
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
-| Communication core | 🟢 Schema/package/repository/service implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts |
+| Communication core | 🟢 Schema/package/repository/service/API/outbox-consumer implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts; apps/api/src/outbox-worker.ts |
 | Automation workflow engine | 🟢 Schema/package/repository/service implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts |
 | AI Runtime persistence | 🟢 Schema/repository implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts |
 | Integration core | 🟢 Schema/package/repository/service implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts |
@@ -256,6 +257,22 @@ Commits:
 - 69bcbc1 — Add Commerce repository tests
 - 8d3b29e — Fix Commerce repository test harness
 - 35d3696 — Complete Commerce orchestration repositories
+- 4a0e40e0 — Claim Outbox events before Queue publication
+- d46dbf02 — Add concurrency-safe Outbox event leasing
+- 964a65ba — Add D1 Outbox publisher and Queue consumer boundary
+- 102f311c — Wire Outbox publisher and Queue consumer into Worker entrypoint
+- 4c8002fb — Expose Commerce cart/checkout/order API routes
+- 787f64b9 — Register Commerce API routes
+- 1a008e17 — Make Communication notification creation transactional with Outbox
+- 880f1398 — Expose Communication API routes
+- 508e8b15 — Register Communication API routes
+- f15ac668 — Process Communication notification events in Queue consumer
+- 973fe752 — Harden Communication notification status scope
+- 43ac6625 — Make Commerce order creation idempotent and transactional with Outbox
+- 7c11d4c5 — Make Commerce order status transitions transactional with Outbox
+- a16c9357 — Make Commerce order outbox race-safe under idempotency concurrency
+- c9c409a8 — Emit Booking confirmation event in finalization transaction
+- a8116af6 — Make Booking status transitions transactional with Outbox
 - 396cae6 — Add Billing core migration 0033
 - 5dcc8b8 — Register Billing core migration
 - 2590b5a — Lock Billing core migration checksum
@@ -365,15 +382,15 @@ Integration note: migration 0038 establishes provider/account/webhook/sync/exter
 
 AI Runtime note: migration 0037 establishes shared operation/provider/model/policy/prompt/schema/result/usage persistence. Provider adapters, routing engine, validation pipeline and durable execution workers remain operational follow-up.
 
-Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Consent/policy/template registry and provider adapters remain operational follow-up gates.
+Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is now transactional with Outbox and the Worker consumer advances created notifications to queued; provider adapter/template/policy layers remain operational gates.
 
 Billing runtime note: the API Seller AI composition now uses the real D1-backed BillingService. No fallback unavailable Billing service is used for the production path; missing plan/subscription/entitlement state fails the operation closed.
 
 Billing note: migrations 0033–0034 establish plan/price/subscription/entitlement/usage/provider-reference/reconciliation storage plus an atomic quota counter. Billing is the commercial entitlement authority; payment execution, invoices and financial ledger remain gated.
 
-Commerce note: migrations 0031–0032 establish the Commerce-owned Cart/Checkout/PriceSnapshot/Order transaction boundary and integrity hardening. Billing/Payment remains authoritative for payment execution, financial settlement, refunds and invoices.
+Commerce note: migrations 0031–0032 establish the Commerce-owned Cart/Checkout/PriceSnapshot/Order transaction boundary and integrity hardening. Cart/Checkout/Order API routes are live in the canonical router; Order creation/status transitions are idempotent/CAS and emit Outbox events. Billing/Payment remains authoritative for payment execution, financial settlement, refunds and invoices.
 
-Booking note: migrations 0028–0030 establish the canonical Booking/Availability physical core and short-lived holds. Migrations 0046–0047 complete the transactional finalization/idempotency/capacity-guard layer. No second reservation model or authoritative slots table is permitted.
+Booking note: migrations 0028–0030 establish the canonical Booking/Availability physical core and short-lived holds. Migrations 0046–0047 complete transactional finalization, idempotency and capacity guards; confirmation/status events now use the platform Outbox. No second reservation model or authoritative slots table is permitted.
 
 Business lifecycle note: migration 0027 records immutable transitions for the existing physical `draft/active/suspended/archived` Business statuses. It intentionally does not invent a new status vocabulary.
 
