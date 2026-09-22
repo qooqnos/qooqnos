@@ -362,7 +362,11 @@ Do not create:
 
 Industry and jurisdiction differences belong in VerificationPolicy and VerificationRequirement.
 
-## 23. Definition of Done
+## 23. Physical implementation status
+
+The canonical physical D1 chain currently covers VerificationCase, Evidence metadata, Policy, Requirements, Checks, Decisions, Human Review records, and Expiry/Re-evaluation records. Reviewer authorization, expiry workers/events, and TrustSignal persistence remain operational follow-up capabilities.
+
+## 24. Definition of Done
 
 The canonical Trust data model is complete when:
 
