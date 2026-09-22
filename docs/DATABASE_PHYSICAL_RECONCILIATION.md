@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0045**.
+The current API migration catalog references versions **0001 through 0047**.
 
 ### Foundation — 0001
 
@@ -596,7 +596,7 @@ The next implementation work should proceed in this order:
 
 1. Define AttributeValue backfill/conflict/cutover rules without duplicating current JSON-backed state.
 2. Complete CustomerProfile only after its field-level contract is closed; keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit.
-3. Complete Booking availability calculation and slot-generation semantics.
+3. Complete Booking availability calculation and slot-generation semantics; transactional finalization/capacity guards are implemented in 0046–0047.
 4. Complete Billing provider adapters/reconciliation workers and invoice/financial-ledger foundation only where their contracts are explicit.
 5. Complete Communication consent/policy/template registry and durable dispatch/provider-adapter contracts.
 6. Complete Automation durable scheduler/worker execution and capability compensation semantics.
