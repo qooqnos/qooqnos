@@ -12,6 +12,8 @@ import { registerCommerceRoutes } from "./commerce-routes";
 import { registerCommunicationRoutes } from "./communication-routes";
 import { registerTrustRoutes } from "./trust-routes";
 import { registerPrivacyRoutes } from "./privacy-routes";
+import { registerAutomationRoutes } from "./automation-routes";
+import { registerIntegrationRoutes } from "./integration-routes";
 
 export interface ApiRouteContext {
   readonly request: Request;
@@ -55,6 +57,8 @@ export class ApiRouter {
     registerCommunicationRoutes(this, options.database, options.authorization);
     registerTrustRoutes(this, options.database, options.authorization);
     registerPrivacyRoutes(this, options.database, options.authorization);
+    registerAutomationRoutes(this, options.database, options.authorization);
+    registerIntegrationRoutes(this, options.database, options.authorization);
   }
 
   register(route: ApiRoute): void {
