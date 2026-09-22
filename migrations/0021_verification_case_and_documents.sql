@@ -90,15 +90,3 @@ CREATE INDEX idx_verification_documents_expiry
 
 CREATE INDEX idx_verification_documents_hash
   ON verification_documents(content_hash);
-
-CREATE TRIGGER IF NOT EXISTS trg_verification_document_org_scope_insert
-BEFORE INSERT ON verification_documents
-FOR EACH ROW
-WHEN NOT EXISTS (
-  SELECT 1
-  FROM verification_cases vc
-  WHERE vc.id = NEW.case_id
-)
-BEGIN
-  SELECT RAISE(ABORT, 'Verification document references an unknown case');
-END;
