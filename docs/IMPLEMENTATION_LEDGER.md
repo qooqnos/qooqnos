@@ -40,9 +40,9 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Commerce transaction core | 🟢 Schema/package/repository/service/API implemented | migrations/0031_commerce_transaction_core.sql; migrations/0032_commerce_integrity_hardening.sql; packages/commerce/src/repository.ts; packages/commerce/src/service.ts; apps/api/src/commerce-routes.ts |
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
 | Communication core | 🟢 Schema/package/repository/service/API/outbox-consumer implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts; apps/api/src/outbox-worker.ts |
-| Automation workflow engine | 🟢 Schema/package/repository/service implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts |
+| Automation workflow engine | 🟢 Schema/package/repository/service/API implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts |
 | AI Runtime persistence | 🟢 Schema/repository implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts |
-| Integration core | 🟢 Schema/package/repository/service implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts |
+| Integration core | 🟢 Schema/package/repository/service/API implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; apps/api/src/integration-routes.ts |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Demand / Matching core | 🟢 Schema/package/repository/service implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts |
 | Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts |
@@ -388,6 +388,8 @@ Booking finalization note: migrations 0046–0047 establish idempotent Booking c
 Trust Review note: migration 0042 physicalizes the canonical Review target from Gate 05 (Business/Offering/Product); 0045 adds target-scope integrity on insert/update and the Trust package exposes the same three-target creation boundary.
 
 Review reputation note: migration 0048 completes Review lifecycle/report/response/moderation/risk/reputation persistence. Reputation is rebuildable projection state; Review/Booking/Customer/Business remain the authoritative sources.
+
+Automation/Integration API note: Automation workflow/version/execution and Integration account/webhook capabilities are now registered in the canonical API router; durable worker execution remains gated by provider/capability contracts.
 
 Review moderation note: migration 0048 completes moderation/reporting/reputation projection storage and API/service behavior. Review target types remain canonical Business/Offering/Product only.
 
