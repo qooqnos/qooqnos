@@ -42,10 +42,10 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Communication core | 🟢 Schema/package/repository/service/API/outbox-consumer implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts; apps/api/src/outbox-worker.ts |
 | Automation workflow engine | 🟢 Schema/package/repository/service/API implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts |
 | AI Runtime persistence | 🟢 Schema/repository implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts |
-| Integration core | 🟢 Schema/package/repository/service/API implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; apps/api/src/integration-routes.ts |
+| Integration core | 🟢 Schema/package/repository/service/API implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; apps/api/src/integration-routes.ts; integration sync-job API |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Demand / Matching core | 🟢 Schema/package/repository/service implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts |
-| Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts |
+| Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts; Review lifecycle fields exposed from repository |
 | Billing counter scope integrity | 🟢 Integrity migration implemented | migrations/0044_billing_counter_scope.sql; packages/billing/src/repository.ts |
 | Review target integrity | 🟢 Canonical three-target schema/service/integrity implemented | migrations/0042_reviews_core.sql; migrations/0045_review_target_integrity.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts |
 | Trust Review core | 🟢 Schema/package/repository/service implemented | migrations/0042_reviews_core.sql; migrations/0043_integrity_update_guards.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts |
@@ -361,8 +361,8 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0047 remain numbered and are extended only through new migrations;
-- migrations 0024–0047 are preserved in the canonical lock sequence.
+- canonical migrations 0001–0048 remain numbered and are extended only through new migrations;
+- migrations 0024–0048 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: GitHub Actions now provides the authoritative build/test verification path; the latest observed pipelines progressed through build/typecheck and surfaced only test-suite contract failures, which are being fixed directly.
@@ -377,7 +377,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0047 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0048 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
 
@@ -389,7 +389,16 @@ Trust Review note: migration 0042 physicalizes the canonical Review target from 
 
 Review reputation note: migration 0048 completes Review lifecycle/report/response/moderation/risk/reputation persistence. Reputation is rebuildable projection state; Review/Booking/Customer/Business remain the authoritative sources.
 
-Automation/Integration API note: Automation workflow/version/execution and Integration account/webhook capabilities are now registered in the canonical API router; durable worker execution remains gated by provider/capability contracts.
+Automation/Integration API note: Automation workflow/version/execution and Integration account/webhook/sync-job capabilities are now registered in the canonical API router; durable worker execution remains gated by provider/capability contracts.
+
+Latest verified commits:
+- 55a6118 — Record Automation and Integration API composition in ledger
+- c681855 — Expose Review lifecycle fields from canonical 0048 schema
+- f6f0c3b — Update Review repository tests for lifecycle fields
+- e15721d — Expose Integration sync job API capability
+- 56591ab — Test protected Integration sync job route
+
+CI verification: GitHub Actions CI and Phoenix verification both pass on current main after these changes.
 
 Review moderation note: migration 0048 completes moderation/reporting/reputation projection storage and API/service behavior. Review target types remain canonical Business/Offering/Product only.
 
