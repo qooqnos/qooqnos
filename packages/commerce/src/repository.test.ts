@@ -19,11 +19,17 @@ function context(): RequestContext {
 
 describe("CommerceRepository", () => {
   it("rejects non-ISO currency values", async () => {
-    const repository = new CommerceRepository({
-      first: async () => null,
-      all: async () => [],
-      run: async () => ({ success: true }),
-    } as never);
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CommerceRepository(new D1Database(raw));
 
     await expect(repository.createCart(context(), {
       id: brandId<"EntityId">("cart-1"),
