@@ -121,14 +121,16 @@ export class AutomationRepository extends Repository {
     if (workflow.status === "retired" && status !== "retired") {
       throw new DatabaseError("Retired workflow cannot be reopened");
     }
-    await this.database.run(
-      "UPDATE automation_workflows SET status = ?, updated_at = ? WHERE id = ? AND (organization_id IS NULL OR organization_id = ?) AND (workspace_id IS NULL OR workspace_id = ?)",
-      status,
-      now,
-      workflowId,
-      context.tenantId,
-      context.workspaceId ?? null,
-    );
+    await this.database.transaction([
+      {
+        sql: "UPDATE automation_workflow_versions SET status = CASE WHEN ? = 'retired' AND status = 'active' THEN 'retired' ELSE status END WHERE workflow_id = ?",
+        params: [status, workflowId],
+      },
+      {
+        sql: "UPDATE automation_workflows SET status = ?, active_version_id = CASE WHEN ? = 'retired' THEN NULL ELSE active_version_id END, updated_at = ? WHERE id = ? AND (organization_id IS NULL OR organization_id = ?) AND (workspace_id IS NULL OR workspace_id = ?)",
+        params: [status, status, now, workflowId, context.tenantId, context.workspaceId ?? null],
+      },
+    ]);
     return this.getWorkflow(context, workflowId);
   }
 
