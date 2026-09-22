@@ -127,19 +127,68 @@ export class CommunicationRepository extends Repository {
       organizationId, input.idempotencyKey.trim(),
     );
     if (existing) return hydrateNotification(existing);
-    await this.database.run(
-      "INSERT INTO communication_notifications (id, organization_id, workspace_id, recipient_reference, intent, channel, template_reference, template_version, locale, variables_json, priority, status, idempotency_key, scheduled_at, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created', ?, ?, ?, ?, ?)",
-      input.id, organizationId, context.workspaceId ?? null, input.recipientReference.trim(), input.intent.trim(),
-      input.channel, input.templateReference?.trim() || null, input.templateVersion?.trim() || null, input.locale ?? null,
-      input.variables ? JSON.stringify(input.variables) : null, input.priority ?? "normal", input.idempotencyKey.trim(),
-      input.scheduledAt ?? null, input.expiresAt ?? null, input.now, input.now,
-    );
+    await this.database.transaction([
+      {
+        sql: "INSERT INTO communication_notifications (id, organization_id, workspace_id, recipient_reference, intent, channel, template_reference, template_version, locale, variables_json, priority, status, idempotency_key, scheduled_at, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created', ?, ?, ?, ?, ?)",
+        params: [
+          input.id,
+          organizationId,
+          context.workspaceId ?? null,
+          input.recipientReference.trim(),
+          input.intent.trim(),
+          input.channel,
+          input.templateReference?.trim() || null,
+          input.templateVersion?.trim() || null,
+          input.locale ?? null,
+          input.variables ? JSON.stringify(input.variables) : null,
+          input.priority ?? "normal",
+          input.idempotencyKey.trim(),
+          input.scheduledAt ?? null,
+          input.expiresAt ?? null,
+          input.now,
+          input.now,
+        ],
+      },
+      {
+        sql: "INSERT INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'communication.notification.created', 1, 'communication_notification', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          input.id + ':created',
+          input.id,
+          organizationId,
+          context.workspaceId ?? null,
+          JSON.stringify({
+            notificationId: input.id,
+            intent: input.intent.trim(),
+            channel: input.channel,
+          }),
+          input.now,
+          input.now,
+        ],
+      },
+    ]);
     const row = await this.database.first<NotificationRow>(
       "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale, variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey, scheduled_at AS scheduledAt, expires_at AS expiresAt, last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt FROM communication_notifications WHERE id = ? LIMIT 1",
       input.id,
     );
     if (!row) throw new DatabaseError("Communication notification not found after creation");
     return hydrateNotification(row);
+  }
+
+  async queueNotificationFromSystem(input: {
+    readonly organizationId: EntityId;
+    readonly workspaceId: EntityId | null;
+    readonly notificationId: EntityId;
+    readonly now: string;
+  }): Promise<boolean> {
+    const result = await this.database.run(
+      "UPDATE communication_notifications SET status = 'queued', updated_at = ? WHERE id = ? AND organization_id = ? AND ((workspace_id IS NULL AND ? IS NULL) OR workspace_id = ?) AND status = 'created'",
+      input.now,
+      input.notificationId,
+      input.organizationId,
+      input.workspaceId,
+      input.workspaceId,
+    );
+    return (result.meta?.changes ?? 0) === 1;
   }
 
   async setNotificationStatus(context: RequestContext, id: EntityId, status: CommunicationMessageStatus, now: string): Promise<NotificationRecord> {
