@@ -577,7 +577,7 @@ The database is broad but not yet production-complete.
 The accurate state is:
 
 ```
-144 physical tables defined across 45 ordered migrations
+144 physical tables defined across 47 ordered migrations
         ↓
 core foundation + identity + business + catalog + media + discovery
 + seller AI + customer/CRM + trust + booking + commerce + billing
@@ -596,7 +596,7 @@ The next implementation work should proceed in this order:
 
 1. Define AttributeValue backfill/conflict/cutover rules without duplicating current JSON-backed state.
 2. Complete CustomerProfile only after its field-level contract is closed; keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit.
-3. Complete Booking availability calculation, hold consumption and atomic finalization semantics.
+3. Complete Booking availability calculation and slot-generation semantics.
 4. Complete Billing provider adapters/reconciliation workers and invoice/financial-ledger foundation only where their contracts are explicit.
 5. Complete Communication consent/policy/template registry and durable dispatch/provider-adapter contracts.
 6. Complete Automation durable scheduler/worker execution and capability compensation semantics.
@@ -608,7 +608,7 @@ The next implementation work should proceed in this order:
 12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
 13. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
-Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0044 and 0045 are integrity-only and add no tables.
+Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables.
 
 ## 9. Final D1 gate
 
