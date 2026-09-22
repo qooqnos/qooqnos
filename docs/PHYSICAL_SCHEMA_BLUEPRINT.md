@@ -531,9 +531,9 @@ Expiry records trigger policy re-evaluation. They are operational Trust records,
 
 ### `reviews`
 
-`id`, customer_id, rating value, content, moderation state, typed target reference(s), timestamps.
+`id`, organization_id, workspace_id?, customer_id, rating_value, content?, moderation_state, business_id?, offering_id?, booking_id?, appointment_id?, service_id?, product_id?, location_id?, created_at, updated_at.
 
-A Review has exactly one canonical target according to the final typed-target matrix. Avoid generic target_type/target_id where FK integrity is important.
+The Review has exactly one canonical typed target from the approved target matrix. Review rows never duplicate target-domain truth.
 
 ### `moderation_cases`
 
