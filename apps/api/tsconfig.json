@@ -18,6 +18,7 @@
     { "path": "../../packages/business" },
     { "path": "../../packages/booking" },
     { "path": "../../packages/commerce" },
+    { "path": "../../packages/billing" },
     { "path": "../../packages/catalog" },
     { "path": "../../packages/discovery" },
     { "path": "../../packages/onboarding" },
