@@ -49,7 +49,7 @@ BEGIN
 END;
 
 CREATE TRIGGER IF NOT EXISTS trg_verification_decision_scope_update
-BEFORE UPDATE OF case_id, requirement_id, policy_version, outcome, actor_type, actor_id, rationale_reference, decided_at ON verification_decisions
+BEFORE UPDATE ON verification_decisions
 FOR EACH ROW
 BEGIN
   SELECT RAISE(ABORT, 'Verification decisions are append-only');
