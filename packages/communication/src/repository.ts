@@ -191,6 +191,53 @@ export class CommunicationRepository extends Repository {
     return (result.meta?.changes ?? 0) === 1;
   }
 
+  async listDispatchableNotifications(now: string, limit = 50): Promise<readonly NotificationRecord[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
+    const rows = await this.database.all<NotificationRow>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale, variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey, scheduled_at AS scheduledAt, expires_at AS expiresAt, last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt FROM communication_notifications WHERE status = 'queued' AND (scheduled_at IS NULL OR scheduled_at <= ?) AND (expires_at IS NULL OR expires_at > ?) ORDER BY priority DESC, created_at ASC, id ASC LIMIT ?",
+      now,
+      now,
+      safeLimit,
+    );
+    return rows.map(hydrateNotification);
+  }
+
+  async claimQueuedNotification(
+    notificationId: EntityId,
+    organizationId: EntityId,
+    workspaceId: EntityId | null,
+    now: string,
+  ): Promise<boolean> {
+    const result = await this.database.run(
+      "UPDATE communication_notifications SET status = 'provider_accepted', updated_at = ? WHERE id = ? AND organization_id = ? AND ((workspace_id IS NULL AND ? IS NULL) OR workspace_id = ?) AND status = 'queued'",
+      now,
+      notificationId,
+      organizationId,
+      workspaceId,
+      workspaceId,
+    );
+    return (result.meta?.changes ?? 0) === 1;
+  }
+
+  async markDispatchResult(
+    notificationId: EntityId,
+    organizationId: EntityId,
+    workspaceId: EntityId | null,
+    status: CommunicationMessageStatus,
+    now: string,
+  ): Promise<boolean> {
+    const result = await this.database.run(
+      "UPDATE communication_notifications SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND ((workspace_id IS NULL AND ? IS NULL) OR workspace_id = ?) AND status = 'provider_accepted'",
+      status,
+      now,
+      notificationId,
+      organizationId,
+      workspaceId,
+      workspaceId,
+    );
+    return (result.meta?.changes ?? 0) === 1;
+  }
+
   async setNotificationStatus(context: RequestContext, id: EntityId, status: CommunicationMessageStatus, now: string): Promise<NotificationRecord> {
     const current = await this.getNotification(context, id);
     if (!current) throw new DatabaseError("Communication notification not found");
