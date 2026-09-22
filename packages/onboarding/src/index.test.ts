@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
   OnboardingWorkflow,
   OnboardingManager,
-} from "./index";
+} from "./legacy";
 import { InMemoryDatabase, createUser } from "@qooqnos/database/legacy";
 import { createUserId } from "@qooqnos/core";
 
