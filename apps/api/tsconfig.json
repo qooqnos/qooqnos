@@ -16,6 +16,7 @@
     { "path": "../../packages/database" },
     { "path": "../../packages/auth" },
     { "path": "../../packages/business" },
+    { "path": "../../packages/booking" },
     { "path": "../../packages/catalog" },
     { "path": "../../packages/discovery" },
     { "path": "../../packages/onboarding" },
