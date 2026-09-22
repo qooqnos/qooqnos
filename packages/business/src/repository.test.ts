@@ -154,4 +154,56 @@ describe("BusinessRepository", () => {
     expect(statements.some((sql) => sql.includes("INSERT INTO business_status_history"))).toBe(true);
   });
 
+
+  it("transactionally rejects a stale publication transition", async () => {
+    let firstCalls = 0;
+    let preparedSql = "";
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        if (preparedSql.includes("FROM businesses")) {
+          return {
+            id: "business-1",
+            organizationId: "tenant-1",
+            workspaceId: "workspace-1",
+            name: "phoenix",
+            displayName: "Phoenix",
+            status: "active",
+            publicationStatus: "unpublished",
+            businessType: null,
+            primaryCategoryId: null,
+            defaultLocale: "en",
+            timezone: "UTC",
+            defaultCurrency: "AZN",
+            createdAt: "2026-09-22T00:00:00.000Z",
+            updatedAt: "2026-09-22T00:00:00.000Z",
+          } as T;
+        }
+        return null;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) {
+        preparedSql = sql;
+        return statement;
+      },
+      async batch() {
+        firstCalls += 1;
+        return [{ success: true, meta: { changes: 0 } }, { success: true }, { success: true }];
+      },
+    };
+    const repository = new BusinessRepository(new D1Database(raw));
+
+    await expect(repository.setPublicationStatusAndRecord(
+      context(),
+      brandId<"EntityId">("business-1"),
+      "published",
+      "2026-09-22T00:01:00.000Z",
+    )).rejects.toThrow("Concurrent business publication transition rejected");
+
+    expect(firstCalls).toBe(1);
+  });
+
 });
