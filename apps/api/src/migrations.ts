@@ -21,6 +21,7 @@ import crmTimelineEvents from "../../../migrations/0020_crm_timeline_events.sql"
 import verificationCaseAndDocuments from "../../../migrations/0021_verification_case_and_documents.sql";
 import verificationPolicyRequirements from "../../../migrations/0022_verification_policy_requirements.sql";
 import verificationChecks from "../../../migrations/0023_verification_checks.sql";
+import verificationDecisions from "../../../migrations/0024_verification_decisions.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -47,4 +48,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0021_verification_case_and_documents.sql", sql: verificationCaseAndDocuments },
   { path: "migrations/0022_verification_policy_requirements.sql", sql: verificationPolicyRequirements },
   { path: "migrations/0023_verification_checks.sql", sql: verificationChecks },
+  { path: "migrations/0024_verification_decisions.sql", sql: verificationDecisions },
 ];
