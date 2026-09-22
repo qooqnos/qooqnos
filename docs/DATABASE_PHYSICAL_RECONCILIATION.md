@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0029.
+The current API migration catalog references versions **0001 through 0030**.
 
 ### Foundation — 0001
 
@@ -72,17 +72,9 @@ The current API migration catalog references versions 0001 through 0029.
 - prices
 - inventory_items
 
-### Catalog integrity — 0006–0007
+### Catalog integrity / permission catalog — 0006–0008
 
 No new tables.
-
-These migrations add database-level catalog lifecycle and cross-aggregate integrity triggers.
-
-### Permission catalog — 0008
-
-No new tables.
-
-This migration seeds persisted permission vocabulary.
 
 ### Media — 0009
 
@@ -105,9 +97,11 @@ This migration seeds persisted permission vocabulary.
 - seller_ai_drafts
 - seller_ai_field_provenance
 
-0012 adds seller-AI links to Business/Catalog plus idempotency/request metadata.
+### Catalog integrity hardening — 0014–0015
 
-0013 adds request_fingerprint.
+No new tables.
+
+These migrations add integrity triggers only.
 
 ### Catalog Attribute vocabulary — 0016
 
@@ -115,49 +109,58 @@ This migration seeds persisted permission vocabulary.
 - attribute_options
 - category_attributes
 
-0016 establishes the canonical reusable attribute vocabulary and Category applicability metadata. It does not create a product/service value table; existing product_variants.attributes_json remains the current value representation.
-
 ### Catalog Attribute values — 0017
 
 - attribute_values
 - attribute_value_options
 
-0017 is an expand-only value-storage migration. It establishes typed AttributeValue records for product, product_variant and service targets, preserves provenance, and enforces type/option compatibility. It does not backfill attributes_json and does not switch current repository reads/writes.
+0017 is expand-only; `product_variants.attributes_json` remains the active authoritative path.
 
 ### Customer core — 0018
 
 - customers
 - customer_preferences
 
-0018 establishes the canonical marketplace Customer representation separately from Identity. Guest Customers are supported through nullable user_id mapping.
-
 ### CRM customer relationships — 0019
 
 - customer_relationships
-
-0019 establishes the canonical Customer↔Business relationship aggregate owned by CRM and enforces same-organization integrity.
 
 ### CRM timeline events — 0020
 
 - crm_timeline_events
 
-0020 establishes the canonical normalized CRM event store for relationship timelines. It is idempotent by source module/event identifier and enforces organization/workspace/relationship scope. The originating module remains authoritative for the underlying business fact.
-
-### Trust VerificationCase / documents — 0021
+### Trust VerificationCase / evidence — 0021
 
 - verification_cases
 - verification_documents
 
-0021 establishes the VerificationCase aggregate and protected evidence metadata/reference layer.
+### Trust policy / requirements — 0022
+
+- verification_policies
+- verification_requirements
+
+### Trust checks — 0023
+
+- verification_checks
+- verification_check_documents
+
+### Trust decisions — 0024
+
+- verification_decisions
+- verification_decision_checks
 
 ### Trust review / expiry — 0025
 
 - verification_reviews
 - verification_expiries
 
-0025 completes the operational human-review assignment and expiry/re-evaluation records. Authorization remains the source of reviewer permission; expiry processing must remain resumable/idempotent.
+### Customer addresses — 0026
+
+- customer_addresses
 
 ### Business lifecycle history — 0027
+
+- business_status_history
 
 ### Booking core — 0028
 
@@ -167,51 +170,21 @@ This migration seeds persisted permission vocabulary.
 - resources
 - appointment_resources
 
-0028 establishes the Booking commitment core, immutable booking-item snapshots, scheduled appointments and the canonical Resource taxonomy.
-
 ### Availability schedules — 0029
 
 - schedules
 - availability_rules
 - availability_exceptions
 
-0029 establishes reusable schedules and recurring/exception availability rules. Bookable slots remain rebuildable projections; no authoritative slots table is created.
+### Booking holds / history — 0030
 
+- booking_holds
+- booking_status_history
+- appointment_events
 
-- business_status_history
+**Total currently defined physical tables: 75.**
 
-0027 adds immutable lifecycle transition history for the existing physical Business status vocabulary. It intentionally does not change the current `businesses.status` enum; the broader conceptual onboarding vocabulary remains a separate reconciliation gate.
-
-### Customer addresses — 0026
-
-- customer_addresses
-
-0026 implements the canonical structured Address value object in the Customer persistence context. The table stores decomposed address fields; CustomerProfile remains gated because its field-level contract is still intentionally open.
-
-### Trust policy / requirements — 0022
-
-- verification_policies
-- verification_requirements
-
-0022 establishes immutable policy versions and policy-scoped requirements.
-
-### Trust checks — 0023
-
-- verification_checks
-- verification_check_documents
-
-0023 establishes evaluations against requirements and controlled evidence links.
-
-### Trust decisions — 0024
-
-- verification_decisions
-- verification_decision_checks
-
-0024 establishes append-only authoritative verification decisions and controlled supporting-check links.
-
-**Total currently defined physical tables: 71.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers; migration 0021 adds two Trust tables; migration 0022 adds two Trust policy tables; migration 0023 adds two Trust check tables plus integrity triggers; migration 0024 adds two Trust decision tables plus append-only/integrity triggers.
-
-This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
+This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
 ## 2. Domain coverage matrix
 
@@ -228,7 +201,7 @@ This count includes only canonical SQL migration sources. It does not include th
 | Seller AI Creation | creation sessions, raw inputs, drafts, field provenance | Implemented for seller-side creation slice |
 | Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events, customer_addresses | Customer core, CRM relationship and structured Address storage implemented; CustomerProfile, timeline projection and workflow layers remain |
 | Matching | no user request / match execution tables | Missing |
-| Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions | Core schema/repositories implemented; final availability resolution, atomic reservation/holds and booking history/events remain |
+| Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions, booking_holds, booking_status_history, appointment_events | Core schema/repositories implemented; final availability resolution and atomic reservation/finalization remain |
 | Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries | Core verification chain + review/expiry records implemented; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
 | Moderation / Privacy / Consent | no canonical workflow tables | Missing |
 | Communication | no conversation/message/notification/delivery tables | Missing |
@@ -470,15 +443,15 @@ new migrations must follow ownership + no-duplication gates
 The next implementation work should proceed in this order:
 
 1. Define AttributeValue backfill/conflict/cutover rules without duplicating current JSON-backed state.
-2. Complete Business lifecycle support only where the logical model requires it.
-3. Complete Customer profile/address field-level persistence where contracts are closed; keep timeline projections gated until projection rebuild contracts are explicit.
-4. Complete Trust reviewer authorization integration, expiry processing/events, and TrustSignal projections only after their operational contracts are explicit.
-6. Introduce Booking/Availability structures.
-7. Introduce Commerce/Billing structures.
-8. Introduce Communication/Automation/Integration structures.
-9. Introduce canonical AI Runtime storage.
-10. Add matching/user-request persistence and rebuildable projections.
-11. Add remaining localization/document/analytics/privacy structures where justified.
+2. Complete Business lifecycle reconciliation only where the conceptual onboarding vocabulary can be mapped without inventing semantics.
+3. Complete CustomerProfile only after its field-level contract is closed; keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit.
+4. Complete Trust reviewer authorization integration, expiry workers/events and TrustSignal projections only after their operational contracts are explicit.
+5. Complete Booking availability calculation, holds consumption and atomic finalization semantics.
+6. Introduce Commerce transaction storage.
+7. Introduce Communication/Automation/Integration storage.
+8. Introduce canonical AI Runtime storage.
+9. Add matching/user-request persistence and rebuildable projections.
+10. Add remaining localization/document/analytics/privacy structures where justified.
 
 Every step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums.
 
