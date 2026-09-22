@@ -270,3 +270,5 @@ export interface TimestampedEntity {
   readonly updatedAt: Date;
   readonly deletedAt?: Date;
 }
+
+export * from "./discovery";
