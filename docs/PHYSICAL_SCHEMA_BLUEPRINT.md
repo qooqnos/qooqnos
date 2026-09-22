@@ -901,6 +901,58 @@ Candidates reference canonical Business/Offering authority; Matching never copie
 
 Match decisions are immutable historical decisions.
 
+## 18.2 Reviews / Reputation
+
+### Review lifecycle extension
+
+Migration 0048 extends `reviews` with:
+
+`status`, interaction_reference?, locale?, published_at?, policy_version, content_version.
+
+The existing typed target columns remain canonical; no generic `review_targets` table is introduced.
+
+### `review_reports`
+
+`id`, review_id, reporter_reference, reason_code, details?, status, created_at, updated_at.
+
+Duplicate reports from the same reporter/reason pair are rejected.
+
+### `review_responses`
+
+`id`, review_id, business_id, actor_reference, content, status, moderation_state, policy_version, content_version, created_at, updated_at.
+
+Business ownership of the canonical review target is schema-enforced.
+
+### `review_moderation_cases`
+
+`id`, review_id, status, reason_code?, policy_version, assigned_to?, opened_at, resolved_at?, created_at, updated_at.
+
+Only one active moderation case may exist for a Review.
+
+### `review_moderation_decisions`
+
+`id`, moderation_case_id, decision, actor_reference, reason_code, policy_version, decided_at, created_at.
+
+Decisions are append-only historical facts.
+
+### `review_risk_signals`
+
+`id`, review_id, signal_type, value_json?, confidence?, source, model_version?, policy_version?, created_at.
+
+Risk signals are advisory evidence. They cannot directly publish/remove a Review.
+
+### `reputation_summaries`
+
+`id`, organization_id, workspace_id?, target_type, target_id, published_review_count, rating_sum, rating_distribution_json, report_count, projection_version, source_review_cursor?, calculated_at, created_at, updated_at.
+
+This is a rebuildable projection, never Review truth.
+
+### `reputation_versions`
+
+`id`, organization_id, workspace_id?, target_type, target_id, version, policy_version, status, generated_at, created_at.
+
+One version is active at a time for a target; previous versions remain for rollback/audit.
+
 ## 19. Explicit gates still open
 
 The following remain controlled architecture gates before their concrete SQL migrations:
