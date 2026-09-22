@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0034**.
+The current API migration catalog references versions **0001 through 0035**.
 
 ### Foundation — 0001
 
@@ -178,6 +178,10 @@ These migrations add integrity triggers only.
 
 ### Booking holds / history — 0030
 
+- booking_holds
+- booking_status_history
+- appointment_events
+
 ### Commerce transaction core — 0031
 
 - commerce_carts
@@ -196,6 +200,10 @@ These migrations add integrity triggers only.
 0031 establishes the Commerce-owned transaction boundary. Billing/Payment remains authoritative for payment instruments, settlement, refunds and financial ledger.
 
 ### Commerce integrity hardening — 0032
+
+- no new tables
+
+0032 tightens Commerce tenant boundaries and makes PriceSnapshot calculation-context uniqueness scope-aware.
 
 ### Billing core — 0033
 
@@ -218,6 +226,17 @@ These migrations add integrity triggers only.
 
 0034 provides an atomic counter boundary for hard quota enforcement.
 
+### Communication core — 0035
+
+- communication_conversations
+- communication_messages
+- communication_notifications
+- communication_delivery_attempts
+
+0035 establishes provider-neutral Communication conversation, message, notification and delivery-attempt storage with notification idempotency and tenant/workspace scope.
+
+**Total currently defined physical tables: 102.**
+
 
 - no new tables
 
@@ -227,8 +246,6 @@ These migrations add integrity triggers only.
 - booking_holds
 - booking_status_history
 - appointment_events
-
-**Total currently defined physical tables: 97.**
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
@@ -250,9 +267,9 @@ This count includes only canonical SQL migration sources. It does not include re
 | Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions, booking_holds, booking_status_history, appointment_events | Core schema/repositories implemented; final availability resolution and atomic reservation/finalization remain |
 | Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries | Core verification chain + review/expiry records implemented; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
 | Moderation / Privacy / Consent | no canonical workflow tables | Missing |
-| Communication | no conversation/message/notification/delivery tables | Missing |
+| Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core provider-neutral storage/repository implemented; consent/policy/template registry/provider adapters and durable dispatch workers remain |
 | Commerce | commerce_carts, commerce_cart_lines, commerce_checkout_sessions, commerce_price_snapshots, commerce_orders, commerce_order_lines, commerce_order_adjustments, commerce_transaction_attempts, commerce_fulfillment_references, commerce_cancellations, commerce_refund_references, commerce_order_events | Core transaction boundary implemented; pricing/checkout orchestration, Billing/Payment, Promotion/Loyalty and Fulfillment integrations remain separate capabilities |
-| Billing | no plan/subscription/usage/invoice tables | Missing |
+| Billing | billing_plans, billing_prices, billing_plan_entitlements, billing_subscriptions, billing_subscription_events, billing_usage_meters, billing_usage_events, billing_usage_counters, billing_entitlement_snapshots, billing_provider_refs, billing_reconciliation_cases | Core plan/subscription/entitlement/usage/quota/reconciliation storage implemented; provider adapters and invoice/financial-ledger layers remain |
 | AI Runtime | no canonical ai_operation/model/provider/policy/result/usage tables | Missing |
 | Automation | no workflow/trigger/execution tables | Missing |
 | Integration | no integration/external-account/webhook/sync tables | Missing |
@@ -494,10 +511,11 @@ The next implementation work should proceed in this order:
 4. Complete Trust reviewer authorization integration, expiry workers/events and TrustSignal projections only after their operational contracts are explicit.
 5. Complete Booking availability calculation, holds consumption and atomic finalization semantics.
 6. Complete Billing provider adapters/reconciliation workers and invoice foundation only where their operational contracts are explicit.
-7. Introduce Communication/Automation/Integration storage.
-8. Introduce canonical AI Runtime storage.
-9. Add matching/user-request persistence and rebuildable projections.
-10. Add remaining localization/document/analytics/privacy structures where justified.
+7. Complete Communication consent/policy/template registry and durable dispatch/provider-adapter contracts.
+8. Introduce Automation/Integration storage.
+9. Introduce canonical AI Runtime storage.
+10. Add matching/user-request persistence and rebuildable projections.
+11. Add Privacy/Consent, Review, Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
 Every step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums.
 
