@@ -3,7 +3,7 @@ import {
   OnboardingWorkflow,
   OnboardingManager,
 } from "./index";
-import { InMemoryDatabase, createUser } from "@qooqnos/database";
+import { InMemoryDatabase, createUser } from "@qooqnos/database/legacy";
 import { createUserId } from "@qooqnos/core";
 
 describe("OnboardingWorkflow", () => {
