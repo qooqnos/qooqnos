@@ -203,24 +203,29 @@ Availability has exactly one canonical engine. Calendar/UI/AI/Plugin integration
 
 | Relationship | Cardinality | Owner | Physical shape | Delete | Tenant rule |
 |---|---|---|---|---|---|
-| Customer → Cart | 1:0..N | Commerce | `carts.customer_id` | HARD_DELETE/EXPIRE | tenant validated |
-| Cart → CartItem | 1:0..N | Commerce | `cart_items.cart_id` | CASCADE | same cart |
-| Customer → Order | 1:0..N | Commerce | `orders.customer_id` | RESTRICT/HISTORICAL | same tenant |
-| Order → OrderItem | 1:1..N | Commerce | `order_items.order_id` | historical immutable | same order |
-| Order → Payment | 1:0..N | Commerce | `payments.order_id` | RESTRICT/HISTORICAL | same tenant |
-| Payment → PaymentAttempt | 1:1..N | Commerce | `payment_attempts.payment_id` | RETAIN/HISTORICAL | same payment |
-| Payment → Refund | 1:0..N | Commerce | `refunds.payment_id` | RETAIN/HISTORICAL | same payment |
-| Order → Invoice | 1:0..N | Commerce | `invoices.order_id` | RESTRICT/HISTORICAL | same tenant |
-| Invoice → InvoiceLine | 1:1..N | Commerce | `invoice_lines.invoice_id` | IMMUTABLE | same invoice |
+| Customer → Cart | 1:0..N | Commerce | `commerce_carts.customer_id` | EXPIRE/RETAIN | tenant validated |
+| Cart → CartLine | 1:0..N | Commerce | `commerce_cart_lines.cart_id` | RESTRICT/EXPIRE | same cart |
+| Cart → CheckoutSession | 1:0..N | Commerce | `commerce_checkout_sessions.cart_id` | RETAIN/HISTORICAL | same cart |
+| CheckoutSession → PriceSnapshot | 0..N references | Commerce | `commerce_checkout_sessions.catalog_snapshot_refs_json` / explicit service contract | RETAIN | same tenant |
+| Customer → Order | 1:0..N | Commerce | `commerce_orders.customer_id` | RESTRICT/HISTORICAL | same tenant |
+| Order → OrderLine | 1:1..N | Commerce | `commerce_order_lines.order_id` | historical immutable | same order |
+| Order → OrderAdjustment | 1:0..N | Commerce | `commerce_order_adjustments.order_id` | RETAIN/HISTORICAL | same order |
+| Order → TransactionAttempt | 1:0..N | Commerce | `commerce_transaction_attempts.order_id` | RETAIN/HISTORICAL | same order |
+| Order → FulfillmentReference | 1:0..N | Commerce | `commerce_fulfillment_references.order_id` | RETAIN/HISTORICAL | same order |
+| Order → Cancellation | 1:0..N | Commerce | `commerce_cancellations.order_id` | RETAIN/HISTORICAL | same order |
+| Order → RefundReference | 1:0..N | Commerce | `commerce_refund_references.order_id` | RETAIN/HISTORICAL | same order |
+| Order → OrderEvent | 1:0..N | Commerce | `commerce_order_events.order_id` | IMMUTABLE | same order |
+| Order → Payment | 0..N reference | Billing/Payment | `commerce_orders.payment_status_ref` / Billing contract | RETAIN/HISTORICAL | same tenant |
+| Order → Invoice | 0..N reference | Billing | Billing contract / Commerce reference | RETAIN/HISTORICAL | same tenant |
 
 ### Commerce invariants
 
-- Historical OrderItem values are snapshots, not live Catalog values.
-- Payment is a transaction record; provider credentials are not owned by Payment.
-- PaymentAttempt is a child attempt history, not a replacement Payment.
-- Refund total cannot exceed captured amount.
-- Invoice line values are immutable after invoice finalization.
-- Subscription billing invoices and marketplace transaction invoices share one canonical Invoice concept only if their financial semantics are compatible; otherwise the distinction must be represented by invoice type, not a second Invoice entity.
+- Historical OrderLine values are snapshots, not live Catalog values.
+- TransactionAttempt is Commerce orchestration evidence, not the financial ledger.
+- Payment, payment attempts, refund execution and invoices remain Billing/Payment-owned.
+- Refund references do not become a second financial ledger.
+- Invoice line values remain immutable under the Billing invoice contract.
+- Commerce cannot claim payment success or fulfillment success without authoritative external evidence.
 
 ---
 
