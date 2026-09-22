@@ -374,7 +374,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0045 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0047 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
 
@@ -399,6 +399,8 @@ Billing runtime note: the API Seller AI composition now uses the real D1-backed 
 Billing note: migrations 0033–0034 establish plan/price/subscription/entitlement/usage/provider-reference/reconciliation storage plus an atomic quota counter. Billing is the commercial entitlement authority; payment execution, invoices and financial ledger remain gated.
 
 Commerce note: migrations 0031–0032 establish the Commerce-owned Cart/Checkout/PriceSnapshot/Order transaction boundary and integrity hardening. Cart/Checkout/Order API routes are live in the canonical router; Order creation/status transitions are idempotent/CAS and emit Outbox events. Billing/Payment remains authoritative for payment execution, financial settlement, refunds and invoices.
+
+Slot projection note: the canonical Booking slot generator is a derived projection over Schedule/Rule/Exception/Appointment/Hold state; no authoritative slots table exists.
 
 Booking note: migrations 0028–0030 establish the canonical Booking/Availability physical core and short-lived holds. Migrations 0046–0047 complete transactional finalization, idempotency and capacity guards; confirmation/status events now use the platform Outbox. No second reservation model or authoritative slots table is permitted.
 
@@ -502,21 +504,18 @@ Every substantial implementation change must update this ledger with:
 
 The ledger is the continuity mechanism for future coding-agent sessions.
 
-## 7. Immediate database work
+## 7. Current completion focus
 
-The next database milestone is not “build PostgreSQL.”
-
-It is:
+The canonical physical inventory now reaches migration 0047. The remaining work is execution/completion, not schema invention:
 
 ```
-reconcile logical model
-→ map every target entity to one owner
-→ classify implemented / partial / missing / duplicate / conflicting
-→ complete Catalog Attribute value ownership/cutover without duplicating attributes_json
-→ complete Business lifecycle only where contracts are sufficiently specified
-→ implement repositories/domain services for the canonical D1 path
-→ migrate or retire any remaining explicit legacy compatibility consumers
-→ verify tenant isolation and integrity
+pass CI build + tests
+→ finish API/runtime composition for remaining canonical capabilities
+→ complete durable workers for Outbox/Communication/Automation/Integration/Trust/Privacy
+→ finish Matching retrieval/ranking/learning and Connect/Act integrations
+→ close CustomerProfile/timeline only when field-level contracts are explicit
+→ define remaining Localization/Documents/Analytics contracts
+→ provision D1 only after the application/runtime verification gates are green
 ```
 
-Cloudflare D1 provisioning comes after the schema is reconciled; it must not be used to hide model uncertainty.
+No new table should be introduced merely to move the completion checklist forward.
