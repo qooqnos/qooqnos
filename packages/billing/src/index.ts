@@ -14,6 +14,7 @@ export interface BillingAIEntitlementRequest {
   readonly operationId: string;
   readonly operationType: string;
   readonly operationVersion: number;
+  readonly businessId?: EntityId | undefined;
   readonly idempotencyKey: string;
   readonly quantity?: number | undefined;
   readonly budgetUnits?: number | undefined;
@@ -42,3 +43,7 @@ export interface BillingAIEntitlementService {
 
 export const BILLING_MODULE_ID = "billing" as const;
 export const BILLING_AI_ENTITLEMENT_CONTRACT_VERSION = 1 as const;
+
+export * from "./repository";
+export * from "./service";
+export * from "./manifest";
