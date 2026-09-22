@@ -6,7 +6,7 @@ import { MatchingRepository } from "./repository";
 import { CustomerRelationshipRepository } from "@qooqnos/database";
 
 export interface MatchingServiceOptions {
-  readonly repository:MatchingRepository; readonly discovery:DiscoveryRepository; readonly relationships:CustomerRelationshipRepository; readonly authorization:AuthorizationService; readonly id:()=>EntityId; readonly now:()=>string;
+  readonly repository:MatchingRepository; readonly discovery:DiscoveryRepository; readonly relationships?:CustomerRelationshipRepository; readonly authorization:AuthorizationService; readonly id:()=>EntityId; readonly now:()=>string;
 }
 
 export class MatchingService {
@@ -143,6 +143,7 @@ export class MatchingService {
       requireAuthentication:true,
       requireWorkspace:true,
     });
+    if(!this.options.relationships) throw new Error("Matching connection relationship capability is not configured");
     const request=await this.options.repository.getMatchRequest(context,input.matchRequestId);
     const demand=await this.options.repository.getDemandRequest(context,request.demandRequestId);
     if(!demand.customerId) throw new Error("Matching connection requires a customer");
