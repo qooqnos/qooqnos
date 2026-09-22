@@ -2,7 +2,7 @@
 
 **Status:** Current implementation ledger  
 **Last reviewed:** 2026-09-22
-**Documentation reconciliation commit:** 41e494d1d6b6f13b9d9d33655cfd589b942a4515
+**Documentation reconciliation:** 2026-09-22; see repository history and this ledger for the latest commit references.
 
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
 
@@ -23,6 +23,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | D1 runtime database boot boundary | ✅ Implemented | packages/runtime/src/boot.ts |
 | Foundation / onboarding / identity / business / catalog SQL | 🟢 Implemented in migration sequence | migrations/0001–0005 |
 | Catalog guard/integrity migrations | 🟢 Implemented in migration sequence | migrations/0006–0008, 0014 |
+| Business category integrity hardening | 🟢 Implemented | migrations/0015_business_primary_category_integrity.sql |
 | Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
 | Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
 | Final physical D1 schema | ⏳ In progress | requires table-by-table reconciliation |
@@ -92,15 +93,21 @@ Commits:
 - fbc467b — Lock migration 0014 checksum
 - d79eed0 — Resolve offering-level pricing source of truth
 - 9288240 — Resolve service/offering physical model
+- f653ea3 — Add business primary category integrity migration 0015
+- 99fab7c — Register migration 0015 in API catalog
+- 087b672 — Lock migration 0015 checksum
+- 571c172 — Reconcile pricing and business primary-category decisions
+- 2378c0a — Align logical catalog ownership with physical schema
+- 0869e8f — Normalize reconciliation section numbering
 
 Migration safety:
-- canonical migrations 0001–0013 were not edited, renumbered or replaced;
-- migration 0014_catalog_offering_integrity was added as a new catalog-owned integrity migration;
+- canonical migrations 0001–0014 were not edited, renumbered or replaced;
+- migration 0015_business_primary_category_integrity was added as a new Business-owned integrity migration;
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
 
-Catalog offering integrity hardening migration added as 0014_catalog_offering_integrity.sql; it introduces no tables and preserves all prior migration identities/checksums.
+Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.sql; 0015_business_primary_category_integrity.sql adds three integrity triggers and no tables. Both preserve all prior migration identities/checksums.
 
 ## 4. Current canonical migration inventory
 
@@ -121,6 +128,7 @@ The API runtime references these migration sources:
 0012_ai_seller_catalog_link.sql
 0013_ai_seller_idempotency_fingerprint.sql
 0014_catalog_offering_integrity.sql
+0015_business_primary_category_integrity.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
@@ -171,7 +179,8 @@ It is:
 reconcile logical model
 → map every target entity to one owner
 → classify implemented / partial / missing / duplicate / conflicting
-→ finalize physical D1 schema
+→ resolve structured Catalog Attributes without duplicating attributes_json
+→ complete Business lifecycle only where contracts are sufficiently specified
 → implement missing module-owned migrations
 → implement repositories/domain services
 → verify tenant isolation and integrity
