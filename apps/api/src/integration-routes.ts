@@ -37,6 +37,33 @@ export function registerIntegrationRoutes(
 
   router.register({
     method: "POST",
+    path: "/api/v1/integrations/sync-jobs",
+    module: "integration",
+    operation: "integration.sync.manage",
+    permission: "integration.sync.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const direction = requiredDirection(body.direction, context.requestId);
+      const job = await service.startSync(context, {
+        integrationAccountId: requiredId(body.integrationAccountId, "integrationAccountId", context.requestId),
+        syncType: requiredString(body.syncType, "syncType", context.requestId),
+        direction,
+        correlationId: typeof body.correlationId === "string" && body.correlationId.trim()
+          ? body.correlationId.trim()
+          : context.correlationId,
+        ...(body.nextRunAt !== undefined
+          ? { nextRunAt: requiredString(body.nextRunAt, "nextRunAt", context.requestId) }
+          : {}),
+      });
+      return json({ data: job }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/integrations/webhooks",
     module: "integration",
     operation: "integration.webhook.receive",
@@ -109,3 +136,10 @@ function requiredSignatureStatus(value: unknown, requestId: EntityId): "verified
   if (typeof value === "string" && values.includes(value as (typeof values)[number])) return value as (typeof values)[number];
   throw new AppError({ code: "VALIDATION_ERROR", message: "signatureStatus is invalid.", requestId });
 }
+
+function requiredDirection(value: unknown, requestId: EntityId): "inbound" | "outbound" | "bidirectional" {
+  const values = ["inbound", "outbound", "bidirectional"] as const;
+  if (typeof value === "string" && values.includes(value as (typeof values)[number])) return value as (typeof values)[number];
+  throw new AppError({ code: "VALIDATION_ERROR", message: "direction is invalid.", requestId });
+}
+
