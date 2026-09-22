@@ -20,7 +20,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "verify:migrations": "node scripts/verify-migration-lock.mjs",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "migration:check:changes": "node scripts/migration-check-changes.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
