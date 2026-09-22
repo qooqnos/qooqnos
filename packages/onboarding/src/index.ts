@@ -1,12 +1,12 @@
 import {
   EntityId,
-  OnboardingStatus,
   VerificationStatus,
   Result,
   Ok,
   Err,
   UserId,
   WorkspaceId,
+  type OnboardingStatus as LegacyOnboardingStatus,
 } from "@qooqnos/core";
 import { InMemoryDatabase, User } from "@qooqnos/database/legacy";
 
@@ -16,7 +16,7 @@ import { InMemoryDatabase, User } from "@qooqnos/database/legacy";
 
 export interface OnboardingSession {
   readonly userId: UserId;
-  readonly status: OnboardingStatus;
+  readonly status: LegacyOnboardingStatus;
   readonly verificationStatus: VerificationStatus;
   readonly currentStep: number;
   readonly completedSteps: readonly number[];
@@ -247,3 +247,7 @@ export class OnboardingManager {
     return this.workflow;
   }
 }
+
+
+export type { OnboardingProfile, OnboardingRepository, OnboardingStatus, OnboardingTransitionTransaction } from "./contract";
+export { OnboardingService } from "./service";
