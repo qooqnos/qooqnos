@@ -64,13 +64,30 @@ export class PrivacyRepository extends Repository {
   }): Promise<ConsentRecord> {
     const organizationId=this.requireOrganization({organizationId:context.tenantId});
     if(!input.purpose.trim()||!input.consentVersion.trim()||!input.source.trim()) throw new DatabaseError("Consent purpose/version/source are required");
-    await this.database.run(
-      "UPDATE privacy_consents SET status = 'revoked', revoked_at = ?, updated_at = ? WHERE organization_id = ? AND subject_type = ? AND subject_id = ? AND purpose = ? AND status = 'granted'",
-      input.grantedAt ?? input.now,input.now,organizationId,input.subjectType,input.subjectId,input.purpose.trim());
-    await this.database.run(
-      "INSERT INTO privacy_consents (id, organization_id, workspace_id, subject_type, subject_id, purpose, consent_version, status, source, evidence_reference, granted_at, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'granted', ?, ?, ?, ?, ?, ?)",
-      input.id,organizationId,context.workspaceId??null,input.subjectType,input.subjectId,input.purpose.trim(),input.consentVersion.trim(),input.source.trim(),
-      input.evidenceReference??null,input.grantedAt??input.now,input.expiresAt??null,input.now,input.now);
+    await this.database.transaction([
+      {
+        sql: "UPDATE privacy_consents SET status = 'revoked', revoked_at = ?, updated_at = ? WHERE organization_id = ? AND subject_type = ? AND subject_id = ? AND purpose = ? AND status = 'granted'",
+        params: [input.grantedAt ?? input.now, input.now, organizationId, input.subjectType, input.subjectId, input.purpose.trim()],
+      },
+      {
+        sql: "INSERT INTO privacy_consents (id, organization_id, workspace_id, subject_type, subject_id, purpose, consent_version, status, source, evidence_reference, granted_at, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'granted', ?, ?, ?, ?, ?, ?)",
+        params: [
+          input.id,
+          organizationId,
+          context.workspaceId ?? null,
+          input.subjectType,
+          input.subjectId,
+          input.purpose.trim(),
+          input.consentVersion.trim(),
+          input.source.trim(),
+          input.evidenceReference ?? null,
+          input.grantedAt ?? input.now,
+          input.expiresAt ?? null,
+          input.now,
+          input.now,
+        ],
+      },
+    ]);
     return this.getConsent(context,input.id);
   }
 
