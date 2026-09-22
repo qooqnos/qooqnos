@@ -11,6 +11,7 @@ import discovery from "../../../migrations/0010_discovery.sql";
 import aiSellerCreation from "../../../migrations/0011_ai_seller_creation.sql";
 import aiSellerCatalogLink from "../../../migrations/0012_ai_seller_catalog_link.sql";
 import aiSellerIdempotencyFingerprint from "../../../migrations/0013_ai_seller_idempotency_fingerprint.sql";
+import catalogOfferingIntegrity from "../../../migrations/0014_catalog_offering_integrity.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -27,4 +28,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0011_ai_seller_creation.sql", sql: aiSellerCreation },
   { path: "migrations/0012_ai_seller_catalog_link.sql", sql: aiSellerCatalogLink },
   { path: "migrations/0013_ai_seller_idempotency_fingerprint.sql", sql: aiSellerIdempotencyFingerprint },
+  { path: "migrations/0014_catalog_offering_integrity.sql", sql: catalogOfferingIntegrity },
 ];
