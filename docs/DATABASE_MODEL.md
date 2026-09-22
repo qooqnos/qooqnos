@@ -118,8 +118,11 @@ Publication eligibility is a policy decision, not a synonym for `status = active
 - `categories`: hierarchical marketplace taxonomy.
 - `category_translations`: localized labels/descriptions.
 - `category_attributes`: typed attributes valid for a category.
-- `attribute_definitions`: reusable attribute vocabulary.
-- `attribute_options`: controlled values for enumerated attributes.
+- `attribute_definitions`: reusable platform attribute vocabulary with typed semantics.
+- `attribute_options`: controlled values for `enum` and `multi_enum` attributes.
+- `category_attributes`: category applicability, requirement, filtering, search and variant-dimension metadata.
+
+The current physical implementation establishes these three vocabulary/applicability tables in migration 0016. Product/Service attribute values remain on their existing owner records until a separate value-ownership and backfill contract is finalized.
 
 ### Services
 
