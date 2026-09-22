@@ -5,9 +5,11 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.js",
-    "./server": "./dist/server.js"
+    "./legacy-server": "./dist/legacy-server.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "bin": {
     "qooqnos": "./dist/cli.js"
   },
@@ -19,7 +21,6 @@
   },
   "dependencies": {
     "@qooqnos/core": "file:../core",
-    "@qooqnos/database": "file:../database",
-    "@qooqnos/api": "file:../api"
+    "@qooqnos/database": "file:../database"
   }
 }
