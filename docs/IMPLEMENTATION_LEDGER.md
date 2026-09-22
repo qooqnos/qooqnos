@@ -33,6 +33,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
 | Trust checks / evidence links | 🟢 Schema implemented | migrations/0023_verification_checks.sql; runtime methods in verification-repository.ts |
 | Trust decisions / supporting checks | 🟢 Schema implemented, append-only | migrations/0024_verification_decisions.sql; runtime methods in verification-repository.ts |
+| Trust reviews / expiry | 🟢 Schema/repository implemented | migrations/0025_verification_review_expiry.sql; review/expiry methods and tests in verification-repository.ts |
 | Catalog Attribute repositories | 🟢 Implemented | packages/catalog/src/attribute-repository.ts; packages/catalog/src/attribute-value-repository.ts |
 | Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
 | Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
@@ -176,6 +177,14 @@ Commits:
 - 22fa0de — Register verification decisions migration
 - f9a1914 — Refresh immutable decision migration checksum
 - 647303c — Enforce complete verification decision immutability
+- 4c08a88 — Add verification review and expiry migration 0025
+- 552e1ff — Register verification review and expiry migration
+- 09269ea — Lock verification review and expiry migration checksum
+- 31c441c — Implement verification review and expiry workflow
+- 99312bc — Test verification review assignment workflow
+- 2310529 — Refresh physical reconciliation after Trust review/expiry
+- 3458d50 — Document Trust review/expiry physical contracts
+- 3ba47ec — Record Trust physical implementation status
 - 66a0ed4 — Reconcile Trust policy/check/decision chain
 - 192fc95 — Align Trust physical blueprint
 - 996658e — Align logical Trust model with physical chain
@@ -197,7 +206,7 @@ Migration lock note: 0021 was refreshed after a pre-apply SQL cleanup; 0022–00
 
 CRM timeline note: normalized event storage and idempotent source-event handling are implemented. A separate timeline projection table remains gated pending a field-level read-model/rebuild contract.
 
-Trust note: migrations 0021–0024 now implement the canonical VerificationCase → Policy/Requirement → Check/Evidence → append-only Decision chain. Reviewer assignment, expiry workflow and TrustSignal projections remain gated.
+Trust note: migrations 0021–0025 implement the canonical VerificationCase → Policy/Requirement → Check/Evidence → append-only Decision → Review/Expiry chain. Reviewer authorization integration, expiry workers/events and TrustSignal projections remain gated.
 
 Migration runtime hardening: splitSqlStatements now keeps SQLite CREATE TRIGGER bodies intact across internal semicolons and rejects unterminated trigger/comment/literal blocks. Trigger-splitting regression tests were added.
 
@@ -230,6 +239,7 @@ The API runtime references these migration sources:
 0022_verification_policy_requirements.sql
 0023_verification_checks.sql
 0024_verification_decisions.sql
+0025_verification_review_expiry.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
