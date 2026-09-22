@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0026.
+The current API migration catalog references versions 0001 through 0027.
 
 ### Foundation — 0001
 
@@ -157,6 +157,12 @@ This migration seeds persisted permission vocabulary.
 
 0025 completes the operational human-review assignment and expiry/re-evaluation records. Authorization remains the source of reviewer permission; expiry processing must remain resumable/idempotent.
 
+### Business lifecycle history — 0027
+
+- business_status_history
+
+0027 adds immutable lifecycle transition history for the existing physical Business status vocabulary. It intentionally does not change the current `businesses.status` enum; the broader conceptual onboarding vocabulary remains a separate reconciliation gate.
+
 ### Customer addresses — 0026
 
 - customer_addresses
@@ -184,7 +190,7 @@ This migration seeds persisted permission vocabulary.
 
 0024 establishes append-only authoritative verification decisions and controlled supporting-check links.
 
-**Total currently defined physical tables: 62.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers; migration 0021 adds two Trust tables; migration 0022 adds two Trust policy tables; migration 0023 adds two Trust check tables plus integrity triggers; migration 0024 adds two Trust decision tables plus append-only/integrity triggers.
+**Total currently defined physical tables: 63.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers; migration 0021 adds two Trust tables; migration 0022 adds two Trust policy tables; migration 0023 adds two Trust check tables plus integrity triggers; migration 0024 adds two Trust decision tables plus append-only/integrity triggers.
 
 This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
 
@@ -196,7 +202,7 @@ This count includes only canonical SQL migration sources. It does not include th
 | Authorization | roles, permissions, role_permissions, membership_roles, persisted permission catalog | Core implemented; policy/entitlement extensions remain future work |
 | Platform / Reliability | modules, module_versions, tenant_modules, feature_flags, audit_events, idempotency_records, outbox_events, schema_migrations | Core implemented |
 | Onboarding | onboarding_profiles | Implemented core |
-| Business | businesses, business_profiles, locations | Partial |
+| Business | businesses, business_profiles, locations, business_status_history | Partial; lifecycle history implemented for current status vocabulary, conceptual onboarding vocabulary still requires reconciliation |
 | Catalog | categories, services, products, variants, offerings, category links, prices, inventory, attribute vocabulary and AttributeValue storage | Partial; value storage is staged and current JSON path remains authoritative |
 | Media | assets, variants, links, processing jobs | Core implemented |
 | Discovery | search documents, embeddings, ranking features, indexing jobs | Core projection implemented; index-version registry is missing |
