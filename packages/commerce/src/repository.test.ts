@@ -34,7 +34,7 @@ describe("CommerceRepository", () => {
     await expect(repository.createCart(context(), {
       id: brandId<"EntityId">("cart-1"),
       actorReference: "user-1",
-      currency: "bad",
+      currency: "BAD!",
       now: "2026-09-22T00:00:00.000Z",
     })).rejects.toThrow("3-letter ISO currency code");
   });
