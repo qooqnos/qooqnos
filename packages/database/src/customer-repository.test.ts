@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { brandId, type RequestContext } from "@qooqnos/core";
-import { CustomerRepository, type CustomerPreferenceRecord } from "./customer-repository";
+import { CustomerRepository } from "./customer-repository";
 import { D1Database, type D1DatabaseLike, type D1PreparedStatementLike } from "./client";
 
 function context(): RequestContext {
