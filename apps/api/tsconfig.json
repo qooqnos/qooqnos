@@ -29,7 +29,6 @@
     { "path": "../../packages/discovery" },
     { "path": "../../packages/onboarding" },
     { "path": "../../packages/ai" },
-    { "path": "../../packages/billing" },
     { "path": "../../packages/runtime" }
   ],
   "include": ["src/**/*.ts"]
