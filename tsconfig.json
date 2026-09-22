@@ -12,6 +12,7 @@
     { "path": "./packages/database" },
     { "path": "./packages/runtime" },
     { "path": "./packages/booking" },
+    { "path": "./packages/commerce" },
     { "path": "./packages/api" },
     { "path": "./packages/i18n" },
     { "path": "./packages/onboarding" }
