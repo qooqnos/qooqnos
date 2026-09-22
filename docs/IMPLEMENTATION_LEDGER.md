@@ -253,8 +253,8 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0023 were not edited, renumbered or replaced;
-- migration 0024_verification_decisions was added as a new Trust-owned schema migration;
+- canonical migrations 0001–0032 were not edited after registration; new schema evolution was added through new numbered migrations;
+- migrations 0024–0032 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
@@ -265,7 +265,7 @@ The old in-memory database implementation is retained only as an explicit legacy
 
 Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
 
-Migration lock note: 0021 was refreshed after a pre-apply SQL cleanup; 0022–0024 remain locked to their canonical SHA-256 values recorded during implementation.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0032 are registered and locked in sequence. Full external D1 application has not yet been executed.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
 
