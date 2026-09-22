@@ -564,13 +564,15 @@ export class VerificationRepository extends Repository {
   async getExpiry(
     context: RequestContext,
     id: EntityId,
-  ): Promise<VerificationExpiryRecord | null> {
-    return this.database.first<VerificationExpiryRecord>(
+  ): Promise<VerificationExpiryRecord> {
+    const expiry = await this.database.first<VerificationExpiryRecord>(
       "SELECT ve.id, ve.case_id AS caseId, ve.requirement_id AS requirementId, ve.evidence_id AS evidenceId, ve.expires_at AS expiresAt, ve.detected_at AS detectedAt, ve.reevaluation_status AS reevaluationStatus, ve.resulting_decision_id AS resultingDecisionId, ve.created_at AS createdAt, ve.updated_at AS updatedAt FROM verification_expiries ve INNER JOIN verification_cases vc ON vc.id = ve.case_id WHERE ve.id = ? AND vc.organization_id = ? AND (vc.workspace_id IS NULL OR vc.workspace_id = ?) LIMIT 1",
       id,
       this.requireOrganization({ organizationId: context.tenantId }),
       this.requireWorkspace({ workspaceId: context.workspaceId }),
     );
+    if (!expiry) throw new DatabaseError("Verification expiry not found");
+    return expiry;
   }
 
   async listPendingExpiries(
