@@ -34,6 +34,7 @@ import billingCore from "../../../migrations/0033_billing_core.sql";
 import billingUsageCounters from "../../../migrations/0034_billing_usage_counters.sql";
 import communicationCore from "../../../migrations/0035_communication_core.sql";
 import automationCore from "../../../migrations/0036_automation_core.sql";
+import aiRuntimeCore from "../../../migrations/0037_ai_runtime_core.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -73,4 +74,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0034_billing_usage_counters.sql", sql: billingUsageCounters },
   { path: "migrations/0035_communication_core.sql", sql: communicationCore },
   { path: "migrations/0036_automation_core.sql", sql: automationCore },
+  { path: "migrations/0037_ai_runtime_core.sql", sql: aiRuntimeCore },
 ];
