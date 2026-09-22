@@ -6,6 +6,7 @@ import { COMMERCE_MODULE } from "@qooqnos/commerce";
 import { BILLING_MODULE } from "@qooqnos/billing";
 import { COMMUNICATION_MODULE } from "@qooqnos/communication";
 import { AUTOMATION_MODULE } from "@qooqnos/automation";
+import { INTEGRATION_MODULE } from "@qooqnos/integration";
 import { onboardingModule } from "@qooqnos/onboarding";
 import {
   createAuthorizationRegistry,
@@ -37,6 +38,7 @@ const modules: readonly RuntimeModule[] = [
   BILLING_MODULE,
   COMMUNICATION_MODULE,
   AUTOMATION_MODULE,
+  INTEGRATION_MODULE,
   onboardingModule,
   AI_MODULE,
 ];
