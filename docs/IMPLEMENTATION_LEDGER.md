@@ -383,7 +383,7 @@ Deployment readiness note: `wrangler.toml` now documents environment-specific D1
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
 
-Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Workflow version activation plus pause/retire lifecycle controls are now canonical repository/service/API operations. Durable scheduler/worker action execution remains gated until the capability invocation contract is executable.
+Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Workflow version activation plus pause/retire lifecycle controls are canonical repository/service/API operations, and those lifecycle transitions now emit transactional Outbox events. Durable scheduler/worker action execution remains gated until the capability invocation contract is executable.
 
 Booking finalization note: migrations 0046–0047 establish idempotent Booking creation, transactional hold consumption, appointment/resource commitment and capacity mutation guards. Availability calculation and schedule-derived slot generation remain separate.
 
@@ -394,6 +394,7 @@ Review reputation note: migration 0048 completes Review lifecycle/report/respons
 Automation/Integration API note: Automation workflow/version/execution and Integration account/webhook/sync-job capabilities are now registered in the canonical API router; durable worker execution remains gated by provider/capability contracts.
 
 Latest verified commits:
+- 426196ce — Finalize Automation lifecycle + Outbox transition verification
 - 793b494 — Test Automation workflow lifecycle controls
 - 1cc6cba — Expose Automation workflow activate/pause/retire routes
 - 085805e — Expose Automation lifecycle service
@@ -411,7 +412,7 @@ Latest verified commits:
 - e15721d — Expose Integration sync job API capability
 - 56591ab — Test protected Integration sync job route
 
-CI verification: commit `586959738b01c635dd5022fb24b2aa7f25dcb439` passed both GitHub Actions `CI` and `Phoenix verification` (run IDs `35785791295` and `35785791200`). Migration lock verification, typecheck, build and unit tests were all green in that verification path.
+CI verification: commit `426196ce1758a3f73499c22b59f520be29315401` passed both GitHub Actions `CI` and `Phoenix verification` (run IDs `35786881635` and `35786881674`). Migration lock verification, typecheck, build and unit tests were green in that verification path.
 
 Review moderation note: migration 0048 completes moderation/reporting/reputation projection storage and API/service behavior. Review target types remain canonical Business/Offering/Product only.
 
