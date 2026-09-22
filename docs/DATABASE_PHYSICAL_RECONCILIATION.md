@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0021.
+The current API migration catalog references versions 0001 through 0024.
 
 ### Foundation — 0001
 
@@ -148,9 +148,30 @@ This migration seeds persisted permission vocabulary.
 - verification_cases
 - verification_documents
 
-0021 establishes the VerificationCase aggregate and protected evidence metadata/reference layer. It does not create verification policy, requirement, check or decision tables yet.
+0021 establishes the VerificationCase aggregate and protected evidence metadata/reference layer.
 
-**Total currently defined physical tables: 54.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers; migration 0021 adds two Trust Verification tables plus scope integrity trigger.
+### Trust policy / requirements — 0022
+
+- verification_policies
+- verification_requirements
+
+0022 establishes immutable policy versions and policy-scoped requirements.
+
+### Trust checks — 0023
+
+- verification_checks
+- verification_check_documents
+
+0023 establishes evaluations against requirements and controlled evidence links.
+
+### Trust decisions — 0024
+
+- verification_decisions
+- verification_decision_checks
+
+0024 establishes append-only authoritative verification decisions and controlled supporting-check links.
+
+**Total currently defined physical tables: 60.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers; migration 0021 adds two Trust tables; migration 0022 adds two Trust policy tables; migration 0023 adds two Trust check tables plus integrity triggers; migration 0024 adds two Trust decision tables plus append-only/integrity triggers.
 
 This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
 
@@ -299,6 +320,15 @@ Migration 0021 implements \`verification_cases\` and \`verification_documents\`.
 \`verification_documents\` stores protected evidence metadata and an object-storage reference; binary evidence remains outside D1. The table intentionally does not model policy/requirement ownership or decision history.
 
 Verification requirement, check and decision tables remain gated because their dependency contracts require additional canonical policy/reference definitions and immutable decision semantics.
+## 3.16 Trust policy / requirement / check / decision chain — 0022–0024
+
+Migrations 0022–0024 complete the core verification decision chain without creating a boolean verification flag.
+
+- 0022: versioned policies and requirements.
+- 0023: evaluation checks and evidence links.
+- 0024: append-only decisions and supporting-check links.
+
+The chain is policy/version scoped and enforces subject/case compatibility at the database boundary. Reviewer assignment and expiry workflows remain separate contracts.
 ## 4. Seller AI versus canonical AI Runtime
 
 The seller-AI migrations are real physical implementation, but they are not the canonical AI execution ledger.
