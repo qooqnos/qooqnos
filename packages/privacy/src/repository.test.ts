@@ -25,7 +25,7 @@ describe("PrivacyRepository", () => {
       async all<T>(){return {results:[] as T[]};},
       async run(){return {success:true};}
     };
-    const raw:D1DatabaseLike={prepare(sql:string){return statement;},async batch(){return[];}};
+    const raw:D1DatabaseLike={prepare(_sql:string){return statement;},async batch(){return[];}};
     const repository=new PrivacyRepository(new D1Database(raw));
     await expect(repository.getConsent(context(),brandId<"EntityId">("foreign"))).rejects.toThrow("Consent not found");
   });
