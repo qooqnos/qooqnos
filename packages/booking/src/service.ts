@@ -48,6 +48,40 @@ export class BookingService {
     return this.options.repository.create(context, input);
   }
 
+  async createHold(context: RequestContext, input: {
+    readonly businessId: EntityId;
+    readonly resourceId?: EntityId | undefined;
+    readonly slotReference: string;
+    readonly actorReference?: string | undefined;
+    readonly expiresAt: string;
+  }) {
+    await this.options.authorization.assert({
+      context,
+      permission: "booking.create",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    return this.options.repository.createHold(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async releaseHold(
+    context: RequestContext,
+    id: EntityId,
+    status: "released" | "expired" | "consumed" = "released",
+  ) {
+    await this.options.authorization.assert({
+      context,
+      permission: "booking.manage",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    return this.options.repository.releaseHold(context, id, status, this.options.now());
+  }
+
   async finalize(
     context: RequestContext,
     input: {
