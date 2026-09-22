@@ -131,6 +131,7 @@ Discovery never writes canonical Business or Catalog state.
 | `CAP.MATCHING.UPDATE_REQUEST` | COMMAND | Matching | CUSTOMER/WORKSPACE | Access | `matching.request.updated` |
 | `CAP.MATCHING.FIND_CANDIDATES` | QUERY | Matching | TENANT/PUBLIC | Discovery, Catalog | candidate set |
 | `CAP.MATCHING.MATCH` | ORCHESTRATION | Matching | TENANT | candidate retrieval + constraints | matches |
+| `CAP.MATCHING.CONNECT` | ORCHESTRATION | Matching | CUSTOMER/WORKSPACE | selected candidate, Customer relationship | relationship + connected match |
 | `CAP.MATCHING.SCORE` | DECISION | Matching | TENANT | trust, availability, preferences | score + provenance |
 | `CAP.MATCHING.RANK` | DECISION | Matching | TENANT | score | ordered candidates |
 | `CAP.MATCHING.EXPLAIN` | DECISION | Matching | TENANT | score/ranking provenance | explanation |
