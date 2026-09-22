@@ -22,11 +22,11 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | D1 database client boundary | ✅ Implemented | packages/database/src/client.ts |
 | D1 runtime database boot boundary | ✅ Implemented | packages/runtime/src/boot.ts |
 | Foundation / onboarding / identity / business / catalog SQL | 🟢 Implemented in migration sequence | migrations/0001–0005 |
-| Catalog guard migrations | 🟢 Implemented in migration sequence | migrations/0006–0008 |
+| Catalog guard/integrity migrations | 🟢 Implemented in migration sequence | migrations/0006–0008, 0014 |
 | Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
 | Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
 | Final physical D1 schema | ⏳ In progress | requires table-by-table reconciliation |
-| Legacy PostgreSQL database path | ⚠️ Quarantined | reconciliation target only |
+| Legacy PostgreSQL database path | ✅ Removed from active source | historical git history only |
 
 ## 2. Database history
 
@@ -59,20 +59,7 @@ Do not extend the historical PostgreSQL path.
 
 ## 3. Known reconciliation issue
 
-The source tree still contains old PostgreSQL-oriented exports and a legacy migration implementation in packages/database/src/migrations.ts.
-
-This is a known architectural mismatch with the D1 runtime boot contract.
-
-It must be treated as technical debt to reconcile, not as a reason to create another database abstraction.
-
-Required future sequence:
-
-1. identify all active consumers of the legacy exports;
-2. migrate consumers to the D1 boundary;
-3. make the canonical D1 MigrationRunner/catalog types the only runtime contract;
-4. run typecheck, unit tests, migration integrity tests and runtime tests;
-5. remove or isolate the legacy PostgreSQL files;
-6. update this ledger with the resulting commit.
+The previous PostgreSQL/D1 migration API mismatch has been reconciled. The obsolete PostgreSQL database source files have been removed from the active tree and remain only in git history.
 
 ## 3.1 Database runtime reconciliation — 2026-09-22
 
