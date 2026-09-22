@@ -22,6 +22,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | D1 database client boundary | ✅ Implemented | packages/database/src/client.ts |
 | D1 runtime database boot boundary | ✅ Implemented | packages/runtime/src/boot.ts |
 | Foundation / onboarding / identity / business / catalog SQL | 🟢 Implemented in migration sequence | migrations/0001–0005 |
+| Canonical Onboarding D1 service | 🟢 Package/contract/repository/service implemented | packages/onboarding/src/contract.ts; packages/onboarding/src/repository.ts; packages/onboarding/src/service.ts |
 | Catalog guard/integrity migrations | 🟢 Implemented in migration sequence | migrations/0006–0008, 0014 |
 | Business category integrity hardening | 🟢 Implemented | migrations/0015_business_primary_category_integrity.sql |
 | Catalog Attribute vocabulary | 🟢 Foundation implemented | migrations/0016_catalog_attribute_vocabulary.sql |
@@ -273,6 +274,15 @@ Commits:
 - a16c9357 — Make Commerce order outbox race-safe under idempotency concurrency
 - c9c409a8 — Emit Booking confirmation event in finalization transaction
 - a8116af6 — Make Booking status transitions transactional with Outbox
+- 7bcd830 — Reconcile physical inventory through Booking migration 0047
+- 552cb66 — Include Auth package in root build graph
+- ddb2e81 — Fix Business status-history D1 test mock
+- ee99556 — Use syntactically invalid currency in Commerce test
+- 7edf140 — Make Commerce checkout idempotency replay independent of cart state
+- 7f6c9e0 — Make Verification case submission idempotent
+- cbd9b05 — Fix Privacy consent transactional test mock
+- 7f9a799 — Align Onboarding lifecycle test authorization with async service contract
+- ee51173 — Use async AuthorizationService stub in Onboarding atomicity tests
 - 396cae6 — Add Billing core migration 0033
 - 5dcc8b8 — Register Billing core migration
 - 2590b5a — Lock Billing core migration checksum
@@ -348,11 +358,11 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0043 remain numbered and are extended only through new migrations;
-- migrations 0024–0043 are preserved in the canonical lock sequence.
+- canonical migrations 0001–0047 remain numbered and are extended only through new migrations;
+- migrations 0024–0047 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
-- Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
+- Verification note: GitHub Actions now provides the authoritative build/test verification path; the latest observed pipelines progressed through build/typecheck and surfaced only test-suite contract failures, which are being fixed directly.
 
 Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.sql; 0015_business_primary_category_integrity.sql adds three integrity triggers and no tables; 0016_catalog_attribute_vocabulary.sql adds three Catalog Attribute tables; 0017_catalog_attribute_values.sql adds two AttributeValue tables and preserves all prior migration identities/checksums.
 
