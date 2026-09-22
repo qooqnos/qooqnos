@@ -595,7 +595,53 @@ Workflow definitions reference canonical event/capability identifiers, never imp
 
 ### Billing
 
-`plans`, `subscriptions`, `entitlements`, `usage_records` use explicit scope, lifecycle, version and timestamps. Billing is the source of commercial entitlement grants; Access evaluates them.
+### `billing_plans`
+
+`id`, plan_key, name, description?, status, created_at, updated_at.
+
+### `billing_prices`
+
+`id`, plan_id, currency, amount_minor, billing_interval, effective_from, effective_to?, tax_treatment_reference?, provider_price_reference?, created_at, updated_at.
+
+### `billing_plan_entitlements`
+
+`id`, plan_id, entitlement_key, value_type, value_json, version, created_at, updated_at.
+
+### `billing_subscriptions`
+
+`id`, organization_id, workspace_id?, business_id, plan_id, billing_price_id, status, starts_at, trial_ends_at?, current_period_start, current_period_end?, grace_until?, cancelled_at?, expires_at?, version, created_at, updated_at.
+
+### `billing_subscription_events`
+
+`id`, subscription_id, from_status?, to_status, event_type, source, actor_reference?, provider_event_reference?, occurred_at, correlation_id, created_at.
+
+### `billing_usage_meters`
+
+`id`, meter_key, unit, aggregation, period_type, hard_limit?, status, created_at, updated_at.
+
+### `billing_usage_events`
+
+`id`, organization_id, workspace_id?, business_id?, meter_id, source_event_id, quantity, period_start?, period_end?, occurred_at, correlation_id, metadata_json?, created_at.
+
+### `billing_usage_counters`
+
+`id`, organization_id, workspace_id?, business_id?, meter_id, period_key, quantity, version, updated_at.
+
+Counters are enforcement state for concurrency-safe hard quotas; usage events remain the historical meter input.
+
+### `billing_entitlement_snapshots`
+
+`id`, subscription_id, entitlement_key, value_type, value_json, source_plan_id, source_plan_version, effective_from, effective_to?, created_at.
+
+### `billing_provider_refs`
+
+`id`, organization_id, workspace_id?, business_id?, provider, reference_type, external_reference, status, metadata_json?, created_at, updated_at.
+
+### `billing_reconciliation_cases`
+
+`id`, organization_id, provider, reference_type, external_reference?, local_reference?, status, category, details_json?, opened_at, resolved_at?, created_at, updated_at.
+
+Billing owns commercial entitlement and usage authority. Payment execution, invoices and financial ledger remain gated until their provider/legal contracts are explicit.
 
 ### Media
 
