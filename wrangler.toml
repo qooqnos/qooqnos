@@ -11,6 +11,22 @@ run_worker_first = ["/api/*", "/health", "/ready"]
 [ai]
 binding = "AI"
 
+# D1 is the canonical runtime database. The remote database_id is environment-specific
+# and must be inserted only after the Cloudflare D1 database is actually provisioned.
+# Keep this commented until the real database IDs exist; do not invent UUIDs here.
+#
+# Example production binding:
+# [[env.production.d1_databases]]
+# binding = "DB"
+# database_name = "qooqnos-production"
+# database_id = "<REAL_D1_DATABASE_ID>"
+#
+# Example staging binding:
+# [[env.staging.d1_databases]]
+# binding = "DB"
+# database_name = "qooqnos-staging"
+# database_id = "<REAL_D1_DATABASE_ID>"
+
 [vars]
 APP_VERSION = "0.1.0"
 
