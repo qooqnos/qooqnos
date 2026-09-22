@@ -153,6 +153,16 @@ export class MatchingRepository extends Repository {
     return {...row,reasons:parseJson(row.reasonsJson),featureSnapshot:parseJson(row.featureSnapshotJson)};
   }
 
+  async resolveOfferingBusiness(context:RequestContext,offeringId:EntityId):Promise<EntityId|null>{
+    const organizationId=this.requireOrganization({organizationId:context.tenantId});
+    const workspaceId=this.requireWorkspace({workspaceId:context.workspaceId});
+    const row=await this.database.first<{businessId:EntityId}>(
+      "SELECT o.business_id AS businessId FROM offerings o INNER JOIN businesses b ON b.id=o.business_id WHERE o.id=? AND b.organization_id=? AND b.workspace_id=? LIMIT 1",
+      offeringId,organizationId,workspaceId
+    );
+    return row?.businessId ?? null;
+  }
+
   async decide(context:RequestContext,input:{
     readonly id:EntityId; readonly matchRequestId:EntityId; readonly candidateId:EntityId; readonly decision:MatchDecision;
     readonly reasonCode?:string; readonly decisionSource:string; readonly policyVersion:string; readonly now:string;
