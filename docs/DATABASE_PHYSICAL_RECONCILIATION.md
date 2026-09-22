@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0030**.
+The current API migration catalog references versions **0001 through 0032**.
 
 ### Foundation — 0001
 
@@ -178,11 +178,35 @@ These migrations add integrity triggers only.
 
 ### Booking holds / history — 0030
 
+### Commerce transaction core — 0031
+
+- commerce_carts
+- commerce_cart_lines
+- commerce_checkout_sessions
+- commerce_price_snapshots
+- commerce_orders
+- commerce_order_lines
+- commerce_order_adjustments
+- commerce_transaction_attempts
+- commerce_fulfillment_references
+- commerce_cancellations
+- commerce_refund_references
+- commerce_order_events
+
+0031 establishes the Commerce-owned transaction boundary. Billing/Payment remains authoritative for payment instruments, settlement, refunds and financial ledger.
+
+### Commerce integrity hardening — 0032
+
+- no new tables
+
+0032 tightens Commerce tenant boundaries and makes PriceSnapshot calculation-context uniqueness scope-aware.
+
+
 - booking_holds
 - booking_status_history
 - appointment_events
 
-**Total currently defined physical tables: 75.**
+**Total currently defined physical tables: 86.**
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
@@ -205,7 +229,7 @@ This count includes only canonical SQL migration sources. It does not include re
 | Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries | Core verification chain + review/expiry records implemented; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
 | Moderation / Privacy / Consent | no canonical workflow tables | Missing |
 | Communication | no conversation/message/notification/delivery tables | Missing |
-| Commerce | no cart/order/payment/refund tables | Missing |
+| Commerce | commerce_carts, commerce_cart_lines, commerce_checkout_sessions, commerce_price_snapshots, commerce_orders, commerce_order_lines, commerce_order_adjustments, commerce_transaction_attempts, commerce_fulfillment_references, commerce_cancellations, commerce_refund_references, commerce_order_events | Core transaction boundary implemented; pricing/checkout orchestration, Billing/Payment, Promotion/Loyalty and Fulfillment integrations remain separate capabilities |
 | Billing | no plan/subscription/usage/invoice tables | Missing |
 | AI Runtime | no canonical ai_operation/model/provider/policy/result/usage tables | Missing |
 | Automation | no workflow/trigger/execution tables | Missing |
