@@ -2,7 +2,7 @@ import { CommunicationRepository } from "@qooqnos/communication";
 import { brandId } from "@qooqnos/core";
 import { OutboxService, type OutboxEventRecord } from "@qooqnos/database";
 import { getDatabase } from "./database";
-import type { ApiEnv, CloudflareQueueBinding } from "./env";
+import type { ApiEnv } from "./env";
 
 export interface ScheduledControllerLike {
   readonly scheduledTime: number;
