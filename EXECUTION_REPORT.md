@@ -1,3 +1,7 @@
+# Historical Execution Report
+
+> **HISTORICAL SNAPSHOT — NOT CURRENT SOURCE OF TRUTH.** This report describes the September 19, 2026 foundation/runtime session. Current verification is maintained in `VERIFICATION.md`, `PHASE_STATUS.md`, and GitHub Actions.
+
 # 🚀 Execution Report - Phoenix/ققنوس
 
 **Date**: September 19, 2026  
