@@ -228,6 +228,13 @@ These migrations add integrity triggers only.
 
 ### Communication core — 0035
 
+- communication_conversations
+- communication_messages
+- communication_notifications
+- communication_delivery_attempts
+
+0035 establishes provider-neutral Communication conversation, message, notification and delivery-attempt storage with notification idempotency and tenant/workspace scope.
+
 ### Automation core — 0036
 
 - automation_workflows
@@ -249,52 +256,6 @@ These migrations add integrity triggers only.
 
 ### AI Runtime core — 0037
 
-### Integration core — 0038
-
-### Privacy / Consent — 0039
-
-### Demand / Matching core — 0040
-
-- demand_requests
-- demand_profiles
-- match_requests
-- match_candidates
-- match_decisions
-
-0040 establishes Phoenix's canonical Demand → Match persistence boundary. Catalog/Business/Offering remain authoritative for the matched supply targets.
-
-### Demand / Matching integrity — 0041
-
-### Trust Reviews — 0042
-
-### Integrity update guards — 0043
-
-- no new tables
-
-0043 adds database-level update-time tenant guards for Match candidates and Review customer scope.
-
-- reviews
-
-0042 physicalizes the canonical Review target selected by the repository's Review target contract, with exactly one typed target and Customer/tenant scope integrity.
-
-- no new tables
-
-0041 hardens typed candidate uniqueness and makes match decisions append-only.
-
-- privacy_consents
-- privacy_requests
-- privacy_processing_records
-
-0039 establishes consent records and explicit privacy subject requests with per-module processing records.
-
-- integration_providers
-- integration_accounts
-- integration_webhooks
-- integration_sync_jobs
-- integration_external_references
-
-0038 establishes provider-neutral external account, webhook, sync and external-reference ownership. Credentials remain referenced through protected secret/credential storage rather than stored in ordinary D1 domain rows.
-
 - ai_operation_types
 - ai_providers
 - ai_models
@@ -312,24 +273,54 @@ These migrations add integrity triggers only.
 
 0037 establishes the shared AI Runtime source-of-truth boundary. AI output remains non-authoritative for Business/Booking/Commerce state.
 
-- communication_conversations
-- communication_messages
-- communication_notifications
-- communication_delivery_attempts
+### Integration core — 0038
 
-0035 establishes provider-neutral Communication conversation, message, notification and delivery-attempt storage with notification idempotency and tenant/workspace scope.
+- integration_providers
+- integration_accounts
+- integration_webhooks
+- integration_sync_jobs
+- integration_external_references
 
-**Total currently defined physical tables: 144.**
+0038 establishes provider-neutral external account, webhook, synchronization and reference state. Credential values remain outside ordinary domain rows.
 
+### Privacy / Consent — 0039
+
+- privacy_consents
+- privacy_requests
+- privacy_processing_records
+
+0039 establishes consent and explicit privacy-subject request processing records.
+
+### Demand / Matching core — 0040
+
+- demand_requests
+- demand_profiles
+- match_requests
+- match_candidates
+- match_decisions
+
+0040 establishes Phoenix's canonical Demand → Match persistence boundary. Catalog/Business/Offering remain authoritative for matched supply.
+
+### Demand / Matching integrity — 0041
 
 - no new tables
 
-0032 tightens Commerce tenant boundaries and makes PriceSnapshot calculation-context uniqueness scope-aware.
+0041 hardens typed candidate uniqueness and append-only MatchDecision history.
 
+### Trust Reviews — 0042
 
-- booking_holds
-- booking_status_history
-- appointment_events
+- reviews
+
+0042 establishes canonical Review storage with typed target references to Business, Offering, Booking, Appointment, Service, Product or Location.
+
+### Integrity update guards — 0043
+
+- no new tables
+
+0043 hardens update-time tenant integrity for MatchCandidate and Review records.
+
+**Total currently defined physical tables: 144.**
+
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
@@ -347,16 +338,17 @@ This count includes only canonical SQL migration sources. It does not include re
 | Discovery | search documents, embeddings, ranking features, indexing jobs | Core projection implemented; index-version registry is missing |
 | Seller AI Creation | creation sessions, raw inputs, drafts, field provenance | Implemented for seller-side creation slice |
 | Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events, customer_addresses | Customer core, CRM relationship and structured Address storage implemented; CustomerProfile, timeline projection and workflow layers remain |
-| Matching | no user request / match execution tables | Missing |
+| Matching | demand_requests, demand_profiles, match_requests, match_candidates, match_decisions | Canonical Demand→Match persistence implemented; retrieval/ranking/learning and Connect/Act integration remain |
 | Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions, booking_holds, booking_status_history, appointment_events | Core schema/repositories implemented; final availability resolution and atomic reservation/finalization remain |
-| Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries | Core verification chain + review/expiry records implemented; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
-| Moderation / Privacy / Consent | no canonical workflow tables | Missing |
+| Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews | Verification chain + review/expiry/review records implemented; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
+| Moderation / Privacy / Consent | privacy_consents, privacy_requests, privacy_processing_records | Core consent/privacy-request storage implemented; retention/export/delete workers remain |
+
 | Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core provider-neutral storage/repository implemented; consent/policy/template registry/provider adapters and durable dispatch workers remain |
 | Commerce | commerce_carts, commerce_cart_lines, commerce_checkout_sessions, commerce_price_snapshots, commerce_orders, commerce_order_lines, commerce_order_adjustments, commerce_transaction_attempts, commerce_fulfillment_references, commerce_cancellations, commerce_refund_references, commerce_order_events | Core transaction boundary implemented; pricing/checkout orchestration, Billing/Payment, Promotion/Loyalty and Fulfillment integrations remain separate capabilities |
 | Billing | billing_plans, billing_prices, billing_plan_entitlements, billing_subscriptions, billing_subscription_events, billing_usage_meters, billing_usage_events, billing_usage_counters, billing_entitlement_snapshots, billing_provider_refs, billing_reconciliation_cases | Core plan/subscription/entitlement/usage/quota/reconciliation storage implemented; provider adapters and invoice/financial-ledger layers remain |
-| AI Runtime | no canonical ai_operation/model/provider/policy/result/usage tables | Missing |
-| Automation | no workflow/trigger/execution tables | Missing |
-| Integration | no integration/external-account/webhook/sync tables | Missing |
+| AI Runtime | ai_operation_types, ai_providers, ai_models, ai_prompts, ai_prompt_versions, ai_schemas, ai_schema_versions, ai_policies, ai_operations, ai_model_routing_decisions, ai_policy_decisions, ai_provider_attempts, ai_runtime_results, ai_usage_records | Core shared AI Runtime persistence implemented; provider adapters, routing/validation execution and durable workers remain |
+| Automation | automation_workflows, automation_workflow_versions, automation_triggers, automation_conditions, automation_actions, automation_schedules, automation_executions, automation_step_executions, automation_execution_attempts, automation_execution_errors, automation_variables, automation_policies, automation_approval_references, automation_compensation_references | Core versioned workflow/execution persistence implemented; durable scheduler/worker execution remains |
+| Integration | integration_providers, integration_accounts, integration_webhooks, integration_sync_jobs, integration_external_references | Core external account/webhook/sync/reference persistence implemented; provider adapters and durable sync workers remain |
 | Localization / Documents / Analytics | no dedicated canonical tables identified in current migration set | Missing |
 
 ## 3. Important semantic mismatches
@@ -568,19 +560,20 @@ Never create parallel canonical entities for:
 
 ## 7. Current implementation boundary
 
-The database is neither empty nor complete.
+The database is broad but not yet production-complete.
 
 The accurate state is:
 
 ```
-60 physical tables defined
+144 physical tables defined across 43 ordered migrations
         ↓
-foundation + onboarding + identity + business + catalog
-+ media + discovery + seller-AI slices implemented
+core foundation + identity + business + catalog + media + discovery
++ seller AI + customer/CRM + trust + booking + commerce + billing
++ communication + automation + AI Runtime + integration + privacy
++ Demand/Matching + reviews are physically implemented
         ↓
-many logical domains remain unimplemented
-        ↓
-several existing semantic mismatches require explicit reconciliation
+remaining work is primarily operational execution, derived projections,
+provider adapters, lifecycle workers and a small set of explicitly gated contracts
         ↓
 new migrations must follow ownership + no-duplication gates
 ```
@@ -590,18 +583,18 @@ new migrations must follow ownership + no-duplication gates
 The next implementation work should proceed in this order:
 
 1. Define AttributeValue backfill/conflict/cutover rules without duplicating current JSON-backed state.
-2. Complete Business lifecycle reconciliation only where the conceptual onboarding vocabulary can be mapped without inventing semantics.
-3. Complete CustomerProfile only after its field-level contract is closed; keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit.
-4. Complete Trust reviewer authorization integration, expiry workers/events and TrustSignal projections only after their operational contracts are explicit.
-5. Complete Booking availability calculation, holds consumption and atomic finalization semantics.
-6. Complete Billing provider adapters/reconciliation workers and invoice foundation only where their operational contracts are explicit.
-7. Complete Communication consent/policy/template registry and durable dispatch/provider-adapter contracts.
-8. Complete Automation durable scheduler/worker execution and capability compensation semantics.
-9. Complete AI Runtime provider adapters, routing/validation execution and durable workers.
-10. Complete Integration provider adapters and durable sync workers.
-11. Complete Privacy retention/export/delete workers and subject-level identity validation.
-12. Add matching/user-request persistence and rebuildable projections.
-13. Add Review, Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
+2. Complete CustomerProfile only after its field-level contract is closed; keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit.
+3. Complete Booking availability calculation, hold consumption and atomic finalization semantics.
+4. Complete Billing provider adapters/reconciliation workers and invoice/financial-ledger foundation only where their contracts are explicit.
+5. Complete Communication consent/policy/template registry and durable dispatch/provider-adapter contracts.
+6. Complete Automation durable scheduler/worker execution and capability compensation semantics.
+7. Complete AI Runtime provider adapters, routing/validation execution and durable workers.
+8. Complete Integration provider adapters and durable sync workers.
+9. Complete Privacy retention/export/delete workers and subject-level identity validation.
+10. Complete Matching retrieval/ranking execution, learning signals and Connect/Act integration.
+11. Complete Review moderation/reporting and reputation projection contracts.
+12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
+13. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
 Every step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums.
 
