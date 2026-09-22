@@ -6,7 +6,9 @@
   "exports": {
     ".": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
@@ -14,7 +16,8 @@
   },
   "dependencies": {
     "@qooqnos/core": "file:../core",
-    "@qooqnos/database": "file:../database"
+    "@qooqnos/database": "file:../database",
+    "@qooqnos/runtime": "file:../runtime"
   },
   "devDependencies": {
     "vitest": "^1.0.0"
