@@ -1,5 +1,6 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import { VerificationRepository } from "@qooqnos/database";
+import { DatabaseError } from "@qooqnos/database";
 import type { AuthorizationService } from "@qooqnos/runtime";
 import { TrustReviewRepository } from "./repository";
 
@@ -23,6 +24,7 @@ export class TrustService {
     readonly riskClass: string;
   }) {
     await this.options.authorization.assert({context,permission:"trust.verification.manage",requireAuthentication:true,requireWorkspace:false});
+    if (!context.tenantId) throw new DatabaseError("Trust organization scope is required");
     return this.options.verification.createCase(context,{
       id:this.options.id(),
       organizationId:context.tenantId,
@@ -49,7 +51,14 @@ export class TrustService {
 
   async completeVerificationReview(context: RequestContext, reviewId: EntityId, outcome: string, escalationReason?: string) {
     await this.options.authorization.assert({context,permission:"trust.verification.manage",requireAuthentication:true,requireWorkspace:false});
-    return this.options.verification.completeReview(context,reviewId,outcome,this.options.now(),this.options.now(),escalationReason);
+    return this.options.verification.updateReview(
+      context,
+      reviewId,
+      "completed",
+      this.options.now(),
+      outcome,
+      escalationReason,
+    );
   }
 
   async moderateReview(context: RequestContext, id: EntityId, moderationState: string) {
