@@ -24,6 +24,7 @@ import verificationChecks from "../../../migrations/0023_verification_checks.sql
 import verificationDecisions from "../../../migrations/0024_verification_decisions.sql";
 import verificationReviewExpiry from "../../../migrations/0025_verification_review_expiry.sql";
 import customerAddresses from "../../../migrations/0026_customer_addresses.sql";
+import businessStatusHistory from "../../../migrations/0027_business_status_history.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -53,4 +54,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0024_verification_decisions.sql", sql: verificationDecisions },
   { path: "migrations/0025_verification_review_expiry.sql", sql: verificationReviewExpiry },
   { path: "migrations/0026_customer_addresses.sql", sql: customerAddresses },
+  { path: "migrations/0027_business_status_history.sql", sql: businessStatusHistory },
 ];
