@@ -254,27 +254,30 @@ Every projection records resource ID, module, tenant/workspace scope, visibility
 
 Only eligible published records may be indexed.
 
-## 11. User request and matching domain
+## 11. Demand and matching domain
 
-- `user_requests`: normalized representation of a customer's marketplace need.
-- `match_runs`: immutable/versioned execution metadata.
-- `match_results`: candidate scores/signals/explanations for a run.
-- `match_constraints`: hard constraints extracted from a request.
-- `match_preferences`: softer preferences with provenance.
+The current canonical physical model is:
+
+- `demand_requests`: customer-demand intake and lifecycle.
+- `demand_profiles`: versioned normalized demand representations.
+- `match_requests`: one explicit matching execution.
+- `match_candidates`: typed Business/Offering candidates referencing canonical supply.
+- `match_decisions`: immutable selection/exclusion decisions.
+
+Legacy conceptual names such as `user_requests`, `match_runs`, and `match_results` are compatibility vocabulary only; they must not create parallel tables.
 
 Pipeline:
 
 ```text
-natural language
-→ intent
-→ hard constraints
+raw demand
+→ demand understanding
+→ normalized demand profile
 → candidate retrieval
-→ semantic retrieval
-→ availability
-→ quality/trust
+→ eligibility
 → ranking
-→ policy filter
-→ explanation
+→ policy decision
+→ match decision
+→ Connect / Act
 ```
 
 Hard constraints eliminate candidates; semantic similarity never overrides them.
@@ -285,11 +288,12 @@ AI has two distinct but connected storage layers:
 
 ### 12.1 AI interaction/orchestration data
 
-- `ai_conversations`: AI interaction context.
-- `ai_messages`: ordered AI conversation messages.
-- `agents`: Agent definition/configuration.
-- `ai_memories`: explicitly approved durable AI memory with provenance/retention.
-- Agent-run/step/tool-invocation concepts are orchestration evidence and map to the canonical AI vocabulary defined by `AI_DATA_DICTIONARY.md`.
+Agent/Conversation/Memory concepts remain a separate, explicitly gated domain until their field-level physical contracts are closed.
+
+- Agent definitions are conceptual configuration.
+- AI conversation/message state is conceptual interaction state.
+- Durable AI memory is gated by explicit retention/provenance contracts.
+- Runtime execution evidence maps only to the canonical `ai_operations` / `ai_provider_attempts` / `ai_runtime_results` / `ai_usage_records` model.
 
 ### 12.2 Canonical AI Runtime data
 
@@ -312,7 +316,7 @@ These Runtime records are operational/execution state, not business-domain truth
 
 ### 12.3 Important reconciliation rule
 
-Legacy names such as `ai_runs`, `ai_tool_calls`, `ai_prompt_versions`, and `ai_usage_events` must not be interpreted as parallel canonical Runtime entities.
+Legacy execution names such as `ai_runs`, `ai_tool_calls` and `ai_usage_events` are prohibited as parallel physical sources of truth. `ai_prompt_versions` is canonical only because it is part of the `ai_prompts` version registry.
 
 Where a physical migration needs AI execution storage, it must map to the canonical Runtime objects and relationships rather than create duplicate tables with overlapping semantics.
 
@@ -347,13 +351,21 @@ Medical/regulated information requires stronger classification, consent, access 
 
 ## 14. Billing and entitlements
 
-- `plans`: commercial plan definitions.
-- `plan_entitlements`: capability/quota definitions.
-- `subscriptions`: tenant/user subscription state.
-- `subscription_events`: immutable billing lifecycle events.
-- `usage_events`: metered usage.
-- `invoices`: financial document metadata.
-- `invoice_lines`: billable components.
+The canonical physical Billing model is module-prefixed:
+
+- `billing_plans`
+- `billing_prices`
+- `billing_plan_entitlements`
+- `billing_subscriptions`
+- `billing_subscription_events`
+- `billing_usage_meters`
+- `billing_usage_events`
+- `billing_usage_counters`
+- `billing_entitlement_snapshots`
+- `billing_provider_refs`
+- `billing_reconciliation_cases`
+
+Payment execution, invoices and the financial ledger remain separate Billing/Payment contracts until their physical ownership contracts close.
 
 Money is never represented as floating point.
 
