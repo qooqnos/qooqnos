@@ -3,3 +3,5 @@ export * from "./availability-repository";
 export * from "./service";
 export * from "./availability-service";
 export * from "./manifest";
+
+export * from "./slot-generator";
