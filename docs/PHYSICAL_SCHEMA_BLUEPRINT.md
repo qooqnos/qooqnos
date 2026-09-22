@@ -567,33 +567,89 @@ Communication owns delivery behavior; domain modules only emit canonical events/
 
 ## 12. AI / Automation
 
-### `agents`
+### Automation
 
-`id`, workspace scope, name, status, model reference, safety policy reference, configuration, timestamps.
+The canonical Automation physical boundary is migration 0036.
 
-### `ai_conversations` / `ai_messages`
+### `automation_workflows`
 
-AI-specific context and messages. They are distinct from Communication Conversation/Message.
+`id`, organization_id?, workspace_id?, business_id?, name, scope, status, active_version_id?, created_by, created_at, updated_at.
 
-### `ai_runs`
+### `automation_workflow_versions`
 
-`id`, agent_id?, ai_conversation_id?, status, model/version, prompt_version?, policy_version?, correlation/request IDs, usage/cost fields, timestamps.
+`id`, workflow_id, version, definition_json, definition_hash, status, activated_at?, created_at.
 
-### `ai_tool_calls`
+### `automation_triggers`
 
-`id`, ai_run_id, capability_id/version, status, input/output references or redacted payload, timestamps.
+`id`, workflow_version_id, type, event_type?, schedule_id?, command_capability?, enabled, created_at.
 
-Tool records reference Capability contracts; they never own domain behavior.
+### `automation_conditions`
 
-### `ai_memories`
+`id`, workflow_version_id, expression, evaluation_policy_version, created_at.
 
-`id`, owner scope, content/reference, provenance, consent reference?, retention/expiry, classification, timestamps.
+### `automation_actions`
 
-Memory is never authoritative Business/Booking/Commerce state.
+`id`, workflow_version_id, capability, input_mapping_json, timeout_policy_json?, retry_policy_json?, approval_policy_json?, sequence, created_at.
 
-### `workflows`, `workflow_triggers`, `workflow_actions`, `workflow_executions`
+### `automation_schedules`
 
-Workflow definitions reference canonical event/capability identifiers, never implementation class names or repositories.
+`id`, organization_id?, workspace_id?, timezone, recurrence, start_at, end_at?, misfire_policy, enabled, next_run_at?, created_at, updated_at.
+
+### `automation_executions`
+
+`id`, workflow_id, workflow_version_id, trigger_id, organization_id?, workspace_id?, business_id?, status, input_reference?, correlation_id, trace_id, started_at?, completed_at?, created_at, updated_at.
+
+### `automation_step_executions`
+
+`id`, execution_id, step_id, status, sequence, input_reference?, output_reference?, started_at?, completed_at?, created_at, updated_at.
+
+### `automation_execution_attempts`
+
+`id`, step_execution_id, attempt_number, idempotency_key, status, error_reference?, started_at, completed_at?.
+
+### `automation_execution_errors`
+
+`id`, execution_id, step_execution_id?, attempt_id?, error_class, retryable, safe_message, provider_reference?, created_at.
+
+### `automation_variables`
+
+`id`, execution_id, variable_key, value_reference, classification, created_at.
+
+### `automation_policies`
+
+`id`, organization_id?, workspace_id?, policy_version, max_duration_seconds?, max_steps?, max_retries?, default_timeout_seconds?, max_concurrency?, allowed_capabilities_json, approval_requirements_json?, retention_policy?, emergency_disabled, created_at, updated_at.
+
+### `automation_approval_references`
+
+`id`, execution_id, authorization_request_id, policy_version, status, expires_at, created_at, updated_at.
+
+### `automation_compensation_references`
+
+`id`, failed_action_id, compensation_capability, status, created_at, updated_at.
+
+Automation actions reference canonical capabilities; workflow state does not become domain truth.
+
+### AI Runtime
+
+Migration 0037 defines the canonical shared AI Runtime. The following are the only physical execution authorities:
+
+- ai_operation_types
+- ai_providers
+- ai_models
+- ai_prompts
+- ai_prompt_versions
+- ai_schemas
+- ai_schema_versions
+- ai_policies
+- ai_operations
+- ai_model_routing_decisions
+- ai_policy_decisions
+- ai_provider_attempts
+- ai_runtime_results
+- ai_usage_records
+
+No `ai_runs`, `ai_tool_calls` or feature-local AI execution ledger may be introduced as a parallel source of truth. Durable provider adapters, routing, validation and execution workers are operational layers over these records.
+
 
 ## 13. Billing / Media / Integration / Platform
 
@@ -657,7 +713,32 @@ Billing owns commercial entitlement and usage authority. Payment execution, invo
 
 ### Integration
 
-`integrations`, `external_accounts`, `webhooks`, `sync_jobs`, `external_references` contain provider references and lifecycle state, not domain ownership.
+The canonical Integration physical boundary is migration 0038.
+
+### `integration_providers`
+
+`id`, provider_key, provider_name, adapter_version, capabilities_json, status, created_at, updated_at.
+
+### `integration_accounts`
+
+`id`, organization_id, workspace_id?, provider_id, account_type, external_account_reference, status, credential_reference?, metadata_json?, connected_at?, disconnected_at?, created_at, updated_at.
+
+### `integration_webhooks`
+
+`id`, integration_account_id, external_event_id, event_type, signature_status, received_at, payload_reference?, processing_status, processed_at?, retry_count, last_error_reference?, correlation_id, created_at.
+
+Webhook uniqueness is provider-account + external event id.
+
+### `integration_sync_jobs`
+
+`id`, integration_account_id, sync_type, direction, status, cursor_reference?, checkpoint_reference?, item_count, error_count, started_at?, completed_at?, next_run_at?, correlation_id, created_at, updated_at.
+
+### `integration_external_references`
+
+`id`, organization_id, workspace_id?, integration_account_id?, resource_type, resource_id, external_type, external_reference, status?, metadata_json?, first_seen_at, last_seen_at, created_at, updated_at.
+
+External references link canonical Phoenix resources to provider identities without transferring domain ownership.
+
 
 ### Platform
 
