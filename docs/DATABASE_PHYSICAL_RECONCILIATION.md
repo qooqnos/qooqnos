@@ -145,14 +145,18 @@ These are not invitations to create duplicate tables. They are reconciliation ga
 
 ### 3.1 Service model
 
-The logical model describes:
+The logical model distinguishes a reusable Service definition from a business-specific offering.
 
-- services as canonical service definitions/templates;
-- business_services as business-specific offers.
+The current physical schema represents that distinction without a second service-link table:
 
-The current physical schema has one services table with a nullable business_id.
+- services may exist with a nullable business_id;
+- offerings always belong to a Business;
+- a service offering references one Service;
+- the catalog repository validates that a referenced Service is compatible with the offering Business.
 
-**Action:** resolve this semantic boundary before creating business_services. Do not create business_services merely because the logical vocabulary contains that name.
+**Decision:** keep the current services + offerings model as the physical source of truth. Do not create business_services or another service-link table merely to mirror the logical vocabulary.
+
+If a future business-specific service configuration needs an independent lifecycle, it must be introduced as an explicit extension of this model, not as a duplicate relationship table.
 
 ### 3.2 Pricing model
 
