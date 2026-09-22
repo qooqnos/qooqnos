@@ -33,6 +33,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Business status history | 🟢 Schema/repository implemented | migrations/0027_business_status_history.sql; packages/business/src/repository.ts |
 | Booking core | 🟢 Schema/package/repository implemented | migrations/0028_booking_core.sql; packages/booking/src/repository.ts; packages/booking/src/service.ts |
 | Booking availability rules | 🟢 Schema/repository implemented | migrations/0029_availability_schedules.sql; packages/booking/src/availability-repository.ts |
+| Booking holds / lifecycle history | 🟢 Schema/repository implemented | migrations/0030_booking_holds_history.sql; packages/booking/src/repository.ts |
 | Trust VerificationCase / evidence | 🟢 Schema/repository implemented | migrations/0021_verification_case_and_documents.sql; packages/database/src/verification-repository.ts |
 | Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
 | Trust checks / evidence links | 🟢 Schema implemented | migrations/0023_verification_checks.sql; runtime methods in verification-repository.ts |
@@ -213,6 +214,16 @@ Commits:
 - 688c09c — Fix Booking schedule scope check
 - 9d94218 — Test Booking lifecycle guards
 - e808ff9 — Test Availability tenant scoping
+- d8908b3 — Add booking holds and lifecycle history migration 0030
+- 8cd30a4 — Register booking hold/history migration
+- d5ca07b — Lock booking hold/history migration checksum
+- af3d3c4 — Fix active hold uniqueness for resource-less slots
+- 7a66937 — Refresh booking hold/history checksum
+- fae8f16 — Implement Booking holds and lifecycle history
+- 3c58b8e — Add Availability capability service
+- 9b2cd4b — Extend Booking permission vocabulary
+- 3a2d8a3 — Wire Availability permissions into manifest
+- fc5e3eb — Export Availability service
 - 2310529 — Refresh physical reconciliation after Trust review/expiry
 - 3458d50 — Document Trust review/expiry physical contracts
 - 3ba47ec — Record Trust physical implementation status
@@ -237,7 +248,7 @@ Migration lock note: 0021 was refreshed after a pre-apply SQL cleanup; 0022–00
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
 
-Booking note: migrations 0028–0029 establish the canonical Booking/Availability physical core. Final slot calculation, holds, atomic finalization and booking history remain next implementation layers; no second reservation model is permitted.
+Booking note: migrations 0028–0030 establish the canonical Booking/Availability physical core, short-lived holds and immutable booking/appointment history. Final availability calculation, hold consumption and atomic finalization remain the next Booking capability layer; no second reservation model or authoritative slots table is permitted.
 
 Business lifecycle note: migration 0027 records immutable transitions for the existing physical `draft/active/suspended/archived` Business statuses. It intentionally does not invent a new status vocabulary.
 
@@ -281,6 +292,7 @@ The API runtime references these migration sources:
 0027_business_status_history.sql
 0028_booking_core.sql
 0029_availability_schedules.sql
+0030_booking_holds_history.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
