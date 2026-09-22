@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0038**.
+The current API migration catalog references versions **0001 through 0039**.
 
 ### Foundation — 0001
 
@@ -251,6 +251,14 @@ These migrations add integrity triggers only.
 
 ### Integration core — 0038
 
+### Privacy / Consent — 0039
+
+- privacy_consents
+- privacy_requests
+- privacy_processing_records
+
+0039 establishes consent records and explicit privacy subject requests with per-module processing records.
+
 - integration_providers
 - integration_accounts
 - integration_webhooks
@@ -283,7 +291,7 @@ These migrations add integrity triggers only.
 
 0035 establishes provider-neutral Communication conversation, message, notification and delivery-attempt storage with notification idempotency and tenant/workspace scope.
 
-**Total currently defined physical tables: 135.**
+**Total currently defined physical tables: 138.**
 
 
 - no new tables
@@ -563,8 +571,9 @@ The next implementation work should proceed in this order:
 8. Complete Automation durable scheduler/worker execution and capability compensation semantics.
 9. Complete AI Runtime provider adapters, routing/validation execution and durable workers.
 10. Complete Integration provider adapters and durable sync workers.
-11. Add matching/user-request persistence and rebuildable projections.
-12. Add Privacy/Consent, Review, Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
+11. Complete Privacy retention/export/delete workers and subject-level identity validation.
+12. Add matching/user-request persistence and rebuildable projections.
+13. Add Review, Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
 Every step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums.
 
