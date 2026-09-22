@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { createAuthorizationRegistry } from "@qooqnos/runtime";
 import { ApiRouter } from "./router";
 
 describe("Trust API routes", () => {
   it("registers protected Review and Verification routes", async () => {
-    const router = new ApiRouter();
+    const router = new ApiRouter({ authorization: createAuthorizationRegistry() });
     const reviewResponse = await router.handle(
       new Request("https://example.test/api/v1/trust/reviews", {
         method: "POST",
