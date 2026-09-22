@@ -2,9 +2,6 @@ import { createServer, IncomingMessage, ServerResponse } from "http";
 import { URL } from "url";
 import { InMemoryDatabase } from "@qooqnos/database/legacy";
 import { ApiRouter } from "@qooqnos/api";
-import {
-} from "@qooqnos/core";
-
 // ============================================================================
 // HTTP SERVER IMPLEMENTATION
 // ============================================================================
