@@ -8,7 +8,7 @@ import {
   UserId,
   WorkspaceId,
 } from "@qooqnos/core";
-import { InMemoryDatabase, User } from "@qooqnos/database";
+import { InMemoryDatabase, User } from "@qooqnos/database/legacy";
 
 // ============================================================================
 // ONBOARDING TYPES
