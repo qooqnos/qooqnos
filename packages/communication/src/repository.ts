@@ -195,8 +195,8 @@ export class CommunicationRepository extends Repository {
     const current = await this.getNotification(context, id);
     if (!current) throw new DatabaseError("Communication notification not found");
     await this.database.run(
-      "UPDATE communication_notifications SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?)",
-      status, now, id, current.organizationId, current.workspaceId ?? context.workspaceId,
+      "UPDATE communication_notifications SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND ((workspace_id IS NULL AND ? IS NULL) OR workspace_id = ?)",
+      status, now, id, current.organizationId, current.workspaceId, current.workspaceId,
     );
     return this.getNotification(context, id);
   }
