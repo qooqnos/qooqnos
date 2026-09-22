@@ -22,6 +22,7 @@
     {"id":"0019_crm_customer_relationships","version":19,"moduleId":"crm","checksum":"20a6c3212b6e19beeaa960f3c569008638399574807a30c1708bbb0e2bf1a976","filename":"0019_crm_customer_relationships.sql"},
     {"id":"0020_crm_timeline_events","version":20,"moduleId":"crm","checksum":"eeda7d6cb21b5064d5cf6722256be51b13ac3236572cd8a73d2dae0d0c235325","filename":"0020_crm_timeline_events.sql"},
     {"id":"0021_verification_case_and_documents","version":21,"moduleId":"trust","checksum":"badbd2be394b7e79dc9c73384babedf32baac694b6f03cbfb0fbafcf764bc814","filename":"0021_verification_case_and_documents.sql"},
-    {"id":"0022_verification_policy_requirements","version":22,"moduleId":"trust","checksum":"c12aa0bb7798e81e6256890ff7268d0b58a69874d1420d29e25e0800119f13fc","filename":"0022_verification_policy_requirements.sql"}
+    {"id":"0022_verification_policy_requirements","version":22,"moduleId":"trust","checksum":"c12aa0bb7798e81e6256890ff7268d0b58a69874d1420d29e25e0800119f13fc","filename":"0022_verification_policy_requirements.sql"},
+    {"id":"0023_verification_checks","version":23,"moduleId":"trust","checksum":"20826f965b790d7a20098ec3f974518280a1171f64af03d3143375afe71b6a6e","filename":"0023_verification_checks.sql"}
   ]
 }
