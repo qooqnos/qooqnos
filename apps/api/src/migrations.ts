@@ -39,6 +39,7 @@ import integrationCore from "../../../migrations/0038_integration_core.sql";
 import privacyConsentRequests from "../../../migrations/0039_privacy_consent_requests.sql";
 import demandMatchingCore from "../../../migrations/0040_demand_matching_core.sql";
 import demandMatchingIntegrity from "../../../migrations/0041_demand_matching_integrity.sql";
+import reviewsModerationReputation from "../../../migrations/0048_reviews_moderation_reputation.sql";
 import reviewsCore from "../../../migrations/0042_reviews_core.sql";
 import integrityUpdateGuards from "../../../migrations/0043_integrity_update_guards.sql";
 import billingCounterScope from "../../../migrations/0044_billing_counter_scope.sql";
@@ -89,6 +90,7 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0039_privacy_consent_requests.sql", sql: privacyConsentRequests },
   { path: "migrations/0040_demand_matching_core.sql", sql: demandMatchingCore },
   { path: "migrations/0041_demand_matching_integrity.sql", sql: demandMatchingIntegrity },
+  { path: "migrations/0048_reviews_moderation_reputation.sql", sql: reviewsModerationReputation },
   { path: "migrations/0042_reviews_core.sql", sql: reviewsCore },
   { path: "migrations/0043_integrity_update_guards.sql", sql: integrityUpdateGuards },
   { path: "migrations/0044_billing_counter_scope.sql", sql: billingCounterScope },
