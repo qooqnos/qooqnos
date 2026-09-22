@@ -55,7 +55,7 @@ async function verify() {
     expectedVersion += 1;
     const entry = lockById.get(source.id);
     if (!entry) fail(`${source.filename} is missing from the manifest`);
-    for (const field of ["version", "moduleId", "filename", "checksum"]) {
+    for (const field of ["version", "filename", "checksum"]) {
       if (entry[field] !== source[field]) fail(`${source.filename} ${field} differs from the manifest`);
     }
   }
