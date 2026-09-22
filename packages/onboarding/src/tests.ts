@@ -38,11 +38,10 @@ function profile(status: OnboardingProfile["status"] = "draft"): OnboardingProfi
 
 function authorization() {
   return {
-    registerPermission() {},
-    registerRole() {},
-    hasPermission() { return true; },
-    evaluate() { return { allowed: true, reason: "allowed" as const, permission: "test" }; },
-    assert() {},
+    async evaluate() {
+      return { allowed: true, reason: "allowed" as const, permission: "test" };
+    },
+    async assert() {},
   };
 }
 
