@@ -764,6 +764,26 @@ A future migration may create a table only after this checklist is complete:
 - migration dependency and rollback/recovery strategy defined;
 - no existing table/capability already owns the same fact.
 
+## 18. Privacy / Consent
+
+### `privacy_consents`
+
+`id`, organization_id, workspace_id?, subject_type, subject_id, purpose, consent_version, status, source, evidence_reference?, granted_at?, revoked_at?, expires_at?, created_at, updated_at.
+
+There is at most one active granted consent for a subject/purpose within an organization.
+
+### `privacy_requests`
+
+`id`, organization_id, workspace_id?, subject_type, subject_id, request_type, status, requested_by, requested_at, due_at?, completed_at?, result_reference?, rejection_reason?, created_at, updated_at.
+
+Requests are explicit workflow records for access/export/delete/restrict/correct actions.
+
+### `privacy_processing_records`
+
+`id`, request_id, module_id, action, resource_reference?, status, error_reference?, processed_at?, created_at.
+
+Processing records provide module-level auditability for privacy requests without making Privacy a copy of domain data.
+
 ## 19. Explicit gates still open
 
 The following remain controlled architecture gates before their concrete SQL migrations:
