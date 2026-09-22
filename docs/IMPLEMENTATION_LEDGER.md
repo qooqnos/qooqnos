@@ -398,7 +398,7 @@ Latest verified commits:
 - e15721d — Expose Integration sync job API capability
 - 56591ab — Test protected Integration sync job route
 
-CI verification: GitHub Actions CI and Phoenix verification both pass on current main after these changes.
+CI verification: workflow definitions and migration-lock verification are present. No live workflow result for the current main SHA has been independently re-verified in this session.
 
 Review moderation note: migration 0048 completes moderation/reporting/reputation projection storage and API/service behavior. Review target types remain canonical Business/Offering/Product only.
 
@@ -414,7 +414,7 @@ AI Runtime composition note: Seller AI now persists canonical AI operation/resul
 
 AI Runtime note: migration 0037 establishes shared operation/provider/model/policy/prompt/schema/result/usage persistence.
 
-Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is now transactional with Outbox and the Worker consumer advances created notifications to queued; provider adapter/template/policy layers remain operational gates.
+Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. External provider adapters plus template/policy/consent layers remain gated.
 
 Billing runtime note: the API Seller AI composition now uses the real D1-backed BillingService. No fallback unavailable Billing service is used for the production path; missing plan/subscription/entitlement state fails the operation closed.
 
