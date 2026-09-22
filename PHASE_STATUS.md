@@ -1,7 +1,7 @@
 # Phoenix Implementation Status
 
 **Status:** Current status document  
-**Last reviewed:** 2026-09-22
+**Last reviewed:** 2026-09-23
 
 This file supersedes the old Phase 1–6 plan that described PostgreSQL as the planned production database. That plan is no longer the source of truth.
 
@@ -84,7 +84,15 @@ Completion requires:
 - tests for critical invariants;
 - removal or formal quarantine of conflicting legacy database code.
 
-## 7. What remains
+## 7. Latest runtime verification
+
+- GitHub Actions CI passed for commit 586959738b01c635dd5022fb24b2aa7f25dcb439 (run 35785791295).
+- GitHub Actions Phoenix verification passed for the same commit (run 35785791200).
+- Migration lock verification passed for the canonical migration inventory through 0048.
+- Typecheck, build, and unit tests passed in the verification path.
+- Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
+
+## 8. What remains
 
 The remaining database work is not “implement PostgreSQL.”
 
@@ -102,6 +110,6 @@ Canonical logical model
 
 Only after this sequence is complete should Cloudflare D1 production provisioning be treated as the final infrastructure step.
 
-## 8. Historical documents
+## 9. Historical documents
 
 docs/PHASE4_SUMMARY.md and older phase snapshots are historical records. They must not be used as current database design instructions.
