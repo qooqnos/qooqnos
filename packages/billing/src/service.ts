@@ -1,11 +1,32 @@
 import type { RequestContext } from "@qooqnos/core";
 import { DatabaseError } from "@qooqnos/database";
-import {
-  BillingAIEntitlementDecision,
-  BillingAIEntitlementRequest,
-  BillingAIEntitlementService,
-} from "./index";
 import { BillingRepository } from "./repository";
+
+export interface BillingAIEntitlementRequest {
+  readonly context: RequestContext;
+  readonly operationId: string;
+  readonly operationType: string;
+  readonly operationVersion: number;
+  readonly businessId?: string;
+  readonly quantity?: number;
+  readonly idempotencyKey: string;
+}
+
+export interface BillingAIEntitlementDecision {
+  readonly allowed: boolean;
+  readonly decision: "denied" | "included" | "quota_consumed";
+  readonly entitlementDecisionId: string;
+  readonly entitlementKey?: string;
+  readonly quotaKey?: string;
+  readonly quotaLimit?: number;
+  readonly quotaRemaining?: number;
+  readonly reservedUnits?: number;
+  readonly reason?: string;
+}
+
+export interface BillingAIEntitlementService {
+  evaluate(input: BillingAIEntitlementRequest): Promise<BillingAIEntitlementDecision>;
+}
 
 export interface BillingServiceOptions {
   readonly repository: BillingRepository;
