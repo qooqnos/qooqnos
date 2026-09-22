@@ -38,6 +38,38 @@ describe("TrustReviewRepository", () => {
     })).rejects.toThrow("exactly one");
   });
 
+  it("allows a canonical Product target", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return {
+        id: "review-3",
+        organizationId: "tenant-1",
+        workspaceId: "workspace-1",
+        customerId: "customer-1",
+        ratingValue: 5,
+        content: null,
+        moderationState: "pending",
+        businessId: null,
+        offeringId: null,
+        productId: "product-1",
+        createdAt: "2026-09-22T00:00:00.000Z",
+        updatedAt: "2026-09-22T00:00:00.000Z"
+      } as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = { prepare() { return statement; }, async batch() { return []; } };
+    const repository = new TrustReviewRepository(new D1Database(raw));
+
+    await expect(repository.createReview(context(), {
+      id: brandId<"EntityId">("review-3"),
+      customerId: brandId<"EntityId">("customer-1"),
+      ratingValue: 5,
+      productId: brandId<"EntityId">("product-1"),
+      now: "2026-09-22T00:00:00.000Z",
+    })).resolves.toMatchObject({ productId: "product-1" });
+  });
+
   it("rejects ratings outside the canonical 1-5 range", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
