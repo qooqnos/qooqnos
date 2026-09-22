@@ -61,6 +61,54 @@ export function registerAutomationRoutes(
 
   router.register({
     method: "POST",
+    path: "/api/v1/automation/workflows/:workflowId/versions/:versionId/activate",
+    module: "automation",
+    operation: "automation.workflow.activate",
+    permission: "automation.workflow.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const workflow = await service.activateVersion(context, {
+        workflowId: requiredParamId(params.workflowId, context.requestId),
+        versionId: requiredParamId(params.versionId, context.requestId),
+      });
+      return json({ data: workflow }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/automation/workflows/:workflowId/pause",
+    module: "automation",
+    operation: "automation.workflow.pause",
+    permission: "automation.workflow.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const workflow = await service.pauseWorkflow(context, requiredParamId(params.workflowId, context.requestId));
+      return json({ data: workflow }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/automation/workflows/:workflowId/retire",
+    module: "automation",
+    operation: "automation.workflow.retire",
+    permission: "automation.workflow.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const workflow = await service.retireWorkflow(context, requiredParamId(params.workflowId, context.requestId));
+      return json({ data: workflow }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/automation/workflows/:workflowId/executions",
     module: "automation",
     operation: "automation.execution.run",
