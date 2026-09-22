@@ -1,4 +1,5 @@
 import { MatchingRepository, MatchingService } from "@qooqnos/matching";
+import { DiscoveryRepository } from "@qooqnos/discovery";
 import { AppError, brandId, type EntityId } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import { createAuthorizationService, type AuthorizationRegistry } from "@qooqnos/runtime";
@@ -61,6 +62,28 @@ export function registerMatchingRoutes(
 
   router.register({
     method: "POST",
+    path: "/api/v1/match-requests/:matchRequestId/retrieve",
+    module: "matching",
+    operation: "matching.request.execute",
+    permission: "matching.request.execute",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      assertDependencies(database, authorization, context.requestId);
+      const body = await parseBody(request, context.requestId);
+      const query = requiredString(body.query, "query", context.requestId);
+      const service = createService(database, authorization);
+      const result = await service.retrieveAndRank(context, {
+        matchRequestId: brandId<"EntityId">(requiredParam(params.matchRequestId, context.requestId)),
+        query,
+        ...(body.limit !== undefined ? { limit: requiredLimit(body.limit, context.requestId) } : {}),
+      });
+      return json({ data: result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/match-requests/:matchRequestId/decisions",
     module: "matching",
     operation: "matching.decision.manage",
@@ -109,6 +132,7 @@ export function registerMatchingRoutes(
 function createService(database: D1Database, authorization: AuthorizationRegistry): MatchingService {
   return new MatchingService({
     repository: new MatchingRepository(database),
+    discovery: new DiscoveryRepository(database),
     authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
     id: () => brandId<"EntityId">(crypto.randomUUID()),
     now: () => new Date().toISOString(),
@@ -151,4 +175,11 @@ function optionalEntityId(value: unknown, field: string, requestId: EntityId): E
 function requiredParam(value: string | undefined, requestId: EntityId): string {
   if (!value) throw new AppError({ code: "NOT_FOUND", message: "Route parameter is missing.", requestId });
   return value;
+}
+
+function requiredLimit(value: unknown, requestId: EntityId): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1) {
+    throw new AppError({ code: "VALIDATION_ERROR", message: "limit must be a positive integer.", requestId });
+  }
+  return Math.min(value, 50);
 }
