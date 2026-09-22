@@ -61,7 +61,7 @@ describe("BookingRepository finalization", () => {
       },
       async batch(items) {
         batchCount += 1;
-        expect(items).toHaveLength(4);
+        expect(items).toHaveLength(5);
         return items.map(() => ({ success: true, meta: { changes: 1 } }));
       },
     };
