@@ -315,6 +315,20 @@
       "moduleId": "trust",
       "filename": "0045_review_target_integrity.sql",
       "checksum": "a1347a28f5d13132707dd967d02a7f04bb2e805fb71740b73f566739a63231eb"
+    },
+    {
+      "id": "0046_booking_finalization_guards",
+      "version": 46,
+      "moduleId": "booking",
+      "filename": "0046_booking_finalization_guards.sql",
+      "checksum": "f10840cf5754bbb42c1c88ef419658f8c9a5c49917715944605696cdc1ab97cc"
+    },
+    {
+      "id": "0047_booking_capacity_update_guards",
+      "version": 47,
+      "moduleId": "booking",
+      "filename": "0047_booking_capacity_update_guards.sql",
+      "checksum": "5a12b4e8b88a1d7341b6b71732323aef31e3868730b2bbf6ff20126e9b69ac29"
     }
   ]
 }
