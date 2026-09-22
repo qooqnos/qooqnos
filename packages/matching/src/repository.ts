@@ -108,6 +108,28 @@ export class MatchingRepository extends Repository {
     ).then(row=>{if(!row)throw new DatabaseError("Match request not found");return row;});
   }
 
+  async setMatchStatus(
+    context: RequestContext,
+    id: EntityId,
+    status: MatchRequestStatus,
+    now: string,
+  ): Promise<MatchRequestRecord> {
+    const current = await this.getMatchRequest(context, id);
+    const completedAt = status === "decided" || status === "connected" || status === "expired" || status === "cancelled"
+      ? now
+      : current.completedAt;
+    await this.database.run(
+      "UPDATE match_requests SET status = ?, completed_at = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?)",
+      status,
+      completedAt,
+      now,
+      id,
+      current.organizationId,
+      context.workspaceId ?? null,
+    );
+    return this.getMatchRequest(context, id);
+  }
+
   async addCandidate(context:RequestContext,input:{
     readonly id:EntityId; readonly matchRequestId:EntityId; readonly businessId?:EntityId;
     readonly offeringId?:EntityId; readonly retrievalSource:string; readonly retrievalScore?:number; readonly rankingScore?:number;
