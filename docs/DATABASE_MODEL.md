@@ -123,20 +123,23 @@ Publication eligibility is a policy decision, not a synonym for `status = active
 
 ### Services
 
-- `services`: canonical service definition/template.
-- `business_services`: business-specific offer of a service.
-- `service_attributes`: structured service attributes.
-- `service_prices`: versioned/current pricing records.
-- `service_durations`: duration where applicable.
-- `service_availability_rules`: constraints used by booking/discovery.
+- `services`: canonical underlying service definition/template; it may be reusable globally or business-specific through its nullable `business_id`.
+- `offerings`: business-owned, customer-facing offer of a Service or Product.
+- `service_attributes`: future structured service attributes once their canonical ownership is finalized.
+- `service_durations`: future duration data where required by the booking model.
+- `service_availability_rules`: future constraints used by booking/discovery.
+
+There is no canonical `business_services` table. A business-specific service configuration must extend the existing Service/Offering model through an explicit architecture decision rather than duplicating the relationship.
 
 ### Products
 
 - `products`: canonical product entity.
-- `product_variants`: sellable variants/SKU-level attributes.
-- `product_attributes`: structured product attributes.
-- `inventory`: stock/availability signals.
-- `product_prices`: current/versioned prices.
+- `product_variants`: sellable variants/SKU-level attributes; current physical attributes are stored in `attributes_json`.
+- `product_attributes`: future structured product attributes only after the canonical attribute model is finalized.
+- `inventory_items`: current physical stock/availability records.
+- Pricing is owned by the shared `prices` table through the owning `offering`; do not create `product_prices` as a parallel source of truth.
+
+Offer-level pricing is canonical: the physical `prices` table is the single source of truth for current and historical price records attached to customer-facing Offerings.
 
 Catalog item lifecycle is explicit:
 
