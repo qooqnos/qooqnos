@@ -77,6 +77,61 @@ export class AutomationRepository extends Repository {
     );
   }
 
+  async activateVersion(
+    context: RequestContext,
+    workflowId: EntityId,
+    versionId: EntityId,
+    now: string,
+  ): Promise<WorkflowRecord> {
+    const workflow = await this.getWorkflow(context, workflowId);
+    const version = await this.database.first<{ id: EntityId; version: number; status: string }>(
+      "SELECT id, version, status FROM automation_workflow_versions WHERE id = ? AND workflow_id = ? LIMIT 1",
+      versionId,
+      workflowId,
+    );
+    if (!version) throw new DatabaseError("Automation workflow version not found");
+    if (!["draft", "validating"].includes(version.status)) {
+      throw new DatabaseError("Only draft or validating workflow versions can be activated");
+    }
+
+    await this.database.transaction([
+      {
+        sql: "UPDATE automation_workflow_versions SET status = 'retired', activated_at = NULL WHERE workflow_id = ? AND status = 'active' AND id <> ?",
+        params: [workflowId, versionId],
+      },
+      {
+        sql: "UPDATE automation_workflow_versions SET status = 'active', activated_at = ? WHERE id = ? AND workflow_id = ?",
+        params: [now, versionId, workflowId],
+      },
+      {
+        sql: "UPDATE automation_workflows SET active_version_id = ?, status = 'active', updated_at = ? WHERE id = ?",
+        params: [versionId, now, workflowId],
+      },
+    ]);
+    return this.getWorkflow(context, workflowId);
+  }
+
+  async setWorkflowStatus(
+    context: RequestContext,
+    workflowId: EntityId,
+    status: "paused" | "retired",
+    now: string,
+  ): Promise<WorkflowRecord> {
+    const workflow = await this.getWorkflow(context, workflowId);
+    if (workflow.status === "retired" && status !== "retired") {
+      throw new DatabaseError("Retired workflow cannot be reopened");
+    }
+    await this.database.run(
+      "UPDATE automation_workflows SET status = ?, updated_at = ? WHERE id = ? AND (organization_id IS NULL OR organization_id = ?) AND (workspace_id IS NULL OR workspace_id = ?)",
+      status,
+      now,
+      workflowId,
+      context.tenantId,
+      context.workspaceId ?? null,
+    );
+    return this.getWorkflow(context, workflowId);
+  }
+
   async startExecution(context: RequestContext, input: {
     readonly id: EntityId; readonly workflowId: EntityId; readonly workflowVersionId: EntityId; readonly triggerId: EntityId;
     readonly correlationId: string; readonly traceId: string; readonly inputReference?: string; readonly now: string;
