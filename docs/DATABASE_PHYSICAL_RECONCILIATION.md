@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0035**.
+The current API migration catalog references versions **0001 through 0037**.
 
 ### Foundation — 0001
 
@@ -228,6 +228,44 @@ These migrations add integrity triggers only.
 
 ### Communication core — 0035
 
+### Automation core — 0036
+
+- automation_workflows
+- automation_workflow_versions
+- automation_triggers
+- automation_conditions
+- automation_actions
+- automation_schedules
+- automation_executions
+- automation_step_executions
+- automation_execution_attempts
+- automation_execution_errors
+- automation_variables
+- automation_policies
+- automation_approval_references
+- automation_compensation_references
+
+0036 establishes reusable versioned workflows and execution state. Domain facts remain owned by their originating modules.
+
+### AI Runtime core — 0037
+
+- ai_operation_types
+- ai_providers
+- ai_models
+- ai_prompts
+- ai_prompt_versions
+- ai_schemas
+- ai_schema_versions
+- ai_policies
+- ai_operations
+- ai_model_routing_decisions
+- ai_policy_decisions
+- ai_provider_attempts
+- ai_runtime_results
+- ai_usage_records
+
+0037 establishes the shared AI Runtime source-of-truth boundary. AI output remains non-authoritative for Business/Booking/Commerce state.
+
 - communication_conversations
 - communication_messages
 - communication_notifications
@@ -235,7 +273,7 @@ These migrations add integrity triggers only.
 
 0035 establishes provider-neutral Communication conversation, message, notification and delivery-attempt storage with notification idempotency and tenant/workspace scope.
 
-**Total currently defined physical tables: 102.**
+**Total currently defined physical tables: 130.**
 
 
 - no new tables
@@ -512,10 +550,11 @@ The next implementation work should proceed in this order:
 5. Complete Booking availability calculation, holds consumption and atomic finalization semantics.
 6. Complete Billing provider adapters/reconciliation workers and invoice foundation only where their operational contracts are explicit.
 7. Complete Communication consent/policy/template registry and durable dispatch/provider-adapter contracts.
-8. Introduce Automation/Integration storage.
-9. Introduce canonical AI Runtime storage.
-10. Add matching/user-request persistence and rebuildable projections.
-11. Add Privacy/Consent, Review, Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
+8. Complete Automation durable scheduler/worker execution and capability compensation semantics.
+9. Complete AI Runtime provider adapters, routing/validation execution and durable workers.
+10. Introduce Integration/Webhook/Sync storage.
+11. Add matching/user-request persistence and rebuildable projections.
+12. Add Privacy/Consent, Review, Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
 Every step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums.
 
