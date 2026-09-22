@@ -37,6 +37,8 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Commerce transaction core | 🟢 Schema/package/repository implemented | migrations/0031_commerce_transaction_core.sql; migrations/0032_commerce_integrity_hardening.sql; packages/commerce/src/repository.ts; packages/commerce/src/service.ts |
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
 | Communication core | 🟢 Schema/package/repository/service implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts |
+| Automation workflow engine | 🟢 Schema/package/repository/service implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts |
+| AI Runtime persistence | 🟢 Schema/repository implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts |
 | Trust VerificationCase / evidence | 🟢 Schema/repository implemented | migrations/0021_verification_case_and_documents.sql; packages/database/src/verification-repository.ts |
 | Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
 | Trust checks / evidence links | 🟢 Schema implemented | migrations/0023_verification_checks.sql; runtime methods in verification-repository.ts |
@@ -287,8 +289,8 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0035 remain numbered and are extended only through new migrations;
-- migrations 0024–0035 are preserved in the canonical lock sequence.
+- canonical migrations 0001–0037 remain numbered and are extended only through new migrations;
+- migrations 0024–0037 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
@@ -299,9 +301,13 @@ The old in-memory database implementation is retained only as an explicit legacy
 
 Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0035 are registered and locked in sequence. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0037 are registered and locked in sequence. Full external D1 application has not yet been executed.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
+
+Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Durable scheduler/worker infrastructure remains the next operational layer.
+
+AI Runtime note: migration 0037 establishes shared operation/provider/model/policy/prompt/schema/result/usage persistence. Provider adapters, routing engine, validation pipeline and durable execution workers remain operational follow-up.
 
 Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Consent/policy/template registry and provider adapters remain operational follow-up gates.
 
@@ -359,6 +365,8 @@ The API runtime references these migration sources:
 0033_billing_core.sql
 0034_billing_usage_counters.sql
 0035_communication_core.sql
+0036_automation_core.sql
+0037_ai_runtime_core.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
