@@ -108,7 +108,7 @@ export class AppError extends Error {
   readonly code: ApiErrorCode;
   readonly requestId?: RequestId | undefined;
   readonly details?: unknown;
-  readonly cause?: unknown;
+  override readonly cause?: unknown;
 
   constructor(input: {
     readonly code: ApiErrorCode;
