@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0032**.
+The current API migration catalog references versions **0001 through 0034**.
 
 ### Foundation — 0001
 
@@ -197,6 +197,28 @@ These migrations add integrity triggers only.
 
 ### Commerce integrity hardening — 0032
 
+### Billing core — 0033
+
+- billing_plans
+- billing_prices
+- billing_plan_entitlements
+- billing_subscriptions
+- billing_subscription_events
+- billing_usage_meters
+- billing_usage_events
+- billing_entitlement_snapshots
+- billing_provider_refs
+- billing_reconciliation_cases
+
+0033 establishes the Billing authority for plans, prices, subscriptions, entitlements, usage events, provider references and reconciliation cases. It does not create marketplace payment execution or financial ledger tables.
+
+### Billing quota counters — 0034
+
+- billing_usage_counters
+
+0034 provides an atomic counter boundary for hard quota enforcement.
+
+
 - no new tables
 
 0032 tightens Commerce tenant boundaries and makes PriceSnapshot calculation-context uniqueness scope-aware.
@@ -206,7 +228,7 @@ These migrations add integrity triggers only.
 - booking_status_history
 - appointment_events
 
-**Total currently defined physical tables: 86.**
+**Total currently defined physical tables: 97.**
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
@@ -471,7 +493,7 @@ The next implementation work should proceed in this order:
 3. Complete CustomerProfile only after its field-level contract is closed; keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit.
 4. Complete Trust reviewer authorization integration, expiry workers/events and TrustSignal projections only after their operational contracts are explicit.
 5. Complete Booking availability calculation, holds consumption and atomic finalization semantics.
-6. Introduce Commerce transaction storage.
+6. Complete Billing provider adapters/reconciliation workers and invoice foundation only where their operational contracts are explicit.
 7. Introduce Communication/Automation/Integration storage.
 8. Introduce canonical AI Runtime storage.
 9. Add matching/user-request persistence and rebuildable projections.
