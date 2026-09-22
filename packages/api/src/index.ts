@@ -25,7 +25,7 @@ import {
   createWorkspace,
   createService,
   createBooking,
-} from "@qooqnos/database";
+} from "@qooqnos/database/legacy";
 
 // ============================================================================
 // API REQUEST/RESPONSE TYPES
