@@ -22,6 +22,7 @@ import verificationCaseAndDocuments from "../../../migrations/0021_verification_
 import verificationPolicyRequirements from "../../../migrations/0022_verification_policy_requirements.sql";
 import verificationChecks from "../../../migrations/0023_verification_checks.sql";
 import verificationDecisions from "../../../migrations/0024_verification_decisions.sql";
+import verificationReviewExpiry from "../../../migrations/0025_verification_review_expiry.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -49,4 +50,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0022_verification_policy_requirements.sql", sql: verificationPolicyRequirements },
   { path: "migrations/0023_verification_checks.sql", sql: verificationChecks },
   { path: "migrations/0024_verification_decisions.sql", sql: verificationDecisions },
+  { path: "migrations/0025_verification_review_expiry.sql", sql: verificationReviewExpiry },
 ];
