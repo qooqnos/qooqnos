@@ -292,7 +292,7 @@
       "id": "0042_reviews_core",
       "version": 42,
       "moduleId": "trust",
-      "checksum": "81d84507482145acbc7cecdd81be54d3321dcfbfc7f390b89b100c4924b626cc",
+      "checksum": "a3df35639cc2a64b368f1f031109f8adb7efc454cbbedeb44f566816383fc1b0",
       "filename": "0042_reviews_core.sql"
     },
     {
@@ -301,6 +301,20 @@
       "moduleId": "platform",
       "checksum": "5933451ff64dee53386e6a5cb3088852f6427248ac55c8f4eaf082a6d22b8c14",
       "filename": "0043_integrity_update_guards.sql"
+    },
+    {
+      "id": "0044_billing_counter_scope",
+      "version": 44,
+      "moduleId": "billing",
+      "filename": "0044_billing_counter_scope.sql",
+      "checksum": "634952860fb7e21034b4a57a38154101c337e1f20c5cd105f265f5b2b61a5767"
+    },
+    {
+      "id": "0045_review_target_integrity",
+      "version": 45,
+      "moduleId": "trust",
+      "filename": "0045_review_target_integrity.sql",
+      "checksum": "a1347a28f5d13132707dd967d02a7f04bb2e805fb71740b73f566739a63231eb"
     }
   ]
 }
