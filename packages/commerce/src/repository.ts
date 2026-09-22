@@ -686,24 +686,60 @@ export class CommerceRepository extends Repository {
     if (isTerminalOrderStatus(current.status) && current.status !== status) {
       throw new DatabaseError("Terminal Commerce order cannot be reopened");
     }
+    if (current.status === status) return current;
 
     const confirmedAt = status === "confirmed" && !current.confirmedAt ? now : current.confirmedAt;
     const completedAt = status === "completed" && !current.completedAt ? now : current.completedAt;
+    const eventType =
+      status === "confirmed"
+        ? "commerce.order.confirmed"
+        : status === "cancelled"
+          ? "commerce.order.cancelled"
+          : status === "completed"
+            ? "commerce.order.completed"
+            : "commerce.order.status.changed";
 
-    await this.database.run(
-      "UPDATE commerce_orders SET status = ?, confirmed_at = ?, completed_at = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?",
-      status,
-      confirmedAt,
-      completedAt,
-      now,
-      id,
-      current.organizationId,
-      current.workspaceId,
-    );
+    const results = await this.database.transaction([
+      {
+        sql: "UPDATE commerce_orders SET status = ?, confirmed_at = ?, completed_at = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND status = ?",
+        params: [
+          status,
+          confirmedAt,
+          completedAt,
+          now,
+          id,
+          current.organizationId,
+          current.workspaceId,
+          current.status,
+        ],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, ?, 1, 'commerce_order', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          id + ":status:" + status + ":" + now,
+          eventType,
+          id,
+          current.organizationId,
+          current.workspaceId,
+          JSON.stringify({ orderId: id, fromStatus: current.status, toStatus: status }),
+          now,
+          now,
+        ],
+      },
+    ]);
+
+    const update = results[0];
+    if (!update || (update.meta?.changes ?? 0) !== 1) {
+      const latest = await this.getOrder(context, id);
+      if (latest?.status === status) return latest;
+      throw new DatabaseError("Commerce order changed concurrently");
+    }
+
     const updated = await this.getOrder(context, id);
     if (!updated) throw new DatabaseError("Commerce order not found after status update");
     return updated;
   }
+
 
   async appendOrderEvent(
     context: RequestContext,
