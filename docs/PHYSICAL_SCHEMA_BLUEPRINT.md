@@ -144,6 +144,44 @@ Constraints:
 - hierarchy cycles prohibited by domain validation;
 - canonical key scoped according to taxonomy ownership.
 
+### Catalog Attribute Vocabulary
+
+#### `attribute_definitions`
+
+Canonical, reusable platform attribute vocabulary.
+
+Required physical fields:
+
+`id`, canonical_key, name, description?, data_type, status, metadata_json?, created_at, updated_at.
+
+Supported `data_type` values in the current physical contract:
+
+`text`, `integer`, `number`, `boolean`, `date`, `datetime`, `enum`, `multi_enum`.
+
+`canonical_key` is globally unique in the current platform-level vocabulary. Tenant-specific attribute vocabularies are intentionally not introduced until Category ownership/scope is represented physically.
+
+#### `attribute_options`
+
+Controlled values for `enum` and `multi_enum` attribute definitions.
+
+Required fields:
+
+`id`, attribute_definition_id, canonical_value, display_label, sort_order, status, metadata_json?, created_at, updated_at.
+
+`canonical_value` is unique within one attribute definition.
+
+#### `category_attributes`
+
+Category-to-attribute applicability and presentation contract.
+
+Required fields:
+
+`id`, category_id, attribute_definition_id, is_required, is_filterable, is_searchable, is_variant_dimension, sort_order, constraints_json?, created_at, updated_at.
+
+Uniqueness is enforced per category/attribute definition pair.
+
+The current migration intentionally does not create `product_attributes`, `service_attributes` or `product_variant_attributes`. Existing `product_variants.attributes_json` remains the current value representation until a value-level migration defines authoritative storage and backfill semantics.
+
 ### `business_categories` / `offering_categories`
 
 Explicit junctions with stable IDs or composite uniqueness where the relationship has no independent lifecycle.
