@@ -375,24 +375,49 @@ export class BookingRepository extends Repository {
       throw new DatabaseError("Terminal booking state cannot be reopened");
     }
 
-    await this.database.run(
-      "UPDATE bookings SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?",
-      status,
-      now,
-      id,
-      current.organizationId,
-      current.workspaceId,
-    );
+    const eventType =
+      status === "confirmed"
+        ? "booking.confirmed"
+        : status === "cancelled"
+          ? "booking.cancelled"
+          : status === "rescheduled"
+            ? "booking.rescheduled"
+            : status === "completed"
+              ? "booking.completed"
+              : status === "no_show"
+                ? "booking.no_show"
+                : "booking.status.changed";
 
-    await this.database.run(
-      "INSERT INTO booking_status_history (id, booking_id, from_status, to_status, changed_at, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-      id + ":status:" + now,
-      id,
-      current.status,
-      status,
-      now,
-      now,
-    );
+    const results = await this.database.transaction([
+      {
+        sql: "UPDATE bookings SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND status = ?",
+        params: [status, now, id, current.organizationId, current.workspaceId, current.status],
+      },
+      {
+        sql: "INSERT INTO booking_status_history (id, booking_id, from_status, to_status, changed_at, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+        params: [id + ":status:" + now, id, current.status, status, now, now],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, ?, 1, 'booking', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          id + ":event:" + status + ":" + now,
+          eventType,
+          id,
+          current.organizationId,
+          current.workspaceId,
+          JSON.stringify({ bookingId: id, fromStatus: current.status, toStatus: status }),
+          now,
+          now,
+        ],
+      },
+    ]);
+
+    const updatedRows = results[0];
+    if (!updatedRows || (updatedRows.meta?.changes ?? 0) !== 1) {
+      const latest = await this.get(context, id);
+      if (latest?.status === status) return latest;
+      throw new DatabaseError("Booking changed concurrently");
+    }
 
     const updated = await this.get(context, id);
     if (!updated) throw new DatabaseError("Booking not found after status update");
