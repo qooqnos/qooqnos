@@ -395,37 +395,77 @@ No authoritative `slots` table in the canonical first implementation. A material
 
 ## 9. Commerce / Financial history
 
-### `carts` / `cart_items`
+Commerce physical persistence is module-prefixed to make ownership explicit and prevent collisions with Billing-owned financial tables.
 
-Mutable purchase intent. Cart data must not become historical transaction truth.
+### `commerce_carts`
 
-### `orders`
+`id`, organization_id, workspace_id?, customer_id?, actor_reference, status, currency, version, expires_at?, created_at, updated_at.
 
-`id`, organization/workspace scope, customer_id, status, currency, totals, policy/tax/discount snapshot references, timestamps.
+Cart is mutable intent. It never becomes historical transaction truth.
 
-### `order_items`
+### `commerce_cart_lines`
 
-Immutable historical fields: `order_id`, source offering/product variant reference, title snapshot, quantity, unit price snapshot, currency, tax snapshot, discount snapshot, total snapshot.
+`id`, cart_id, resource_type, resource_id, variant_reference?, quantity, selected_options_json?, source_reference?, created_at, updated_at.
 
-### `payments`
+Resource types are controlled; canonical Catalog resources remain authoritative.
 
-`id`, order_id?, booking_id?, customer_id?, status, amount_minor, currency, provider, external_reference?, timestamps.
+### `commerce_checkout_sessions`
 
-Provider secrets/credentials belong to Integration/secret management, not Payment rows.
+`id`, cart_id, status, idempotency_key, correlation_id, catalog_snapshot_refs_json?, promotion_qualification_refs_json?, loyalty_benefit_refs_json?, booking_reservation_refs_json?, payment_attempt_ref?, failure_code?, started_at, completed_at?, created_at, updated_at.
 
-### `payment_attempts`
+### `commerce_price_snapshots`
 
-`id`, payment_id, provider, status, amount_minor, currency, external_reference?, attempted_at, failure code/category?, metadata-safe fields.
+`id`, organization_id, workspace_id?, currency, line_snapshots_json, subtotal_minor, adjustment_total_minor, tax_total_minor, fee_total_minor, grand_total_minor, catalog_version_refs_json?, promotion_version_refs_json?, loyalty_version_refs_json?, policy_version, calculated_at, calculation_context_hash, created_at.
 
-### `refunds`
+Price snapshots are immutable commercial evidence.
 
-`id`, payment_id, amount_minor, currency, status, reason?, external_reference?, created_at.
+### `commerce_orders`
 
-Invariant: cumulative refunds cannot exceed captured amount.
+`id`, organization_id, workspace_id, business_id, customer_id, price_snapshot_id?, status, currency, subtotal_minor, adjustment_total_minor, tax_total_minor, fee_total_minor, grand_total_minor, payment_status_ref?, fulfillment_status_ref?, source_channel, policy_version, idempotency_key, correlation_id, created_at, updated_at, confirmed_at?, completed_at?.
 
-### `invoices` / `invoice_lines`
+Order is the canonical Commerce aggregate after checkout.
 
-Invoice header and immutable line snapshots. Marketplace transaction invoices are owned by Commerce; subscription billing semantics remain Billing-owned. Do not create two invoice entities.
+### `commerce_order_lines`
+
+`id`, order_id, resource_type, resource_id, resource_version?, variant_reference?, description_snapshot, quantity, unit_price_minor_snapshot, line_subtotal_minor, line_adjustment_total_minor, line_total_minor, promotion_reference?, loyalty_reference?, booking_reference?, fulfillment_reference?, created_at, updated_at.
+
+Historical values become immutable after the order commitment boundary.
+
+### `commerce_order_adjustments`
+
+`id`, order_id, order_line_id?, adjustment_type, source_module, source_reference, amount_minor, currency, policy_version, created_at.
+
+### `commerce_transaction_attempts`
+
+`id`, order_id, attempt_type, attempt_status, idempotency_key, provider_reference?, requested_at, completed_at?, failure_code?, correlation_id, created_at.
+
+This is Commerce orchestration evidence, not the Billing/Payment financial ledger.
+
+### `commerce_fulfillment_references`
+
+`id`, order_id, order_line_id?, fulfillment_type, external_module, external_reference, status_reference?, created_at, updated_at.
+
+External modules remain authoritative for fulfillment state.
+
+### `commerce_cancellations`
+
+`id`, order_id, requested_by, reason_code, policy_version, decision, effective_at, correlation_id, created_at.
+
+Cancellation does not erase financial or Booking history.
+
+### `commerce_refund_references`
+
+`id`, order_id, requested_amount_minor, currency, reason_code, billing_reference, refund_status, requested_at, completed_at?, correlation_id, created_at.
+
+Commerce references refunds; Billing/Payment executes and owns the financial outcome.
+
+### `commerce_order_events`
+
+`id`, order_id, event_type, event_version, tenant_id, workspace_id, actor_reference?, source, occurred_at, correlation_id, causation_id?, provenance_reference?, payload_reference?, created_at.
+
+Order events are immutable Commerce history and publication evidence.
+
+Payment, payment attempts, refund execution, invoices and subscription billing remain outside Commerce unless their canonical owner contract explicitly assigns a transaction reference surface.
 
 ## 10. Trust / Verification / Moderation
 
