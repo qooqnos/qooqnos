@@ -648,7 +648,7 @@ export class VerificationRepository extends Repository {
       {
         sql: "INSERT INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at) VALUES (?, 'trust.verification.expired', 1, 'VerificationCase', ?, ?, ?, ?, 'pending', 0, ?, ?)",
         params: [
-          expiry.expiryId + ":expired",
+          expiry.id + ":expired",
           expiry.caseId,
           expiry.organizationId,
           expiry.workspaceId,
