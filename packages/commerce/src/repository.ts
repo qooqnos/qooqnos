@@ -459,6 +459,197 @@ export class CommerceRepository extends Repository {
     return row;
   }
 
+
+  async listOrderLines(
+    context: RequestContext,
+    orderId: EntityId,
+  ): Promise<readonly OrderLineRecord[]> {
+    const order = await this.getOrder(context, orderId);
+    if (!order) throw new DatabaseError("Commerce order not found");
+    return this.database.all<OrderLineRecord>(
+      "SELECT id, order_id AS orderId, resource_type AS resourceType, resource_id AS resourceId, resource_version AS resourceVersion, variant_reference AS variantReference, description_snapshot AS descriptionSnapshot, quantity, unit_price_minor_snapshot AS unitPriceMinorSnapshot, line_subtotal_minor AS lineSubtotalMinor, line_adjustment_total_minor AS lineAdjustmentTotalMinor, line_total_minor AS lineTotalMinor, promotion_reference AS promotionReference, loyalty_reference AS loyaltyReference, booking_reference AS bookingReference, fulfillment_reference AS fulfillmentReference, created_at AS createdAt, updated_at AS updatedAt FROM commerce_order_lines WHERE order_id = ? ORDER BY created_at ASC, id ASC",
+      orderId,
+    );
+  }
+
+  async addOrderAdjustment(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly orderId: EntityId;
+      readonly orderLineId?: EntityId | undefined;
+      readonly adjustmentType: "promotion" | "loyalty" | "fee" | "tax" | "manual_approved";
+      readonly sourceModule: string;
+      readonly sourceReference: string;
+      readonly amountMinor: number;
+      readonly currency: string;
+      readonly policyVersion: string;
+      readonly now: string;
+    },
+  ): Promise<void> {
+    const order = await this.getOrder(context, input.orderId);
+    if (!order) throw new DatabaseError("Commerce order not found");
+    if (order.status !== "draft" && order.status !== "pending_confirmation") {
+      throw new DatabaseError("Order adjustments are immutable after commitment");
+    }
+    validateMoney(input.amountMinor, "adjustment", true);
+    if (!input.sourceModule.trim() || !input.sourceReference.trim()) {
+      throw new DatabaseError("Commerce adjustment source is required");
+    }
+
+    await this.database.run(
+      "INSERT INTO commerce_order_adjustments (id, order_id, order_line_id, adjustment_type, source_module, source_reference, amount_minor, currency, policy_version, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.orderId,
+      input.orderLineId ?? null,
+      input.adjustmentType,
+      input.sourceModule.trim(),
+      input.sourceReference.trim(),
+      input.amountMinor,
+      normalizeCurrency(input.currency),
+      input.policyVersion.trim(),
+      input.now,
+    );
+  }
+
+  async recordTransactionAttempt(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly orderId: EntityId;
+      readonly attemptType: string;
+      readonly attemptStatus: string;
+      readonly idempotencyKey: string;
+      readonly providerReference?: string | undefined;
+      readonly requestedAt: string;
+      readonly completedAt?: string | undefined;
+      readonly failureCode?: string | undefined;
+      readonly correlationId: string;
+      readonly now: string;
+    },
+  ): Promise<void> {
+    const order = await this.getOrder(context, input.orderId);
+    if (!order) throw new DatabaseError("Commerce order not found");
+    if (!input.attemptType.trim() || !input.attemptStatus.trim()) {
+      throw new DatabaseError("Commerce transaction attempt type/status are required");
+    }
+    await this.database.run(
+      "INSERT INTO commerce_transaction_attempts (id, order_id, attempt_type, attempt_status, idempotency_key, provider_reference, requested_at, completed_at, failure_code, correlation_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.orderId,
+      input.attemptType.trim(),
+      input.attemptStatus.trim(),
+      input.idempotencyKey.trim(),
+      input.providerReference?.trim() || null,
+      input.requestedAt,
+      input.completedAt ?? null,
+      input.failureCode?.trim() || null,
+      input.correlationId,
+      input.now,
+    );
+  }
+
+  async recordFulfillmentReference(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly orderId: EntityId;
+      readonly orderLineId?: EntityId | undefined;
+      readonly fulfillmentType: string;
+      readonly externalModule: string;
+      readonly externalReference: string;
+      readonly statusReference?: string | undefined;
+      readonly now: string;
+    },
+  ): Promise<void> {
+    const order = await this.getOrder(context, input.orderId);
+    if (!order) throw new DatabaseError("Commerce order not found");
+    if (!input.externalModule.trim() || !input.externalReference.trim()) {
+      throw new DatabaseError("Commerce fulfillment external reference is required");
+    }
+    await this.database.run(
+      "INSERT INTO commerce_fulfillment_references (id, order_id, order_line_id, fulfillment_type, external_module, external_reference, status_reference, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.orderId,
+      input.orderLineId ?? null,
+      input.fulfillmentType.trim(),
+      input.externalModule.trim(),
+      input.externalReference.trim(),
+      input.statusReference?.trim() || null,
+      input.now,
+      input.now,
+    );
+  }
+
+  async requestCancellation(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly orderId: EntityId;
+      readonly requestedBy: string;
+      readonly reasonCode: string;
+      readonly policyVersion: string;
+      readonly decision: string;
+      readonly effectiveAt: string;
+      readonly correlationId: string;
+      readonly now: string;
+    },
+  ): Promise<void> {
+    const order = await this.getOrder(context, input.orderId);
+    if (!order) throw new DatabaseError("Commerce order not found");
+    if (isTerminalOrderStatus(order.status) && order.status !== "cancelled") {
+      throw new DatabaseError("Terminal Commerce order cannot be cancelled");
+    }
+    await this.database.run(
+      "INSERT INTO commerce_cancellations (id, order_id, requested_by, reason_code, policy_version, decision, effective_at, correlation_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.orderId,
+      input.requestedBy.trim(),
+      input.reasonCode.trim(),
+      input.policyVersion.trim(),
+      input.decision.trim(),
+      input.effectiveAt,
+      input.correlationId,
+      input.now,
+    );
+  }
+
+  async requestRefundReference(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly orderId: EntityId;
+      readonly requestedAmountMinor: number;
+      readonly currency: string;
+      readonly reasonCode: string;
+      readonly billingReference: string;
+      readonly refundStatus: string;
+      readonly requestedAt: string;
+      readonly completedAt?: string | undefined;
+      readonly correlationId: string;
+      readonly now: string;
+    },
+  ): Promise<void> {
+    const order = await this.getOrder(context, input.orderId);
+    if (!order) throw new DatabaseError("Commerce order not found");
+    if (input.requestedAmountMinor <= 0) throw new DatabaseError("Commerce refund amount must be positive");
+    if (!input.billingReference.trim()) throw new DatabaseError("Billing refund reference is required");
+    await this.database.run(
+      "INSERT INTO commerce_refund_references (id, order_id, requested_amount_minor, currency, reason_code, billing_reference, refund_status, requested_at, completed_at, correlation_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.orderId,
+      input.requestedAmountMinor,
+      normalizeCurrency(input.currency),
+      input.reasonCode.trim(),
+      input.billingReference.trim(),
+      input.refundStatus.trim(),
+      input.requestedAt,
+      input.completedAt ?? null,
+      input.correlationId,
+      input.now,
+    );
+  }
+
   async setOrderStatus(context: RequestContext, id: EntityId, status: OrderStatus, now: string): Promise<OrderRecord> {
     const current = await this.getOrder(context, id);
     if (!current) throw new DatabaseError("Commerce order not found");
