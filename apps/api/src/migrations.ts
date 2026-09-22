@@ -43,6 +43,7 @@ import reviewsCore from "../../../migrations/0042_reviews_core.sql";
 import integrityUpdateGuards from "../../../migrations/0043_integrity_update_guards.sql";
 import billingCounterScope from "../../../migrations/0044_billing_counter_scope.sql";
 import reviewTargetIntegrity from "../../../migrations/0045_review_target_integrity.sql";
+import bookingFinalizationGuards from "../../../migrations/0046_booking_finalization_guards.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -91,4 +92,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0043_integrity_update_guards.sql", sql: integrityUpdateGuards },
   { path: "migrations/0044_billing_counter_scope.sql", sql: billingCounterScope },
   { path: "migrations/0045_review_target_integrity.sql", sql: reviewTargetIntegrity },
+  { path: "migrations/0046_booking_finalization_guards.sql", sql: bookingFinalizationGuards },
 ];
