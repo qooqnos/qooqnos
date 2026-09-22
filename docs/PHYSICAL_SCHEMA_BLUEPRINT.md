@@ -445,6 +445,18 @@ Decisions are append-only historical facts; corrections create a new Decision.
 
 The linked Check must belong to the same VerificationCase as the Decision.
 
+### `verification_reviews`
+
+`id`, case_id, reviewer_id, status, assigned_at, completed_at?, review_outcome?, escalation_reason?, created_at, updated_at.
+
+Reviewers remain authorized by the centralized Authorization module; Trust does not grant reviewer permissions.
+
+### `verification_expiries`
+
+`id`, case_id, requirement_id, evidence_id?, expires_at, detected_at, reevaluation_status, resulting_decision_id?, created_at, updated_at.
+
+Expiry records trigger policy re-evaluation. They are operational Trust records, not a replacement for immutable Decisions.
+
 ### `reviews`
 
 `id`, customer_id, rating value, content, moderation state, typed target reference(s), timestamps.
