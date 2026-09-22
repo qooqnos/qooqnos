@@ -8,7 +8,7 @@ CREATE TABLE billing_usage_counters (
   period_key TEXT NOT NULL,
   quantity INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
   version INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1),
-  updated_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
 );
 
 CREATE UNIQUE INDEX uq_billing_usage_counter_scope
