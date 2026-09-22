@@ -107,6 +107,8 @@ Migration safety:
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
 
+Catalog offering integrity hardening migration added as 0014_catalog_offering_integrity.sql; it introduces no tables and preserves all prior migration identities/checksums.
+
 ## 4. Current canonical migration inventory
 
 The API runtime references these migration sources:
