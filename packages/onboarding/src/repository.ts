@@ -1,6 +1,6 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import { D1Database, DatabaseError, Repository, type TransactionStatement } from "@qooqnos/database";
-import type { OnboardingProfile, OnboardingRepository, OnboardingStatus } from "./index";
+import type { OnboardingProfile, OnboardingRepository, OnboardingStatus } from "./contract";
 
 export interface OnboardingCreateTransaction {
   readonly id: EntityId;
