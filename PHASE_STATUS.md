@@ -31,9 +31,9 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Migration lock | ✅ Implemented | reviewed SQL identity/checksum is enforced |
 | D1 database boundary | ✅ Implemented | packages/database exposes D1-compatible access |
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
-| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0013 |
+| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0047 |
 | Full logical model | ⏳ In progress | many target entities remain intentionally un-migrated |
-| Final D1 physical schema | ⏳ In progress | physical work must follow the reconciliation process |
+| Final D1 physical schema | 🟡 Core domains implemented; operational gaps remain | physical schema is broad and integrity-guarded; remaining work is provider/worker/projection execution and gated contracts |
 | Legacy PostgreSQL path | ⚠️ Quarantined | historical files remain but are not canonical |
 
 ## 3. Critical database rule
@@ -52,24 +52,7 @@ Before adding a table:
 
 ## 4. Migration sequence currently registered
 
-The API runtime currently references:
-
-```
-0001_foundation
-0002_onboarding
-0003_identity_sessions
-0004_business
-0005_catalog
-0006_catalog_product_guards
-0007_catalog_integrity_guards
-0008_permission_catalog
-0009_media
-0010_discovery
-0011_ai_seller_creation
-0012_ai_seller_catalog_link
-0013_ai_seller_idempotency_fingerprint
-0014_catalog_offering_integrity
-```
+The API runtime currently references the ordered canonical migration sequence `0001` through `0047`.
 
 Do not renumber or replace these migrations.
 
