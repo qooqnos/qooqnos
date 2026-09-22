@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0043**.
+The current API migration catalog references versions **0001 through 0045**.
 
 ### Foundation — 0001
 
@@ -311,13 +311,25 @@ These migrations add integrity triggers only.
 
 - reviews
 
-0042 establishes canonical Review storage with typed target references to Business, Offering, Booking, Appointment, Service, Product or Location.
+0042 establishes canonical Review storage with exactly one target from the Gate 05 matrix: Business, Offering, or Product.
 
 ### Integrity update guards — 0043
 
 - no new tables
 
 0043 hardens update-time tenant integrity for MatchCandidate and Review records.
+
+### Billing counter scope — 0044
+
+- no new tables
+
+0044 corrects Billing usage-counter uniqueness so counters are scoped by Organization, Workspace, Business, Meter and Period.
+
+### Review target integrity — 0045
+
+- no new tables
+
+0045 enforces Review Business/Offering/Product target scope on insert and update.
 
 **Total currently defined physical tables: 144.**
 
@@ -340,7 +352,7 @@ This count includes only canonical SQL migration sources. It does not include re
 | Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events, customer_addresses | Customer core, CRM relationship and structured Address storage implemented; CustomerProfile, timeline projection and workflow layers remain |
 | Matching | demand_requests, demand_profiles, match_requests, match_candidates, match_decisions | Canonical Demand→Match persistence implemented; retrieval/ranking/learning and Connect/Act integration remain |
 | Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions, booking_holds, booking_status_history, appointment_events | Core schema/repositories implemented; final availability resolution and atomic reservation/finalization remain |
-| Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews | Verification chain + review/expiry/review records implemented; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
+| Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews | Verification chain + review/expiry/review records implemented; Review target scope is schema-enforced for Business/Offering/Product; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
 | Moderation / Privacy / Consent | privacy_consents, privacy_requests, privacy_processing_records | Core consent/privacy-request storage implemented; retention/export/delete workers remain |
 
 | Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core provider-neutral storage/repository implemented; consent/policy/template registry/provider adapters and durable dispatch workers remain |
@@ -565,7 +577,7 @@ The database is broad but not yet production-complete.
 The accurate state is:
 
 ```
-144 physical tables defined across 43 ordered migrations
+144 physical tables defined across 45 ordered migrations
         ↓
 core foundation + identity + business + catalog + media + discovery
 + seller AI + customer/CRM + trust + booking + commerce + billing
@@ -596,7 +608,7 @@ The next implementation work should proceed in this order:
 12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
 13. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
-Every step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums.
+Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0044 and 0045 are integrity-only and add no tables.
 
 ## 9. Final D1 gate
 
