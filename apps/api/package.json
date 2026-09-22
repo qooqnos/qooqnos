@@ -12,6 +12,7 @@
     "@qooqnos/automation": "*",
     "@qooqnos/integration": "*",
     "@qooqnos/privacy": "*",
+    "@qooqnos/matching": "*",
     "@qooqnos/business": "*",
     "@qooqnos/booking": "*",
     "@qooqnos/commerce": "*",
