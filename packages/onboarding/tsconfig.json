@@ -15,6 +15,9 @@
     },
     {
       "path": "../database"
+    },
+    {
+      "path": "../runtime"
     }
   ],
   "exclude": [
