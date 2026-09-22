@@ -270,7 +270,7 @@ A Customer may be a guest. `user_id` is an optional mapping, never the Customer 
 
 `customer_id`, preferences/profile data, locale/timezone?, timestamps.
 
-The profile shape remains intentionally open until its field-level contract is finalized.
+The profile shape remains intentionally open until its field-level contract is finalized. Do not create physical columns or JSON blobs merely to reserve this concept.
 
 ### `customer_preferences`
 
@@ -280,7 +280,9 @@ Preferences are distinct from AI memory and centralized consent authority. Sourc
 
 ### `customer_addresses`
 
-`id`, customer_id, address value fields, type, default flag?, timestamps.
+`id`, customer_id, country_code, administrative_area?, locality?, district?, postal_code?, street_line_1?, street_line_2?, building_number?, unit?, formatted?, locale?, created_at, updated_at.
+
+The stored fields implement the canonical structured Address value object from Architecture Gate 01. Address type/default semantics are not invented until their customer-specific contract is finalized.
 
 ### `customer_relationships`
 
@@ -646,7 +648,6 @@ A future migration may create a table only after this checklist is complete:
 
 The following must be finalized before their concrete SQL migrations:
 
-1. structured Address shape;
 2. final Role scope matrix;
 3. Resource taxonomy;
 4. exact BookingItem snapshots;
