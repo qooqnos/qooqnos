@@ -79,10 +79,58 @@ export function parseMigrationPath(path: string): ParsedMigrationPath {
 export function splitSqlStatements(sql: string): string[] {
   const statements: string[] = [];
   let start = 0;
-  let quote: "'" | '"' | "`" | "[" | null = null;
+  let quote: "'" | '"' | "\`" | "[" | null = null;
+  let lineComment = false;
+  let blockComment = false;
+  let token = "";
+  let sawCreate = false;
+  let triggerDefinition = false;
+  let triggerDepth = 0;
+
+  const flushToken = (): void => {
+    if (!token) return;
+    const normalized = token.toUpperCase();
+
+    if (!triggerDefinition) {
+      if (normalized === "CREATE") {
+        sawCreate = true;
+      } else if (sawCreate && normalized === "TRIGGER") {
+        triggerDefinition = true;
+      }
+    } else if (normalized === "BEGIN") {
+      triggerDepth += 1;
+    } else if (normalized === "END" && triggerDepth > 0) {
+      triggerDepth -= 1;
+    }
+
+    token = "";
+  };
+
+  const statement = (end: number): void => {
+    const value = sql.slice(start, end).trim();
+    if (value) statements.push(value);
+    start = end + 1;
+    sawCreate = false;
+    triggerDefinition = false;
+    triggerDepth = 0;
+  };
 
   for (let index = 0; index < sql.length; index += 1) {
     const character = sql[index];
+    const next = sql[index + 1];
+
+    if (lineComment) {
+      if (character === "\n") lineComment = false;
+      continue;
+    }
+
+    if (blockComment) {
+      if (character === "*" && next === "/") {
+        blockComment = false;
+        index += 1;
+      }
+      continue;
+    }
 
     if (quote) {
       if (quote === "[" && character === "]") {
@@ -90,7 +138,7 @@ export function splitSqlStatements(sql: string): string[] {
         continue;
       }
       if (character === quote) {
-        if (sql[index + 1] === quote && quote !== "[") {
+        if (next === quote && quote !== "[") {
           index += 1;
         } else {
           quote = null;
@@ -99,19 +147,51 @@ export function splitSqlStatements(sql: string): string[] {
       continue;
     }
 
-    if (character === "'" || character === '"' || character === "`") {
+    if (character === "-" && next === "-") {
+      flushToken();
+      lineComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (character === "/" && next === "*") {
+      flushToken();
+      blockComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (character === "'" || character === '"' || character === "\`") {
+      flushToken();
       quote = character;
       continue;
     }
+
     if (character === "[") {
+      flushToken();
       quote = "[";
       continue;
     }
-    if (character === ";") {
-      const statement = sql.slice(start, index).trim();
-      if (statement) statements.push(statement);
-      start = index + 1;
+
+    if (/[A-Za-z0-9_]/.test(character)) {
+      token += character;
+      continue;
     }
+
+    flushToken();
+
+    if (character === ";" && triggerDepth === 0) {
+      statement(index);
+    }
+  }
+
+  flushToken();
+
+  if (lineComment || blockComment || quote) {
+    throw new Error("Unterminated SQL comment or quoted literal");
+  }
+  if (triggerDefinition && triggerDepth !== 0) {
+    throw new Error("Unterminated SQLite trigger block");
   }
 
   const tail = sql.slice(start).trim();
