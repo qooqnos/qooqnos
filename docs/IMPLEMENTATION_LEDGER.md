@@ -15,6 +15,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Capability decision rules | ✅ Complete | docs/CAPABILITY_DECISION_RULES.md |
 | Logical database model | ✅ Canonical | docs/DATABASE_MODEL.md |
 | Physical schema blueprint | ✅ Canonical | docs/PHYSICAL_SCHEMA_BLUEPRINT.md |
+| Physical database reconciliation | ✅ Canonical planning gate | docs/DATABASE_PHYSICAL_RECONCILIATION.md |
 | Migration ownership model | ✅ Canonical | docs/MIGRATION_BLUEPRINT.md |
 | Migration catalog contract | ✅ Implemented | docs/MIGRATION_CATALOG_IMPLEMENTATION.md |
 | Migration lock integrity | ✅ Implemented | docs/MIGRATION_LOCK_STRATEGY.md |

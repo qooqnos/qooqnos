@@ -80,6 +80,10 @@ Historical references remain only in git history and superseded phase documents.
 
 The reconciliation did not modify, renumber, or rewrite any canonical migration in migrations/.
 
+## 5.1 Physical schema reconciliation
+
+Current physical coverage and missing-domain analysis is maintained in docs/DATABASE_PHYSICAL_RECONCILIATION.md. New tables must pass that reconciliation before a migration is authored.
+
 ## 6. Current architecture gate for database work
 
 The database is not considered complete merely because a connection works.
