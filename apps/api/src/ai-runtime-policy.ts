@@ -35,7 +35,7 @@ export function createSellerProductAIRuntimePolicy(
     async checkEntitlement(request: AIRuntimeRequest): Promise<AIEntitlementDecision> {
       const decision = await options.billing.evaluate({
         context: request.context,
-        businessId: request.businessId,
+        ...(request.businessId !== undefined ? { businessId: request.businessId } : {}),
         operationId: request.operationId,
         operationType: request.operationType,
         operationVersion: request.operationVersion,
