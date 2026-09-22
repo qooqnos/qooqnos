@@ -168,6 +168,53 @@ export interface VerificationCheckRecord {
   readonly updatedAt: string;
 }
 
+
+export type VerificationReviewStatus = "assigned" | "in_progress" | "completed" | "escalated";
+
+export interface VerificationReviewRecord {
+  readonly id: EntityId;
+  readonly caseId: EntityId;
+  readonly reviewerId: string;
+  readonly status: VerificationReviewStatus;
+  readonly assignedAt: string;
+  readonly completedAt: string | null;
+  readonly reviewOutcome: string | null;
+  readonly escalationReason: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface VerificationExpiryRecord {
+  readonly id: EntityId;
+  readonly caseId: EntityId;
+  readonly requirementId: string;
+  readonly evidenceId: EntityId | null;
+  readonly expiresAt: string;
+  readonly detectedAt: string;
+  readonly reevaluationStatus: "pending" | "evaluated" | "blocked";
+  readonly resultingDecisionId: EntityId | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface CreateVerificationReviewInput {
+  readonly id: EntityId;
+  readonly caseId: EntityId;
+  readonly reviewerId: string;
+  readonly assignedAt: string;
+  readonly now: string;
+}
+
+export interface CreateVerificationExpiryInput {
+  readonly id: EntityId;
+  readonly caseId: EntityId;
+  readonly requirementId: string;
+  readonly evidenceId?: EntityId | undefined;
+  readonly expiresAt: string;
+  readonly detectedAt: string;
+  readonly now: string;
+}
+
 export class VerificationRepository extends Repository {
   constructor(database: D1Database) {
     super(database);
@@ -358,6 +405,185 @@ export class VerificationRepository extends Repository {
     );
     if (!row) throw new DatabaseError("Verification check not found");
     return row.caseId;
+  }
+
+
+  async assignReview(
+    context: RequestContext,
+    input: CreateVerificationReviewInput,
+  ): Promise<VerificationReviewRecord> {
+    const verificationCase = await this.getCase(context, input.caseId);
+    if (!verificationCase) throw new DatabaseError("Verification case not found");
+    if (!input.reviewerId.trim()) throw new DatabaseError("Verification reviewer is required");
+    if (verificationCase.status !== "submitted" && verificationCase.status !== "under_review") {
+      throw new DatabaseError("Verification case is not eligible for human review");
+    }
+
+    await this.database.run(
+      "INSERT INTO verification_reviews (id, case_id, reviewer_id, status, assigned_at, created_at, updated_at) VALUES (?, ?, ?, 'assigned', ?, ?, ?)",
+      input.id,
+      input.caseId,
+      input.reviewerId.trim(),
+      input.assignedAt,
+      input.now,
+      input.now,
+    );
+
+    if (verificationCase.status === "submitted") {
+      await this.database.run(
+        "UPDATE verification_cases SET status = 'under_review', updated_at = ? WHERE id = ? AND status = 'submitted'",
+        input.now,
+        input.caseId,
+      );
+    }
+
+    return this.getReview(context, input.id);
+  }
+
+  async updateReview(
+    context: RequestContext,
+    id: EntityId,
+    status: VerificationReviewStatus,
+    now: string,
+    reviewOutcome?: string,
+    escalationReason?: string,
+  ): Promise<VerificationReviewRecord> {
+    const review = await this.getReview(context, id);
+    if (!review) throw new DatabaseError("Verification review not found");
+    await this.getCase(context, review.caseId);
+
+    if (status === "completed" && !reviewOutcome?.trim()) {
+      throw new DatabaseError("Completed verification review requires an outcome");
+    }
+    if (status === "escalated" && !escalationReason?.trim()) {
+      throw new DatabaseError("Escalated verification review requires an escalation reason");
+    }
+
+    const completedAt = status === "completed" ? now : review.completedAt;
+    await this.database.run(
+      "UPDATE verification_reviews SET status = ?, completed_at = ?, review_outcome = ?, escalation_reason = ?, updated_at = ? WHERE id = ?",
+      status,
+      completedAt,
+      reviewOutcome?.trim() || review.reviewOutcome,
+      escalationReason?.trim() || review.escalationReason,
+      now,
+      id,
+    );
+    return this.getReview(context, id);
+  }
+
+  async getReview(
+    context: RequestContext,
+    id: EntityId,
+  ): Promise<VerificationReviewRecord> {
+    const review = await this.database.first<VerificationReviewRecord>(
+      "SELECT vr.id, vr.case_id AS caseId, vr.reviewer_id AS reviewerId, vr.status, vr.assigned_at AS assignedAt, vr.completed_at AS completedAt, vr.review_outcome AS reviewOutcome, vr.escalation_reason AS escalationReason, vr.created_at AS createdAt, vr.updated_at AS updatedAt FROM verification_reviews vr INNER JOIN verification_cases vc ON vc.id = vr.case_id WHERE vr.id = ? AND vc.organization_id = ? AND (vc.workspace_id IS NULL OR vc.workspace_id = ?) LIMIT 1",
+      id,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      this.requireWorkspace({ workspaceId: context.workspaceId }),
+    );
+    if (!review) throw new DatabaseError("Verification review not found");
+    return review;
+  }
+
+  async createExpiry(
+    context: RequestContext,
+    input: CreateVerificationExpiryInput,
+  ): Promise<VerificationExpiryRecord> {
+    const verificationCase = await this.getCase(context, input.caseId);
+    if (!verificationCase) throw new DatabaseError("Verification case not found");
+    if (input.detectedAt < input.expiresAt) {
+      throw new DatabaseError("Verification expiry detection cannot precede expiry");
+    }
+
+    const requirement = await this.database.first<{ id: string }>(
+      "SELECT id FROM verification_requirements WHERE id = ? AND policy_id = ? AND policy_version = ? AND subject_type = ? LIMIT 1",
+      input.requirementId,
+      verificationCase.policyId,
+      verificationCase.policyVersion,
+      verificationCase.subjectType,
+    );
+    if (!requirement) throw new DatabaseError("Verification expiry requirement does not match case policy");
+
+    if (input.evidenceId) {
+      const evidence = await this.database.first<{ id: EntityId }>(
+        "SELECT id FROM verification_documents WHERE id = ? AND case_id = ? LIMIT 1",
+        input.evidenceId,
+        input.caseId,
+      );
+      if (!evidence) throw new DatabaseError("Verification expiry evidence does not belong to case");
+    }
+
+    await this.database.run(
+      "INSERT INTO verification_expiries (id, case_id, requirement_id, evidence_id, expires_at, detected_at, reevaluation_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
+      input.id,
+      input.caseId,
+      input.requirementId,
+      input.evidenceId ?? null,
+      input.expiresAt,
+      input.detectedAt,
+      input.now,
+      input.now,
+    );
+    return this.getExpiry(context, input.id);
+  }
+
+  async evaluateExpiry(
+    context: RequestContext,
+    id: EntityId,
+    resultingDecisionId: EntityId | null,
+    status: "evaluated" | "blocked",
+    now: string,
+  ): Promise<VerificationExpiryRecord> {
+    const expiry = await this.getExpiry(context, id);
+    if (!expiry) throw new DatabaseError("Verification expiry not found");
+    if (expiry.reevaluationStatus !== "pending") {
+      throw new DatabaseError("Verification expiry is already resolved");
+    }
+
+    if (resultingDecisionId) {
+      const decision = await this.database.first<{ caseId: EntityId; requirementId: string }>(
+        "SELECT case_id AS caseId, requirement_id AS requirementId FROM verification_decisions WHERE id = ? LIMIT 1",
+        resultingDecisionId,
+      );
+      if (!decision || decision.caseId !== expiry.caseId || decision.requirementId !== expiry.requirementId) {
+        throw new DatabaseError("Resulting verification decision does not match expiry");
+      }
+    }
+
+    await this.database.run(
+      "UPDATE verification_expiries SET reevaluation_status = ?, resulting_decision_id = ?, updated_at = ? WHERE id = ? AND reevaluation_status = 'pending'",
+      status,
+      resultingDecisionId,
+      now,
+      id,
+    );
+    return this.getExpiry(context, id);
+  }
+
+  async getExpiry(
+    context: RequestContext,
+    id: EntityId,
+  ): Promise<VerificationExpiryRecord | null> {
+    return this.database.first<VerificationExpiryRecord>(
+      "SELECT ve.id, ve.case_id AS caseId, ve.requirement_id AS requirementId, ve.evidence_id AS evidenceId, ve.expires_at AS expiresAt, ve.detected_at AS detectedAt, ve.reevaluation_status AS reevaluationStatus, ve.resulting_decision_id AS resultingDecisionId, ve.created_at AS createdAt, ve.updated_at AS updatedAt FROM verification_expiries ve INNER JOIN verification_cases vc ON vc.id = ve.case_id WHERE ve.id = ? AND vc.organization_id = ? AND (vc.workspace_id IS NULL OR vc.workspace_id = ?) LIMIT 1",
+      id,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      this.requireWorkspace({ workspaceId: context.workspaceId }),
+    );
+  }
+
+  async listPendingExpiries(
+    context: RequestContext,
+    limit = 100,
+  ): Promise<readonly VerificationExpiryRecord[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+    return this.database.all<VerificationExpiryRecord>(
+      "SELECT ve.id, ve.case_id AS caseId, ve.requirement_id AS requirementId, ve.evidence_id AS evidenceId, ve.expires_at AS expiresAt, ve.detected_at AS detectedAt, ve.reevaluation_status AS reevaluationStatus, ve.resulting_decision_id AS resultingDecisionId, ve.created_at AS createdAt, ve.updated_at AS updatedAt FROM verification_expiries ve INNER JOIN verification_cases vc ON vc.id = ve.case_id WHERE ve.reevaluation_status = 'pending' AND vc.organization_id = ? AND (vc.workspace_id IS NULL OR vc.workspace_id = ?) ORDER BY ve.expires_at ASC, ve.id ASC LIMIT ?",
+      this.requireOrganization({ organizationId: context.tenantId }),
+      this.requireWorkspace({ workspaceId: context.workspaceId }),
+      safeLimit,
+    );
   }
 
   async createCase(
