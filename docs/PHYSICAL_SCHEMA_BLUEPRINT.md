@@ -784,6 +784,38 @@ Requests are explicit workflow records for access/export/delete/restrict/correct
 
 Processing records provide module-level auditability for privacy requests without making Privacy a copy of domain data.
 
+## 18.1 Demand / Matching
+
+### `demand_requests`
+
+`id`, organization_id, workspace_id?, customer_id?, source_channel, status, raw_input_reference?, locale?, normalized_demand_json?, confidence?, created_at, updated_at.
+
+Demand request is the canonical customer-demand intake record.
+
+### `demand_profiles`
+
+`id`, demand_request_id, version, profile_json, confidence?, provenance_json?, status, created_at, updated_at.
+
+DemandProfile versions are the normalized representation used by matching; raw input remains in the Demand Request.
+
+### `match_requests`
+
+`id`, demand_request_id, organization_id, workspace_id?, algorithm_version, policy_version, status, requested_at, completed_at?, created_at, updated_at.
+
+A MatchRequest records one execution intent against a specific demand version/context.
+
+### `match_candidates`
+
+`id`, match_request_id, business_id? XOR offering_id?, retrieval_source, retrieval_score?, ranking_score?, rank_position?, eligibility_status, reasons_json?, feature_snapshot_json?, created_at.
+
+Candidates reference canonical Business/Offering authority; Matching never copies supply truth.
+
+### `match_decisions`
+
+`id`, match_request_id, candidate_id, decision, reason_code?, decision_source, policy_version, actor_reference?, decided_at, created_at.
+
+Match decisions are immutable historical decisions.
+
 ## 19. Explicit gates still open
 
 The following remain controlled architecture gates before their concrete SQL migrations:
@@ -799,6 +831,7 @@ The following remain controlled architecture gates before their concrete SQL mig
 9. Business conceptual lifecycle vocabulary reconciliation.
 10. Booking availability calculation, hold consumption and atomic finalization contract.
 11. Review physical target implementation beyond the canonical typed-target matrix.
+12. Matching retrieval/ranking/learning execution contracts where they require additional derived projections.
 
 These are controlled architecture gates, not provisional implementation instructions.
 
