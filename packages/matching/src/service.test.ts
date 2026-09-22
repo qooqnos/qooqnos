@@ -258,4 +258,111 @@ describe("MatchingService", () => {
     expect(searched).toBe(false);
     expect(result.candidates).toHaveLength(1);
   });
+  it("connects a selected business candidate through Customer relationships", async () => {
+    const calls: string[] = [];
+    const service = new MatchingService({
+      repository: {
+        async getMatchRequest() {
+          return {
+            id: "match-1",
+            demandRequestId: "demand-1",
+            organizationId: "tenant-1",
+            workspaceId: "workspace-1",
+            algorithmVersion: "deterministic-v1",
+            policyVersion: "policy-1",
+            status: "decided",
+            requestedAt: "2026-09-22T00:00:00.000Z",
+            completedAt: "2026-09-22T00:01:00.000Z",
+            createdAt: "2026-09-22T00:00:00.000Z",
+            updatedAt: "2026-09-22T00:01:00.000Z",
+          };
+        },
+        async getDemandRequest() {
+          return {
+            id: "demand-1",
+            organizationId: "tenant-1",
+            workspaceId: "workspace-1",
+            customerId: "customer-1",
+            sourceChannel: "api",
+            status: "matched",
+            rawInputReference: null,
+            locale: "en",
+            normalizedDemand: {},
+            confidence: 1,
+            createdAt: "2026-09-22T00:00:00.000Z",
+            updatedAt: "2026-09-22T00:01:00.000Z",
+          };
+        },
+        async getCandidate() {
+          return {
+            id: "candidate-1",
+            matchRequestId: "match-1",
+            businessId: "business-1",
+            offeringId: null,
+            retrievalSource: "discovery.lexical",
+            retrievalScore: 1,
+            rankingScore: 1,
+            rankPosition: 1,
+            eligibilityStatus: "eligible",
+            reasons: [],
+            featureSnapshot: {},
+            createdAt: "2026-09-22T00:01:00.000Z",
+          };
+        },
+        async hasSelectedDecision() {
+          return true;
+        },
+        async setMatchStatus(_context: RequestContext, _id: string, status: string) {
+          calls.push("match:" + status);
+          return {
+            id: "match-1",
+            demandRequestId: "demand-1",
+            organizationId: "tenant-1",
+            workspaceId: "workspace-1",
+            algorithmVersion: "deterministic-v1",
+            policyVersion: "policy-1",
+            status,
+            requestedAt: "2026-09-22T00:00:00.000Z",
+            completedAt: "2026-09-22T00:01:00.000Z",
+            createdAt: "2026-09-22T00:00:00.000Z",
+            updatedAt: "2026-09-22T00:01:00.000Z",
+          };
+        },
+      } as never,
+      discovery: {} as never,
+      relationships: {
+        async getByCustomerBusinessType() {
+          return null;
+        },
+        async create(_context: RequestContext, input: { readonly relationshipType: string; readonly businessId: string }) {
+          calls.push("relationship:" + input.relationshipType + ":" + input.businessId);
+          return {
+            id: "relationship-1",
+            customerId: "customer-1",
+            businessId: input.businessId,
+            relationshipType: input.relationshipType,
+            status: "prospect",
+            firstInteractionAt: "2026-09-22T00:01:00.000Z",
+            lastInteractionAt: "2026-09-22T00:01:00.000Z",
+            source: "matching",
+            createdAt: "2026-09-22T00:01:00.000Z",
+            updatedAt: "2026-09-22T00:01:00.000Z",
+          };
+        },
+      } as never,
+      authorization: authorization(),
+      id: () => brandId<"EntityId">("relationship-1"),
+      now: () => "2026-09-22T00:01:00.000Z",
+    });
+
+    const result = await service.connect(context(), {
+      matchRequestId: brandId<"EntityId">("match-1"),
+      candidateId: brandId<"EntityId">("candidate-1"),
+    });
+
+    expect(result.relationship.businessId).toBe("business-1");
+    expect(result.replayed).toBe(false);
+    expect(calls).toEqual(["relationship:match:business-1", "match:connected"]);
+  });
+
 });
