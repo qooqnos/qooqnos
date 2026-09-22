@@ -17,7 +17,6 @@
     "@qooqnos/business": "*",
     "@qooqnos/booking": "*",
     "@qooqnos/commerce": "*",
-    "@qooqnos/billing": "*",
     "@qooqnos/catalog": "*",
     "@qooqnos/core": "*",
     "@qooqnos/database": "*",
