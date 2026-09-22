@@ -269,33 +269,20 @@ export function createBooking(
     updatedAt: now,
   };
 }
-export {
-  createDatabaseConnection,
-  SQL,
-  type DatabaseConfig,
-  type DatabaseConnection,
-  type Transaction,
-  type QueryResult,
-  DatabaseError,
-  ConnectionError,
-  QueryError,
-} from "./postgres-adapter";
 
-export {
-  MigrationRunner,
-  BUILTIN_MIGRATIONS,
-  type Migration,
-  type MigrationStatus,
-  MigrationError,
-} from "./migrations";
-
-export {
-  UserRepository,
-  WorkspaceRepository,
-  ServiceRepository,
-  BookingRepository,
-} from "./database-repository";
-
-export { DatabaseFactory } from "./database-factory";
-
-export { PostgresDatabase } from "./postgres-database";
+// Canonical D1 database boundary.
+export * from "./client";
+export * from "./transaction";
+export * from "./command-repository";
+export * from "./catalog-command-repository";
+export * from "./identity-repository";
+export * from "./session-repository";
+export * from "./authorization-repository";
+export * from "./request-authorization-repository";
+export * from "./platform-repository";
+export * from "./seller-ai-repository";
+export * from "./services";
+export * from "./hash";
+export * from "./migration-catalog";
+export * from "./migration-lock";
+export * from "./migrations";
