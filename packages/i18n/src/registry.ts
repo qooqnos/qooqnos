@@ -1,10 +1,7 @@
 import type { Locale, LocaleDefinition, TranslationDictionary } from "./index";
-import { getDirection } from "./index";
-import fa from "../locales/fa.json";
-import en from "../locales/en.json";
-import ar from "../locales/ar.json";
+import { getDirection, translations } from "./index";
 
-const DICTIONARIES: Record<Locale, TranslationDictionary> = { fa, en, ar };
+const DICTIONARIES: Record<Locale, TranslationDictionary> = translations;
 
 export function getLocaleDefinition(locale: Locale): LocaleDefinition {
   return {
