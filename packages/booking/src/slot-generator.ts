@@ -105,7 +105,7 @@ export function generateAvailabilitySlots(
 
         const slotReference = buildSlotReference(
           context.schedule.id,
-          context.schedule.resourceId,
+          context.schedule.resourceId ?? null,
           slotStart.toISOString(),
           slotEnd.toISOString(),
         );
@@ -346,8 +346,13 @@ function getLocalDateKey(instant: Date, timezone: string): string {
 }
 
 function zonedDateTimeToUtc(dateKey: string, time: string, timezone: string): Date {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  const [hour, minute] = time.split(":").map(Number);
+  const [yearValue, monthValue, dayValue] = dateKey.split("-");
+  const [hourValue, minuteValue] = time.split(":");
+  const year = Number(yearValue!);
+  const month = Number(monthValue!);
+  const day = Number(dayValue!);
+  const hour = Number(hourValue!);
+  const minute = Number(minuteValue!);
   let candidate = Date.UTC(year, month - 1, day, hour, minute, 0);
   for (let i = 0; i < 3; i += 1) {
     const offset = timezoneOffsetMinutes(new Date(candidate), timezone);
@@ -379,7 +384,10 @@ function timezoneOffsetMinutes(instant: Date, timezone: string): number {
 }
 
 function isoWeekday(dateKey: string): number {
-  const [year, month, day] = dateKey.split("-").map(Number);
+  const [yearValue, monthValue, dayValue] = dateKey.split("-");
+  const year = Number(yearValue!);
+  const month = Number(monthValue!);
+  const day = Number(dayValue!);
   const dayOfWeek = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
   return dayOfWeek === 0 ? 7 : dayOfWeek;
 }
@@ -395,7 +403,10 @@ function dateKeys(start: string, end: string): readonly string[] {
 }
 
 function addLocalDay(dateKey: string): string {
-  const [year, month, day] = dateKey.split("-").map(Number);
+  const [yearValue, monthValue, dayValue] = dateKey.split("-");
+  const year = Number(yearValue!);
+  const month = Number(monthValue!);
+  const day = Number(dayValue!);
   const next = new Date(Date.UTC(year, month - 1, day + 1));
   return next.toISOString().slice(0, 10);
 }
