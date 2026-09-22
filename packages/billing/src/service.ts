@@ -1,4 +1,3 @@
-import type { RequestContext } from "@qooqnos/core";
 import { DatabaseError } from "@qooqnos/database";
 import { BillingRepository } from "./repository";
 import type { BillingAIEntitlementDecision, BillingAIEntitlementRequest, BillingAIEntitlementService } from "./contract";
