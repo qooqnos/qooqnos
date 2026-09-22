@@ -36,6 +36,7 @@
     {"id":"0033_billing_core","version":33,"moduleId":"billing","checksum":"59a525717df6a49debe9dd326dec4a2724ddf74f4ff0ba967f3f179c9fdef0a2","filename":"0033_billing_core.sql"},
     {"id":"0034_billing_usage_counters","version":34,"moduleId":"billing","checksum":"12d5687ed94c3a065c07713ce9cc982c797f018d219c24fd46521caf928ba0a0","filename":"0034_billing_usage_counters.sql"},
     {"id":"0035_communication_core","version":35,"moduleId":"communication","checksum":"f0e16443c764044a8915067778200a30b255da2afdd2362fd0cf1b57d4d7a7e3","filename":"0035_communication_core.sql"},
-    {"id":"0036_automation_core","version":36,"moduleId":"automation","checksum":"c8d471d7cfce3c5a3e0a134209fa8c19d39ee7426f0206c4b70b91bbf4d9e6be","filename":"0036_automation_core.sql"}
+    {"id":"0036_automation_core","version":36,"moduleId":"automation","checksum":"c8d471d7cfce3c5a3e0a134209fa8c19d39ee7426f0206c4b70b91bbf4d9e6be","filename":"0036_automation_core.sql"},
+    {"id":"0037_ai_runtime_core","version":37,"moduleId":"ai","checksum":"bb70d4356bfcbe208c5ee69ffc224b35d28f8ba22261b621eadc8ba291078a27","filename":"0037_ai_runtime_core.sql"}
   ]
 }
