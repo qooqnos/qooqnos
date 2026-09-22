@@ -69,13 +69,9 @@ export class TrustService {
       readonly ratingValue: number;
       readonly content?: string;
       readonly moderationState?: string;
-  readonly businessId?: EntityId;
-  readonly offeringId?: EntityId;
-  readonly bookingId?: EntityId;
-  readonly appointmentId?: EntityId;
-  readonly serviceId?: EntityId;
-  readonly productId?: EntityId;
-  readonly locationId?: EntityId;
+      readonly businessId?: EntityId;
+      readonly offeringId?: EntityId;
+      readonly productId?: EntityId;
     },
   ) {
     await this.options.authorization.assert({
