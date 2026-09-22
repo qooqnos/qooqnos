@@ -236,7 +236,7 @@
       "id": "0034_billing_usage_counters",
       "version": 34,
       "moduleId": "billing",
-      "checksum": "7fac2ba3a1fd8a7df29c7ca9a5fa5046bf6ff2b01680e99c9d15495de93f3752",
+      "checksum": "b830a354de8e03c99920ff88a615590ab0c6a576e991379081230f9d160ab804",
       "filename": "0034_billing_usage_counters.sql"
     },
     {
