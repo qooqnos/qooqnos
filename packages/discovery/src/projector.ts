@@ -24,7 +24,24 @@ export interface BusinessCreatedEvent {
     readonly workspaceId: EntityId;
     readonly name: string;
     readonly displayName: string;
-    readonly publicationStatus: "unpublished" | "published" | "suspended";
+    readonly publicationStatus: "unpublished" | "pending" | "published" | "blocked";
+  };
+  readonly occurredAt: string;
+}
+
+
+
+export interface BusinessPublicationChangedEvent {
+  readonly eventType: "business.publication.changed.v1";
+  readonly eventVersion: 1;
+  readonly payload: {
+    readonly businessId: EntityId;
+    readonly organizationId: EntityId;
+    readonly workspaceId: EntityId;
+    readonly name: string;
+    readonly displayName: string;
+    readonly publicationStatus: "unpublished" | "pending" | "published" | "blocked";
+    readonly updatedAt: string;
   };
   readonly occurredAt: string;
 }
@@ -48,6 +65,27 @@ export class DiscoveryProjector {
       sourceType: "business",
       sourceId: event.payload.businessId,
       documentVersion: 1,
+      title: event.payload.displayName || event.payload.name,
+      metadata: {
+        businessId: event.payload.businessId,
+        publicationStatus: event.payload.publicationStatus,
+      },
+      eligibility: event.payload.publicationStatus === "published" ? "eligible" : "ineligible",
+      now: event.occurredAt,
+    });
+  }
+
+
+  async applyBusinessPublicationChanged(
+    context: RequestContext,
+    event: BusinessPublicationChangedEvent,
+  ): Promise<SearchDocumentRecord> {
+    return this.options.repository.upsert({
+      context,
+      id: event.payload.businessId,
+      sourceType: "business",
+      sourceId: event.payload.businessId,
+      documentVersion: Math.max(1, Date.parse(event.payload.updatedAt)),
       title: event.payload.displayName || event.payload.name,
       metadata: {
         businessId: event.payload.businessId,
