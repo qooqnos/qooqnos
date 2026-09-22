@@ -31,46 +31,6 @@ const booking = {
   updatedAt: "2026-09-22T00:00:00.000Z",
 } as const;
 
-function databaseFor({
-  replay = false,
-}: {
-  readonly replay?: boolean;
-} = {}): { readonly database: D1Database; readonly batches: number[] } {
-  let batches = 0;
-  const statement: D1PreparedStatementLike = {
-    bind() {
-      return this;
-    },
-    async first<T>() {
-      return replay ? booking as T : null as T | null;
-    },
-    async all<T>() {
-      return { results: [] as T[] };
-    },
-    async run() {
-      return { success: true };
-    },
-  };
-  const raw: D1DatabaseLike = {
-    prepare(sql: string) {
-      if (!replay && sql.includes("WHERE id = ? AND organization_id = ? AND workspace_id = ?")) {
-        return {
-          ...statement,
-          async first<T>() {
-            return booking as T;
-          },
-        };
-      }
-      return statement;
-    },
-    async batch(items) {
-      batches += 1;
-      return items.map(() => ({ success: true, meta: { changes: 1 } }));
-    },
-  };
-  return { database: new D1Database(raw), batches: [batches] };
-}
-
 describe("BookingRepository finalization", () => {
   it("commits hold consumption, booking and appointment in one batch", async () => {
     let batchCount = 0;
