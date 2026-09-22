@@ -21,6 +21,7 @@
     { "path": "../../packages/billing" },
     { "path": "../../packages/communication" },
     { "path": "../../packages/automation" },
+    { "path": "../../packages/integration" },
     { "path": "../../packages/catalog" },
     { "path": "../../packages/discovery" },
     { "path": "../../packages/onboarding" },
