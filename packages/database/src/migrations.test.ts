@@ -82,7 +82,7 @@ describe("MigrationRunner", () => {
           id: first.id,
           version: first.version,
           checksum: first.checksum,
-          moduleId: first.moduleId,
+          module_id: first.moduleId,
           appliedAt,
         },
       ],
