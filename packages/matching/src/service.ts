@@ -40,7 +40,7 @@ export class MatchingService {
     readonly retrievalScore?:number; readonly rankingScore?:number; readonly rankPosition?:number;
     readonly eligibilityStatus?:"unknown"|"eligible"|"ineligible"|"blocked"; readonly reasons?:unknown; readonly featureSnapshot?:unknown;
   }){
-    await this.options.authorization.assert({context,permission:"matching.candidate.read",requireAuthentication:true,requireWorkspace:false});
+    await this.options.authorization.assert({context,permission:"matching.candidate.manage",requireAuthentication:true,requireWorkspace:false});
     return this.options.repository.addCandidate(context,{...input,id:this.options.id(),now:this.options.now()});
   }
 
@@ -55,6 +55,6 @@ export class MatchingService {
 
 export const MATCHING_PERMISSIONS=[
   "matching.demand.read","matching.demand.create","matching.demand.manage",
-  "matching.request.read","matching.request.create","matching.candidate.read",
+  "matching.request.read","matching.request.create","matching.candidate.read","matching.candidate.manage",
   "matching.decision.read","matching.decision.manage"
 ] as const;
