@@ -392,17 +392,26 @@ Review reputation note: migration 0048 completes Review lifecycle/report/respons
 Automation/Integration API note: Automation workflow/version/execution and Integration account/webhook/sync-job capabilities are now registered in the canonical API router; durable worker execution remains gated by provider/capability contracts.
 
 Latest verified commits:
+- 5869597 — Test canonical Matching Connect flow
+- 421a91c — Keep Matching Connect dependency optional for non-connect consumers
+- a06eb07 — Make Match Connect selection-bound and replay-safe
+- 615a5ae — Require explicit Match selection before Connect
+- 6eab4c0 — Add canonical Customer relationship lookup for Match Connect replay
+- 30199b0 — Resolve Match offering candidates to canonical Business
+- 45731de — Expose Matching Connect API
 - 55a6118 — Record Automation and Integration API composition in ledger
 - c681855 — Expose Review lifecycle fields from canonical 0048 schema
 - f6f0c3b — Update Review repository tests for lifecycle fields
 - e15721d — Expose Integration sync job API capability
 - 56591ab — Test protected Integration sync job route
 
-CI verification: workflow definitions and migration-lock verification are present. No live workflow result for the current main SHA has been independently re-verified in this session.
+CI verification: commit `586959738b01c635dd5022fb24b2aa7f25dcb439` passed both GitHub Actions `CI` and `Phoenix verification` (run IDs `35785791295` and `35785791200`). Migration lock verification, typecheck, build and unit tests were all green in that verification path.
 
 Review moderation note: migration 0048 completes moderation/reporting/reputation projection storage and API/service behavior. Review target types remain canonical Business/Offering/Product only.
 
-Matching execution note: retrieval/ranking is now wired through Discovery projections with deterministic eligibility-first ranking and replay-safe candidate reuse. Connect/Act integrations and learning signals remain the next operational layers.
+Matching execution note: retrieval/ranking is wired through Discovery projections with deterministic eligibility-first ranking and replay-safe candidate reuse. `Match → Connect` is now implemented as the canonical Matching orchestration: it requires an explicit selected decision, resolves the canonical Business target, creates/replays the existing Customer↔Business relationship, and advances the MatchRequest to `connected`. Connect does not create a second relationship or supply source of truth.
+
+Matching Connect note: `packages/matching/src/service.ts`, `packages/matching/src/repository.ts`, `apps/api/src/matching-routes.ts`, and `packages/database/src/customer-relationship-repository.ts` provide the canonical connection boundary. Commit `5869597` is covered by green CI and Phoenix verification runs.
 
 Discovery projection note: Business creation/publication outbox events are now consumed by the Discovery projector; indexed eligibility follows authoritative Business publication state. Catalog/product projection remains derived and non-authoritative.
 
