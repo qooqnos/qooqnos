@@ -110,7 +110,7 @@ function systemContext(notification: NotificationRecord): RequestContext {
   return {
     requestId: brandId<"RequestId">("communication:" + notification.id),
     correlationId: brandId<"CorrelationId">("communication:" + notification.id),
-    actorId: brandId<EntityId>("system:" + notification.organizationId),
+    actorId: brandId<"EntityId">("system:" + notification.organizationId),
     tenantId: notification.organizationId,
     ...(notification.workspaceId ? { workspaceId: notification.workspaceId } : {}),
     module: "communication",
