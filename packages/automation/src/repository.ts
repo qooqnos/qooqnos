@@ -107,6 +107,18 @@ export class AutomationRepository extends Repository {
         sql: "UPDATE automation_workflows SET active_version_id = ?, status = 'active', updated_at = ? WHERE id = ?",
         params: [versionId, now, workflowId],
       },
+      {
+        sql: "INSERT INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at) VALUES (?, 'automation.workflow.activated', 1, 'automation_workflow', ?, ?, ?, ?, 'pending', 0, ?, ?)",
+        params: [
+          workflowId + ':automation.workflow.activated:' + versionId,
+          workflowId,
+          workflow.organizationId ?? context.tenantId,
+          workflow.workspaceId ?? context.workspaceId ?? null,
+          JSON.stringify({ workflowId, versionId }),
+          now,
+          now,
+        ],
+      },
     ]);
     return this.getWorkflow(context, workflowId);
   }
@@ -121,6 +133,12 @@ export class AutomationRepository extends Repository {
     if (workflow.status === "retired" && status !== "retired") {
       throw new DatabaseError("Retired workflow cannot be reopened");
     }
+    if (workflow.status === status) return workflow;
+
+    const eventType = status === "retired"
+      ? "automation.workflow.retired"
+      : "automation.workflow.paused";
+
     await this.database.transaction([
       {
         sql: "UPDATE automation_workflow_versions SET status = CASE WHEN ? = 'retired' AND status = 'active' THEN 'retired' ELSE status END WHERE workflow_id = ?",
@@ -129,6 +147,19 @@ export class AutomationRepository extends Repository {
       {
         sql: "UPDATE automation_workflows SET status = ?, active_version_id = CASE WHEN ? = 'retired' THEN NULL ELSE active_version_id END, updated_at = ? WHERE id = ? AND (organization_id IS NULL OR organization_id = ?) AND (workspace_id IS NULL OR workspace_id = ?)",
         params: [status, status, now, workflowId, context.tenantId, context.workspaceId ?? null],
+      },
+      {
+        sql: "INSERT INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at) VALUES (?, ?, 1, 'automation_workflow', ?, ?, ?, ?, 'pending', 0, ?, ?)",
+        params: [
+          workflowId + ':' + eventType + ':' + now,
+          eventType,
+          workflowId,
+          workflow.organizationId ?? context.tenantId,
+          workflow.workspaceId ?? context.workspaceId ?? null,
+          JSON.stringify({ workflowId, status }),
+          now,
+          now,
+        ],
       },
     ]);
     return this.getWorkflow(context, workflowId);
