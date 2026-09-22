@@ -34,6 +34,7 @@
     {"id":"0031_commerce_transaction_core","version":31,"moduleId":"commerce","checksum":"52527e84458d4414dab10961d842e665641450cf5c14c5fcdb120f7401881753","filename":"0031_commerce_transaction_core.sql"},
     {"id":"0032_commerce_integrity_hardening","version":32,"moduleId":"commerce","checksum":"219cacbce936f13632a7b444b202f24326c36b812db49cdf9b10f0c4a67d6553","filename":"0032_commerce_integrity_hardening.sql"},
     {"id":"0033_billing_core","version":33,"moduleId":"billing","checksum":"59a525717df6a49debe9dd326dec4a2724ddf74f4ff0ba967f3f179c9fdef0a2","filename":"0033_billing_core.sql"},
-    {"id":"0034_billing_usage_counters","version":34,"moduleId":"billing","checksum":"12d5687ed94c3a065c07713ce9cc982c797f018d219c24fd46521caf928ba0a0","filename":"0034_billing_usage_counters.sql"}
+    {"id":"0034_billing_usage_counters","version":34,"moduleId":"billing","checksum":"12d5687ed94c3a065c07713ce9cc982c797f018d219c24fd46521caf928ba0a0","filename":"0034_billing_usage_counters.sql"},
+    {"id":"0035_communication_core","version":35,"moduleId":"communication","checksum":"f0e16443c764044a8915067778200a30b255da2afdd2362fd0cf1b57d4d7a7e3","filename":"0035_communication_core.sql"}
   ]
 }
