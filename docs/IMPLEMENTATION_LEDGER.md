@@ -342,6 +342,8 @@ The old in-memory database implementation is retained only as an explicit legacy
 
 Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
 
+CI install reconciliation note: GitHub Actions run 35715908415 initially failed at npm install because package.json declared TypeScript ESLint 7-era direct dependencies while the canonical package-lock already resolved the 8.70.0 toolchain. Root package.json is now aligned to the lockfile toolchain (`typescript-eslint` 8.42, ESLint 9.35, Node >=22).
+
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
 Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0045 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
