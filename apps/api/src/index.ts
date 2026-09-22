@@ -12,6 +12,8 @@ import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
 import type { ApiEnv } from "./env";
+import { consumeOutbox, publishPendingOutbox, type QueueBatchLike, type ScheduledControllerLike } from "./outbox-worker";
+import type { OutboxEventRecord } from "@qooqnos/database";
 import { getDatabase } from "./database";
 import { checkDatabase } from "./readiness";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
@@ -528,6 +530,17 @@ export default {
     const database = getDatabase(env);
     if (request.method === "GET" && url.pathname === "/") return html(homePage(version));
     return createRouter(version, database ?? undefined, env).handle(request);
+  },
+
+  async scheduled(controller: ScheduledControllerLike, env: ApiEnv): Promise<void> {
+    await publishPendingOutbox(env, new Date(controller.scheduledTime).toISOString());
+  },
+
+  async queue(
+    batch: QueueBatchLike<OutboxEventRecord>,
+    env: ApiEnv,
+  ): Promise<void> {
+    await consumeOutbox(env, batch);
   },
 };
 
