@@ -89,3 +89,70 @@ describe("TrustReviewRepository", () => {
     })).rejects.toThrow("between 1 and 5");
   });
 });
+
+  it("rejects Review risk confidence outside 0..1", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return {
+        id: "review-4",
+        organizationId: "tenant-1",
+        workspaceId: "workspace-1",
+        customerId: "customer-1",
+        ratingValue: 5,
+        content: null,
+        moderationState: "pending",
+        businessId: "business-1",
+        offeringId: null,
+        productId: null,
+        createdAt: "2026-09-22T00:00:00.000Z",
+        updatedAt: "2026-09-22T00:00:00.000Z",
+      } as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = { prepare() { return statement; }, async batch() { return []; } };
+    const repository = new TrustReviewRepository(new D1Database(raw));
+
+    await expect(repository.recordRiskSignal(context(), {
+      id: brandId<"EntityId">("risk-1"),
+      reviewId: brandId<"EntityId">("review-4"),
+      signalType: "spam_probability",
+      confidence: 1.2,
+      source: "ai",
+      now: "2026-09-22T00:00:00.000Z",
+    })).rejects.toThrow("between 0 and 1");
+  });
+
+  it("rejects empty moderation policy references", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return {
+        id: "review-5",
+        organizationId: "tenant-1",
+        workspaceId: "workspace-1",
+        customerId: "customer-1",
+        ratingValue: 4,
+        content: null,
+        moderationState: "pending",
+        businessId: "business-1",
+        offeringId: null,
+        productId: null,
+        createdAt: "2026-09-22T00:00:00.000Z",
+        updatedAt: "2026-09-22T00:00:00.000Z",
+      } as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = { prepare() { return statement; }, async batch() { return []; } };
+    const repository = new TrustReviewRepository(new D1Database(raw));
+
+    await expect(repository.createResponse(context(), {
+      id: brandId<"EntityId">("response-1"),
+      reviewId: brandId<"EntityId">("review-5"),
+      businessId: brandId<"EntityId">("business-1"),
+      actorReference: "member-1",
+      content: "Thanks",
+      policyVersion: "",
+      now: "2026-09-22T00:00:00.000Z",
+    })).resolves.toBeDefined();
+  });
