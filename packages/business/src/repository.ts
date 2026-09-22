@@ -258,12 +258,6 @@ export class BusinessRepository extends Repository {
     if (!current) throw new DatabaseError("Business not found");
     if (current.publicationStatus === status) return current;
 
-    const updated = {
-      ...current,
-      publicationStatus: status,
-      updatedAt: now,
-    } satisfies BusinessRecord;
-
     const eventId = `${id}:business.publication.changed.v1:${now}`;
     const results = await this.database.transaction([
       {
