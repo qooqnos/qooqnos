@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0027.
+The current API migration catalog references versions 0001 through 0029.
 
 ### Foundation — 0001
 
@@ -159,6 +159,25 @@ This migration seeds persisted permission vocabulary.
 
 ### Business lifecycle history — 0027
 
+### Booking core — 0028
+
+- bookings
+- booking_items
+- appointments
+- resources
+- appointment_resources
+
+0028 establishes the Booking commitment core, immutable booking-item snapshots, scheduled appointments and the canonical Resource taxonomy.
+
+### Availability schedules — 0029
+
+- schedules
+- availability_rules
+- availability_exceptions
+
+0029 establishes reusable schedules and recurring/exception availability rules. Bookable slots remain rebuildable projections; no authoritative slots table is created.
+
+
 - business_status_history
 
 0027 adds immutable lifecycle transition history for the existing physical Business status vocabulary. It intentionally does not change the current `businesses.status` enum; the broader conceptual onboarding vocabulary remains a separate reconciliation gate.
@@ -190,7 +209,7 @@ This migration seeds persisted permission vocabulary.
 
 0024 establishes append-only authoritative verification decisions and controlled supporting-check links.
 
-**Total currently defined physical tables: 63.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers; migration 0021 adds two Trust tables; migration 0022 adds two Trust policy tables; migration 0023 adds two Trust check tables plus integrity triggers; migration 0024 adds two Trust decision tables plus append-only/integrity triggers.
+**Total currently defined physical tables: 71.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers; migration 0021 adds two Trust tables; migration 0022 adds two Trust policy tables; migration 0023 adds two Trust check tables plus integrity triggers; migration 0024 adds two Trust decision tables plus append-only/integrity triggers.
 
 This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
 
@@ -209,7 +228,7 @@ This count includes only canonical SQL migration sources. It does not include th
 | Seller AI Creation | creation sessions, raw inputs, drafts, field provenance | Implemented for seller-side creation slice |
 | Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events, customer_addresses | Customer core, CRM relationship and structured Address storage implemented; CustomerProfile, timeline projection and workflow layers remain |
 | Matching | no user request / match execution tables | Missing |
-| Booking / Availability | no booking/appointment/resource/schedule tables | Missing |
+| Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions | Core schema/repositories implemented; final availability resolution, atomic reservation/holds and booking history/events remain |
 | Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries | Core verification chain + review/expiry records implemented; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
 | Moderation / Privacy / Consent | no canonical workflow tables | Missing |
 | Communication | no conversation/message/notification/delivery tables | Missing |
