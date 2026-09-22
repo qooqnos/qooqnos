@@ -1,7 +1,9 @@
 import { CommunicationRepository } from "@qooqnos/communication";
+import { DiscoveryOutboxProcessor, DiscoveryRepository } from "@qooqnos/discovery";
 import { brandId } from "@qooqnos/core";
 import { OutboxService, type OutboxEventRecord } from "@qooqnos/database";
 import { getDatabase } from "./database";
+import { createRequestContext } from "./context";
 import type { ApiEnv } from "./env";
 
 export interface ScheduledControllerLike {
@@ -59,6 +61,7 @@ export async function consumeOutbox(
 ): Promise<{ processed: number }> {
   const database = getDatabase(env);
   const communication = database ? new CommunicationRepository(database) : null;
+  const discovery = database ? new DiscoveryOutboxProcessor({ repository: new DiscoveryRepository(database) }) : null;
 
   for (const message of batch.messages) {
     try {
@@ -80,6 +83,36 @@ export async function consumeOutbox(
           workspaceId: event.workspaceId ? brandId<"EntityId">(event.workspaceId) : null,
           notificationId: brandId<"EntityId">(notificationId),
           now: new Date().toISOString(),
+        });
+      }
+
+      if (
+        discovery
+        && (
+          event.eventType === "catalog.product.created"
+          || event.eventType === "business.created.v1"
+          || event.eventType === "business.publication.changed.v1"
+        )
+      ) {
+        if (!event.organizationId || !event.workspaceId) {
+          throw new Error("Discovery projection event cannot be processed without tenant/workspace scope");
+        }
+        const context = createRequestContext({
+          module: "discovery",
+          operation: "discovery.project",
+          actorId: "system",
+          tenantId: event.organizationId,
+          workspaceId: event.workspaceId,
+          correlationId: event.id,
+          requestId: event.id,
+          authenticated: true,
+        });
+        await discovery.process(context, {
+          id: event.id,
+          eventType: event.eventType,
+          eventVersion: event.eventVersion,
+          payloadJson: event.payloadJson,
+          occurredAt: event.occurredAt,
         });
       }
 
