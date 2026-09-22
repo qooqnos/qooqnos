@@ -25,6 +25,7 @@ import verificationDecisions from "../../../migrations/0024_verification_decisio
 import verificationReviewExpiry from "../../../migrations/0025_verification_review_expiry.sql";
 import customerAddresses from "../../../migrations/0026_customer_addresses.sql";
 import businessStatusHistory from "../../../migrations/0027_business_status_history.sql";
+import bookingCore from "../../../migrations/0028_booking_core.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -55,4 +56,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0025_verification_review_expiry.sql", sql: verificationReviewExpiry },
   { path: "migrations/0026_customer_addresses.sql", sql: customerAddresses },
   { path: "migrations/0027_business_status_history.sql", sql: businessStatusHistory },
+  { path: "migrations/0028_booking_core.sql", sql: bookingCore },
 ];
