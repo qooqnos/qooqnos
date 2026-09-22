@@ -26,6 +26,8 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Business category integrity hardening | 🟢 Implemented | migrations/0015_business_primary_category_integrity.sql |
 | Catalog Attribute vocabulary | 🟢 Foundation implemented | migrations/0016_catalog_attribute_vocabulary.sql |
 | Catalog AttributeValue storage | 🟡 Expand phase implemented | migrations/0017_catalog_attribute_values.sql; JSON backfill/cutover remains gated |
+| Customer core | 🟢 Schema/repository implemented | migrations/0018_customer_core.sql; packages/database/src/customer-repository.ts |
+| CRM Customer relationships | 🟢 Schema/repository implemented | migrations/0019_crm_customer_relationships.sql; packages/database/src/customer-relationship-repository.ts |
 | Catalog Attribute repositories | 🟢 Implemented | packages/catalog/src/attribute-repository.ts; packages/catalog/src/attribute-value-repository.ts |
 | Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
 | Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
@@ -131,10 +133,23 @@ Commits:
 - 216ccf7 — Harden migration SQL splitting for SQLite triggers
 - 0efbe5f — Add migration splitter trigger/comment tests
 - 34333c5 — Fix AttributeValue option key generation
+- ce36a28 — Add canonical Customer and preference storage
+- 683c821 — Register Customer core migration
+- 187f7bc — Lock Customer core migration checksum
+- 9a6a9a2 — Reconcile Customer and CRM physical schema
+- fbba518 — Define Customer preference physical contract
+- ef20f3a — Add CRM customer relationship storage
+- eccaa8e — Register CRM customer relationship migration
+- b409aed — Lock CRM relationship migration checksum
+- 7f013f7 — Implement canonical Customer repository
+- 2b699fb — Implement canonical CRM customer relationship repository
+- e9588d9 — Export Customer and CRM repositories
+- 8a1899a — Add Customer repository tests
+- 6cba51e — Add CRM relationship repository tests
 
 Migration safety:
-- canonical migrations 0001–0016 were not edited, renumbered or replaced;
-- migration 0017_catalog_attribute_values was added as a new Catalog-owned expand-phase schema migration;
+- canonical migrations 0001–0017 were not edited, renumbered or replaced;
+- migration 0018_customer_core and 0019_crm_customer_relationships were added as new customer/CRM-owned schema migrations;
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
@@ -142,6 +157,8 @@ Migration safety:
 Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.sql; 0015_business_primary_category_integrity.sql adds three integrity triggers and no tables; 0016_catalog_attribute_vocabulary.sql adds three Catalog Attribute tables; 0017_catalog_attribute_values.sql adds two AttributeValue tables and preserves all prior migration identities/checksums.
 
 The old in-memory database implementation is retained only as an explicit legacy compatibility module and is no longer part of the canonical @qooqnos/database root API.
+
+Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
 
 Migration runtime hardening: splitSqlStatements now keeps SQLite CREATE TRIGGER bodies intact across internal semicolons and rejects unterminated trigger/comment/literal blocks. Trigger-splitting regression tests were added.
 
@@ -167,6 +184,8 @@ The API runtime references these migration sources:
 0015_business_primary_category_integrity.sql
 0016_catalog_attribute_vocabulary.sql
 0017_catalog_attribute_values.sql
+0018_customer_core.sql
+0019_crm_customer_relationships.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
