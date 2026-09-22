@@ -109,7 +109,7 @@ export function generateAvailabilitySlots(
           slotStart.toISOString(),
           slotEnd.toISOString(),
         );
-        if (!passesConstraint(rule.startConstraint, slotStart) || !passesEndConstraint(rule.endConstraint, slotEnd)) {
+        if (!passesConstraint(rule.startConstraint ?? null, slotStart) || !passesEndConstraint(rule.endConstraint ?? null, slotEnd)) {
           continue;
         }
 
