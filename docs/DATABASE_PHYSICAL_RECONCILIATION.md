@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0016.
+The current API migration catalog references versions 0001 through 0017.
 
 ### Foundation — 0001
 
@@ -117,7 +117,14 @@ This migration seeds persisted permission vocabulary.
 
 0016 establishes the canonical reusable attribute vocabulary and Category applicability metadata. It does not create a product/service value table; existing product_variants.attributes_json remains the current value representation.
 
-**Total currently defined physical tables: 46.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables.
+### Catalog Attribute values — 0017
+
+- attribute_values
+- attribute_value_options
+
+0017 is an expand-only value-storage migration. It establishes typed AttributeValue records for product, product_variant and service targets, preserves provenance, and enforces type/option compatibility. It does not backfill attributes_json and does not switch current repository reads/writes.
+
+**Total currently defined physical tables: 48.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables.
 
 This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
 
@@ -130,7 +137,7 @@ This count includes only canonical SQL migration sources. It does not include th
 | Platform / Reliability | modules, module_versions, tenant_modules, feature_flags, audit_events, idempotency_records, outbox_events, schema_migrations | Core implemented |
 | Onboarding | onboarding_profiles | Implemented core |
 | Business | businesses, business_profiles, locations | Partial |
-| Catalog | categories, services, products, variants, offerings, category links, prices, inventory, attribute vocabulary | Partial; attribute-definition foundation implemented |
+| Catalog | categories, services, products, variants, offerings, category links, prices, inventory, attribute vocabulary and AttributeValue storage | Partial; value storage is staged and current JSON path remains authoritative |
 | Media | assets, variants, links, processing jobs | Core implemented |
 | Discovery | search documents, embeddings, ranking features, indexing jobs | Core projection implemented; index-version registry is missing |
 | Seller AI Creation | creation sessions, raw inputs, drafts, field provenance | Implemented for seller-side creation slice |
@@ -190,9 +197,9 @@ business_profiles currently stores contact and branding information in JSON fiel
 
 product_variants currently contains attributes_json.
 
-The logical model also contains structured product attributes and reusable attribute definitions/options.
+The logical model contains AttributeDefinition and AttributeValue semantics.
 
-**Decision:** migration 0016 implements the canonical reusable Attribute vocabulary (attribute_definitions, attribute_options, category_attributes) without creating a second value store. product_variants.attributes_json remains the current physical value representation. Do not create product_attributes, service_attributes or a variant-attribute table until authoritative value ownership, backfill and read/write cutover semantics are explicitly defined.
+**Decision:** migration 0016 implements the canonical reusable Attribute vocabulary, and migration 0017 adds the canonical typed AttributeValue storage. product_variants.attributes_json remains authoritative during this expand phase. Do not dual-write or dual-read it until an explicit backfill, conflict-resolution and repository cutover migration is defined. Do not create parallel product_attributes, service_attributes or product_variant_attributes tables.
 
 ### 3.6 Business primary category
 
@@ -225,6 +232,14 @@ Migration 0016 establishes three canonical Catalog Attribute tables: attribute_d
 The physical contract is deliberately platform-level for the reusable attribute vocabulary. It does not invent tenant-specific ownership semantics while the existing Category model lacks physical organization/workspace owner columns.
 
 The migration also deliberately does not create value tables for Products or Services. The existing product_variants.attributes_json remains the current value representation. A later value migration must define authoritative storage, JSON backfill, conflict handling and repository cutover before introducing any structured value table.
+
+## 3.11 Catalog Attribute values — 0017
+
+Migration 0017 adds \`attribute_values\` and \`attribute_value_options\` as the canonical typed AttributeValue storage layer.
+
+The storage is intentionally staged: existing \`product_variants.attributes_json\` remains the active value path. No backfill is attempted because arbitrary JSON keys cannot be safely mapped to canonical AttributeDefinitions without an explicit mapping contract.
+
+The supported target types are currently product, product_variant and service. Adding more targets requires a contract update. Multi-enum values use a parent AttributeValue plus child option rows, while enum values use a single option_id.
 
 ## 4. Seller AI versus canonical AI Runtime
 
@@ -328,7 +343,7 @@ new migrations must follow ownership + no-duplication gates
 
 The next implementation work should proceed in this order:
 
-1. Complete Catalog Attribute value ownership and migration semantics without duplicating current JSON-backed state.
+1. Define AttributeValue repository/write semantics and explicit backfill/cutover rules without duplicating current JSON-backed state.
 2. Complete Business lifecycle support only where the logical model requires it.
 4. Introduce Customer/CRM identity and relationship structures.
 5. Introduce Verification/Trust/Moderation structures.
