@@ -407,15 +407,14 @@ export class CommerceRepository extends Repository {
         ],
       },
       {
-        sql: "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'commerce.order.created', 1, 'commerce_order', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        sql: "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) SELECT o.id || ':created', 'commerce.order.created', 1, 'commerce_order', o.id, o.organization_id, o.workspace_id, ?, 'pending', 0, ?, ?, NULL FROM commerce_orders o WHERE o.organization_id = ? AND o.workspace_id = ? AND o.idempotency_key = ?",
         params: [
-          orderId + ":created",
-          orderId,
+          JSON.stringify({ sourceChannel: input.sourceChannel }),
+          now,
+          now,
           organizationId,
           workspaceId,
-          JSON.stringify({ orderId, sourceChannel: input.sourceChannel }),
-          now,
-          now,
+          input.idempotencyKey.trim(),
         ],
       },
     ]);
