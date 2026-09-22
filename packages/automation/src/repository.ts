@@ -83,7 +83,7 @@ export class AutomationRepository extends Repository {
     versionId: EntityId,
     now: string,
   ): Promise<WorkflowRecord> {
-    await this.getWorkflow(context, workflowId);
+    const workflow = await this.getWorkflow(context, workflowId);
     const version = await this.database.first<{ id: EntityId; version: number; status: string }>(
       "SELECT id, version, status FROM automation_workflow_versions WHERE id = ? AND workflow_id = ? LIMIT 1",
       versionId,
