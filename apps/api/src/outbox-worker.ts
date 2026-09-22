@@ -31,9 +31,13 @@ export async function publishPendingOutbox(
   let failed = 0;
 
   for (const event of events) {
+    const leaseUntil = new Date(Date.parse(now) + 60_000).toISOString();
+    const claimed = await outbox.claimPending(event.id, now, leaseUntil);
+    if (!claimed) continue;
+
     try {
       await queue.send(event);
-      await outbox.markPublished(event.id, now);
+      await outbox.markPublished(event.id, new Date().toISOString());
       published += 1;
     } catch {
       await outbox.scheduleRetry(
