@@ -219,6 +219,25 @@ export class CommunicationRepository extends Repository {
     return (result.meta?.changes ?? 0) === 1;
   }
 
+  async requeueNotification(
+    notificationId: EntityId,
+    organizationId: EntityId,
+    workspaceId: EntityId | null,
+    nextAttemptAt: string,
+    now: string,
+  ): Promise<boolean> {
+    const result = await this.database.run(
+      "UPDATE communication_notifications SET status = 'queued', scheduled_at = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND ((workspace_id IS NULL AND ? IS NULL) OR workspace_id = ?) AND status = 'provider_accepted'",
+      nextAttemptAt,
+      now,
+      notificationId,
+      organizationId,
+      workspaceId,
+      workspaceId,
+    );
+    return (result.meta?.changes ?? 0) === 1;
+  }
+
   async markDispatchResult(
     notificationId: EntityId,
     organizationId: EntityId,
