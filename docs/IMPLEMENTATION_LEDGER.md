@@ -45,6 +45,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Integration core | 🟢 Schema/package/repository/service implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Demand / Matching core | 🟢 Schema/package/repository/service implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts |
+| Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts |
 | Billing counter scope integrity | 🟢 Integrity migration implemented | migrations/0044_billing_counter_scope.sql; packages/billing/src/repository.ts |
 | Review target integrity | 🟢 Canonical three-target schema/service/integrity implemented | migrations/0042_reviews_core.sql; migrations/0045_review_target_integrity.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts |
 | Trust Review core | 🟢 Schema/package/repository/service implemented | migrations/0042_reviews_core.sql; migrations/0043_integrity_update_guards.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts |
@@ -383,6 +384,8 @@ Automation note: migration 0036 establishes versioned workflows, triggers, actio
 Booking finalization note: migrations 0046–0047 establish idempotent Booking creation, transactional hold consumption, appointment/resource commitment and capacity mutation guards. Availability calculation and schedule-derived slot generation remain separate.
 
 Trust Review note: migration 0042 physicalizes the canonical Review target from Gate 05 (Business/Offering/Product); 0045 adds target-scope integrity on insert/update and the Trust package exposes the same three-target creation boundary.
+
+Review reputation note: migration 0048 completes Review lifecycle/report/response/moderation/risk/reputation persistence. Reputation is rebuildable projection state; Review/Booking/Customer/Business remain the authoritative sources.
 
 Matching note: migrations 0040–0041 establish the canonical Demand→Match persistence boundary with typed Business/Offering targets and append-only decisions. Retrieval/ranking/learning execution remains operational follow-up.
 
