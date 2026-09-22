@@ -57,6 +57,24 @@ export class TrustReviewRepository extends Repository {
     return this.getReview(context, input.id);
   }
 
+  async moderateReview(
+    context: RequestContext,
+    id: EntityId,
+    moderationState: string,
+    now: string,
+  ): Promise<ReviewRecord> {
+    const current = await this.getReview(context, id);
+    await this.database.run(
+      "UPDATE reviews SET moderation_state = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?)",
+      moderationState.trim(),
+      now,
+      current.id,
+      current.organizationId,
+      current.workspaceId ?? context.workspaceId,
+    );
+    return this.getReview(context, id);
+  }
+
   async getReview(context: RequestContext, id: EntityId): Promise<ReviewRecord> {
     const row = await this.database.first<ReviewRecord>(
       "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, customer_id AS customerId, rating_value AS ratingValue, content, moderation_state AS moderationState, business_id, offering_id, booking_id, appointment_id, service_id, product_id, location_id, created_at AS createdAt, updated_at AS updatedAt FROM reviews WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
