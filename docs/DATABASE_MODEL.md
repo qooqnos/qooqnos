@@ -196,12 +196,15 @@ Availability must be resolved from current domain state; AI output is never auth
 Verification is a case/check/decision system, not a boolean.
 
 - `verification_cases`: aggregate for a verification workflow.
+- `verification_policies`: immutable policy versions.
 - `verification_requirements`: policy-defined requirements.
-- `verification_checks`: evaluation of one requirement.
 - `verification_documents`: protected evidence metadata/reference.
-- `verification_decisions`: reviewer/system decisions.
-- `verification_events`: immutable verification history.
-- `verification_policy_versions`: jurisdiction/industry policy versions.
+- `verification_checks`: evaluation of one requirement.
+- `verification_check_documents`: controlled evidence links for checks.
+- `verification_decisions`: immutable reviewer/system decisions.
+- `verification_decision_checks`: supporting-check links.
+
+The core Trust chain is now physically implemented through migrations 0021–0024. Verification reviewer assignment, expiry workflow, trust signals and historical event projection remain separate capabilities.
 
 Example check types:
 
