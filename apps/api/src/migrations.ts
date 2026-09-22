@@ -90,11 +90,11 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0039_privacy_consent_requests.sql", sql: privacyConsentRequests },
   { path: "migrations/0040_demand_matching_core.sql", sql: demandMatchingCore },
   { path: "migrations/0041_demand_matching_integrity.sql", sql: demandMatchingIntegrity },
-  { path: "migrations/0048_reviews_moderation_reputation.sql", sql: reviewsModerationReputation },
   { path: "migrations/0042_reviews_core.sql", sql: reviewsCore },
   { path: "migrations/0043_integrity_update_guards.sql", sql: integrityUpdateGuards },
   { path: "migrations/0044_billing_counter_scope.sql", sql: billingCounterScope },
   { path: "migrations/0045_review_target_integrity.sql", sql: reviewTargetIntegrity },
   { path: "migrations/0046_booking_finalization_guards.sql", sql: bookingFinalizationGuards },
   { path: "migrations/0047_booking_capacity_update_guards.sql", sql: bookingCapacityUpdateGuards },
+  { path: "migrations/0048_reviews_moderation_reputation.sql", sql: reviewsModerationReputation },
 ];
