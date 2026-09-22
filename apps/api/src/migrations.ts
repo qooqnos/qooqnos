@@ -35,6 +35,12 @@ import billingUsageCounters from "../../../migrations/0034_billing_usage_counter
 import communicationCore from "../../../migrations/0035_communication_core.sql";
 import automationCore from "../../../migrations/0036_automation_core.sql";
 import aiRuntimeCore from "../../../migrations/0037_ai_runtime_core.sql";
+import integrationCore from "../../../migrations/0038_integration_core.sql";
+import privacyConsentRequests from "../../../migrations/0039_privacy_consent_requests.sql";
+import demandMatchingCore from "../../../migrations/0040_demand_matching_core.sql";
+import demandMatchingIntegrity from "../../../migrations/0041_demand_matching_integrity.sql";
+import reviewsCore from "../../../migrations/0042_reviews_core.sql";
+import integrityUpdateGuards from "../../../migrations/0043_integrity_update_guards.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -75,4 +81,10 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0035_communication_core.sql", sql: communicationCore },
   { path: "migrations/0036_automation_core.sql", sql: automationCore },
   { path: "migrations/0037_ai_runtime_core.sql", sql: aiRuntimeCore },
+  { path: "migrations/0038_integration_core.sql", sql: integrationCore },
+  { path: "migrations/0039_privacy_consent_requests.sql", sql: privacyConsentRequests },
+  { path: "migrations/0040_demand_matching_core.sql", sql: demandMatchingCore },
+  { path: "migrations/0041_demand_matching_integrity.sql", sql: demandMatchingIntegrity },
+  { path: "migrations/0042_reviews_core.sql", sql: reviewsCore },
+  { path: "migrations/0043_integrity_update_guards.sql", sql: integrityUpdateGuards },
 ];
