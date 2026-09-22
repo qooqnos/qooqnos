@@ -239,6 +239,14 @@ export class TrustReviewRepository extends Repository {
     const version = (versionRow?.version ?? 0) + 1;
     const summaryId = input.targetType + ":" + input.targetId;
     const versionId = summaryId + ":" + String(version);
+    const existingSummary = await this.database.first<{ id: EntityId }>(
+      "SELECT id FROM reputation_summaries WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND target_type = ? AND target_id = ? LIMIT 1",
+      organizationId,
+      target.workspaceId,
+      input.targetType,
+      input.targetId,
+    );
+
     await this.database.transaction([
       {
         sql: "UPDATE reputation_versions SET status = 'retired' WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND target_type = ? AND target_id = ? AND status = 'active'",
@@ -248,15 +256,21 @@ export class TrustReviewRepository extends Repository {
         sql: "INSERT INTO reputation_versions (id, organization_id, workspace_id, target_type, target_id, version, policy_version, status, generated_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)",
         params: [versionId, organizationId, target.workspaceId, input.targetType, input.targetId, version, input.policyVersion, input.now, input.now],
       },
-      {
-        sql: "INSERT INTO reputation_summaries (id, organization_id, workspace_id, target_type, target_id, published_review_count, rating_sum, rating_distribution_json, report_count, projection_version, source_review_cursor, calculated_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(organization_id, COALESCE(workspace_id, ''), target_type, target_id) DO UPDATE SET published_review_count = excluded.published_review_count, rating_sum = excluded.rating_sum, rating_distribution_json = excluded.rating_distribution_json, report_count = excluded.report_count, projection_version = excluded.projection_version, source_review_cursor = excluded.source_review_cursor, calculated_at = excluded.calculated_at, updated_at = excluded.updated_at",
-        params: [summaryId, organizationId, target.workspaceId, input.targetType, input.targetId, rows.length, ratingSum, JSON.stringify(distribution), reportCount, version, input.now, input.now, input.now, input.now],
-      },
+      ...(existingSummary
+        ? [{
+            sql: "UPDATE reputation_summaries SET published_review_count = ?, rating_sum = ?, rating_distribution_json = ?, report_count = ?, projection_version = ?, source_review_cursor = ?, calculated_at = ?, updated_at = ? WHERE id = ?",
+            params: [rows.length, ratingSum, JSON.stringify(distribution), reportCount, version, input.now, input.now, input.now, existingSummary.id],
+          }]
+        : [{
+            sql: "INSERT INTO reputation_summaries (id, organization_id, workspace_id, target_type, target_id, published_review_count, rating_sum, rating_distribution_json, report_count, projection_version, source_review_cursor, calculated_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            params: [summaryId, organizationId, target.workspaceId, input.targetType, input.targetId, rows.length, ratingSum, JSON.stringify(distribution), reportCount, version, input.now, input.now, input.now],
+          }]),
       {
         sql: "INSERT INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at) VALUES (?, 'reputation.updated', 1, ?, ?, ?, ?, ?, 'pending', 0, ?, ?)",
         params: [versionId + ":updated", "ReputationSummary", input.targetId, organizationId, target.workspaceId, JSON.stringify({ targetType: input.targetType, targetId: input.targetId, version }), input.now, input.now],
       },
     ]);
+
     return this.database.first(
       "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, target_type AS targetType, target_id AS targetId, published_review_count AS publishedReviewCount, rating_sum AS ratingSum, rating_distribution_json AS ratingDistributionJson, report_count AS reportCount, projection_version AS projectionVersion, source_review_cursor AS sourceReviewCursor, calculated_at AS calculatedAt, created_at AS createdAt, updated_at AS updatedAt FROM reputation_summaries WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND target_type = ? AND target_id = ? LIMIT 1",
       organizationId, target.workspaceId, input.targetType, input.targetId,
