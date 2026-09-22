@@ -81,26 +81,25 @@ export class MatchingService {
       limit: Math.min(Math.max(input.limit ?? 20, 1), 50),
     });
 
-    const discoveryCandidates: readonly DiscoveryCandidate[] = documents
-      .map((document, index) => {
-        if (document.sourceType !== "business") return null;
-        const retrievalScore = 1 / (index + 1);
-        return {
-          id: document.sourceId,
-          resourceType: "business",
-          payload: document,
-          eligibility: {
-            eligible: document.eligibility === "eligible",
-            reasons: document.eligibility === "eligible" ? [] : ["discovery_projection_ineligible"],
-            policyVersion: "discovery.lexical-v1",
-          },
-          signals: {
-            retrievalScore,
-            freshness: document.updatedAt === document.createdAt ? 0.1 : 0,
-          },
-        };
-      })
-      .filter((candidate): candidate is DiscoveryCandidate => candidate !== null);
+    const discoveryCandidates: DiscoveryCandidate[] = [];
+    for (const [index, document] of documents.entries()) {
+      if (document.sourceType !== "business") continue;
+      const retrievalScore = 1 / (index + 1);
+      discoveryCandidates.push({
+        id: document.sourceId,
+        resourceType: "business",
+        payload: document,
+        eligibility: {
+          eligible: document.eligibility === "eligible",
+          reasons: document.eligibility === "eligible" ? [] : ["discovery_projection_ineligible"],
+          policyVersion: "discovery.lexical-v1",
+        },
+        signals: {
+          retrievalScore,
+          freshness: document.updatedAt === document.createdAt ? 0.1 : 0,
+        },
+      });
+    }
 
     const ranked = rankEligibleCandidates(discoveryCandidates, request.algorithmVersion);
     await this.options.repository.setMatchStatus(context, request.id, "ranking", this.options.now());
@@ -112,7 +111,9 @@ export class MatchingService {
         matchRequestId: request.id,
         businessId: candidate.id,
         retrievalSource: "discovery.lexical",
-        retrievalScore: candidate.signals.retrievalScore,
+        ...(candidate.signals.retrievalScore !== undefined
+          ? { retrievalScore: candidate.signals.retrievalScore }
+          : {}),
         rankingScore: candidate.score,
         rankPosition: index + 1,
         eligibilityStatus: "eligible",
