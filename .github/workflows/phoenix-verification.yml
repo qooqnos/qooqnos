@@ -19,19 +19,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-
-      - name: Enable Corepack
-        run: corepack enable
+          cache: npm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
       - name: Verify migration catalog and lock
-        run: pnpm verify:migrations
+        run: npm run verify:migrations
 
       - name: Build workspace
-        run: pnpm -r --if-present build
+        run: npm run build
 
       - name: Run tests
-        run: pnpm -r --if-present test
+        run: npm test
