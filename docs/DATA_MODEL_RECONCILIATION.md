@@ -293,9 +293,9 @@ Rules:
 
 ### AI
 
-- Agent
-- AIConversation
-- AIRun
+- Agent (conceptual/gated)
+- AIConversation (conceptual/gated)
+- AI Operation via canonical Runtime (`ai_operations`)
 
 ### Automation
 
@@ -352,7 +352,7 @@ Aggregate status does not imply every related table must be physically nested or
 - VerificationCase 1:N VerificationDocument.
 - VerificationCase 1:N VerificationCheck.
 - VerificationCase 1:N VerificationDecision.
-- Review has exactly one canonical target according to the approved typed-target matrix.
+- Review has exactly one canonical target: Business, Offering, or Product.
 
 ### AI/plugin
 
@@ -557,7 +557,7 @@ These are intentionally kept as explicit gates rather than silently guessing:
 2. Final Role scope matrix for platform/organization/workspace/business.
 3. Final Resource taxonomy and whether staff/provider identity needs a dedicated resource/person abstraction.
 4. Exact BookingItem physical shape and snapshot fields.
-5. Final typed Review target matrix.
+5. Review target matrix is resolved by Architecture Gate 05.
 6. Package/Bundle composition under Offering.
 7. Tax/discount ownership and immutable financial snapshots.
 8. Payment provider adapter/reference model.
