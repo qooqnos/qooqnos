@@ -189,12 +189,15 @@ The following remain controlled architecture decisions and must be finalized bef
 
 - final scope model for Roles;
 - final `Resource` taxonomy (staff, room, equipment, vehicle, etc.);
-- whether `BookingItem` is required from the first physical booking migration;
+- final semantic fields and lifecycle policy for `BookingItem` beyond the canonical physical snapshot shape;
 - package/bundle composition under Offering;
 - tax/discount rules and their historical snapshots;
 - search/vector storage technology;
 - durable AI memory storage and retention;
 - integration/webhook/sync retention and retry model.
+
+
+The canonical Booking physical model already includes `booking_items` in migration `0028_booking_core.sql`; this is not an open schema-existence decision. Remaining BookingItem work is limited to semantic field/lifecycle refinement without creating a parallel item model.
 
 These are intentionally unresolved; they are not permission to create parallel models.
 
