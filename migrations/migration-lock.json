@@ -31,6 +31,7 @@
     {"id":"0028_booking_core","version":28,"moduleId":"booking","checksum":"eac7d712995052dd58a99b675fddc7302bb4451c841f9810c83454a1120e79e3","filename":"0028_booking_core.sql"},
     {"id":"0029_availability_schedules","version":29,"moduleId":"booking","checksum":"e92cb816e25a5b4a8ece94f71f06e248a4e1801f85d465ea919053731d9ec8d5","filename":"0029_availability_schedules.sql"},
     {"id":"0030_booking_holds_history","version":30,"moduleId":"booking","checksum":"942a1995e18d16d02c17616f0d30cd9e1a4d727279666faabca5f6fe59421ee4","filename":"0030_booking_holds_history.sql"},
-    {"id":"0031_commerce_transaction_core","version":31,"moduleId":"commerce","checksum":"52527e84458d4414dab10961d842e665641450cf5c14c5fcdb120f7401881753","filename":"0031_commerce_transaction_core.sql"}
+    {"id":"0031_commerce_transaction_core","version":31,"moduleId":"commerce","checksum":"52527e84458d4414dab10961d842e665641450cf5c14c5fcdb120f7401881753","filename":"0031_commerce_transaction_core.sql"},
+    {"id":"0032_commerce_integrity_hardening","version":32,"moduleId":"commerce","checksum":"219cacbce936f13632a7b444b202f24326c36b812db49cdf9b10f0c4a67d6553","filename":"0032_commerce_integrity_hardening.sql"}
   ]
 }
