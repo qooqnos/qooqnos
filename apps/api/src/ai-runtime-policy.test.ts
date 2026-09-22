@@ -59,6 +59,7 @@ describe("Seller AI runtime policy", () => {
 
     expect(billing.evaluate).toHaveBeenCalledWith({
       context,
+      businessId: brandId<"EntityId">("business-1"),
       operationId: "operation-1",
       operationType: "seller.product.extract",
       operationVersion: 2,
