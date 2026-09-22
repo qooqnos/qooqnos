@@ -3,9 +3,10 @@ import { rankEligibleCandidates, type DiscoveryCandidate } from "@qooqnos/core";
 import { DiscoveryRepository } from "@qooqnos/discovery";
 import type { AuthorizationService } from "@qooqnos/runtime";
 import { MatchingRepository } from "./repository";
+import { CustomerRelationshipRepository } from "@qooqnos/database";
 
 export interface MatchingServiceOptions {
-  readonly repository:MatchingRepository; readonly discovery:DiscoveryRepository; readonly authorization:AuthorizationService; readonly id:()=>EntityId; readonly now:()=>string;
+  readonly repository:MatchingRepository; readonly discovery:DiscoveryRepository; readonly relationships:CustomerRelationshipRepository; readonly authorization:AuthorizationService; readonly id:()=>EntityId; readonly now:()=>string;
 }
 
 export class MatchingService {
@@ -129,6 +130,43 @@ export class MatchingService {
 
     const finalRequest = await this.options.repository.setMatchStatus(context, request.id, "decided", this.options.now());
     return { request: finalRequest, candidates: created };
+  }
+
+  async connect(context:RequestContext,input:{
+    readonly matchRequestId:EntityId;
+    readonly candidateId:EntityId;
+    readonly relationshipType?:string;
+  }){
+    await this.options.authorization.assert({
+      context,
+      permission:"matching.request.connect",
+      requireAuthentication:true,
+      requireWorkspace:true,
+    });
+    const request=await this.options.repository.getMatchRequest(context,input.matchRequestId);
+    const demand=await this.options.repository.getDemandRequest(context,request.demandRequestId);
+    if(!demand.customerId) throw new Error("Matching connection requires a customer");
+    const candidate=await this.options.repository.getCandidate(context,input.candidateId);
+    if(candidate.matchRequestId!==request.id) throw new Error("Candidate does not belong to match request");
+    if(candidate.eligibilityStatus!=="eligible") throw new Error("Only eligible candidates can be connected");
+    let businessId=candidate.businessId;
+    if(!businessId && candidate.offeringId){
+      businessId=await this.options.repository.resolveOfferingBusiness(context,candidate.offeringId);
+    }
+    if(!businessId) throw new Error("Match candidate does not resolve to a business");
+    const now=this.options.now();
+    const relationship=await this.options.relationships.create(context,{
+      id:this.options.id(),
+      customerId:demand.customerId,
+      businessId,
+      relationshipType:input.relationshipType?.trim() || "match",
+      source:"matching",
+      firstInteractionAt:now,
+      lastInteractionAt:now,
+      now,
+    });
+    const updatedRequest=await this.options.repository.setMatchStatus(context,request.id,"connected",now);
+    return {request:updatedRequest,relationship};
   }
 
   async decide(context:RequestContext,input:{
