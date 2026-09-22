@@ -101,6 +101,7 @@ export interface CreateBookingInput {
   readonly currency: string;
   readonly totalAmountMinor?: number | undefined;
   readonly policySnapshot?: string | undefined;
+  readonly idempotencyKey: string;
   readonly now: string;
 }
 
@@ -142,7 +143,7 @@ export class BookingRepository extends Repository {
     }
 
     await this.database.run(
-      "INSERT INTO bookings (id, organization_id, workspace_id, business_id, customer_id, status, currency, total_amount_minor, policy_snapshot, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'requested', ?, ?, ?, ?, ?)",
+      "INSERT INTO bookings (id, organization_id, workspace_id, business_id, customer_id, status, currency, total_amount_minor, policy_snapshot, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'requested', ?, ?, ?, ?, ?, ?)",
       input.id,
       organizationId,
       workspaceId,
@@ -151,6 +152,7 @@ export class BookingRepository extends Repository {
       input.currency.trim().toUpperCase(),
       input.totalAmountMinor ?? null,
       input.policySnapshot ?? null,
+      input.idempotencyKey.trim(),
       input.now,
       input.now,
     );
@@ -167,6 +169,136 @@ export class BookingRepository extends Repository {
       this.requireOrganization({ organizationId: context.tenantId }),
       this.requireWorkspace({ workspaceId: context.workspaceId }),
     );
+  }
+
+  async getByIdempotency(
+    context: RequestContext,
+    idempotencyKey: string,
+  ): Promise<BookingRecord | null> {
+    if (!idempotencyKey.trim()) return null;
+    return this.database.first<BookingRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, customer_id AS customerId, status, currency, total_amount_minor AS totalAmountMinor, policy_snapshot AS policySnapshot, created_at AS createdAt, updated_at AS updatedAt FROM bookings WHERE organization_id = ? AND workspace_id = ? AND idempotency_key = ? LIMIT 1",
+      this.requireOrganization({ organizationId: context.tenantId }),
+      this.requireWorkspace({ workspaceId: context.workspaceId }),
+      idempotencyKey.trim(),
+    );
+  }
+
+  async finalize(
+    context: RequestContext,
+    input: {
+      readonly bookingId: EntityId;
+      readonly idempotencyKey: string;
+      readonly businessId: EntityId;
+      readonly customerId: EntityId;
+      readonly offeringId: EntityId;
+      readonly currency: string;
+      readonly quantity: number;
+      readonly titleSnapshot: string;
+      readonly priceMinorSnapshot: number;
+      readonly durationSecondsSnapshot?: number | undefined;
+      readonly policySnapshot?: string | undefined;
+      readonly holdId: EntityId;
+      readonly startsAt: string;
+      readonly endsAt: string;
+      readonly timezone?: string | undefined;
+      readonly locationId?: EntityId | undefined;
+      readonly resourceId?: EntityId | undefined;
+      readonly now: string;
+    },
+  ): Promise<BookingRecord> {
+    const existing = await this.getByIdempotency(context, input.idempotencyKey);
+    if (existing) return existing;
+
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    if (input.endsAt <= input.startsAt) throw new DatabaseError("Appointment end must be after start");
+    if (input.quantity < 1) throw new DatabaseError("Booking item quantity must be positive");
+    if (input.priceMinorSnapshot < 0) throw new DatabaseError("Booking item price cannot be negative");
+    if (!input.titleSnapshot.trim()) throw new DatabaseError("Booking item title snapshot is required");
+
+    const statements: Array<{ sql: string; params?: readonly unknown[] }> = [
+      {
+        sql: "UPDATE booking_holds SET status = 'consumed', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND business_id = ? AND status = 'active' AND expires_at > ? AND (resource_id IS NULL OR resource_id = ?)",
+        params: [
+          input.now,
+          input.holdId,
+          organizationId,
+          workspaceId,
+          input.businessId,
+          input.now,
+          input.resourceId ?? null,
+        ],
+      },
+      {
+        sql: "INSERT INTO bookings (id, organization_id, workspace_id, business_id, customer_id, status, currency, total_amount_minor, policy_snapshot, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?, ?, ?)",
+        params: [
+          input.bookingId,
+          organizationId,
+          workspaceId,
+          input.businessId,
+          input.customerId,
+          input.currency.trim().toUpperCase(),
+          input.priceMinorSnapshot * input.quantity,
+          input.policySnapshot ?? null,
+          input.idempotencyKey.trim(),
+          input.now,
+          input.now,
+        ],
+      },
+      {
+        sql: "INSERT INTO booking_items (id, booking_id, offering_id, quantity, title_snapshot, price_minor_snapshot, currency_snapshot, duration_seconds_snapshot, policy_snapshot, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params: [
+          input.bookingId + ":item",
+          input.bookingId,
+          input.offeringId,
+          input.quantity,
+          input.titleSnapshot.trim(),
+          input.priceMinorSnapshot,
+          input.currency.trim().toUpperCase(),
+          input.durationSecondsSnapshot ?? null,
+          input.policySnapshot ?? null,
+          input.now,
+          input.now,
+        ],
+      },
+      {
+        sql: "INSERT INTO appointments (id, booking_id, status, starts_at, ends_at, timezone, location_id, created_at, updated_at) VALUES (?, ?, 'confirmed', ?, ?, ?, ?, ?, ?)",
+        params: [
+          input.bookingId + ":appointment",
+          input.bookingId,
+          input.startsAt,
+          input.endsAt,
+          input.timezone ?? null,
+          input.locationId ?? null,
+          input.now,
+          input.now,
+        ],
+      },
+    ];
+
+    if (input.resourceId) {
+      statements.push({
+        sql: "INSERT INTO appointment_resources (appointment_id, resource_id, created_at) VALUES (?, ?, ?)",
+        params: [input.bookingId + ":appointment", input.resourceId, input.now],
+      });
+    }
+
+    try {
+      const results = await this.database.transaction(statements);
+      const holdUpdate = results[0];
+      if (!holdUpdate || (holdUpdate.meta?.changes ?? 0) !== 1) {
+        throw new DatabaseError("Booking hold is unavailable or expired");
+      }
+    } catch (error) {
+      const replay = await this.getByIdempotency(context, input.idempotencyKey);
+      if (replay) return replay;
+      throw error;
+    }
+
+    const booking = await this.get(context, input.bookingId);
+    if (!booking) throw new DatabaseError("Booking not found after finalization");
+    return booking;
   }
 
   async addItem(context: RequestContext, input: AddBookingItemInput): Promise<BookingItemRecord> {
