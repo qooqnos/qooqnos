@@ -82,6 +82,7 @@ apps/api/src/migrations.ts currently references 0001 through 0013:
 0011_ai_seller_creation.sql
 0012_ai_seller_catalog_link.sql
 0013_ai_seller_idempotency_fingerprint.sql
+0014_catalog_offering_integrity.sql
 ```
 
 ## Tenant isolation
