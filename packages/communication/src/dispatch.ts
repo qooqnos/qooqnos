@@ -1,4 +1,4 @@
-import { brandId, type EntityId, type RequestId, type CorrelationId, type RequestContext } from "@qooqnos/core";
+import { brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import { CommunicationRepository, type NotificationRecord } from "./repository";
 import type { CommunicationProviderRegistry, CommunicationDeliveryResult } from "./adapter";
 
@@ -108,8 +108,8 @@ export async function dispatchQueuedNotifications(
 
 function systemContext(notification: NotificationRecord): RequestContext {
   return {
-    requestId: brandId<RequestId>("communication:" + notification.id),
-    correlationId: brandId<CorrelationId>("communication:" + notification.id),
+    requestId: brandId<"RequestId">("communication:" + notification.id),
+    correlationId: brandId<"CorrelationId">("communication:" + notification.id),
     actorId: brandId<EntityId>("system:" + notification.organizationId),
     tenantId: notification.organizationId,
     ...(notification.workspaceId ? { workspaceId: notification.workspaceId } : {}),
