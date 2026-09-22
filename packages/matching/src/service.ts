@@ -149,24 +149,40 @@ export class MatchingService {
     const candidate=await this.options.repository.getCandidate(context,input.candidateId);
     if(candidate.matchRequestId!==request.id) throw new Error("Candidate does not belong to match request");
     if(candidate.eligibilityStatus!=="eligible") throw new Error("Only eligible candidates can be connected");
+    if(!(await this.options.repository.hasSelectedDecision(context,request.id,candidate.id))){
+      throw new Error("Only selected match candidates can be connected");
+    }
     let businessId=candidate.businessId;
     if(!businessId && candidate.offeringId){
       businessId=await this.options.repository.resolveOfferingBusiness(context,candidate.offeringId);
     }
     if(!businessId) throw new Error("Match candidate does not resolve to a business");
     const now=this.options.now();
+    const relationshipType=input.relationshipType?.trim() || "match";
+    const existingRelationship=await this.options.relationships.getByCustomerBusinessType(
+      context,
+      demand.customerId,
+      businessId,
+      relationshipType,
+    );
+    if(existingRelationship){
+      const updatedRequest=request.status==="connected"
+        ? request
+        : await this.options.repository.setMatchStatus(context,request.id,"connected",now);
+      return {request:updatedRequest,relationship:existingRelationship,replayed:true};
+    }
     const relationship=await this.options.relationships.create(context,{
       id:this.options.id(),
       customerId:demand.customerId,
       businessId,
-      relationshipType:input.relationshipType?.trim() || "match",
+      relationshipType,
       source:"matching",
       firstInteractionAt:now,
       lastInteractionAt:now,
       now,
     });
     const updatedRequest=await this.options.repository.setMatchStatus(context,request.id,"connected",now);
-    return {request:updatedRequest,relationship};
+    return {request:updatedRequest,relationship,replayed:false};
   }
 
   async decide(context:RequestContext,input:{
