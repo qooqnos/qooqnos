@@ -393,6 +393,10 @@ Appointment events are immutable history/evidence and do not replace Appointment
 
 No authoritative `slots` table in the canonical first implementation. A materialized slot table is permitted only as a rebuildable optimization with schedule/version references, expiration/invalidation semantics, and no authority over booking truth.
 
+### Booking finalization guard
+
+Booking finalization uses the existing `bookings`, `booking_items`, `appointments`, `appointment_resources`, `booking_holds` and `resources` tables. Migration 0046 adds scoped Booking idempotency and capacity-finalization guards; migration 0047 re-checks capacity on appointment/resource mutations. No additional authoritative reservation table is permitted.
+
 ## 9. Commerce / Financial history
 
 Commerce physical persistence is module-prefixed to make ownership explicit and prevent collisions with Billing-owned financial tables.
@@ -910,7 +914,7 @@ The following remain controlled architecture gates before their concrete SQL mig
 7. Integration/Webhook/Sync retention and retry details.
 8. Communication consent/policy/template registry and provider adapter contracts.
 9. Business conceptual lifecycle vocabulary reconciliation.
-10. Booking availability calculation, hold consumption and atomic finalization contract.
+10. Booking availability calculation and slot-generation contract.
 11. Review physical target implementation beyond the canonical typed-target matrix.
 12. Matching retrieval/ranking/learning execution contracts where they require additional derived projections.
 
