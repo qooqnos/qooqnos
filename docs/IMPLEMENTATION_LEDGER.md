@@ -412,6 +412,8 @@ Trust note: migrations 0021–0025 implement the canonical VerificationCase → 
 
 Trust expiry worker: scheduled Trust expiry processing is now idempotent; expired work creates an append-only system Policy Decision, marks the expiry/case state and emits `trust.verification.expired` through Outbox in one D1 batch.
 
+Trust API routes: canonical VerificationCase creation, human-review assignment/completion, Review creation and Review moderation are now exposed through the main API router with centralized authorization.
+
 Migration runtime hardening: splitSqlStatements now keeps SQLite CREATE TRIGGER bodies intact across internal semicolons and rejects unterminated trigger/comment/literal blocks. Trigger-splitting regression tests were added.
 
 ## 4. Current canonical migration inventory
