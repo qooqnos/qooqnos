@@ -121,8 +121,10 @@ Publication eligibility is a policy decision, not a synonym for `status = active
 - `attribute_definitions`: reusable platform attribute vocabulary with typed semantics.
 - `attribute_options`: controlled values for `enum` and `multi_enum` attributes.
 - `category_attributes`: category applicability, requirement, filtering, search and variant-dimension metadata.
+- `attribute_values`: typed AttributeValue records for supported catalog targets with provenance.
+- `attribute_value_options`: multi-enum option membership for an AttributeValue.
 
-The current physical implementation establishes these three vocabulary/applicability tables in migration 0016. Product/Service attribute values remain on their existing owner records until a separate value-ownership and backfill contract is finalized.
+The current physical implementation establishes the Attribute vocabulary in migration 0016 and typed AttributeValue storage in migration 0017. The 0017 storage is an expand-only layer: `product_variants.attributes_json` remains the active authoritative value path until an explicit backfill/conflict-resolution/cutover contract is implemented.
 
 ### Services
 
