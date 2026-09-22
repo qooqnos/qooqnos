@@ -32,6 +32,7 @@ import commerceTransactionCore from "../../../migrations/0031_commerce_transacti
 import commerceIntegrityHardening from "../../../migrations/0032_commerce_integrity_hardening.sql";
 import billingCore from "../../../migrations/0033_billing_core.sql";
 import billingUsageCounters from "../../../migrations/0034_billing_usage_counters.sql";
+import communicationCore from "../../../migrations/0035_communication_core.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -69,4 +70,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0032_commerce_integrity_hardening.sql", sql: commerceIntegrityHardening },
   { path: "migrations/0033_billing_core.sql", sql: billingCore },
   { path: "migrations/0034_billing_usage_counters.sql", sql: billingUsageCounters },
+  { path: "migrations/0035_communication_core.sql", sql: communicationCore },
 ];
