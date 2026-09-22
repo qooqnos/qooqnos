@@ -52,6 +52,34 @@ export interface CreateAiOperationInput {
 export class AiRuntimeRepository extends Repository {
   constructor(database: D1Database) { super(database); }
 
+  async ensureOperationType(
+    context: RequestContext,
+    input: { readonly operationType: string; readonly version: number; readonly description?: string; readonly now: string },
+    id: EntityId,
+  ): Promise<EntityId> {
+    const existing = await this.database.first<{ id: EntityId }>(
+      "SELECT id FROM ai_operation_types WHERE operation_type = ? LIMIT 1",
+      input.operationType,
+    );
+    if (existing) return existing.id;
+
+    await this.database.run(
+      "INSERT OR IGNORE INTO ai_operation_types (id, operation_type, description, active_version, status, created_at, updated_at) VALUES (?, ?, ?, ?, 'active', ?, ?)",
+      id,
+      input.operationType,
+      input.description ?? null,
+      input.version,
+      input.now,
+      input.now,
+    );
+    const created = await this.database.first<{ id: EntityId }>(
+      "SELECT id FROM ai_operation_types WHERE operation_type = ? LIMIT 1",
+      input.operationType,
+    );
+    if (!created) throw new DatabaseError("AI operation type not found after registration");
+    return created.id;
+  }
+
   async createOperation(context: RequestContext, input: CreateAiOperationInput): Promise<AiOperationRecord> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const existing = await this.database.first<AiOperationRecord>(
@@ -122,7 +150,7 @@ export class AiRuntimeRepository extends Repository {
   }) {
     await this.getOperation(context, input.operationId);
     await this.database.run(
-      "INSERT INTO ai_runtime_results (id, operation_id, status, validated_output_reference, schema_version_reference, provider_id, model_id, safety_outcome, provenance_json, warnings_json, abstention_json, attempt_summary_json, error_classification, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT OR IGNORE INTO ai_runtime_results (id, operation_id, status, validated_output_reference, schema_version_reference, provider_id, model_id, safety_outcome, provenance_json, warnings_json, abstention_json, attempt_summary_json, error_classification, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       input.id, input.operationId, input.status, input.validatedOutputReference ?? null, input.schemaVersionReference ?? null,
       input.providerId ?? null, input.modelId ?? null, input.safetyOutcome ?? null,
       input.provenance ? JSON.stringify(input.provenance) : null, input.warnings ? JSON.stringify(input.warnings) : null,
