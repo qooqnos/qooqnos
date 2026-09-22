@@ -10,6 +10,7 @@ export * from "./request-authorization-repository";
 export * from "./platform-repository";
 export * from "./seller-ai-repository";
 export * from "./customer-repository";
+export * from "./customer-address-repository";
 export * from "./customer-relationship-repository";
 export * from "./crm-timeline-repository";
 export * from "./verification-repository";
