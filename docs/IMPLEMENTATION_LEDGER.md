@@ -103,6 +103,7 @@ Commits:
 
 Migration safety:
 - canonical migrations 0001–0013 were not edited, renumbered or replaced;
+- migration 0014_catalog_offering_integrity was added as a new catalog-owned integrity migration;
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
@@ -127,6 +128,7 @@ The API runtime references these migration sources:
 0011_ai_seller_creation.sql
 0012_ai_seller_catalog_link.sql
 0013_ai_seller_idempotency_fingerprint.sql
+0014_catalog_offering_integrity.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
