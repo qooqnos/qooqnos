@@ -23,6 +23,7 @@
   "exclude": [
     "src/**/*.test.ts",
     "src/atomicity-tests.ts",
-    "src/security-tests.ts"
+    "src/security-tests.ts",
+    "src/tests.ts"
   ]
 }
