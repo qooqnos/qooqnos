@@ -102,6 +102,7 @@ export const BOOKING_PERMISSIONS = [
   "booking.read",
   "booking.manage",
   "booking.cancel",
+  "booking.reschedule",
   "booking.confirm",
   "booking.complete",
 ] as const;
