@@ -1,42 +1,306 @@
 {
-  "generatedAt": "2026-09-16T04:46:00.000Z",
+  "generatedAt": "2026-09-22T10:36:00.000Z",
   "migrations": [
-    {"id":"0001_foundation","version":1,"moduleId":"foundation","checksum":"4989242437c0be2f6d6e4e9d94b4c647a614e67103eac11ee51010a25a9d8341","filename":"0001_foundation.sql"},
-    {"id":"0002_onboarding","version":2,"moduleId":"onboarding","checksum":"a557c00c814a15af6bbb3945c628cedcbca72c6b9024220c4f6136b743397a65","filename":"0002_onboarding.sql"},
-    {"id":"0003_identity_sessions","version":3,"moduleId":"identity","checksum":"becc5672f722bfd617887ace7b2220d27902c1c32d0e537b82b7e108e88f8441","filename":"0003_identity_sessions.sql"},
-    {"id":"0004_business","version":4,"moduleId":"business","checksum":"281fccca4f607bf3f6b312c4b249f56349b065aba9954cd3dd46f2a7cdddf60b","filename":"0004_business.sql"},
-    {"id":"0005_catalog","version":5,"moduleId":"catalog","checksum":"8d80b24aee067764ac76fd4dcfb5582d0ea0eb0e944eb2422e4eff85e2bd833e","filename":"0005_catalog.sql"},
-    {"id":"0006_catalog_product_guards","version":6,"moduleId":"catalog","checksum":"0e5ccc00fa3ba5275654f9c178b39316e7e96a5e9a5968281c830807bad8f209","filename":"0006_catalog_product_guards.sql"},
-    {"id":"0007_catalog_integrity_guards","version":7,"moduleId":"catalog","checksum":"90a04b77abf209992820278f3570fee7dab6b49218c8dd8271f2979f8cabb4cb","filename":"0007_catalog_integrity_guards.sql"},
-    {"id":"0008_permission_catalog","version":8,"moduleId":"permission","checksum":"b5e161e255dd1de76c7b6b19f66bae676aff7c5e094760be1a4e1a4f35c5de96","filename":"0008_permission_catalog.sql"},
-    {"id":"0009_media","version":9,"moduleId":"media","checksum":"ee3ad90407346f74cf077110633aea383769405bfea6be09fd11f3cbbfc6ad38","filename":"0009_media.sql"},
-    {"id":"0010_discovery","version":10,"moduleId":"discovery","checksum":"e574e1bfca32a82f30d34420dcdb5113f2ddd214dc1dfdf8be3f20b42a9bed08","filename":"0010_discovery.sql"},
-    {"id":"0011_ai_seller_creation","version":11,"moduleId":"ai","checksum":"de3bebc30288aa64f5590bfa19d21be210a8664e9de4af25a9ccfb4c2c9417b6","filename":"0011_ai_seller_creation.sql"},
-    {"id":"0012_ai_seller_catalog_link","version":12,"moduleId":"ai","checksum":"4adad90af1a0fbee18d8a948fe881cf12c7f787dc1452f0feed3d11eb172e247","filename":"0012_ai_seller_catalog_link.sql"},
-    {"id":"0013_ai_seller_idempotency_fingerprint","version":13,"moduleId":"ai","checksum":"de6b77f3221bb8838f6c5b26746298938ce2015803e928faf1877764c5048ce7","filename":"0013_ai_seller_idempotency_fingerprint.sql"},
-    {"id":"0014_catalog_offering_integrity","version":14,"moduleId":"catalog","checksum":"cb51be78df07baa8bb726f08a8c6cb27082738a8e784a903a2ac6424f1183258","filename":"0014_catalog_offering_integrity.sql"},
-    {"id":"0015_business_primary_category_integrity","version":15,"moduleId":"business","checksum":"2e6405416a016b3cb507bdae70cf18a3fcedb46776d28969610db2434f7b364a","filename":"0015_business_primary_category_integrity.sql"},
-    {"id":"0016_catalog_attribute_vocabulary","version":16,"moduleId":"catalog","checksum":"3ee03bb4dcc4f34630740ecccb10151fd7eade7497a5f0077c939cd62eda070b","filename":"0016_catalog_attribute_vocabulary.sql"},
-    {"id":"0017_catalog_attribute_values","version":17,"moduleId":"catalog","checksum":"ddb8a4cc6c4dcab7504d969190f8895d787c0e94e680afae0021df6cc3956938","filename":"0017_catalog_attribute_values.sql"},
-    {"id":"0018_customer_core","version":18,"moduleId":"customer","checksum":"a946f43a7e635114871da41bb6a15c6344af8554bd28315fe99304ce9cead7d8","filename":"0018_customer_core.sql"},
-    {"id":"0019_crm_customer_relationships","version":19,"moduleId":"crm","checksum":"20a6c3212b6e19beeaa960f3c569008638399574807a30c1708bbb0e2bf1a976","filename":"0019_crm_customer_relationships.sql"},
-    {"id":"0020_crm_timeline_events","version":20,"moduleId":"crm","checksum":"eeda7d6cb21b5064d5cf6722256be51b13ac3236572cd8a73d2dae0d0c235325","filename":"0020_crm_timeline_events.sql"},
-    {"id":"0021_verification_case_and_documents","version":21,"moduleId":"trust","checksum":"3dcd9cef136b61476cb5000c0b5f6f83f89110de221d62bc2f41f2a487ab680b","filename":"0021_verification_case_and_documents.sql"},
-    {"id":"0022_verification_policy_requirements","version":22,"moduleId":"trust","checksum":"c12aa0bb7798e81e6256890ff7268d0b58a69874d1420d29e25e0800119f13fc","filename":"0022_verification_policy_requirements.sql"},
-    {"id":"0023_verification_checks","version":23,"moduleId":"trust","checksum":"20826f965b790d7a20098ec3f974518280a1171f64af03d3143375afe71b6a6e","filename":"0023_verification_checks.sql"},
-    {"id":"0024_verification_decisions","version":24,"moduleId":"trust","checksum":"bb43d2316a51f547e453f5f9ee710a03927a091bf6857f5774e7374eb6232e48","filename":"0024_verification_decisions.sql"},
-    {"id":"0025_verification_review_expiry","version":25,"moduleId":"trust","checksum":"9ec06e6ab162fa8953b0c1c1f10fb6c5ce9a6353b40197f4a0cd72bb6dda2a4f","filename":"0025_verification_review_expiry.sql"},
-    {"id":"0026_customer_addresses","version":26,"moduleId":"customer","checksum":"05a010c736c414bd5cf2851e83f0f7454678a34a3d21d21b6db11b7af80b9b43","filename":"0026_customer_addresses.sql"},
-    {"id":"0027_business_status_history","version":27,"moduleId":"business","checksum":"1d3189e9b1060d73fff1934672404d61d5ff7f5f7c5951fa20f42f0b6ff533af","filename":"0027_business_status_history.sql"},
-    {"id":"0028_booking_core","version":28,"moduleId":"booking","checksum":"eac7d712995052dd58a99b675fddc7302bb4451c841f9810c83454a1120e79e3","filename":"0028_booking_core.sql"},
-    {"id":"0029_availability_schedules","version":29,"moduleId":"booking","checksum":"e92cb816e25a5b4a8ece94f71f06e248a4e1801f85d465ea919053731d9ec8d5","filename":"0029_availability_schedules.sql"},
-    {"id":"0030_booking_holds_history","version":30,"moduleId":"booking","checksum":"942a1995e18d16d02c17616f0d30cd9e1a4d727279666faabca5f6fe59421ee4","filename":"0030_booking_holds_history.sql"},
-    {"id":"0031_commerce_transaction_core","version":31,"moduleId":"commerce","checksum":"52527e84458d4414dab10961d842e665641450cf5c14c5fcdb120f7401881753","filename":"0031_commerce_transaction_core.sql"},
-    {"id":"0032_commerce_integrity_hardening","version":32,"moduleId":"commerce","checksum":"219cacbce936f13632a7b444b202f24326c36b812db49cdf9b10f0c4a67d6553","filename":"0032_commerce_integrity_hardening.sql"},
-    {"id":"0033_billing_core","version":33,"moduleId":"billing","checksum":"59a525717df6a49debe9dd326dec4a2724ddf74f4ff0ba967f3f179c9fdef0a2","filename":"0033_billing_core.sql"},
-    {"id":"0034_billing_usage_counters","version":34,"moduleId":"billing","checksum":"12d5687ed94c3a065c07713ce9cc982c797f018d219c24fd46521caf928ba0a0","filename":"0034_billing_usage_counters.sql"},
-    {"id":"0035_communication_core","version":35,"moduleId":"communication","checksum":"f0e16443c764044a8915067778200a30b255da2afdd2362fd0cf1b57d4d7a7e3","filename":"0035_communication_core.sql"},
-    {"id":"0036_automation_core","version":36,"moduleId":"automation","checksum":"c8d471d7cfce3c5a3e0a134209fa8c19d39ee7426f0206c4b70b91bbf4d9e6be","filename":"0036_automation_core.sql"},
-    {"id":"0037_ai_runtime_core","version":37,"moduleId":"ai","checksum":"bb70d4356bfcbe208c5ee69ffc224b35d28f8ba22261b621eadc8ba291078a27","filename":"0037_ai_runtime_core.sql"}
+    {
+      "id": "0001_foundation",
+      "version": 1,
+      "moduleId": "foundation",
+      "checksum": "4989242437c0be2f6d6e4e9d94b4c647a614e67103eac11ee51010a25a9d8341",
+      "filename": "0001_foundation.sql"
+    },
+    {
+      "id": "0002_onboarding",
+      "version": 2,
+      "moduleId": "onboarding",
+      "checksum": "a557c00c814a15af6bbb3945c628cedcbca72c6b9024220c4f6136b743397a65",
+      "filename": "0002_onboarding.sql"
+    },
+    {
+      "id": "0003_identity_sessions",
+      "version": 3,
+      "moduleId": "identity",
+      "checksum": "becc5672f722bfd617887ace7b2220d27902c1c32d0e537b82b7e108e88f8441",
+      "filename": "0003_identity_sessions.sql"
+    },
+    {
+      "id": "0004_business",
+      "version": 4,
+      "moduleId": "business",
+      "checksum": "281fccca4f607bf3f6b312c4b249f56349b065aba9954cd3dd46f2a7cdddf60b",
+      "filename": "0004_business.sql"
+    },
+    {
+      "id": "0005_catalog",
+      "version": 5,
+      "moduleId": "catalog",
+      "checksum": "8d80b24aee067764ac76fd4dcfb5582d0ea0eb0e944eb2422e4eff85e2bd833e",
+      "filename": "0005_catalog.sql"
+    },
+    {
+      "id": "0006_catalog_product_guards",
+      "version": 6,
+      "moduleId": "catalog",
+      "checksum": "0e5ccc00fa3ba5275654f9c178b39316e7e96a5e9a5968281c830807bad8f209",
+      "filename": "0006_catalog_product_guards.sql"
+    },
+    {
+      "id": "0007_catalog_integrity_guards",
+      "version": 7,
+      "moduleId": "catalog",
+      "checksum": "90a04b77abf209992820278f3570fee7dab6b49218c8dd8271f2979f8cabb4cb",
+      "filename": "0007_catalog_integrity_guards.sql"
+    },
+    {
+      "id": "0008_permission_catalog",
+      "version": 8,
+      "moduleId": "permission",
+      "checksum": "b5e161e255dd1de76c7b6b19f66bae676aff7c5e094760be1a4e1a4f35c5de96",
+      "filename": "0008_permission_catalog.sql"
+    },
+    {
+      "id": "0009_media",
+      "version": 9,
+      "moduleId": "media",
+      "checksum": "ee3ad90407346f74cf077110633aea383769405bfea6be09fd11f3cbbfc6ad38",
+      "filename": "0009_media.sql"
+    },
+    {
+      "id": "0010_discovery",
+      "version": 10,
+      "moduleId": "discovery",
+      "checksum": "e574e1bfca32a82f30d34420dcdb5113f2ddd214dc1dfdf8be3f20b42a9bed08",
+      "filename": "0010_discovery.sql"
+    },
+    {
+      "id": "0011_ai_seller_creation",
+      "version": 11,
+      "moduleId": "ai",
+      "checksum": "de3bebc30288aa64f5590bfa19d21be210a8664e9de4af25a9ccfb4c2c9417b6",
+      "filename": "0011_ai_seller_creation.sql"
+    },
+    {
+      "id": "0012_ai_seller_catalog_link",
+      "version": 12,
+      "moduleId": "ai",
+      "checksum": "4adad90af1a0fbee18d8a948fe881cf12c7f787dc1452f0feed3d11eb172e247",
+      "filename": "0012_ai_seller_catalog_link.sql"
+    },
+    {
+      "id": "0013_ai_seller_idempotency_fingerprint",
+      "version": 13,
+      "moduleId": "ai",
+      "checksum": "de6b77f3221bb8838f6c5b26746298938ce2015803e928faf1877764c5048ce7",
+      "filename": "0013_ai_seller_idempotency_fingerprint.sql"
+    },
+    {
+      "id": "0014_catalog_offering_integrity",
+      "version": 14,
+      "moduleId": "catalog",
+      "checksum": "cb51be78df07baa8bb726f08a8c6cb27082738a8e784a903a2ac6424f1183258",
+      "filename": "0014_catalog_offering_integrity.sql"
+    },
+    {
+      "id": "0015_business_primary_category_integrity",
+      "version": 15,
+      "moduleId": "business",
+      "checksum": "2e6405416a016b3cb507bdae70cf18a3fcedb46776d28969610db2434f7b364a",
+      "filename": "0015_business_primary_category_integrity.sql"
+    },
+    {
+      "id": "0016_catalog_attribute_vocabulary",
+      "version": 16,
+      "moduleId": "catalog",
+      "checksum": "3ee03bb4dcc4f34630740ecccb10151fd7eade7497a5f0077c939cd62eda070b",
+      "filename": "0016_catalog_attribute_vocabulary.sql"
+    },
+    {
+      "id": "0017_catalog_attribute_values",
+      "version": 17,
+      "moduleId": "catalog",
+      "checksum": "ddb8a4cc6c4dcab7504d969190f8895d787c0e94e680afae0021df6cc3956938",
+      "filename": "0017_catalog_attribute_values.sql"
+    },
+    {
+      "id": "0018_customer_core",
+      "version": 18,
+      "moduleId": "customer",
+      "checksum": "a946f43a7e635114871da41bb6a15c6344af8554bd28315fe99304ce9cead7d8",
+      "filename": "0018_customer_core.sql"
+    },
+    {
+      "id": "0019_crm_customer_relationships",
+      "version": 19,
+      "moduleId": "crm",
+      "checksum": "20a6c3212b6e19beeaa960f3c569008638399574807a30c1708bbb0e2bf1a976",
+      "filename": "0019_crm_customer_relationships.sql"
+    },
+    {
+      "id": "0020_crm_timeline_events",
+      "version": 20,
+      "moduleId": "crm",
+      "checksum": "eeda7d6cb21b5064d5cf6722256be51b13ac3236572cd8a73d2dae0d0c235325",
+      "filename": "0020_crm_timeline_events.sql"
+    },
+    {
+      "id": "0021_verification_case_and_documents",
+      "version": 21,
+      "moduleId": "trust",
+      "checksum": "3dcd9cef136b61476cb5000c0b5f6f83f89110de221d62bc2f41f2a487ab680b",
+      "filename": "0021_verification_case_and_documents.sql"
+    },
+    {
+      "id": "0022_verification_policy_requirements",
+      "version": 22,
+      "moduleId": "trust",
+      "checksum": "c12aa0bb7798e81e6256890ff7268d0b58a69874d1420d29e25e0800119f13fc",
+      "filename": "0022_verification_policy_requirements.sql"
+    },
+    {
+      "id": "0023_verification_checks",
+      "version": 23,
+      "moduleId": "trust",
+      "checksum": "20826f965b790d7a20098ec3f974518280a1171f64af03d3143375afe71b6a6e",
+      "filename": "0023_verification_checks.sql"
+    },
+    {
+      "id": "0024_verification_decisions",
+      "version": 24,
+      "moduleId": "trust",
+      "checksum": "bb43d2316a51f547e453f5f9ee710a03927a091bf6857f5774e7374eb6232e48",
+      "filename": "0024_verification_decisions.sql"
+    },
+    {
+      "id": "0025_verification_review_expiry",
+      "version": 25,
+      "moduleId": "trust",
+      "checksum": "9ec06e6ab162fa8953b0c1c1f10fb6c5ce9a6353b40197f4a0cd72bb6dda2a4f",
+      "filename": "0025_verification_review_expiry.sql"
+    },
+    {
+      "id": "0026_customer_addresses",
+      "version": 26,
+      "moduleId": "customer",
+      "checksum": "05a010c736c414bd5cf2851e83f0f7454678a34a3d21d21b6db11b7af80b9b43",
+      "filename": "0026_customer_addresses.sql"
+    },
+    {
+      "id": "0027_business_status_history",
+      "version": 27,
+      "moduleId": "business",
+      "checksum": "1d3189e9b1060d73fff1934672404d61d5ff7f5f7c5951fa20f42f0b6ff533af",
+      "filename": "0027_business_status_history.sql"
+    },
+    {
+      "id": "0028_booking_core",
+      "version": 28,
+      "moduleId": "booking",
+      "checksum": "eac7d712995052dd58a99b675fddc7302bb4451c841f9810c83454a1120e79e3",
+      "filename": "0028_booking_core.sql"
+    },
+    {
+      "id": "0029_availability_schedules",
+      "version": 29,
+      "moduleId": "booking",
+      "checksum": "e92cb816e25a5b4a8ece94f71f06e248a4e1801f85d465ea919053731d9ec8d5",
+      "filename": "0029_availability_schedules.sql"
+    },
+    {
+      "id": "0030_booking_holds_history",
+      "version": 30,
+      "moduleId": "booking",
+      "checksum": "942a1995e18d16d02c17616f0d30cd9e1a4d727279666faabca5f6fe59421ee4",
+      "filename": "0030_booking_holds_history.sql"
+    },
+    {
+      "id": "0031_commerce_transaction_core",
+      "version": 31,
+      "moduleId": "commerce",
+      "checksum": "52527e84458d4414dab10961d842e665641450cf5c14c5fcdb120f7401881753",
+      "filename": "0031_commerce_transaction_core.sql"
+    },
+    {
+      "id": "0032_commerce_integrity_hardening",
+      "version": 32,
+      "moduleId": "commerce",
+      "checksum": "219cacbce936f13632a7b444b202f24326c36b812db49cdf9b10f0c4a67d6553",
+      "filename": "0032_commerce_integrity_hardening.sql"
+    },
+    {
+      "id": "0033_billing_core",
+      "version": 33,
+      "moduleId": "billing",
+      "checksum": "59a525717df6a49debe9dd326dec4a2724ddf74f4ff0ba967f3f179c9fdef0a2",
+      "filename": "0033_billing_core.sql"
+    },
+    {
+      "id": "0034_billing_usage_counters",
+      "version": 34,
+      "moduleId": "billing",
+      "checksum": "12d5687ed94c3a065c07713ce9cc982c797f018d219c24fd46521caf928ba0a0",
+      "filename": "0034_billing_usage_counters.sql"
+    },
+    {
+      "id": "0035_communication_core",
+      "version": 35,
+      "moduleId": "communication",
+      "checksum": "f0e16443c764044a8915067778200a30b255da2afdd2362fd0cf1b57d4d7a7e3",
+      "filename": "0035_communication_core.sql"
+    },
+    {
+      "id": "0036_automation_core",
+      "version": 36,
+      "moduleId": "automation",
+      "checksum": "c8d471d7cfce3c5a3e0a134209fa8c19d39ee7426f0206c4b70b91bbf4d9e6be",
+      "filename": "0036_automation_core.sql"
+    },
+    {
+      "id": "0037_ai_runtime_core",
+      "version": 37,
+      "moduleId": "ai",
+      "checksum": "bb70d4356bfcbe208c5ee69ffc224b35d28f8ba22261b621eadc8ba291078a27",
+      "filename": "0037_ai_runtime_core.sql"
+    },
+    {
+      "id": "0038_integration_core",
+      "version": 38,
+      "moduleId": "integration",
+      "checksum": "92feb5a07a8e46b906d1593aafa73394000b399840772fbf18f402e5737e2c43",
+      "filename": "0038_integration_core.sql"
+    },
+    {
+      "id": "0039_privacy_consent_requests",
+      "version": 39,
+      "moduleId": "privacy",
+      "checksum": "07cb293b84120118687c02df28115c35df8923fd2545a84d1de478b4c0d84cf8",
+      "filename": "0039_privacy_consent_requests.sql"
+    },
+    {
+      "id": "0040_demand_matching_core",
+      "version": 40,
+      "moduleId": "matching",
+      "checksum": "c1764e43ebf125d4f7f26698f65f96e28e7a1a20744b6a3be0c6c522c3b8e17e",
+      "filename": "0040_demand_matching_core.sql"
+    },
+    {
+      "id": "0041_demand_matching_integrity",
+      "version": 41,
+      "moduleId": "matching",
+      "checksum": "699e02a379f853ebd3ad5039a538708148ce5beb54486b1a7aeee6b35a56ea88",
+      "filename": "0041_demand_matching_integrity.sql"
+    },
+    {
+      "id": "0042_reviews_core",
+      "version": 42,
+      "moduleId": "trust",
+      "checksum": "81d84507482145acbc7cecdd81be54d3321dcfbfc7f390b89b100c4924b626cc",
+      "filename": "0042_reviews_core.sql"
+    },
+    {
+      "id": "0043_integrity_update_guards",
+      "version": 43,
+      "moduleId": "platform",
+      "checksum": "5933451ff64dee53386e6a5cb3088852f6427248ac55c8f4eaf082a6d22b8c14",
+      "filename": "0043_integrity_update_guards.sql"
+    }
   ]
 }
