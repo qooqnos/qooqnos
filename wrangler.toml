@@ -37,3 +37,20 @@ vars = { APP_VERSION = "staging" }
 [env.production]
 name = "qooqnos-production"
 vars = { APP_VERSION = "production" }
+
+# Queue and R2 resources are also environment-specific. Keep these examples commented
+# until the real Cloudflare resources exist.
+#
+# [[env.production.queues.producers]]
+# binding = "OUTBOX_QUEUE"
+# queue = "qooqnos-outbox-production"
+#
+# [[env.production.queues.consumers]]
+# queue = "qooqnos-outbox-production"
+# max_batch_size = 50
+# max_batch_timeout = 30
+#
+# [[env.production.r2_buckets]]
+# binding = "MEDIA_BUCKET"
+# bucket_name = "qooqnos-media-production"
+
