@@ -237,7 +237,7 @@ Availability has exactly one canonical engine. Calendar/UI/AI/Plugin integration
 | VerificationCase → VerificationCheck | 1:0..N | Trust | FK | RETAIN | same case |
 | VerificationCase → VerificationDecision | 1:0..N | Trust | FK | IMMUTABLE/HISTORICAL | same case |
 | Customer → Review | 1:0..N | Trust | `reviews.customer_id` | RETAIN/ANONYMIZE by policy | tenant validated |
-| Review → canonical target | 1:1 | Trust | approved typed FK matrix | RESTRICT/ARCHIVE | same tenant/public target |
+| Review → canonical target | 1:1 | Trust | typed FK to Business OR Offering OR Product | RESTRICT/ARCHIVE | same tenant/workspace scope |
 | ModerationCase → subject | 1:1 | Trust | controlled polymorphic reference | policy-driven | explicit tenant validation |
 
 ### Trust invariants
