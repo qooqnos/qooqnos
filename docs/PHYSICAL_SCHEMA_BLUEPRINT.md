@@ -180,7 +180,40 @@ Required fields:
 
 Uniqueness is enforced per category/attribute definition pair.
 
-The current migration intentionally does not create `product_attributes`, `service_attributes` or `product_variant_attributes`. Existing `product_variants.attributes_json` remains the current value representation until a value-level migration defines authoritative storage and backfill semantics.
+### `attribute_values`
+
+Canonical typed AttributeValue records for supported Catalog targets.
+
+Required fields:
+
+`id`, attribute_definition_id, target_type, target_id, source_type, source_reference?, confidence?, option_id?, one typed scalar value channel where applicable, created_at, updated_at.
+
+Current target types are intentionally limited to `product`, `product_variant` and `service`. A new target type requires an explicit contract update rather than a generic polymorphic expansion.
+
+Typed scalar channels are:
+
+- text_value
+- integer_value
+- number_value
+- boolean_value
+- date_value
+- datetime_value
+
+Enumerated attributes use `option_id`; multi-enum attributes use the child `attribute_value_options` relation.
+
+Exactly one AttributeValue is permitted per attribute definition and target object. Multi-enum values are represented by one parent AttributeValue plus one or more option rows.
+
+Source/provenance is part of the authoritative value record because AI-generated or extracted values require traceability.
+
+### `attribute_value_options`
+
+Child rows for `multi_enum` AttributeValues.
+
+Required fields:
+
+`id`, attribute_value_id, option_id, created_at.
+
+The option must belong to the same AttributeDefinition as the parent value. The current schema enforces type compatibility at the database boundary.
 
 ### `business_categories` / `offering_categories`
 
