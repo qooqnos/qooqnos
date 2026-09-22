@@ -118,21 +118,19 @@ Historical transaction snapshots preserve title, quantity, price, tax, discount,
 
 | Table | Owner | Responsibility |
 |---|---|---|
-| `conversations` | Communication | communication conversation |
-| `messages` | Communication | communication messages |
-| `notifications` | Communication | notification lifecycle |
-| `delivery_attempts` | Communication | channel delivery attempts |
-| `agents` | AI | agent definition/configuration |
-| `ai_conversations` | AI | AI interaction context |
-| `ai_messages` | AI | AI messages |
-| `ai_operations` | AI Runtime | canonical model operation identity/lifecycle |
+| `communication_conversations` | Communication | communication conversation |
+| `communication_messages` | Communication | communication messages |
+| `communication_notifications` | Communication | notification lifecycle |
+| `communication_delivery_attempts` | Communication | provider delivery attempts |
+| `ai_operations` | AI Runtime | canonical AI operation identity/lifecycle |
 | `ai_provider_attempts` | AI Runtime | provider execution attempts |
 | `ai_runtime_results` | AI Runtime | normalized validated execution results |
-| `ai_memories` | AI | explicitly approved durable memory |
-| `workflows` | Automation | automation definition |
-| `workflow_triggers` | Automation | event/condition triggers |
-| `workflow_actions` | Automation | capability actions |
-| `workflow_executions` | Automation | execution lifecycle |
+| `ai_usage_records` | AI Runtime | canonical runtime usage telemetry |
+| `automation_workflows` | Automation | workflow definition |
+| `automation_workflow_versions` | Automation | immutable workflow versions |
+| `automation_triggers` | Automation | event/schedule/command triggers |
+| `automation_actions` | Automation | capability actions |
+| `automation_executions` | Automation | execution lifecycle |
 
 ### AI Runtime Registry / Governance
 
@@ -148,9 +146,9 @@ Historical transaction snapshots preserve title, quantity, price, tax, discount,
 | `ai_schema_versions` | AI Runtime | immutable schema versions |
 | `ai_policies` | AI Policy/Governance | AI policy metadata/version |
 | `ai_policy_decisions` | AI Policy/Governance | execution policy decisions |
-| `ai_usage_records` | AI Runtime | canonical execution usage telemetry |
 
-These tables represent the canonical Runtime data dictionary. They are not a second AI domain model. Exact physical decomposition may combine or separate records only when semantic ownership and one-to-one mapping remain explicit.
+These tables represent the canonical Runtime data dictionary. Feature-local `ai_runs`, `ai_tool_calls` and provider-specific ledgers are prohibited parallel models.
+
 
 ## 3. Schema field contract
 
