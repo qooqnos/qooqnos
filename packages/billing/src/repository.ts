@@ -265,7 +265,7 @@ export class BillingRepository extends Repository {
 
     await this.database.transaction(
       planEntitlements.map((entitlement) => ({
-        sql: "INSERT INTO billing_entitlement_snapshots (id, subscription_id, entitlement_key, value_type, value_json, source_plan_id, source_plan_version, effective_from) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        sql: "INSERT OR IGNORE INTO billing_entitlement_snapshots (id, subscription_id, entitlement_key, value_type, value_json, source_plan_id, source_plan_version, effective_from) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         params: [
           subscriptionId + ":" + entitlement.entitlementKey + ":" + entitlement.version,
           subscriptionId,
@@ -309,6 +309,29 @@ export class BillingRepository extends Repository {
   ): Promise<{ allowed: boolean; limit: number | null; remaining: number | null }> {
     if (!Number.isSafeInteger(input.quantity) || input.quantity <= 0) {
       throw new DatabaseError("Billing usage quantity must be a positive integer");
+    }
+
+    const existingUsage = await this.database.first<{ quantity: number; meterId: EntityId }>(
+      "SELECT quantity, meter_id AS meterId FROM billing_usage_events WHERE source_event_id = ? AND organization_id = ? LIMIT 1",
+      input.sourceEventId,
+      input.subscription.organizationId,
+    );
+    if (existingUsage) {
+      const meter = await this.database.first<{ hardLimit: number | null }>(
+        "SELECT hard_limit AS hardLimit FROM billing_usage_meters WHERE id = ? LIMIT 1",
+        existingUsage.meterId,
+      );
+      const counter = await this.database.first<{ quantity: number }>(
+        "SELECT quantity FROM billing_usage_counters WHERE id = ? LIMIT 1",
+        input.subscription.id + ":" + existingUsage.meterId + ":" + input.periodKey,
+      );
+      return {
+        allowed: true,
+        limit: meter?.hardLimit ?? null,
+        remaining: meter?.hardLimit === null || meter?.hardLimit === undefined
+          ? null
+          : Math.max(0, meter.hardLimit - (counter?.quantity ?? 0)),
+      };
     }
 
     const meter = await this.database.first<{ id: EntityId; hardLimit: number | null }>(
