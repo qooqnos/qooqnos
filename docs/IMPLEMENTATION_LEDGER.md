@@ -35,6 +35,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Booking availability rules | 🟢 Schema/repository implemented | migrations/0029_availability_schedules.sql; packages/booking/src/availability-repository.ts |
 | Booking holds / lifecycle history | 🟢 Schema/repository implemented | migrations/0030_booking_holds_history.sql; packages/booking/src/repository.ts |
 | Commerce transaction core | 🟢 Schema/package/repository implemented | migrations/0031_commerce_transaction_core.sql; migrations/0032_commerce_integrity_hardening.sql; packages/commerce/src/repository.ts; packages/commerce/src/service.ts |
+| Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
 | Trust VerificationCase / evidence | 🟢 Schema/repository implemented | migrations/0021_verification_case_and_documents.sql; packages/database/src/verification-repository.ts |
 | Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
 | Trust checks / evidence links | 🟢 Schema implemented | migrations/0023_verification_checks.sql; runtime methods in verification-repository.ts |
@@ -245,6 +246,24 @@ Commits:
 - 69bcbc1 — Add Commerce repository tests
 - 8d3b29e — Fix Commerce repository test harness
 - 35d3696 — Complete Commerce orchestration repositories
+- 396cae6 — Add Billing core migration 0033
+- 5dcc8b8 — Register Billing core migration
+- 2590b5a — Lock Billing core migration checksum
+- b815ed3 — Add atomic Billing quota counters migration 0034
+- 3936de7 — Register Billing quota counter migration
+- c1f2fe1 — Lock Billing quota counter migration checksum
+- 20b0f45 — Implement canonical Billing repository
+- 6561ad2 — Harden Billing entitlement materialization and usage idempotency
+- 344ed98 — Expose Billing repository and entitlement service
+- 244cdb1 — Implement Billing entitlement service
+- c904fa8 — Add Billing runtime module manifest
+- a7d47f4 — Extend Billing package dependencies
+- 4af726b — Extend Billing project references
+- dad066f — Register Billing package in root graph
+- 0d2fc87 — Register Billing package in API graph
+- 6eb13be — Register Billing dependency in API
+- fa9a38c — Register Billing module in API runtime
+- a552486 — Add Billing entitlement tests
 - 2310529 — Refresh physical reconciliation after Trust review/expiry
 - 3458d50 — Document Trust review/expiry physical contracts
 - 3ba47ec — Record Trust physical implementation status
@@ -268,6 +287,8 @@ Customer/CRM verification note: repositories and scope-focused tests were added;
 Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0032 are registered and locked in sequence. Full external D1 application has not yet been executed.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
+
+Billing note: migrations 0033–0034 establish plan/price/subscription/entitlement/usage/provider-reference/reconciliation storage plus an atomic quota counter. Billing is the commercial entitlement authority; payment execution, invoices and financial ledger remain gated.
 
 Commerce note: migrations 0031–0032 establish the Commerce-owned Cart/Checkout/PriceSnapshot/Order transaction boundary and integrity hardening. Billing/Payment remains authoritative for payment execution, financial settlement, refunds and invoices.
 
@@ -318,6 +339,8 @@ The API runtime references these migration sources:
 0030_booking_holds_history.sql
 0031_commerce_transaction_core.sql
 0032_commerce_integrity_hardening.sql
+0033_billing_core.sql
+0034_billing_usage_counters.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
