@@ -22,6 +22,7 @@ export interface CreateBookingCommand {
   readonly currency: string;
   readonly totalAmountMinor?: number | undefined;
   readonly policySnapshot?: string | undefined;
+  readonly idempotencyKey: string;
 }
 
 export class BookingService {
@@ -41,9 +42,44 @@ export class BookingService {
       currency: command.currency.trim().toUpperCase(),
       totalAmountMinor: command.totalAmountMinor,
       policySnapshot: command.policySnapshot,
+      idempotencyKey: command.idempotencyKey,
       now: this.options.now(),
     };
     return this.options.repository.create(context, input);
+  }
+
+  async finalize(
+    context: RequestContext,
+    input: {
+      readonly bookingId: EntityId;
+      readonly idempotencyKey: string;
+      readonly businessId: EntityId;
+      readonly customerId: EntityId;
+      readonly offeringId: EntityId;
+      readonly currency: string;
+      readonly quantity: number;
+      readonly titleSnapshot: string;
+      readonly priceMinorSnapshot: number;
+      readonly durationSecondsSnapshot?: number | undefined;
+      readonly policySnapshot?: string | undefined;
+      readonly holdId: EntityId;
+      readonly startsAt: string;
+      readonly endsAt: string;
+      readonly timezone?: string | undefined;
+      readonly locationId?: EntityId | undefined;
+      readonly resourceId?: EntityId | undefined;
+    },
+  ): Promise<BookingRecord> {
+    await this.options.authorization.assert({
+      context,
+      permission: "booking.confirm",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    return this.options.repository.finalize(context, {
+      ...input,
+      now: this.options.now(),
+    });
   }
 
   async addItem(context: RequestContext, input: Omit<AddBookingItemInput, "id" | "now">) {
