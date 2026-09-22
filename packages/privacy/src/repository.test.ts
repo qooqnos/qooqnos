@@ -43,7 +43,13 @@ describe("PrivacyRepository", () => {
       async all<T>(){return {results:[] as T[]};},
       async run(){writes+=1;return {success:true};}
     };
-    const raw:D1DatabaseLike={prepare(){return statement;},async batch(){return[];}};
+    const raw:D1DatabaseLike={
+      prepare(){return statement;},
+      async batch(statements){
+        writes += statements.length;
+        return statements.map(()=>({success:true}));
+      }
+    };
     const repository=new PrivacyRepository(new D1Database(raw));
     const result=await repository.createConsent(context(),{
       id:brandId<"EntityId">("consent-2"),subjectType:"customer",subjectId:brandId<"EntityId">("customer-1"),
