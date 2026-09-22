@@ -110,6 +110,10 @@ Canonical logical model
 
 Only after this sequence is complete should Cloudflare D1 production provisioning be treated as the final infrastructure step.
 
-## 9. Historical documents
+## 9. Remote D1 provisioning gate
+
+The application/runtime is D1-ready, but the repository does not contain a fabricated remote database UUID. Wrangler requires a real `database_id` for a D1 binding; staging and production bindings are therefore documented but remain commented until the corresponding Cloudflare databases exist. The runtime deliberately fails closed when `env.DB` is absent.
+
+## 10. Historical documents
 
 docs/PHASE4_SUMMARY.md and older phase snapshots are historical records. They must not be used as current database design instructions.
