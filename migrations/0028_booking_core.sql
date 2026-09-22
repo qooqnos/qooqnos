@@ -36,7 +36,7 @@ WHEN NOT EXISTS (
     AND b.organization_id = NEW.organization_id
     AND b.workspace_id = NEW.workspace_id
     AND c.id = NEW.customer_id
-    AND NEW.total_amount_minor IS NULL OR NEW.total_amount_minor >= 0
+    AND (NEW.total_amount_minor IS NULL OR NEW.total_amount_minor >= 0)
 )
 BEGIN
   SELECT RAISE(ABORT, 'Booking scope or customer/business relationship is invalid');
