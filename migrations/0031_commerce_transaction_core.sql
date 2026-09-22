@@ -313,8 +313,15 @@ BEGIN
   SELECT RAISE(ABORT, 'Committed Commerce order lines are immutable');
 END;
 
-CREATE TRIGGER IF NOT EXISTS trg_commerce_price_snapshot_immutable
-BEFORE UPDATE OR DELETE ON commerce_price_snapshots
+CREATE TRIGGER IF NOT EXISTS trg_commerce_price_snapshot_update_immutable
+BEFORE UPDATE ON commerce_price_snapshots
+FOR EACH ROW
+BEGIN
+  SELECT RAISE(ABORT, 'Commerce price snapshots are immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_commerce_price_snapshot_delete_immutable
+BEFORE DELETE ON commerce_price_snapshots
 FOR EACH ROW
 BEGIN
   SELECT RAISE(ABORT, 'Commerce price snapshots are immutable');
