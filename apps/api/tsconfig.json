@@ -23,6 +23,7 @@
     { "path": "../../packages/automation" },
     { "path": "../../packages/integration" },
     { "path": "../../packages/privacy" },
+    { "path": "../../packages/matching" },
     { "path": "../../packages/catalog" },
     { "path": "../../packages/discovery" },
     { "path": "../../packages/onboarding" },
