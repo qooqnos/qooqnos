@@ -9,8 +9,15 @@ CREATE TABLE billing_usage_counters (
   quantity INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
   version INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1),
   updated_at TEXT NOT NULL,
-  UNIQUE(organization_id, COALESCE(workspace_id, ''), meter_id, period_key)
 );
+
+CREATE UNIQUE INDEX uq_billing_usage_counter_scope
+  ON billing_usage_counters(
+    organization_id,
+    COALESCE(workspace_id, ''),
+    meter_id,
+    period_key
+  );
 
 CREATE INDEX idx_billing_usage_counters_meter_period
   ON billing_usage_counters(meter_id, period_key, organization_id, workspace_id);
