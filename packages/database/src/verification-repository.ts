@@ -630,6 +630,7 @@ export class VerificationRepository extends Repository {
   ): Promise<VerificationCaseRecord> {
     const current = await this.getCase(context, id);
     if (!current) throw new DatabaseError("Verification case not found");
+    if (current.status === "submitted") return current;
     if (current.status !== "created") {
       throw new DatabaseError("Only created verification cases can be submitted");
     }
