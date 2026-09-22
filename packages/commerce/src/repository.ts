@@ -287,9 +287,6 @@ export class CommerceRepository extends Repository {
   }
 
   async startCheckout(context: RequestContext, input: StartCheckoutInput): Promise<CheckoutSessionRecord> {
-    const cart = await this.getCart(context, input.cartId);
-    if (!cart) throw new DatabaseError("Commerce cart not found");
-    if (cart.status !== "active") throw new DatabaseError("Only active carts can enter checkout");
     if (!input.idempotencyKey.trim()) throw new DatabaseError("Checkout idempotency key is required");
     const existing = await this.database.first<CheckoutSessionRow>(
       "SELECT id, cart_id AS cartId, status, idempotency_key AS idempotencyKey, correlation_id AS correlationId, catalog_snapshot_refs_json AS catalogSnapshotRefsJson, promotion_qualification_refs_json AS promotionQualificationRefsJson, loyalty_benefit_refs_json AS loyaltyBenefitRefsJson, booking_reservation_refs_json AS bookingReservationRefsJson, payment_attempt_ref AS paymentAttemptRef, failure_code AS failureCode, started_at AS startedAt, completed_at AS completedAt, created_at AS createdAt, updated_at AS updatedAt FROM commerce_checkout_sessions WHERE cart_id = ? AND idempotency_key = ? LIMIT 1",
@@ -297,6 +294,10 @@ export class CommerceRepository extends Repository {
       input.idempotencyKey.trim(),
     );
     if (existing) return hydrateCheckout(existing);
+
+    const cart = await this.getCart(context, input.cartId);
+    if (!cart) throw new DatabaseError("Commerce cart not found");
+    if (cart.status !== "active") throw new DatabaseError("Only active carts can enter checkout");
 
     await this.database.run(
       "INSERT INTO commerce_checkout_sessions (id, cart_id, status, idempotency_key, correlation_id, started_at, created_at, updated_at) VALUES (?, ?, 'started', ?, ?, ?, ?, ?)",
