@@ -22,6 +22,7 @@ export interface AIRuntimeRequest<TInput = unknown> {
   readonly operationType: string;
   readonly operationVersion: number;
   readonly context: RequestContext;
+  readonly businessId?: string | undefined;
   readonly idempotencyKey: string;
   readonly input: TInput;
   readonly dataClassification: AIDataClassification;
