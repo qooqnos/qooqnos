@@ -153,6 +153,15 @@ export class MatchingRepository extends Repository {
     return {...row,reasons:parseJson(row.reasonsJson),featureSnapshot:parseJson(row.featureSnapshotJson)};
   }
 
+  async hasSelectedDecision(context:RequestContext,matchRequestId:EntityId,candidateId:EntityId):Promise<boolean>{
+    await this.getMatchRequest(context,matchRequestId);
+    const row=await this.database.first<{id:EntityId}>(
+      "SELECT md.id FROM match_decisions md WHERE md.match_request_id=? AND md.candidate_id=? AND md.decision='selected' ORDER BY md.decided_at DESC, md.id DESC LIMIT 1",
+      matchRequestId,candidateId
+    );
+    return !!row;
+  }
+
   async resolveOfferingBusiness(context:RequestContext,offeringId:EntityId):Promise<EntityId|null>{
     const organizationId=this.requireOrganization({organizationId:context.tenantId});
     const workspaceId=this.requireWorkspace({workspaceId:context.workspaceId});
