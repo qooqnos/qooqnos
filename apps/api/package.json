@@ -8,6 +8,7 @@
     "@qooqnos/ai": "*",
     "@qooqnos/auth": "*",
     "@qooqnos/billing": "*",
+    "@qooqnos/communication": "*",
     "@qooqnos/business": "*",
     "@qooqnos/booking": "*",
     "@qooqnos/commerce": "*",
