@@ -66,7 +66,7 @@ export class IntegrationRepository extends Repository {
     if(!row)throw new DatabaseError("Integration webhook not found");
     await this.getAccount(context,row.accountId);
     await this.database.run(
-      "UPDATE integration_webhooks SET processing_status = ?, processed_at = CASE WHEN ? IN ('processed','ignored') THEN ? ELSE processed_at END, last_error_reference = ?, updated_at = updated_at WHERE id = ?",
+      "UPDATE integration_webhooks SET processing_status = ?, processed_at = CASE WHEN ? IN ('processed','ignored') THEN ? ELSE processed_at END, last_error_reference = ? WHERE id = ?",
       status,status,now,errorReference??null,id);
   }
 }
