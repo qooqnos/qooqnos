@@ -14,6 +14,7 @@ import aiSellerIdempotencyFingerprint from "../../../migrations/0013_ai_seller_i
 import catalogOfferingIntegrity from "../../../migrations/0014_catalog_offering_integrity.sql";
 import businessPrimaryCategoryIntegrity from "../../../migrations/0015_business_primary_category_integrity.sql";
 import catalogAttributeVocabulary from "../../../migrations/0016_catalog_attribute_vocabulary.sql";
+import catalogAttributeValues from "../../../migrations/0017_catalog_attribute_values.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -33,4 +34,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0014_catalog_offering_integrity.sql", sql: catalogOfferingIntegrity },
   { path: "migrations/0015_business_primary_category_integrity.sql", sql: businessPrimaryCategoryIntegrity },
   { path: "migrations/0016_catalog_attribute_vocabulary.sql", sql: catalogAttributeVocabulary },
+  { path: "migrations/0017_catalog_attribute_values.sql", sql: catalogAttributeValues },
 ];
