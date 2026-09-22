@@ -14,7 +14,7 @@ CREATE TABLE booking_holds (
 );
 
 CREATE UNIQUE INDEX uq_booking_holds_active_slot
-  ON booking_holds(business_id, resource_id, slot_reference)
+  ON booking_holds(business_id, COALESCE(resource_id, ''), slot_reference)
   WHERE status = 'active';
 
 CREATE INDEX idx_booking_holds_expiry
