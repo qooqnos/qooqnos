@@ -198,13 +198,13 @@ offerings identifies its offering_type and optional service_id/product_id. The c
 
 **Decision:** this invariant is finalized and enforced by migration 0014. Do not redesign offerings as another entity.
 
-## 3.1 Catalog integrity hardening — 0014
+## 3.8 Catalog integrity hardening — 0014
 
 Migration 0014 hardens the existing offerings model without introducing a new entity. It enforces that a service offering references exactly one service, a product offering exactly one product, the referenced row exists, and the referenced product/service belongs to the offering business. Update paths are protected as well.
 
 This confirms the current physical design: services, products and offerings are distinct but related concepts. Do not create business_services, offers, or another duplicate sellable table without a new architecture decision.
 
-## 3.2 Business primary category integrity — 0015
+## 3.9 Business primary category integrity — 0015
 
 Migration 0015 hardens the existing `businesses.primary_category_id` relationship without adding a new entity. It rejects inserts/updates that reference an unknown category and prevents deletion of a category that is referenced as a Business primary category.
 
