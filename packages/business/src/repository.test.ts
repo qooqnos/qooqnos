@@ -99,4 +99,58 @@ describe("BusinessRepository", () => {
       ),
     ).rejects.toThrow("Business creation scope does not match request context");
   });
+
+  it("records immutable status history when business status changes", async () => {
+    const statements: string[] = [];
+    let business = {
+      id: "business-1",
+      organizationId: "tenant-1",
+      workspaceId: "workspace-1",
+      name: "phoenix",
+      displayName: "Phoenix",
+      status: "draft",
+      publicationStatus: "unpublished",
+      businessType: null,
+      primaryCategoryId: null,
+      defaultLocale: "en",
+      timezone: "UTC",
+      defaultCurrency: "AZN",
+      createdAt: "2026-09-22T00:00:00.000Z",
+      updatedAt: "2026-09-22T00:00:00.000Z",
+    };
+
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>(..._args: unknown[]) {
+        return business.id === "business-1" ? (business as unknown as T) : null;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run(sql?: string, ..._args: unknown[]) {
+        if (sql?.includes("UPDATE businesses SET status")) {
+          business = { ...business, status: "active", updatedAt: "2026-09-22T00:01:00.000Z" };
+        }
+        if (sql?.includes("INSERT INTO business_status_history")) {
+          statements.push(sql);
+        }
+        return { success: true };
+      },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { statements.push(sql); return statement; },
+      async batch() { return []; },
+    };
+    const repository = new BusinessRepository(new D1Database(raw));
+
+    const result = await repository.setStatus(
+      context(),
+      brandId<"EntityId">("business-1"),
+      "active",
+      "2026-09-22T00:01:00.000Z",
+      brandId<"EntityId">("history-1"),
+    );
+
+    expect(result.status).toBe("active");
+    expect(statements.some((sql) => sql.includes("INSERT INTO business_status_history"))).toBe(true);
+  });
+
 });
