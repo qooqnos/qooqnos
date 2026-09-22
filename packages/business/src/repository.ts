@@ -265,7 +265,7 @@ export class BusinessRepository extends Repository {
     } satisfies BusinessRecord;
 
     const eventId = `${id}:business.publication.changed.v1:${now}`;
-    await this.database.transaction([
+    const results = await this.database.transaction([
       {
         sql: `UPDATE businesses SET publication_status = ?, updated_at = ?
               WHERE id = ? AND organization_id = ? AND workspace_id = ? AND publication_status = ?`,
@@ -318,6 +318,10 @@ export class BusinessRepository extends Repository {
         ],
       },
     ]);
+
+    if ((results[0]?.meta?.changes ?? 0) !== 1) {
+      throw new DatabaseError("Concurrent business publication transition rejected");
+    }
 
     const result = await this.database.first<BusinessRecord>(
       `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
