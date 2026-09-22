@@ -31,6 +31,8 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | CRM timeline events | 🟢 Schema/repository implemented | migrations/0020_crm_timeline_events.sql; packages/database/src/crm-timeline-repository.ts; projections remain gated |
 | Customer addresses | 🟢 Schema/repository implemented | migrations/0026_customer_addresses.sql; packages/database/src/customer-address-repository.ts |
 | Business status history | 🟢 Schema/repository implemented | migrations/0027_business_status_history.sql; packages/business/src/repository.ts |
+| Booking core | 🟢 Schema/package/repository implemented | migrations/0028_booking_core.sql; packages/booking/src/repository.ts; packages/booking/src/service.ts |
+| Booking availability rules | 🟢 Schema/repository implemented | migrations/0029_availability_schedules.sql; packages/booking/src/availability-repository.ts |
 | Trust VerificationCase / evidence | 🟢 Schema/repository implemented | migrations/0021_verification_case_and_documents.sql; packages/database/src/verification-repository.ts |
 | Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
 | Trust checks / evidence links | 🟢 Schema implemented | migrations/0023_verification_checks.sql; runtime methods in verification-repository.ts |
@@ -195,6 +197,22 @@ Commits:
 - 1311c39 — Lock business status history checksum
 - 8cd05c8 — Implement business lifecycle status history
 - c9ebe65 — Test business lifecycle status history
+- 84aa66c — Add booking core migration 0028
+- 4a25975 — Fix booking scope trigger precedence
+- 2b3cb9b — Lock booking core migration checksum
+- 4c25434 — Register booking core migration
+- 2f8c926 — Add availability schedule migration 0029
+- d242580 — Register availability schedule migration
+- ad81e18 — Lock availability schedule migration checksum
+- f185856 — Add Booking package manifest
+- 2385166 — Implement Booking repository
+- e4a6af5 — Implement availability repository
+- 50f2cbd — Implement Booking service
+- b362141 — Add Booking exports
+- ab062a9 — Register Booking module in API runtime
+- 688c09c — Fix Booking schedule scope check
+- 9d94218 — Test Booking lifecycle guards
+- e808ff9 — Test Availability tenant scoping
 - 2310529 — Refresh physical reconciliation after Trust review/expiry
 - 3458d50 — Document Trust review/expiry physical contracts
 - 3ba47ec — Record Trust physical implementation status
@@ -218,6 +236,8 @@ Customer/CRM verification note: repositories and scope-focused tests were added;
 Migration lock note: 0021 was refreshed after a pre-apply SQL cleanup; 0022–0024 remain locked to their canonical SHA-256 values recorded during implementation.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
+
+Booking note: migrations 0028–0029 establish the canonical Booking/Availability physical core. Final slot calculation, holds, atomic finalization and booking history remain next implementation layers; no second reservation model is permitted.
 
 Business lifecycle note: migration 0027 records immutable transitions for the existing physical `draft/active/suspended/archived` Business statuses. It intentionally does not invent a new status vocabulary.
 
@@ -259,6 +279,8 @@ The API runtime references these migration sources:
 0025_verification_review_expiry.sql
 0026_customer_addresses.sql
 0027_business_status_history.sql
+0028_booking_core.sql
+0029_availability_schedules.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
