@@ -231,18 +231,6 @@ export class BookingRepository extends Repository {
         ],
       },
       {
-        sql: "UPDATE booking_holds SET status = 'consumed', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND business_id = ? AND status = 'active' AND expires_at > ? AND (resource_id IS NULL OR resource_id = ?)",
-        params: [
-          input.now,
-          input.holdId,
-          organizationId,
-          workspaceId,
-          input.businessId,
-          input.now,
-          input.resourceId ?? null,
-        ],
-      },
-      {
         sql: "INSERT INTO bookings (id, organization_id, workspace_id, business_id, customer_id, status, currency, total_amount_minor, policy_snapshot, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?, ?, ?)",
         params: [
           input.bookingId,
