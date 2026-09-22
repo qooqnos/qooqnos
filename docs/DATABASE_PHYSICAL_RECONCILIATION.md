@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0037**.
+The current API migration catalog references versions **0001 through 0038**.
 
 ### Foundation — 0001
 
@@ -249,6 +249,16 @@ These migrations add integrity triggers only.
 
 ### AI Runtime core — 0037
 
+### Integration core — 0038
+
+- integration_providers
+- integration_accounts
+- integration_webhooks
+- integration_sync_jobs
+- integration_external_references
+
+0038 establishes provider-neutral external account, webhook, sync and external-reference ownership. Credentials remain referenced through protected secret/credential storage rather than stored in ordinary D1 domain rows.
+
 - ai_operation_types
 - ai_providers
 - ai_models
@@ -273,7 +283,7 @@ These migrations add integrity triggers only.
 
 0035 establishes provider-neutral Communication conversation, message, notification and delivery-attempt storage with notification idempotency and tenant/workspace scope.
 
-**Total currently defined physical tables: 130.**
+**Total currently defined physical tables: 135.**
 
 
 - no new tables
@@ -552,7 +562,7 @@ The next implementation work should proceed in this order:
 7. Complete Communication consent/policy/template registry and durable dispatch/provider-adapter contracts.
 8. Complete Automation durable scheduler/worker execution and capability compensation semantics.
 9. Complete AI Runtime provider adapters, routing/validation execution and durable workers.
-10. Introduce Integration/Webhook/Sync storage.
+10. Complete Integration provider adapters and durable sync workers.
 11. Add matching/user-request persistence and rebuildable projections.
 12. Add Privacy/Consent, Review, Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
