@@ -329,6 +329,13 @@
       "moduleId": "booking",
       "filename": "0047_booking_capacity_update_guards.sql",
       "checksum": "5a12b4e8b88a1d7341b6b71732323aef31e3868730b2bbf6ff20126e9b69ac29"
+    },
+    {
+      "id": "0048_reviews_moderation_reputation",
+      "version": 48,
+      "moduleId": "trust",
+      "checksum": "ad46f3d8046415fbab72659e1e21f4fbc40a399ee2bf8bfa8c72c9dbecf652a7",
+      "filename": "0048_reviews_moderation_reputation.sql"
     }
   ]
 }
