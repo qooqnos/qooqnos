@@ -6,6 +6,7 @@ import { createRequestContext, getCorrelationId, getRequestId } from "./context"
 import { resolveRequestAuth } from "./auth-context";
 import { errorResponse, json } from "./http";
 import { registerDiscoveryRoutes } from "./discovery-routes";
+import { registerMatchingRoutes } from "./matching-routes";
 
 export interface ApiRouteContext {
   readonly request: Request;
@@ -43,6 +44,7 @@ export class ApiRouter {
 
   constructor(private readonly options: ApiRouterOptions = {}) {
     registerDiscoveryRoutes(this, options.database);
+    registerMatchingRoutes(this, options.database, options.authorization);
   }
 
   register(route: ApiRoute): void {
