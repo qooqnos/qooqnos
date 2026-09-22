@@ -52,6 +52,16 @@ export class TrustService {
     return this.options.verification.completeReview(context,reviewId,outcome,this.options.now(),this.options.now(),escalationReason);
   }
 
+  async moderateReview(context: RequestContext, id: EntityId, moderationState: string) {
+    await this.options.authorization.assert({
+      context,
+      permission: "trust.review.moderate",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.moderateReview(context,id,moderationState,this.options.now());
+  }
+
   async createReview(
     context: RequestContext,
     input: {
