@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0020.
+The current API migration catalog references versions 0001 through 0021.
 
 ### Foundation — 0001
 
@@ -143,7 +143,14 @@ This migration seeds persisted permission vocabulary.
 
 0020 establishes the canonical normalized CRM event store for relationship timelines. It is idempotent by source module/event identifier and enforces organization/workspace/relationship scope. The originating module remains authoritative for the underlying business fact.
 
-**Total currently defined physical tables: 52.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers.
+### Trust VerificationCase / documents — 0021
+
+- verification_cases
+- verification_documents
+
+0021 establishes the VerificationCase aggregate and protected evidence metadata/reference layer. It does not create verification policy, requirement, check or decision tables yet.
+
+**Total currently defined physical tables: 54.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers; migration 0020 adds one CRM timeline table plus integrity triggers; migration 0021 adds two Trust Verification tables plus scope integrity trigger.
 
 This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
 
@@ -283,6 +290,15 @@ The table stores normalized event references rather than duplicating source-doma
 
 \`crm_timeline_projections\` remains intentionally unimplemented. Its physical read-model fields, rebuild semantics and projection ownership are not sufficiently specified to justify another table.
 
+## 3.15 Trust VerificationCase / evidence — 0021
+
+Migration 0021 implements \`verification_cases\` and \`verification_documents\`.
+
+\`verification_cases\` stores the verification workflow aggregate, subject reference/type, evaluated policy reference/version, risk class and lifecycle timestamps.
+
+\`verification_documents\` stores protected evidence metadata and an object-storage reference; binary evidence remains outside D1. The table intentionally does not model policy/requirement ownership or decision history.
+
+Verification requirement, check and decision tables remain gated because their dependency contracts require additional canonical policy/reference definitions and immutable decision semantics.
 ## 4. Seller AI versus canonical AI Runtime
 
 The seller-AI migrations are real physical implementation, but they are not the canonical AI execution ledger.
