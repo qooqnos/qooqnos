@@ -42,6 +42,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Integration core | 🟢 Schema/package/repository/service implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Demand / Matching core | 🟢 Schema/package/repository/service implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts |
+| Trust Review core | 🟢 Schema/package/repository/service implemented | migrations/0042_reviews_core.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts |
 | Trust VerificationCase / evidence | 🟢 Schema/repository implemented | migrations/0021_verification_case_and_documents.sql; packages/database/src/verification-repository.ts |
 | Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
 | Trust checks / evidence links | 🟢 Schema implemented | migrations/0023_verification_checks.sql; runtime methods in verification-repository.ts |
@@ -292,8 +293,8 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0041 remain numbered and are extended only through new migrations;
-- migrations 0024–0041 are preserved in the canonical lock sequence.
+- canonical migrations 0001–0042 remain numbered and are extended only through new migrations;
+- migrations 0024–0042 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
@@ -304,11 +305,13 @@ The old in-memory database implementation is retained only as an explicit legacy
 
 Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0041 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0042 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
 
 Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Durable scheduler/worker infrastructure remains the next operational layer.
+
+Trust Review note: migration 0042 physicalizes the canonical typed Review target and the Trust package exposes its creation boundary.
 
 Matching note: migrations 0040–0041 establish the canonical Demand→Match persistence boundary with typed Business/Offering targets and append-only decisions. Retrieval/ranking/learning execution remains operational follow-up.
 
@@ -380,6 +383,7 @@ The API runtime references these migration sources:
 0039_privacy_consent_requests.sql
 0040_demand_matching_core.sql
 0041_demand_matching_integrity.sql
+0042_reviews_core.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
