@@ -1,3 +1,4 @@
+import { CommunicationRepository } from "@qooqnos/communication";
 import { OutboxService, type OutboxEventRecord } from "@qooqnos/database";
 import { getDatabase } from "./database";
 import type { ApiEnv, CloudflareQueueBinding } from "./env";
@@ -55,18 +56,47 @@ export async function consumeOutbox(
   env: ApiEnv,
   batch: QueueBatchLike<OutboxEventRecord>,
 ): Promise<{ processed: number }> {
-  const processed = batch.messages.length;
+  const database = getDatabase(env);
+  const communication = database ? new CommunicationRepository(database) : null;
+
   for (const message of batch.messages) {
     try {
-      // Downstream consumers are intentionally not coupled here. Queue delivery is
-      // only the transport boundary; domain-specific consumers process the event
-      // through their owning capability.
+      const event = message.body;
+
+      if (event.eventType === "communication.notification.created") {
+        if (!communication || !event.organizationId) {
+          throw new Error("Communication notification event cannot be processed without D1 scope");
+        }
+
+        const payload = parsePayload(event.payloadJson);
+        const notificationId = payload.notificationId;
+        if (typeof notificationId !== "string" || !notificationId) {
+          throw new Error("Communication notification event is missing notificationId");
+        }
+
+        await communication.queueNotificationFromSystem({
+          organizationId: event.organizationId as never,
+          workspaceId: event.workspaceId ?? null,
+          notificationId: notificationId as never,
+          now: new Date().toISOString(),
+        });
+      }
+
       message.ack();
     } catch {
       message.retry();
     }
   }
-  return { processed };
+
+  return { processed: batch.messages.length };
+}
+
+function parsePayload(payloadJson: string): Record<string, unknown> {
+  const parsed: unknown = JSON.parse(payloadJson);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("Outbox payload must be a JSON object");
+  }
+  return parsed as Record<string, unknown>;
 }
 
 function retryAt(attempt: number, now: string): string {
