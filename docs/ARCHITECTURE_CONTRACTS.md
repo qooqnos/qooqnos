@@ -94,15 +94,23 @@ Verification, TrustSignal, Review, Rating, and Moderation are distinct concepts.
 
 | Table | Owner | Responsibility |
 |---|---|---|
-| `carts` | Commerce | customer purchase intent |
-| `cart_items` | Commerce | cart lines |
-| `orders` | Commerce | commercial transaction |
-| `order_items` | Commerce | immutable historical purchase lines |
-| `payments` | Commerce | payment aggregate |
-| `payment_attempts` | Commerce | provider attempts |
-| `refunds` | Commerce | refund records |
-| `invoices` | Commerce/Billing contract | financial document |
-| `invoice_lines` | Commerce/Billing contract | invoice components |
+| `commerce_carts` | Commerce | customer purchase intent |
+| `commerce_cart_lines` | Commerce | cart lines |
+| `commerce_checkout_sessions` | Commerce | checkout attempt |
+| `commerce_price_snapshots` | Commerce | immutable commercial calculation evidence |
+| `commerce_orders` | Commerce | commercial transaction |
+| `commerce_order_lines` | Commerce | immutable historical purchase lines |
+| `commerce_order_adjustments` | Commerce | applied commercial effects |
+| `commerce_transaction_attempts` | Commerce | orchestration attempt evidence |
+| `commerce_fulfillment_references` | Commerce | references to fulfillment authority |
+| `commerce_cancellations` | Commerce | cancellation history |
+| `commerce_refund_references` | Commerce | refund request/reference history |
+| `commerce_order_events` | Commerce | immutable order events |
+| `payments` | Billing/Payment | payment aggregate |
+| `payment_attempts` | Billing/Payment | provider attempts |
+| `refunds` | Billing/Payment | financial refund execution |
+| `invoices` | Billing | financial document |
+| `invoice_lines` | Billing | invoice components |
 
 Historical transaction snapshots preserve title, quantity, price, tax, discount, currency, and other values required to reconstruct the transaction without querying mutable catalog state.
 
