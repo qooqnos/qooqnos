@@ -19,6 +19,7 @@
     {"id":"0016_catalog_attribute_vocabulary","version":16,"moduleId":"catalog","checksum":"3ee03bb4dcc4f34630740ecccb10151fd7eade7497a5f0077c939cd62eda070b","filename":"0016_catalog_attribute_vocabulary.sql"},
     {"id":"0017_catalog_attribute_values","version":17,"moduleId":"catalog","checksum":"ddb8a4cc6c4dcab7504d969190f8895d787c0e94e680afae0021df6cc3956938","filename":"0017_catalog_attribute_values.sql"},
     {"id":"0018_customer_core","version":18,"moduleId":"customer","checksum":"a946f43a7e635114871da41bb6a15c6344af8554bd28315fe99304ce9cead7d8","filename":"0018_customer_core.sql"},
-    {"id":"0019_crm_customer_relationships","version":19,"moduleId":"crm","checksum":"20a6c3212b6e19beeaa960f3c569008638399574807a30c1708bbb0e2bf1a976","filename":"0019_crm_customer_relationships.sql"}
+    {"id":"0019_crm_customer_relationships","version":19,"moduleId":"crm","checksum":"20a6c3212b6e19beeaa960f3c569008638399574807a30c1708bbb0e2bf1a976","filename":"0019_crm_customer_relationships.sql"},
+    {"id":"0020_crm_timeline_events","version":20,"moduleId":"crm","checksum":"eeda7d6cb21b5064d5cf6722256be51b13ac3236572cd8a73d2dae0d0c235325","filename":"0020_crm_timeline_events.sql"}
   ]
 }
