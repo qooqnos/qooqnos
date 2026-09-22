@@ -37,7 +37,7 @@ These files may still exist in the repository, but their presence is a compatibi
 
 The current database path is:
 
-\`\`\`
+```
 Cloudflare Workers / API
         ↓
 Runtime boot
@@ -53,7 +53,7 @@ migration lock verification
 D1 MigrationRunner
         ↓
 Cloudflare D1
-\`\`\`
+```
 
 Canonical references:
 

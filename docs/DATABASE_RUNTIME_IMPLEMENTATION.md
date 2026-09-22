@@ -19,7 +19,7 @@ This document records the executable database foundation for the current Cloudfl
 
 ## Runtime path
 
-\`\`\`
+```
 Cloudflare Worker
       ↓
 API / Runtime
@@ -29,11 +29,11 @@ D1Database
 Repository / domain service
       ↓
 D1
-\`\`\`
+```
 
 Migration boot path:
 
-\`\`\`
+```
 migrations/*.sql
       ↓
 loadMigrationCatalog
@@ -45,7 +45,7 @@ MigrationRunner
 schema_migrations
       ↓
 D1
-\`\`\`
+```
 
 ## Migration source contract
 
@@ -68,7 +68,7 @@ No handwritten TypeScript migration constant is allowed to become a second schem
 
 apps/api/src/migrations.ts currently references 0001 through 0013:
 
-\`\`\`
+```
 0001_foundation.sql
 0002_onboarding.sql
 0003_identity_sessions.sql
@@ -82,7 +82,7 @@ apps/api/src/migrations.ts currently references 0001 through 0013:
 0011_ai_seller_creation.sql
 0012_ai_seller_catalog_link.sql
 0013_ai_seller_idempotency_fingerprint.sql
-\`\`\`
+```
 
 ## Tenant isolation
 

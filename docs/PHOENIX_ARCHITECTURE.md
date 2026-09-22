@@ -9,9 +9,9 @@ Phoenix is fundamentally an intelligent decision and connection layer between cu
 
 The canonical product loop is:
 
-\`\`\`
+```
 Understand Demand → Understand Supply → Decide → Match → Connect → Act → Learn
-\`\`\`
+```
 
 Marketplace, Catalog, Discovery, Booking, CRM, Billing and AI are supporting capabilities that strengthen this loop. They are not independent product identities.
 
@@ -64,7 +64,7 @@ Each module owns its private persistence structures and exposes typed applicatio
 
 The hierarchy is:
 
-\`\`\`
+```
 Canonical logical model
         ↓
 Physical schema blueprint
@@ -76,7 +76,7 @@ Migration catalog + lock
 D1 migration runner
         ↓
 D1 physical database
-\`\`\`
+```
 
 The authoritative documents are:
 
@@ -112,17 +112,17 @@ SQL files under migrations/ are the only source of migration contents.
 
 The required filename shape is:
 
-\`\`\`
+```
 NNNN_module[_description].sql
-\`\`\`
+```
 
 For example:
 
-\`\`\`
+```
 0001_foundation.sql
 0005_catalog.sql
 0011_ai_seller_creation.sql
-\`\`\`
+```
 
 The module segment establishes the default migration owner. The migration catalog derives:
 
@@ -137,14 +137,14 @@ The migration lock records the reviewed identity and checksum of each migration.
 
 The runtime flow is:
 
-\`\`\`
+```
 canonical SQL
   → migration catalog
   → lock verification
   → D1 MigrationRunner
   → schema_migrations
   → D1 schema
-\`\`\`
+```
 
 Applied migration SQL is immutable. Never edit, rename, renumber or silently replace an applied migration.
 
@@ -152,7 +152,7 @@ Applied migration SQL is immutable. Never edit, rename, renumber or silently rep
 
 The API migration catalog currently references the canonical SQL sequence through:
 
-\`\`\`
+```
 0001_foundation
 0002_onboarding
 0003_identity_sessions
@@ -166,7 +166,7 @@ The API migration catalog currently references the canonical SQL sequence throug
 0011_ai_seller_creation
 0012_ai_seller_catalog_link
 0013_ai_seller_idempotency_fingerprint
-\`\`\`
+```
 
 This is the current migration source sequence visible in apps/api/src/migrations.ts.
 
@@ -254,9 +254,9 @@ The old files must be removed or explicitly adapted only in a dedicated reconcil
 
 Breaking changes use:
 
-\`\`\`
+```
 Expand → Migrate → Switch → Contract
-\`\`\`
+```
 
 Never combine destructive cleanup with an unverified consumer switch.
 
@@ -284,7 +284,7 @@ Sensitive data must follow classification, least-privilege, audit and retention 
 
 Before implementing any capability, verify that it strengthens:
 
-\`\`\`
+```
 Understand Demand
 → Understand Supply
 → Decide
@@ -292,7 +292,7 @@ Understand Demand
 → Connect
 → Act
 → Learn
-\`\`\`
+```
 
 When a capability is useful infrastructure rather than a product identity, it belongs inside the appropriate bounded context and must not create a competing source of truth.
 

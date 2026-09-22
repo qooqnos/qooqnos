@@ -54,7 +54,7 @@ Before adding a table:
 
 The API runtime currently references:
 
-\`\`\`
+```
 0001_foundation
 0002_onboarding
 0003_identity_sessions
@@ -68,7 +68,7 @@ The API runtime currently references:
 0011_ai_seller_creation
 0012_ai_seller_catalog_link
 0013_ai_seller_idempotency_fingerprint
-\`\`\`
+```
 
 Do not renumber or replace these migrations.
 
@@ -108,7 +108,7 @@ The remaining database work is not “implement PostgreSQL.”
 
 It is:
 
-\`\`\`
+```
 Canonical logical model
 → physical schema gap analysis
 → missing/partial/duplicate/conflicting entity resolution
@@ -116,7 +116,7 @@ Canonical logical model
 → repository/domain service implementation
 → runtime integration
 → integrity/tenant-isolation tests
-\`\`\`
+```
 
 Only after this sequence is complete should Cloudflare D1 production provisioning be treated as the final infrastructure step.
 

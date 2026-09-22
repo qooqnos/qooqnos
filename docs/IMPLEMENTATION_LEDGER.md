@@ -2,6 +2,7 @@
 
 **Status:** Current implementation ledger  
 **Last reviewed:** 2026-09-22
+**Documentation reconciliation commit:** 41e494d1d6b6f13b9d9d33655cfd589b942a4515
 
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
 
@@ -44,14 +45,14 @@ This work is preserved as history but is superseded.
 
 All new database work must use:
 
-\`\`\`
+```
 D1Database
 → repositories/services
 → canonical migrations/*.sql
 → migration catalog
 → migration lock
 → D1
-\`\`\`
+```
 
 Do not extend the historical PostgreSQL path.
 
@@ -76,7 +77,7 @@ Required future sequence:
 
 The API runtime references these migration sources:
 
-\`\`\`
+```
 0001_foundation.sql
 0002_onboarding.sql
 0003_identity_sessions.sql
@@ -90,7 +91,7 @@ The API runtime references these migration sources:
 0011_ai_seller_creation.sql
 0012_ai_seller_catalog_link.sql
 0013_ai_seller_idempotency_fingerprint.sql
-\`\`\`
+```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
 
@@ -136,7 +137,7 @@ The next database milestone is not “build PostgreSQL.”
 
 It is:
 
-\`\`\`
+```
 reconcile logical model
 → map every target entity to one owner
 → classify implemented / partial / missing / duplicate / conflicting
@@ -144,6 +145,6 @@ reconcile logical model
 → implement missing module-owned migrations
 → implement repositories/domain services
 → verify tenant isolation and integrity
-\`\`\`
+```
 
 Cloudflare D1 provisioning comes after the schema is reconciled; it must not be used to hide model uncertainty.

@@ -4,9 +4,9 @@ Phoenix is a secure, modular, multilingual, multi-tenant intelligent decision an
 
 ## Product loop
 
-\`\`\`
+```
 Understand Demand → Understand Supply → Decide → Match → Connect → Act → Learn
-\`\`\`
+```
 
 Marketplace, Catalog, Discovery, Booking, CRM, Billing and AI strengthen this loop; they are not independent product identities.
 
@@ -29,7 +29,7 @@ SQL migrations live under migrations/ and are the only source of migration conte
 
 The current API migration sequence is:
 
-\`\`\`
+```
 0001_foundation
 0002_onboarding
 0003_identity_sessions
@@ -43,7 +43,7 @@ The current API migration sequence is:
 0011_ai_seller_creation
 0012_ai_seller_catalog_link
 0013_ai_seller_idempotency_fingerprint
-\`\`\`
+```
 
 The runtime derives migration metadata from the canonical SQL, verifies the migration lock and executes the resulting definitions against D1.
 
