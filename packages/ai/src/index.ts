@@ -5,3 +5,5 @@ export * from "./seller-product-repository-adapter";
 export * from "./manifest";
 
 export * from "./runtime-repository";
+
+export * from "./runtime-service";
