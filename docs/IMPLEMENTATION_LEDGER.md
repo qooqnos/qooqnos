@@ -60,6 +60,8 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Final physical D1 schema | ⏳ In progress | requires table-by-table reconciliation |
 | Legacy PostgreSQL database path | ✅ Removed from active source | historical git history only |
 | Legacy in-memory database path | 🟡 Isolated compatibility path | packages/database/src/legacy.ts; not exported by canonical package root |
+| Legacy onboarding compatibility | 🟡 Explicit compatibility path | packages/onboarding/src/legacy.ts; package subpath `@qooqnos/onboarding/legacy`; canonical root no longer exports legacy workflow |
+| Legacy Node server | 🟡 Isolated compatibility source | packages/runtime/src/legacy-server.ts; canonical runtime no longer exports `./server` and legacy server is excluded from runtime build |
 
 ## 2. Database history
 
@@ -387,6 +389,8 @@ Trust Review note: migration 0042 physicalizes the canonical Review target from 
 
 Review reputation note: migration 0048 completes Review lifecycle/report/response/moderation/risk/reputation persistence. Reputation is rebuildable projection state; Review/Booking/Customer/Business remain the authoritative sources.
 
+Review moderation note: migration 0048 completes moderation/reporting/reputation projection storage and API/service behavior. Review target types remain canonical Business/Offering/Product only.
+
 Matching note: migrations 0040–0041 establish the canonical Demand→Match persistence boundary with typed Business/Offering targets and append-only decisions. Retrieval/ranking/learning execution remains operational follow-up.
 
 Privacy note: migration 0039 establishes consent, privacy-request and per-module processing persistence. Durable export/delete/retention workers remain follow-up operational capabilities.
@@ -471,6 +475,7 @@ The API runtime references these migration sources:
 0045_review_target_integrity.sql
 0046_booking_finalization_guards.sql
 0047_booking_capacity_update_guards.sql
+0048_reviews_moderation_reputation.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
@@ -513,7 +518,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory now reaches migration 0047. The remaining work is execution/completion, not schema invention:
+The canonical physical inventory now reaches migration 0048. The remaining work is execution/completion, not schema invention:
 
 ```
 pass CI build + tests
