@@ -1,9 +1,11 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
+import { rankEligibleCandidates, type DiscoveryCandidate } from "@qooqnos/core";
+import { DiscoveryRepository } from "@qooqnos/discovery";
 import type { AuthorizationService } from "@qooqnos/runtime";
 import { MatchingRepository } from "./repository";
 
 export interface MatchingServiceOptions {
-  readonly repository:MatchingRepository; readonly authorization:AuthorizationService; readonly id:()=>EntityId; readonly now:()=>string;
+  readonly repository:MatchingRepository; readonly discovery:DiscoveryRepository; readonly authorization:AuthorizationService; readonly id:()=>EntityId; readonly now:()=>string;
 }
 
 export class MatchingService {
@@ -44,6 +46,90 @@ export class MatchingService {
     return this.options.repository.addCandidate(context,{...input,id:this.options.id(),now:this.options.now()});
   }
 
+  async retrieveAndRank(
+    context: RequestContext,
+    input: {
+      readonly matchRequestId: EntityId;
+      readonly query: string;
+      readonly limit?: number;
+    },
+  ) {
+    await this.options.authorization.assert({
+      context,
+      permission: "matching.request.execute",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+
+    const request = await this.options.repository.getMatchRequest(context, input.matchRequestId);
+    if (!context.workspaceId || request.workspaceId !== context.workspaceId) {
+      throw new Error("Matching retrieval requires the request workspace scope");
+    }
+
+    const existing = await this.options.repository.listCandidates(context, request.id, input.limit ?? 50);
+    if (existing.length > 0) {
+      return {
+        request: await this.options.repository.setMatchStatus(context, request.id, "decided", this.options.now()),
+        candidates: existing,
+      };
+    }
+
+    await this.options.repository.setMatchStatus(context, request.id, "retrieving", this.options.now());
+    const documents = await this.options.discovery.search({
+      context,
+      query: input.query,
+      limit: Math.min(Math.max(input.limit ?? 20, 1), 50),
+    });
+
+    const discoveryCandidates: readonly DiscoveryCandidate[] = documents
+      .map((document, index) => {
+        if (document.sourceType !== "business") return null;
+        const retrievalScore = 1 / (index + 1);
+        return {
+          id: document.sourceId,
+          resourceType: "business",
+          payload: document,
+          eligibility: {
+            eligible: document.eligibility === "eligible",
+            reasons: document.eligibility === "eligible" ? [] : ["discovery_projection_ineligible"],
+            policyVersion: "discovery.lexical-v1",
+          },
+          signals: {
+            retrievalScore,
+            freshness: document.updatedAt === document.createdAt ? 0.1 : 0,
+          },
+        };
+      })
+      .filter((candidate): candidate is DiscoveryCandidate => candidate !== null);
+
+    const ranked = rankEligibleCandidates(discoveryCandidates, request.algorithmVersion);
+    await this.options.repository.setMatchStatus(context, request.id, "ranking", this.options.now());
+
+    const created = [];
+    for (const [index, candidate] of ranked.candidates.entries()) {
+      created.push(await this.options.repository.addCandidate(context, {
+        id: this.options.id(),
+        matchRequestId: request.id,
+        businessId: candidate.id,
+        retrievalSource: "discovery.lexical",
+        retrievalScore: candidate.signals.retrievalScore,
+        rankingScore: candidate.score,
+        rankPosition: index + 1,
+        eligibilityStatus: "eligible",
+        reasons: candidate.eligibility.reasons,
+        featureSnapshot: {
+          ...candidate.signals,
+          rankingVersion: ranked.rankingVersion,
+          sourceDocumentId: candidate.id,
+        },
+        now: this.options.now(),
+      }));
+    }
+
+    const finalRequest = await this.options.repository.setMatchStatus(context, request.id, "decided", this.options.now());
+    return { request: finalRequest, candidates: created };
+  }
+
   async decide(context:RequestContext,input:{
     readonly matchRequestId:EntityId;readonly candidateId:EntityId;readonly decision:"selected"|"rejected"|"deferred"|"excluded";
     readonly reasonCode?:string;readonly decisionSource:string;readonly policyVersion:string;
@@ -55,6 +141,6 @@ export class MatchingService {
 
 export const MATCHING_PERMISSIONS=[
   "matching.demand.read","matching.demand.create","matching.demand.manage",
-  "matching.request.read","matching.request.create","matching.candidate.read","matching.candidate.manage",
+  "matching.request.read","matching.request.create","matching.request.execute","matching.candidate.read","matching.candidate.manage",
   "matching.decision.read","matching.decision.manage"
 ] as const;
