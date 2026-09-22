@@ -284,6 +284,21 @@ Commits:
 - b6af4a2 — Register Communication project in API graph
 - fd73f97 — Register Communication dependency in API
 - 92ee4c2 — Register Communication module in API runtime
+- 2310529 — Refresh physical reconciliation after Trust review/expiry
+- e96ffe7 — Add Communication core migration 0035
+- 13614a9 — Add canonical Review repository invariant tests
+- 8044713 — Remove resolved Address/Review architecture decisions
+- 0076b5a — Align physical blueprint with canonical Automation AI and Integration tables
+- 5595266 — Fix D1-invalid expression UNIQUE in Billing usage counters
+- 98ce88a — Refresh Billing usage counter migration checksum
+- 25f17cf — Propagate Seller AI business scope into AIRuntime requests
+- 994a807 — Pass persisted Seller business scope into AI runtime
+- 74663c3 — Wire business scope into Billing entitlement policy
+- 72246b0 — Inject real BillingService into Seller AI API composition
+- 10540b8 — Cover Seller AI business scope in entitlement policy test
+- 118e73d — Update Seller AI runtime tests for persisted business scope
+- 04ee3b0 — Remove duplicate API workspace references
+- 4f246cd — Restore migration lock verifier helpers
 - 42f8063 — Test Communication message and notification idempotency
 - 2310529 — Refresh physical reconciliation after Trust review/expiry
 - 3458d50 — Document Trust review/expiry physical contracts
@@ -305,6 +320,8 @@ The old in-memory database implementation is retained only as an explicit legacy
 
 Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
 
+Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
+
 Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0043 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
@@ -322,6 +339,8 @@ Integration note: migration 0038 establishes provider/account/webhook/sync/exter
 AI Runtime note: migration 0037 establishes shared operation/provider/model/policy/prompt/schema/result/usage persistence. Provider adapters, routing engine, validation pipeline and durable execution workers remain operational follow-up.
 
 Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Consent/policy/template registry and provider adapters remain operational follow-up gates.
+
+Billing runtime note: the API Seller AI composition now uses the real D1-backed BillingService. No fallback unavailable Billing service is used for the production path; missing plan/subscription/entitlement state fails the operation closed.
 
 Billing note: migrations 0033–0034 establish plan/price/subscription/entitlement/usage/provider-reference/reconciliation storage plus an atomic quota counter. Billing is the commercial entitlement authority; payment execution, invoices and financial ledger remain gated.
 
