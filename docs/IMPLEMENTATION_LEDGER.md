@@ -24,6 +24,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Foundation / onboarding / identity / business / catalog SQL | 🟢 Implemented in migration sequence | migrations/0001–0005 |
 | Catalog guard/integrity migrations | 🟢 Implemented in migration sequence | migrations/0006–0008, 0014 |
 | Business category integrity hardening | 🟢 Implemented | migrations/0015_business_primary_category_integrity.sql |
+| Catalog Attribute vocabulary | 🟢 Foundation implemented | migrations/0016_catalog_attribute_vocabulary.sql; attribute value cutover remains gated |
 | Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
 | Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
 | Final physical D1 schema | ⏳ In progress | requires table-by-table reconciliation |
@@ -99,15 +100,21 @@ Commits:
 - 571c172 — Reconcile pricing and business primary-category decisions
 - 2378c0a — Align logical catalog ownership with physical schema
 - 0869e8f — Normalize reconciliation section numbering
+- ede3d54 — Add canonical Catalog Attribute vocabulary migration 0016
+- e9c338f — Register migration 0016 in API catalog
+- f22beb4 — Lock migration 0016 checksum
+- 00e904e — Define Catalog Attribute physical contract
+- cdbc1cb — Reconcile Catalog Attribute physical schema
+- a647b1c — Record canonical Catalog Attribute model
 
 Migration safety:
-- canonical migrations 0001–0014 were not edited, renumbered or replaced;
-- migration 0015_business_primary_category_integrity was added as a new Business-owned integrity migration;
+- canonical migrations 0001–0015 were not edited, renumbered or replaced;
+- migration 0016_catalog_attribute_vocabulary was added as a new Catalog-owned schema migration;
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
 
-Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.sql; 0015_business_primary_category_integrity.sql adds three integrity triggers and no tables. Both preserve all prior migration identities/checksums.
+Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.sql; 0015_business_primary_category_integrity.sql adds three integrity triggers and no tables; 0016_catalog_attribute_vocabulary.sql adds three Catalog Attribute tables and preserves all prior migration identities/checksums.
 
 ## 4. Current canonical migration inventory
 
@@ -129,6 +136,7 @@ The API runtime references these migration sources:
 0013_ai_seller_idempotency_fingerprint.sql
 0014_catalog_offering_integrity.sql
 0015_business_primary_category_integrity.sql
+0016_catalog_attribute_vocabulary.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
@@ -179,7 +187,7 @@ It is:
 reconcile logical model
 → map every target entity to one owner
 → classify implemented / partial / missing / duplicate / conflicting
-→ resolve structured Catalog Attributes without duplicating attributes_json
+→ complete Catalog Attribute value ownership/cutover without duplicating attributes_json
 → complete Business lifecycle only where contracts are sufficiently specified
 → implement missing module-owned migrations
 → implement repositories/domain services
