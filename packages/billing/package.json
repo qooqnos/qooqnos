@@ -12,7 +12,9 @@
     }
   },
   "dependencies": {
-    "@qooqnos/core": "*"
+    "@qooqnos/core": "*",
+    "@qooqnos/database": "*",
+    "@qooqnos/runtime": "*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"
