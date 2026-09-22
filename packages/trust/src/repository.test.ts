@@ -18,21 +18,42 @@ function context(): RequestContext {
 }
 
 describe("TrustReviewRepository", () => {
-  it("requires exactly one typed review target", async () => {
+  it("requires exactly one canonical typed review target", async () => {
     const statement: D1PreparedStatementLike = {
-      bind(){ return this; },
-      async first<T>() { return { id: "review-1" } as T; },
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
       async all<T>() { return { results: [] as T[] }; },
       async run() { return { success: true }; },
     };
-    const raw: D1DatabaseLike = { prepare(){ return statement; }, async batch(){ return []; } };
+    const raw: D1DatabaseLike = { prepare() { return statement; }, async batch() { return []; } };
     const repository = new TrustReviewRepository(new D1Database(raw));
 
     await expect(repository.createReview(context(), {
       id: brandId<"EntityId">("review-1"),
       customerId: brandId<"EntityId">("customer-1"),
       ratingValue: 5,
+      businessId: brandId<"EntityId">("business-1"),
+      offeringId: brandId<"EntityId">("offering-1"),
       now: "2026-09-22T00:00:00.000Z",
-    } as never)).rejects.toThrow("exactly one");
+    })).rejects.toThrow("exactly one");
+  });
+
+  it("rejects ratings outside the canonical 1-5 range", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = { prepare() { return statement; }, async batch() { return []; } };
+    const repository = new TrustReviewRepository(new D1Database(raw));
+
+    await expect(repository.createReview(context(), {
+      id: brandId<"EntityId">("review-2"),
+      customerId: brandId<"EntityId">("customer-1"),
+      ratingValue: 6,
+      businessId: brandId<"EntityId">("business-1"),
+      now: "2026-09-22T00:00:00.000Z",
+    })).rejects.toThrow("between 1 and 5");
   });
 });
