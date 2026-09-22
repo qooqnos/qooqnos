@@ -69,6 +69,31 @@ export interface ResourceRecord {
   readonly updatedAt: string;
 }
 
+
+
+export interface BookingStatusHistoryRecord {
+  readonly id: EntityId;
+  readonly bookingId: EntityId;
+  readonly fromStatus: BookingStatus | null;
+  readonly toStatus: BookingStatus;
+  readonly changedAt: string;
+  readonly createdAt: string;
+}
+
+export interface BookingHoldRecord {
+  readonly id: EntityId;
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId;
+  readonly businessId: EntityId;
+  readonly resourceId: EntityId | null;
+  readonly slotReference: string;
+  readonly actorReference: string | null;
+  readonly status: "active" | "released" | "expired" | "consumed";
+  readonly expiresAt: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export interface CreateBookingInput {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -207,9 +232,144 @@ export class BookingRepository extends Repository {
       current.workspaceId,
     );
 
+    await this.database.run(
+      "INSERT INTO booking_status_history (id, booking_id, from_status, to_status, changed_at, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+      id + ":status:" + now,
+      id,
+      current.status,
+      status,
+      now,
+      now,
+    );
+
     const updated = await this.get(context, id);
     if (!updated) throw new DatabaseError("Booking not found after status update");
     return updated;
+  }
+
+
+  async listStatusHistory(
+    context: RequestContext,
+    bookingId: EntityId,
+    limit = 100,
+  ): Promise<readonly BookingStatusHistoryRecord[]> {
+    const booking = await this.get(context, bookingId);
+    if (!booking) throw new DatabaseError("Booking not found");
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+    return this.database.all<BookingStatusHistoryRecord>(
+      "SELECT id, booking_id AS bookingId, from_status AS fromStatus, to_status AS toStatus, changed_at AS changedAt, created_at AS createdAt FROM booking_status_history WHERE booking_id = ? ORDER BY changed_at DESC, id DESC LIMIT ?",
+      bookingId,
+      safeLimit,
+    );
+  }
+
+  async createHold(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly businessId: EntityId;
+      readonly resourceId?: EntityId | undefined;
+      readonly slotReference: string;
+      readonly actorReference?: string | undefined;
+      readonly expiresAt: string;
+      readonly now: string;
+    },
+  ): Promise<BookingHoldRecord> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    if (!input.slotReference.trim()) throw new DatabaseError("Booking hold slot reference is required");
+    if (input.expiresAt <= input.now) throw new DatabaseError("Booking hold must expire in the future");
+
+    await this.database.run(
+      "INSERT INTO booking_holds (id, organization_id, workspace_id, business_id, resource_id, slot_reference, actor_reference, status, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)",
+      input.id,
+      organizationId,
+      workspaceId,
+      input.businessId,
+      input.resourceId ?? null,
+      input.slotReference.trim(),
+      input.actorReference ?? null,
+      input.expiresAt,
+      input.now,
+      input.now,
+    );
+
+    const hold = await this.getHold(context, input.id);
+    if (!hold) throw new DatabaseError("Booking hold not found after creation");
+    return hold;
+  }
+
+  async releaseHold(
+    context: RequestContext,
+    id: EntityId,
+    status: "released" | "expired" | "consumed",
+    now: string,
+  ): Promise<BookingHoldRecord> {
+    const current = await this.getHold(context, id);
+    if (!current) throw new DatabaseError("Booking hold not found");
+    if (current.status !== "active") return current;
+
+    await this.database.run(
+      "UPDATE booking_holds SET status = ?, updated_at = ? WHERE id = ? AND status = 'active'",
+      status,
+      now,
+      id,
+    );
+
+    const updated = await this.getHold(context, id);
+    if (!updated) throw new DatabaseError("Booking hold not found after release");
+    return updated;
+  }
+
+  async getHold(context: RequestContext, id: EntityId): Promise<BookingHoldRecord | null> {
+    return this.database.first<BookingHoldRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, resource_id AS resourceId, slot_reference AS slotReference, actor_reference AS actorReference, status, expires_at AS expiresAt, created_at AS createdAt, updated_at AS updatedAt FROM booking_holds WHERE id = ? AND organization_id = ? AND workspace_id = ? LIMIT 1",
+      id,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      this.requireWorkspace({ workspaceId: context.workspaceId }),
+    );
+  }
+
+  async listExpiredHolds(
+    context: RequestContext,
+    now: string,
+    limit = 100,
+  ): Promise<readonly BookingHoldRecord[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+    return this.database.all<BookingHoldRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, resource_id AS resourceId, slot_reference AS slotReference, actor_reference AS actorReference, status, expires_at AS expiresAt, created_at AS createdAt, updated_at AS updatedAt FROM booking_holds WHERE status = 'active' AND expires_at <= ? AND organization_id = ? AND workspace_id = ? ORDER BY expires_at ASC, id ASC LIMIT ?",
+      now,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      this.requireWorkspace({ workspaceId: context.workspaceId }),
+      safeLimit,
+    );
+  }
+
+  async recordAppointmentEvent(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly appointmentId: EntityId;
+      readonly eventType: string;
+      readonly eventVersion?: number | undefined;
+      readonly payload?: Readonly<Record<string, unknown>> | undefined;
+      readonly occurredAt: string;
+      readonly now: string;
+    },
+  ): Promise<void> {
+    const appointment = await this.getAppointment(context, input.appointmentId);
+    if (!appointment) throw new DatabaseError("Appointment not found");
+
+    await this.database.run(
+      "INSERT INTO appointment_events (id, appointment_id, event_type, event_version, payload_json, occurred_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.appointmentId,
+      input.eventType.trim(),
+      input.eventVersion ?? 1,
+      input.payload ? JSON.stringify(input.payload) : null,
+      input.occurredAt,
+      input.now,
+    );
   }
 
   async createAppointment(context: RequestContext, input: CreateAppointmentInput): Promise<AppointmentRecord> {
