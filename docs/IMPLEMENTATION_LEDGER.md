@@ -522,6 +522,7 @@ The canonical physical inventory now reaches migration 0048. The remaining work 
 
 ```
 pass CI build + tests
+→ keep canonical runtime free of legacy implementations
 → finish API/runtime composition for remaining canonical capabilities
 → complete durable workers for Outbox/Communication/Automation/Integration/Trust/Privacy
 → finish Matching retrieval/ranking/learning and Connect/Act integrations
