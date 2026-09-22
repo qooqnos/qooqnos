@@ -10,6 +10,7 @@
     "@qooqnos/billing": "*",
     "@qooqnos/business": "*",
     "@qooqnos/booking": "*",
+    "@qooqnos/commerce": "*",
     "@qooqnos/catalog": "*",
     "@qooqnos/core": "*",
     "@qooqnos/database": "*",
