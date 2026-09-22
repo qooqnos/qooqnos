@@ -38,6 +38,61 @@ describe("CommunicationRepository", () => {
     })).rejects.toThrow("content is required");
   });
 
+
+  it("creates a notification and its outbox event in one batch", async () => {
+    let batchStatements = 0;
+    let firstCalls = 0;
+    const notification = {
+      id: "notification-2",
+      organizationId: "tenant-1",
+      workspaceId: "workspace-1",
+      recipientReference: "customer-2",
+      intent: "booking.confirmed",
+      channel: "sms",
+      templateReference: null,
+      templateVersion: null,
+      locale: "en",
+      variablesJson: "{}",
+      priority: "normal",
+      status: "created",
+      idempotencyKey: "tenant-1:booking:evt-2",
+      scheduledAt: null,
+      expiresAt: null,
+      lastPolicyEvaluatedAt: null,
+      createdAt: "2026-09-22T00:00:00.000Z",
+      updatedAt: "2026-09-22T00:00:00.000Z",
+    };
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        firstCalls += 1;
+        return firstCalls === 1 ? null : notification as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true, meta: { changes: 1 } }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch(statements) {
+        batchStatements = statements.length;
+        return statements.map(() => ({ success: true, meta: { changes: 1 } }));
+      },
+    };
+    const repository = new CommunicationRepository(new D1Database(raw));
+
+    const result = await repository.createNotification(context(), {
+      id: brandId<"EntityId">("notification-2"),
+      recipientReference: "customer-2",
+      intent: "booking.confirmed",
+      channel: "sms",
+      idempotencyKey: "tenant-1:booking:evt-2",
+      now: "2026-09-22T00:00:00.000Z",
+    });
+
+    expect(result.id).toBe("notification-2");
+    expect(batchStatements).toBe(2);
+  });
+
   it("returns the existing notification for a repeated idempotency key", async () => {
     const existing = {
       id: "notification-1",
