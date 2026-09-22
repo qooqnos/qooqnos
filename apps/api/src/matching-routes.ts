@@ -3,7 +3,7 @@ import { DiscoveryRepository } from "@qooqnos/discovery";
 import { AppError, brandId, type EntityId } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import { createAuthorizationService, type AuthorizationRegistry } from "@qooqnos/runtime";
-import { AuthorizationRepository } from "@qooqnos/database";
+import { AuthorizationRepository, CustomerRelationshipRepository } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
 
@@ -113,6 +113,27 @@ export function registerMatchingRoutes(
   });
 
   router.register({
+    method: "POST",
+    path: "/api/v1/match-requests/:matchRequestId/connect",
+    module: "matching",
+    operation: "matching.request.connect",
+    permission: "matching.request.connect",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      assertDependencies(database, authorization, context.requestId);
+      const body = await parseBody(request, context.requestId);
+      const service = createService(database, authorization);
+      const result = await service.connect(context, {
+        matchRequestId: brandId<"EntityId">(requiredParam(params.matchRequestId, context.requestId)),
+        candidateId: requiredEntityId(body.candidateId, "candidateId", context.requestId),
+        ...(typeof body.relationshipType === "string" ? { relationshipType: body.relationshipType } : {}),
+      });
+      return json({ data: result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "GET",
     path: "/api/v1/match-requests/:matchRequestId/candidates",
     module: "matching",
@@ -133,6 +154,7 @@ function createService(database: D1Database, authorization: AuthorizationRegistr
   return new MatchingService({
     repository: new MatchingRepository(database),
     discovery: new DiscoveryRepository(database),
+    relationships: new CustomerRelationshipRepository(database),
     authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
     id: () => brandId<"EntityId">(crypto.randomUUID()),
     now: () => new Date().toISOString(),
