@@ -10,6 +10,7 @@
     "@qooqnos/billing": "*",
     "@qooqnos/communication": "*",
     "@qooqnos/automation": "*",
+    "@qooqnos/integration": "*",
     "@qooqnos/business": "*",
     "@qooqnos/booking": "*",
     "@qooqnos/commerce": "*",
