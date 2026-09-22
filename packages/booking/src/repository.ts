@@ -231,6 +231,18 @@ export class BookingRepository extends Repository {
         ],
       },
       {
+        sql: "UPDATE booking_holds SET status = 'consumed', updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND business_id = ? AND status = 'active' AND expires_at > ? AND (resource_id IS NULL OR resource_id = ?)",
+        params: [
+          input.now,
+          input.holdId,
+          organizationId,
+          workspaceId,
+          input.businessId,
+          input.now,
+          input.resourceId ?? null,
+        ],
+      },
+      {
         sql: "INSERT INTO bookings (id, organization_id, workspace_id, business_id, customer_id, status, currency, total_amount_minor, policy_snapshot, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?, ?, ?)",
         params: [
           input.bookingId,
@@ -283,6 +295,26 @@ export class BookingRepository extends Repository {
         params: [input.bookingId + ":appointment", input.resourceId, input.now],
       });
     }
+
+    statements.push({
+      sql: "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'booking.confirmed', 1, 'booking', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+      params: [
+        input.bookingId + ":confirmed",
+        input.bookingId,
+        organizationId,
+        workspaceId,
+        JSON.stringify({
+          bookingId: input.bookingId,
+          businessId: input.businessId,
+          customerId: input.customerId,
+          startsAt: input.startsAt,
+          endsAt: input.endsAt,
+          resourceId: input.resourceId ?? null,
+        }),
+        input.now,
+        input.now,
+      ],
+    });
 
     try {
       const results = await this.database.transaction(statements);
