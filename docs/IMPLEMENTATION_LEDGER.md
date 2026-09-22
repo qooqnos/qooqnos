@@ -34,6 +34,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Booking core | 🟢 Schema/package/repository implemented | migrations/0028_booking_core.sql; packages/booking/src/repository.ts; packages/booking/src/service.ts |
 | Booking availability rules | 🟢 Schema/repository implemented | migrations/0029_availability_schedules.sql; packages/booking/src/availability-repository.ts |
 | Booking holds / lifecycle history | 🟢 Schema/repository implemented | migrations/0030_booking_holds_history.sql; packages/booking/src/repository.ts |
+| Commerce transaction core | 🟢 Schema/package/repository implemented | migrations/0031_commerce_transaction_core.sql; migrations/0032_commerce_integrity_hardening.sql; packages/commerce/src/repository.ts; packages/commerce/src/service.ts |
 | Trust VerificationCase / evidence | 🟢 Schema/repository implemented | migrations/0021_verification_case_and_documents.sql; packages/database/src/verification-repository.ts |
 | Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
 | Trust checks / evidence links | 🟢 Schema implemented | migrations/0023_verification_checks.sql; runtime methods in verification-repository.ts |
@@ -224,6 +225,26 @@ Commits:
 - 9b2cd4b — Extend Booking permission vocabulary
 - 3a2d8a3 — Wire Availability permissions into manifest
 - fc5e3eb — Export Availability service
+- 6031da2 — Add Commerce transaction core migration 0031
+- 84476f4 — Fix Commerce snapshot immutability trigger syntax
+- 8d0476b — Register Commerce transaction migration
+- c2294ed — Lock Commerce transaction migration checksum
+- c9f704e — Add Commerce integrity hardening migration 0032
+- 5ed153b — Register Commerce integrity migration
+- e3f9b14 — Lock Commerce integrity migration checksum
+- 769d12c — Add Commerce package manifest
+- 2bdbf2b — Add Commerce TypeScript project
+- 4dbcf82 — Implement canonical Commerce repository
+- 0ef4da5 — Implement Commerce service capability layer
+- a753c85 — Add Commerce runtime module manifest
+- 1a0ad2b — Export Commerce package
+- a0a8808 — Register Commerce project in root graph
+- 9178600 — Register Commerce project in API graph
+- 5b7d2c1 — Register Commerce dependency in API
+- 0763a85 — Register Commerce module in API runtime
+- 69bcbc1 — Add Commerce repository tests
+- 8d3b29e — Fix Commerce repository test harness
+- 35d3696 — Complete Commerce orchestration repositories
 - 2310529 — Refresh physical reconciliation after Trust review/expiry
 - 3458d50 — Document Trust review/expiry physical contracts
 - 3ba47ec — Record Trust physical implementation status
@@ -247,6 +268,8 @@ Customer/CRM verification note: repositories and scope-focused tests were added;
 Migration lock note: 0021 was refreshed after a pre-apply SQL cleanup; 0022–0024 remain locked to their canonical SHA-256 values recorded during implementation.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
+
+Commerce note: migrations 0031–0032 establish the Commerce-owned Cart/Checkout/PriceSnapshot/Order transaction boundary and integrity hardening. Billing/Payment remains authoritative for payment execution, financial settlement, refunds and invoices.
 
 Booking note: migrations 0028–0030 establish the canonical Booking/Availability physical core, short-lived holds and immutable booking/appointment history. Final availability calculation, hold consumption and atomic finalization remain the next Booking capability layer; no second reservation model or authoritative slots table is permitted.
 
@@ -293,6 +316,8 @@ The API runtime references these migration sources:
 0028_booking_core.sql
 0029_availability_schedules.sql
 0030_booking_holds_history.sql
+0031_commerce_transaction_core.sql
+0032_commerce_integrity_hardening.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
