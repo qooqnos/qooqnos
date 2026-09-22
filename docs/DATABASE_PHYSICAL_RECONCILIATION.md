@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0017.
+The current API migration catalog references versions 0001 through 0019.
 
 ### Foundation — 0001
 
@@ -124,7 +124,20 @@ This migration seeds persisted permission vocabulary.
 
 0017 is an expand-only value-storage migration. It establishes typed AttributeValue records for product, product_variant and service targets, preserves provenance, and enforces type/option compatibility. It does not backfill attributes_json and does not switch current repository reads/writes.
 
-**Total currently defined physical tables: 48.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables.
+### Customer core — 0018
+
+- customers
+- customer_preferences
+
+0018 establishes the canonical marketplace Customer representation separately from Identity. Guest Customers are supported through nullable user_id mapping.
+
+### CRM customer relationships — 0019
+
+- customer_relationships
+
+0019 establishes the canonical Customer↔Business relationship aggregate owned by CRM and enforces same-organization integrity.
+
+**Total currently defined physical tables: 51.** Migrations 0014–0015 add integrity triggers only; migration 0016 adds three Catalog Attribute vocabulary tables; migration 0017 adds two Attribute value tables; migration 0018 adds two Customer tables; migration 0019 adds one CRM relationship table plus integrity triggers.
 
 This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
 
@@ -141,7 +154,7 @@ This count includes only canonical SQL migration sources. It does not include th
 | Media | assets, variants, links, processing jobs | Core implemented |
 | Discovery | search documents, embeddings, ranking features, indexing jobs | Core projection implemented; index-version registry is missing |
 | Seller AI Creation | creation sessions, raw inputs, drafts, field provenance | Implemented for seller-side creation slice |
-| Customer / CRM | no canonical customer tables | Missing |
+| Customer / CRM | customers, customer_preferences, customer_relationships | Core identity/preference/relationship storage implemented; profile/address/timeline/CRM workflow layers remain |
 | Matching | no user request / match execution tables | Missing |
 | Booking / Availability | no booking/appointment/resource/schedule tables | Missing |
 | Trust / Verification | no verification case/check/evidence/decision tables | Missing |
@@ -240,6 +253,21 @@ Migration 0017 adds \`attribute_values\` and \`attribute_value_options\` as the 
 The storage is intentionally staged: existing \`product_variants.attributes_json\` remains the active value path. No backfill is attempted because arbitrary JSON keys cannot be safely mapped to canonical AttributeDefinitions without an explicit mapping contract.
 
 The supported target types are currently product, product_variant and service. Adding more targets requires a contract update. Multi-enum values use a parent AttributeValue plus child option rows, while enum values use a single option_id.
+
+
+## 3.12 Customer core — 0018
+
+Migration 0018 establishes `customers` and `customer_preferences`.
+
+Customer is distinct from User. Identity remains authoritative for authentication/account state; Customer is the marketplace representation scoped to an Organization. A guest Customer has no user mapping.
+
+Preference records retain source, confidence, persistence and consent scope; they are not AI memory or communication consent authority.
+
+## 3.13 CRM customer relationships — 0019
+
+Migration 0019 establishes `customer_relationships` as the canonical Customer↔Business relationship table. Relationship status follows the Customer data contract (prospect, active, inactive).
+
+The database rejects cross-organization Customer/Business relationships. CRM remains the owner of relationship workflows and does not duplicate booking, commerce, communication or reputation truth.
 
 ## 4. Seller AI versus canonical AI Runtime
 
