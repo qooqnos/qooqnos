@@ -162,6 +162,7 @@ Commits:
 - f5b9c18 — Add verification case and document migration 0021
 - a88c395 — Register verification case migration
 - 0a68a2f — Lock verification case migration checksum
+- f6177f3 — Refresh verification case migration checksum after pre-apply migration cleanup
 - 2e2e47c — Implement canonical verification repository
 - 9a901c5 — Export canonical verification repository
 - 0ad59e4 — Add verification repository tests
@@ -191,6 +192,8 @@ Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.
 The old in-memory database implementation is retained only as an explicit legacy compatibility module and is no longer part of the canonical @qooqnos/database root API.
 
 Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
+
+Migration lock note: 0021 was refreshed after a pre-apply SQL cleanup; 0022–0024 remain locked to their canonical SHA-256 values recorded during implementation.
 
 CRM timeline note: normalized event storage and idempotent source-event handling are implemented. A separate timeline projection table remains gated pending a field-level read-model/rebuild contract.
 
