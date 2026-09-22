@@ -27,6 +27,7 @@ import customerAddresses from "../../../migrations/0026_customer_addresses.sql";
 import businessStatusHistory from "../../../migrations/0027_business_status_history.sql";
 import bookingCore from "../../../migrations/0028_booking_core.sql";
 import availabilitySchedules from "../../../migrations/0029_availability_schedules.sql";
+import bookingHoldsHistory from "../../../migrations/0030_booking_holds_history.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -59,4 +60,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0027_business_status_history.sql", sql: businessStatusHistory },
   { path: "migrations/0028_booking_core.sql", sql: bookingCore },
   { path: "migrations/0029_availability_schedules.sql", sql: availabilitySchedules },
+  { path: "migrations/0030_booking_holds_history.sql", sql: bookingHoldsHistory },
 ];
