@@ -1,0 +1,37 @@
+name: Phoenix verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify migration catalog and lock
+        run: pnpm verify:migrations
+
+      - name: Build workspace
+        run: pnpm -r --if-present build
+
+      - name: Run tests
+        run: pnpm -r --if-present test
