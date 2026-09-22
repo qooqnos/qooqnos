@@ -16,6 +16,7 @@
     {"id":"0013_ai_seller_idempotency_fingerprint","version":13,"moduleId":"ai","checksum":"de6b77f3221bb8838f6c5b26746298938ce2015803e928faf1877764c5048ce7","filename":"0013_ai_seller_idempotency_fingerprint.sql"},
     {"id":"0014_catalog_offering_integrity","version":14,"moduleId":"catalog","checksum":"cb51be78df07baa8bb726f08a8c6cb27082738a8e784a903a2ac6424f1183258","filename":"0014_catalog_offering_integrity.sql"},
     {"id":"0015_business_primary_category_integrity","version":15,"moduleId":"business","checksum":"2e6405416a016b3cb507bdae70cf18a3fcedb46776d28969610db2434f7b364a","filename":"0015_business_primary_category_integrity.sql"},
-    {"id":"0016_catalog_attribute_vocabulary","version":16,"moduleId":"catalog","checksum":"3ee03bb4dcc4f34630740ecccb10151fd7eade7497a5f0077c939cd62eda070b","filename":"0016_catalog_attribute_vocabulary.sql"}
+    {"id":"0016_catalog_attribute_vocabulary","version":16,"moduleId":"catalog","checksum":"3ee03bb4dcc4f34630740ecccb10151fd7eade7497a5f0077c939cd62eda070b","filename":"0016_catalog_attribute_vocabulary.sql"},
+    {"id":"0017_catalog_attribute_values","version":17,"moduleId":"catalog","checksum":"ddb8a4cc6c4dcab7504d969190f8895d787c0e94e680afae0021df6cc3956938","filename":"0017_catalog_attribute_values.sql"}
   ]
 }
