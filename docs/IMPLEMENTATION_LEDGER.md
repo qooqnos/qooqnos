@@ -29,6 +29,10 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Customer core | 🟢 Schema/repository implemented | migrations/0018_customer_core.sql; packages/database/src/customer-repository.ts |
 | CRM Customer relationships | 🟢 Schema/repository implemented | migrations/0019_crm_customer_relationships.sql; packages/database/src/customer-relationship-repository.ts |
 | CRM timeline events | 🟢 Schema/repository implemented | migrations/0020_crm_timeline_events.sql; packages/database/src/crm-timeline-repository.ts; projections remain gated |
+| Trust VerificationCase / evidence | 🟢 Schema/repository implemented | migrations/0021_verification_case_and_documents.sql; packages/database/src/verification-repository.ts |
+| Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
+| Trust checks / evidence links | 🟢 Schema implemented | migrations/0023_verification_checks.sql; runtime methods in verification-repository.ts |
+| Trust decisions / supporting checks | 🟢 Schema implemented, append-only | migrations/0024_verification_decisions.sql; runtime methods in verification-repository.ts |
 | Catalog Attribute repositories | 🟢 Implemented | packages/catalog/src/attribute-repository.ts; packages/catalog/src/attribute-value-repository.ts |
 | Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
 | Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
@@ -155,10 +159,29 @@ Commits:
 - a6bf6f1 — Implement canonical CRM timeline repository
 - 22c49ab — Export CRM timeline repository
 - d922430 — Add CRM timeline repository tests
+- f5b9c18 — Add verification case and document migration 0021
+- a88c395 — Register verification case migration
+- 0a68a2f — Lock verification case migration checksum
+- 2e2e47c — Implement canonical verification repository
+- 9a901c5 — Export canonical verification repository
+- 0ad59e4 — Add verification repository tests
+- f3e4586 — Add verification policy/requirement migration 0022
+- 376ae76 — Register verification policy migration
+- 15b008f — Lock verification policy migration checksum
+- fc2cdf5 — Add verification checks migration 0023
+- 7452230 — Register verification checks migration
+- 2277200 — Lock verification checks migration checksum
+- b6ae11a — Add verification decisions migration 0024
+- 22fa0de — Register verification decisions migration
+- f9a1914 — Refresh immutable decision migration checksum
+- 647303c — Enforce complete verification decision immutability
+- 66a0ed4 — Reconcile Trust policy/check/decision chain
+- 192fc95 — Align Trust physical blueprint
+- 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0019 were not edited, renumbered or replaced;
-- migration 0020_crm_timeline_events was added as a new CRM-owned schema migration;
+- canonical migrations 0001–0023 were not edited, renumbered or replaced;
+- migration 0024_verification_decisions was added as a new Trust-owned schema migration;
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
@@ -170,6 +193,8 @@ The old in-memory database implementation is retained only as an explicit legacy
 Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
 
 CRM timeline note: normalized event storage and idempotent source-event handling are implemented. A separate timeline projection table remains gated pending a field-level read-model/rebuild contract.
+
+Trust note: migrations 0021–0024 now implement the canonical VerificationCase → Policy/Requirement → Check/Evidence → append-only Decision chain. Reviewer assignment, expiry workflow and TrustSignal projections remain gated.
 
 Migration runtime hardening: splitSqlStatements now keeps SQLite CREATE TRIGGER bodies intact across internal semicolons and rejects unterminated trigger/comment/literal blocks. Trigger-splitting regression tests were added.
 
@@ -198,6 +223,10 @@ The API runtime references these migration sources:
 0018_customer_core.sql
 0019_crm_customer_relationships.sql
 0020_crm_timeline_events.sql
+0021_verification_case_and_documents.sql
+0022_verification_policy_requirements.sql
+0023_verification_checks.sql
+0024_verification_decisions.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
