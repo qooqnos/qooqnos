@@ -270,6 +270,14 @@ A Customer may be a guest. `user_id` is an optional mapping, never the Customer 
 
 `customer_id`, preferences/profile data, locale/timezone?, timestamps.
 
+The profile shape remains intentionally open until its field-level contract is finalized.
+
+### `customer_preferences`
+
+`id`, customer_id, attribute, value_reference, source, confidence?, persistence, consent_scope?, created_at, expires_at.
+
+Preferences are distinct from AI memory and centralized consent authority. Source/confidence are provenance metadata and must not be interpreted as financial or identity truth.
+
 ### `customer_addresses`
 
 `id`, customer_id, address value fields, type, default flag?, timestamps.
