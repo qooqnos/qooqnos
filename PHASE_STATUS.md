@@ -31,7 +31,7 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Migration lock | ✅ Implemented | reviewed SQL identity/checksum is enforced |
 | D1 database boundary | ✅ Implemented | packages/database exposes D1-compatible access |
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
-| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0047 |
+| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0048 |
 | Full logical model | ⏳ In progress | many target entities remain intentionally un-migrated |
 | Final D1 physical schema | 🟡 Core domains implemented; operational gaps remain | physical schema is broad and integrity-guarded; remaining work is provider/worker/projection execution and gated contracts |
 | Legacy PostgreSQL path | ⚠️ Quarantined | historical files remain but are not canonical |
@@ -52,7 +52,7 @@ Before adding a table:
 
 ## 4. Migration sequence currently registered
 
-The API runtime currently references the ordered canonical migration sequence `0001` through `0047`.
+The API runtime currently references the ordered canonical migration sequence `0001` through `0048`.
 
 Do not renumber or replace these migrations.
 
