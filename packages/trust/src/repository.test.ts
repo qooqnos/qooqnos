@@ -154,5 +154,5 @@ describe("TrustReviewRepository", () => {
       content: "Thanks",
       policyVersion: "",
       now: "2026-09-22T00:00:00.000Z",
-    })).resolves.toBeDefined();
+    })).rejects.toThrow("policy version is required");
   });
