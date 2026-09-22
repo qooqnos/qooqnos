@@ -331,6 +331,20 @@ These migrations add integrity triggers only.
 
 0045 enforces Review Business/Offering/Product target scope on insert and update.
 
+### Booking finalization guards — 0046
+
+- no new tables
+- adds `bookings.idempotency_key`
+- adds transactional resource-capacity triggers for appointment-resource commitments
+
+0046 hardens Booking finalization/idempotency without introducing an alternate reservation table.
+
+### Booking capacity update guards — 0047
+
+- no new tables
+
+0047 extends capacity protection to appointment status/time mutations and Resource capacity reductions.
+
 **Total currently defined physical tables: 144.**
 
 
@@ -351,7 +365,7 @@ This count includes only canonical SQL migration sources. It does not include re
 | Seller AI Creation | creation sessions, raw inputs, drafts, field provenance | Implemented for seller-side creation slice |
 | Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events, customer_addresses | Customer core, CRM relationship and structured Address storage implemented; CustomerProfile, timeline projection and workflow layers remain |
 | Matching | demand_requests, demand_profiles, match_requests, match_candidates, match_decisions | Canonical Demand→Match persistence implemented; retrieval/ranking/learning and Connect/Act integration remain |
-| Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions, booking_holds, booking_status_history, appointment_events | Core schema/repositories implemented; final availability resolution and atomic reservation/finalization remain |
+| Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions, booking_holds, booking_status_history, appointment_events | Core schema/repositories implemented; finalization/idempotency/capacity guards and derived slot generation implemented; provider/workers remain separate |
 | Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews | Verification chain + review/expiry/review records implemented; Review target scope is schema-enforced for Business/Offering/Product; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
 | Moderation / Privacy / Consent | privacy_consents, privacy_requests, privacy_processing_records | Core consent/privacy-request storage implemented; retention/export/delete workers remain |
 
