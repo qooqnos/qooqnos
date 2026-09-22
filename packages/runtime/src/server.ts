@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import { URL } from "url";
-import { InMemoryDatabase } from "@qooqnos/database";
+import { InMemoryDatabase } from "@qooqnos/database/legacy";
 import { ApiRouter } from "@qooqnos/api";
 import {
   createCorrelationId,
