@@ -17,6 +17,7 @@ import catalogAttributeVocabulary from "../../../migrations/0016_catalog_attribu
 import catalogAttributeValues from "../../../migrations/0017_catalog_attribute_values.sql";
 import customerCore from "../../../migrations/0018_customer_core.sql";
 import crmCustomerRelationships from "../../../migrations/0019_crm_customer_relationships.sql";
+import crmTimelineEvents from "../../../migrations/0020_crm_timeline_events.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -39,4 +40,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0017_catalog_attribute_values.sql", sql: catalogAttributeValues },
   { path: "migrations/0018_customer_core.sql", sql: customerCore },
   { path: "migrations/0019_crm_customer_relationships.sql", sql: crmCustomerRelationships },
+  { path: "migrations/0020_crm_timeline_events.sql", sql: crmTimelineEvents },
 ];
