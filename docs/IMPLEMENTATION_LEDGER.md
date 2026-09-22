@@ -29,6 +29,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
 | Final physical D1 schema | ⏳ In progress | requires table-by-table reconciliation |
 | Legacy PostgreSQL database path | ✅ Removed from active source | historical git history only |
+| Legacy in-memory database path | 🟡 Isolated compatibility path | packages/database/src/legacy.ts; not exported by canonical package root |
 
 ## 2. Database history
 
@@ -106,6 +107,17 @@ Commits:
 - 00e904e — Define Catalog Attribute physical contract
 - cdbc1cb — Reconcile Catalog Attribute physical schema
 - a647b1c — Record canonical Catalog Attribute model
+- b6220a1 — Implement Catalog Attribute repository
+- 1b528e9 — Export Catalog Attribute repository
+- ac0f704 — Add Catalog Attribute repository tests
+- 4264535 — Isolate legacy in-memory database compatibility layer
+- b06ea23 — Make database package export D1 boundary only
+- e166926 — Route legacy API imports through explicit legacy boundary
+- aac18d7 — Route legacy runtime server through explicit legacy boundary
+- b8e28bb — Route legacy onboarding through explicit legacy boundary
+- 2a1cbae — Route legacy onboarding tests through explicit legacy boundary
+- f584d3b — Expose legacy database compatibility as explicit subpath
+- 736af81 — Map explicit legacy database subpath in TypeScript
 
 Migration safety:
 - canonical migrations 0001–0015 were not edited, renumbered or replaced;
@@ -115,6 +127,8 @@ Migration safety:
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
 
 Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.sql; 0015_business_primary_category_integrity.sql adds three integrity triggers and no tables; 0016_catalog_attribute_vocabulary.sql adds three Catalog Attribute tables and preserves all prior migration identities/checksums.
+
+The old in-memory database implementation is retained only as an explicit legacy compatibility module and is no longer part of the canonical @qooqnos/database root API.
 
 ## 4. Current canonical migration inventory
 
@@ -189,8 +203,8 @@ reconcile logical model
 → classify implemented / partial / missing / duplicate / conflicting
 → complete Catalog Attribute value ownership/cutover without duplicating attributes_json
 → complete Business lifecycle only where contracts are sufficiently specified
-→ implement missing module-owned migrations
-→ implement repositories/domain services
+→ implement repositories/domain services for the canonical D1 path
+→ migrate or retire any remaining explicit legacy compatibility consumers
 → verify tenant isolation and integrity
 ```
 
