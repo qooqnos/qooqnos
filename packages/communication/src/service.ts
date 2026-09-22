@@ -12,6 +12,20 @@ export interface CommunicationServiceOptions {
 export class CommunicationService {
   constructor(private readonly options: CommunicationServiceOptions) {}
 
+  async createConversation(context: RequestContext, input: { readonly customerId?: EntityId | undefined }) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.conversation.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.createConversation(context, {
+      id: this.options.id(),
+      ...(input.customerId ? { customerId: input.customerId } : {}),
+      now: this.options.now(),
+    });
+  }
+
   async sendMessage(context: RequestContext, input: {
     readonly conversationId: EntityId; readonly content: string; readonly classification: string;
   }) {
