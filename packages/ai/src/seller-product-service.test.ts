@@ -57,7 +57,25 @@ function repository(): SellerProductSessionRepository {
         updatedAt: input.now,
       };
     },
-    async getSession() { return null; },
+    async getSession() {
+      return {
+        id: brandId<"EntityId">("session-1"),
+        organizationId: brandId<"EntityId">("tenant-1"),
+        workspaceId: brandId<"EntityId">("workspace-1"),
+        businessId: brandId<"EntityId">("business-1"),
+        catalogProductId: null,
+        actorId: brandId<"EntityId">("user-1"),
+        status: "initiated",
+        currentDraftVersion: 0,
+        idempotencyKey: "idem-1",
+        requestFingerprint: "hash-1",
+        requestId: brandId<"RequestId">("req-1"),
+        correlationId: brandId<"CorrelationId">("corr-1"),
+        expiresAt: null,
+        createdAt: "2026-09-16T00:00:00.000Z",
+        updatedAt: "2026-09-16T00:00:00.000Z",
+      };
+    },
     async getInputs() {
       return [{
         id: brandId<"EntityId">("input-1"),
@@ -162,6 +180,7 @@ describe("SellerProductService", () => {
 
     expect(executeMock).toHaveBeenCalledWith(expect.objectContaining({
       context: context(),
+      businessId: brandId<"EntityId">("business-1"),
       sessionId: brandId<"EntityId">("session-1"),
       operationType: SELLER_AI_OPERATION_TYPES.extract,
       operationVersion: 1,
