@@ -304,6 +304,7 @@ export class BillingRepository extends Repository {
       readonly periodKey: string;
       readonly sourceEventId: string;
       readonly correlationId: string;
+      readonly fallbackLimit?: number | undefined;
       readonly now: string;
     },
   ): Promise<{ allowed: boolean; limit: number | null; remaining: number | null }> {
@@ -321,15 +322,16 @@ export class BillingRepository extends Repository {
         "SELECT hard_limit AS hardLimit FROM billing_usage_meters WHERE id = ? LIMIT 1",
         existingUsage.meterId,
       );
+      const counterId = input.subscription.organizationId + ":" + (input.subscription.workspaceId ?? "") + ":" + input.subscription.businessId + ":" + existingUsage.meterId + ":" + input.periodKey;
       const counter = await this.database.first<{ quantity: number }>(
         "SELECT quantity FROM billing_usage_counters WHERE id = ? LIMIT 1",
-        input.subscription.id + ":" + existingUsage.meterId + ":" + input.periodKey,
+        counterId,
       );
       return {
         allowed: true,
-        limit: meter?.hardLimit ?? null,
+        limit: meter?.hardLimit ?? input.fallbackLimit ?? null,
         remaining: meter?.hardLimit === null || meter?.hardLimit === undefined
-          ? null
+          ? (input.fallbackLimit === undefined ? null : Math.max(0, input.fallbackLimit - (counter?.quantity ?? 0)))
           : Math.max(0, meter.hardLimit - (counter?.quantity ?? 0)),
       };
     }
@@ -340,7 +342,7 @@ export class BillingRepository extends Repository {
     );
     if (!meter) return { allowed: true, limit: null, remaining: null };
 
-    const counterId = input.subscription.id + ":" + meter.id + ":" + input.periodKey;
+    const counterId = input.subscription.organizationId + ":" + (input.subscription.workspaceId ?? "") + ":" + input.subscription.businessId + ":" + meter.id + ":" + input.periodKey;
     await this.database.run(
       "INSERT OR IGNORE INTO billing_usage_counters (id, organization_id, workspace_id, business_id, meter_id, period_key, quantity, version, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, 1, ?)",
       counterId,
@@ -352,7 +354,8 @@ export class BillingRepository extends Repository {
       input.now,
     );
 
-    if (meter.hardLimit === null) {
+    const hardLimit = meter.hardLimit ?? input.fallbackLimit ?? null;
+    if (hardLimit === null) {
       await this.database.run(
         "UPDATE billing_usage_counters SET quantity = quantity + ?, version = version + 1, updated_at = ? WHERE id = ?",
         input.quantity,
@@ -368,7 +371,7 @@ export class BillingRepository extends Repository {
       input.now,
       counterId,
       input.quantity,
-      meter.hardLimit,
+      hardLimit,
     );
     if ((update.meta?.changes ?? 0) !== 1) {
       const current = await this.database.first<{ quantity: number }>(
@@ -377,8 +380,8 @@ export class BillingRepository extends Repository {
       );
       return {
         allowed: false,
-        limit: meter.hardLimit,
-        remaining: Math.max(0, (meter.hardLimit ?? 0) - (current?.quantity ?? 0)),
+        limit: hardLimit,
+        remaining: Math.max(0, (hardLimit ?? 0) - (current?.quantity ?? 0)),
       };
     }
 
@@ -398,8 +401,8 @@ export class BillingRepository extends Repository {
 
     return {
       allowed: true,
-      limit: meter.hardLimit,
-      remaining: Math.max(0, meter.hardLimit - ((await this.getUsageCounter(counterId)) ?? 0)),
+      limit: hardLimit,
+      remaining: hardLimit === null ? null : Math.max(0, hardLimit - ((await this.getUsageCounter(counterId)) ?? 0)),
     };
   }
 
