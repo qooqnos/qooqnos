@@ -8,20 +8,47 @@
     "outDir": "./dist"
   },
   "references": [
-    { "path": "./packages/core" },
-    { "path": "./packages/database" },
-    { "path": "./packages/runtime" },
-    { "path": "./packages/booking" },
-    { "path": "./packages/commerce" },
-    { "path": "./packages/billing" },
-    { "path": "./packages/communication" },
-    { "path": "./packages/automation" },
-    { "path": "./packages/integration" },
-    { "path": "./packages/privacy" },
-    { "path": "./packages/matching" },
-    { "path": "./packages/trust" },
-    { "path": "./packages/api" },
-    { "path": "./packages/i18n" },
-    { "path": "./packages/onboarding" }
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/database"
+    },
+    {
+      "path": "./packages/runtime"
+    },
+    {
+      "path": "./packages/booking"
+    },
+    {
+      "path": "./packages/commerce"
+    },
+    {
+      "path": "./packages/billing"
+    },
+    {
+      "path": "./packages/communication"
+    },
+    {
+      "path": "./packages/automation"
+    },
+    {
+      "path": "./packages/integration"
+    },
+    {
+      "path": "./packages/privacy"
+    },
+    {
+      "path": "./packages/matching"
+    },
+    {
+      "path": "./packages/trust"
+    },
+    {
+      "path": "./packages/i18n"
+    },
+    {
+      "path": "./packages/onboarding"
+    }
   ]
 }
