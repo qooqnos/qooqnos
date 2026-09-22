@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./dist/index.js",
-    "./legacy-server": "./dist/legacy-server.js"
+    ".": "./dist/index.js"
   },
   "files": [
     "dist"
