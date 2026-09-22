@@ -100,3 +100,24 @@ export class I18nManager {
 }
 
 export const defaultI18n = new I18nManager("en");
+
+
+export type Locale = SupportedLanguage;
+export type TranslationDictionary = TranslationKeys;
+
+export interface LocaleDefinition {
+  readonly code: Locale;
+  readonly direction: "ltr" | "rtl";
+  readonly dictionary: TranslationDictionary;
+}
+
+export function getDirection(locale: Locale): "ltr" | "rtl" {
+  return locale === "fa" || locale === "ar" ? "rtl" : "ltr";
+}
+
+export function getLocaleFromPreference(preference: string, fallback: Locale = "en"): Locale {
+  const normalized = preference.trim().toLowerCase().split(/[-_]/, 1)[0];
+  return normalized === "fa" || normalized === "ar" || normalized === "en"
+    ? normalized
+    : fallback;
+}
