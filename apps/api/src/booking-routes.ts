@@ -1,4 +1,4 @@
-import { BookingRepository, BookingService } from "@qooqnos/booking";
+import { AvailabilityRepository, AvailabilityService, BookingRepository, BookingService } from "@qooqnos/booking";
 import { AuthorizationRepository } from "@qooqnos/database";
 import { createAuthorizationService, type AuthorizationRegistry } from "@qooqnos/runtime";
 import { AppError, brandId, type EntityId } from "@qooqnos/core";
@@ -11,6 +11,44 @@ export function registerBookingRoutes(
   database: D1Database | undefined,
   authorization: AuthorizationRegistry | undefined,
 ): void {
+  router.register({
+    method: "GET",
+    path: "/api/v1/availability/schedules/:scheduleId/slots",
+    module: "booking",
+    operation: "availability.read",
+    permission: "availability.read",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      if (!authorization) throw new AppError({ code: "INTERNAL_ERROR", message: "Authorization registry is not configured.", requestId: context.requestId });
+
+      const url = new URL(request.url);
+      const from = requiredString(url.searchParams.get("from"), "from", context.requestId);
+      const to = requiredString(url.searchParams.get("to"), "to", context.requestId);
+      const durationSeconds = requiredPositiveInteger(
+        Number(url.searchParams.get("durationSeconds")),
+        "durationSeconds",
+        context.requestId,
+      );
+      const resourceId = url.searchParams.get("resourceId");
+      const service = new AvailabilityService({
+        repository: new AvailabilityRepository(database),
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
+        id: () => brandId<"EntityId">(crypto.randomUUID()),
+        now: () => new Date().toISOString(),
+      });
+      const slots = await service.getSlots(context, {
+        scheduleId: brandId<"EntityId">(requiredParam(params.scheduleId, context.requestId)),
+        from,
+        to,
+        durationSeconds,
+        ...(resourceId ? { resourceId: brandId<"EntityId">(resourceId) } : {}),
+      });
+      return json({ data: slots }, 200, context.requestId);
+    },
+  });
+
   router.register({
     method: "POST",
     path: "/api/v1/booking/holds",
