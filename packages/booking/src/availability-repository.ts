@@ -44,6 +44,37 @@ export interface AvailabilityExceptionRecord {
   readonly updatedAt: string;
 }
 
+
+export interface AvailabilityRuleDefinition {
+  readonly version: 1;
+  readonly weekdays: readonly number[];
+  readonly start: string;
+  readonly end: string;
+  readonly capacity?: number | undefined;
+}
+
+export interface ScheduleGenerationDefinition {
+  readonly version: 1;
+  readonly slotGranularityMinutes: number;
+}
+
+export interface AvailabilityAppointmentCommitment {
+  readonly id: EntityId;
+  readonly startsAt: string;
+  readonly endsAt: string;
+  readonly quantity: number;
+}
+
+export interface AvailabilityContext {
+  readonly schedule: ScheduleRecord;
+  readonly generation: ScheduleGenerationDefinition;
+  readonly rules: readonly AvailabilityRuleRecord[];
+  readonly exceptions: readonly AvailabilityExceptionRecord[];
+  readonly appointments: readonly AvailabilityAppointmentCommitment[];
+  readonly activeHoldSlotReferences: ReadonlySet<string>;
+  readonly resourceCapacity: number | null;
+}
+
 export interface CreateScheduleInput {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -92,6 +123,79 @@ export class AvailabilityRepository extends Repository {
       this.requireOrganization({ organizationId: context.tenantId }),
       this.requireWorkspace({ workspaceId: context.workspaceId }),
     );
+  }
+
+
+  async getAvailabilityContext(
+    context: RequestContext,
+    scheduleId: EntityId,
+    from: string,
+    to: string,
+    resourceId?: EntityId,
+  ): Promise<AvailabilityContext> {
+    const schedule = await this.getSchedule(context, scheduleId);
+    if (!schedule) throw new DatabaseError("Schedule not found");
+    if (schedule.status !== "active") throw new DatabaseError("Schedule is not active");
+    if (from >= to) throw new DatabaseError("Availability range must end after it starts");
+
+    const generation = parseGenerationDefinition(schedule.recurrenceDefinition);
+    const rules = await this.database.all<AvailabilityRuleRecord>(
+      "SELECT id, schedule_id AS scheduleId, rule_type AS ruleType, recurrence_payload AS recurrencePayload, start_constraint AS startConstraint, end_constraint AS endConstraint, capacity, version, created_at AS createdAt, updated_at AS updatedAt FROM availability_rules WHERE schedule_id = ? ORDER BY version DESC, id ASC",
+      scheduleId,
+    );
+    const exceptions = await this.database.all<AvailabilityExceptionRecord>(
+      "SELECT id, schedule_id AS scheduleId, effective_start AS effectiveStart, effective_end AS effectiveEnd, exception_type AS exceptionType, capacity, closure_reason AS closureReason, version, created_at AS createdAt, updated_at AS updatedAt FROM availability_exceptions WHERE schedule_id = ? AND effective_start < ? AND effective_end > ? ORDER BY effective_start ASC, effective_end ASC, version DESC",
+      scheduleId,
+      to,
+      from,
+    );
+
+    const effectiveResourceId = resourceId ?? schedule.resourceId ?? undefined;
+    if (schedule.resourceId && effectiveResourceId !== schedule.resourceId) {
+      throw new DatabaseError("Schedule is bound to a different resource");
+    }
+
+    let resourceCapacity: number | null = null;
+    if (effectiveResourceId) {
+      const resource = await this.database.first<{ capacity: number }>(
+        "SELECT capacity FROM resources WHERE id = ? AND business_id = ? AND status = 'active' LIMIT 1",
+        effectiveResourceId,
+        schedule.businessId,
+      );
+      if (!resource) throw new DatabaseError("Availability resource not found");
+      resourceCapacity = resource.capacity;
+    }
+
+    const appointmentSql = effectiveResourceId
+      ? "SELECT a.id, a.starts_at AS startsAt, a.ends_at AS endsAt, COALESCE(SUM(bi.quantity), 0) + CASE WHEN COUNT(bi.id) = 0 THEN 1 ELSE 0 END AS quantity FROM appointments a INNER JOIN bookings b ON b.id = a.booking_id INNER JOIN appointment_resources ar ON ar.appointment_id = a.id LEFT JOIN booking_items bi ON bi.booking_id = a.booking_id WHERE b.business_id = ? AND a.status IN ('scheduled','confirmed') AND a.starts_at < ? AND a.ends_at > ? AND ar.resource_id = ? GROUP BY a.id, a.starts_at, a.ends_at ORDER BY a.starts_at ASC, a.id ASC"
+      : "SELECT a.id, a.starts_at AS startsAt, a.ends_at AS endsAt, COALESCE(SUM(bi.quantity), 0) + CASE WHEN COUNT(bi.id) = 0 THEN 1 ELSE 0 END AS quantity FROM appointments a INNER JOIN bookings b ON b.id = a.booking_id LEFT JOIN booking_items bi ON bi.booking_id = a.booking_id WHERE b.business_id = ? AND a.status IN ('scheduled','confirmed') AND a.starts_at < ? AND a.ends_at > ? GROUP BY a.id, a.starts_at, a.ends_at ORDER BY a.starts_at ASC, a.id ASC";
+
+    const appointmentRows = await this.database.all<AvailabilityAppointmentCommitment>(
+      appointmentSql,
+      schedule.businessId,
+      to,
+      from,
+      ...(effectiveResourceId ? [effectiveResourceId] : []),
+    );
+
+    const holdRows = await this.database.all<{ slotReference: string }>(
+      "SELECT slot_reference AS slotReference FROM booking_holds WHERE business_id = ? AND status = 'active' AND expires_at > ? AND organization_id = ? AND workspace_id = ? AND (resource_id IS NULL OR resource_id = ?)",
+      schedule.businessId,
+      new Date().toISOString(),
+      this.requireOrganization({ organizationId: context.tenantId }),
+      this.requireWorkspace({ workspaceId: context.workspaceId }),
+      effectiveResourceId ?? null,
+    );
+
+    return {
+      schedule,
+      generation,
+      rules,
+      exceptions,
+      appointments: appointmentRows,
+      activeHoldSlotReferences: new Set(holdRows.map((row) => row.slotReference)),
+      resourceCapacity,
+    };
   }
 
   async createSchedule(context: RequestContext, input: CreateScheduleInput): Promise<ScheduleRecord> {
@@ -163,3 +267,40 @@ export class AvailabilityRepository extends Repository {
     return record;
   }
 }
+
+function parseGenerationDefinition(value: string): ScheduleGenerationDefinition {
+  try {
+    const parsed = JSON.parse(value) as Partial<ScheduleGenerationDefinition>;
+    if (parsed.version !== 1) throw new Error("version");
+    const slotGranularityMinutes = parsed.slotGranularityMinutes ?? 15;
+    if (!Number.isSafeInteger(slotGranularityMinutes) || slotGranularityMinutes < 1 || slotGranularityMinutes > 1440) {
+      throw new Error("slotGranularityMinutes");
+    }
+    return { version: 1, slotGranularityMinutes };
+  } catch {
+    throw new DatabaseError("Schedule recurrence definition is invalid");
+  }
+}
+
+export function parseAvailabilityRuleDefinition(value: string): AvailabilityRuleDefinition {
+  try {
+    const parsed = JSON.parse(value) as Partial<AvailabilityRuleDefinition>;
+    if (parsed.version !== 1 || !Array.isArray(parsed.weekdays)) throw new Error("shape");
+    if (!parsed.weekdays.every((day) => Number.isSafeInteger(day) && day >= 1 && day <= 7)) throw new Error("weekday");
+    if (typeof parsed.start !== "string" || !TIME_RE.test(parsed.start)) throw new Error("start");
+    if (typeof parsed.end !== "string" || !TIME_RE.test(parsed.end)) throw new Error("end");
+    if (parsed.end <= parsed.start) throw new Error("overnight");
+    if (parsed.capacity !== undefined && (!Number.isSafeInteger(parsed.capacity) || parsed.capacity <= 0)) throw new Error("capacity");
+    return {
+      version: 1,
+      weekdays: [...new Set(parsed.weekdays)].sort((a, b) => a - b),
+      start: parsed.start,
+      end: parsed.end,
+      ...(parsed.capacity !== undefined ? { capacity: parsed.capacity } : {}),
+    };
+  } catch {
+    throw new DatabaseError("Availability rule recurrence payload is invalid");
+  }
+}
+
+const TIME_RE = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
