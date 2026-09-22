@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0013.
+The current API migration catalog references versions 0001 through 0014.
 
 ### Foundation — 0001
 
@@ -109,7 +109,7 @@ This migration seeds persisted permission vocabulary.
 
 0013 adds request_fingerprint.
 
-**Total currently defined physical tables: 43.**
+**Total currently defined physical tables: 43.** Migration 0014 adds integrity triggers only; it does not add a table.
 
 This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
 
@@ -193,6 +193,12 @@ businesses.primary_category_id is present, but the current migration does not es
 offerings identifies its offering_type and optional service_id/product_id. The current guard migrations enforce cross-business consistency when references are present, but the physical contract should also ensure the correct referenced aggregate exists for the declared type.
 
 **Action:** add a targeted integrity migration only after the invariant is finalized. Do not redesign offerings as another entity.
+
+## 3.1 Catalog integrity hardening — 0014
+
+Migration 0014 hardens the existing offerings model without introducing a new entity. It enforces that a service offering references exactly one service, a product offering exactly one product, the referenced row exists, and the referenced product/service belongs to the offering business. Update paths are protected as well.
+
+This confirms the current physical design: services, products and offerings are distinct but related concepts. Do not create business_services, offers, or another duplicate sellable table without a new architecture decision.
 
 ## 4. Seller AI versus canonical AI Runtime
 
