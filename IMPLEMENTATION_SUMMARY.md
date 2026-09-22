@@ -1,3 +1,7 @@
+# Historical Implementation Summary
+
+> **HISTORICAL SNAPSHOT — NOT CURRENT SOURCE OF TRUTH.** This file describes the September 19, 2026 foundation/API session. Current implementation status is maintained in `VERIFICATION.md`, `PHASE_STATUS.md`, and `docs/IMPLEMENTATION_LEDGER.md`.
+
 # 🎉 Phoenix/ققنوس Implementation - Complete Summary
 
 ## 📊 Overview
