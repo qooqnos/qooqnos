@@ -1,255 +1,82 @@
-# Phoenix Phase 4 Implementation - File Structure
+# Phoenix
 
-## 📋 Quick Reference
+Phoenix is a secure, modular, multilingual, multi-tenant intelligent decision and connection platform between customers and businesses.
 
-### ✨ NEW FILES (Phase 4 Implementation)
-These are the files created for Phase 4:
+## Product loop
 
-```
-PHASE4_SUMMARY.md                      - Detailed implementation summary
-database-factory.ts                    - Database initialization factory
-database-repository.ts                 - Repository implementations (CRUD)
-postgres-adapter.ts                    - PostgreSQL connection adapter
-postgres-database.ts                   - Database compatibility layer
-migrations.ts                          - Migration system
-runtime-index.ts                       - Updated runtime with DB support
-```
+\`\`\`
+Understand Demand → Understand Supply → Decide → Match → Connect → Act → Learn
+\`\`\`
 
-### 📝 DOCUMENTATION & CONFIG
-```
-IMPLEMENTATION_LEDGER.md               - Phase tracking and status
-CLAUDE.md                              - Project rules and guidelines
-CHANGES.diff                           - Full git diff of all changes
-```
+Marketplace, Catalog, Discovery, Booking, CRM, Billing and AI strengthen this loop; they are not independent product identities.
 
-### 📦 EXISTING DATABASE FILES (Not modified by Phase 4)
-These files already existed but are included for reference:
-```
-index.ts                               - Database package exports
-client.ts                              - Database client
-services.ts                            - Service definitions
-transaction.ts                         - Transaction handling
-hash.ts                                - Hashing utilities
-workspace-repository.ts                - Original workspace repo
-identity-repository.ts                 - Identity repo
-authorization-repository.ts            - Authorization repo
-platform-repository.ts                 - Platform repo
-session-repository.ts                  - Session repo
-command-repository.ts                  - Command repo
-catalog-command-repository.ts          - Catalog command repo
-request-authorization-repository.ts    - Request auth repo
-seller-ai-repository.ts                - Seller AI repo
-migration-lock.ts                      - Migration lock system
-migration-catalog.ts                   - Migration catalog
-+ *.test.ts files                      - Test files
-```
+## Canonical production architecture
 
----
+- API/runtime: Cloudflare Workers + Hono
+- Relational source of truth: Cloudflare D1
+- Object storage: Cloudflare R2
+- Async processing: Cloudflare Queues
+- Stateful coordination: Durable Objects where justified
+- Semantic retrieval: derived Vectorize/search projections
+- AI execution: Phoenix AI Runtime and provider adapters
+- Deployment: GitHub Actions → Cloudflare
 
-## 🚀 How to Apply Changes
+## Database architecture
 
-### Option 1: Manual File Placement
-1. Extract this zip file
-2. Copy the ✨ NEW FILES to their destination:
-   ```
-   database-factory.ts                → packages/database/src/
-   database-repository.ts             → packages/database/src/
-   postgres-adapter.ts                → packages/database/src/
-   postgres-database.ts               → packages/database/src/
-   migrations.ts                      → packages/database/src/
-   runtime-index.ts                   → packages/runtime/src/index.ts
-   ```
-3. Update package files:
-   ```
-   packages/database/src/index.ts     (add exports for new classes)
-   packages/database/tsconfig.json    (add composite: true)
-   packages/runtime/tsconfig.json     (add composite: true)
-   packages/core/tsconfig.json        (add composite: true)
-   packages/api/tsconfig.json         (add composite: true)
-   packages/i18n/tsconfig.json        (add composite: true)
-   packages/onboarding/tsconfig.json  (add composite: true)
-   tsconfig.json                      (root level fixes)
-   ```
+D1 is the canonical transactional source of truth.
 
-### Option 2: Use Git Patch
-```bash
-# In your repository directory:
-cd /path/to/qooqnos
-patch -p1 < CHANGES.diff
-```
+SQL migrations live under migrations/ and are the only source of migration contents.
 
----
+The current API migration sequence is:
 
-## 📊 What's New in Phase 4
+\`\`\`
+0001_foundation
+0002_onboarding
+0003_identity_sessions
+0004_business
+0005_catalog
+0006_catalog_product_guards
+0007_catalog_integrity_guards
+0008_permission_catalog
+0009_media
+0010_discovery
+0011_ai_seller_creation
+0012_ai_seller_catalog_link
+0013_ai_seller_idempotency_fingerprint
+\`\`\`
 
-### Database Adapter
-- ✅ PostgreSQL connection management
-- ✅ Transaction support (BEGIN/COMMIT/ROLLBACK)
-- ✅ SQL query builders
-- ✅ Error handling
+The runtime derives migration metadata from the canonical SQL, verifies the migration lock and executes the resulting definitions against D1.
 
-### Migration System
-- ✅ Automatic migration tracking
-- ✅ Built-in initial schema (5 tables)
-- ✅ Version control
-- ✅ Apply/rollback support
+## Important database rule
 
-### Repository Layer
-- ✅ UserRepository
-- ✅ WorkspaceRepository
-- ✅ ServiceRepository
-- ✅ BookingRepository
-- ✅ Full CRUD operations
+Do not create a second database architecture.
 
-### Runtime Integration
-- ✅ Dual-mode support (in-memory & PostgreSQL)
-- ✅ Environment variable configuration
-- ✅ Automatic fallback mechanism
+The following old PostgreSQL-oriented files are historical compatibility artifacts:
 
----
+- packages/database/src/postgres-adapter.ts
+- packages/database/src/postgres-database.ts
+- the old PostgreSQL-style migration implementation
+- old USE_POSTGRES / SQLite instructions
 
-## 🔧 Configuration
+Do not extend them for new capabilities.
 
-### Environment Variables
-```bash
-# Use PostgreSQL (default: false = in-memory)
-USE_POSTGRES=true
+Do not recreate migrations/0001_schema.sql.
 
-# PostgreSQL Connection Details
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=qooqnos
-DB_USER=postgres
-DB_PASSWORD=yourpassword
-DB_SSL=false
-```
+Do not add a parallel TypeScript migration source.
 
-### Start Server (In-Memory - Default)
-```bash
-npm run build
-npx tsx packages/runtime/src/index.ts
-# Output: Using in-memory database
-```
+## Where to read before database work
 
-### Start Server (PostgreSQL)
-```bash
-USE_POSTGRES=true npx tsx packages/runtime/src/index.ts
-# Output: Connecting to PostgreSQL...
-```
+1. docs/PHOENIX_ARCHITECTURE.md
+2. docs/DATABASE_MODEL.md
+3. docs/PHYSICAL_SCHEMA_BLUEPRINT.md
+4. docs/MIGRATION_BLUEPRINT.md
+5. docs/MIGRATION_CATALOG_IMPLEMENTATION.md
+6. docs/MIGRATION_LOCK_STRATEGY.md
+7. docs/DATABASE_RUNTIME_IMPLEMENTATION.md
+8. docs/IMPLEMENTATION_LEDGER.md
 
----
+## Current database state
 
-## 📋 Database Schema
+The logical data model is intentionally broader than the physically migrated schema. Missing modules must be implemented incrementally and only after table-by-table reconciliation.
 
-### users
-```sql
-CREATE TABLE users (
-  id VARCHAR(36) PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  name VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
-```
-
-### workspaces
-```sql
-CREATE TABLE workspaces (
-  id VARCHAR(36) PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  owner_id VARCHAR(36) NOT NULL REFERENCES users(id),
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
-```
-
-### services
-```sql
-CREATE TABLE services (
-  id VARCHAR(36) PRIMARY KEY,
-  workspace_id VARCHAR(36) NOT NULL REFERENCES workspaces(id),
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  price DECIMAL(10, 2) NOT NULL,
-  currency VARCHAR(3) NOT NULL,
-  provider_id VARCHAR(36) NOT NULL REFERENCES users(id),
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
-```
-
-### bookings
-```sql
-CREATE TABLE bookings (
-  id VARCHAR(36) PRIMARY KEY,
-  service_id VARCHAR(36) NOT NULL REFERENCES services(id),
-  buyer_id VARCHAR(36) NOT NULL REFERENCES users(id),
-  provider_id VARCHAR(36) NOT NULL REFERENCES users(id),
-  workspace_id VARCHAR(36) NOT NULL REFERENCES workspaces(id),
-  start_time TIMESTAMP NOT NULL,
-  end_time TIMESTAMP NOT NULL,
-  status VARCHAR(50) NOT NULL DEFAULT 'pending',
-  total_price DECIMAL(10, 2) NOT NULL,
-  created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
-);
-```
-
-### workspace_members
-```sql
-CREATE TABLE workspace_members (
-  workspace_id VARCHAR(36) NOT NULL REFERENCES workspaces(id),
-  user_id VARCHAR(36) NOT NULL REFERENCES users(id),
-  created_at TIMESTAMP NOT NULL,
-  PRIMARY KEY (workspace_id, user_id)
-);
-```
-
----
-
-## ✅ Verification
-
-After applying changes:
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Build project
-npm run build
-
-# 3. Start server
-npx tsx packages/runtime/src/index.ts
-
-# 4. Test API
-curl http://localhost:3000/health
-
-# Expected response:
-# {
-#   "success": true,
-#   "data": { "status": "ok" }
-# }
-```
-
----
-
-## 📖 Documentation Files
-
-- **PHASE4_SUMMARY.md** - Detailed breakdown of all changes
-- **IMPLEMENTATION_LEDGER.md** - Phase tracking across the project
-- **CLAUDE.md** - Project rules and Claude session guidelines
-- **CHANGES.diff** - Raw git diff (for reference)
-
----
-
-## 🎯 Remaining Phase 4 Tasks
-
-- [ ] Add query methods (findByWorkspace, findByUser)
-- [ ] Full environment configuration (.env support)
-- [ ] Unit tests for repository layer
-- [ ] Connection pooling optimization
-
----
-
-**Implementation Date**: 2026-09-21  
-**Commits**: 2024bdb, 312f9c7  
-**Progress**: Phase 4 (60% complete)
+Do not treat historical phase documents as current architecture.

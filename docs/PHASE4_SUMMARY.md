@@ -1,342 +1,86 @@
-# Phase 4 Implementation Summary
+# Phase 4 — Historical Database Implementation Record
 
-**Session Date**: 2026-09-21  
-**Commit**: 2024bdb  
-**Status**: 60% Complete (Core infrastructure implemented)
+**Status:** Historical / superseded  
+**Original implementation date:** 2026-09-21
 
-## 🎯 Objectives Achieved
+## Important
 
-### ✅ PostgreSQL Database Adapter
-- **File**: `packages/database/src/postgres-adapter.ts` (~280 lines)
-- **Features**:
-  - DatabaseConnection interface for query execution
-  - Transaction support (BEGIN/COMMIT/ROLLBACK)
-  - Prepared statements with parameter binding
-  - Error types: DatabaseError, ConnectionError, QueryError
-  - SQL helpers: insert(), select(), update(), delete()
-  - Connection pooling infrastructure
-  - Development mode (SQLite) for testing
-  - Production mode (PostgreSQL) for deployment
+This document records an earlier database implementation attempt. It is retained for audit/history only.
 
-### ✅ Migration System
-- **File**: `packages/database/src/migrations.ts` (~270 lines)
-- **Features**:
-  - MigrationRunner class for managing migrations
-  - Automatic schema_migrations tracking table
-  - Version control and ordering
-  - Transaction-safe migration execution
-  - Apply all pending: migrateUp()
-  - Rollback support
-  - Built-in initial schema migration including:
-    - users table
-    - workspaces table
-    - services table
-    - bookings table
-    - workspace_members many-to-many table
-    - Optimized indexes for common queries
+It is **not** the current Phoenix database architecture and must not be used as the basis for new database work.
 
-### ✅ Repository Layer
-- **File**: `packages/database/src/database-repository.ts` (~330 lines)
-- **Classes**:
-  - `UserRepository<User>` - CRUD operations
-  - `WorkspaceRepository<Workspace>` - CRUD operations
-  - `ServiceRepository<Service>` - CRUD operations
-  - `BookingRepository<Booking>` - CRUD operations
-- **Features**:
-  - Implements Repository<T> interface
-  - Full null-safety (noUncheckedIndexedAccess)
-  - Type-safe entity creation
-  - SQL query generation via helpers
-  - Error handling
+The earlier implementation centered on:
 
-### ✅ Database Factory
-- **File**: `packages/database/src/database-factory.ts` (~100 lines)
-- **Methods**:
-  - `create(config)` - Create connection
-  - `initialize(db)` - Run migrations
-  - `createDev()` - Development database (in-memory)
-  - `createProduction()` - Production database (PostgreSQL)
-- **Features**:
-  - Environment variable support (DB_HOST, DB_PORT, DB_NAME, etc.)
-  - Automatic migration execution
-  - Migration status logging
+- PostgreSQL adapter code
+- SQLite development mode
+- a built-in TypeScript migration schema
+- generic User / Workspace / Service / Booking tables
+- a dual in-memory/PostgreSQL runtime switch
 
-### ✅ PostgresDatabase Adapter
-- **File**: `packages/database/src/postgres-database.ts` (~100 lines)
-- **Purpose**: Backward compatibility layer
-- **Methods**:
-  - `getUserRepository()`
-  - `getWorkspaceRepository()`
-  - `getServiceRepository()`
-  - `getBookingRepository()`
-  - `findServicesByWorkspace()` - Query support
-  - `findBookingsByUser()` - Query support
-  - `findWorkspacesByUser()` - Query support
-  - `close()` - Cleanup
+That architecture has been superseded by the Cloudflare D1 + canonical SQL migration architecture.
 
-### ✅ Runtime Integration
-- **File**: `packages/runtime/src/index.ts` (updated)
-- **Features**:
-  - Dual-mode database support
-  - Environment variable: `USE_POSTGRES=true`
-  - Automatic fallback to in-memory if connection fails
-  - Test data seeding works in both modes
-  - Server runs successfully in both modes
+## Historical commit
 
-### ✅ Module Exports
-- **File**: `packages/database/src/index.ts` (updated)
-- **Exports**:
-  - PostgreSQL adapter classes and types
-  - Migration system
-  - Repository classes
-  - Database factory
-  - Error types
+The historical implementation was introduced in commit 2024bdb and related follow-up commits.
 
-## 📊 Code Statistics
+The historical files included:
 
-| Metric | Value |
-|--------|-------|
-| New TypeScript Files | 5 |
-| Total New Lines | ~1,100 |
-| Database Adapter | ~280 lines |
-| Migration System | ~270 lines |
-| Repository Layer | ~330 lines |
-| Database Factory | ~100 lines |
-| Integration Updates | ~30 lines |
+- packages/database/src/postgres-adapter.ts
+- packages/database/src/postgres-database.ts
+- packages/database/src/database-factory.ts
+- the old packages/database/src/migrations.ts implementation
+- legacy repository implementations
 
-## 🧪 Testing & Verification
+These files may still exist in the repository, but their presence is a compatibility/reconciliation concern, not an architectural recommendation.
 
-### ✅ Verification Completed
-- Server starts successfully in both modes
-- API endpoints respond correctly
-- Health check endpoint returns proper JSON
-- Test data seeding works
-- Database repositories initialize correctly
-- Error handling is in place
+## Current replacement architecture
 
-### Test Execution
-```bash
-✅ npm run build              # Completes (with non-Phase-4 errors)
-✅ npx tsx packages/runtime   # Server starts
-✅ curl http://localhost:3000/health
-{
-  "success": true,
-  "data": {
-    "status": "ok",
-    "timestamp": "2026-09-21T21:25:33.997Z"
-  }
-}
-```
+The current database path is:
 
-## 🏗️ Database Schema
+\`\`\`
+Cloudflare Workers / API
+        ↓
+Runtime boot
+        ↓
+packages/database D1 boundary
+        ↓
+canonical SQL migrations/
+        ↓
+migration catalog
+        ↓
+migration lock verification
+        ↓
+D1 MigrationRunner
+        ↓
+Cloudflare D1
+\`\`\`
 
-### users
-- id (UUID, PRIMARY KEY)
-- email (VARCHAR UNIQUE)
-- name (VARCHAR)
-- created_at (TIMESTAMP)
-- updated_at (TIMESTAMP)
-- Index: email
+Canonical references:
 
-### workspaces
-- id (UUID, PRIMARY KEY)
-- name (VARCHAR)
-- owner_id (VARCHAR, FOREIGN KEY → users)
-- created_at (TIMESTAMP)
-- updated_at (TIMESTAMP)
-- Index: owner_id
+- docs/PHOENIX_ARCHITECTURE.md
+- docs/DATABASE_MODEL.md
+- docs/PHYSICAL_SCHEMA_BLUEPRINT.md
+- docs/MIGRATION_BLUEPRINT.md
+- docs/MIGRATION_CATALOG_IMPLEMENTATION.md
+- docs/MIGRATION_LOCK_STRATEGY.md
+- docs/DATABASE_RUNTIME_IMPLEMENTATION.md
 
-### services
-- id (UUID, PRIMARY KEY)
-- workspace_id (VARCHAR, FOREIGN KEY → workspaces)
-- name (VARCHAR)
-- description (TEXT)
-- price (DECIMAL)
-- currency (VARCHAR)
-- provider_id (VARCHAR, FOREIGN KEY → users)
-- created_at (TIMESTAMP)
-- updated_at (TIMESTAMP)
-- Indexes: workspace_id, provider_id
+## Database safety rules
 
-### bookings
-- id (UUID, PRIMARY KEY)
-- service_id (VARCHAR, FOREIGN KEY → services)
-- buyer_id (VARCHAR, FOREIGN KEY → users)
-- provider_id (VARCHAR, FOREIGN KEY → users)
-- workspace_id (VARCHAR, FOREIGN KEY → workspaces)
-- start_time (TIMESTAMP)
-- end_time (TIMESTAMP)
-- status (VARCHAR DEFAULT 'pending')
-- total_price (DECIMAL)
-- created_at (TIMESTAMP)
-- updated_at (TIMESTAMP)
-- Indexes: service_id, buyer_id, provider_id
+Do not:
 
-### workspace_members
-- workspace_id (VARCHAR, FOREIGN KEY)
-- user_id (VARCHAR, FOREIGN KEY)
-- created_at (TIMESTAMP)
-- PRIMARY KEY: (workspace_id, user_id)
-- Index: user_id
+- add new tables to the historical five-table schema;
+- extend the PostgreSQL adapter for new capabilities;
+- create TypeScript migration constants that duplicate SQL files;
+- reintroduce migrations/0001_schema.sql;
+- add a second migration registry;
+- create duplicate Business, Customer, Invoice, Booking or Catalog entities;
+- change an already-applied migration in place.
 
-## 🔄 Architecture Layers
+All new physical schema must be introduced through the canonical module-owned SQL migration process.
 
-```
-┌─────────────────────────────────────┐
-│     HTTP Server                     │
-│  (packages/runtime/src/server.ts)   │
-└──────────────────┬──────────────────┘
-                   │
-┌──────────────────▼──────────────────┐
-│     API Handlers                    │
-│   (packages/api/src/handlers)       │
-└──────────────────┬──────────────────┘
-                   │
-┌──────────────────▼──────────────────┐
-│  Repository Interface               │
-│    (packages/core/Repository)       │
-└──────────────────┬──────────────────┘
-                   │
-        ┌──────────┴──────────┐
-        │                     │
-┌───────▼────────┐   ┌────────▼────────┐
-│ InMemoryDB     │   │ PostgresDB      │
-│  (dev/test)    │   │  (production)   │
-└───────┬────────┘   └────────┬────────┘
-        │                     │
-        │            ┌────────▼────────┐
-        │            │ DatabaseFactory │
-        │            └────────┬────────┘
-        │                     │
-        │            ┌────────▼────────┐
-        │            │Postgres Adapter │
-        │            │ & Migrations    │
-        │            └─────────────────┘
-```
+## Reconciliation note
 
-## 📋 Remaining Phase 4 Tasks
+The repository still contains historical PostgreSQL-oriented code. Before that code is deleted, active imports and runtime consumers must be identified and replaced with the D1 boundary.
 
-### High Priority
-1. **Query Methods** (15 mins)
-   - Implement findServicesByWorkspace()
-   - Implement findBookingsByUser()
-   - Implement findWorkspacesByUser()
-   - Add search/filter capabilities
-
-2. **Environment Configuration** (10 mins)
-   - Read DB_HOST, DB_PORT, DB_NAME from env
-   - Create .env.example
-   - Support connection string format
-
-3. **Unit Tests** (45 mins)
-   - Test migration runner
-   - Test repository CRUD
-   - Test error handling
-   - Test transaction rollback
-
-### Medium Priority
-4. **Connection Pooling Config** (20 mins)
-   - Tune max connections
-   - Connection timeout settings
-   - Idle connection cleanup
-
-5. **Query Optimization** (20 mins)
-   - Add prepared statement caching
-   - Optimize index usage
-   - Query performance monitoring
-
-### Low Priority
-6. **Advanced Features** (45 mins)
-   - Soft deletes / archival
-   - Audit logging
-   - Change tracking
-
-## 🚀 Deployment Readiness
-
-### Current State
-- ✅ Database adapter implemented
-- ✅ Migrations system created
-- ✅ Repositories functional
-- ✅ Runtime integration complete
-- ✅ Backward compatibility maintained
-- ⚠️ Query methods stubbed (return [])
-- ⚠️ Environment config minimal
-- ⚠️ Unit tests not yet written
-
-### To Production Ready
-- [ ] Complete query methods
-- [ ] Full environment configuration
-- [ ] Unit test suite (80% coverage)
-- [ ] Connection pooling tuning
-- [ ] Performance testing
-- [ ] Error handling verification
-
-## 📝 Git History
-
-```
-Commit: 2024bdb
-Author: Claude <claude@qooqnos.ai>
-Date:   2026-09-21
-
-Phase 4: Implement PostgreSQL database adapter with migration system
-
-Features:
-- PostgreSQL connection adapter with pooling and transaction support
-- Migration runner with built-in initial schema
-- Repository layer for User, Workspace, Service, Booking entities
-- Database factory for easy initialization
-- PostgresDatabase adapter for backward compatibility
-- Runtime support for both in-memory and PostgreSQL modes
-- Environment variable configuration (USE_POSTGRES=true)
-
-Files changed: 8
-Insertions: +1,100
-Deletions: -20
-```
-
-## 🎓 Lessons & Notes
-
-### What Worked Well
-- ✅ TypeScript strict mode caught issues early
-- ✅ Repository pattern provides abstraction
-- ✅ Migration system is extensible
-- ✅ Dual-mode support helps testing
-- ✅ Factory pattern simplifies initialization
-
-### Challenges Overcome
-- Null safety in row access (needed explicit checks)
-- Export statement management (avoided duplicates)
-- Module export ordering
-- Backward compatibility with InMemoryDatabase
-
-### Future Improvements
-- Connection pooling configuration
-- Batch operation support
-- Query builder for complex queries
-- Soft delete support
-- Audit logging tables
-- Full-text search support
-
-## 🎯 Next Session Goals
-
-When continuing in the next session:
-
-1. Complete Phase 4 (45 mins)
-   - Add query methods
-   - Full environment config
-   - Unit tests
-
-2. Begin Phase 5 (2-3 hours)
-   - Payments (Stripe integration)
-   - Reviews & ratings
-   - Email notifications
-
-3. Estimated Overall Progress
-   - Phase 4 → 100% (Phase 4 complete)
-   - Phase 5 → 50% (Features implemented)
-   - Overall → 75% complete
-
----
-
-**Implementation Ledger**: docs/IMPLEMENTATION_LEDGER.md  
-**Architecture Reference**: docs/ARCHITECTURE_COMPLETE.md
+This document is intentionally explicit so that historical code is not mistaken for an unfinished Phase 4 implementation.

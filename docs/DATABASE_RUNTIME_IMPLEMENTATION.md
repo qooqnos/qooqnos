@@ -1,80 +1,138 @@
 # Phoenix Database Runtime Implementation
 
+**Status:** Current runtime contract  
+**Last reviewed:** 2026-09-22
+
 ## Purpose
 
-This document records the executable database foundation added after the architecture phase.
+This document records the executable database foundation for the current Cloudflare D1 architecture.
 
-## Boundaries
+## Canonical boundaries
 
-- D1 remains the authoritative transactional store.
-- Application code reaches D1 through the `packages/database` abstraction.
+- D1 is the authoritative transactional store.
+- Application code reaches D1 through packages/database.
 - SQL is parameterized; values are never interpolated into statements.
 - Organization/workspace context is an explicit repository boundary.
 - Audit, idempotency and outbox concerns are represented as application services.
-- Migrations remain append-only.
+- Schema changes are append-only migrations.
+- Derived search/vector/cache/analytics structures are not sources of truth.
 
-## Current implementation
+## Runtime path
 
-### `packages/database/src/index.ts`
+\`\`\`
+Cloudflare Worker
+      ↓
+API / Runtime
+      ↓
+D1Database
+      ↓
+Repository / domain service
+      ↓
+D1
+\`\`\`
 
-Provides a small D1-compatible adapter with:
+Migration boot path:
 
-- parameter binding
-- `first`, `all`, and `run`
-- batch transactions
-- database error normalization
-- mandatory organization/workspace repository context guards
+\`\`\`
+migrations/*.sql
+      ↓
+loadMigrationCatalog
+      ↓
+verifyMigrationLock
+      ↓
+MigrationRunner
+      ↓
+schema_migrations
+      ↓
+D1
+\`\`\`
 
-### `packages/database/src/services.ts`
+## Migration source contract
 
-Provides:
+The canonical migration contents live only in migrations/*.sql.
 
-- `AuditService.append`
-- `IdempotencyService.claim/complete`
-- `OutboxService.enqueue`
+The build/runtime layer supplies MigrationSource entries to the catalog loader. The loader derives:
 
-### `packages/database/src/migrations.ts`
+- migration id
+- version
+- owning module
+- exact SQL
+- checksum
+- executable statements
 
-Provides:
+The lock manifest protects reviewed migration identity/checksum.
 
-- contiguous migration version validation
-- migration identity/module validation
-- SHA-256 checksum validation for pending definitions
-- checksum and identity validation against `schema_migrations`
-- transactional D1 batch application with migration history recording
-- explicit UTC application timestamps
+No handwritten TypeScript migration constant is allowed to become a second schema source.
 
-### `packages/database/src/identity-repository.ts`
+## Current migration sequence
 
-Provides:
+apps/api/src/migrations.ts currently references 0001 through 0013:
 
-- user creation and lookup
-- external identity creation
-- external identity lookup
-- user lookup by external identity
+\`\`\`
+0001_foundation.sql
+0002_onboarding.sql
+0003_identity_sessions.sql
+0004_business.sql
+0005_catalog.sql
+0006_catalog_product_guards.sql
+0007_catalog_integrity_guards.sql
+0008_permission_catalog.sql
+0009_media.sql
+0010_discovery.sql
+0011_ai_seller_creation.sql
+0012_ai_seller_catalog_link.sql
+0013_ai_seller_idempotency_fingerprint.sql
+\`\`\`
 
-### `packages/database/src/workspace-repository.ts`
+## Tenant isolation
 
-Provides:
+Repositories must require the correct organization/workspace context for tenant-owned data.
 
-- organization-scoped workspace creation/listing
-- workspace lookup requiring both organization and workspace context
-- membership creation behind a workspace boundary
-- workspace membership lookup
+Cross-organization access is rejected server-side even when a record id is otherwise valid.
 
-## Required hardening before production
+UI routes, URLs, AI context and discovery indexes never define authorization scope.
 
-1. Add a build-time migration catalog that derives prepared statements from the canonical SQL files without duplicating SQL sources.
-2. Add concurrency-safe idempotency claim tests and define replay semantics.
-3. Add outbox claiming/publishing/retry/dead-letter policy.
-4. Add retention and redaction policies for audit and sensitive records.
-5. Add integration tests against the actual D1 runtime.
-6. Add explicit repository tenant-isolation tests, including cross-organization access attempts.
-7. Add authorization runtime before exposing membership/role operations to application modules.
-8. Add CI gates for typecheck, tests, migration integrity and build.
+## Legacy PostgreSQL reconciliation warning
 
-## Source alignment
+The source tree still contains historical PostgreSQL-oriented files:
 
-The initial database model defines the core relationship chain around User, Membership, Organization, Workspace and the future Business/Service hierarchy, and requires tenant context, opaque public IDs, UTC timestamps, minor-unit money and migration-only schema changes. fileciteturn138file0L2-L2
+- packages/database/src/postgres-adapter.ts
+- packages/database/src/postgres-database.ts
+- an older PostgreSQL-style migration runner in packages/database/src/migrations.ts
+- old database exports in packages/database/src/index.ts
 
-The current foundation intentionally implements only the infrastructure needed underneath those future domain modules; it does not prematurely implement every domain table.
+These are not the canonical runtime boundary.
+
+There is currently a source-level mismatch to reconcile: runtime boot expects the D1 catalog/lock MigrationRunner contract, while the legacy packages/database/src/migrations.ts and related exports still contain the old PostgreSQL-oriented API.
+
+Until that reconciliation is completed:
+
+- do not extend the legacy migration runner;
+- do not add migrations to BUILTIN_MIGRATIONS;
+- do not add new PostgreSQL/SQLite adapters;
+- do not update USE_POSTGRES documentation;
+- do not create a second schema registry.
+
+The correct fix is to converge the remaining consumers onto the canonical D1 contract, verify the full build/test/runtime path, and then remove or archive the legacy code.
+
+## Production hardening
+
+Before production:
+
+1. make the D1 migration catalog/runner contract the only active migration API;
+2. verify the committed migration lock in CI;
+3. run integration tests against actual D1;
+4. test cross-tenant access failures;
+5. test idempotency claims and replay behavior;
+6. test outbox claiming, retry and dead-letter semantics;
+7. verify retention/redaction rules;
+8. verify critical transaction boundaries and integrity constraints.
+
+## Non-negotiable safety rules
+
+- Never edit an applied migration.
+- Never renumber migrations.
+- Never create duplicate canonical entities.
+- Never bypass repositories/domain services with arbitrary SQL from AI or UI code.
+- Never treat search/vector/cache/analytics data as authoritative business state.
+- Never use PostgreSQL compatibility files as the starting point for new domain work.

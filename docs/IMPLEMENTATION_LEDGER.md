@@ -1,278 +1,149 @@
-# 🎯 Phoenix Implementation Ledger
+# Phoenix Implementation Ledger
 
-**Status**: Phase 4 In Progress (50% → 60% complete)  
-**Last Updated**: 2026-09-21  
-**Current Phase**: Phase 4 - Real Database (PostgreSQL/D1)
+**Status:** Current implementation ledger  
+**Last reviewed:** 2026-09-22
 
----
+This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
 
-## 📋 Phase Completion Status
+## 1. Capability status
 
-| Phase | Title | Status | Completion | Commit |
-|-------|-------|--------|------------|--------|
-| 1 | Runtime Verification | ✅ COMPLETE | 100% | (initial) |
-| 2 | Real HTTP Server | ✅ COMPLETE | 100% | (initial) |
-| 3 | Authentication System | ✅ COMPLETE | 100% | (initial) |
-| 4 | Real Database | 🔄 IN PROGRESS | 60% | 2024bdb |
-| 5 | Additional Features | ⬜ PLANNED | 0% | — |
-| 6 | CI/CD & Deployment | ⬜ PLANNED | 0% | — |
+| Capability | Status | Canonical source |
+|---|---|---|
+| Product North Star | ✅ Complete | docs/PHOENIX_PRODUCT_NORTH_STAR.md |
+| AI product direction | ✅ Complete | docs/AI_PRODUCT_DIRECTION.md |
+| Capability decision rules | ✅ Complete | docs/CAPABILITY_DECISION_RULES.md |
+| Logical database model | ✅ Canonical | docs/DATABASE_MODEL.md |
+| Physical schema blueprint | ✅ Canonical | docs/PHYSICAL_SCHEMA_BLUEPRINT.md |
+| Migration ownership model | ✅ Canonical | docs/MIGRATION_BLUEPRINT.md |
+| Migration catalog contract | ✅ Implemented | docs/MIGRATION_CATALOG_IMPLEMENTATION.md |
+| Migration lock integrity | ✅ Implemented | docs/MIGRATION_LOCK_STRATEGY.md |
+| D1 database client boundary | ✅ Implemented | packages/database/src/client.ts |
+| D1 runtime database boot boundary | ✅ Implemented | packages/runtime/src/boot.ts |
+| Foundation / onboarding / identity / business / catalog SQL | 🟢 Implemented in migration sequence | migrations/0001–0005 |
+| Catalog guard migrations | 🟢 Implemented in migration sequence | migrations/0006–0008 |
+| Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
+| Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
+| Final physical D1 schema | ⏳ In progress | requires table-by-table reconciliation |
+| Legacy PostgreSQL database path | ⚠️ Quarantined | reconciliation target only |
 
----
+## 2. Database history
 
-## ✅ Completed Capabilities
+### Historical — commit 2024bdb
 
-### Phase 1-3: Core Infrastructure
-- ✅ HTTP server with 11 endpoints (Node.js native)
-- ✅ JWT authentication (HS256)
-- ✅ Password hashing (PBKDF2)
-- ✅ In-memory database
-- ✅ API handlers for users, workspaces, services, bookings
+A PostgreSQL-oriented Phase 4 implementation was created, including:
 
-### Phase 4: Database Implementation (IN PROGRESS)
+- postgres-adapter.ts
+- postgres-database.ts
+- generic repository implementations
+- built-in TypeScript migrations
+- USE_POSTGRES runtime selection
 
-#### ✅ Completed (Commit: 2024bdb)
-- ✅ **PostgreSQL Adapter** (`postgres-adapter.ts`)
-  - Connection pooling infrastructure
-  - Query execution with parameters
-  - Transaction support (BEGIN/COMMIT/ROLLBACK)
-  - Error handling (DatabaseError, ConnectionError, QueryError)
-  - SQL helpers (insert, select, update, delete)
-  - Development mode with SQLite support
-  
-- ✅ **Migration System** (`migrations.ts`)
-  - MigrationRunner with versioning
-  - Automatic schema_migrations tracking table
-  - Built-in initial schema migration:
-    - users table with email index
-    - workspaces table with owner reference
-    - services table with workspace/provider references
-    - bookings table with all required fields
-    - workspace_members many-to-many table
-  - Transaction-safe migration execution
-  - Apply and rollback capabilities
-  
-- ✅ **Repository Layer** (`database-repository.ts`)
-  - UserRepository (CRUD)
-  - WorkspaceRepository (CRUD)
-  - ServiceRepository (CRUD)
-  - BookingRepository (CRUD)
-  - Compatible with existing Repository interface
-  - Full null-safety with noUncheckedIndexedAccess
-  
-- ✅ **Database Factory** (`database-factory.ts`)
-  - Single entry point for database initialization
-  - Development database creation (in-memory/SQLite)
-  - Production database creation (PostgreSQL)
-  - Environment variable configuration
-  - Automatic migration execution on init
-  
-- ✅ **PostgresDatabase Adapter** (`postgres-database.ts`)
-  - Backward compatibility layer
-  - Works with existing HttpServer interface
-  - Delegates to repository implementations
-  - Close/cleanup support
-  
-- ✅ **Runtime Integration** (`packages/runtime/src/index.ts`)
-  - Dual-mode support (in-memory & PostgreSQL)
-  - Environment variable: USE_POSTGRES=true
-  - Automatic fallback to in-memory on connection failure
-  - All test data seeding works with both modes
-  - Server runs successfully in both modes
+This work is preserved as history but is superseded.
 
-#### ⬜ Remaining (Phase 4)
-- [ ] Query methods for list/filtering (e.g., findByWorkspace)
-- [ ] Connection pooling configuration tuning
-- [ ] Batch operations support
-- [ ] Query builder optimizations
-- [ ] Soft deletes / archival patterns
-- [ ] Audit logging tables
+### Current canonical path
 
----
+All new database work must use:
 
-## 🔧 Build Status
+\`\`\`
+D1Database
+→ repositories/services
+→ canonical migrations/*.sql
+→ migration catalog
+→ migration lock
+→ D1
+\`\`\`
 
-**Current State**: Server runs successfully (both modes)
-**TypeScript Errors**: 293 remaining (mostly in non-Phase-4 packages)
-**Phase 4 Packages**: ✅ Build clean
+Do not extend the historical PostgreSQL path.
 
-### Build Verification
-```bash
-✅ npm run build          # Completes (with non-Phase-4 errors)
-✅ tsx packages/runtime   # Server starts successfully
-✅ curl /health           # API responds correctly
-✅ Seeding               # Test data loads correctly
-```
+## 3. Known reconciliation issue
 
----
+The source tree still contains old PostgreSQL-oriented exports and a legacy migration implementation in packages/database/src/migrations.ts.
 
-## 📊 Phase 4 Metrics
+This is a known architectural mismatch with the D1 runtime boot contract.
 
-| Metric | Value |
-|--------|-------|
-| **New Files** | 5 (adapter, migrations, repos, factory, integration) |
-| **Lines of Code** | ~800 (database layer) |
-| **TypeScript Strict** | 100% compliant (for Phase 4 code) |
-| **Migration Strategies** | 1 built-in schema (extensible) |
-| **Repositories** | 4 (User, Workspace, Service, Booking) |
-| **DB Modes** | 2 (In-memory, PostgreSQL) |
-| **Transaction Support** | ✅ Supported |
-| **Null Safety** | ✅ Strict (noUncheckedIndexedAccess) |
+It must be treated as technical debt to reconcile, not as a reason to create another database abstraction.
 
----
+Required future sequence:
 
-## 🚀 Testing & Verification
+1. identify all active consumers of the legacy exports;
+2. migrate consumers to the D1 boundary;
+3. make the canonical D1 MigrationRunner/catalog types the only runtime contract;
+4. run typecheck, unit tests, migration integrity tests and runtime tests;
+5. remove or isolate the legacy PostgreSQL files;
+6. update this ledger with the resulting commit.
 
-### Manual Testing Completed
-```bash
-# Server starts and runs in both modes:
-✅ In-memory mode (default)
-✅ PostgreSQL mode (USE_POSTGRES=true)
+## 4. Current canonical migration inventory
 
-# API endpoints remain functional:
-✅ GET  /health           → returns status
-✅ POST /users            → creates users
-✅ GET  /users/:id        → fetches users
-✅ All other 8 endpoints  → working
+The API runtime references these migration sources:
 
-# Database operations:
-✅ Seeding populates test data
-✅ Repositories implement Repository interface
-✅ Error handling for missing records
-```
+\`\`\`
+0001_foundation.sql
+0002_onboarding.sql
+0003_identity_sessions.sql
+0004_business.sql
+0005_catalog.sql
+0006_catalog_product_guards.sql
+0007_catalog_integrity_guards.sql
+0008_permission_catalog.sql
+0009_media.sql
+0010_discovery.sql
+0011_ai_seller_creation.sql
+0012_ai_seller_catalog_link.sql
+0013_ai_seller_idempotency_fingerprint.sql
+\`\`\`
 
----
+Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
 
-## 📋 Next Steps for Continuation
+## 5. Rules for continuing implementation
 
-### Immediate (to complete Phase 4)
-1. **Query Methods** - Add list/filter capabilities to repositories
-   - findByWorkspace(workspaceId)
-   - findByProvider(providerId)
-   - search(query, filters)
-   
-2. **Connection Configuration** - Read from environment
-   - DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
-   - Create .env.example
-   
-3. **Database Queries** - Implement stub queries
-   - Replace stub implementations with real queries
-   - Add prepared statements
-   
-4. **Testing** - Add unit tests for database layer
-   - Test migrations
-   - Test repositories (CRUD)
-   - Test error handling
+Before writing database code:
 
-### For Phase 5 (Additional Features)
-- Payments (Stripe integration)
-- Reviews & ratings
-- Email notifications
-- Advanced search/discovery
-- File uploads for service images
+- inspect the canonical logical model;
+- inspect the physical schema blueprint;
+- inspect the owning module;
+- search the existing migrations and repositories for the entity;
+- confirm that the capability does not already exist under another name;
+- add exactly one canonical implementation;
+- preserve organization/workspace isolation;
+- add a migration before relying on a new physical structure.
 
-### For Phase 6 (CI/CD & Deployment)
-- GitHub Actions workflows
-- Docker containerization
-- Environment configuration
-- Database migrations in CI
-- Deployment targets (Railway, Cloudflare)
+Before touching migration files:
 
----
+- never edit an applied migration;
+- preserve numbering;
+- preserve checksum/lock integrity;
+- use a new migration for schema evolution;
+- use Expand → Migrate → Switch → Contract for breaking changes.
 
-## 🔗 Architecture Reference
+## 6. Ledger update rule
 
-### Database Schema
-```sql
-users
-├── id (UUID, PK)
-├── email (UNIQUE)
-├── name
-├── created_at
-└── updated_at
+Every substantial implementation change must update this ledger with:
 
-workspaces
-├── id (UUID, PK)
-├── name
-├── owner_id (FK → users)
-├── created_at
-└── updated_at
+- capability name
+- status
+- owning module
+- canonical files
+- migration ids involved
+- tests/verification
+- commit reference
+- unresolved follow-up work
 
-services
-├── id (UUID, PK)
-├── workspace_id (FK → workspaces)
-├── name
-├── description
-├── price
-├── currency
-├── provider_id (FK → users)
-├── created_at
-└── updated_at
+The ledger is the continuity mechanism for future coding-agent sessions.
 
-bookings
-├── id (UUID, PK)
-├── service_id (FK → services)
-├── buyer_id (FK → users)
-├── provider_id (FK → users)
-├── workspace_id (FK → workspaces)
-├── start_time
-├── end_time
-├── status (pending/confirmed/completed/cancelled)
-├── total_price
-├── created_at
-└── updated_at
+## 7. Immediate database work
 
-workspace_members
-├── workspace_id (FK → workspaces)
-├── user_id (FK → users)
-├── created_at
-└── PRIMARY KEY (workspace_id, user_id)
-```
+The next database milestone is not “build PostgreSQL.”
 
-### Layer Architecture
-```
-HTTP Server
-    ↓
-API Handlers (packages/api)
-    ↓
-Service Layer (would be added)
-    ↓
-Repository Interface (packages/core)
-    ↓
-Database Repositories (packages/database)
-    ↓
-PostgreSQL/SQLite Adapter
-    ↓
-Database Connection
-```
+It is:
 
----
+\`\`\`
+reconcile logical model
+→ map every target entity to one owner
+→ classify implemented / partial / missing / duplicate / conflicting
+→ finalize physical D1 schema
+→ implement missing module-owned migrations
+→ implement repositories/domain services
+→ verify tenant isolation and integrity
+\`\`\`
 
-## 📝 Version Control
-
-**Repository**: github.com/qooqnos/qooqnos  
-**Branch**: main  
-**Latest Commit**: 2024bdb  
-**Commit Message**: "Phase 4: Implement PostgreSQL database adapter with migration system"
-
----
-
-## 🎯 Success Criteria (Phase 4)
-
-- [x] PostgreSQL adapter implemented
-- [x] Migration system created
-- [x] Initial schema migration defined
-- [x] Repositories for all entities
-- [x] Factory for database initialization
-- [x] Server runs with both DB modes
-- [x] Backward compatibility maintained
-- [x] TypeScript strict compliance
-- [ ] Query methods for filtering/search
-- [ ] Environment configuration complete
-- [ ] Connection pooling tuned
-- [ ] Unit tests for database layer
-
----
-
-**Updated**: 2026-09-21  
-**Next Review**: After Phase 4 completion  
-**Estimated Completion**: Phase 4 (add query methods, env config, tests)
+Cloudflare D1 provisioning comes after the schema is reconciled; it must not be used to hide model uncertainty.
