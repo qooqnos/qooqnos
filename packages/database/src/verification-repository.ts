@@ -79,6 +79,95 @@ export interface AddVerificationDocumentInput {
   readonly now: string;
 }
 
+
+
+export interface CreateVerificationPolicyInput {
+  readonly id: string;
+  readonly version: string;
+  readonly subjectType: VerificationSubjectType;
+  readonly riskClass: string;
+  readonly jurisdiction?: string | undefined;
+  readonly industry?: string | undefined;
+  readonly effectiveFrom?: string | undefined;
+  readonly effectiveTo?: string | undefined;
+  readonly humanReviewRules?: string | undefined;
+  readonly expiryRules?: string | undefined;
+  readonly status?: "draft" | "active" | "retired";
+  readonly now: string;
+}
+
+export interface CreateVerificationRequirementInput {
+  readonly id: string;
+  readonly policyId: string;
+  readonly policyVersion: string;
+  readonly subjectType: VerificationSubjectType;
+  readonly requirementType: string;
+  readonly required?: boolean | undefined;
+  readonly evidenceTypes: readonly string[];
+  readonly humanReviewRequired?: boolean | undefined;
+  readonly jurisdiction?: string | undefined;
+  readonly industry?: string | undefined;
+  readonly effectiveFrom?: string | undefined;
+  readonly effectiveTo?: string | undefined;
+  readonly expiryRule?: string | undefined;
+  readonly now: string;
+}
+
+export interface CreateVerificationCheckInput {
+  readonly id: EntityId;
+  readonly caseId: EntityId;
+  readonly requirementId: string;
+  readonly checkType: string;
+  readonly method: "automated" | "human";
+  readonly result: "pass" | "fail" | "inconclusive";
+  readonly confidence?: number | undefined;
+  readonly reviewerId?: string | undefined;
+  readonly policyVersion: string;
+  readonly performedAt: string;
+  readonly now: string;
+}
+
+export interface CreateVerificationDecisionInput {
+  readonly id: EntityId;
+  readonly caseId: EntityId;
+  readonly requirementId: string;
+  readonly outcome: "approved" | "rejected" | "changes_required" | "expired";
+  readonly actorType: "human" | "system_policy";
+  readonly actorId?: string | undefined;
+  readonly rationaleReference: string;
+  readonly policyVersion: string;
+  readonly decidedAt: string;
+  readonly now: string;
+}
+
+export interface VerificationDecisionRecord {
+  readonly id: EntityId;
+  readonly caseId: EntityId;
+  readonly requirementId: string;
+  readonly outcome: CreateVerificationDecisionInput["outcome"];
+  readonly actorType: CreateVerificationDecisionInput["actorType"];
+  readonly actorId: string | null;
+  readonly rationaleReference: string;
+  readonly policyVersion: string;
+  readonly decidedAt: string;
+  readonly createdAt: string;
+}
+
+export interface VerificationCheckRecord {
+  readonly id: EntityId;
+  readonly caseId: EntityId;
+  readonly requirementId: string;
+  readonly checkType: string;
+  readonly method: "automated" | "human";
+  readonly result: "pass" | "fail" | "inconclusive";
+  readonly confidence: number | null;
+  readonly reviewerId: string | null;
+  readonly policyVersion: string;
+  readonly performedAt: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export class VerificationRepository extends Repository {
   constructor(database: D1Database) {
     super(database);
@@ -94,6 +183,181 @@ export class VerificationRepository extends Repository {
       organizationId,
       workspaceId,
     );
+  }
+
+
+  async createPolicy(input: CreateVerificationPolicyInput): Promise<void> {
+    if (!input.id.trim()) throw new DatabaseError("Verification policy id is required");
+    if (!input.version.trim()) throw new DatabaseError("Verification policy version is required");
+    if (!input.riskClass.trim()) throw new DatabaseError("Verification policy risk class is required");
+
+    await this.database.run(
+      "INSERT INTO verification_policies (id, version, jurisdiction, industry, subject_type, risk_class, effective_from, effective_to, human_review_rules, expiry_rules, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id.trim(),
+      input.version.trim(),
+      input.jurisdiction ?? null,
+      input.industry ?? null,
+      input.subjectType,
+      input.riskClass.trim(),
+      input.effectiveFrom ?? null,
+      input.effectiveTo ?? null,
+      input.humanReviewRules ?? null,
+      input.expiryRules ?? null,
+      input.status ?? "draft",
+      input.now,
+      input.now,
+    );
+  }
+
+  async createRequirement(input: CreateVerificationRequirementInput): Promise<void> {
+    if (!input.requirementType.trim()) throw new DatabaseError("Verification requirement type is required");
+    if (input.evidenceTypes.length === 0) throw new DatabaseError("Verification requirement evidence types are required");
+
+    await this.database.run(
+      "INSERT INTO verification_requirements (id, policy_id, policy_version, subject_type, jurisdiction, industry, requirement_type, required, evidence_types, human_review_required, effective_from, effective_to, expiry_rule, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.policyId,
+      input.policyVersion,
+      input.subjectType,
+      input.jurisdiction ?? null,
+      input.industry ?? null,
+      input.requirementType.trim(),
+      input.required === false ? 0 : 1,
+      JSON.stringify(input.evidenceTypes),
+      input.humanReviewRequired ? 1 : 0,
+      input.effectiveFrom ?? null,
+      input.effectiveTo ?? null,
+      input.expiryRule ?? null,
+      input.now,
+      input.now,
+    );
+  }
+
+  async createCheck(
+    context: RequestContext,
+    input: CreateVerificationCheckInput,
+  ): Promise<VerificationCheckRecord> {
+    const verificationCase = await this.getCase(context, input.caseId);
+    if (!verificationCase) throw new DatabaseError("Verification case not found");
+    if (!input.checkType.trim()) throw new DatabaseError("Verification check type is required");
+    if (input.confidence !== undefined && (input.confidence < 0 || input.confidence > 1)) {
+      throw new DatabaseError("Verification check confidence must be between 0 and 1");
+    }
+
+    await this.database.run(
+      "INSERT INTO verification_checks (id, case_id, requirement_id, check_type, method, result, confidence, reviewer_id, policy_version, performed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.caseId,
+      input.requirementId,
+      input.checkType.trim(),
+      input.method,
+      input.result,
+      input.confidence ?? null,
+      input.reviewerId ?? null,
+      input.policyVersion,
+      input.performedAt,
+      input.now,
+      input.now,
+    );
+
+    const record = await this.database.first<VerificationCheckRecord>(
+      "SELECT id, case_id AS caseId, requirement_id AS requirementId, check_type AS checkType, method, result, confidence, reviewer_id AS reviewerId, policy_version AS policyVersion, performed_at AS performedAt, created_at AS createdAt, updated_at AS updatedAt FROM verification_checks WHERE id = ? LIMIT 1",
+      input.id,
+    );
+    if (!record) throw new DatabaseError("Verification check not found after creation");
+    return record;
+  }
+
+  async attachEvidenceToCheck(
+    context: RequestContext,
+    checkId: EntityId,
+    documentId: EntityId,
+    now: string,
+  ): Promise<void> {
+    const check = await this.database.first<{ caseId: EntityId }>(
+      "SELECT case_id AS caseId FROM verification_checks WHERE id = ? LIMIT 1",
+      checkId,
+    );
+    if (!check) throw new DatabaseError("Verification check not found");
+
+    const document = await this.listDocuments(context, await this.resolveCaseForCheck(checkId));
+    if (!document.some((item) => item.id === documentId)) {
+      throw new DatabaseError("Verification evidence is not available in the current case scope");
+    }
+
+    await this.database.run(
+      "INSERT INTO verification_check_documents (check_id, document_id, created_at) VALUES (?, ?, ?)",
+      checkId,
+      documentId,
+      now,
+    );
+  }
+
+  async createDecision(
+    context: RequestContext,
+    input: CreateVerificationDecisionInput,
+  ): Promise<VerificationDecisionRecord> {
+    const verificationCase = await this.getCase(context, input.caseId);
+    if (!verificationCase) throw new DatabaseError("Verification case not found");
+    if (!input.rationaleReference.trim()) throw new DatabaseError("Verification decision rationale reference is required");
+
+    await this.database.run(
+      "INSERT INTO verification_decisions (id, case_id, requirement_id, outcome, actor_type, actor_id, rationale_reference, policy_version, decided_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.caseId,
+      input.requirementId,
+      input.outcome,
+      input.actorType,
+      input.actorId ?? null,
+      input.rationaleReference.trim(),
+      input.policyVersion,
+      input.decidedAt,
+      input.now,
+    );
+
+    const record = await this.database.first<VerificationDecisionRecord>(
+      "SELECT id, case_id AS caseId, requirement_id AS requirementId, outcome, actor_type AS actorType, actor_id AS actorId, rationale_reference AS rationaleReference, policy_version AS policyVersion, decided_at AS decidedAt, created_at AS createdAt FROM verification_decisions WHERE id = ? LIMIT 1",
+      input.id,
+    );
+    if (!record) throw new DatabaseError("Verification decision not found after creation");
+    return record;
+  }
+
+  async attachCheckToDecision(
+    context: RequestContext,
+    decisionId: EntityId,
+    checkId: EntityId,
+    now: string,
+  ): Promise<void> {
+    const decision = await this.database.first<{ caseId: EntityId }>(
+      "SELECT case_id AS caseId FROM verification_decisions WHERE id = ? LIMIT 1",
+      decisionId,
+    );
+    if (!decision) throw new DatabaseError("Verification decision not found");
+    await this.getCase(context, decision.caseId);
+
+    const check = await this.database.first<{ id: EntityId; caseId: EntityId }>(
+      "SELECT id, case_id AS caseId FROM verification_checks WHERE id = ? LIMIT 1",
+      checkId,
+    );
+    if (!check) throw new DatabaseError("Verification check not found");
+    if (check.caseId !== decision.caseId) throw new DatabaseError("Verification check does not belong to the decision case");
+
+    await this.database.run(
+      "INSERT INTO verification_decision_checks (decision_id, check_id, created_at) VALUES (?, ?, ?)",
+      decisionId,
+      checkId,
+      now,
+    );
+  }
+
+  private async resolveCaseForCheck(checkId: EntityId): Promise<EntityId> {
+    const row = await this.database.first<{ caseId: EntityId }>(
+      "SELECT case_id AS caseId FROM verification_checks WHERE id = ? LIMIT 1",
+      checkId,
+    );
+    if (!row) throw new DatabaseError("Verification check not found");
+    return row.caseId;
   }
 
   async createCase(
