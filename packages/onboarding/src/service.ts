@@ -43,7 +43,7 @@ export class OnboardingService {
     if (!profile) throw new DatabaseError("Onboarding profile not found");
     if (profile.ownerId !== actorId) throw new DatabaseError("Onboarding actor does not own the profile");
     if (profile.status !== expectedStatus) {
-      throw new DatabaseError(\`Invalid onboarding transition: expected \${expectedStatus}, found \${profile.status}\`);
+      throw new DatabaseError(`Invalid onboarding transition: expected ${expectedStatus}, found ${profile.status}`);
     }
 
     await this.options.authorization.assert({
@@ -65,10 +65,10 @@ export class OnboardingService {
       status,
       now,
       audit: {
-        sql: \`INSERT INTO audit_events
+        sql: `INSERT INTO audit_events
               (id, actor_id, organization_id, workspace_id, action, target_type, target_id,
                outcome, request_id, correlation_id, metadata_json, created_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\`,
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         params: [
           this.options.id(),
           actorId,
@@ -85,13 +85,13 @@ export class OnboardingService {
         ],
       },
       outbox: {
-        sql: \`INSERT INTO outbox_events
+        sql: `INSERT INTO outbox_events
               (id, event_type, event_version, aggregate_type, aggregate_id,
                organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)\`,
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)`,
         params: [
           this.options.id(),
-          \`onboarding.\${status}\`,
+          `onboarding.${status}`,
           1,
           "onboarding_profile",
           profile.id,
