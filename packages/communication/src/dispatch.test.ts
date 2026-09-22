@@ -70,7 +70,7 @@ describe("Communication dispatch", () => {
       async claimQueuedNotification() {
         return true;
       },
-      async appendDeliveryAttempt(input: { readonly provider: string; readonly failureCode?: string }) {
+      async appendDeliveryAttempt(_context: unknown, input: { readonly provider: string; readonly failureCode?: string }) {
         calls.push(input.provider + ":" + input.failureCode);
       },
       async markDispatchResult() {
