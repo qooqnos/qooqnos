@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0047**.
+The current API migration catalog references versions **0001 through 0048**.
 
 ### Foundation — 0001
 
@@ -303,6 +303,20 @@ These migrations add integrity triggers only.
 
 ### Demand / Matching integrity — 0041
 
+### Review moderation / reputation — 0048
+
+- no new domain owner beyond Trust/Reviews
+- adds Review lifecycle fields on `reviews`
+- review_reports
+- review_responses
+- review_moderation_cases
+- review_moderation_decisions
+- review_risk_signals
+- reputation_summaries
+- reputation_versions
+
+0048 completes the Review-owned reporting/moderation/risk/reputation projection boundary while keeping reputation rebuildable and Booking/Customer/Business facts authoritative in their owners.
+
 - no new tables
 
 0041 hardens typed candidate uniqueness and append-only MatchDecision history.
@@ -345,7 +359,7 @@ These migrations add integrity triggers only.
 
 0047 extends capacity protection to appointment status/time mutations and Resource capacity reductions.
 
-**Total currently defined physical tables: 144.**
+**Total currently defined physical tables: 151.**
 
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
@@ -366,7 +380,7 @@ This count includes only canonical SQL migration sources. It does not include re
 | Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events, customer_addresses | Customer core, CRM relationship and structured Address storage implemented; CustomerProfile, timeline projection and workflow layers remain |
 | Matching | demand_requests, demand_profiles, match_requests, match_candidates, match_decisions | Canonical Demand→Match persistence implemented; retrieval/ranking/learning and Connect/Act integration remain |
 | Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions, booking_holds, booking_status_history, appointment_events | Core schema/repositories implemented; finalization/idempotency/capacity guards and derived slot generation implemented; provider/workers remain separate |
-| Trust / Verification | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews | Verification chain + review/expiry/review records implemented; Review target scope is schema-enforced for Business/Offering/Product; reviewer authorization integration, expiry workers/events and TrustSignal projections remain |
+| Trust / Verification / Reviews | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews, review_reports, review_responses, review_moderation_cases, review_moderation_decisions, review_risk_signals, reputation_summaries, reputation_versions | Verification chain, review reporting/moderation/risk and reputation projections implemented; expiry worker and Review API are live; broader TrustSignal/anti-abuse automation remains operational follow-up |
 | Moderation / Privacy / Consent | privacy_consents, privacy_requests, privacy_processing_records | Core consent/privacy-request storage implemented; retention/export/delete workers remain |
 
 | Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core provider-neutral storage/repository implemented; consent/policy/template registry/provider adapters and durable dispatch workers remain |
@@ -622,7 +636,7 @@ The next implementation work should proceed in this order:
 12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
 13. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
-Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables.
+Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables; 0048 completes the Review-owned moderation/reputation projection layer.
 
 ## 9. Final D1 gate
 
