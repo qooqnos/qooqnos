@@ -189,11 +189,9 @@ No one layer is a substitute for another.
 
 The following remain controlled architecture decisions and must be finalized before their physical migrations:
 
-- whether address is structured columns or a JSON value object in each context;
 - final scope model for Roles;
 - final `Resource` taxonomy (staff, room, equipment, vehicle, etc.);
 - whether `BookingItem` is required from the first physical booking migration;
-- final typed target matrix for Reviews;
 - package/bundle composition under Offering;
 - tax/discount rules and their historical snapshots;
 - search/vector storage technology;
