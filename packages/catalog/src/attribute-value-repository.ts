@@ -152,7 +152,7 @@ export class CatalogAttributeValueRepository extends Repository {
       statements.push(
         ...optionIds.map((optionId) => ({
           sql: "INSERT INTO attribute_value_options (id, attribute_value_id, option_id, created_at) VALUES (?, ?, ?, ?)",
-          params: [String.raw\`\${valueId}:\${optionId}\`, valueId, optionId, input.now],
+          params: [valueId + ":" + optionId, valueId, optionId, input.now],
         })),
       );
     }
