@@ -307,7 +307,7 @@ export class BillingRepository extends Repository {
       readonly fallbackLimit?: number | undefined;
       readonly now: string;
     },
-  ): Promise<{ allowed: boolean; limit: number | null; remaining: number | null }> {
+  ): Promise<{ allowed: boolean; limit: number | null; remaining: number | null; reason?: string }> {
     if (!Number.isSafeInteger(input.quantity) || input.quantity <= 0) {
       throw new DatabaseError("Billing usage quantity must be a positive integer");
     }
@@ -340,7 +340,15 @@ export class BillingRepository extends Repository {
       "SELECT id, hard_limit AS hardLimit FROM billing_usage_meters WHERE meter_key = ? AND status = 'active' LIMIT 1",
       input.meterKey,
     );
-    if (!meter) return { allowed: true, limit: null, remaining: null };
+    if (!meter) {
+      if (input.fallbackLimit === undefined) return { allowed: true, limit: null, remaining: null };
+      return {
+        allowed: false,
+        limit: input.fallbackLimit,
+        remaining: input.fallbackLimit,
+        reason: "Billing usage meter is not configured",
+      };
+    }
 
     const counterId = input.subscription.organizationId + ":" + (input.subscription.workspaceId ?? "") + ":" + input.subscription.businessId + ":" + meter.id + ":" + input.periodKey;
     await this.database.run(
