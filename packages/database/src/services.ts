@@ -165,6 +165,16 @@ export class OutboxService {
     );
   }
 
+  async scheduleRetry(id: string, availableAt: string): Promise<void> {
+    await this.database.run(
+      `UPDATE outbox_events
+       SET status = 'pending', attempts = attempts + 1, available_at = ?
+       WHERE id = ? AND status = 'pending'`,
+      availableAt,
+      id,
+    );
+  }
+
   async markFailed(id: string): Promise<void> {
     await this.database.run(
       `UPDATE outbox_events
