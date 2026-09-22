@@ -1,4 +1,3 @@
-import type { AuthorizationPolicyRegistry } from "@qooqnos/runtime";
 import { ONBOARDING_PERMISSIONS, registerOnboardingAuthorization } from "./authorization";
 
 export const onboardingModule = {
@@ -6,7 +5,9 @@ export const onboardingModule = {
   version: "1.0.0",
   dependencies: ["runtime"],
   permissions: ONBOARDING_PERMISSIONS,
-  registerAuthorization(registry: AuthorizationPolicyRegistry): void {
+  registerAuthorization(registry: {
+    registerPermission(permission: string): void;
+  }): void {
     registerOnboardingAuthorization(registry);
   },
 } as const;
