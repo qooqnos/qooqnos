@@ -232,6 +232,7 @@ export class TrustReviewRepository extends Repository {
       "SELECT COUNT(*) AS count FROM review_reports rr INNER JOIN reviews r ON r.id = rr.review_id WHERE rr.status <> 'dismissed' AND r.organization_id = ? AND " + targetPredicateSql(input.targetType),
       organizationId, input.targetId,
     );
+    const reportCount = reportRow?.count ?? 0;
     const versionRow = await this.database.first<{ version: number }>(
       "SELECT COALESCE(MAX(version), 0) AS version FROM reputation_versions WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND target_type = ? AND target_id = ?",
       organizationId, target.workspaceId, input.targetType, input.targetId,
