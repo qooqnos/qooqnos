@@ -543,21 +543,25 @@ Polymorphic moderation subjects are allowed only under the controlled polymorphi
 
 ## 11. Communication
 
-### `conversations`
+### `communication_conversations`
 
-`id`, scope, status, timestamps.
+`id`, organization_id, workspace_id?, customer_id?, status, created_at, updated_at.
 
-### `messages`
+### `communication_messages`
 
-`id`, conversation_id, sender reference, content, classification, timestamps.
+`id`, conversation_id, sender_reference, content, classification, status, created_at, updated_at.
 
-### `notifications`
+### `communication_notifications`
 
-`id`, recipient reference, event/action reference, template version, channel, status, timestamps.
+`id`, organization_id, workspace_id?, recipient_reference, intent, channel, template_reference?, template_version?, locale?, variables_json?, priority, status, idempotency_key, scheduled_at?, expires_at?, last_policy_evaluated_at?, created_at, updated_at.
 
-### `delivery_attempts`
+Notification idempotency is unique within Organization scope.
 
-`id`, notification_id, provider/channel, status, attempted_at, safe provider reference, retry metadata.
+### `communication_delivery_attempts`
+
+`id`, notification_id, provider, channel, status, attempted_at, provider_reference?, retry_count, next_retry_at?, failure_code?, failure_class?, metadata_json?, created_at.
+
+Communication owns delivery state and attempt history. Provider-specific credentials and secrets remain outside domain rows.
 
 Communication owns delivery behavior; domain modules only emit canonical events/capabilities.
 
@@ -771,9 +775,10 @@ The following remain controlled architecture gates before their concrete SQL mig
 5. Search/vector projection versioning/storage details.
 6. AI Memory physical storage/retention contract.
 7. Integration/Webhook/Sync retention and retry details.
-8. Business conceptual lifecycle vocabulary reconciliation.
-9. Booking availability calculation, hold consumption and atomic finalization contract.
-10. Review physical target implementation beyond the canonical typed-target matrix.
+8. Communication consent/policy/template registry and provider adapter contracts.
+9. Business conceptual lifecycle vocabulary reconciliation.
+10. Booking availability calculation, hold consumption and atomic finalization contract.
+11. Review physical target implementation beyond the canonical typed-target matrix.
 
 These are controlled architecture gates, not provisional implementation instructions.
 
