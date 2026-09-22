@@ -28,6 +28,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Catalog AttributeValue storage | 🟡 Expand phase implemented | migrations/0017_catalog_attribute_values.sql; JSON backfill/cutover remains gated |
 | Customer core | 🟢 Schema/repository implemented | migrations/0018_customer_core.sql; packages/database/src/customer-repository.ts |
 | CRM Customer relationships | 🟢 Schema/repository implemented | migrations/0019_crm_customer_relationships.sql; packages/database/src/customer-relationship-repository.ts |
+| CRM timeline events | 🟢 Schema/repository implemented | migrations/0020_crm_timeline_events.sql; packages/database/src/crm-timeline-repository.ts; projections remain gated |
 | Catalog Attribute repositories | 🟢 Implemented | packages/catalog/src/attribute-repository.ts; packages/catalog/src/attribute-value-repository.ts |
 | Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
 | Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
@@ -146,10 +147,18 @@ Commits:
 - e9588d9 — Export Customer and CRM repositories
 - 8a1899a — Add Customer repository tests
 - 6cba51e — Add CRM relationship repository tests
+- 1a1bcc5 — Add canonical CRM timeline events migration 0020
+- f057754 — Register CRM timeline migration
+- ef9d7cb — Lock CRM timeline migration checksum
+- 69f275b — Define CRM timeline physical contract
+- be45756 — Reconcile CRM timeline event storage
+- a6bf6f1 — Implement canonical CRM timeline repository
+- 22c49ab — Export CRM timeline repository
+- d922430 — Add CRM timeline repository tests
 
 Migration safety:
-- canonical migrations 0001–0017 were not edited, renumbered or replaced;
-- migration 0018_customer_core and 0019_crm_customer_relationships were added as new customer/CRM-owned schema migrations;
+- canonical migrations 0001–0019 were not edited, renumbered or replaced;
+- migration 0020_crm_timeline_events was added as a new CRM-owned schema migration;
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: source-level reconciliation was completed, but no local build/test execution was available in this connector environment and no GitHub Actions run was visible for the reconciliation commit at verification time.
@@ -159,6 +168,8 @@ Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.
 The old in-memory database implementation is retained only as an explicit legacy compatibility module and is no longer part of the canonical @qooqnos/database root API.
 
 Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
+
+CRM timeline note: normalized event storage and idempotent source-event handling are implemented. A separate timeline projection table remains gated pending a field-level read-model/rebuild contract.
 
 Migration runtime hardening: splitSqlStatements now keeps SQLite CREATE TRIGGER bodies intact across internal semicolons and rejects unterminated trigger/comment/literal blocks. Trigger-splitting regression tests were added.
 
@@ -186,6 +197,7 @@ The API runtime references these migration sources:
 0017_catalog_attribute_values.sql
 0018_customer_core.sql
 0019_crm_customer_relationships.sql
+0020_crm_timeline_events.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
