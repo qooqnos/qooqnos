@@ -10,6 +10,7 @@ import { registerMatchingRoutes } from "./matching-routes";
 import { registerBookingRoutes } from "./booking-routes";
 import { registerCommerceRoutes } from "./commerce-routes";
 import { registerCommunicationRoutes } from "./communication-routes";
+import { registerTrustRoutes } from "./trust-routes";
 
 export interface ApiRouteContext {
   readonly request: Request;
@@ -51,6 +52,7 @@ export class ApiRouter {
     registerBookingRoutes(this, options.database, options.authorization);
     registerCommerceRoutes(this, options.database, options.authorization);
     registerCommunicationRoutes(this, options.database, options.authorization);
+    registerTrustRoutes(this, options.database, options.authorization);
   }
 
   register(route: ApiRoute): void {
