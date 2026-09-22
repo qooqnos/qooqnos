@@ -120,6 +120,12 @@ Rules:
 - Verification status is not duplicated as Business status.
 - Owner is a relationship/permission concept, not a Provider entity.
 
+### `business_status_history`
+
+`id`, business_id, from_status?, to_status, changed_at, created_at.
+
+Append-only history for the currently physical Business status vocabulary. It does not replace the authoritative `businesses.status` field.
+
 ### `business_profiles`
 
 `business_id`, localized/public description, contact presentation, branding references, timestamps.
