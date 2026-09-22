@@ -48,6 +48,7 @@ describe("Seller AI runtime policy", () => {
       operationType: "seller.product.extract",
       operationVersion: 2,
       context,
+      businessId: brandId<"EntityId">("business-1"),
       idempotencyKey: "idem-1",
       input: { title: "Example" },
       dataClassification: "internal",
