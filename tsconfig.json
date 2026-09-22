@@ -18,6 +18,7 @@
     { "path": "./packages/automation" },
     { "path": "./packages/integration" },
     { "path": "./packages/privacy" },
+    { "path": "./packages/matching" },
     { "path": "./packages/api" },
     { "path": "./packages/i18n" },
     { "path": "./packages/onboarding" }
