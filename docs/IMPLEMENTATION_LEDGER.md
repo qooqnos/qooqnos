@@ -42,6 +42,8 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Integration core | 🟢 Schema/package/repository/service implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Demand / Matching core | 🟢 Schema/package/repository/service implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts |
+| Billing counter scope integrity | 🟢 Integrity migration implemented | migrations/0044_billing_counter_scope.sql; packages/billing/src/repository.ts |
+| Review target integrity | 🟢 Canonical three-target schema/service/integrity implemented | migrations/0042_reviews_core.sql; migrations/0045_review_target_integrity.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts |
 | Trust Review core | 🟢 Schema/package/repository/service implemented | migrations/0042_reviews_core.sql; migrations/0043_integrity_update_guards.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts |
 | Trust VerificationCase / evidence | 🟢 Schema/repository implemented | migrations/0021_verification_case_and_documents.sql; packages/database/src/verification-repository.ts |
 | Trust policies / requirements | 🟢 Schema/repository implemented | migrations/0022_verification_policy_requirements.sql; packages/database/src/verification-repository.ts |
@@ -298,6 +300,26 @@ Commits:
 - 10540b8 — Cover Seller AI business scope in entitlement policy test
 - 118e73d — Update Seller AI runtime tests for persisted business scope
 - 04ee3b0 — Remove duplicate API workspace references
+- 8a823dd2 — Fix pre-provision D1 syntax in Billing usage counters
+- 10d94263 — Refresh migration 0034 checksum after syntax correction
+- 84e00424 — Align Review migration with Gate 05 three-target contract
+- bb49dc02 — Normalize Trust Review repository to three targets
+- 95da531c — Normalize Trust Review service target contract
+- 96e11934 — Test canonical Product Review target
+- 81486981 — Add Business-scoped Billing counter uniqueness correction
+- a9b9d5fb — Add Review target scope integrity migration
+- 3cfbaf4e — Register Billing/Review integrity migrations
+- a25ddaeb — Lock migrations through 0045
+- c1476ee1 — Enforce stable Business-scoped Billing usage counters
+- dfca4efc — Pass plan entitlement limit into quota enforcement
+- 67b762dd — Fail closed when Billing quota meter is missing
+- 5915ac1b — Mark unavailable Billing configuration as temporary_unavailable
+- 683d7d15 — Test Billing plan entitlement quota enforcement
+- 6c534a27 — Reconcile logical database model with canonical Demand/AI names
+- 7379301b — Reconcile relationship matrix with canonical Runtime tables
+- 12701f60 — Reconcile architecture contract physical names
+- f7f9121b — Resolve Review target matrix in reconciliation docs
+- 559c45c7 — Align physical schema blueprint with Gate 05 Review targets
 - 4f246cd — Restore migration lock verifier helpers
 - 42f8063 — Test Communication message and notification idempotency
 - 2310529 — Refresh physical reconciliation after Trust review/expiry
@@ -322,13 +344,13 @@ Customer/CRM verification note: repositories and scope-focused tests were added;
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0043 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0045 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
 
 Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Durable scheduler/worker infrastructure remains the next operational layer.
 
-Trust Review note: migration 0042 physicalizes the canonical typed Review target and the Trust package exposes its creation boundary.
+Trust Review note: migration 0042 physicalizes the canonical Review target from Gate 05 (Business/Offering/Product); 0045 adds target-scope integrity on insert/update and the Trust package exposes the same three-target creation boundary.
 
 Matching note: migrations 0040–0041 establish the canonical Demand→Match persistence boundary with typed Business/Offering targets and append-only decisions. Retrieval/ranking/learning execution remains operational follow-up.
 
@@ -404,6 +426,8 @@ The API runtime references these migration sources:
 0041_demand_matching_integrity.sql
 0042_reviews_core.sql
 0043_integrity_update_guards.sql
+0044_billing_counter_scope.sql
+0045_review_target_integrity.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
