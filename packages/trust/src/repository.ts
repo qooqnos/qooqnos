@@ -11,6 +11,12 @@ export interface ReviewRecord {
   readonly ratingValue: number;
   readonly content: string | null;
   readonly moderationState: string;
+  readonly status: "eligible" | "draft" | "submitted" | "pending_moderation" | "published" | "rejected" | "withdrawn" | "removed" | "expired";
+  readonly interactionReference: string | null;
+  readonly locale: string | null;
+  readonly publishedAt: string | null;
+  readonly policyVersion: string;
+  readonly contentVersion: number;
   readonly businessId: EntityId | null;
   readonly offeringId: EntityId | null;
   readonly productId: EntityId | null;
@@ -299,7 +305,7 @@ export class TrustReviewRepository extends Repository {
 
   async getReview(context: RequestContext, id: EntityId): Promise<ReviewRecord> {
     const row = await this.database.first<ReviewRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, customer_id AS customerId, rating_value AS ratingValue, content, moderation_state AS moderationState, business_id AS businessId, offering_id AS offeringId, product_id AS productId, created_at AS createdAt, updated_at AS updatedAt FROM reviews WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, customer_id AS customerId, rating_value AS ratingValue, content, moderation_state AS moderationState, status, interaction_reference AS interactionReference, locale, published_at AS publishedAt, policy_version AS policyVersion, content_version AS contentVersion, business_id AS businessId, offering_id AS offeringId, product_id AS productId, created_at AS createdAt, updated_at AS updatedAt FROM reviews WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
       id,
       this.requireOrganization({ organizationId: context.tenantId }),
       context.workspaceId ?? null,
