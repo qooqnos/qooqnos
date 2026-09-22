@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions 0001 through 0014.
+The current API migration catalog references versions 0001 through 0015.
 
 ### Foundation — 0001
 
@@ -109,7 +109,7 @@ This migration seeds persisted permission vocabulary.
 
 0013 adds request_fingerprint.
 
-**Total currently defined physical tables: 43.** Migration 0014 adds integrity triggers only; it does not add a table.
+**Total currently defined physical tables: 43.** Migrations 0014–0015 add integrity triggers only; they do not add tables.
 
 This count includes only canonical SQL migration sources. It does not include the removed PostgreSQL compatibility schema or any historical in-memory schema.
 
@@ -160,11 +160,11 @@ If a future business-specific service configuration needs an independent lifecyc
 
 ### 3.2 Pricing model
 
-The logical model describes service_prices and product_prices.
+The logical vocabulary previously described service_prices and product_prices.
 
-The physical schema uses a shared prices table attached to offerings.
+The physical schema uses one shared `prices` table attached to `offerings`, and no active code creates parallel service- or product-price tables.
 
-**Action:** determine whether offering-level pricing is the canonical Phoenix model. If variant/product-specific pricing is required, extend the existing pricing model through an owned migration rather than creating an unrelated second price system.
+**Decision:** `prices(offering_id, ...)` is the canonical physical source of truth for offer-level pricing. Do not create `service_prices` or `product_prices`. If variant-specific or component-specific pricing becomes a product requirement, extend the existing pricing model through an explicit migration and ownership decision.
 
 ### 3.3 Business category ownership
 
@@ -188,21 +188,27 @@ The logical model also contains structured product attributes and reusable attri
 
 ### 3.6 Business primary category
 
-businesses.primary_category_id is present, but the current migration does not establish a direct foreign-key constraint to categories.
+`businesses.primary_category_id` is part of the canonical Business record but was initially created without a direct foreign-key constraint to `categories`.
 
-**Action:** treat this as an integrity-hardening candidate. Do not create another category relationship table.
+**Decision:** harden the existing field in a Business-owned integrity migration. Do not create another category relationship table. Because category scope currently does not carry explicit organization/workspace owner columns, tenant-scope compatibility remains a domain-policy concern rather than an invented SQL relationship.
 
 ### 3.7 Offering integrity
 
 offerings identifies its offering_type and optional service_id/product_id. The current guard migrations enforce cross-business consistency when references are present, but the physical contract should also ensure the correct referenced aggregate exists for the declared type.
 
-**Action:** add a targeted integrity migration only after the invariant is finalized. Do not redesign offerings as another entity.
+**Decision:** this invariant is finalized and enforced by migration 0014. Do not redesign offerings as another entity.
 
 ## 3.1 Catalog integrity hardening — 0014
 
 Migration 0014 hardens the existing offerings model without introducing a new entity. It enforces that a service offering references exactly one service, a product offering exactly one product, the referenced row exists, and the referenced product/service belongs to the offering business. Update paths are protected as well.
 
 This confirms the current physical design: services, products and offerings are distinct but related concepts. Do not create business_services, offers, or another duplicate sellable table without a new architecture decision.
+
+## 3.2 Business primary category integrity — 0015
+
+Migration 0015 hardens the existing `businesses.primary_category_id` relationship without adding a new entity. It rejects inserts/updates that reference an unknown category and prevents deletion of a category that is referenced as a Business primary category.
+
+The migration deliberately does not infer organization/workspace ownership for category rows because the current `categories` contract does not store those owner keys.
 
 ## 4. Seller AI versus canonical AI Runtime
 
@@ -306,8 +312,7 @@ new migrations must follow ownership + no-duplication gates
 
 The next implementation work should proceed in this order:
 
-1. Resolve the service/offering/pricing semantic boundaries.
-2. Resolve structured catalog attributes without duplicating current JSON-backed state.
+1. Resolve structured catalog attributes without duplicating current JSON-backed state.
 3. Complete Business lifecycle support only where the logical model requires it.
 4. Introduce Customer/CRM identity and relationship structures.
 5. Introduce Verification/Trust/Moderation structures.
