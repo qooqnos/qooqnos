@@ -10,6 +10,7 @@ import { INTEGRATION_MODULE } from "@qooqnos/integration";
 import { PRIVACY_MODULE } from "@qooqnos/privacy";
 import { MATCHING_MODULE } from "@qooqnos/matching";
 import { FULFILLMENT_MODULE } from "@qooqnos/fulfillment";
+import { CASE_SUPPORT_MODULE } from "@qooqnos/case-support";
 import { TRUST_MODULE } from "@qooqnos/trust";
 import { onboardingModule } from "@qooqnos/onboarding";
 import {
@@ -46,6 +47,7 @@ const modules: readonly RuntimeModule[] = [
   PRIVACY_MODULE,
   MATCHING_MODULE,
   FULFILLMENT_MODULE,
+  CASE_SUPPORT_MODULE,
   TRUST_MODULE,
   onboardingModule,
   AI_MODULE,
