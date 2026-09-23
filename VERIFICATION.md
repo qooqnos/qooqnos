@@ -8,16 +8,16 @@
 
 The latest verified `main` checkpoint is:
 
-`f70c572eb39a092fe54222f934b476a8f7543f93`
+`577d9087873f3101881d16a5483bb46b073a9d6e`
 
 Both required workflows passed:
 
-- **CI:** run `35878164561` — success
-- **Phoenix verification:** run `35878164342` — success
+- **CI:** run `35880130727` — success
+- **Phoenix verification:** run `35880131164` — success
 
-The verification path passed format/lint checks, migration-lock verification, TypeScript typecheck, workspace build, and the unit-test suite: **70 test files / 196 tests passed**.
+The verification path passed format/lint checks, migration-lock verification, TypeScript typecheck, workspace build, Cloudflare Worker dry-run bundling, and the unit-test suite: **70 test files / 196 tests passed**.
 
-Current `main` points to `f70c572eb39a092fe54222f934b476a8f7543f93`; this head has passed CI and Phoenix verification.
+Current `main` points to `577d9087873f3101881d16a5483bb46b073a9d6e`; this head has passed CI and Phoenix verification.
 
 ## Canonical runtime baseline
 
