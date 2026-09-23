@@ -19,6 +19,7 @@ import { checkDatabase } from "./readiness";
 import { processPendingTrustExpiries } from "./trust-worker";
 import { processCommunicationDispatch } from "./communication-worker";
 import { processAutomationSchedules } from "./automation-worker";
+import { processCaseSla } from "./case-sla-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 
 const homePage = (version: string): string => `<!doctype html>
@@ -541,6 +542,7 @@ export default {
     await processCommunicationDispatch(env, now);
     await processPendingTrustExpiries(env, now);
     await processAutomationSchedules(env, now);
+    await processCaseSla(env, now);
   },
 
   async queue(
