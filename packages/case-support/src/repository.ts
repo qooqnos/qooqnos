@@ -165,7 +165,7 @@ export class CaseSupportRepository extends Repository {
   }): Promise<boolean> {
     const caseRecord = await this.getRequired(context, input.caseId);
     const eventId = input.caseId + ":sla_breached:" + input.metric;
-    const result = await this.database.transaction([
+    await this.database.transaction([
       {
         sql: "INSERT OR IGNORE INTO case_events (id,case_id,event_type,actor_type,actor_id,from_status,to_status,payload_reference,correlation_id,occurred_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
         params: [
