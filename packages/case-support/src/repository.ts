@@ -421,6 +421,35 @@ export class CaseSupportRepository extends Repository {
     return { id: input.id, status: "requested", resultReference: null };
   }
 
+  async listApprovedActions(context: RequestContext, limit = 50): Promise<readonly {
+    readonly id: EntityId;
+    readonly caseId: EntityId;
+    readonly capability: string;
+    readonly targetReference: string;
+    readonly requestedBy: string;
+    readonly authorizationReference: string;
+  }[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
+    await this.list(context, 1);
+    return this.database.all(
+      "SELECT a.id, a.case_id AS caseId, a.capability, a.target_reference AS targetReference, a.requested_by AS requestedBy, a.authorization_reference AS authorizationReference FROM case_actions a INNER JOIN cases c ON c.id = a.case_id WHERE c.organization_id = ? AND (c.workspace_id IS NULL OR c.workspace_id = ?) AND a.status = 'approved' ORDER BY a.created_at ASC, a.id ASC LIMIT ?",
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+      safeLimit,
+    );
+  }
+
+  async claimApprovedAction(context: RequestContext, caseId: EntityId, actionId: EntityId, now: string): Promise<boolean> {
+    await this.getRequired(context, caseId);
+    const result = await this.database.run(
+      "UPDATE case_actions SET status = 'running', updated_at = ? WHERE id = ? AND case_id = ? AND status = 'approved'",
+      now,
+      actionId,
+      caseId,
+    );
+    return (result.meta?.changes ?? 0) === 1;
+  }
+
   async getAction(context: RequestContext, caseId: EntityId, actionId: EntityId) {
     await this.getRequired(context, caseId);
     return this.database.first<{
