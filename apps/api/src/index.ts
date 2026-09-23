@@ -19,7 +19,9 @@ import { checkDatabase } from "./readiness";
 import { processPendingTrustExpiries } from "./trust-worker";
 import { processCommunicationDispatch } from "./communication-worker";
 import { processAutomationSchedules } from "./automation-worker";
+import { processAutomationExecutions } from "./automation-execution-worker";
 import { processCaseSla } from "./case-sla-worker";
+import { processCaseActions } from "./case-action-worker";
 import { processPrivacyConsentExpiry } from "./privacy-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 
@@ -543,7 +545,9 @@ export default {
     await processCommunicationDispatch(env, now);
     await processPendingTrustExpiries(env, now);
     await processAutomationSchedules(env, now);
+    await processAutomationExecutions(env, now);
     await processCaseSla(env, now);
+    await processCaseActions(env, now);
     await processPrivacyConsentExpiry(env, now);
   },
 
