@@ -52,7 +52,7 @@ Before adding a table:
 
 ## 4. Migration sequence currently registered
 
-The API runtime currently references the ordered canonical migration sequence `0001` through `0050`.
+The API runtime currently references the ordered canonical migration sequence `0001` through `0053`.
 
 Do not renumber or replace these migrations.
 
@@ -86,10 +86,11 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- GitHub Actions CI passed for commit `2fde64e31db2124440d27b7cd64c751ec751d5eb`.
-- GitHub Actions Phoenix verification passed for the same commit.
-- Migration lock verification passed for the canonical migration inventory through 0050.
-- Typecheck, build, lint, migration verification and unit tests passed on the same checkpoint.
+- The latest code-bearing green verification checkpoint is commit `184c5ff9f1230c7f67179e7447a13b73caf87425`.
+- GitHub Actions CI run `35841847298` and Phoenix verification run `35841847334` passed for that checkpoint.
+- Migration lock verification passed through migration `0053`.
+- Format, lint, typecheck, workspace build and the unit-test suite passed; the checkpoint reported 195 tests across 69 test files.
+- `main` now points to `3f43d5cafd665a33c1239ee16be67e8870e0c774`; the commits after the green code checkpoint only refresh status/ledger documentation, so they do not change the verified code state.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
 
 ## 8. What remains
