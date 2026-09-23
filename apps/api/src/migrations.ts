@@ -35,6 +35,7 @@ import billingUsageCounters from "../../../migrations/0034_billing_usage_counter
 import communicationCore from "../../../migrations/0035_communication_core.sql";
 import automationCore from "../../../migrations/0036_automation_core.sql";
 import aiRuntimeCore from "../../../migrations/0037_ai_runtime_core.sql";
+import aiRuntimeWorkerLeases from "../../../migrations/0053_ai_runtime_worker_leases.sql";
 import integrationCore from "../../../migrations/0038_integration_core.sql";
 import privacyConsentRequests from "../../../migrations/0039_privacy_consent_requests.sql";
 import demandMatchingCore from "../../../migrations/0040_demand_matching_core.sql";
@@ -90,6 +91,7 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0035_communication_core.sql", sql: communicationCore },
   { path: "migrations/0036_automation_core.sql", sql: automationCore },
   { path: "migrations/0037_ai_runtime_core.sql", sql: aiRuntimeCore },
+  { path: "migrations/0053_ai_runtime_worker_leases.sql", sql: aiRuntimeWorkerLeases },
   { path: "migrations/0038_integration_core.sql", sql: integrationCore },
   { path: "migrations/0039_privacy_consent_requests.sql", sql: privacyConsentRequests },
   { path: "migrations/0040_demand_matching_core.sql", sql: demandMatchingCore },
