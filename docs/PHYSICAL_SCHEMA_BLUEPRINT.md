@@ -573,6 +573,30 @@ Communication owns delivery state and attempt history. Provider-specific credent
 
 Communication owns delivery behavior; domain modules only emit canonical events/capabilities.
 
+### `communication_intents`
+
+`id`, intent_key, category, requires_opt_in, allowed_channels_json, policy_version, status, created_at, updated_at.
+
+Intent is the canonical policy key. Unknown or retired intents are fail-closed.
+
+### `communication_preferences`
+
+`id`, organization_id, workspace_id?, recipient_reference, category, channel?, status, source, consent_reference?, effective_from, effective_to?, created_at, updated_at.
+
+Preference history is recipient- and scope-aware. The latest applicable record wins.
+
+### `communication_suppression_records`
+
+`id`, organization_id, workspace_id?, recipient_reference, scope, category?, channel?, intent?, reason_code, source, status, effective_from, expires_at?, created_at, updated_at.
+
+Suppressions are explicit policy blocks independent from UI preference state.
+
+### `communication_policy_decisions`
+
+`id`, notification_id, organization_id, workspace_id?, result, reason_code?, policy_version, preference_reference?, suppression_reference?, evaluated_at, created_at.
+
+Every notification records the policy decision that authorized, denied, or suppressed delivery.
+
 ## 12. AI / Automation
 
 ### Automation
