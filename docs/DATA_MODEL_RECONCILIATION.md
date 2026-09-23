@@ -186,13 +186,15 @@ Entitlement appeared in both Access and Billing.
 
 Billing is the canonical source of commercial entitlement grants. Access exposes the canonical decision capability `CAP.ACCESS.CHECK_ENTITLEMENT`. Access does not maintain a second entitlement database.
 
-### 4.8 Invoice ownership
+### 4.8 Payment / Refund / Invoice ownership
 
-Invoice appeared as both Commerce and Billing.
+Payment, Refund and Invoice appeared across Commerce and Billing vocabulary.
 
 **Resolution:**
 
-Commerce owns transaction-linked invoice creation and historical invoice data for marketplace transactions. Billing owns subscription/plan billing semantics. If one invoice spans both domains, a contract boundary and explicit ownership rule must be defined; never create two invoice entities.
+Billing/Payment is the authoritative owner of Payment, PaymentAttempt, Refund, Invoice and financial-ledger state. Commerce owns the commercial transaction and may invoke payment/refund/invoice capabilities while storing only orchestration/reference state required to reconstruct the Order flow.
+
+Commerce must not become a second financial ledger or store a second authoritative Payment, Refund or Invoice aggregate. Financial references remain versioned and tenant-scoped.
 
 ### 4.9 Analytics vs domain tables
 
