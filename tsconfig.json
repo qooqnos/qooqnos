@@ -48,6 +48,9 @@
       "path": "./packages/matching"
     },
     {
+      "path": "./packages/fulfillment"
+    },
+    {
       "path": "./packages/trust"
     },
     {
