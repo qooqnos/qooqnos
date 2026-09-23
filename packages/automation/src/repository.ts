@@ -479,14 +479,18 @@ export class AutomationRepository extends Repository {
       readonly completedAt: string;
     },
   ): Promise<void> {
-    const attempt = await this.database.first<{ id: EntityId; executionId: EntityId }>(
-      "SELECT a.id, se.execution_id AS executionId FROM automation_execution_attempts a INNER JOIN automation_step_executions se ON se.id = a.step_execution_id WHERE a.idempotency_key = ? LIMIT 1",
+    const attempt = await this.database.first<{ id: EntityId; executionId: EntityId; status: "running" | "succeeded" | "failed" | "cancelled" }>(
+      "SELECT a.id, se.execution_id AS executionId, a.status FROM automation_execution_attempts a INNER JOIN automation_step_executions se ON se.id = a.step_execution_id WHERE a.idempotency_key = ? LIMIT 1",
       input.idempotencyKey,
     );
     if (!attempt) throw new DatabaseError("Automation execution attempt not found");
     await this.getExecution(context, attempt.executionId);
+    if (attempt.status !== "running") {
+      if (attempt.status === input.status) return;
+      throw new DatabaseError("Terminal automation execution attempt cannot be reopened");
+    }
     await this.database.run(
-      "UPDATE automation_execution_attempts SET status = ?, completed_at = ? WHERE id = ?",
+      "UPDATE automation_execution_attempts SET status = ?, completed_at = ? WHERE id = ? AND status = 'running'",
       input.status,
       input.completedAt,
       attempt.id,
