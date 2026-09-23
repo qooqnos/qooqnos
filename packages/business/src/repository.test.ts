@@ -206,4 +206,41 @@ describe("BusinessRepository", () => {
     expect(firstCalls).toBe(1);
   });
 
+  it("rejects a stale business status transition", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        return {
+          id: "business-1",
+          organizationId: "tenant-1",
+          workspaceId: "workspace-1",
+          name: "Business",
+          displayName: "Business",
+          status: "draft",
+          publicationStatus: "unpublished",
+          businessType: null,
+          primaryCategoryId: null,
+          defaultLocale: "en",
+          timezone: "UTC",
+          createdAt: "2026-09-23T00:00:00.000Z",
+          updatedAt: "2026-09-23T00:00:00.000Z",
+        } as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true, meta: { changes: 0 } }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new BusinessRepository(new D1Database(raw));
+
+    await expect(repository.setStatus(
+      context(),
+      brandId<"EntityId">("business-1"),
+      "active",
+      "2026-09-23T00:01:00.000Z",
+    )).rejects.toThrow("Concurrent business status transition rejected");
+  });
+
 });
