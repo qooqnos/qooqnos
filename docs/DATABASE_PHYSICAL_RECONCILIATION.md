@@ -609,14 +609,16 @@ The next implementation work should proceed in this order:
 3. Complete Booking availability calculation and slot-generation semantics; transactional finalization/capacity guards are implemented in 0046–0047.
 4. Complete Billing provider adapters/reconciliation workers and invoice/financial-ledger foundation only where their contracts are explicit.
 5. Complete Communication consent/policy/template registry and durable dispatch/provider-adapter contracts.
-6. Complete Automation durable scheduler/worker execution and capability compensation semantics.
+6. Scheduled Automation polling/misfire execution is implemented; complete scheduled action execution and capability compensation through the canonical runtime CapabilityRegistry.
 7. Complete AI Runtime durable/asynchronous worker orchestration over the existing provider/routing/validation runtime.
 8. Complete Integration provider adapters and durable sync workers.
 9. Complete Privacy retention/export/delete workers and subject-level identity validation.
 10. Complete Matching retrieval/ranking execution, learning signals and Connect/Act integration.
 11. Complete Fulfillment provider adapters, callback reconciliation and durable execution workers.
 12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
-13. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
+13. Complete Case queue dispatch and cross-domain CaseAction execution through the canonical capability registry.
+14. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
+15. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
 Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables; 0048 completes the Review-owned moderation/reputation projection layer.
 
