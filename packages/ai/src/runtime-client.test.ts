@@ -206,7 +206,9 @@ describe("persistent AI Runtime client", () => {
           recordedStatus = status;
           return {} as never;
         },
-        async recordResult() {},
+        async recordResult(_context: RequestContext, input: { readonly status: string }) {
+          recordedStatus = input.status === "abstained" ? "blocked" : input.status;
+        },
         async recordUsage() {},
       } as never,
       {
