@@ -95,4 +95,43 @@ describe("FulfillmentRepository", () => {
       "2026-09-22T00:02:00.000Z",
     )).rejects.toThrow("Invalid FulfillmentOrder status transition");
   });
+
+  it("rejects an invalid shipment lifecycle transition", async () => {
+    const shipment = {
+      id: "shipment-1",
+      fulfillmentItemId: "item-1",
+      carrierRef: null,
+      serviceLevel: null,
+      trackingReference: null,
+      originRef: null,
+      destinationRef: null,
+      status: "draft",
+      dispatchedAt: null,
+      deliveredAt: null,
+      proofOfDeliveryRef: null,
+      createdAt: "2026-09-22T00:00:00.000Z",
+      updatedAt: "2026-09-22T00:00:00.000Z",
+    };
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return shipment as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new FulfillmentRepository(new D1Database(raw));
+
+    await expect(repository.setShipmentStatus(
+      context(),
+      {
+        shipmentId: brandId<"EntityId">("shipment-1"),
+        status: "delivered",
+        now: "2026-09-22T00:02:00.000Z",
+      },
+    )).rejects.toThrow("Invalid Shipment status transition");
+  });
+
 });
