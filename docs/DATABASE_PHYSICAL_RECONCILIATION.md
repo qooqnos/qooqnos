@@ -439,6 +439,22 @@ These migrations add integrity triggers only.
 
 0054 closes the Discovery index-generation/versioning gap and persists query/evaluation evidence without turning derived search state into domain truth.
 
+### Communication policy / consent enforcement — 0055
+
+- communication_intents
+- communication_preferences
+- communication_suppression_records
+- communication_policy_decisions
+
+0055 closes Communication intent/channel policy, preference, opt-in and suppression policy.
+
+### Communication required-message suppression — 0056
+
+- no new tables
+- adds `communication_suppression_records.applies_to_required`
+
+0056 distinguishes optional suppression from required transactional/security traffic.
+
 **Total currently defined physical tables: 190.**
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
@@ -685,7 +701,7 @@ The database is broad but not yet production-complete.
 The accurate state is:
 
 ```
-186 physical tables defined across 54 ordered migrations
+190 physical tables defined across 56 ordered migrations
         ↓
 core foundation + identity + business + catalog + media + discovery
 + seller AI + customer/CRM + trust + booking + commerce + billing
