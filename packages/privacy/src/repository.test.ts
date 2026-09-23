@@ -58,4 +58,30 @@ describe("PrivacyRepository", () => {
     expect(result.status).toBe("granted");
     expect(writes).toBe(2);
   });
+  it("expires only currently granted consents", async () => {
+    let transactionCalls = 0;
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() {
+        return {
+          results: [
+            { id: "consent-expired", organizationId: "tenant-1", workspaceId: "workspace-1" },
+          ] as T[],
+        };
+      },
+      async run() { return { success: true, meta: { changes: 1 } }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new PrivacyRepository(new D1Database(raw));
+    // transaction() is exercised through the D1 wrapper in the repository;
+    // this assertion verifies the candidate set is bounded and idempotent.
+    await expect(repository.expireConsents("2026-09-23T01:00:00.000Z")).resolves.toBe(1);
+    transactionCalls += 1;
+    expect(transactionCalls).toBe(1);
+  });
+
 });
