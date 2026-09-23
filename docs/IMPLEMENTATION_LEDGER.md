@@ -624,7 +624,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0054_discovery_index_observability.sql`. The latest fully verified green head before the final documentation cleanup is `425c6a3b736608d7923b0c3976fc6d6c16341273`; current `main` contains documentation-only reconciliation after that verified head, and its CI/Phoenix workflows are the final checks.
+The canonical physical inventory reaches migration `0054_discovery_index_observability.sql`. The latest fully verified green head is `b9aba19db5abb985f680448767b2bf39553f9c6b`; CI and Phoenix verification are green on this current documentation-reconciled head.
 
 Current engineering state:
 
