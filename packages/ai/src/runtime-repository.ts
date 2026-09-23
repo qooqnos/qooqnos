@@ -6,6 +6,7 @@ export interface AiOperationRecord {
   readonly organizationId: EntityId;
   readonly workspaceId: EntityId | null;
   readonly actorId: EntityId | null;
+  readonly sessionId: EntityId | null;
   readonly operationType: string;
   readonly operationVersion: number;
   readonly requestId: string;
@@ -87,7 +88,7 @@ export class AiRuntimeRepository extends Repository {
   async createOperation(context: RequestContext, input: CreateAiOperationInput): Promise<AiOperationRecord> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const existing = await this.database.first<AiOperationRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, actor_id AS actorId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, worker_lease_until AS workerLeaseUntil, worker_claimed_by AS workerClaimedBy, worker_attempts AS workerAttempts, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE organization_id = ? AND idempotency_key = ? LIMIT 1",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, actor_id AS actorId, session_id AS sessionId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, worker_lease_until AS workerLeaseUntil, worker_claimed_by AS workerClaimedBy, worker_attempts AS workerAttempts, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE organization_id = ? AND idempotency_key = ? LIMIT 1",
       organizationId,
       input.idempotencyKey,
     );
@@ -120,7 +121,7 @@ export class AiRuntimeRepository extends Repository {
   ): Promise<readonly AiOperationRecord[]> {
     const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
     return this.database.all<AiOperationRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, actor_id AS actorId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, worker_lease_until AS workerLeaseUntil, worker_claimed_by AS workerClaimedBy, worker_attempts AS workerAttempts, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE status IN ('created','entitlement_checked','started') AND (worker_lease_until IS NULL OR worker_lease_until <= ?) ORDER BY created_at ASC, id ASC LIMIT ?",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, actor_id AS actorId, session_id AS sessionId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, worker_lease_until AS workerLeaseUntil, worker_claimed_by AS workerClaimedBy, worker_attempts AS workerAttempts, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE status IN ('created','entitlement_checked','started') AND (worker_lease_until IS NULL OR worker_lease_until <= ?) ORDER BY created_at ASC, id ASC LIMIT ?",
       now,
       safeLimit,
     );
@@ -141,7 +142,7 @@ export class AiRuntimeRepository extends Repository {
       now,
     );
     return this.database.first<AiOperationRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, actor_id AS actorId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, worker_lease_until AS workerLeaseUntil, worker_claimed_by AS workerClaimedBy, worker_attempts AS workerAttempts, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE id=? AND worker_claimed_by=? LIMIT 1",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, actor_id AS actorId, session_id AS sessionId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, worker_lease_until AS workerLeaseUntil, worker_claimed_by AS workerClaimedBy, worker_attempts AS workerAttempts, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE id=? AND worker_claimed_by=? LIMIT 1",
       id,
       workerId,
     );
