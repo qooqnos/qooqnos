@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0053**.
+The current API migration catalog references versions **0001 through 0054**.
 
 ### Foundation — 0001
 
@@ -408,11 +408,19 @@ These migrations add integrity triggers only.
 
 0052 establishes the canonical generic moderation workflow record. Review-specific moderation remains owned by the existing review moderation tables; this record is the cross-domain moderation case coordinator.
 
-**Total currently defined physical tables: 183.**
+**Total currently defined physical tables: 186.**
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
 ### AI Runtime worker leases — 0053
+
+### Discovery index observability — 0054
+
+- search_index_versions
+- discovery_query_traces
+- discovery_evaluation_records
+
+0054 closes the Discovery index-generation/versioning gap and persists query/evaluation evidence without turning derived search state into domain truth.
 
 - no new tables
 - adds AI operation worker lease/claim columns and indexes
@@ -438,7 +446,7 @@ This count includes only canonical SQL migration sources. It does not include re
 | Trust / Verification / Reviews | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews, review_reports, review_responses, review_moderation_cases, review_moderation_decisions, review_risk_signals, reputation_summaries, reputation_versions | Verification chain, review reporting/moderation/risk and reputation projections implemented; expiry worker and Review API are live; broader TrustSignal/anti-abuse automation remains operational follow-up |
 | Moderation / Privacy / Consent | moderation_cases, privacy_consents, privacy_requests, privacy_processing_records | Core generic moderation/consent/privacy-request storage implemented; subject scope validation is implemented; retention/export/delete workers and broader moderation actions remain |
 
-| Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core storage, outbox-linked dispatch worker and in-app delivery adapter implemented; external provider adapters, consent/policy/template registry remain |
+| Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core storage, outbox-linked dispatch worker, versioned template registry and in-app delivery adapter implemented; external provider adapters and consent/anti-spam policy remain |
 | Commerce | commerce_carts, commerce_cart_lines, commerce_checkout_sessions, commerce_price_snapshots, commerce_orders, commerce_order_lines, commerce_order_adjustments, commerce_transaction_attempts, commerce_fulfillment_references, commerce_cancellations, commerce_refund_references, commerce_order_events | Core transaction boundary implemented; pricing/checkout orchestration, Billing/Payment, Promotion/Loyalty and Fulfillment integrations remain separate capabilities |
 | Billing | billing_plans, billing_prices, billing_plan_entitlements, billing_subscriptions, billing_subscription_events, billing_usage_meters, billing_usage_events, billing_usage_counters, billing_entitlement_snapshots, billing_provider_refs, billing_reconciliation_cases | Core plan/subscription/entitlement/usage/quota/reconciliation storage implemented; provider adapters and invoice/financial-ledger layers remain |
 | AI Runtime | ai_operation_types, ai_providers, ai_models, ai_prompts, ai_prompt_versions, ai_schemas, ai_schema_versions, ai_policies, ai_operations, ai_model_routing_decisions, ai_policy_decisions, ai_provider_attempts, ai_runtime_results, ai_usage_records | Core persistence plus provider registry/governance/routing/output-safety validation and Seller AI durable worker scheduling implemented; new AI operation types require explicit input resolvers |
