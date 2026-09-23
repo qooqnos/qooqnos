@@ -31,10 +31,10 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Migration lock | ✅ Implemented | reviewed SQL identity/checksum is enforced |
 | D1 database boundary | ✅ Implemented | packages/database exposes D1-compatible access |
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
-| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0050 |
+| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0053 |
 | Full logical model | ⏳ In progress | many target entities remain intentionally un-migrated |
-| Final D1 physical schema | 🟡 Core domains implemented; operational gaps remain | physical schema is broad and integrity-guarded; remaining work is provider adapters, durable workers, a few gated contracts, and real Cloudflare resource provisioning |
-| Legacy PostgreSQL path | ⚠️ Quarantined | historical files remain but are not canonical |
+| Final D1 physical schema | 🟢 Core physical domains and integrity guards implemented; 1 blueprint contract remains gated | 183 physical tables across migrations 0001–0053; remaining work is explicit contract/provider/worker gates and real Cloudflare resource provisioning |
+| Legacy PostgreSQL path | ✅ Removed from active source | historical git history only |
 
 ## 3. Critical database rule
 
