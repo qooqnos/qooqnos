@@ -10,7 +10,7 @@ The latest verified `main` checkpoint is:
 
 `b9e9a5131e0123450dd8642975ae739537ca278b`
 
-Current `main` head is `076e7863073fa10a1e78624de9467531464242fb`; this head is covered by the latest successful CI and Phoenix verification runs.
+Current `main` head is `b9aba19db5abb985f680448767b2bf39553f9c6b`; this head is covered by the latest successful CI and Phoenix verification runs.
 
 Both required workflows passed:
 
