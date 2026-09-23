@@ -8,14 +8,14 @@
 
 The current `main` commit verified in GitHub Actions is:
 
-`2fde64e31db2124440d27b7cd64c751ec751d5eb`
+`fc03861eccf6d575c1ba68070e82bd4461e17097`
 
 Both required workflows passed:
 
-- **CI:** run `35829052893` — success
-- **Phoenix verification:** run `35829052883` — success
+- **CI:** run `35835340923` — success
+- **Phoenix verification:** run `35835340833` — success
 
-The verification path passed migration-lock verification, TypeScript typecheck, workspace build, lint/migration checks, and the unit-test suite: **63 test files / 182 tests passed**.
+The verification path passed migration-lock verification, TypeScript typecheck, workspace build, lint/migration checks, and the unit-test suite: **64 test files / 184 tests passed**.
 
 ## Canonical runtime baseline
 
@@ -36,7 +36,7 @@ The product loop remains:
 
 ## Canonical implementation coverage
 
-Current canonical migrations reach `0050_case_support_core.sql`.
+Current canonical migrations reach `0052_moderation_cases.sql`.
 
 Implemented core capability families include:
 
@@ -56,6 +56,10 @@ Implemented core capability families include:
 - Privacy / Consent
 - Demand / Matching
 - Matching `Connect` through canonical CustomerRelationship ownership
+- Fulfillment / Service Delivery core and lifecycle evidence
+- Case Support lifecycle / SLA / CaseAction execution
+- Communication template registry
+- Generic ModerationCase coordination
 
 ## Important implementation boundaries
 
@@ -76,7 +80,7 @@ The physical schema is intentionally broad but not every operational concern is 
 1. Scheduled Automation polling and misfire semantics are implemented; scheduled action execution still requires canonical CapabilityRegistry composition.
 2. Integration provider adapters and durable sync workers; adapter payload/credential contracts remain provider-specific.
 3. Privacy consent expiry is live; export/delete/retention workers with subject-level identity validation remain.
-4. External Communication provider adapters plus template/policy registry; provider-neutral dispatch is already live.
+4. External Communication provider adapters plus consent/anti-spam policy remain gated; template registry and provider-neutral dispatch are live.
 5. AI provider routing/validation execution beyond the current in-process Runtime/registry, specifically durable/asynchronous worker orchestration where required.
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile only when its field-level contract is explicit; CRM timeline is already physically implemented as events/projection input.
