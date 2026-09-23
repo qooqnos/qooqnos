@@ -31,14 +31,14 @@ export async function processApprovedPrivacyRequests(
   if (!database) return { claimed: 0, skipped: 0, failed: 0 };
 
   const repository = new PrivacyRepository(database);
-  const items = await repository.listApprovedRequests(limit);
+  const items = await repository.listClaimableRequests(limit);
   let claimed = 0;
   let skipped = 0;
   let failed = 0;
 
   for (const item of items) {
     try {
-      const result = await repository.claimApprovedRequest({
+      const result = await repository.claimOrResumeRequest({
         requestId: item.id,
         now,
       });
