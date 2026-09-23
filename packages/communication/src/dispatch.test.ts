@@ -21,6 +21,7 @@ function notification(channel: NotificationRecord["channel"] = "in_app"): Notifi
     idempotencyKey: "idem-1",
     scheduledAt: null,
     expiresAt: null,
+    policyVersion: "1",
     lastPolicyEvaluatedAt: null,
     createdAt: "2026-09-22T00:00:00.000Z",
     updatedAt: "2026-09-22T00:00:00.000Z",
