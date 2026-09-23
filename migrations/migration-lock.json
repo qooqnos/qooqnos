@@ -379,5 +379,19 @@
       "filename": "0054_discovery_index_observability.sql",
       "checksum": "242b0282b2658d03d3adf4b9ad6754250a809b746653d603ac3a791c6797c1fd"
     }
+    {
+      "id": "0055_communication_policy_consent",
+      "version": 55,
+      "moduleId": "communication",
+      "checksum": "c860cf05dcacac1b3bcf7fb9d8f5936c7741ac15eb7935e17ec15efe905682db",
+      "filename": "0055_communication_policy_consent.sql"
+    },
+    {
+      "id": "0056_communication_required_suppression",
+      "version": 56,
+      "moduleId": "communication",
+      "checksum": "877b142d6b8fb49bbff20b7f9e4a3eda16b7057cf07ccb61abb0a5e70cffa72c",
+      "filename": "0056_communication_required_suppression.sql"
+    }
   ]
 }
