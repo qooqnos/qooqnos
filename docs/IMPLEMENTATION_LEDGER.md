@@ -629,7 +629,7 @@ AI worker note: migration 0053 adds worker lease ownership to the existing `ai_o
 CaseAction state note: CaseAction now has explicit repository/service/API approval, cancellation and completion transitions with authorization checks. `apps/api/src/case-action-worker.ts` claims approved actions and executes them through the same canonical CapabilityRegistry as Automation, preserving tenant/workspace scope and current actor authorization.
 
 
-CI verification checkpoint: current main commit `184c5ff9f1230c7f67179e7447a13b73caf87425` passed GitHub CI run `35841847298` and Phoenix verification run `35841847334`. Format check, lint, migration lock verification, typecheck, build and unit tests all passed; the run reported **195 tests / 69 test files**. This is the authoritative latest green checkpoint.
+CI verification checkpoint: code-bearing main commit `184c5ff9f1230c7f67179e7447a13b73caf87425` passed GitHub CI run `35841847298` and Phoenix verification run `35841847334`. Format check, lint, migration lock verification, typecheck, build and unit tests all passed; the run reported **195 tests / 69 test files**. `main` is now `3f43d5cafd665a33c1239ee16be67e8870e0c774`; subsequent commits only refreshed `PHASE_STATUS.md` and this ledger, so 184c5ff9 remains the authoritative code checkpoint.
 
 
 Production deployment preflight: `scripts/verify-production-bindings.mjs` and `predeploy:prod` now fail closed when real production D1/Queue/R2 bindings are absent or still contain placeholders. The repository intentionally does not fabricate Cloudflare resource IDs; remote provisioning remains the final external infrastructure gate.
