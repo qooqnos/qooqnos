@@ -45,8 +45,7 @@
       "@qooqnos/customer": [
         "packages/customer/src"
       ]
-    },
-    "composite": true
+    }
   },
   "exclude": [
     "node_modules",
