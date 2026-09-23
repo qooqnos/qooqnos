@@ -197,6 +197,6 @@ export class MatchingService {
 
 export const MATCHING_PERMISSIONS=[
   "matching.demand.read","matching.demand.create","matching.demand.manage",
-  "matching.request.read","matching.request.create","matching.request.execute","matching.candidate.read","matching.candidate.manage",
+  "matching.request.read","matching.request.create","matching.request.execute","matching.request.connect","matching.candidate.read","matching.candidate.manage",
   "matching.decision.read","matching.decision.manage"
 ] as const;
