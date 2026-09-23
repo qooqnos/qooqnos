@@ -773,7 +773,7 @@ interface NotificationRow {
   readonly templateReference: string | null; readonly templateVersion: string | null; readonly locale: string | null;
   readonly variablesJson: string | null; readonly priority: CommunicationPriority; readonly status: CommunicationMessageStatus;
   readonly idempotencyKey: string; readonly scheduledAt: string | null; readonly expiresAt: string | null;
-  readonly lastPolicyEvaluatedAt: string | null; readonly createdAt: string; readonly updatedAt: string;
+  readonly policyVersion: string | null; readonly lastPolicyEvaluatedAt: string | null; readonly createdAt: string; readonly updatedAt: string;
 }
 interface DeliveryRow {
   readonly id: EntityId; readonly notificationId: EntityId; readonly provider: string; readonly channel: CommunicationChannel;
