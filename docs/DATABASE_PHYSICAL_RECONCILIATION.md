@@ -303,6 +303,12 @@ These migrations add integrity triggers only.
 
 ### Demand / Matching integrity — 0041
 
+### Booking idempotency — 0042
+
+- no new tables
+
+0042 aligns the canonical Booking repository with D1 by adding the missing scoped `idempotency_key` contract and unique index to `bookings`.
+
 - no new tables
 
 0041 hardens typed candidate uniqueness and append-only MatchDecision history.
