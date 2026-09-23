@@ -24,7 +24,7 @@ Phoenix does not use Wrangler's generated D1 migration registry as the applicati
 
 `migrations/*.sql` → migration catalog → migration lock → Phoenix runtime MigrationRunner
 
-The current canonical sequence ends at `0054_discovery_index_observability.sql`.
+The current canonical sequence ends at `0056_communication_required_suppression.sql`.
 
 ## Cloudflare Worker bundling
 
