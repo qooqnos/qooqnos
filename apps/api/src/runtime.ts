@@ -1,3 +1,4 @@
+import { DISCOVERY_MODULE } from "@qooqnos/discovery";
 import { AI_MODULE } from "@qooqnos/ai";
 import { MEDIA_MODULE } from "@qooqnos/media";
 import { CATALOG_MODULE } from "@qooqnos/catalog";
@@ -40,6 +41,7 @@ const modules: readonly RuntimeModule[] = [
   runtimeModule,
   BUSINESS_MODULE,
   CATALOG_MODULE,
+  DISCOVERY_MODULE,
   BOOKING_MODULE,
   COMMERCE_MODULE,
   BILLING_MODULE,
