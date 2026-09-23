@@ -94,12 +94,14 @@ Invariant: every consequential action references an existing approved capability
 |---|---|
 | `schedule_id` | Opaque identifier |
 | `timezone` | IANA timezone |
-| `recurrence` | Canonical recurrence definition |
+| `recurrence` | ISO-8601 duration recurrence, e.g. `PT15M`, `PT1H`, `P1D` |
 | `start_at` | UTC start |
 | `end_at` | Optional UTC end |
-| `misfire_policy` | Policy for missed execution |
+| `misfire_policy` | SKIP / CATCH_UP_ONCE / CATCH_UP_ALL |
 | `enabled` | Schedule state |
-| `next_run_at` | Projected next run |
+| `next_run_at` | Projected next unclaimed run |
+
+The initial production scheduler contract uses fixed-duration UTC recurrence. `timezone` is preserved for user-facing/calendar context; calendar-aware wall-clock recurrence requires an explicit future contract before implementation. `CATCH_UP_ALL` is bounded to a worker-defined replay window.
 
 Persisted timestamps remain UTC; user-facing interpretation uses localization/calendar contracts.
 
