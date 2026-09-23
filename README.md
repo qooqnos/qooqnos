@@ -30,7 +30,7 @@ SQL migrations live under migrations/ and are the only source of migration conte
 The current API migration sequence is:
 
 ```text
-0001_foundation … 0054_discovery_index_observability
+0001_foundation … 0056_communication_required_suppression
 ```
 
 See `apps/api/src/migrations.ts` and `migrations/migration-lock.json` for the authoritative ordered sequence.
@@ -61,6 +61,6 @@ Do not add a parallel TypeScript migration source.
 
 ## Current database state
 
-The logical model is broader than the physically migrated schema, but the current canonical D1 sequence now covers the core platform domains through migration `0054`. Remaining work is primarily operational execution, derived projections, provider adapters and explicitly gated contracts.
+The current canonical D1 sequence covers the core platform domains through migration `0056`. Remaining work is primarily external provider adapters, derived projections, lifecycle processors, explicitly gated contracts, and real Cloudflare resource provisioning.
 
 Do not treat historical phase documents as current architecture.
