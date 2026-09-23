@@ -13,6 +13,7 @@
     "@qooqnos/integration": "*",
     "@qooqnos/privacy": "*",
     "@qooqnos/matching": "*",
+    "@qooqnos/fulfillment": "*",
     "@qooqnos/trust": "*",
     "@qooqnos/business": "*",
     "@qooqnos/booking": "*",
