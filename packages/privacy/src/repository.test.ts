@@ -271,9 +271,12 @@ describe("PrivacyRepository", () => {
 
   it("claims an approved privacy request exactly once", async () => {
     let updateCalls = 0;
+    let reads = 0;
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
       async first<T>() {
+        reads += 1;
+        const status = reads >= 2 ? "processing" : "approved";
         return {
           id: "request-1",
           organizationId: "tenant-1",
@@ -281,7 +284,7 @@ describe("PrivacyRepository", () => {
           subjectType: "customer",
           subjectId: "customer-1",
           requestType: "export",
-          status: "approved",
+          status,
           requestedBy: "privacy-admin",
           requestedAt: "2026-09-22T00:00:00.000Z",
           dueAt: null,
@@ -289,13 +292,18 @@ describe("PrivacyRepository", () => {
           resultReference: null,
           rejectionReason: null,
           createdAt: "2026-09-22T00:00:00.000Z",
-          updatedAt: "2026-09-22T00:00:00.000Z",
+          updatedAt: "2026-09-23T00:00:00.000Z",
         } as T;
       },
       async all<T>() { return { results: [] as T[] }; },
       async run() { updateCalls += 1; return { success: true, meta: { changes: 1 } }; },
     };
-    const raw: D1DatabaseLike = { prepare() { return statement; }, async batch(statements) { return statements.map(() => ({ success: true, meta: { changes: 1 } })); } };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch(statements) {
+        return statements.map(() => ({ success: true, meta: { changes: 1 } }));
+      },
+    };
     const repository = new PrivacyRepository(new D1Database(raw));
 
     const result = await repository.claimOrResumeRequest({
@@ -303,7 +311,7 @@ describe("PrivacyRepository", () => {
       now: "2026-09-23T00:00:00.000Z",
     });
 
-    expect(result?.status).toBe("approved");
+    expect(result?.status).toBe("processing");
     expect(updateCalls).toBe(1);
   });
 
