@@ -607,5 +607,7 @@ Case SLA worker note: the Worker scheduled hook now evaluates active cases again
 
 Privacy consent expiry note: scheduled processing now transitions only expired granted consents to `expired` and emits idempotent `privacy.consent.expired` Outbox evidence. Export/delete and subject-level identity validation remain deliberately gated.
 
+CaseAction state note: CaseAction now has explicit repository/service/API approval, cancellation and completion transitions with authorization checks. Cross-domain execution remains gated behind the canonical CapabilityRegistry/provider boundary.
+
 
 CI verification checkpoint: commit `488a04c93d34ed725433a37af71941348a02f136` passed GitHub CI and Phoenix verification after the Case SLA worker/first-response implementation and fixes. No PR was created.
