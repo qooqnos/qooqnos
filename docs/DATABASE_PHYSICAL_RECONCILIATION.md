@@ -414,6 +414,11 @@ This count includes only canonical SQL migration sources. It does not include re
 
 ### AI Runtime worker leases — 0053
 
+- no new tables
+- adds AI operation worker lease/claim columns and indexes
+
+0053 adds durable execution ownership to the existing AI Runtime operation aggregate without creating a second execution ledger.
+
 ### Discovery index observability — 0054
 
 - search_index_versions
@@ -421,11 +426,6 @@ This count includes only canonical SQL migration sources. It does not include re
 - discovery_evaluation_records
 
 0054 closes the Discovery index-generation/versioning gap and persists query/evaluation evidence without turning derived search state into domain truth.
-
-- no new tables
-- adds AI operation worker lease/claim columns and indexes
-
-0053 adds durable execution ownership to the existing AI Runtime operation aggregate without creating a second execution ledger.
 
 ## 2. Domain coverage matrix
 
@@ -694,7 +694,7 @@ The next implementation work should proceed in this order:
 6. Scheduled Automation polling/misfire execution and CapabilityRegistry-backed scheduled action execution are implemented; capability compensation remains only where a concrete rollback contract exists.
 7. AI Runtime durable worker scheduling and Seller AI input/payload resolution are implemented; add resolvers only when a new AI operation type is introduced.
 8. Complete Integration provider-specific adapters and cross-provider retention/reconciliation semantics; durable claim/sync worker infrastructure is implemented.
-9. Complete Privacy export/delete/retention workers; subject-level identity validation is implemented.
+9. Complete Privacy export/delete/retention processors; approved-request orchestration, subject-level identity validation and consent expiry are implemented.
 10. Complete Matching learning signals and broader Act projections; core retrieval/ranking/Connect execution is implemented.
 11. Complete Fulfillment provider-specific adapters, callback reconciliation and durable polling only where an external provider contract exists; canonical tracking/service completion persistence is implemented.
 12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
