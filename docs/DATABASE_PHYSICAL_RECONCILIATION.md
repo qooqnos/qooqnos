@@ -345,117 +345,6 @@ These migrations add integrity triggers only.
 0047 extends capacity protection to appointment status/time mutations and Resource capacity reductions.
 
 ### Review moderation / reputation — 0048
-
-- no new domain owner beyond Trust/Reviews
-- adds Review lifecycle fields on `reviews`
-- review_reports
-- review_responses
-- review_moderation_cases
-- review_moderation_decisions
-- review_risk_signals
-- reputation_summaries
-- reputation_versions
-
-0048 completes the Review-owned reporting/moderation/risk/reputation projection boundary.
-
-### Fulfillment core — 0049
-
-- fulfillment_orders
-- fulfillment_items
-- fulfillment_plans
-- fulfillment_tasks
-- fulfillment_assignments
-- shipments
-- shipment_packages
-- tracking_events
-- delivery_attempts
-- service_deliveries
-- service_completions
-- digital_deliveries
-- fulfillment_exceptions
-- fulfillment_status_history
-- fulfillment_completion_evidence
-
-0049 establishes the canonical reusable Fulfillment & Service Delivery execution boundary. Order/OrderLine remain Commerce-owned, Appointment remains Booking-owned, Payment/Refund remains Billing-owned, and Fulfillment stores execution state/evidence only.
-### Case Support core — 0050
-
-- cases
-- case_types
-- case_queues
-- case_assignments
-- case_participants
-- case_events
-- case_notes
-- case_evidence_references
-- case_links
-- case_escalations
-- case_resolutions
-- case_slas
-- case_actions
-- case_templates
-
-0050 establishes the canonical Case & Support Operations engine. Case links/evidence reference other domain authorities instead of duplicating their facts.
-
-
-- no new domain owner beyond Trust/Reviews
-- adds Review lifecycle fields on `reviews`
-- review_reports
-- review_responses
-- review_moderation_cases
-- review_moderation_decisions
-- review_risk_signals
-- reputation_summaries
-- reputation_versions
-
-0048 completes the Review-owned reporting/moderation/risk/reputation projection boundary while keeping reputation rebuildable and Booking/Customer/Business facts authoritative in their owners.
-
-- no new tables
-
-0041 hardens typed candidate uniqueness and append-only MatchDecision history.
-
-### Trust Reviews — 0042
-
-- reviews
-
-0042 establishes canonical Review storage with exactly one target from the Gate 05 matrix: Business, Offering, or Product.
-
-### Integrity update guards — 0043
-
-- no new tables
-
-0043 hardens update-time tenant integrity for MatchCandidate and Review records.
-
-### Billing counter scope — 0044
-
-- no new tables
-
-0044 corrects Billing usage-counter uniqueness so counters are scoped by Organization, Workspace, Business, Meter and Period.
-
-### Review target integrity — 0045
-
-- no new tables
-
-0045 enforces Review Business/Offering/Product target scope on insert and update.
-
-### Booking finalization guards — 0046
-
-- no new tables
-- adds `bookings.idempotency_key`
-- adds transactional resource-capacity triggers for appointment-resource commitments
-
-0046 hardens Booking finalization/idempotency without introducing an alternate reservation table.
-
-### Booking capacity update guards — 0047
-
-- no new tables
-
-0047 extends capacity protection to appointment status/time mutations and Resource capacity reductions.
-
-**Total currently defined physical tables: 180.**
-
-
-This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
-
 ## 2. Domain coverage matrix
 
 | Domain | Current physical state | Reconciliation status |
@@ -470,16 +359,16 @@ This count includes only canonical SQL migration sources. It does not include re
 | Discovery | search documents, embeddings, ranking features, indexing jobs | Core projection implemented; index-version registry is missing |
 | Seller AI Creation | creation sessions, raw inputs, drafts, field provenance | Implemented for seller-side creation slice |
 | Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events, customer_addresses | Customer core, CRM relationship and structured Address storage implemented; CustomerProfile, timeline projection and workflow layers remain |
-| Matching | demand_requests, demand_profiles, match_requests, match_candidates, match_decisions | Canonical Demand→Match persistence implemented; retrieval/ranking/learning and Connect/Act integration remain |
+| Matching | demand_requests, demand_profiles, match_requests, match_candidates, match_decisions | Canonical Demand→Match persistence plus Discovery-backed retrieval/ranking and Match→Connect orchestration implemented; learning signals and broader Act integrations remain |
 | Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions, booking_holds, booking_status_history, appointment_events | Core schema/repositories implemented; finalization/idempotency/capacity guards and derived slot generation implemented; provider/workers remain separate |
 | Trust / Verification / Reviews | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews, review_reports, review_responses, review_moderation_cases, review_moderation_decisions, review_risk_signals, reputation_summaries, reputation_versions | Verification chain, review reporting/moderation/risk and reputation projections implemented; expiry worker and Review API are live; broader TrustSignal/anti-abuse automation remains operational follow-up |
 | Moderation / Privacy / Consent | privacy_consents, privacy_requests, privacy_processing_records | Core consent/privacy-request storage implemented; retention/export/delete workers remain |
 
-| Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core provider-neutral storage/repository implemented; consent/policy/template registry/provider adapters and durable dispatch workers remain |
+| Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core storage, outbox-linked dispatch worker and in-app delivery adapter implemented; external provider adapters, consent/policy/template registry remain |
 | Commerce | commerce_carts, commerce_cart_lines, commerce_checkout_sessions, commerce_price_snapshots, commerce_orders, commerce_order_lines, commerce_order_adjustments, commerce_transaction_attempts, commerce_fulfillment_references, commerce_cancellations, commerce_refund_references, commerce_order_events | Core transaction boundary implemented; pricing/checkout orchestration, Billing/Payment, Promotion/Loyalty and Fulfillment integrations remain separate capabilities |
 | Billing | billing_plans, billing_prices, billing_plan_entitlements, billing_subscriptions, billing_subscription_events, billing_usage_meters, billing_usage_events, billing_usage_counters, billing_entitlement_snapshots, billing_provider_refs, billing_reconciliation_cases | Core plan/subscription/entitlement/usage/quota/reconciliation storage implemented; provider adapters and invoice/financial-ledger layers remain |
 | AI Runtime | ai_operation_types, ai_providers, ai_models, ai_prompts, ai_prompt_versions, ai_schemas, ai_schema_versions, ai_policies, ai_operations, ai_model_routing_decisions, ai_policy_decisions, ai_provider_attempts, ai_runtime_results, ai_usage_records | Core shared AI Runtime persistence implemented; provider adapters, routing/validation execution and durable workers remain |
-| Automation | automation_workflows, automation_workflow_versions, automation_triggers, automation_conditions, automation_actions, automation_schedules, automation_executions, automation_step_executions, automation_execution_attempts, automation_execution_errors, automation_variables, automation_policies, automation_approval_references, automation_compensation_references | Core versioned workflow/execution persistence implemented; durable scheduler/worker execution remains |
+| Automation | automation_workflows, automation_workflow_versions, automation_triggers, automation_conditions, automation_actions, automation_schedules, automation_executions, automation_step_executions, automation_execution_attempts, automation_execution_errors, automation_variables, automation_policies, automation_approval_references, automation_compensation_references | Core versioned workflow/execution persistence plus CapabilityRegistry-backed idempotent execution implemented; durable schedule polling remains |
 | Integration | integration_providers, integration_accounts, integration_webhooks, integration_sync_jobs, integration_external_references | Core external account/webhook/sync/reference persistence implemented; provider adapters and durable sync workers remain |
 | Case & Support Operations | cases, case_types, case_queues, case_assignments, case_participants, case_events, case_notes, case_evidence_references, case_links, case_escalations, case_resolutions, case_slas, case_actions, case_templates | Core case lifecycle/assignment/escalation/resolution persistence implemented; SLA workers, queues/dispatch and cross-domain action execution remain |
 | Localization / Documents / Analytics | no dedicated canonical tables identified in current migration set | Missing |
