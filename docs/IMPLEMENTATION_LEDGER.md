@@ -585,12 +585,16 @@ The canonical physical inventory now reaches migration 0049. The remaining work 
 ```
 pass CI build + tests
 → keep canonical runtime free of legacy implementations
-→ finish API/runtime composition for remaining canonical capabilities
-→ complete durable workers for Outbox/Communication/Automation/Integration/Trust/Privacy
-→ finish Matching retrieval/ranking/learning and Connect/Act integrations
-→ close CustomerProfile/timeline only when field-level contracts are explicit
+→ complete only the remaining operational gates with explicit provider/worker contracts
+→ durable Automation scheduler polling and misfire semantics remain open
+→ Integration provider adapters and durable sync workers remain provider-specific
+→ Privacy export/delete/retention workers remain gated by subject-validation semantics
+→ external Communication provider/template/policy integration remains gated
+→ AI durable/asynchronous worker orchestration remains after the in-process governance/runtime
+→ Matching learning signals and broader Act integrations remain contract-gated
+→ CustomerProfile remains gated until field-level contract is explicit
 → define remaining Localization/Documents/Analytics contracts
-→ provision D1 only after the application/runtime verification gates are green
+→ provision real Cloudflare D1/R2/Queue resources and production bindings
 ```
 
 No new table should be introduced merely to move the completion checklist forward.
