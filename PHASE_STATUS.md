@@ -86,10 +86,10 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- Latest verified code checkpoint is commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`.
-- GitHub Actions CI run `35883717408` and Phoenix verification run `35883717643` both passed for that code checkpoint.
+- Latest verified code checkpoint is commit `d122981098cc1d517664afdce3d33d3333e82afa`.
+- GitHub Actions CI run `35884840249` and Phoenix verification run `35884840411` both passed for that code checkpoint.
 - Migration lock verification passed through migration `0053`.
-- The verified checkpoint completed format, lint, migration-lock verification, typecheck, build, Cloudflare Worker dry-run bundling, and unit tests successfully.
+- The verified checkpoint completed format, lint, migration-lock verification, typecheck, build, Cloudflare Worker dry-run bundling, and unit tests successfully: 70 test files / 197 tests.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
 
 ## 8. What remains
