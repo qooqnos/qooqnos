@@ -75,7 +75,7 @@ The physical schema is intentionally broad but not every operational concern is 
 
 1. Scheduled Automation polling and misfire semantics are implemented; scheduled action execution still requires canonical CapabilityRegistry composition.
 2. Integration provider adapters and durable sync workers; adapter payload/credential contracts remain provider-specific.
-3. Privacy export/delete/retention workers with subject-level identity validation.
+3. Privacy consent expiry is live; export/delete/retention workers with subject-level identity validation remain.
 4. External Communication provider adapters plus template/policy registry; provider-neutral dispatch is already live.
 5. AI provider routing/validation execution beyond the current in-process Runtime/registry, specifically durable/asynchronous worker orchestration where required.
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
