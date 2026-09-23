@@ -650,13 +650,13 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 The canonical physical inventory reaches migration `0056_communication_required_suppression.sql`. The migration lock/catalog is reconciled through 0056, and the current main head has passed both CI and Phoenix verification.
 
-Last fully verified head: `3f3192819a9879fb453070e82e04785b3fea5e80`. Subsequent main-head commits are pending the next CI/Phoenix verification run.
+Last fully verified head: `fde1b3f55a63c666f2044792d959c3a7209b2af5`, verified by the current green CI and Phoenix verification runs.
 
 The canonical source-boundary and runtime-module-registry guards are now themselves verified on the current head. Discovery's RuntimeModule was also registered in `apps/api/src/runtime.ts` so every canonical manifest is present in the runtime module list.
 
-GitHub Actions on this exact head completed successfully:
-- Phoenix verification run `35918117178`
-- CI run `35918117117`
+GitHub Actions on the current head completed successfully:
+- Phoenix verification run `35921249040`
+- CI run `35921249232`
 
 Verification coverage on this checkpoint includes migration-lock integrity, canonical-source legacy boundary, runtime-module registry completeness, migration-history rules, lint, typecheck, workspace build, Cloudflare Worker dry-run, and unit tests.
 
