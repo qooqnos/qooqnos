@@ -5,7 +5,6 @@ import {
   type IntegrationSyncJobRecord,
   type IntegrationWebhookRecord,
 } from "./repository";
-import type { IntegrationProviderAdapter, IntegrationWebhookRequest, IntegrationSyncRequest } from "./adapter";
 
 export interface IntegrationWorkerResult {
   readonly webhooksSeen: number;
@@ -50,7 +49,7 @@ export async function processIntegrationWork(
       continue;
     }
 
-    const account = await repository.getAccount(accountContext, webhook.integrationAccountId);
+    const account = await repository.getAccountForWorker(webhook.integrationAccountId);
     const adapter = registry.resolve(account.providerId);
     if (!adapter || !adapter.supportedWebhookTypes.includes(claimed.eventType)) {
       await repository.finishWebhook(accountContext, {
@@ -113,7 +112,7 @@ export async function processIntegrationWork(
     syncJobsClaimed += 1;
 
     const accountContext = await buildContextForAccount(repository, claimed.integrationAccountId, claimed.correlationId);
-    const account = await repository.getAccount(accountContext, claimed.integrationAccountId);
+    const account = await repository.getAccountForWorker(claimed.integrationAccountId);
     const adapter = registry.resolve(account.providerId);
     if (!adapter || !adapter.supportedSyncTypes.includes(claimed.syncType)) {
       await repository.finishSyncJob(accountContext, {
@@ -164,24 +163,16 @@ export async function processIntegrationWork(
       });
       syncJobsCompleted += 1;
     } catch {
+      const terminalFailure = claimed.errorCount >= 4;
       const retryAt = new Date(Date.parse(now) + retryDelayMs(claimed));
       await repository.finishSyncJob(accountContext, {
         id: claimed.id,
-        status: "queued",
+        status: terminalFailure ? "failed" : "queued",
         errorCount: 1,
-        nextRunAt: retryAt.toISOString(),
+        nextRunAt: terminalFailure ? null : retryAt.toISOString(),
         now,
       });
-      if (claimed.errorCount >= 4) {
-        await repository.finishSyncJob(accountContext, {
-          id: claimed.id,
-          status: "failed",
-          errorCount: 0,
-          nextRunAt: null,
-          now,
-        });
-        syncJobsFailed += 1;
-      }
+      if (terminalFailure) syncJobsFailed += 1;
     }
   }
 
@@ -211,20 +202,6 @@ async function buildContextForAccount(
     ...(account.workspaceId ? { workspaceId: account.workspaceId } : {}),
     module: "integration",
     operation: "integration.worker",
-    locale: "en",
-    timezone: "UTC",
-    authenticated: true,
-  };
-}
-
-function platformContext(): RequestContext {
-  return {
-    requestId: brandId<"RequestId">("integration:lookup"),
-    correlationId: brandId<"CorrelationId">("integration:lookup"),
-    actorId: brandId<"EntityId">("system"),
-    tenantId: brandId<"EntityId">("system"),
-    module: "integration",
-    operation: "integration.worker.lookup",
     locale: "en",
     timezone: "UTC",
     authenticated: true,
