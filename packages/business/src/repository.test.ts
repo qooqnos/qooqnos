@@ -101,7 +101,7 @@ describe("BusinessRepository", () => {
   });
 
   it("records immutable status history when business status changes", async () => {
-    const statements: string[] = [];
+    const prepared: string[] = [];
     let business = {
       id: "business-1",
       organizationId: "tenant-1",
@@ -119,26 +119,26 @@ describe("BusinessRepository", () => {
       updatedAt: "2026-09-22T00:00:00.000Z",
     };
 
-    let preparedSql = "";
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
-      async first<T>(..._args: unknown[]) {
-        return business.id === "business-1" ? (business as unknown as T) : null;
+      async first<T>() {
+        return business as unknown as T;
       },
       async all<T>() { return { results: [] as T[] }; },
-      async run() {
-        if (preparedSql.includes("UPDATE businesses SET status")) {
-          business = { ...business, status: "active", updatedAt: "2026-09-22T00:01:00.000Z" };
-        }
-        if (preparedSql.includes("INSERT INTO business_status_history")) {
-          statements.push(preparedSql);
-        }
-        return { success: true };
-      },
+      async run() { return { success: true, meta: { changes: 1 } }; },
     };
     const raw: D1DatabaseLike = {
-      prepare(sql: string) { preparedSql = sql; return statement; },
-      async batch() { return []; },
+      prepare(sql: string) {
+        prepared.push(sql);
+        return statement;
+      },
+      async batch() {
+        business = { ...business, status: "active", updatedAt: "2026-09-22T00:01:00.000Z" };
+        return [
+          { success: true, meta: { changes: 1 } },
+          { success: true, meta: { changes: 1 } },
+        ];
+      },
     };
     const repository = new BusinessRepository(new D1Database(raw));
 
@@ -151,9 +151,8 @@ describe("BusinessRepository", () => {
     );
 
     expect(result.status).toBe("active");
-    expect(statements.some((sql) => sql.includes("INSERT INTO business_status_history"))).toBe(true);
+    expect(prepared.some((sql) => sql.includes("INSERT INTO business_status_history"))).toBe(true);
   });
-
 
   it("transactionally rejects a stale publication transition", async () => {
     let firstCalls = 0;
