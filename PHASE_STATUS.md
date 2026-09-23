@@ -31,9 +31,9 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Migration lock | ✅ Implemented | reviewed SQL identity/checksum is enforced |
 | D1 database boundary | ✅ Implemented | packages/database exposes D1-compatible access |
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
-| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0053 |
+| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0054 |
 | Full logical model | 🟢 Core logical model resolved | remaining work is operational/provider/projection gates, not an unimplemented CustomerProfile table |
-| Final D1 physical schema | 🟢 Physical blueprint complete | 183 physical tables across migrations 0001–0053; remaining work is explicit contract/provider/worker gates and real Cloudflare resource provisioning |
+| Final D1 physical schema | 🟢 Physical blueprint complete | 186 physical tables across migrations 0001–0054; remaining work is explicit contract/provider/worker gates and real Cloudflare resource provisioning |
 | Legacy PostgreSQL path | ✅ Removed from active source | historical git history only |
 
 ## 3. Critical database rule
@@ -86,9 +86,9 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- Latest verified code checkpoint is commit `90792c7a0e52ec40b00eb4ebf6d2d3d4a7da62e6`.
+- Latest fully verified code checkpoint is commit `90792c7a0e52ec40b00eb4ebf6d2d3d4a7da62e6`; current main has additional commits and is not yet independently verified.
 - GitHub Actions CI run `35888657937` and Phoenix verification run `35888657930` both passed for that code checkpoint.
-- Migration lock verification passed through migration `0053`.
+- Migration lock verification is registered through migration `0054`; fresh CI verification for the current main branch is still required.
 - The verified checkpoint completed format, lint, migration-lock verification, typecheck, build, Cloudflare Worker dry-run bundling, and unit tests successfully: 70 test files / 197 tests.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
 
