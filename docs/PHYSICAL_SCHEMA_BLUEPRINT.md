@@ -953,6 +953,86 @@ This is a rebuildable projection, never Review truth.
 
 One version is active at a time for a target; previous versions remain for rollback/audit.
 
+## 18.3 Fulfillment / Service Delivery
+
+### `fulfillment_orders`
+
+`id`, organization_id, workspace_id, business_id, source_type, source_id, status, fulfillment_type, plan_id?, created_at, updated_at, completed_at?, cancelled_at?.
+
+FulfillmentOrder is the execution aggregate. Source commitments remain authoritative in Commerce or Booking.
+
+### `fulfillment_items`
+
+`id`, fulfillment_id, source_type, source_id, source_line_id?, quantity, fulfillment_type, status, promised_from?, promised_to?, destination_ref?, service_location_ref?, assigned_actor_ref?, completion_evidence_ref?, exception_id?, created_at, updated_at.
+
+### `fulfillment_plans`
+
+`id`, fulfillment_id, version, status, strategy, created_by, created_at, activated_at?, supersedes_plan_id?.
+
+Plans are versioned execution plans, not a second Automation workflow model.
+
+### `fulfillment_tasks`
+
+`id`, fulfillment_id, fulfillment_item_id?, task_type, status, priority, assigned_actor_ref?, scheduled_from?, scheduled_to?, started_at?, completed_at?, failure_reason_code?, created_at, updated_at.
+
+### `fulfillment_assignments`
+
+`id`, fulfillment_task_id, actor_ref, actor_type, assigned_by, assigned_at, unassigned_at?, status.
+
+Identity and authorization remain external authorities.
+
+### `shipments`
+
+`id`, fulfillment_item_id, carrier_ref?, service_level?, tracking_reference?, origin_ref?, destination_ref?, status, dispatched_at?, delivered_at?, proof_of_delivery_ref?, created_at, updated_at.
+
+### `shipment_packages`
+
+`id`, shipment_id, package_reference, package_type, weight_ref?, dimensions_ref?, status, created_at, updated_at.
+
+### `tracking_events`
+
+`id`, shipment_id, event_type, occurred_at, received_at, source, external_event_id?, location_ref?, normalized_status, provider_payload_ref?, event_version, deduplication_key, created_at.
+
+Tracking events are immutable evidence and deduplicated by shipment/deduplication key.
+
+### `delivery_attempts`
+
+`id`, shipment_id, attempt_number, attempted_at, actor_ref?, status, failure_reason_code?, evidence_ref?, next_action_ref?, created_at.
+
+### `service_deliveries`
+
+`id`, fulfillment_item_id, booking_ref, provider_ref?, service_location_ref?, status, scheduled_from?, scheduled_to?, started_at?, ended_at?, completion_id?, exception_id?, created_at, updated_at.
+
+Booking remains authoritative for appointment truth.
+
+### `service_completions`
+
+`id`, service_delivery_id, completed_by_actor_ref, completed_at, confirmation_type, customer_confirmation_ref?, provider_confirmation_ref?, evidence_ref?, status, created_at.
+
+### `digital_deliveries`
+
+`id`, fulfillment_item_id, entitlement_ref?, delivery_channel, recipient_scope_ref, issued_at, expires_at?, delivery_status, evidence_ref?, created_at, updated_at.
+
+Secrets and private access credentials are not stored in ordinary Fulfillment rows.
+
+### `fulfillment_exceptions`
+
+`id`, fulfillment_id, fulfillment_item_id?, exception_type, severity, status, reason_code, detected_at, detected_by, resolution_code?, resolved_at?, resolved_by?, rework_task_ref?, created_at, updated_at.
+
+### `fulfillment_status_history`
+
+`id`, aggregate_type, aggregate_id, from_status?, to_status, changed_by, changed_at, reason_code?, correlation_id, policy_version?.
+
+Append-only historical lifecycle evidence.
+
+### `fulfillment_completion_evidence`
+
+`id`, evidence_type, evidence_ref, source, captured_at, captured_by, verification_status, metadata_ref?, created_at.
+
+Evidence may reference Media or external providers; Fulfillment never becomes an evidence-storage substitute.
+
+Fulfillment is execution authority only. Commerce owns Order/OrderLine truth, Booking owns Appointment truth, Billing/Payment owns financial settlement, and Communications owns delivery messaging.
+
 ## 19. Explicit gates still open
 
 The following remain controlled architecture gates before their concrete SQL migrations:
