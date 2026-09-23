@@ -451,7 +451,7 @@ These migrations add integrity triggers only.
 
 0047 extends capacity protection to appointment status/time mutations and Resource capacity reductions.
 
-**Total currently defined physical tables: 166.**
+**Total currently defined physical tables: 180.**
 
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
@@ -698,12 +698,12 @@ The database is broad but not yet production-complete.
 The accurate state is:
 
 ```
-144 physical tables defined across 47 ordered migrations
+180 physical tables defined across 50 ordered migrations
         ↓
 core foundation + identity + business + catalog + media + discovery
 + seller AI + customer/CRM + trust + booking + commerce + billing
 + communication + automation + AI Runtime + integration + privacy
-+ Demand/Matching + reviews are physically implemented
++ Demand/Matching + reviews + Fulfillment + Case Support are physically implemented
         ↓
 remaining work is primarily operational execution, derived projections,
 provider adapters, lifecycle workers and a small set of explicitly gated contracts
