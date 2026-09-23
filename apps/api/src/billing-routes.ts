@@ -20,7 +20,7 @@ export function registerBillingRoutes(
     requireWorkspace: false,
     handler: async ({ context, request }) => {
       void request;
-      const service = createService(database, context.requestId);
+      const service = createService(database, _authorization, context.requestId);
       const plans = await service.listPlans(context);
       return json({ data: plans }, 200, context.requestId);
     },
