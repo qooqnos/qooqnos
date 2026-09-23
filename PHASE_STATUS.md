@@ -31,7 +31,7 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Migration lock | ✅ Implemented | reviewed SQL identity/checksum is enforced |
 | D1 database boundary | ✅ Implemented | packages/database exposes D1-compatible access |
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
-| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0048 |
+| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0050 |
 | Full logical model | ⏳ In progress | many target entities remain intentionally un-migrated |
 | Final D1 physical schema | 🟡 Core domains implemented; operational gaps remain | physical schema is broad and integrity-guarded; remaining work is provider/worker/projection execution and gated contracts |
 | Legacy PostgreSQL path | ⚠️ Quarantined | historical files remain but are not canonical |
@@ -52,7 +52,7 @@ Before adding a table:
 
 ## 4. Migration sequence currently registered
 
-The API runtime currently references the ordered canonical migration sequence `0001` through `0048`.
+The API runtime currently references the ordered canonical migration sequence `0001` through `0050`.
 
 Do not renumber or replace these migrations.
 
@@ -86,10 +86,10 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- GitHub Actions CI passed for commit 586959738b01c635dd5022fb24b2aa7f25dcb439 (run 35785791295).
-- GitHub Actions Phoenix verification passed for the same commit (run 35785791200).
-- Migration lock verification passed for the canonical migration inventory through 0048.
-- Typecheck, build, and unit tests passed in the verification path.
+- GitHub Actions CI passed for commit d32953ab4b9957d2256fe5d485ca0188befb4eb8 (run 35824011221).
+- GitHub Actions Phoenix verification passed for the same commit (run 35824011195).
+- Migration lock verification passed for the canonical migration inventory through 0050.
+- Typecheck, build, and unit tests passed in the verification path: **61 test files / 173 tests**.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
 
 ## 8. What remains
