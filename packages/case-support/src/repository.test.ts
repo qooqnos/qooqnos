@@ -68,4 +68,39 @@ describe("CaseSupportRepository", () => {
       now: "2026-09-23T01:01:00.000Z",
     })).resolves.toBe(true);
   });
+  it("keeps CaseAction transitions bounded to approved/running states", async () => {
+    const action = {
+      id: "action-1",
+      caseId: "case-1",
+      capability: "booking.confirm",
+      targetReference: "booking-1",
+      requestedBy: "agent-1",
+      authorizationReference: "auth-1",
+      idempotencyKey: "case-1:booking.confirm:1",
+      status: "approved",
+      resultReference: null,
+      createdAt: "2026-09-23T00:00:00.000Z",
+      completedAt: null,
+    };
+    let writes = 0;
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return action as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { writes += 1; return { success: true, meta: { changes: 1 } }; },
+    };
+    const raw: D1DatabaseLike = { prepare() { return statement; }, async batch() { return []; } };
+    const repository = new CaseSupportRepository(new D1Database(raw));
+
+    await repository.completeAction(context(), {
+      caseId: brandId<"EntityId">("case-1"),
+      actionId: brandId<"EntityId">("action-1"),
+      status: "succeeded",
+      resultReference: "result-1",
+      now: "2026-09-23T00:01:00.000Z",
+    });
+
+    expect(writes).toBe(1);
+  });
+
 });
