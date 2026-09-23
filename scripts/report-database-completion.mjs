@@ -16,12 +16,22 @@ const filenames = (await readdir(migrationsDir))
 
 const migrations = [];
 let physicalTableCount = 0;
+const physicalTables = new Map();
 
 for (const filename of filenames) {
   const sql = await readFile(path.join(migrationsDir, filename), "utf8");
   const tables = [...sql.matchAll(/\bCREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+([A-Za-z_][A-Za-z0-9_]*)/gi)].map(
     (match) => match[1],
   );
+  for (const table of tables) {
+    if (physicalTables.has(table)) {
+      throw new Error(
+        "Duplicate physical table definition: " + table +
+        " in " + physicalTables.get(table) + " and " + filename,
+      );
+    }
+    physicalTables.set(table, filename);
+  }
   physicalTableCount += tables.length;
   migrations.push({ filename, version: Number(filename.slice(0, 4)), tables: tables.length });
 }
