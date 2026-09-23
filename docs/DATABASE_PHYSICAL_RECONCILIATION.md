@@ -467,7 +467,7 @@ This count includes only canonical SQL migration sources. It does not include re
 | Authorization | roles, permissions, role_permissions, membership_roles, persisted permission catalog | Core implemented; policy/entitlement extensions remain future work |
 | Platform / Reliability | modules, module_versions, tenant_modules, feature_flags, audit_events, idempotency_records, outbox_events, schema_migrations | Core implemented |
 | Onboarding | onboarding_profiles | Implemented core |
-| Business | businesses, business_profiles, locations, business_status_history | Partial; lifecycle history implemented for current status vocabulary, conceptual onboarding vocabulary still requires reconciliation |
+| Business | businesses, business_profiles, locations, business_status_history | Core storage and lifecycle history implemented; Business lifecycle and Onboarding workflow are explicitly reconciled as separate state machines with no additional physical Business status table |
 | Catalog | categories, services, products, variants, offerings, category links, prices, inventory, attribute vocabulary and AttributeValue storage | Partial; value storage is staged and current JSON path remains authoritative |
 | Media | assets, variants, links, processing jobs | Core implemented |
 | Discovery | search_documents, search_index_versions, embedding_records, ranking_features, indexing_jobs, discovery_query_traces, discovery_evaluation_records | Core versioned projection, trace and evaluation persistence implemented; external Vectorize generation remains an infrastructure/provider gate |
