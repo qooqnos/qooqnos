@@ -85,18 +85,38 @@ export class CustomerRelationshipRepository extends Repository {
       throw new DatabaseError("Last interaction cannot precede first interaction");
     }
 
-    await this.database.run(
-      "INSERT INTO customer_relationships (id, customer_id, business_id, relationship_type, status, first_interaction_at, last_interaction_at, source, created_at, updated_at) VALUES (?, ?, ?, ?, 'prospect', ?, ?, ?, ?, ?)",
-      input.id,
-      input.customerId,
-      input.businessId,
-      input.relationshipType.trim(),
-      input.firstInteractionAt ?? null,
-      input.lastInteractionAt ?? null,
-      input.source.trim(),
-      input.now,
-      input.now,
-    );
+    await this.database.transaction([
+      {
+        sql: "INSERT INTO customer_relationships (id, customer_id, business_id, relationship_type, status, first_interaction_at, last_interaction_at, source, created_at, updated_at) VALUES (?, ?, ?, ?, 'prospect', ?, ?, ?, ?, ?)",
+        params: [
+          input.id,
+          input.customerId,
+          input.businessId,
+          input.relationshipType.trim(),
+          input.firstInteractionAt ?? null,
+          input.lastInteractionAt ?? null,
+          input.source.trim(),
+          input.now,
+          input.now,
+        ],
+      },
+      {
+        sql: "INSERT INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'customer.relationship.linked', 1, 'CustomerRelationship', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          input.id + ":linked",
+          input.id,
+          organizationId,
+          workspaceId,
+          JSON.stringify({
+            customerId: input.customerId,
+            businessId: input.businessId,
+            relationshipType: input.relationshipType.trim(),
+          }),
+          input.now,
+          input.now,
+        ],
+      },
+    ]);
 
     const record = await this.get(context, input.id);
     if (!record) throw new DatabaseError("Customer relationship not found after creation");
