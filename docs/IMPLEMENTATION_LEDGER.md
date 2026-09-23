@@ -391,19 +391,19 @@ Migration safety:
 - migrations 0024–0054 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
-- Verification note: GitHub Actions now provides the authoritative build/test verification path; the latest observed pipelines progressed through build/typecheck and surfaced only test-suite contract failures, which are being fixed directly.
+- Verification note: GitHub Actions is the authoritative build/test verification path; the current `main` head passed both CI and Phoenix verification with format, lint, migration-lock verification, typecheck, build, Worker dry-run and unit tests green.
 
 Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.sql; 0015_business_primary_category_integrity.sql adds three integrity triggers and no tables; 0016_catalog_attribute_vocabulary.sql adds three Catalog Attribute tables; 0017_catalog_attribute_values.sql adds two AttributeValue tables and preserves all prior migration identities/checksums.
 
 The old in-memory database implementation is retained only as an explicit legacy compatibility module and is no longer part of the canonical @qooqnos/database root API.
 
-Customer/CRM verification note: repositories and scope-focused tests were added; full local test execution remains unavailable in this connector environment.
+Customer/CRM verification note: repository and scope-focused tests are covered by the repository test suite and current GitHub Actions verification.
 
 CI install reconciliation note: GitHub Actions run 35715908415 initially failed at npm install because package.json declared TypeScript ESLint 7-era direct dependencies while the canonical package-lock already resolved the 8.70.0 toolchain. Root package.json is now aligned to the lockfile toolchain (`typescript-eslint` 8.42, ESLint 9.35, Node >=22).
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The current head `ea9f4a36d1c3ebb0ecf4103f574e783a87d41ad8` passed both CI and Phoenix verification. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The current verified head `f9666b0252cb175fa48052467c919d93ede44427` passed both CI and Phoenix verification (CI `35895454714`; Phoenix verification `35895454663`). Full external D1 application has not yet been executed.
 
 Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution, Automation scheduled execution, AI durable Seller AI worker resolution, and privacy consent expiry are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processing, communication consent/anti-spam policy and external adapters, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
 
@@ -411,7 +411,7 @@ Deployment readiness note: `wrangler.toml` now documents environment-specific D1
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile is a logical aggregate over Customer core/preferences/addresses and is not a standalone table.
 
-Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Workflow version activation plus pause/retire lifecycle controls are canonical repository/service/API operations, and those lifecycle transitions now emit transactional Outbox events. Capability invocation contract is now executable through the canonical runtime CapabilityRegistry and idempotent AutomationExecutor. Durable scheduler/worker polling remains the remaining operational layer.
+Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Workflow activation/pause/retire lifecycle, transactional Outbox events, scheduled execution, CapabilityRegistry-backed invocation and idempotent AutomationExecutor are implemented; only concrete rollback/compensation contracts remain gated.
 
 Booking finalization note: migrations 0046–0047 establish idempotent Booking creation, transactional hold consumption, appointment/resource commitment and capacity mutation guards. Availability calculation and schedule-derived slot generation remain separate.
 
@@ -421,7 +421,7 @@ Fulfillment adapter note: the canonical Fulfillment package now exposes a provid
 
 Review reputation note: migration 0048 completes Review lifecycle/report/response/moderation/risk/reputation persistence. Reputation is rebuildable projection state; Review/Booking/Customer/Business remain the authoritative sources.
 
-Automation/Integration API note: Automation workflow/version/execution and Integration account/webhook/sync-job capabilities are now registered in the canonical API router; durable worker execution remains gated by provider/capability contracts.
+Automation/Integration API note: Automation workflow/version/execution and Integration account/webhook/sync-job capabilities are registered in the canonical API router; durable claim/sync execution is implemented, while provider-specific adapters/credentials remain external gates.
 
 Latest verified commits:
 - e1769126 — Expose persisted AI Runtime terminal results and normalize abstention operation state
