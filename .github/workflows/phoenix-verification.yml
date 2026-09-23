@@ -27,6 +27,9 @@ jobs:
       - name: Verify migration catalog and lock
         run: npm run verify:migrations
 
+      - name: Verify canonical source boundary
+        run: npm run verify:source-boundary
+
       - name: Build workspace
         run: npm run build
 
