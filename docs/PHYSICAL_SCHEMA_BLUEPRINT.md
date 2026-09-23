@@ -1051,6 +1051,26 @@ Evidence may reference Media or external providers; Fulfillment never becomes an
 
 Fulfillment is execution authority only. Commerce owns Order/OrderLine truth, Booking owns Appointment truth, Billing/Payment owns financial settlement, and Communications owns delivery messaging.
 
+## 18.4 Discovery index / observability
+
+### `search_index_versions`
+
+`id`, organization_id, workspace_id, generation, index_schema_version, embedding_model_version?, status, source_checkpoint_reference?, created_by, activated_at?, retired_at?, created_at, updated_at.
+
+Exactly one active index generation exists per organization/workspace. The active generation can be rotated without changing authoritative domain records.
+
+### `discovery_query_traces`
+
+`id`, organization_id, workspace_id, request_id, normalized_intent_json?, candidate_counts_json?, retrieval_sources_json?, policy_exclusions_json?, ranking_policy_version, cache_status?, latency_ms?, degradation_state?, result_ids_json?, created_at.
+
+Query traces are operational/evaluation evidence and never an authorization boundary.
+
+### `discovery_evaluation_records`
+
+`id`, organization_id?, workspace_id?, evaluation_type, dataset_reference, query_version?, index_schema_version?, embedding_model_version?, ranking_policy_version?, metrics_json, evaluator_version, generated_at, created_at.
+
+Evaluation records are immutable evidence for retrieval/ranking/matching quality.
+
 ## 19. Explicit gates still open
 
 The following remain controlled architecture/operational gates:
@@ -1058,13 +1078,13 @@ The following remain controlled architecture/operational gates:
 1. CRM timeline projection read-model/rebuild contract.
 2. Tax/discount transaction snapshot semantics beyond the existing Commerce ownership decision.
 3. Payment provider reference/invoice/financial-ledger contract.
-4. Search/vector projection versioning/storage details.
-5. AI Memory physical storage/retention contract.
-6. Integration/Webhook/Sync retention semantics and provider-specific adapter implementations.
-7. Communication consent/anti-spam policy and external provider adapter implementations. Template registry and provider-neutral dispatch are implemented.
-8. Business conceptual lifecycle vocabulary reconciliation.
-9. AI durable worker input/payload resolution contract is closed for Seller AI `seller.product.extract`; new AI operation types require their own explicit resolver contract.
-10. Matching learning-signal persistence/derivation contract and broader Act projections where required. Core retrieval/ranking/Connect execution is implemented.
+4. AI Memory physical storage/retention contract.
+5. Integration/Webhook/Sync retention semantics and provider-specific adapter implementations.
+6. Communication consent/anti-spam policy and external provider adapter implementations. Template registry and provider-neutral dispatch are implemented.
+7. Business conceptual lifecycle vocabulary reconciliation.
+8. AI durable worker input/payload resolution contract is closed for Seller AI `seller.product.extract`; new AI operation types require their own explicit resolver contract.
+9. Matching learning-signal persistence/derivation contract and broader Act projections where required. Core retrieval/ranking/Connect execution is implemented.
+10. Privacy export/delete/retention processing semantics; subject-level identity validation is implemented.
 11. Privacy export/delete/retention processing semantics; subject-level identity validation is implemented.
 
 Closed implementation gates must not be reopened by future agents: Booking transactional finalization/capacity guards, Review target integrity, Matching retrieval/ranking/Connect execution, Automation scheduled execution, Integration durable claim/worker boundaries, Fulfillment provider-adapter boundary and CaseAction capability execution are implemented and tested.
