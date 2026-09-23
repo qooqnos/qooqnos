@@ -357,6 +357,13 @@
       "moduleId": "communication",
       "checksum": "d99e1b07ac4bedc1e9d0061694f950cba1c686890125030930945006fa52eabc",
       "filename": "0051_communication_templates.sql"
+    },
+    {
+      "id": "0052_moderation_cases",
+      "version": 52,
+      "moduleId": "trust",
+      "checksum": "9e300d5a50b5a5dd5ffc455a4c553f1aaba9a12c6562954a0c9f92a91b135b80",
+      "filename": "0052_moderation_cases.sql"
     }
   ]
 }
