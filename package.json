@@ -21,7 +21,9 @@
     "format": "prettier --write .",
     "verify:migrations": "node scripts/verify-migration-lock.mjs",
     "format:check": "prettier --check .",
-    "migration:check:changes": "node scripts/migration-check-changes.mjs"
+    "migration:check:changes": "node scripts/migration-check-changes.mjs",
+    "verify:production-bindings": "node scripts/verify-production-bindings.mjs",
+    "predeploy:prod": "pnpm verify:production-bindings && pnpm verify:migrations && pnpm build"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
