@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0051**.
+The current API migration catalog references versions **0001 through 0052**.
 
 ### Foundation — 0001
 
@@ -345,6 +345,73 @@ These migrations add integrity triggers only.
 0047 extends capacity protection to appointment status/time mutations and Resource capacity reductions.
 
 ### Review moderation / reputation — 0048
+
+- review_reports
+- review_responses
+- review_moderation_cases
+- review_moderation_decisions
+- review_risk_signals
+- reputation_summaries
+- reputation_versions
+
+0048 establishes review reporting, response, moderation, risk-signal and reputation projection storage.
+
+### Fulfillment core — 0049
+
+- fulfillment_orders
+- fulfillment_items
+- fulfillment_plans
+- fulfillment_tasks
+- fulfillment_assignments
+- shipments
+- shipment_packages
+- tracking_events
+- delivery_attempts
+- service_deliveries
+- service_completions
+- digital_deliveries
+- fulfillment_exceptions
+- fulfillment_status_history
+- fulfillment_completion_evidence
+
+0049 establishes canonical fulfillment/service-delivery ownership separate from Commerce transaction truth.
+
+### Case & Support core — 0050
+
+- cases
+- case_types
+- case_queues
+- case_assignments
+- case_participants
+- case_events
+- case_notes
+- case_evidence_references
+- case_links
+- case_escalations
+- case_resolutions
+- case_slas
+- case_actions
+- case_templates
+
+0050 establishes operational case/support ownership without duplicating domain truth.
+
+### Communication templates — 0051
+
+- communication_templates
+- communication_template_versions
+
+0051 establishes the versioned Communication template registry. Approved versions are immutable.
+
+### Generic ModerationCase — 0052
+
+- moderation_cases
+
+0052 establishes the canonical generic moderation workflow record. Review-specific moderation remains owned by the existing review moderation tables; this record is the cross-domain moderation case coordinator.
+
+**Total currently defined physical tables: 183.**
+
+This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
+
 ## 2. Domain coverage matrix
 
 | Domain | Current physical state | Reconciliation status |
@@ -362,7 +429,7 @@ These migrations add integrity triggers only.
 | Matching | demand_requests, demand_profiles, match_requests, match_candidates, match_decisions | Canonical Demand→Match persistence plus Discovery-backed retrieval/ranking and Match→Connect orchestration implemented; learning signals and broader Act integrations remain |
 | Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions, booking_holds, booking_status_history, appointment_events | Core schema/repositories implemented; finalization/idempotency/capacity guards and derived slot generation implemented; provider/workers remain separate |
 | Trust / Verification / Reviews | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews, review_reports, review_responses, review_moderation_cases, review_moderation_decisions, review_risk_signals, reputation_summaries, reputation_versions | Verification chain, review reporting/moderation/risk and reputation projections implemented; expiry worker and Review API are live; broader TrustSignal/anti-abuse automation remains operational follow-up |
-| Moderation / Privacy / Consent | privacy_consents, privacy_requests, privacy_processing_records | Core consent/privacy-request storage implemented; retention/export/delete workers remain |
+| Moderation / Privacy / Consent | moderation_cases, privacy_consents, privacy_requests, privacy_processing_records | Core generic moderation/consent/privacy-request storage implemented; retention/export/delete workers and broader moderation actions remain |
 
 | Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core storage, outbox-linked dispatch worker and in-app delivery adapter implemented; external provider adapters, consent/policy/template registry remain |
 | Commerce | commerce_carts, commerce_cart_lines, commerce_checkout_sessions, commerce_price_snapshots, commerce_orders, commerce_order_lines, commerce_order_adjustments, commerce_transaction_attempts, commerce_fulfillment_references, commerce_cancellations, commerce_refund_references, commerce_order_events | Core transaction boundary implemented; pricing/checkout orchestration, Billing/Payment, Promotion/Loyalty and Fulfillment integrations remain separate capabilities |
