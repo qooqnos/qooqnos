@@ -409,7 +409,7 @@ Migration lock note: migration 0021 was refreshed before provisioning after a pr
 
 Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events, Automation scheduled execution, AI durable Seller AI worker resolution, privacy consent expiry and approved-request orchestration are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processing, communication consent/anti-spam policy and external adapters, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
 
-Deployment readiness note: `wrangler.toml` now documents environment-specific D1/Queue/R2 bindings without inventing remote resource IDs. Remote D1 provisioning and real Cloudflare binding configuration remain the final infrastructure gate.
+Deployment readiness note: `wrangler.toml` remains free of fabricated Cloudflare resource IDs. Production deployment renders `.wrangler/production.wrangler.toml` from real deployment variables, verifies D1/R2/Queue/Workers AI/model bindings, runs the pinned Worker dry-run and tests, then deploys. `/ready` exposes infrastructure binding state in production and scheduled execution fails closed when mandatory bindings are absent.
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile is a logical aggregate over Customer core/preferences/addresses and is not a standalone table.
 
