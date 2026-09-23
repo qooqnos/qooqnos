@@ -259,7 +259,7 @@ Catalog is the source of truth for current catalog definitions and base pricing.
 
 ```text
 CU0001 Customer
-CU0002 CustomerProfile
+CU0002 CustomerProfile (logical aggregate; no standalone table)
 CU0003 CustomerAddress
 CU0004 CustomerRelationship
 ```
