@@ -52,7 +52,8 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Case Support core | 🟢 Schema/package/repository/service/API implemented | migrations/0050_case_support_core.sql; packages/case-support/src/repository.ts; packages/case-support/src/service.ts; apps/api/src/case-support-routes.ts |
 | CaseAction execution worker | 🟢 CapabilityRegistry-backed worker implemented | packages/case-support/src/repository.ts; apps/api/src/capabilities.ts; apps/api/src/case-action-worker.ts |
 | Privacy subject scope validation | 🟢 Repository validation/test implemented | packages/privacy/src/repository.ts; packages/privacy/src/repository.test.ts |
-| Lifecycle invariant hardening | 🟡 Implemented; latest changes pending CI verification | Billing subscription terminal transitions; Matching latest-decision/terminal request guards; Automation execution/attempt terminal guards; AI operation terminal guard + failed-operation replay; focused repository/client tests |
+| Lifecycle invariant hardening | 🟢 Verified through `2b98364`; follow-up CustomerRelationship interaction CAS pending | Billing subscription terminal transitions; Matching latest-decision/terminal request guards; Automation execution/attempt terminal guards; AI operation terminal guard + failed-operation replay; focused repository/client tests |
+| CustomerRelationship concurrency hardening | 🟡 Implemented; pending CI verification | `packages/database/src/customer-relationship-repository.ts`; `c2692c8`; `2b98364`; interaction timestamp monotonic CAS update is in `48af422` / `bf814b9` |
 | Demand / Matching core | 🟢 Schema/package/repository/service/API/retrieval/ranking/connect implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts; apps/api/src/matching-routes.ts |
 | Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts; Review lifecycle fields exposed from repository |
 | Generic ModerationCase | 🟢 Schema/repository/service/test implemented | migrations/0052_moderation_cases.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; packages/trust/src/repository.test.ts |
@@ -613,6 +614,8 @@ CI + Phoenix verification
 → remaining work is provider-specific or explicitly contract-gated
 → no new schema should be invented to close an external/provider gate
 ```
+
+Production binding gate: `wrangler.toml` intentionally keeps D1/Queue/R2 production resources unbound until the real Cloudflare resource IDs/names exist; `scripts/verify-production-bindings.mjs` fails closed rather than accepting placeholders.
 
 Open completion gates are deliberately limited to:
 - real Cloudflare D1 / R2 / Queue provisioning and production binding configuration;
