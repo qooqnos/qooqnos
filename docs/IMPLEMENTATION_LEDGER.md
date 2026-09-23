@@ -620,3 +620,6 @@ CaseAction state note: CaseAction now has explicit repository/service/API approv
 
 
 CI verification checkpoint: commit `fc03861eccf6d575c1ba68070e82bd4461e17097` passed GitHub CI (run `35835340923`) and Phoenix verification (run `35835340833`). The verification path passed format/lint/migration lock/typecheck/build and **184 tests / 64 suites**.
+
+
+Production deployment preflight: `scripts/verify-production-bindings.mjs` and `predeploy:prod` now fail closed when real production D1/Queue/R2 bindings are absent or still contain placeholders. The repository intentionally does not fabricate Cloudflare resource IDs; remote provisioning remains the final external infrastructure gate.
