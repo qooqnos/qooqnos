@@ -102,14 +102,15 @@ Business status and verification status are separate concepts.
 
 ### Lifecycle
 
-```text
-draft → submitted → under_review → approved → active
-                  ├→ needs_changes → draft
-                  └→ rejected
-active → suspended / expired / archived
-```
+Business lifecycle is separate from onboarding workflow:
 
-Publication eligibility is a policy decision, not a synonym for `status = active`.
+- \`businesses.status\` is the canonical supply lifecycle: \`draft | active | suspended | archived\`.
+- \`onboarding_profiles.status\` is the canonical onboarding workflow: \`draft | submitted | verified | rejected\`.
+- Trust owns verification evidence and decisions; Business activation consumes those policy outcomes.
+- Do not merge onboarding status into Business status or create a second Business lifecycle table.
+
+The existing \`business_status_history\` remains the append-only history for Business.status transitions.
+
 
 ## 5. Taxonomy and catalog domain
 
