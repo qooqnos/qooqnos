@@ -2,7 +2,15 @@ import { readFile } from "node:fs/promises";
 import process from "node:process";
 
 const configPath = process.argv[2] || process.env.WRANGLER_CONFIG || "wrangler.toml";
-const wrangler = await readFile(configPath, "utf8");
+let wrangler;
+try {
+  wrangler = await readFile(configPath, "utf8");
+} catch (error) {
+  if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+    throw new Error(`Production Wrangler config is missing: ${configPath}. Run npm run render:wrangler:prod first.`);
+  }
+  throw error;
+}
 
 function fail(message) {
   throw new Error(`Production binding verification failed: ${message}`);
