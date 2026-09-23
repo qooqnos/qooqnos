@@ -51,6 +51,74 @@ export function registerCommunicationRoutes(
 
   router.register({
     method: "POST",
+    path: "/api/v1/communications/templates",
+    module: "communication",
+    operation: "communication.template.manage",
+    permission: "communication.template.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const template = await service.createTemplate(context, {
+        templateKey: requiredString(body.templateKey, "templateKey", context.requestId),
+        intent: requiredString(body.intent, "intent", context.requestId),
+        channel: requiredChannel(body.channel, context.requestId),
+        ownerReference: requiredString(body.ownerReference, "ownerReference", context.requestId),
+        ...(body.status !== undefined ? { status: requiredEnum(body.status, "status", ["draft","active","retired"], context.requestId) } : {}),
+      });
+      return json({ data: template }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/communications/templates/:templateId/versions",
+    module: "communication",
+    operation: "communication.template.manage",
+    permission: "communication.template.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const version = requiredInteger(body.version, "version", context.requestId);
+      const variablesSchema = requiredObject(body.variablesSchema, "variablesSchema", context.requestId);
+      const record = await service.createTemplateVersion(context, {
+        templateId: brandId<"EntityId">(requiredParam(params.templateId, context.requestId)),
+        version,
+        locale: requiredString(body.locale, "locale", context.requestId),
+        variablesSchema,
+        contentReference: requiredString(body.contentReference, "contentReference", context.requestId),
+        contentChecksum: requiredString(body.contentChecksum, "contentChecksum", context.requestId),
+        ...(body.approvalState !== undefined ? { approvalState: requiredEnum(body.approvalState, "approvalState", ["not_required","pending"], context.requestId) } : {}),
+        ...(body.effectiveFrom !== undefined ? { effectiveFrom: requiredString(body.effectiveFrom, "effectiveFrom", context.requestId) } : {}),
+        ...(body.effectiveTo !== undefined ? { effectiveTo: requiredString(body.effectiveTo, "effectiveTo", context.requestId) } : {}),
+      });
+      return json({ data: record }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/communications/template-versions/:versionId/approve",
+    module: "communication",
+    operation: "communication.template.manage",
+    permission: "communication.template.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const record = await service.approveTemplateVersion(
+        context,
+        brandId<"EntityId">(requiredParam(params.versionId, context.requestId)),
+      );
+      return json({ data: record }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/communications/notifications",
     module: "communication",
     operation: "communication.notification.send",
