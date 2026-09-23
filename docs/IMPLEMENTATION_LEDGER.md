@@ -40,6 +40,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Commerce transaction core | 🟢 Schema/package/repository/service/API implemented | migrations/0031_commerce_transaction_core.sql; migrations/0032_commerce_integrity_hardening.sql; packages/commerce/src/repository.ts; packages/commerce/src/service.ts; apps/api/src/commerce-routes.ts |
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
 | Communication core | 🟢 Schema/package/repository/service/API/outbox-consumer implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts; apps/api/src/outbox-worker.ts |
+| Communication template registry | 🟢 Schema/package/repository/service/API implemented | migrations/0051_communication_templates.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts |
 | Automation workflow engine | 🟢 Schema/package/repository/service/API implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts |
 | Automation capability executor | 🟢 Runtime registry/executor/test implemented | packages/runtime/src/capabilities.ts; packages/automation/src/executor.ts; packages/automation/src/repository.ts |
 | AI Runtime persistence | 🟢 Schema/repository/runtime composition implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/runtime-client.ts; apps/api/src/ai-composition.ts |
@@ -365,7 +366,7 @@ Commits:
 
 Migration safety:
 - canonical migrations 0001–0050 remain numbered and are extended only through new migrations;
-- migrations 0024–0050 are preserved in the canonical lock sequence.
+- migrations 0024–0051 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: GitHub Actions now provides the authoritative build/test verification path; the latest observed pipelines progressed through build/typecheck and surfaced only test-suite contract failures, which are being fixed directly.
@@ -460,6 +461,8 @@ AI Runtime composition note: Seller AI now persists canonical AI operation/resul
 
 AI Runtime note: migration 0037 establishes shared operation/provider/model/policy/prompt/schema/result/usage persistence. The Runtime now has the canonical provider registry, governance eligibility checks, routing policy, provider/model identity validation and output/safety validation; persistent terminal operations replay stored terminal evidence instead of invoking a provider again, and abstention is retained in `ai_runtime_results` while lifecycle state uses canonical `blocked`. 
 
+Communication template note: migration 0051 establishes the scoped versioned template registry. Notification sends referencing templates now require an approved active version matching intent/channel/locale; approved versions are immutable.
+
 Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. External provider adapters plus template/policy/consent layers remain gated.
 
 Billing runtime note: the API Seller AI composition now uses the real D1-backed BillingService. No fallback unavailable Billing service is used for the production path; missing plan/subscription/entitlement state fails the operation closed.
@@ -539,6 +542,7 @@ The API runtime references these migration sources:
 0048_reviews_moderation_reputation.sql
 0049_fulfillment_core.sql
 0050_case_support_core.sql
+0051_communication_templates.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
@@ -581,7 +585,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory now reaches migration 0050. The remaining work is execution/completion, not schema invention:
+The canonical physical inventory now reaches migration 0051. The remaining work is execution/completion, not schema invention:
 
 ```
 pass CI build + tests
@@ -591,7 +595,7 @@ pass CI build + tests
 → Case SLA breach monitoring implemented; queue dispatch and CaseAction execution still require canonical capability-registry composition
 → Integration provider adapters and durable sync workers remain provider-specific
 → Privacy export/delete/retention workers remain gated by subject-validation semantics
-→ external Communication provider/template/policy integration remains gated
+→ Communication template registry implemented; external provider adapters and consent/anti-spam policy remain gated
 → AI durable/asynchronous worker orchestration remains after the in-process governance/runtime
 → Matching learning signals and broader Act integrations remain contract-gated
 → CustomerProfile remains gated until field-level contract is explicit
