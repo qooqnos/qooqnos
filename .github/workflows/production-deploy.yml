@@ -4,9 +4,14 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: phoenix-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
