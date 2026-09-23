@@ -20,6 +20,7 @@ import { processPendingTrustExpiries } from "./trust-worker";
 import { processCommunicationDispatch } from "./communication-worker";
 import { processAutomationSchedules } from "./automation-worker";
 import { processCaseSla } from "./case-sla-worker";
+import { processPrivacyConsentExpiry } from "./privacy-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 
 const homePage = (version: string): string => `<!doctype html>
@@ -543,6 +544,7 @@ export default {
     await processPendingTrustExpiries(env, now);
     await processAutomationSchedules(env, now);
     await processCaseSla(env, now);
+    await processPrivacyConsentExpiry(env, now);
   },
 
   async queue(
