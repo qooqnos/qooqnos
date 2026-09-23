@@ -1,3 +1,4 @@
+import { brandId } from "@qooqnos/core";
 import { PrivacyRepository, createPrivacyProcessorRegistry, type PrivacyProcessorRegistry } from "@qooqnos/privacy";
 import { getDatabase } from "./database";
 import type { ApiEnv } from "./env";
@@ -82,7 +83,7 @@ export async function processApprovedPrivacyRequests(
             status: processorResult.status === "completed" ? "completed" : "skipped",
             processedAt: now,
             now,
-            id: processor.id + ":" + item.id,
+            id: brandId<"EntityId">(processor.id + ":" + item.id),
           } as never);
 
           if (processorResult.status !== "completed") {
@@ -101,7 +102,7 @@ export async function processApprovedPrivacyRequests(
             status: "failed",
             errorReference: processor.id,
             now,
-            id: processor.id + ":" + item.id + ":failed",
+            id: brandId<"EntityId">(processor.id + ":" + item.id + ":failed"),
           } as never);
         }
       }
