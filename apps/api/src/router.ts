@@ -17,6 +17,7 @@ import { registerIntegrationRoutes } from "./integration-routes";
 import { registerFulfillmentRoutes } from "./fulfillment-routes";
 import { registerBillingRoutes } from "./billing-routes";
 import { registerCaseSupportRoutes } from "./case-support-routes";
+import { registerCustomerRoutes } from "./customer-routes";
 
 export interface ApiRouteContext {
   readonly request: Request;
@@ -65,6 +66,7 @@ export class ApiRouter {
     registerFulfillmentRoutes(this, options.database, options.authorization);
     registerBillingRoutes(this, options.database, options.authorization);
     registerCaseSupportRoutes(this, options.database, options.authorization);
+    registerCustomerRoutes(this, options.database, options.authorization);
   }
 
   register(route: ApiRoute): void {
