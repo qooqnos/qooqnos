@@ -43,7 +43,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Communication core | 🟢 Schema/package/repository/service/API/outbox-consumer implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts; apps/api/src/outbox-worker.ts |
 | Communication template registry | 🟢 Schema/package/repository/service/API implemented | migrations/0051_communication_templates.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts |
 | Automation workflow engine | 🟢 Schema/package/repository/service/API/worker implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts; apps/api/src/automation-worker.ts; apps/api/src/automation-execution-worker.ts |
-| Automation capability executor | 🟢 Runtime registry/executor/composition/worker implemented | packages/runtime/src/capabilities.ts; packages/automation/src/executor.ts; packages/automation/src/repository.ts; apps/api/src/capabilities.ts |
+| Automation capability executor | 🟢 Runtime registry/executor/composition/worker implemented | packages/runtime/src/capabilities.ts; packages/automation/src/executor.ts; packages/automation/src/repository.ts; apps/api/src/capabilities.ts; Booking availability, Case Support and Fulfillment canonical aliases are registered |
 | AI Runtime persistence | 🟢 Schema/repository/runtime composition implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/runtime-client.ts; apps/api/src/ai-composition.ts |
 | AI Runtime worker lease boundary | 🟢 Durable lease/claim/reclaim/resolver/scheduler implemented | migrations/0053_ai_runtime_worker_leases.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/worker.ts; packages/ai/src/runtime-input-resolver.ts; apps/api/src/ai-composition.ts; apps/api/src/index.ts |
 | Integration core | 🟢 Schema/package/repository/service/API/durable worker-boundary implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; packages/integration/src/adapter.ts; packages/integration/src/worker.ts; apps/api/src/integration-routes.ts; apps/api/src/integration-worker.ts |
@@ -624,7 +624,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0054_discovery_index_observability.sql` and the migration lock/catalog verification is green on the current head. The latest fully verified green head is `c620a231b58ab9223d5330df1d8514f28f3c9166`; CI and Phoenix verification are green on this current documentation-reconciled head.
+The canonical physical inventory reaches migration `0054_discovery_index_observability.sql` and the migration lock/catalog verification is green on the current head. The latest fully verified green head is `de2454120e57b3f771b9f334fed87fd7de66273a`; CI and Phoenix verification are green on this current documentation-reconciled head.
 
 Current engineering state:
 
@@ -651,7 +651,7 @@ Open completion gates are deliberately limited to:
 
 CustomerProfile remains a logical aggregate over existing Customer-owned records; CRM timeline events are canonical projection input and do not require a duplicate timeline table.
 
-Verification checkpoint: `c620a231b58ab9223d5330df1d8514f28f3c9166` passed GitHub Actions CI and Phoenix verification. Current successful runs: CI `35899387247`, Phoenix verification `35899387211`. The workflows passed migration-lock verification, typecheck/build and the test suite.
+Verification checkpoint: `de2454120e57b3f771b9f334fed87fd7de66273a` passed GitHub Actions CI and Phoenix verification. Current successful runs: CI `35899964284`, Phoenix verification `35899964188`. The workflows passed migration-lock verification, typecheck/build, lint and the test suite.
 
 The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above. Privacy subject scope validation was added in commits `afcff1bb0023187024b12508f7eb7cf175d8bec6` and `c121e50055d3a2e3ca1023c88c13a2f5bb403fa0`, then reconciled into the verified checkpoint `d122981098cc1d517664afdce3d33d3333e82afa`.
 
