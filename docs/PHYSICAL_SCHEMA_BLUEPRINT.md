@@ -1055,18 +1055,17 @@ Fulfillment is execution authority only. Commerce owns Order/OrderLine truth, Bo
 
 The following remain controlled architecture/operational gates:
 
-1. CustomerProfile field-level contract.
-2. CRM timeline projection read-model/rebuild contract.
-3. Tax/discount transaction snapshot semantics beyond the existing Commerce ownership decision.
-4. Payment provider reference/invoice/financial-ledger contract.
-5. Search/vector projection versioning/storage details.
-6. AI Memory physical storage/retention contract.
-7. Integration/Webhook/Sync retention semantics and provider-specific adapter implementations.
-8. Communication consent/anti-spam policy and external provider adapter implementations. Template registry and provider-neutral dispatch are implemented.
-9. Business conceptual lifecycle vocabulary reconciliation.
-10. AI durable worker input/payload resolution contract. Seller AI `seller.product.extract` resolution and scheduled execution are implemented; new AI operation types require their own explicit resolver contract.
-11. Matching learning-signal persistence/derivation contract and broader Act projections where required. Core retrieval/ranking/Connect execution is implemented.
-12. Privacy export/delete/retention processing semantics and subject-level identity validation.
+1. CRM timeline projection read-model/rebuild contract.
+2. Tax/discount transaction snapshot semantics beyond the existing Commerce ownership decision.
+3. Payment provider reference/invoice/financial-ledger contract.
+4. Search/vector projection versioning/storage details.
+5. AI Memory physical storage/retention contract.
+6. Integration/Webhook/Sync retention semantics and provider-specific adapter implementations.
+7. Communication consent/anti-spam policy and external provider adapter implementations. Template registry and provider-neutral dispatch are implemented.
+8. Business conceptual lifecycle vocabulary reconciliation.
+9. AI durable worker input/payload resolution contract. Seller AI `seller.product.extract` resolution and scheduled execution are implemented; new AI operation types require their own explicit resolver contract.
+10. Matching learning-signal persistence/derivation contract and broader Act projections where required. Core retrieval/ranking/Connect execution is implemented.
+11. Privacy export/delete/retention processing semantics and subject-level identity validation.
 
 Closed implementation gates must not be reopened by future agents: Booking transactional finalization/capacity guards, Review target integrity, Matching retrieval/ranking/Connect execution, Automation scheduled execution, Integration durable claim/worker boundaries, Fulfillment provider-adapter boundary and CaseAction capability execution are implemented and tested.
 
