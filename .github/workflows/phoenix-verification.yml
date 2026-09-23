@@ -30,6 +30,9 @@ jobs:
       - name: Verify canonical source boundary
         run: npm run verify:source-boundary
 
+      - name: Verify runtime module registry
+        run: npm run verify:runtime-registry
+
       - name: Build workspace
         run: npm run build
 
