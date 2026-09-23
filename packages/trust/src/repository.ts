@@ -27,6 +27,89 @@ export interface ReviewRecord {
 export class TrustReviewRepository extends Repository {
   constructor(database: D1Database) { super(database); }
 
+  async createGenericModerationCase(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly subjectType: string;
+      readonly subjectId: EntityId;
+      readonly sourceType: string;
+      readonly sourceId: EntityId;
+      readonly policyId: string;
+      readonly policyVersion: string;
+      readonly riskLevel: "low" | "medium" | "high" | "critical";
+      readonly now: string;
+    },
+  ) {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    if (!input.subjectType.trim() || !input.sourceType.trim() || !input.policyId.trim() || !input.policyVersion.trim()) {
+      throw new DatabaseError("Moderation case subject/source/policy fields are required");
+    }
+
+    await this.database.run(
+      "INSERT INTO moderation_cases (id, organization_id, workspace_id, subject_type, subject_id, source_type, source_id, policy_id, policy_version, status, risk_level, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)",
+      input.id,
+      organizationId,
+      context.workspaceId ?? null,
+      input.subjectType.trim(),
+      input.subjectId,
+      input.sourceType.trim(),
+      input.sourceId,
+      input.policyId.trim(),
+      input.policyVersion.trim(),
+      input.riskLevel,
+      input.now,
+    );
+
+    return this.getGenericModerationCase(context, input.id);
+  }
+
+  async getGenericModerationCase(context: RequestContext, id: EntityId) {
+    const row = await this.database.first<{
+      readonly id: EntityId;
+      readonly organizationId: EntityId;
+      readonly workspaceId: EntityId | null;
+      readonly subjectType: string;
+      readonly subjectId: EntityId;
+      readonly sourceType: string;
+      readonly sourceId: EntityId;
+      readonly policyId: string;
+      readonly policyVersion: string;
+      readonly status: "open" | "reviewing" | "decided" | "actioned" | "closed" | "escalated";
+      readonly riskLevel: "low" | "medium" | "high" | "critical";
+      readonly createdAt: string;
+      readonly resolvedAt: string | null;
+    }>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, source_type AS sourceType, source_id AS sourceId, policy_id AS policyId, policy_version AS policyVersion, status, risk_level AS riskLevel, created_at AS createdAt, resolved_at AS resolvedAt FROM moderation_cases WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
+      id,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+    );
+    if (!row) throw new DatabaseError("Moderation case not found");
+    return row;
+  }
+
+  async transitionGenericModerationCase(
+    context: RequestContext,
+    id: EntityId,
+    status: "open" | "reviewing" | "decided" | "actioned" | "closed" | "escalated",
+    now: string,
+  ) {
+    const current = await this.getGenericModerationCase(context, id);
+    if (current.status === "closed") return current;
+    const resolvedAt = status === "closed" ? now : current.resolvedAt;
+
+    await this.database.run(
+      "UPDATE moderation_cases SET status = ?, resolved_at = ?, WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?)",
+      status,
+      resolvedAt,
+      id,
+      current.organizationId,
+      current.workspaceId ?? context.workspaceId,
+    );
+    return this.getGenericModerationCase(context, id);
+  }
+
   async createReview(
     context: RequestContext,
     input: {
