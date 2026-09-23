@@ -8,12 +8,12 @@
 
 The current `main` commit verified in GitHub Actions is:
 
-`c4e61e5cb90dc7a08b973e2d1c0d4657a37f8703`
+`bf1a11a5fd743ea7bb72962722a9f30b2e2c8019`
 
 Both required workflows passed:
 
-- **CI:** run `35836006573` — success
-- **Phoenix verification:** run `35836006591` — success
+- **CI:** run `35839653984` — success
+- **Phoenix verification:** run `35839653974` — success
 
 The verification path passed migration-lock verification, TypeScript typecheck, workspace build, lint/migration checks, and the unit-test suite: **64 test files / 184 tests passed**.
 
@@ -77,15 +77,15 @@ Implemented core capability families include:
 
 The physical schema is intentionally broad but not every operational concern is closed. Remaining work is primarily execution rather than schema invention:
 
-1. Scheduled Automation polling and misfire semantics are implemented; scheduled action execution still requires canonical CapabilityRegistry composition.
-2. Integration provider adapters and durable sync workers; adapter payload/credential contracts remain provider-specific.
+1. Scheduled Automation polling, misfire handling, and CapabilityRegistry-backed scheduled action execution are implemented; compensation remains gated by concrete rollback contracts.
+2. Integration durable claim/sync workers and provider-neutral adapter boundary are implemented; provider-specific adapters and credential contracts remain external integration work.
 3. Privacy consent expiry is live; export/delete/retention workers with subject-level identity validation remain.
 4. External Communication provider adapters plus consent/anti-spam policy remain gated; template registry and provider-neutral dispatch are live.
-5. AI provider routing/validation execution beyond the current in-process Runtime/registry, specifically durable/asynchronous worker orchestration where required.
+5. AI durable worker lease/claim/reclaim infrastructure is implemented; production scheduler execution remains gated by an explicit canonical input/payload resolver.
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile only when its field-level contract is explicit; CRM timeline is already physically implemented as events/projection input.
 8. CustomerProfile field-level contract, plus Localization / Documents / Analytics contracts where canonical ownership is explicit.
-9. Case queue dispatch and cross-domain CaseAction execution through canonical capabilities, then remote D1 provisioning and production binding configuration.
+9. Case queue/provider dispatch remains external-provider gated; CaseAction approval/completion and CapabilityRegistry-backed execution are implemented. Remote D1 provisioning and production binding configuration remain the final infrastructure gate.
 
 ## Source-of-truth documents
 
