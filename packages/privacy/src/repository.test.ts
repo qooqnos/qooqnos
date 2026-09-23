@@ -18,6 +18,32 @@ function context(): RequestContext {
 }
 
 describe("PrivacyRepository", () => {
+  it("completes a claimed privacy request with an outbox event", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true, meta: { changes: 1 } }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() {
+        return [
+          { success: true, meta: { changes: 1 } },
+          { success: true, meta: { changes: 1 } },
+        ];
+      },
+    };
+    const repository = new PrivacyRepository(new D1Database(raw));
+
+    await expect(repository.completeClaimedRequest({
+      requestId: brandId<"EntityId">("request-1"),
+      resultReference: "export:request-1",
+      now: "2026-09-23T01:00:00.000Z",
+    })).resolves.toBe(true);
+  });
+
+
   it("is tenant scoped when reading consents", async () => {
     const statement:D1PreparedStatementLike={
       bind(){return this;},
