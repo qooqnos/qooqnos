@@ -375,6 +375,8 @@ Commits:
 - 12701f60 — Reconcile architecture contract physical names
 - f7f9121b — Resolve Review target matrix in reconciliation docs
 - 559c45c7 — Align physical schema blueprint with Gate 05 Review targets
+- 7ffdcc0d — Harden Privacy consent revocation and request lifecycle transitions
+- eb197c5c — Test Privacy request lifecycle transition guard
 - 4f246cd — Restore migration lock verifier helpers
 - 42f8063 — Test Communication message and notification idempotency
 - 2310529 — Refresh physical reconciliation after Trust review/expiry
@@ -401,7 +403,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest main head has passed CI and Phoenix verification; full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The the pre-hardening head `684ca068d9a1bc2289aa7a79ee9527978c70fc7e` passed both CI and Phoenix verification; current post-hardening workflows are running. Full external D1 application has not yet been executed.
 
 Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution, Automation scheduled execution, AI durable Seller AI worker resolution, and privacy consent expiry are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processing, communication consent/anti-spam policy and external adapters, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
 
