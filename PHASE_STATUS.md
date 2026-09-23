@@ -36,6 +36,13 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Final D1 physical schema | 🟢 Physical blueprint complete | 190 physical tables across migrations 0001–0056; remaining work is explicit contract/provider/worker gates and credentialed remote D1 migration/application |
 | Legacy PostgreSQL path | ✅ Removed from active source | historical git history only |
 
+## 2.1 Database completion percentage
+
+- **Physical D1 schema: 100% complete** — 56 ordered migrations define the canonical physical schema and the reconciled inventory is 190 tables.
+- **Database engineering readiness: 91.7%** on the explicit 12-gate readiness rubric: 11 repository/schema/runtime gates are closed; one credentialed remote-D1 application gate remains.
+- **Production remote migration state:** not verified from this runtime because no Cloudflare credential/connector is exposed here. The canonical remote migration executor is implemented and verifies D1 identity plus migration checksums before applying anything.
+- Provider-specific adapters, Analytics, Documents, Localization registries and AI Memory are not counted as missing relational schema where their physical contracts are intentionally gated.
+
 ## 3. Critical database rule
 
 Do not create a new database schema beside the current D1 model.
