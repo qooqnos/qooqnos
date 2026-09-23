@@ -41,13 +41,14 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
 | Communication core | 🟢 Schema/package/repository/service/API/outbox-consumer implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts; apps/api/src/outbox-worker.ts |
 | Communication template registry | 🟢 Schema/package/repository/service/API implemented | migrations/0051_communication_templates.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts |
-| Automation workflow engine | 🟢 Schema/package/repository/service/API implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts |
-| Automation capability executor | 🟢 Runtime registry/executor/test implemented | packages/runtime/src/capabilities.ts; packages/automation/src/executor.ts; packages/automation/src/repository.ts |
+| Automation workflow engine | 🟢 Schema/package/repository/service/API/worker implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts; apps/api/src/automation-worker.ts; apps/api/src/automation-execution-worker.ts |
+| Automation capability executor | 🟢 Runtime registry/executor/composition/worker implemented | packages/runtime/src/capabilities.ts; packages/automation/src/executor.ts; packages/automation/src/repository.ts; apps/api/src/capabilities.ts |
 | AI Runtime persistence | 🟢 Schema/repository/runtime composition implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/runtime-client.ts; apps/api/src/ai-composition.ts |
 | Integration core | 🟢 Schema/package/repository/service/API implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; apps/api/src/integration-routes.ts; integration sync-job API |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Fulfillment / Service Delivery core | 🟢 Schema/package/repository/service/API implemented | migrations/0049_fulfillment_core.sql; packages/fulfillment/src/repository.ts; packages/fulfillment/src/service.ts; apps/api/src/fulfillment-routes.ts |
 | Case Support core | 🟢 Schema/package/repository/service/API implemented | migrations/0050_case_support_core.sql; packages/case-support/src/repository.ts; packages/case-support/src/service.ts; apps/api/src/case-support-routes.ts |
+| CaseAction execution worker | 🟢 CapabilityRegistry-backed worker implemented | packages/case-support/src/repository.ts; apps/api/src/capabilities.ts; apps/api/src/case-action-worker.ts |
 | Demand / Matching core | 🟢 Schema/package/repository/service implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts; apps/api/src/matching-routes.ts |
 | Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts; Review lifecycle fields exposed from repository |
 | Generic ModerationCase | 🟢 Schema/repository/service/test implemented | migrations/0052_moderation_cases.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; packages/trust/src/repository.test.ts |
@@ -589,7 +590,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory now reaches migration 0051. The remaining work is execution/completion, not schema invention:
+The canonical physical inventory now reaches migration 0052 and the current main branch is green in both verification workflows. The remaining work is execution/completion, not schema invention:
 
 ```
 pass CI build + tests
@@ -599,7 +600,7 @@ pass CI build + tests
 → Case SLA breach monitoring implemented; queue dispatch and CaseAction execution still require canonical capability-registry composition
 → Integration provider adapters and durable sync workers remain provider-specific
 → Privacy export/delete/retention workers remain gated by subject-validation semantics
-→ Communication template registry implemented; external provider adapters and consent/anti-spam policy remain gated
+→ Communication template registry and provider-neutral dispatch implemented; external provider adapters plus consent/anti-spam policy remain gated
 → AI durable/asynchronous worker orchestration remains after the in-process governance/runtime
 → Matching learning signals and broader Act integrations remain contract-gated
 → CustomerProfile remains gated until field-level contract is explicit
@@ -609,13 +610,13 @@ pass CI build + tests
 
 No new table should be introduced merely to move the completion checklist forward.
 
-Automation scheduler note: the Worker scheduled hook now plans fixed-duration ISO-8601 schedules, applies SKIP/CATCH_UP_ONCE/CATCH_UP_ALL misfire policies, atomically claims schedule occurrences, and creates idempotent pending WorkflowExecution records. Scheduled action invocation remains behind the canonical CapabilityRegistry composition boundary.
+Automation scheduler note: the Worker scheduled hook now plans fixed-duration ISO-8601 schedules, applies SKIP/CATCH_UP_ONCE/CATCH_UP_ALL misfire policies, atomically claims schedule occurrences, creates idempotent pending WorkflowExecution records, and executes approved actions through the canonical CapabilityRegistry using the workflow creator's current authorization context.
 
 Case SLA worker note: the Worker scheduled hook now evaluates active cases against explicit CaseSLA first-response and resolution targets, records explicit `case.first_response` events through a protected capability, and emits idempotent `case.sla_breached` case/outbox evidence. No new SLA table was introduced; queue dispatch and CaseAction execution remain behind the canonical capability boundary.
 
 Privacy consent expiry note: scheduled processing now transitions only expired granted consents to `expired` and emits idempotent `privacy.consent.expired` Outbox evidence. Export/delete and subject-level identity validation remain deliberately gated.
 
-CaseAction state note: CaseAction now has explicit repository/service/API approval, cancellation and completion transitions with authorization checks. Cross-domain execution remains gated behind the canonical CapabilityRegistry/provider boundary.
+CaseAction state note: CaseAction now has explicit repository/service/API approval, cancellation and completion transitions with authorization checks. `apps/api/src/case-action-worker.ts` claims approved actions and executes them through the same canonical CapabilityRegistry as Automation, preserving tenant/workspace scope and current actor authorization.
 
 
-CI verification checkpoint: commit `2fde64e31db2124440d27b7cd64c751ec751d5eb` passed GitHub CI (run `35829052893`) and Phoenix verification (run `35829052883`). The verification path passed format/lint/migration lock/typecheck/build and **182 tests / 63 suites**.
+CI verification checkpoint: commit `fc03861eccf6d575c1ba68070e82bd4461e17097` passed GitHub CI (run `35835340923`) and Phoenix verification (run `35835340833`). The verification path passed format/lint/migration lock/typecheck/build and **184 tests / 64 suites**.
