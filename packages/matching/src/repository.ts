@@ -155,11 +155,11 @@ export class MatchingRepository extends Repository {
 
   async hasSelectedDecision(context:RequestContext,matchRequestId:EntityId,candidateId:EntityId):Promise<boolean>{
     await this.getMatchRequest(context,matchRequestId);
-    const row=await this.database.first<{id:EntityId}>(
-      "SELECT md.id FROM match_decisions md WHERE md.match_request_id=? AND md.candidate_id=? AND md.decision='selected' ORDER BY md.decided_at DESC, md.id DESC LIMIT 1",
+    const row=await this.database.first<{decision: MatchDecision}>(
+      "SELECT md.decision FROM match_decisions md WHERE md.match_request_id=? AND md.candidate_id=? ORDER BY md.decided_at DESC, md.id DESC LIMIT 1",
       matchRequestId,candidateId
     );
-    return !!row;
+    return row?.decision === "selected";
   }
 
   async resolveOfferingBusiness(context:RequestContext,offeringId:EntityId):Promise<EntityId|null>{
