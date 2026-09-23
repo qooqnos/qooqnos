@@ -53,6 +53,50 @@ export class CaseSupportService {
     });
   }
 
+  async approveAction(context: RequestContext, input: { readonly caseId: EntityId; readonly actionId: EntityId; readonly authorizationReference: string }) {
+    await this.options.authorization.assert({
+      context,
+      permission: "case.update",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.approveAction(context, {
+      ...input,
+      now: this.options.now(),
+    });
+  }
+
+  async cancelAction(context: RequestContext, input: { readonly caseId: EntityId; readonly actionId: EntityId }) {
+    await this.options.authorization.assert({
+      context,
+      permission: "case.update",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.cancelAction(context, {
+      ...input,
+      now: this.options.now(),
+    });
+  }
+
+  async completeAction(context: RequestContext, input: {
+    readonly caseId: EntityId;
+    readonly actionId: EntityId;
+    readonly status: "succeeded" | "failed";
+    readonly resultReference?: string;
+  }) {
+    await this.options.authorization.assert({
+      context,
+      permission: "case.update",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.completeAction(context, {
+      ...input,
+      now: this.options.now(),
+    });
+  }
+
   async transition(context: RequestContext, input: {
     readonly id: EntityId;
     readonly status: CaseStatus;
