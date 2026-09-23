@@ -605,7 +605,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0054_discovery_index_observability.sql`. The latest fully verified green code checkpoint is `90792c7a0e52ec40b00eb4ebf6d2d3d4a7da62e6`; the current main branch contains later lifecycle/documentation changes and this 0054 slice, so it must not be described as CI-verified until a fresh workflow run passes.
+The canonical physical inventory reaches migration `0054_discovery_index_observability.sql`. The latest fully verified green code checkpoint is `90792c7a0e52ec40b00eb4ebf6d2d3d4a7da62e6`; the current main branch contains the 0054 slice and its latest Phoenix verification run is green. The general CI workflow is currently still running for the same head.
 
 Current engineering state:
 
@@ -635,6 +635,21 @@ CustomerProfile remains a logical aggregate over existing Customer-owned records
 Verification checkpoint: `90792c7a0e52ec40b00eb4ebf6d2d3d4a7da62e6` passed GitHub Actions CI and Phoenix verification. CI passed format/lint, migration-lock verification, typecheck, build, Cloudflare Worker dry-run and the full test suite.
 
 The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above. Privacy subject scope validation was added in commits `afcff1bb0023187024b12508f7eb7cf175d8bec6` and `c121e50055d3a2e3ca1023c88c13a2f5bb403fa0`, then reconciled into the verified checkpoint `d122981098cc1d517664afdce3d33d3333e82afa`.
+
+
+
+Discovery index observability implementation commits:
+- a5432b45022e53b12fc2bc31a74ab732ca1fb43a — add migration 0054_discovery_index_observability.sql
+- 31b3b3ac756a541a6e4d8a80b14fc1067b7a885e — register migration 0054 in API catalog
+- 6fc79015cd4230ce3a4a52d021d3059b71f35d5a — lock migration 0054 checksum
+- 1dbfa6965296fb8c8a983d0e8ba1fe8e8f58d863 — implement Discovery index/query/evaluation repository
+- 42790c1c1227f7d6df3c99dd89505284d1707eec — expose Discovery observability capabilities
+- 4f29f7422e08017bd4e0dd54f3adf23190f60ae9 — add Discovery observability invariant tests
+- 583a7d6ac4037e593bb07f111a7f0e2c9d4beb3e — reconcile Discovery implementation status
+- f6ef5fb01486738a0cce3d80fec5ea25d35e970b — update physical schema blueprint
+- 03146a358b6736a46ca8b2cc407c0325fa05e1a8 — update implementation ledger
+- 6169b15d7f9e1ab4c6af4692632a96ca5f8209a7 — update phase status
+- b688ba5bc8d118896c45e3bb1c315ae3a84520a3 — reconcile physical inventory through migration 0054
 
 Lifecycle hardening commits: `77d7945` / `9d3c85f` (Matching latest-decision Connect invariant), `a70fa84` / `df9c33b` (MatchRequest lifecycle), `e4f018d` / `5a361f2` (Billing subscription terminal lifecycle), `9158971` / `8fc9619` (Automation execution lifecycle), `25c70aa` / `b2cd1044` (AI failed-operation replay), `8a4af78` / `c48e5949` / `26ace41` (AI terminal lifecycle), `ed90ca6` / `28af923` (Automation attempt lifecycle), `c2692c8` / `2b98364` / `48af422` / `7573f49` (CustomerRelationship CAS/monotonic interactions), and `b935137` / `90792c7` (Business status lifecycle atomicity/CAS).
 
