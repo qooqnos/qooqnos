@@ -336,7 +336,7 @@
       "moduleId": "trust",
       "checksum": "4dfef1fbee5f51783fd9a3ed5404cf58906270b39480f3bb501b57c448b9ee7e",
       "filename": "0048_reviews_moderation_reputation.sql"
-    }
+    },
     {
       "id": "0049_fulfillment_core",
       "version": 49,
