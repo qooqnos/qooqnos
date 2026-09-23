@@ -4,7 +4,8 @@ import { join, relative } from "node:path";
 const root = process.cwd();
 const scanRoots = ["apps", "packages"];
 const allowedPrefixes = [
-  "packages/api/",
+  "packages/api/src/auth.ts",
+  "packages/api/src/index.ts",
   "packages/database/src/legacy.ts",
   "packages/onboarding/src/legacy.ts",
   "packages/onboarding/src/index.test.ts",
