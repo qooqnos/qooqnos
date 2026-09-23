@@ -364,8 +364,8 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0048 remain numbered and are extended only through new migrations;
-- migrations 0024–0048 are preserved in the canonical lock sequence.
+- canonical migrations 0001–0050 remain numbered and are extended only through new migrations;
+- migrations 0024–0050 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: GitHub Actions now provides the authoritative build/test verification path; the latest observed pipelines progressed through build/typecheck and surfaced only test-suite contract failures, which are being fixed directly.
