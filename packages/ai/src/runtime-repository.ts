@@ -157,7 +157,45 @@ export class AiRuntimeRepository extends Repository {
       input.abstention ? JSON.stringify(input.abstention) : null, input.attemptSummary ? JSON.stringify(input.attemptSummary) : null,
       input.errorClassification ?? null, input.now,
     );
-    await this.setOperationStatus(context, input.operationId, input.status === "succeeded" ? "succeeded" : input.status, input.now, input.validatedOutputReference);
+    const operationStatus = input.status === "succeeded" ? "succeeded" : input.status === "abstained" ? "blocked" : input.status;
+    await this.setOperationStatus(context, input.operationId, operationStatus, input.now, input.validatedOutputReference);
+  }
+
+  async getResult(
+    context: RequestContext,
+    operationId: EntityId,
+  ): Promise<{
+    readonly status: "succeeded" | "partially_succeeded" | "failed" | "blocked" | "abstained";
+    readonly providerId: string | null;
+    readonly modelId: string | null;
+    readonly safetyOutcome: string | null;
+    readonly provenance: string[];
+    readonly warnings: string[];
+  } | null> {
+    await this.getOperation(context, operationId);
+    const row = await this.database.first<{
+      readonly status: "succeeded" | "partially_succeeded" | "failed" | "blocked" | "abstained";
+      readonly providerId: string | null;
+      readonly modelId: string | null;
+      readonly safetyOutcome: string | null;
+      readonly provenanceJson: string | null;
+      readonly warningsJson: string | null;
+    }>(
+      "SELECT status, provider_id AS providerId, model_id AS modelId, safety_outcome AS safetyOutcome, provenance_json AS provenanceJson, warnings_json AS warningsJson FROM ai_runtime_results WHERE operation_id = ? LIMIT 1",
+      operationId,
+    );
+    if (!row) return null;
+
+    const provenance = parseStringArray(row.provenanceJson);
+    const warnings = parseStringArray(row.warningsJson);
+    return {
+      status: row.status,
+      providerId: row.providerId,
+      modelId: row.modelId,
+      safetyOutcome: row.safetyOutcome,
+      provenance,
+      warnings,
+    };
   }
 
   async recordUsage(context: RequestContext, input: {
@@ -174,5 +212,16 @@ export class AiRuntimeRepository extends Repository {
       input.operationType, input.operationVersion, input.meterUnit, input.quantity, input.providerId ?? null, input.modelId ?? null,
       input.idempotencyKey, input.entitlementDecisionReference ?? null, input.billingUsageReference ?? null, input.now,
     );
+  }
+}
+
+
+function parseStringArray(value: string | null): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) && parsed.every((item) => typeof item === "string") ? parsed : [];
+  } catch {
+    throw new DatabaseError("Stored AI Runtime string array is invalid");
   }
 }
