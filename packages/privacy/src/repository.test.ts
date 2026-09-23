@@ -62,6 +62,66 @@ describe("PrivacyRepository", () => {
     expect(writes).toBe(2);
   });
 
+
+  it("uses the current server time when revoking a replaced consent", async () => {
+    const statements: Array<{ sql: string; params: readonly unknown[] }> = [];
+    const existing = {
+      id: "consent-current",
+      organizationId: "tenant-1",
+      workspaceId: "workspace-1",
+      subjectType: "customer",
+      subjectId: "customer-1",
+      purpose: "marketing",
+      consentVersion: "v1",
+      status: "granted",
+      source: "web",
+      evidenceReference: null,
+      grantedAt: "2026-09-22T00:00:00.000Z",
+      revokedAt: null,
+      expiresAt: null,
+      createdAt: "2026-09-22T00:00:00.000Z",
+      updatedAt: "2026-09-22T00:00:00.000Z",
+    };
+    let query = "";
+    const statement: D1PreparedStatementLike = {
+      bind(...values) {
+        statements.push({ sql: query, params: values });
+        return this;
+      },
+      async first<T>() {
+        if (query.includes("FROM customers")) return { found: 1 } as T;
+        if (query.includes("FROM privacy_consents")) return existing as T;
+        return null as T | null;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) {
+        query = sql;
+        return statement;
+      },
+      async batch() {
+        return statements.map(() => ({ success: true }));
+      },
+    };
+    const repository = new PrivacyRepository(new D1Database(raw));
+
+    await repository.createConsent(context(), {
+      id: brandId<"EntityId">("consent-new"),
+      subjectType: "customer",
+      subjectId: brandId<"EntityId">("customer-1"),
+      purpose: "marketing",
+      consentVersion: "v2",
+      source: "web",
+      grantedAt: "2026-09-20T00:00:00.000Z",
+      now: "2026-09-23T00:00:00.000Z",
+    });
+
+    const revokeStatement = statements.find((item) => item.sql.includes("UPDATE privacy_consents SET status = 'revoked'"));
+    expect(revokeStatement?.params[0]).toBe("2026-09-23T00:00:00.000Z");
+  });
+
   it("rejects a subject outside the tenant scope before recording consent", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
