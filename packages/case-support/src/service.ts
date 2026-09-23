@@ -39,6 +39,20 @@ export class CaseSupportService {
     return this.options.repository.list(context, limit);
   }
 
+  async recordFirstResponse(context: RequestContext, caseId: EntityId) {
+    await this.options.authorization.assert({
+      context,
+      permission: "case.update",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.recordFirstResponse(context, {
+      caseId,
+      actorId: context.actorId ?? "system",
+      now: this.options.now(),
+    });
+  }
+
   async transition(context: RequestContext, input: {
     readonly id: EntityId;
     readonly status: CaseStatus;
