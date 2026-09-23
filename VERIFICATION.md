@@ -1,23 +1,23 @@
 # Phoenix Current Verification
 
-**Status:** Current engineering verification snapshot  
+**Status:** Verification snapshot; pending post-checkpoint verification  
 **Last verified:** 2026-09-24  
 **Authoritative sources:** `docs/IMPLEMENTATION_LEDGER.md`, `PHASE_STATUS.md`, GitHub Actions
 
 ## Verification result
 
-The latest verified `main` checkpoint is:
+The latest fully verified checkpoint remains:
 
 `3f3192819a9879fb453070e82e04785b3fea5e80`
 
-Current `main` head is `3f3192819a9879fb453070e82e04785b3fea5e80`; this head is covered by the latest successful CI and Phoenix verification runs.
+Current `main` contains subsequent implementation/documentation commits and has not yet produced a new successful CI/Phoenix verification run. The prior checkpoint remains the verification baseline.
 
-Both required workflows passed:
+Both required workflows passed for the prior verified checkpoint:
 
 - **CI:** current head verification run `35918117117` — success
 - **Phoenix verification:** current head run `35918117178` — success
 
-The latest verification runs on the current `main` head completed successfully. Validation on this checkpoint includes migration-lock integrity, canonical-source legacy boundary, runtime-module registry completeness, migration-history checks, lint, typecheck, build, Cloudflare Worker dry-run and unit tests.
+The prior verification run completed successfully. Validation on that checkpoint includes migration-lock integrity, canonical-source legacy boundary, runtime-module registry completeness, migration-history checks, lint, typecheck, build, Cloudflare Worker dry-run and unit tests.
 
 ## Canonical runtime baseline
 
@@ -77,7 +77,7 @@ Implemented core capability families include:
 
 ## Repository continuity guards
 
-- `npm run verify:migrations` validates all 56 canonical SQL migrations and their lock manifest.
+- `npm run verify:migrations` validates the canonical SQL migrations and their lock manifest.
 - `npm run verify:source-boundary` fails if canonical application packages reintroduce legacy InMemory/PostgreSQL/database compatibility paths outside the explicit compatibility allowlist.
 - `npm run verify:runtime-registry` fails if a package manifest is missing from the canonical API runtime module registry.
 
@@ -93,7 +93,7 @@ The physical schema is intentionally broad but not every operational concern is 
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile is resolved as a logical aggregate over existing Customer-owned records; CRM timeline is already physically implemented as events/projection input.
 8. Localization context interfaces are implemented; physical country/legal/profile registries, Documents and Analytics remain contract-gated.
-9. Case queue/provider dispatch remains external-provider gated; CaseAction approval/completion and CapabilityRegistry-backed execution are implemented. Remote D1 provisioning and production binding configuration remain the final infrastructure gate.
+9. Case queue/provider dispatch remains external-provider gated; CaseAction approval/completion and CapabilityRegistry-backed execution are implemented. Production D1 is externally provisioned; credentialed remote migration/application and final binding configuration remain the infrastructure gate.
 
 ## Source-of-truth documents
 
