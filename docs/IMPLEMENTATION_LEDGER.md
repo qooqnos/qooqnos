@@ -50,7 +50,9 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Fulfillment / Service Delivery core | 🟢 Schema/package/repository/service/API/provider-boundary implemented | migrations/0049_fulfillment_core.sql; packages/fulfillment/src/repository.ts; packages/fulfillment/src/service.ts; packages/fulfillment/src/adapter.ts; apps/api/src/fulfillment-routes.ts |
 | Case Support core | 🟢 Schema/package/repository/service/API implemented | migrations/0050_case_support_core.sql; packages/case-support/src/repository.ts; packages/case-support/src/service.ts; apps/api/src/case-support-routes.ts |
-| CaseAction execution worker | 🟢 CapabilityRegistry-backed worker implemented | packages/case-support/src/repository.ts; apps/api/src/capabilities.ts; apps/api/src/case-action-worker.ts |\n| Privacy subject scope validation | 🟢 Repository validation/test implemented | packages/privacy/src/repository.ts; packages/privacy/src/repository.test.ts |
+| CaseAction execution worker | 🟢 CapabilityRegistry-backed worker implemented | packages/case-support/src/repository.ts; apps/api/src/capabilities.ts; apps/api/src/case-action-worker.ts |
+| Privacy subject scope validation | 🟢 Repository validation/test implemented | packages/privacy/src/repository.ts; packages/privacy/src/repository.test.ts |
+| Lifecycle invariant hardening | 🟡 Implemented; latest changes pending CI verification | Billing subscription terminal transitions; Matching latest-decision/terminal request guards; Automation execution/attempt terminal guards; AI operation terminal guard + failed-operation replay; focused repository/client tests |
 | Demand / Matching core | 🟢 Schema/package/repository/service/API/retrieval/ranking/connect implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts; apps/api/src/matching-routes.ts |
 | Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts; Review lifecycle fields exposed from repository |
 | Generic ModerationCase | 🟢 Schema/repository/service/test implemented | migrations/0052_moderation_cases.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; packages/trust/src/repository.test.ts |
@@ -599,7 +601,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0053_ai_runtime_worker_leases.sql`. The latest verified code checkpoint is `fc7f53e1f848094a32aa697d3bafab90197ab9e6`.
+The canonical physical inventory reaches migration `0053_ai_runtime_worker_leases.sql`. The latest fully verified green code checkpoint remains `b2cd1044cf5908b4308094af092ca586005a8fa9`; later lifecycle hardening commits are present on `main` and are pending the current CI/Phoenix verification runs.
 
 Current engineering state:
 
@@ -624,8 +626,10 @@ Open completion gates are deliberately limited to:
 
 CustomerProfile remains a logical aggregate over existing Customer-owned records; CRM timeline events are canonical projection input and do not require a duplicate timeline table.
 
-Verification checkpoint: `e51ccc310f75f4e74a91cf6e17d8ae235107d147` passed GitHub Actions CI run `35885175119` and Phoenix verification run `35885175114`. The verified steps include format/lint, migration-lock verification, typecheck, workspace build, Cloudflare Worker dry-run bundling and 70 test files / 197 passing tests.
+Verification checkpoint: `b2cd1044cf5908b4308094af092ca586005a8fa9` passed GitHub Actions CI and Phoenix verification. Later commits extend lifecycle invariants but must not be described as verified until their current runs complete.
 
 The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above. Privacy subject scope validation was added in commits `afcff1bb0023187024b12508f7eb7cf175d8bec6` and `c121e50055d3a2e3ca1023c88c13a2f5bb403fa0`, then reconciled into the verified checkpoint `d122981098cc1d517664afdce3d33d3333e82afa`.
+
+Lifecycle hardening commits: `77d7945` / `9d3c85f` (Matching latest-decision Connect invariant), `a70fa84` / `df9c33b` (MatchRequest lifecycle), `e4f018d` / `5a361f2` (Billing subscription terminal lifecycle), `9158971` / `8fc9619` (Automation execution lifecycle), `25c70aa` / `b2cd1044` (AI failed-operation replay), `8a4af78` / `c48e5949` (AI terminal lifecycle), `ed90ca6` / `28af923` (Automation attempt lifecycle), with `fb2cfe8`, `a3e5c1a`, and `26ace41` containing subsequent CI-fix iterations.
 
 Migration continuity remains mandatory: never renumber, rewrite or replace an existing migration. Every physical change must use a new numbered migration and preserve the canonical migration lock.
