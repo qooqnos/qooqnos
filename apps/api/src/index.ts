@@ -5,7 +5,7 @@ import { AppError, brandId, type RequestId } from "@qooqnos/core";
 import { AuthorizationRepository, CatalogCommandRepository, SessionRepository, sha256Hex } from "@qooqnos/database";
 import type { D1Database } from "@qooqnos/database";
 import { createAuthorizationService } from "@qooqnos/runtime";
-import { createSellerProductService } from "./ai-composition";
+import { createSellerProductService, processSellerProductAIRuntimeWork } from "./ai-composition";
 import { validateSellerProductOutput, validateSellerProductSafety } from "./ai-validation";
 import { BillingRepository, BillingService } from "@qooqnos/billing";
 import { ApiRouter } from "./router";
@@ -551,6 +551,29 @@ export default {
     await processCaseActions(env, now);
     await processPrivacyConsentExpiry(env, now);
     await processIntegration(env, now);
+
+    const database = getDatabase(env);
+    if (database && env.AI && env.AI_SELLER_EXTRACT_MODEL_ID) {
+      const authorizationRegistry = createApiAuthorizationRegistry();
+      const authorization = createAuthorizationService(
+        new AuthorizationRepository(database),
+        authorizationRegistry,
+      );
+      await processSellerProductAIRuntimeWork({
+        env,
+        database,
+        authorization,
+        billing: new BillingService({
+          repository: new BillingRepository(database),
+          id: () => crypto.randomUUID(),
+          now: () => now,
+        }),
+        validateOutput: validateSellerProductOutput,
+        validateSafety: validateSellerProductSafety,
+        workerId: env.AI_WORKER_ID ?? "phoenix-ai-scheduled",
+        now: () => now,
+      });
+    }
   },
 
   async queue(
