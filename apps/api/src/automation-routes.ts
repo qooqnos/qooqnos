@@ -61,6 +61,53 @@ export function registerAutomationRoutes(
 
   router.register({
     method: "POST",
+    path: "/api/v1/automation/schedules",
+    module: "automation",
+    operation: "automation.workflow.manage",
+    permission: "automation.workflow.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const misfirePolicy = body.misfirePolicy;
+      if (misfirePolicy !== "skip" && misfirePolicy !== "catch_up_once" && misfirePolicy !== "catch_up_all") {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "misfirePolicy is invalid.", requestId: context.requestId });
+      }
+      const schedule = await service.createSchedule(context, {
+        timezone: requiredString(body.timezone, "timezone", context.requestId),
+        recurrence: requiredString(body.recurrence, "recurrence", context.requestId),
+        startAt: requiredString(body.startAt, "startAt", context.requestId),
+        ...(body.endAt !== undefined ? { endAt: requiredString(body.endAt, "endAt", context.requestId) } : {}),
+        misfirePolicy,
+      });
+      return json({ data: schedule }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/automation/workflows/:workflowId/versions/:versionId/schedule-triggers",
+    module: "automation",
+    operation: "automation.workflow.manage",
+    permission: "automation.workflow.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      await service.attachScheduleTrigger(context, {
+        workflowId: requiredParamId(params.workflowId, context.requestId),
+        workflowVersionId: requiredParamId(params.versionId, context.requestId),
+        scheduleId: requiredId(body.scheduleId, "scheduleId", context.requestId),
+        ...(body.enabled !== undefined ? { enabled: body.enabled === true } : {}),
+      });
+      return json({ attached: true }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/automation/workflows/:workflowId/versions/:versionId/activate",
     module: "automation",
     operation: "automation.workflow.activate",
