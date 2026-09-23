@@ -164,7 +164,7 @@ Binary content belongs in R2. D1 stores metadata, ownership, classification, che
 ## 7. Customer and trust domain
 
 - `customers`: tenant-scoped customer representation.
-- `customer_profiles`: customer preferences/profile data; physical fields remain gated.
+- `CustomerProfile`: logical Customer aggregate composed from `customers`, `customer_preferences` and `customer_addresses`; it has no separate physical source of truth.
 - `customer_addresses`: structured customer Address records owned by Customer.
 - `reviews`: customer feedback against eligible supply.
 - `review_replies`: business responses.
