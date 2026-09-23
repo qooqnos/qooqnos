@@ -141,7 +141,7 @@ The matrix uses the perspective `A → B`: one A can reference the stated number
 | Relationship | Cardinality | Owner | Physical shape | Delete | Tenant rule |
 |---|---|---|---|---|---|
 | User → Customer | 1:0..1 | Customer | optional `customers.user_id` UNIQUE | SET NULL/RESTRICT by policy | user may map to customer within tenant |
-| Customer → CustomerProfile | 1:0..1 | Customer | `customer_profiles.customer_id` UNIQUE | CASCADE/ARCHIVE | same customer |
+| Customer → CustomerProfile | 1:1 logical aggregate | Customer | composed from `customers` + `customer_preferences` + `customer_addresses`; no separate table | n/a | same customer |
 | Customer → CustomerAddress | 1:0..N | Customer | `customer_addresses.customer_id` | ARCHIVE | same customer |
 | Business → Customer | N:N | Customer | `customer_relationships` | relationship lifecycle | same tenant |
 | Customer → BusinessRelationship | 1:0..N | Customer | `customer_relationships.customer_id` | ARCHIVE | same tenant |
