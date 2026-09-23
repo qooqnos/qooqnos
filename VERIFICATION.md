@@ -1,23 +1,23 @@
 # Phoenix Current Verification
 
 **Status:** Current engineering verification snapshot  
-**Last verified:** 2026-09-23  
+**Last verified:** 2026-09-24  
 **Authoritative sources:** `docs/IMPLEMENTATION_LEDGER.md`, `PHASE_STATUS.md`, GitHub Actions
 
 ## Verification result
 
 The latest verified `main` checkpoint is:
 
-`90e202f14db7a55a155aaf677a1991205165647b`
+`3f3192819a9879fb453070e82e04785b3fea5e80`
 
-Current `main` head is `90e202f14db7a55a155aaf677a1991205165647b`; this head is covered by the latest successful CI and Phoenix verification runs.
+Current `main` head is `3f3192819a9879fb453070e82e04785b3fea5e80`; this head is covered by the latest successful CI and Phoenix verification runs.
 
 Both required workflows passed:
 
-- **CI:** current head verification run `35915438117` — success
-- **Phoenix verification:** current head run `35915438197` — success
+- **CI:** current head verification run `35918117117` — success
+- **Phoenix verification:** current head run `35918117178` — success
 
-The latest verification runs on the current `main` head completed successfully. The repository's CI/verification workflows are now the authoritative validation result for build, typecheck, migration integrity and tests on this head.
+The latest verification runs on the current `main` head completed successfully. Validation on this checkpoint includes migration-lock integrity, canonical-source legacy boundary, runtime-module registry completeness, migration-history checks, lint, typecheck, build, Cloudflare Worker dry-run and unit tests.
 
 ## Canonical runtime baseline
 
@@ -74,6 +74,12 @@ Implemented core capability families include:
 - Communication delivery state is provider-neutral; provider adapters remain behind the Communication boundary.
 - Billing owns commercial entitlement/usage authority; Payment execution, invoices and financial ledger remain separate ownership gates.
 - Booking slots remain derived projections; there is no authoritative slots table.
+
+## Repository continuity guards
+
+- `npm run verify:migrations` validates all 56 canonical SQL migrations and their lock manifest.
+- `npm run verify:source-boundary` fails if canonical application packages reintroduce legacy InMemory/PostgreSQL/database compatibility paths outside the explicit compatibility allowlist.
+- `npm run verify:runtime-registry` fails if a package manifest is missing from the canonical API runtime module registry.
 
 ## Remaining completion gates
 

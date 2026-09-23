@@ -1,7 +1,7 @@
 # Phoenix Implementation Status
 
 **Status:** Current status document  
-**Last reviewed:** 2026-09-23
+**Last reviewed:** 2026-09-24
 
 This file supersedes the old Phase 1–6 plan that described PostgreSQL as the planned production database. That plan is no longer the source of truth.
 
@@ -86,11 +86,15 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- Latest fully verified code checkpoint is commit `90e202f14db7a55a155aaf677a1991205165647b`.
-- GitHub Actions CI run `35915438117` and Phoenix verification run `35915438197` both passed for the current `main` checkpoint.
+- Latest fully verified code checkpoint is commit `3f3192819a9879fb453070e82e04785b3fea5e80`.
+- GitHub Actions CI run `35918117117` and Phoenix verification run `35918117178` both passed for the current `main` checkpoint.
 - Migration lock verification is registered through migration `0056` and passed in the latest CI/Phoenix verification workflows.
-- The current checkpoint is covered by successful CI/Phoenix verification; historical run details remain available in GitHub Actions.
+- The current checkpoint is covered by successful CI/Phoenix verification, including migration lock, legacy-source boundary, runtime-module registry, lint, typecheck, build, Worker dry-run and tests; historical run details remain available in GitHub Actions.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
+
+## 7.1 Runtime continuity guards
+
+The canonical runtime now has two repository-level guards: legacy-source boundary verification and runtime-module registry completeness. Discovery's `DISCOVERY_MODULE` is registered in `apps/api/src/runtime.ts`; all canonical package manifests are covered by the registry guard.
 
 ## 8. What remains
 
