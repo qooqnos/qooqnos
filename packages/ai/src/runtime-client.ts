@@ -46,7 +46,7 @@ export function createPersistentAIRuntimeClient(
         now,
       });
 
-      if (operation.status === "succeeded" || operation.status === "blocked" || operation.status === "abstained") {
+      if (operation.status === "succeeded" || operation.status === "failed" || operation.status === "blocked" || operation.status === "abstained") {
         const persisted = await repository.getResult(request.context, operation.id);
         if (!persisted) {
           throw new Error("AI Runtime terminal operation has no persisted result");
