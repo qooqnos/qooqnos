@@ -430,7 +430,7 @@ This count includes only canonical SQL migration sources. It does not include re
 | Business | businesses, business_profiles, locations, business_status_history | Partial; lifecycle history implemented for current status vocabulary, conceptual onboarding vocabulary still requires reconciliation |
 | Catalog | categories, services, products, variants, offerings, category links, prices, inventory, attribute vocabulary and AttributeValue storage | Partial; value storage is staged and current JSON path remains authoritative |
 | Media | assets, variants, links, processing jobs | Core implemented |
-| Discovery | search documents, embeddings, ranking features, indexing jobs | Core projection implemented; index-version registry is missing |
+| Discovery | search_documents, search_index_versions, embedding_records, ranking_features, indexing_jobs, discovery_query_traces, discovery_evaluation_records | Core versioned projection, trace and evaluation persistence implemented; external Vectorize generation remains an infrastructure/provider gate |
 | Seller AI Creation | creation sessions, raw inputs, drafts, field provenance | Implemented for seller-side creation slice |
 | Customer / CRM | customers, customer_preferences, customer_relationships, crm_timeline_events, customer_addresses | Customer core, CRM relationship, structured Address and logical CustomerProfile composition are implemented; timeline read-model/workflow layers remain |
 | Matching | demand_requests, demand_profiles, match_requests, match_candidates, match_decisions | Canonical Demand→Match persistence plus Discovery-backed retrieval/ranking and Match→Connect orchestration implemented; learning signals and broader Act integrations remain |
@@ -626,7 +626,7 @@ They must never become authoritative sources for:
 - permissions
 - financial state
 
-The missing search_index_versions concept should be introduced only if its versioning semantics are needed by the projection system.
+The search_index_versions contract is implemented in migration 0054; Discovery now persists index generations, active-generation lifecycle, query traces and evaluation evidence.
 
 ## 6. Duplicate prevention rules
 
@@ -661,7 +661,7 @@ The database is broad but not yet production-complete.
 The accurate state is:
 
 ```
-183 physical tables defined across 53 ordered migrations
+186 physical tables defined across 54 ordered migrations
         ↓
 core foundation + identity + business + catalog + media + discovery
 + seller AI + customer/CRM + trust + booking + commerce + billing
@@ -693,7 +693,7 @@ The next implementation work should proceed in this order:
 13. Complete Case queue dispatch/provider integrations where explicit contracts exist; CaseAction capability execution is already implemented.
 14. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
-Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables; 0048 completes the Review-owned moderation/reputation projection layer.
+Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables; 0048 completes the Review-owned moderation/reputation projection layer; 0054 adds Discovery index generations and observability evidence.
 
 ## 9. Final D1 gate
 
