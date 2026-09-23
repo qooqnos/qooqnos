@@ -8,7 +8,7 @@
 
 The latest code-bearing `main` checkpoint verified in GitHub Actions is:
 
-`184c5ff9f1230c7f67179e7447a13b73caf87425`
+`a2542730d92a57c5554a590b62e5cbd9baf99cae`
 
 Both required workflows passed:
 
