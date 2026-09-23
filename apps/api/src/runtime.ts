@@ -9,6 +9,7 @@ import { AUTOMATION_MODULE } from "@qooqnos/automation";
 import { INTEGRATION_MODULE } from "@qooqnos/integration";
 import { PRIVACY_MODULE } from "@qooqnos/privacy";
 import { MATCHING_MODULE } from "@qooqnos/matching";
+import { CUSTOMER_MODULE } from "@qooqnos/customer";
 import { FULFILLMENT_MODULE } from "@qooqnos/fulfillment";
 import { CASE_SUPPORT_MODULE } from "@qooqnos/case-support";
 import { TRUST_MODULE } from "@qooqnos/trust";
@@ -46,6 +47,7 @@ const modules: readonly RuntimeModule[] = [
   INTEGRATION_MODULE,
   PRIVACY_MODULE,
   MATCHING_MODULE,
+  CUSTOMER_MODULE,
   FULFILLMENT_MODULE,
   CASE_SUPPORT_MODULE,
   TRUST_MODULE,
