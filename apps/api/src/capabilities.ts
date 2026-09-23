@@ -1,4 +1,4 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
+import type { EntityId } from "@qooqnos/core";
 import {
   AuthorizationRepository,
 } from "@qooqnos/database";
@@ -7,7 +7,6 @@ import {
   BookingService,
 } from "@qooqnos/booking";
 import {
-  CaseSupportRepository,
 } from "@qooqnos/case-support";
 import {
   CommerceRepository,
