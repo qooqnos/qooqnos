@@ -45,6 +45,24 @@ No provider credentials, D1 UUIDs, Queue names, or R2 bucket names are invented 
 
 ## Production preflight
 
+The production deployment path now renders a temporary Wrangler environment file from real deployment variables rather than storing resource IDs in Git.
+
+Required production values are supplied through the deployment environment:
+
+- `PHOENIX_PROD_D1_DATABASE_ID`
+- `PHOENIX_PROD_D1_DATABASE_NAME`
+- `PHOENIX_PROD_R2_BUCKET_NAME`
+- `PHOENIX_PROD_OUTBOX_QUEUE_NAME`
+- `PHOENIX_PROD_AI_MODEL_ID`
+- `PHOENIX_PROD_AI_MODEL_VERSION` (optional; defaults to `1`)
+- `PHOENIX_PROD_AI_GATEWAY_ID` (optional)
+
+The renderer writes only to `.wrangler/production.wrangler.toml`, which is ignored by Git. The production workflow then executes:
+
+`render → binding verification → migration verification → lint → typecheck → build → Worker dry-run → tests → deploy`.
+
+Wrangler named environments do not inherit bindings/vars, so the generated production config explicitly defines D1, R2, Queue producer/consumer and Workers AI bindings for `env.production`.
+
 The repository now provides two fail-closed checks before production deployment:
 
 - `npm run verify:production-bindings` rejects missing production D1, Queue and R2 bindings or placeholder resource IDs.
