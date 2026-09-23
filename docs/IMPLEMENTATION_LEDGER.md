@@ -397,11 +397,6 @@ Latest verified commits:
 - e1769126 — Expose persisted AI Runtime terminal results and normalize abstention operation state
 - d965b2e — Replay persisted AI Runtime terminal results without rerunning providers
 - 134a68a — Test AI Runtime terminal replay and abstention persistence
-- f43ed7b — Persist AI provider/model identities with runtime results and usage
-- d1509e6 — Cover AI provider/model persistence contract in runtime client test
-- 1affcd9 — Assert persisted AI provider/model identities
-- 4645d91 — Persist successful AI provider attempts in runtime audit trail
-- bd50aa8 — Test persisted AI provider-attempt audit record
 - fe44de5e — Test Booking availability generation across DST and capacity constraints
 - 426196ce — Finalize Automation lifecycle + Outbox transition verification
 - 793b494 — Test Automation workflow lifecycle controls
@@ -437,7 +432,7 @@ Integration note: migration 0038 establishes provider/account/webhook/sync/exter
 
 AI Runtime composition note: Seller AI now persists canonical AI operation/result/usage evidence around the shared Runtime. Repeated Seller AI requests replay the persisted draft before invoking the model again; provider adapters/routing/validation workers remain the next operational layers.
 
-AI Runtime note: migration 0037 establishes shared operation/provider/model/policy/prompt/schema/result/usage persistence. Persistent Runtime terminal operations now replay stored terminal evidence instead of invoking a provider again; abstention is retained in `ai_runtime_results` while the operation lifecycle uses the canonical `blocked` status. Successful persisted executions also record provider/model attempt evidence in `ai_provider_attempts`.
+AI Runtime note: migration 0037 establishes shared operation/provider/model/policy/prompt/schema/result/usage persistence. Runtime provider/model strings are not written into FK fields until a canonical provider/model registry mapping contract is explicit. Persistent Runtime terminal operations now replay stored terminal evidence instead of invoking a provider again; abstention is retained in `ai_runtime_results` while the operation lifecycle uses the canonical `blocked` status. 
 
 Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. External provider adapters plus template/policy/consent layers remain gated.
 
