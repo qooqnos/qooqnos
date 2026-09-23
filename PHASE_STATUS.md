@@ -108,7 +108,7 @@ Canonical logical model
 → integrity/tenant-isolation tests
 ```
 
-Only after this sequence is complete should Cloudflare D1 production provisioning be treated as the final infrastructure step.
+The application/runtime and physical schema gates are complete; remaining work is operational/provider-specific plus real Cloudflare resource provisioning. Cloudflare D1 production provisioning is the final infrastructure step.
 
 ## 9. Remote D1 provisioning gate
 
