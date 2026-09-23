@@ -42,6 +42,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
 | Communication core | 🟢 Schema/package/repository/service/API/outbox-consumer implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts; apps/api/src/outbox-worker.ts |
 | Communication template registry | 🟢 Schema/package/repository/service/API implemented | migrations/0051_communication_templates.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts |
+| Communication policy / consent enforcement | 🟢 Schema/package/repository/service/API/test implemented | migrations/0055_communication_policy_consent.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts |
 | Automation workflow engine | 🟢 Schema/package/repository/service/API/worker implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts; apps/api/src/automation-worker.ts; apps/api/src/automation-execution-worker.ts |
 | Automation capability executor | 🟢 Runtime registry/executor/composition/worker implemented | packages/runtime/src/capabilities.ts; packages/automation/src/executor.ts; packages/automation/src/repository.ts; apps/api/src/capabilities.ts; Booking availability, Case Support and Fulfillment canonical aliases are registered |
 | AI Runtime persistence | 🟢 Schema/repository/runtime composition implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/runtime-client.ts; apps/api/src/ai-composition.ts |
@@ -405,9 +406,9 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint `3782da6c6d0559e6431ec749f7019f93ed44e87a` passed both CI (`35902958843`) and Phoenix verification (`35902958873`). Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0055 are registered and locked in sequence from canonical SQL contents. Migration 0055 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint `3782da6c6d0559e6431ec749f7019f93ed44e87a` passed both CI (`35902958843`) and Phoenix verification (`35902958873`). Full external D1 application has not yet been executed.
 
-Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events, Automation scheduled execution, AI durable Seller AI worker resolution, privacy consent expiry and approved-request orchestration are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processing, communication consent/anti-spam policy and external adapters, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
+Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events, Automation scheduled execution, AI durable Seller AI worker resolution, privacy consent expiry and approved-request orchestration, and Communication intent/consent/suppression policy are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processors, communication external provider adapters and platform rate-limit/anomaly controls, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
 
 Deployment readiness note: `wrangler.toml` remains free of fabricated Cloudflare resource IDs. Production deployment renders `.wrangler/production.wrangler.toml` from real deployment variables, verifies D1/R2/Queue/Workers AI/model bindings, runs the pinned Worker dry-run and tests, then deploys. `/ready` exposes infrastructure binding state in production and scheduled execution fails closed when mandatory bindings are absent.
 
@@ -498,6 +499,8 @@ AI Runtime composition note: Seller AI now persists canonical AI operation/resul
 
 AI Runtime note: migration 0037 establishes shared operation/provider/model/policy/prompt/schema/result/usage persistence. The Runtime now has the canonical provider registry, governance eligibility checks, routing policy, provider/model identity validation and output/safety validation; persistent terminal operations replay stored terminal evidence instead of invoking a provider again, and abstention is retained in `ai_runtime_results` while lifecycle state uses canonical `blocked`. 
 
+Communication policy note: migration 0055 establishes intent/channel policy, recipient preferences, explicit suppressions and per-notification policy decision evidence. Unknown intents, invalid channels, required-but-missing opt-in, and active suppressions fail closed; denied/suppressed sends are retained without Outbox dispatch.
+
 Communication template note: migration 0051 establishes the scoped versioned template registry. Notification sends referencing templates now require an approved active version matching intent/channel/locale; approved versions are immutable.
 
 Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. External provider adapters and consent/anti-spam policy remain gated; the scoped versioned template registry is implemented.
@@ -582,6 +585,7 @@ The API runtime references these migration sources:
 0051_communication_templates.sql
 0052_moderation_cases.sql
 0054_discovery_index_observability.sql
+0055_communication_policy_consent.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
