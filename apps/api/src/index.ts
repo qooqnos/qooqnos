@@ -25,6 +25,7 @@ import { processCaseActions } from "./case-action-worker";
 import { processPrivacyConsentExpiry, processApprovedPrivacyRequests } from "./privacy-worker";
 import { processIntegration } from "./integration-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
+import { assertProductionInfrastructure, checkRuntimeInfrastructure } from "./infrastructure";
 
 const homePage = (version: string): string => `<!doctype html>
 <html lang="en">
@@ -86,14 +87,15 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
     operation: "readiness.read",
     handler: async ({ context }) => {
       try {
-        await ensureRuntimeBoot(envForRuntime(version, database));
+        await ensureRuntimeBoot(env);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Runtime boot failed.";
         return json({ status: "not_ready", checks: { runtime: "unavailable", reason: message }, timestamp: new Date().toISOString() }, 503, context.requestId);
       }
+      const infrastructure = checkRuntimeInfrastructure(env);
       const result = await checkDatabase(database?.raw());
-      const ready = result.database === "ok" && result.migrationRegistry === "ok";
-      return json({ status: ready ? "ready" : "not_ready", checks: { runtime: "ok", ...result }, timestamp: new Date().toISOString() }, ready ? 200 : 503, context.requestId);
+      const ready = infrastructure.ready && result.database === "ok" && result.migrationRegistry === "ok";
+      return json({ status: ready ? "ready" : "not_ready", checks: { runtime: "ok", infrastructure, ...result }, timestamp: new Date().toISOString() }, ready ? 200 : 503, context.requestId);
     },
   });
 
@@ -510,10 +512,6 @@ function stableStringify(value: unknown): string {
   return JSON.stringify(value);
 }
 
-function envForRuntime(version: string, database: D1Database | undefined): ApiEnv {
-  if (!database) return { APP_VERSION: version };
-  return { APP_VERSION: version, DB: database.raw() };
-}
 
 function createSellerProductServiceForRequest(database: D1Database | undefined, env: ApiEnv, authorization: ReturnType<typeof createApiAuthorizationRegistry>, requestId: RequestId) {
   if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId });
@@ -541,6 +539,7 @@ export default {
   },
 
   async scheduled(controller: ScheduledControllerLike, env: ApiEnv): Promise<void> {
+    assertProductionInfrastructure(env);
     const now = new Date(controller.scheduledTime).toISOString();
     await publishPendingOutbox(env, now);
     await processCommunicationDispatch(env, now);
