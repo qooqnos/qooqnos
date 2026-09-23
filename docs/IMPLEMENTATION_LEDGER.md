@@ -50,6 +50,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Case Support core | 🟢 Schema/package/repository/service/API implemented | migrations/0050_case_support_core.sql; packages/case-support/src/repository.ts; packages/case-support/src/service.ts; apps/api/src/case-support-routes.ts |
 | Demand / Matching core | 🟢 Schema/package/repository/service implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts; apps/api/src/matching-routes.ts |
 | Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts; Review lifecycle fields exposed from repository |
+| Generic ModerationCase | 🟢 Schema/repository/service/test implemented | migrations/0052_moderation_cases.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; packages/trust/src/repository.test.ts |
 | Billing counter scope integrity | 🟢 Integrity migration implemented | migrations/0044_billing_counter_scope.sql; packages/billing/src/repository.ts |
 | Review target integrity | 🟢 Canonical three-target schema/service/integrity implemented | migrations/0042_reviews_core.sql; migrations/0045_review_target_integrity.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts |
 | Trust Review core | 🟢 Schema/package/repository/service implemented | migrations/0042_reviews_core.sql; migrations/0043_integrity_update_guards.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts |
@@ -60,8 +61,10 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Trust reviews / expiry | 🟢 Schema/repository implemented | migrations/0025_verification_review_expiry.sql; review/expiry methods and tests in verification-repository.ts |
 | Catalog Attribute repositories | 🟢 Implemented | packages/catalog/src/attribute-repository.ts; packages/catalog/src/attribute-value-repository.ts |
 | Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
-| Full canonical logical model | ⏳ Partial | many logical entities remain un-migrated |
-| Final physical D1 schema | ⏳ In progress | requires table-by-table reconciliation |
+| Full canonical logical model | ⏳ Partial | most core entities are physical; remaining work is mainly gated profile fields, projections, workers, provider adapters and operational integrations
+
+Database completion note: 122 of 123 table contracts in docs/PHYSICAL_SCHEMA_BLUEPRINT.md now have canonical physical tables (99.2%). The remaining table contract is customer_profiles; it remains deliberately gated because its current field dictionary is still too vague to implement without inventing semantics. |
+| Final physical D1 schema | 🟢 99.2% of Physical Schema Blueprint table contracts have canonical physical tables; 1 contract remains gated | only customer_profiles lacks a sufficiently specific field-level contract |
 | Legacy PostgreSQL database path | ✅ Removed from active source | historical git history only |
 | Legacy in-memory database path | 🟡 Isolated compatibility path | packages/database/src/legacy.ts; not exported by canonical package root |
 | Legacy onboarding compatibility | 🟡 Explicit compatibility path | packages/onboarding/src/legacy.ts; package subpath `@qooqnos/onboarding/legacy`; canonical root no longer exports legacy workflow |
@@ -381,7 +384,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0050 are registered and locked in sequence from canonical SQL contents. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0052 are registered and locked in sequence from canonical SQL contents. Migration 0051 checksum was reconciled before this update. Full external D1 application has not yet been executed.
 
 Deployment readiness note: `wrangler.toml` now documents environment-specific D1/Queue/R2 bindings without inventing remote resource IDs. Remote D1 provisioning and real Cloudflare binding configuration remain the final infrastructure gate.
 
@@ -543,6 +546,7 @@ The API runtime references these migration sources:
 0049_fulfillment_core.sql
 0050_case_support_core.sql
 0051_communication_templates.sql
+0052_moderation_cases.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
