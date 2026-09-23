@@ -390,8 +390,8 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0054 remain numbered and are extended only through new migrations;
-- migrations 0024–0054 are preserved in the canonical lock sequence.
+- canonical migrations 0001–0056 remain numbered and are extended only through new migrations;
+- migrations 0024–0056 are preserved in the canonical lock sequence;
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: GitHub Actions is the authoritative build/test verification path; the current `main` head passed both CI and Phoenix verification with format, lint, migration-lock verification, typecheck, build, Worker dry-run and unit tests green.
@@ -406,7 +406,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0056 are registered and locked in sequence from canonical SQL contents. Migration 0055 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint `3782da6c6d0559e6431ec749f7019f93ed44e87a` passed both CI (`35902958843`) and Phoenix verification (`35902958873`). Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0056 are registered and locked in sequence from canonical SQL contents. Migration 0055 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint remains `3782da6c6d0559e6431ec749f7019f93ed44e87a` (CI `35902958843`, Phoenix verification `35902958873`); subsequent changes have not yet received a visible GitHub Actions result. Full external D1 application has not yet been executed.
 
 Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events, Automation scheduled execution, AI durable Seller AI worker resolution, privacy consent expiry and approved-request orchestration, and Communication intent/consent/suppression policy are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processors, communication external provider adapters and platform rate-limit/anomaly controls, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
 
@@ -505,7 +505,7 @@ Communication policy note: migration 0055 establishes intent/channel policy, rec
 
 Communication template note: migration 0051 establishes the scoped versioned template registry. Notification sends referencing templates now require an approved active version matching intent/channel/locale; approved versions are immutable.
 
-Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. External provider adapters and consent/anti-spam policy remain gated; the scoped versioned template registry is implemented.
+Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. External provider adapters and platform rate-limit/anomaly controls remain gated; intent/consent/suppression policy and the scoped versioned template registry are implemented.
 
 Billing runtime note: the API Seller AI composition uses the real D1-backed BillingService. Missing plan/subscription/entitlement state fails the operation closed.
 
@@ -631,7 +631,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0054_discovery_index_observability.sql` and the migration lock/catalog verification is green on the current head.
+The canonical physical inventory reaches migration `0056_communication_required_suppression.sql`. The migration lock/catalog has been reconciled through 0056; a fresh CI run for the latest changes is not yet visible.
 
 Current verified head: `9364f37d795b06fa5a3f5b7bba8add074f1478f7`.
 GitHub Actions on this exact head completed successfully:
@@ -648,6 +648,11 @@ Discovery index observability implementation commits:
 - a5432b45022e53b12fc2bc31a74ab732ca1fb43a — add migration 0054_discovery_index_observability.sql
 - 31b3b3ac756a541a6e4d8a80b14fc1067b7a885e — register migration 0054 in API catalog
 - 6fc79015cd4230ce3a4a52d021d3059b71f35d5a — lock migration 0054 checksum
+- 0565a740dd833cff41211cc285648ebb434e44d9 — register migration 0055 in API catalog
+- c96a6737ea7f6f3998a3b56ec4ac857063cb8b70 — lock migration 0055 checksum
+- d99837cfe07578e4f9b0add855b8d3ddb2223c50 — register migration 0056 in API catalog
+- 15ad01cb7e423a705364ea5a83a3ede09b245456 — lock migration 0056 checksum
+- b7fe5e4fd9896a2b6f5b5c48e8b6f4a0bdc7d604 — fix migration lock JSON separator
 - 1dbfa6965296fb8c8a983d0e8ba1fe8e8f58d863 — implement Discovery index/query/evaluation repository
 - 42790c1c1227f7d6df3c99dd89505284d1707eec — expose Discovery observability capabilities
 - 4f29f7422e08017bd4e0dd54f3adf23190f60ae9 — add Discovery observability invariant tests
