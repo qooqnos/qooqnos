@@ -392,7 +392,7 @@ Current operational boundary note: Integration durable claim/sync workers, Fulfi
 
 Deployment readiness note: `wrangler.toml` now documents environment-specific D1/Queue/R2 bindings without inventing remote resource IDs. Remote D1 provisioning and real Cloudflare binding configuration remain the final infrastructure gate.
 
-Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
+Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile is a logical aggregate over Customer core/preferences/addresses and is not a standalone table.
 
 Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Workflow version activation plus pause/retire lifecycle controls are canonical repository/service/API operations, and those lifecycle transitions now emit transactional Outbox events. Capability invocation contract is now executable through the canonical runtime CapabilityRegistry and idempotent AutomationExecutor. Durable scheduler/worker polling remains the remaining operational layer.
 
