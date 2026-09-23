@@ -53,7 +53,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Case Support core | 🟢 Schema/package/repository/service/API implemented | migrations/0050_case_support_core.sql; packages/case-support/src/repository.ts; packages/case-support/src/service.ts; apps/api/src/case-support-routes.ts |
 | CaseAction execution worker | 🟢 CapabilityRegistry-backed worker implemented | packages/case-support/src/repository.ts; apps/api/src/capabilities.ts; apps/api/src/case-action-worker.ts |
 | Privacy subject scope validation | 🟢 Repository validation/test implemented | packages/privacy/src/repository.ts; packages/privacy/src/repository.test.ts |
-| Lifecycle invariant hardening | 🟢 Verified through `18342b7`; CustomerRelationship interaction CAS now closed | Billing subscription terminal transitions; Matching latest-decision/terminal request guards; Automation execution/attempt terminal guards; AI operation terminal guard + failed-operation replay; CustomerRelationship interaction CAS; focused repository/client tests |
+| Lifecycle invariant hardening | 🟢 Implemented through `18342b7` + explicit CAS test `8bf1372` | Billing subscription terminal transitions; Matching latest-decision/terminal request guards; Automation execution/attempt terminal guards; AI operation terminal guard + failed-operation replay; CustomerRelationship interaction CAS; focused repository/client tests |
 | CustomerRelationship concurrency hardening | 🟢 Verified in `90792c7` | `packages/database/src/customer-relationship-repository.ts`; `c2692c8`; `2b98364`; `48af422`; `7573f49` test harness |
 | Business lifecycle concurrency hardening | 🟢 Verified in `90792c7` | `packages/business/src/repository.ts`; `b935137`; `90792c7` test harness |
 | Demand / Matching core | 🟢 Schema/package/repository/service/API/retrieval/ranking/connect implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts; apps/api/src/matching-routes.ts |
@@ -93,6 +93,7 @@ A PostgreSQL-oriented Phase 4 implementation was created, including:
 This work is preserved as history but is superseded.
 
 - 4d9916c — Test CustomerRelationship interaction CAS guard
+- 8bf1372 — Add explicit CustomerRelationship interaction CAS test
 
 ### Current canonical path
 
