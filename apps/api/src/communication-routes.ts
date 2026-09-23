@@ -180,6 +180,7 @@ export function registerCommunicationRoutes(
         ...(body.intent !== undefined ? { intent: requiredString(body.intent, "intent", context.requestId) } : {}),
         reasonCode: requiredString(body.reasonCode, "reasonCode", context.requestId),
         source: requiredString(body.source, "source", context.requestId),
+        ...(body.appliesToRequired !== undefined ? { appliesToRequired: requiredBoolean(body.appliesToRequired, "appliesToRequired", context.requestId) } : {}),
         effectiveFrom: requiredString(body.effectiveFrom, "effectiveFrom", context.requestId),
         ...(body.expiresAt !== undefined ? { expiresAt: requiredString(body.expiresAt, "expiresAt", context.requestId) } : {}),
       });
@@ -330,6 +331,13 @@ function requiredIdempotencyKey(request: Request, requestId: EntityId): string {
   const value = request.headers.get("idempotency-key")?.trim();
   if (!value) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is required.", requestId });
   if (value.length > 200) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is too long.", requestId });
+  return value;
+}
+
+function requiredBoolean(value: unknown, field: string, requestId: EntityId): boolean {
+  if (typeof value !== "boolean") {
+    throw new AppError({ code: "VALIDATION_ERROR", message: field + " must be boolean.", requestId });
+  }
   return value;
 }
 
