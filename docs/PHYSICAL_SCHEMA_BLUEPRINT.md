@@ -1049,22 +1049,22 @@ Fulfillment is execution authority only. Commerce owns Order/OrderLine truth, Bo
 
 ## 19. Explicit gates still open
 
-The following remain controlled architecture gates before their concrete SQL migrations:
+The following remain controlled architecture/operational gates:
 
 1. CustomerProfile field-level contract.
 2. CRM timeline projection read-model/rebuild contract.
 3. Tax/discount transaction snapshot semantics beyond the existing Commerce ownership decision.
-4. Payment provider reference contract.
+4. Payment provider reference/invoice/financial-ledger contract.
 5. Search/vector projection versioning/storage details.
 6. AI Memory physical storage/retention contract.
-7. Integration/Webhook/Sync retention and retry details.
-8. Communication consent/policy/template registry and provider adapter contracts.
+7. Integration/Webhook/Sync retention, retry and provider-adapter contracts.
+8. Communication consent/anti-spam policy and external provider adapter contracts. Template registry itself is implemented in migration 0051.
 9. Business conceptual lifecycle vocabulary reconciliation.
-10. Booking availability calculation and slot-generation contract.
-11. Review physical target implementation beyond the canonical typed-target matrix.
-12. Matching retrieval/ranking/learning execution contracts where they require additional derived projections.
+10. AI durable worker input/payload resolution contract. The current Runtime/provider/routing/validation path is implemented; the worker must not infer request payloads from opaque references.
+11. Matching learning-signal persistence/derivation contract and broader Act projections where required.
+12. Privacy export/delete/retention processing semantics and subject-level identity validation.
 
-These are controlled architecture gates, not provisional implementation instructions.
+Closed implementation gates must not be reopened by future agents: Booking slot generation, Review target integrity, Matching retrieval/ranking, Automation scheduled execution and CaseAction capability execution are implemented and tested.
 
 ## 20. Definition of Done
 
