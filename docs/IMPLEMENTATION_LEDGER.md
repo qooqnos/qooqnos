@@ -581,7 +581,6 @@ The API runtime references these migration sources:
 0051_communication_templates.sql
 0052_moderation_cases.sql
 0054_discovery_index_observability.sql
-0054_discovery_index_observability.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
@@ -624,7 +623,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0054_discovery_index_observability.sql`. The latest fully verified green head is `b9aba19db5abb985f680448767b2bf39553f9c6b`; CI and Phoenix verification are green on this current documentation-reconciled head.
+The canonical physical inventory reaches migration `0054_discovery_index_observability.sql`. The latest fully verified green head is `aad9585e19c4326cb853f0facf2514cac5e20593`; CI and Phoenix verification are green on this current documentation-reconciled head.
 
 Current engineering state:
 
@@ -651,7 +650,7 @@ Open completion gates are deliberately limited to:
 
 CustomerProfile remains a logical aggregate over existing Customer-owned records; CRM timeline events are canonical projection input and do not require a duplicate timeline table.
 
-Verification checkpoint: `90792c7a0e52ec40b00eb4ebf6d2d3d4a7da62e6` passed GitHub Actions CI and Phoenix verification. CI passed format/lint, migration-lock verification, typecheck, build, Cloudflare Worker dry-run and the full test suite.
+Verification checkpoint: `aad9585e19c4326cb853f0facf2514cac5e20593` passed GitHub Actions CI and Phoenix verification. Current successful runs: CI `35897887513`, Phoenix verification `35897887763`. The workflows passed migration-lock verification, typecheck/build and the test suite.
 
 The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above. Privacy subject scope validation was added in commits `afcff1bb0023187024b12508f7eb7cf175d8bec6` and `c121e50055d3a2e3ca1023c88c13a2f5bb403fa0`, then reconciled into the verified checkpoint `d122981098cc1d517664afdce3d33d3333e82afa`.
 
