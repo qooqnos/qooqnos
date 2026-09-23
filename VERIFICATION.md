@@ -16,7 +16,7 @@ Both required workflows passed:
 
 The verification path passed format/lint checks, migration-lock verification, TypeScript typecheck, workspace build, and the unit-test suite: **69 test files / 195 tests passed**.
 
-The current `main` head is `a2542730d92a57c5554a590b62e5cbd9baf99cae`; commits after the latest code-bearing checkpoint are documentation/status reconciliation only, so the verified application code remains unchanged.
+Current `main` points to `e5ffb4f87eb05f5e3521f9d81fad53ea5a913944`; this head is documentation/status reconciliation only, so the verified application code remains unchanged.
 
 ## Canonical runtime baseline
 
