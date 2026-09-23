@@ -115,7 +115,7 @@ export class BillingService implements BillingAIEntitlementService {
     };
   }
 
-  async listPlans(context: RequestContext) {
+  async listPlans(_context: RequestContext) {
     return this.options.repository.listPlans();
   }
 }
