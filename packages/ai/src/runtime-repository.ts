@@ -282,9 +282,8 @@ function parseStringArray(value: string | null): string[] {
   } catch {
     throw new DatabaseError("Stored AI Runtime string array is invalid");
   }
-function isTerminalAiOperationStatus(status: string): boolean {
-  return ["succeeded", "partially_succeeded", "failed", "cancelled", "expired", "blocked"].includes(status);
 }
 
-
+function isTerminalAiOperationStatus(status: string): boolean {
+  return ["succeeded", "partially_succeeded", "failed", "cancelled", "expired", "blocked"].includes(status);
 }
