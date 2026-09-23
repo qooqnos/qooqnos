@@ -108,14 +108,13 @@ export class CaseSupportRepository extends Repository {
     );
   }
 
-  async listSlaActiveCases(context: RequestContext, now: string, limit = 200): Promise<readonly CaseRecord[]> {
-    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
-    const workspaceId = context.workspaceId ?? null;
+  async listSlaActiveCases(now: string, limit = 200): Promise<readonly (CaseRecord & {
+    readonly firstResponseTargetSeconds: number;
+    readonly resolutionTargetSeconds: number;
+  })[]> {
     const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
-    return this.database.all<CaseRecord>(
-      "SELECT c.id,c.organization_id AS organizationId,c.workspace_id AS workspaceId,c.case_type_id AS caseTypeId,c.status,c.priority,c.severity,c.subject_type AS subjectType,c.subject_id AS subjectId,c.requester_type AS requesterType,c.requester_id AS requesterId,c.source_type AS sourceType,c.source_reference AS sourceReference,c.queue_id AS queueId,c.assignee_id AS assigneeId,c.sla_id AS slaId,c.version,c.opened_at AS openedAt,c.resolved_at AS resolvedAt,c.closed_at AS closedAt,c.created_at AS createdAt,c.updated_at AS updatedAt FROM cases c INNER JOIN case_slas s ON s.id = c.sla_id WHERE c.organization_id=? AND (c.workspace_id IS NULL OR c.workspace_id=?) AND c.status NOT IN ('resolved','closed') AND s.effective_from <= ? AND (s.effective_to IS NULL OR s.effective_to > ?) ORDER BY c.opened_at ASC,c.id ASC LIMIT ?",
-      organizationId,
-      workspaceId,
+    return this.database.all(
+      "SELECT c.id,c.organization_id AS organizationId,c.workspace_id AS workspaceId,c.case_type_id AS caseTypeId,c.status,c.priority,c.severity,c.subject_type AS subjectType,c.subject_id AS subjectId,c.requester_type AS requesterType,c.requester_id AS requesterId,c.source_type AS sourceType,c.source_reference AS sourceReference,c.queue_id AS queueId,c.assignee_id AS assigneeId,c.sla_id AS slaId,c.version,c.opened_at AS openedAt,c.resolved_at AS resolvedAt,c.closed_at AS closedAt,c.created_at AS createdAt,c.updated_at AS updatedAt,s.first_response_target_seconds AS firstResponseTargetSeconds,s.resolution_target_seconds AS resolutionTargetSeconds FROM cases c INNER JOIN case_slas s ON s.id = c.sla_id WHERE c.status NOT IN ('resolved','closed') AND s.effective_from <= ? AND (s.effective_to IS NULL OR s.effective_to > ?) ORDER BY c.opened_at ASC,c.id ASC LIMIT ?",
       now,
       now,
       safeLimit,
