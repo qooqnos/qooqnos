@@ -28,3 +28,12 @@ Before substantial work, read `docs/PHOENIX_PRODUCT_NORTH_STAR.md`, `docs/PHOENI
 Understand → Identify the North Star outcome → Inspect → Plan → ADR if needed → Implement → Test → Security Review → Performance Review → Product-alignment Review → Document → Verify.
 ## Definition of Done
 Implementation, types, tests, authorization, tenant isolation, migrations, documentation, product-direction alignment, and relevant checks are verified before completion.
+
+## Phoenix Continuation Guard
+
+The canonical product identity is the intelligent decision and connection layer:
+`Understand Demand → Understand Supply → Decide → Match → Connect → Act → Learn`.
+
+Architecture work must strengthen that loop and reuse existing module ownership. Before introducing a new entity/capability, verify that the fact is not already owned elsewhere and that the work has a closed contract.
+
+Continue from `docs/IMPLEMENTATION_LEDGER.md` and the latest verified checkpoint; do not restart repository analysis unnecessarily. Complete each safe implementation slice with tests, ledger update and a direct `main` commit.
