@@ -514,14 +514,14 @@ export class AutomationRepository extends Repository {
 }
 
 function validateRecurrence(value: string): void {
-  if (!/^P(?:(?:\\d+\\.?\\d*)D)?(?:T(?:(?:\\d+\\.?\\d*)H)?(?:(?:\\d+\\.?\\d*)M)?(?:(?:\\d+\\.?\\d*)S)?)?$/.test(value.trim())) {
+  if (!/^P(?:(?:\d+\\.?\d*)D)?(?:T(?:(?:\d+\\.?\d*)H)?(?:(?:\d+\\.?\d*)M)?(?:(?:\d+\\.?\d*)S)?)?$/.test(value.trim())) {
     throw new DatabaseError("Automation recurrence must be an ISO-8601 duration");
   }
   if (parseDurationMs(value) <= 0) throw new DatabaseError("Automation recurrence must be greater than zero");
 }
 
 function parseDurationMs(value: string): number {
-  const match = /^P(?:(\\d+\\.?\\d*)D)?(?:T(?:(\\d+\\.?\\d*)H)?(?:(\\d+\\.?\\d*)M)?(?:(\\d+\\.?\\d*)S)?)?$/.exec(value.trim());
+  const match = /^P(?:(\d+\\.?\d*)D)?(?:T(?:(\d+\\.?\d*)H)?(?:(\d+\\.?\d*)M)?(?:(\d+\\.?\d*)S)?)?$/.exec(value.trim());
   if (!match) return 0;
   const days = Number(match[1] ?? 0);
   const hours = Number(match[2] ?? 0);
