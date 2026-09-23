@@ -10,7 +10,7 @@ The latest verified `main` checkpoint is:
 
 `90792c7a0e52ec40b00eb4ebf6d2d3d4a7da62e6`
 
-Current `main` head is `614c7cfd7fbc05e061ee5a97538c4fd4357bb46a`; commits after the verified checkpoint include code-level reconciliation (CustomerRelationship interaction CAS and migration-catalog import ordering) and are not represented by the above historical CI result.
+Current `main` head is `a432801a0a8112cb8fc364b10113a07b26b19674`; commits after the verified checkpoint include code-level reconciliation (CustomerRelationship interaction CAS and migration-catalog import ordering) and are not represented by the above historical CI result.
 
 Both required workflows passed:
 
