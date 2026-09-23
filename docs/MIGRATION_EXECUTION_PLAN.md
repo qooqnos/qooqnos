@@ -29,9 +29,9 @@ Future schema evolution follows the bounded-context dependency order:
 8. Commerce
 9. Trust
 10. Communication
-11. AI
+11. AI Runtime
 12. Automation
-13. Billing
+13. Billing / Payment
 14. Media
 15. Integration
 16. Discovery / projections
@@ -104,12 +104,12 @@ Only after all consumers have migrated, data integrity has been validated, and r
 | C0001 | Catalog | Offering/category/pricing foundations |
 | CU0001 | Customer | Customer/address/relationship foundations |
 | BK0001 | Booking | Schedule/resource/booking/appointment foundations |
-| CO0001 | Commerce | Cart/order/payment/invoice foundations |
+| CO0001 | Commerce | Cart/checkout/order/commercial-snapshot foundations and financial orchestration references |
 | T0001 | Trust | Verification/review/moderation foundations |
 | M0001 | Communication | Conversation/message/notification foundations |
 | AI0001 | AI | Agent/run/tool/memory foundations |
 | AU0001 | Automation | Workflow/trigger/action/execution foundations |
-| BL0001 | Billing | Plan/subscription/usage foundations |
+| BL0001 | Billing / Payment | Plan/subscription/usage plus payment/settlement/invoice financial foundations when their contracts are closed |
 | ME0001 | Media | Asset/variant/attachment foundations |
 | IN0001 | Integration | Integration/webhook/sync foundations |
 | D0001 | Discovery | Rebuildable search/filter/facet projection foundations |
