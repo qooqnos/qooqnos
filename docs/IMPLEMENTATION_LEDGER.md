@@ -44,7 +44,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Automation workflow engine | 🟢 Schema/package/repository/service/API/worker implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts; apps/api/src/automation-worker.ts; apps/api/src/automation-execution-worker.ts |
 | Automation capability executor | 🟢 Runtime registry/executor/composition/worker implemented | packages/runtime/src/capabilities.ts; packages/automation/src/executor.ts; packages/automation/src/repository.ts; apps/api/src/capabilities.ts |
 | AI Runtime persistence | 🟢 Schema/repository/runtime composition implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/runtime-client.ts; apps/api/src/ai-composition.ts |
-| Integration core | 🟢 Schema/package/repository/service/API implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; apps/api/src/integration-routes.ts; integration sync-job API |
+| Integration core | 🟢 Schema/package/repository/service/API/worker-boundary implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; packages/integration/src/adapter.ts; packages/integration/src/worker.ts; apps/api/src/integration-routes.ts; apps/api/src/integration-worker.ts |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Fulfillment / Service Delivery core | 🟢 Schema/package/repository/service/API implemented | migrations/0049_fulfillment_core.sql; packages/fulfillment/src/repository.ts; packages/fulfillment/src/service.ts; apps/api/src/fulfillment-routes.ts |
 | Case Support core | 🟢 Schema/package/repository/service/API implemented | migrations/0050_case_support_core.sql; packages/case-support/src/repository.ts; packages/case-support/src/service.ts; apps/api/src/case-support-routes.ts |
@@ -458,6 +458,8 @@ Matching Connect note: `packages/matching/src/service.ts`, `packages/matching/sr
 Discovery projection note: Business creation/publication outbox events are now consumed by the Discovery projector; indexed eligibility follows authoritative Business publication state. Catalog/product projection remains derived and non-authoritative.
 
 Privacy note: migration 0039 establishes consent, privacy-request and per-module processing persistence. Durable export/delete/retention workers remain follow-up operational capabilities.
+
+Integration worker note: durable webhook/sync claim/finish semantics and provider-adapter boundaries are now implemented. The scheduled Worker deliberately leaves jobs untouched when no matching provider adapter is registered; actual provider-specific adapters remain external integration work.
 
 Integration note: migration 0038 establishes provider/account/webhook/sync/external-reference persistence; provider adapters and durable sync workers remain operational follow-up.
 
