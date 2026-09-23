@@ -303,20 +303,20 @@ export class AutomationRepository extends Repository {
 
   async startExecution(context: RequestContext, input: {
     readonly id: EntityId; readonly workflowId: EntityId; readonly workflowVersionId: EntityId; readonly triggerId: EntityId;
-    readonly correlationId: string; readonly traceId: string; readonly inputReference?: string; readonly now: string;
+    readonly correlationId: string; readonly traceId: string; readonly inputReference?: string; readonly initialStatus?: AutomationExecutionStatus; readonly now: string;
   }): Promise<WorkflowExecutionRecord> {
     await this.getWorkflow(context, input.workflowId);
     const existing = await this.database.first<WorkflowExecutionRecord>(
       "SELECT id, workflow_id AS workflowId, workflow_version_id AS workflowVersionId, trigger_id AS triggerId, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, status, input_reference AS inputReference, correlation_id AS correlationId, trace_id AS traceId, started_at AS startedAt, completed_at AS completedAt, created_at AS createdAt, updated_at AS updatedAt FROM automation_executions WHERE workflow_id = ? AND correlation_id = ? ORDER BY created_at DESC LIMIT 1",
       input.workflowId, input.correlationId,
     );
-    if (existing && (existing.status === "running" || existing.status === "waiting" || existing.status === "completed")) return existing;
+    if (existing && (existing.status === "pending" || existing.status === "running" || existing.status === "waiting" || existing.status === "completed")) return existing;
 
     const workflow = await this.getWorkflow(context, input.workflowId);
     await this.database.run(
-      "INSERT INTO automation_executions (id, workflow_id, workflow_version_id, trigger_id, organization_id, workspace_id, business_id, status, input_reference, correlation_id, trace_id, started_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'running', ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO automation_executions (id, workflow_id, workflow_version_id, trigger_id, organization_id, workspace_id, business_id, status, input_reference, correlation_id, trace_id, started_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       input.id, input.workflowId, input.workflowVersionId, input.triggerId, workflow.organizationId, workflow.workspaceId, workflow.businessId,
-      input.inputReference ?? null, input.correlationId, input.traceId, input.now, input.now, input.now,
+      input.initialStatus ?? 'running', input.inputReference ?? null, input.correlationId, input.traceId, input.now, input.now, input.now,
     );
     return this.getExecution(context, input.id);
   }
