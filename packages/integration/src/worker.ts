@@ -1,8 +1,7 @@
 import { brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import {
   IntegrationRepository,
-  type IntegrationSyncJobRecord,
-  type IntegrationWebhookRecord,
+  type IntegrationSyncJobRecord ,
 } from "./repository";
 import type { IntegrationProviderRegistry } from "./adapter";
 
@@ -191,7 +190,7 @@ async function buildContextForAccount(
   integrationAccountId: EntityId,
   correlationId: string,
 ): Promise<RequestContext> {
-  const account = await repository.getAccount(platformContext(), integrationAccountId);
+  const account = await repository.getAccountForWorker(integrationAccountId);
   return {
     requestId: brandId<"RequestId">("integration:" + integrationAccountId),
     correlationId: brandId<"CorrelationId">(correlationId),
