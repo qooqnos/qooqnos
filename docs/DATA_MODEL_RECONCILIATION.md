@@ -85,8 +85,8 @@ No consumer is allowed to create a second domain model or second implementation 
 | Order | Commerce | `Order` | Commercial transaction |
 | Payment | Billing/Payment | `Payment` | Financial payment aggregate; Commerce stores orchestration/reference state |
 | PaymentAttempt | Commerce | `PaymentAttempt` | Provider execution attempt |
-| Refund | Commerce | `Refund` | Payment reversal |
-| Invoice | Commerce/Billing contract | `Invoice` | Financial document |
+| Refund | Billing/Payment | `Refund` | Financial payment reversal |
+| Invoice | Billing | `Invoice` | Financial document |
 | Verification | Trust | `VerificationCase` | Verification workflow/case, not boolean |
 | Review | Trust | `Review` | Customer feedback |
 | Rating | Trust | Value Object | Review rating semantics |
@@ -281,9 +281,20 @@ Rules:
 ### Commerce
 
 - Cart
+- Checkout
 - Order
+- commercial snapshots
+- payment/refund/invoice orchestration references
+
+Commerce coordinates commercial transactions and may invoke payment/invoice/refund capabilities, but it does not own financial settlement truth.
+
+### Billing / Payment
+
 - Payment
+- PaymentAttempt
+- Refund
 - Invoice
+- financial ledger
 
 ### Trust
 
@@ -342,10 +353,10 @@ Aggregate status does not imply every related table must be physically nested or
 
 - Customer 1:N Order.
 - Order 1:N OrderItem.
-- Order 1:N Payment.
+- Order has 0:N Payment references/financial interactions through the Billing/Payment contract.
 - Payment 1:N PaymentAttempt.
 - Payment 1:N Refund.
-- Order 0:N Invoice.
+- Order 0:N Invoice through the Billing contract.
 
 ### Trust
 
@@ -380,7 +391,7 @@ Aggregate status does not imply every related table must be physically nested or
 | Booking | Booking | yes |
 | Appointment | Booking | yes |
 | Order | Commerce | yes |
-| Payment | Commerce/provider adapter contract | yes |
+| Payment | Billing/Payment financial authority; Commerce keeps orchestration/reference state | yes |
 | Verification | Trust | yes |
 | Review | Trust | yes |
 | Trust score | derived | yes, always |
