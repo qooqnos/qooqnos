@@ -140,7 +140,8 @@ describe("CustomerRelationshipRepository", () => {
 
     const update = queries.find((query) => query.sql.includes("first_interaction_at = CASE"));
     expect(update?.sql).toContain("last_interaction_at = CASE");
-    expect(update?.params[0]).toBe("2026-09-19T00:00:00.000Z");
+    expect(update?.sql).toContain("first_interaction_at > ?");
+    expect(update?.sql).toContain("last_interaction_at < ?");
   });
 
 });
