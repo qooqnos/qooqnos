@@ -2,10 +2,6 @@ import type { D1DatabaseLike } from "@qooqnos/database";
 import type { CloudflareAIBinding } from "@qooqnos/runtime";
 import type { CloudflareQueueBinding, CloudflareR2Binding } from "./infrastructure";
 
-export interface CloudflareQueueBinding {
-  send(message: unknown): Promise<void>;
-}
-
 export interface ApiEnv {
   readonly APP_VERSION?: string;
   readonly ENVIRONMENT?: string;
