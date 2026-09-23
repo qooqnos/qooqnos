@@ -303,6 +303,31 @@ export class PrivacyRepository extends Repository {
     return current;
   }
 
+  async recordProcessingSystem(input: {
+    readonly id: EntityId;
+    readonly requestId: EntityId;
+    readonly moduleId: string;
+    readonly action: string;
+    readonly resourceReference?: string;
+    readonly status: PrivacyProcessingRecord["status"];
+    readonly errorReference?: string;
+    readonly processedAt?: string;
+    readonly now: string;
+  }): Promise<void> {
+    await this.database.run(
+      "INSERT OR REPLACE INTO privacy_processing_records (id, request_id, module_id, action, resource_reference, status, error_reference, processed_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.requestId,
+      input.moduleId.trim(),
+      input.action.trim(),
+      input.resourceReference ?? null,
+      input.status,
+      input.errorReference ?? null,
+      input.processedAt ?? null,
+      input.now,
+    );
+  }
+
   async completeClaimedRequest(
     input: {
       readonly requestId: EntityId;
