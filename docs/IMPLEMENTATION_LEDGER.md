@@ -1,7 +1,7 @@
 # Phoenix Implementation Ledger
 
 **Status:** Current implementation ledger  
-**Last reviewed:** 2026-09-23
+**Last reviewed:** 2026-09-24
 **Documentation reconciliation:** 2026-09-22; see repository history and this ledger for the latest commit references.
 
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
@@ -78,11 +78,20 @@ This ledger is the continuity record for future coding agents. Completed or supe
 
 Database completion note: all physical table contracts in docs/PHYSICAL_SCHEMA_BLUEPRINT.md have canonical physical representations; CustomerProfile is intentionally represented as a logical aggregate over Customer-owned records rather than a separate table. |
 | Final physical D1 schema | 🟢 Physical blueprint complete | all physical table contracts have canonical representations; remaining work is operational/provider/projection gates |
+| Database completion audit | 🟢 Executable integrity audit | scripts/report-database-completion.mjs; package.json `report:database` |
 | Production D1 migration executor | 🟢 Canonical remote execution path implemented | scripts/migrate-production-d1.mjs; package.json `migrate:prod:canonical`; production deploy invokes it before Worker deploy |
 | Legacy PostgreSQL database path | ✅ Removed from active source | historical git history only |
 | Legacy in-memory database path | 🟡 Isolated compatibility path | packages/database/src/legacy.ts; not exported by canonical package root |
 | Legacy onboarding compatibility | 🟡 Explicit compatibility path | packages/onboarding/src/legacy.ts; package subpath `@qooqnos/onboarding/legacy`; canonical root no longer exports legacy workflow |
 | Legacy Node server | 🟡 Isolated compatibility source | packages/runtime/src/legacy-server.ts; canonical runtime no longer exports `./server` and legacy server is excluded from runtime build |
+
+## Database completion status — 2026-09-24
+
+**Physical D1 schema: 100%.** The canonical migration set reaches 0056 and the reconciled inventory contains 190 physical tables. The repository now has an executable audit that cross-checks SQL migration count, API catalog count, migration-lock count, sequence continuity and the documented physical-table total.
+
+**Database engineering readiness: 91.7% on the explicit 12-gate rubric:** 11 repository/schema/runtime gates are closed; the remaining gate is credentialed remote application of the canonical migration history to the provisioned production D1. This percentage is a readiness metric, not a product-completion score.
+
+The current main head is 33 commits ahead of the last fully verified checkpoint. The compare shows only documentation/package/deployment-script changes after that checkpoint; no canonical migration SQL was changed. Current connector access did not expose a successful workflow run for the latest head, so the latest CI result is not claimed as current-head verification.
 
 ## 2. Database history
 
