@@ -31,9 +31,9 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Migration lock | ✅ Implemented | reviewed SQL identity/checksum is enforced |
 | D1 database boundary | ✅ Implemented | packages/database exposes D1-compatible access |
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
-| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0054 |
+| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0056 |
 | Full logical model | 🟢 Core logical model resolved | remaining work is operational/provider/projection gates, not an unimplemented CustomerProfile table |
-| Final D1 physical schema | 🟢 Physical blueprint complete | 186 physical tables across migrations 0001–0054; remaining work is explicit contract/provider/worker gates and real Cloudflare resource provisioning |
+| Final D1 physical schema | 🟢 Physical blueprint complete | 190 physical tables across migrations 0001–0056; remaining work is explicit contract/provider/worker gates and real Cloudflare resource provisioning |
 | Legacy PostgreSQL path | ✅ Removed from active source | historical git history only |
 
 ## 3. Critical database rule
@@ -52,7 +52,7 @@ Before adding a table:
 
 ## 4. Migration sequence currently registered
 
-The API runtime currently references the ordered canonical migration sequence `0001` through `0054`.
+The API runtime currently references the ordered canonical migration sequence `0001` through `0056`.
 
 Do not renumber or replace these migrations.
 
@@ -88,7 +88,7 @@ Completion requires:
 
 - Latest fully verified code checkpoint is commit `ed05f899b5de241f1f208fdd5eb0040429b08176`.
 - GitHub Actions CI run `35902569467` and Phoenix verification run `35902569466` both passed for the current `main` checkpoint.
-- Migration lock verification is registered through migration `0054` and passed in the latest Phoenix verification workflow.
+- Migration lock verification is registered through migration `0056` and passed in the latest CI/Phoenix verification workflows.
 - The current checkpoint is covered by successful CI/Phoenix verification; historical run details remain available in GitHub Actions.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
 
