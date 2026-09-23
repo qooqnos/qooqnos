@@ -538,6 +538,7 @@ The API runtime references these migration sources:
 0047_booking_capacity_update_guards.sql
 0048_reviews_moderation_reputation.sql
 0049_fulfillment_core.sql
+0050_case_support_core.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
@@ -580,13 +581,13 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory now reaches migration 0049. The remaining work is execution/completion, not schema invention:
+The canonical physical inventory now reaches migration 0050. The remaining work is execution/completion, not schema invention:
 
 ```
 pass CI build + tests
 → keep canonical runtime free of legacy implementations
 → complete only the remaining operational gates with explicit provider/worker contracts
-→ durable Automation scheduler polling and misfire semantics remain open
+→ durable Automation scheduler polling and misfire semantics implemented; scheduled action execution still requires canonical capability-registry composition
 → Integration provider adapters and durable sync workers remain provider-specific
 → Privacy export/delete/retention workers remain gated by subject-validation semantics
 → external Communication provider/template/policy integration remains gated
@@ -598,6 +599,8 @@ pass CI build + tests
 ```
 
 No new table should be introduced merely to move the completion checklist forward.
+
+Automation scheduler note: the Worker scheduled hook now plans fixed-duration ISO-8601 schedules, applies SKIP/CATCH_UP_ONCE/CATCH_UP_ALL misfire policies, atomically claims schedule occurrences, and creates idempotent pending WorkflowExecution records. Scheduled action invocation remains behind the canonical CapabilityRegistry composition boundary.
 
 
 CI verification checkpoint: commit `6275a6f4ba52450977f9700c3bd82e792905aafa` passed GitHub CI and Phoenix verification with Format, Lint, migration lock, Typecheck, Build and **173 tests / 61 suites** passing. No PR was created.
