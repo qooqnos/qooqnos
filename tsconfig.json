@@ -63,6 +63,9 @@
       "path": "./packages/i18n"
     },
     {
+      "path": "./packages/media"
+    },
+    {
       "path": "./packages/onboarding"
     }
   ],
