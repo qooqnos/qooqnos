@@ -82,6 +82,12 @@ export class BillingRepository extends Repository {
     return plan;
   }
 
+  async listPlans(): Promise<readonly BillingPlanRecord[]> {
+    return this.database.all<BillingPlanRecord>(
+      "SELECT id, plan_key AS planKey, name, description, status FROM billing_plans WHERE status <> 'retired' ORDER BY plan_key ASC",
+    );
+  }
+
   async getPlan(id: EntityId): Promise<BillingPlanRecord | null> {
     return this.database.first<BillingPlanRecord>(
       "SELECT id, plan_key AS planKey, name, description, status FROM billing_plans WHERE id = ? LIMIT 1",
