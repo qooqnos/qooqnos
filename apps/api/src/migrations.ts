@@ -51,6 +51,7 @@ import reviewTargetIntegrity from "../../../migrations/0045_review_target_integr
 import bookingFinalizationGuards from "../../../migrations/0046_booking_finalization_guards.sql";
 import bookingCapacityUpdateGuards from "../../../migrations/0047_booking_capacity_update_guards.sql";
 import aiRuntimeWorkerLeases from "../../../migrations/0053_ai_runtime_worker_leases.sql";
+import discoveryIndexObservability from "../../../migrations/0054_discovery_index_observability.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -107,4 +108,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0051_communication_templates.sql", sql: communicationTemplates },
   { path: "migrations/0052_moderation_cases.sql", sql: moderationCases },
   { path: "migrations/0053_ai_runtime_worker_leases.sql", sql: aiRuntimeWorkerLeases },
+  { path: "migrations/0054_discovery_index_observability.sql", sql: discoveryIndexObservability },
 ];
