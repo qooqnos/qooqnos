@@ -15,11 +15,11 @@ for (const entry of packages) {
   try {
     const source = await readFile(manifestPath, "utf8");
     const idMatch = source.match(/\bid:\s*"([^"]+)"/);
-    const exportMatch = source.match(/export\\s+const\\s+([A-Za-z0-9_]+)\\s*[=:]/);
+    const exportMatch = source.match(/export\s+const\s+([A-Za-z0-9_]+)\s*[=:]/);
     if (!idMatch || !exportMatch) continue;
     const moduleId = idMatch[1];
     const exportName = exportMatch[1];
-    if (!new RegExp(`\\\\b${exportName}\\\\b`).test(runtimeSource)) {
+    if (!new RegExp(`\\b${exportName}\\b`).test(runtimeSource)) {
       orphaned.push(`${entry.name} -> ${moduleId} (${exportName})`);
     }
   } catch (error) {
