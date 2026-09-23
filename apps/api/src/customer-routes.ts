@@ -157,6 +157,34 @@ export function registerCustomerRoutes(
   });
 
   router.register({
+    method: "PATCH",
+    path: "/api/v1/customers/addresses/:addressId",
+    module: "customer",
+    operation: "customer.manage_address",
+    permission: "customer.manage_address",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const address = await service.updateAddress(context, requiredParam(params.addressId, context.requestId), {
+        countryCode: requiredString(body.countryCode, "countryCode", context.requestId),
+        ...(body.administrativeArea !== undefined ? { administrativeArea: requiredNullableString(body.administrativeArea, "administrativeArea", context.requestId) ?? undefined } : {}),
+        ...(body.locality !== undefined ? { locality: requiredNullableString(body.locality, "locality", context.requestId) ?? undefined } : {}),
+        ...(body.district !== undefined ? { district: requiredNullableString(body.district, "district", context.requestId) ?? undefined } : {}),
+        ...(body.postalCode !== undefined ? { postalCode: requiredNullableString(body.postalCode, "postalCode", context.requestId) ?? undefined } : {}),
+        ...(body.streetLine1 !== undefined ? { streetLine1: requiredNullableString(body.streetLine1, "streetLine1", context.requestId) ?? undefined } : {}),
+        ...(body.streetLine2 !== undefined ? { streetLine2: requiredNullableString(body.streetLine2, "streetLine2", context.requestId) ?? undefined } : {}),
+        ...(body.buildingNumber !== undefined ? { buildingNumber: requiredNullableString(body.buildingNumber, "buildingNumber", context.requestId) ?? undefined } : {}),
+        ...(body.unit !== undefined ? { unit: requiredNullableString(body.unit, "unit", context.requestId) ?? undefined } : {}),
+        ...(body.formatted !== undefined ? { formatted: requiredNullableString(body.formatted, "formatted", context.requestId) ?? undefined } : {}),
+        ...(body.locale !== undefined ? { locale: requiredNullableString(body.locale, "locale", context.requestId) ?? undefined } : {}),
+      });
+      return json({ data: address }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "GET",
     path: "/api/v1/customers/:customerId/addresses",
     module: "customer",
