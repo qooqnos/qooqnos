@@ -408,6 +408,14 @@ Latest verified commits:
 - d31481e4 — Repair migration lock JSON separator after 0049
 - 5199e4a — Make Fulfillment a composite workspace build target
 - 1b4011cb — Add Fulfillment to root TypeScript build graph
+- 78a38f41 — Add BillingRepository plan listing
+- 3ceddd89 — Add BillingService plan listing capability
+- 03f5d4d8 — Expose canonical Billing plan listing route
+- 346b788b — Register Billing routes in canonical router
+- 61327406 — Test protected Billing plan route
+- 3beb6ab2 — Fix unused Billing plan listing context argument
+- f0d4464d — Remove unused Billing route dependencies
+- 13457e45 — Fix Billing plan service RequestContext import
 - e15e16e — Finalize Fulfillment continuity ledger after migration verification reset
 - fe44de5e — Test Booking availability generation across DST and capacity constraints
 - 426196ce — Finalize Automation lifecycle + Outbox transition verification
@@ -428,7 +436,7 @@ Latest verified commits:
 - e15721d — Expose Integration sync job API capability
 - 56591ab — Test protected Integration sync job route
 
-CI verification: commit `1b4011cb32f7a9a6be98575e8bfd4391e0dcd805` passed both GitHub Actions `CI` and `Phoenix verification` (run IDs `35819495147` and `35819495077`). Format, lint, migration lock verification, typecheck, build and unit tests were green.
+CI verification: commit `13457e4554584bb002adb0b1d8f6145475a2b356` passed both GitHub Actions `CI` and `Phoenix verification` (run IDs `35819822179` and `35819822174`). Format, lint, migration lock verification, typecheck, build and unit tests were green.
 
 Review moderation note: migration 0048 completes moderation/reporting/reputation projection storage and API/service behavior.
 
@@ -454,7 +462,7 @@ Communication note: migration 0035 establishes provider-neutral Conversation/Mes
 
 Billing runtime note: the API Seller AI composition now uses the real D1-backed BillingService. No fallback unavailable Billing service is used for the production path; missing plan/subscription/entitlement state fails the operation closed.
 
-Billing note: migrations 0033–0034 establish plan/price/subscription/entitlement/usage/provider-reference/reconciliation storage plus an atomic quota counter. Billing is the commercial entitlement authority; payment execution, invoices and financial ledger remain gated.
+Billing note: migrations 0033–0034 establish plan/price/subscription/entitlement/usage/provider-reference/reconciliation storage plus an atomic quota counter. Billing is the commercial entitlement authority; payment execution, invoices and financial ledger remain gated. `GET /api/v1/billing/plans` is now exposed through the canonical BillingService and router permission `billing.plan.read`; subscription/entitlement/usage routes remain gated until a precise business-scope selector contract exists.
 
 Commerce note: migrations 0031–0032 establish the Commerce-owned Cart/Checkout/PriceSnapshot/Order transaction boundary and integrity hardening. Cart/Checkout/Order API routes are live in the canonical router; Order creation/status transitions are idempotent/CAS and emit Outbox events. Billing/Payment remains authoritative for payment execution, financial settlement, refunds and invoices.
 
