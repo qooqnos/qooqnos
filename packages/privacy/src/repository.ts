@@ -303,6 +303,32 @@ export class PrivacyRepository extends Repository {
     return current;
   }
 
+  async completeClaimedRequest(
+    input: {
+      readonly requestId: EntityId;
+      readonly resultReference?: string;
+      readonly now: string;
+    },
+  ): Promise<boolean> {
+    const result = await this.database.transaction([
+      {
+        sql: "UPDATE privacy_requests SET status='completed', completed_at=?, result_reference=COALESCE(?, result_reference), updated_at=? WHERE id=? AND status='processing'",
+        params: [input.now, input.resultReference ?? null, input.now, input.requestId],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) SELECT ?, 'privacy.request.status_changed', 1, 'privacy_request', id, organization_id, workspace_id, ?, 'pending', 0, ?, ?, NULL FROM privacy_requests WHERE id=?",
+        params: [
+          input.requestId + ":status:completed",
+          JSON.stringify({ requestId: input.requestId, to: "completed" }),
+          input.now,
+          input.now,
+          input.requestId,
+        ],
+      },
+    ]);
+    return (result[0]?.meta?.changes ?? 0) === 1;
+  }
+
   async recordProcessing(context:RequestContext,input:{
     readonly id:EntityId; readonly requestId:EntityId; readonly moduleId:string; readonly action:string;
     readonly resourceReference?:string; readonly status:PrivacyProcessingRecord["status"]; readonly errorReference?:string; readonly processedAt?:string; readonly now:string;
