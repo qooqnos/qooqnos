@@ -126,6 +126,26 @@ export class CrmTimelineRepository extends Repository {
     return record;
   }
 
+  async listCustomerTimeline(
+    context: RequestContext,
+    customerId: EntityId,
+    limit = 100,
+  ): Promise<readonly CrmTimelineEventRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+
+    const rows = await this.database.all<TimelineRow>(
+      "SELECT e.id, e.organization_id AS organizationId, e.workspace_id AS workspaceId, e.relationship_id AS relationshipId, e.source_module AS sourceModule, e.source_event_id AS sourceEventId, e.event_type AS eventType, e.event_version AS eventVersion, e.occurred_at AS occurredAt, e.received_at AS receivedAt, e.actor_reference AS actorReference, e.visibility, e.redaction_class AS redactionClass, e.payload_json AS payloadJson, e.projection_version AS projectionVersion FROM crm_timeline_events e INNER JOIN customer_relationships cr ON cr.id = e.relationship_id WHERE cr.customer_id = ? AND e.organization_id = ? AND e.workspace_id = ? ORDER BY e.occurred_at DESC, e.id DESC LIMIT ?",
+      customerId,
+      organizationId,
+      workspaceId,
+      safeLimit,
+    );
+
+    return rows.map((row) => this.hydrate(row));
+  }
+
   async listRelationshipTimeline(
     context: RequestContext,
     relationshipId: EntityId,
