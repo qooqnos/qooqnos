@@ -20,7 +20,8 @@ The canonical architecture already established in `DATABASE_MODEL.md`, `ARCHITEC
 | Media | Media | MediaAsset and processing metadata |
 | Customer | Customer | Customer, Profile, Relationship |
 | Booking / Availability | Booking | Booking, BookingItem, Appointment, Schedule, Resource, availability rules/results |
-| Commerce | Commerce | Cart, Order, Payment, Refund, transaction snapshots |
+| Commerce | Commerce | Cart, Checkout, Order, commercial snapshots, transaction orchestration and references to financial state |
+| Billing / Payment | Billing | Payment execution, settlement, refunds, invoices and financial ledger |
 | Trust / Verification | Trust | Verification cases/evidence/checks/decisions, Reviews, Trust signals |
 | Matching | Matching | Need/request, candidate relation, match run/result |
 | Discovery | Discovery | Search/index/projection state only |
@@ -69,6 +70,7 @@ AI and plugins cannot mutate authoritative state except by invoking the owning c
 6. Verification truth belongs to Trust; Business consumes verification decisions through contracts/events.
 7. Discovery never becomes a source of truth for Business/Catalog/Trust.
 8. AI execution records use the canonical AI Runtime model; feature-specific execution ledgers are prohibited.
+9. Commerce may own payment/refund orchestration capabilities, but financial payment/refund/invoice truth remains Billing/Payment-owned.
 
 ## 6. Frozen cross-domain access rule
 
