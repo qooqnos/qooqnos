@@ -7,3 +7,4 @@ export * from "./manifest";
 export * from "./runtime-repository";
 
 export * from "./runtime-service";
+export * from "./worker";
