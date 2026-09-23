@@ -38,6 +38,7 @@ Phoenix Core
   └── Module Runtime
           │
           ├── Marketplace Module
+          ├── Customer Module
           ├── Beauty Module
           ├── Booking Module
           ├── CRM Module
