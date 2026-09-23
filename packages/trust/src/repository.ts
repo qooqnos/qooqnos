@@ -100,7 +100,7 @@ export class TrustReviewRepository extends Repository {
     const resolvedAt = status === "closed" ? now : current.resolvedAt;
 
     await this.database.run(
-      "UPDATE moderation_cases SET status = ?, resolved_at = ?, WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?)",
+      "UPDATE moderation_cases SET status = ?, resolved_at = ? WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?)",
       status,
       resolvedAt,
       id,
