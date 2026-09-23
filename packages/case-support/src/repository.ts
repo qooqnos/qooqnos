@@ -108,6 +108,98 @@ export class CaseSupportRepository extends Repository {
     );
   }
 
+  async listSlaActiveCases(context: RequestContext, now: string, limit = 200): Promise<readonly CaseRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = context.workspaceId ?? null;
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+    return this.database.all<CaseRecord>(
+      "SELECT c.id,c.organization_id AS organizationId,c.workspace_id AS workspaceId,c.case_type_id AS caseTypeId,c.status,c.priority,c.severity,c.subject_type AS subjectType,c.subject_id AS subjectId,c.requester_type AS requesterType,c.requester_id AS requesterId,c.source_type AS sourceType,c.source_reference AS sourceReference,c.queue_id AS queueId,c.assignee_id AS assigneeId,c.sla_id AS slaId,c.version,c.opened_at AS openedAt,c.resolved_at AS resolvedAt,c.closed_at AS closedAt,c.created_at AS createdAt,c.updated_at AS updatedAt FROM cases c INNER JOIN case_slas s ON s.id = c.sla_id WHERE c.organization_id=? AND (c.workspace_id IS NULL OR c.workspace_id=?) AND c.status NOT IN ('resolved','closed') AND s.effective_from <= ? AND (s.effective_to IS NULL OR s.effective_to > ?) ORDER BY c.opened_at ASC,c.id ASC LIMIT ?",
+      organizationId,
+      workspaceId,
+      now,
+      now,
+      safeLimit,
+    );
+  }
+
+  async hasCaseEvent(
+    context: RequestContext,
+    caseId: EntityId,
+    eventType: string,
+  ): Promise<boolean> {
+    await this.getRequired(context, caseId);
+    const row = await this.database.first<{ id: EntityId }>(
+      "SELECT id FROM case_events WHERE case_id=? AND event_type=? LIMIT 1",
+      caseId,
+      eventType,
+    );
+    return row !== null;
+  }
+
+  async recordFirstResponse(context: RequestContext, input: {
+    readonly caseId: EntityId;
+    readonly actorId: string;
+    readonly now: string;
+  }): Promise<void> {
+    await this.getRequired(context, input.caseId);
+    await this.database.run(
+      "INSERT OR IGNORE INTO case_events (id,case_id,event_type,actor_type,actor_id,from_status,to_status,payload_reference,correlation_id,occurred_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+      input.caseId + ":first_response",
+      input.caseId,
+      "case.first_response",
+      "human",
+      input.actorId.trim(),
+      null,
+      null,
+      null,
+      context.correlationId,
+      input.now,
+      input.now,
+    );
+  }
+
+  async recordSlaBreach(context: RequestContext, input: {
+    readonly caseId: EntityId;
+    readonly metric: "first_response" | "resolution";
+    readonly targetAt: string;
+    readonly now: string;
+  }): Promise<boolean> {
+    const caseRecord = await this.getRequired(context, input.caseId);
+    const eventId = input.caseId + ":sla_breached:" + input.metric;
+    const result = await this.database.transaction([
+      {
+        sql: "INSERT OR IGNORE INTO case_events (id,case_id,event_type,actor_type,actor_id,from_status,to_status,payload_reference,correlation_id,occurred_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        params: [
+          eventId,
+          input.caseId,
+          "case.sla_breached",
+          "system",
+          "system",
+          caseRecord.status,
+          caseRecord.status,
+          JSON.stringify({ metric: input.metric, targetAt: input.targetAt }),
+          context.correlationId,
+          input.now,
+          input.now,
+        ],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?, ?, 1, 'case', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          eventId + ":outbox",
+          "case.sla_breached",
+          input.caseId,
+          caseRecord.organizationId,
+          caseRecord.workspaceId,
+          JSON.stringify({ caseId: input.caseId, metric: input.metric, targetAt: input.targetAt }),
+          input.now,
+          input.now,
+        ],
+      },
+    ]);
+    return (results[0]?.meta?.changes ?? 0) === 1;
+  }
+
   async transition(context: RequestContext, input: {
     readonly id: EntityId;
     readonly status: CaseStatus;
