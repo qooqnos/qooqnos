@@ -12,8 +12,8 @@ The latest code-bearing `main` checkpoint verified in GitHub Actions is:
 
 Both required workflows passed:
 
-- **CI:** run `35841847298` — success
-- **Phoenix verification:** run `35841847334` — success
+- **CI:** run `35867835880` — success
+- **Phoenix verification:** run `35867835863` — success
 
 The verification path passed format/lint checks, migration-lock verification, TypeScript typecheck, workspace build, and the unit-test suite: **69 test files / 195 tests passed**.
 
