@@ -404,7 +404,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The current verified head `0258d25b32556f7eb83936a749ac880b9adda167` passed both CI and Phoenix verification (CI `35897343025`; Phoenix verification `35897343014`). Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The current verified head `b9e9a5131e0123450dd8642975ae739537ca278b` passed both CI and Phoenix verification (CI `35897607266`; Phoenix verification `35897607158`). Full external D1 application has not yet been executed.
 
 Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events, Automation scheduled execution, AI durable Seller AI worker resolution, privacy consent expiry and approved-request orchestration are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processing, communication consent/anti-spam policy and external adapters, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
 
@@ -458,6 +458,8 @@ Latest verified commits:
 - 397de04 — Implement Privacy approved-request worker orchestration
 - f3d5067 — Run Privacy subject-request worker from scheduled Worker
 - b4db6ef — Test Privacy request claim boundary
+- a27b37e — Strengthen Privacy claim test to model CAS transition
+- b9e9a51 — Synchronize verification and reconciliation snapshots
 - 5869597 — Test canonical Matching Connect flow
 - 421a91c — Keep Matching Connect dependency optional for non-connect consumers
 - a06eb07 — Make Match Connect selection-bound and replay-safe
