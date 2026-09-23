@@ -446,7 +446,7 @@ Fulfillment 0049 note: package `@qooqnos/fulfillment` and canonical API routes a
 
 Fulfillment note: migration 0049 establishes the reusable Fulfillment & Service Delivery execution model across physical, digital and service obligations. Commerce/Booking/Billing remain authoritative for upstream commitments and finance; Fulfillment owns execution state and evidence. Review target types remain canonical Business/Offering/Product only.
 
-Matching execution note: retrieval/ranking is wired through Discovery projections with deterministic eligibility-first ranking and replay-safe candidate reuse. `Match → Connect` is now implemented as the canonical Matching orchestration: it requires an explicit selected decision, resolves the canonical Business target, creates/replays the existing Customer↔Business relationship, and advances the MatchRequest to `connected`. Connect does not create a second relationship or supply source of truth.
+Matching execution note: retrieval/ranking is wired through Discovery projections with deterministic eligibility-first ranking and replay-safe candidate reuse. `Match → Connect` is implemented as the canonical Matching orchestration: it requires an explicit selected decision, resolves the canonical Business target, creates/replays the existing Customer↔Business relationship, and advances the MatchRequest to `connected`. Connect does not create a second relationship or supply source of truth.
 
 Matching Connect note: `packages/matching/src/service.ts`, `packages/matching/src/repository.ts`, `apps/api/src/matching-routes.ts`, and `packages/database/src/customer-relationship-repository.ts` provide the canonical connection boundary. Commit `5869597` is covered by green CI and Phoenix verification runs.
 
@@ -594,3 +594,6 @@ pass CI build + tests
 ```
 
 No new table should be introduced merely to move the completion checklist forward.
+
+
+CI verification checkpoint: commit `d32953ab4b9957d2256fe5d485ca0188befb4eb8` passed GitHub CI and Phoenix verification with Format, Lint, migration lock, Typecheck, Build and **173 tests / 61 suites** passing. No PR was created.
