@@ -24,6 +24,14 @@ export class FulfillmentService {
     await this.options.authorization.assert({context,permission:"fulfillment.plan",requireAuthentication:true,requireWorkspace:true});
     return this.options.repository.createShipment(context,{...input,id:this.options.id(),now:this.options.now()});
   }
+  async createServiceDelivery(context:RequestContext,input:{
+    readonly fulfillmentItemId:EntityId;readonly bookingRef:EntityId;readonly providerRef?:string;readonly serviceLocationRef?:string;
+    readonly scheduledFrom?:string;readonly scheduledTo?:string;
+  }){
+    await this.options.authorization.assert({context,permission:"fulfillment.plan",requireAuthentication:true,requireWorkspace:true});
+    return this.options.repository.createServiceDelivery(context,{...input,id:this.options.id(),now:this.options.now()});
+  }
+
   async completeService(context:RequestContext,input:{readonly serviceDeliveryId:EntityId;readonly completedByActorRef:string;readonly completedAt:string;readonly confirmationType:string;readonly customerConfirmationRef?:string;readonly providerConfirmationRef?:string;readonly evidenceRef?:string}){
     await this.options.authorization.assert({context,permission:"fulfillment.confirm_service_completion",requireAuthentication:true,requireWorkspace:true});
     return this.options.repository.completeService(context,{...input,id:this.options.id(),now:this.options.now()});
