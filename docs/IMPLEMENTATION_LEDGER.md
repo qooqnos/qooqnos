@@ -45,7 +45,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Automation workflow engine | 🟢 Schema/package/repository/service/API/worker implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts; apps/api/src/automation-worker.ts; apps/api/src/automation-execution-worker.ts |
 | Automation capability executor | 🟢 Runtime registry/executor/composition/worker implemented | packages/runtime/src/capabilities.ts; packages/automation/src/executor.ts; packages/automation/src/repository.ts; apps/api/src/capabilities.ts |
 | AI Runtime persistence | 🟢 Schema/repository/runtime composition implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/runtime-client.ts; apps/api/src/ai-composition.ts |
-| AI Runtime worker lease boundary | 🟢 Durable lease/claim/reclaim/resolver/scheduler implemented | migrations/0053_ai_runtime_worker_leases.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/worker.ts; packages/ai/src/runtime-input-resolver.ts; apps/api/src/ai-composition.ts; apps/api/src/index.ts |
+| AI Runtime worker lease boundary | 🟢 Durable lease/claim/reclaim/resolver/scheduler implemented | migrations/0054_discovery_index_observability.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/worker.ts; packages/ai/src/runtime-input-resolver.ts; apps/api/src/ai-composition.ts; apps/api/src/index.ts |
 | Integration core | 🟢 Schema/package/repository/service/API/durable worker-boundary implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; packages/integration/src/adapter.ts; packages/integration/src/worker.ts; apps/api/src/integration-routes.ts; apps/api/src/integration-worker.ts |
 | Discovery index generation / evaluation | 🟢 Schema/package/repository/service/test implemented | migrations/0054_discovery_index_observability.sql; packages/discovery/src/repository.ts; packages/discovery/src/service.ts; packages/discovery/src/index-observability.test.ts |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
@@ -561,7 +561,7 @@ The API runtime references these migration sources:
 0050_case_support_core.sql
 0051_communication_templates.sql
 0052_moderation_cases.sql
-0053_ai_runtime_worker_leases.sql
+0054_discovery_index_observability.sql
 0054_discovery_index_observability.sql
 ```
 
