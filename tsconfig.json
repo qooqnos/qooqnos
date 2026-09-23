@@ -51,6 +51,9 @@
       "path": "./packages/fulfillment"
     },
     {
+      "path": "./packages/case-support"
+    },
+    {
       "path": "./packages/trust"
     },
     {
