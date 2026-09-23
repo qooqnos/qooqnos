@@ -849,6 +849,20 @@ A future migration may create a table only after this checklist is complete:
 - migration dependency and rollback/recovery strategy defined;
 - no existing table/capability already owns the same fact.
 
+## 17.1 Communication Template Registry
+
+### `communication_templates`
+
+`id`, organization_id?, workspace_id?, template_key, intent, channel, owner_reference, status, created_at, updated_at.
+
+Template identity is scoped to organization/workspace and channel. Provider-specific payloads remain outside the domain registry.
+
+### `communication_template_versions`
+
+`id`, template_id, version, locale, variables_schema_json, content_reference, content_checksum, approval_state, effective_from?, effective_to?, created_by, created_at, updated_at.
+
+Approved versions are immutable and can only be resolved when active, locale/channel/intent match, and the effective window is valid.
+
 ## 18. Privacy / Consent
 
 ### `privacy_consents`
