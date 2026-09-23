@@ -428,11 +428,13 @@ export class CaseSupportRepository extends Repository {
     readonly targetReference: string;
     readonly requestedBy: string;
     readonly authorizationReference: string;
+    readonly organizationId: EntityId;
+    readonly workspaceId: EntityId | null;
   }[]> {
     const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
     await this.list(context, 1);
     return this.database.all(
-      "SELECT a.id, a.case_id AS caseId, a.capability, a.target_reference AS targetReference, a.requested_by AS requestedBy, a.authorization_reference AS authorizationReference FROM case_actions a INNER JOIN cases c ON c.id = a.case_id WHERE c.organization_id = ? AND (c.workspace_id IS NULL OR c.workspace_id = ?) AND a.status = 'approved' ORDER BY a.created_at ASC, a.id ASC LIMIT ?",
+      "SELECT a.id, a.case_id AS caseId, a.capability, a.target_reference AS targetReference, a.requested_by AS requestedBy, a.authorization_reference AS authorizationReference, c.organization_id AS organizationId, c.workspace_id AS workspaceId FROM case_actions a INNER JOIN cases c ON c.id = a.case_id WHERE c.organization_id = ? AND (c.workspace_id IS NULL OR c.workspace_id = ?) AND a.status = 'approved' ORDER BY a.created_at ASC, a.id ASC LIMIT ?",
       this.requireOrganization({ organizationId: context.tenantId }),
       context.workspaceId ?? null,
       safeLimit,
