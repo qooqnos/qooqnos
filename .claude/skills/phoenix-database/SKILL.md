@@ -20,3 +20,11 @@ Read `docs/DATABASE_MODEL.md` and the relevant module architecture document befo
 - Sensitive/regulated data requires purpose, least privilege, retention, audit, and privacy review.
 ## Done
 Verify migrations, constraints, indexes, query patterns, transactions, authorization, tenant isolation, auditability, tests, and relevant lint/typecheck/build checks.
+
+## Phoenix Continuation Guard
+
+D1 is the canonical relational source of truth. Before adding schema, read `docs/DATABASE_MODEL.md`, `docs/PHYSICAL_SCHEMA_BLUEPRINT.md`, `docs/DATABASE_PHYSICAL_RECONCILIATION.md`, and `docs/IMPLEMENTATION_LEDGER.md`.
+
+Never add a second table/service for an existing fact. Every new physical change is exactly one new module-owned numbered migration; never rewrite/renumber prior migrations; preserve lock/checksum integrity.
+
+After implementation, add tenant/integrity tests, update the ledger, commit to `main`, and continue to the next safe contract-backed slice.
