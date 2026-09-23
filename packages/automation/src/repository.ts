@@ -17,6 +17,32 @@ export interface WorkflowRecord {
   readonly updatedAt: string;
 }
 
+export interface AutomationScheduleRecord {
+  readonly id: EntityId;
+  readonly organizationId: EntityId | null;
+  readonly workspaceId: EntityId | null;
+  readonly timezone: string;
+  readonly recurrence: string;
+  readonly startAt: string;
+  readonly endAt: string | null;
+  readonly misfirePolicy: "skip" | "catch_up_once" | "catch_up_all";
+  readonly enabled: boolean;
+  readonly nextRunAt: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface AutomationScheduleTriggerRecord {
+  readonly scheduleId: EntityId;
+  readonly triggerId: EntityId;
+  readonly workflowId: EntityId;
+  readonly workflowVersionId: EntityId;
+  readonly organizationId: EntityId | null;
+  readonly workspaceId: EntityId | null;
+  readonly businessId: EntityId | null;
+  readonly workflowScope: "platform" | "organization" | "workspace" | "business";
+}
+
 export interface WorkflowExecutionRecord {
   readonly id: EntityId;
   readonly workflowId: EntityId;
@@ -37,6 +63,115 @@ export interface WorkflowExecutionRecord {
 
 export class AutomationRepository extends Repository {
   constructor(database: D1Database) { super(database); }
+
+  async createSchedule(context: RequestContext, input: {
+    readonly id: EntityId;
+    readonly timezone: string;
+    readonly recurrence: string;
+    readonly startAt: string;
+    readonly endAt?: string | undefined;
+    readonly misfirePolicy: AutomationScheduleRecord["misfirePolicy"];
+    readonly now: string;
+  }): Promise<AutomationScheduleRecord> {
+    validateRecurrence(input.recurrence);
+    if (Number.isNaN(Date.parse(input.startAt))) throw new DatabaseError("Automation schedule startAt is invalid");
+    if (input.endAt !== undefined && Number.isNaN(Date.parse(input.endAt))) {
+      throw new DatabaseError("Automation schedule endAt is invalid");
+    }
+    if (input.endAt !== undefined && input.endAt <= input.startAt) {
+      throw new DatabaseError("Automation schedule endAt must be after startAt");
+    }
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = context.workspaceId ?? null;
+    const nextRunAt = input.startAt > input.now ? input.startAt : nextRecurrenceAt(input.recurrence, input.startAt, input.now);
+    await this.database.run(
+      "INSERT INTO automation_schedules (id, organization_id, workspace_id, timezone, recurrence, start_at, end_at, misfire_policy, enabled, next_run_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)",
+      input.id,
+      organizationId ?? null,
+      workspaceId,
+      input.timezone.trim(),
+      input.recurrence.trim(),
+      input.startAt,
+      input.endAt ?? null,
+      input.misfirePolicy,
+      nextRunAt,
+      input.now,
+      input.now,
+    );
+    const schedule = await this.getSchedule(context, input.id);
+    if (!schedule) throw new DatabaseError("Automation schedule not found after creation");
+    return schedule;
+  }
+
+  async getSchedule(context: RequestContext, id: EntityId): Promise<AutomationScheduleRecord | null> {
+    return this.database.first<AutomationScheduleRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, timezone, recurrence, start_at AS startAt, end_at AS endAt, misfire_policy AS misfirePolicy, enabled, next_run_at AS nextRunAt, created_at AS createdAt, updated_at AS updatedAt FROM automation_schedules WHERE id = ? AND (organization_id IS NULL OR organization_id = ?) AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
+      id,
+      context.tenantId ?? null,
+      context.workspaceId ?? null,
+    );
+  }
+
+  async createScheduleTrigger(context: RequestContext, input: {
+    readonly id: EntityId;
+    readonly workflowId: EntityId;
+    readonly workflowVersionId: EntityId;
+    readonly scheduleId: EntityId;
+    readonly enabled?: boolean;
+    readonly now: string;
+  }): Promise<void> {
+    const workflow = await this.getWorkflow(context, input.workflowId);
+    const version = await this.database.first<{ id: EntityId; workflowId: EntityId; status: string }>(
+      "SELECT id, workflow_id AS workflowId, status FROM automation_workflow_versions WHERE id = ? AND workflow_id = ? LIMIT 1",
+      input.workflowVersionId,
+      input.workflowId,
+    );
+    if (!version) throw new DatabaseError("Automation workflow version not found");
+    const schedule = await this.getSchedule(context, input.scheduleId);
+    if (!schedule) throw new DatabaseError("Automation schedule not found");
+    if (workflow.workspaceId !== schedule.workspaceId) {
+      throw new DatabaseError("Automation schedule workspace does not match workflow workspace");
+    }
+    if (workflow.organizationId !== schedule.organizationId) {
+      throw new DatabaseError("Automation schedule organization does not match workflow organization");
+    }
+    await this.database.run(
+      "INSERT INTO automation_triggers (id, workflow_version_id, type, schedule_id, enabled, created_at) VALUES (?, ?, 'schedule', ?, ?, ?)",
+      input.id,
+      input.workflowVersionId,
+      input.scheduleId,
+      input.enabled === false ? 0 : 1,
+      input.now,
+    );
+  }
+
+  async listDueScheduleTriggers(now: string, limit = 100): Promise<readonly (AutomationScheduleTriggerRecord & { readonly nextRunAt: string; readonly recurrence: string; readonly misfirePolicy: AutomationScheduleRecord["misfirePolicy"]; readonly endAt: string | null; })[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+    return this.database.all(
+      "SELECT s.id AS scheduleId, t.id AS triggerId, w.id AS workflowId, v.id AS workflowVersionId, s.organization_id AS organizationId, s.workspace_id AS workspaceId, w.business_id AS businessId, w.scope AS workflowScope, s.next_run_at AS nextRunAt, s.recurrence, s.misfire_policy AS misfirePolicy, s.end_at AS endAt FROM automation_schedules s INNER JOIN automation_triggers t ON t.schedule_id = s.id AND t.type = 'schedule' AND t.enabled = 1 INNER JOIN automation_workflow_versions v ON v.id = t.workflow_version_id AND v.status = 'active' INNER JOIN automation_workflows w ON w.id = v.workflow_id AND w.status = 'active' WHERE s.enabled = 1 AND s.next_run_at IS NOT NULL AND s.next_run_at <= ? AND s.start_at <= ? AND (s.end_at IS NULL OR s.end_at > ?) ORDER BY s.next_run_at ASC, s.id ASC, t.id ASC LIMIT ?",
+      now,
+      now,
+      now,
+      safeLimit,
+    );
+  }
+
+  async claimScheduleOccurrence(
+    scheduleId: EntityId,
+    expectedNextRunAt: string,
+    nextRunAt: string | null,
+    now: string,
+  ): Promise<boolean> {
+    const result = await this.database.run(
+      "UPDATE automation_schedules SET next_run_at = ?, enabled = CASE WHEN ? IS NULL THEN 0 ELSE enabled END, updated_at = ? WHERE id = ? AND enabled = 1 AND next_run_at = ?",
+      nextRunAt,
+      nextRunAt,
+      now,
+      scheduleId,
+      expectedNextRunAt,
+    );
+    return (result.meta?.changes ?? 0) === 1;
+  }
 
   async createWorkflow(context: RequestContext, input: {
     readonly id: EntityId; readonly name: string; readonly scope: WorkflowRecord["scope"];
@@ -376,6 +511,33 @@ export class AutomationRepository extends Repository {
     );
     return this.getExecution(context, id);
   }
+}
+
+function validateRecurrence(value: string): void {
+  if (!/^P(?:(?:\\d+\\.?\\d*)D)?(?:T(?:(?:\\d+\\.?\\d*)H)?(?:(?:\\d+\\.?\\d*)M)?(?:(?:\\d+\\.?\\d*)S)?)?$/.test(value.trim())) {
+    throw new DatabaseError("Automation recurrence must be an ISO-8601 duration");
+  }
+  if (parseDurationMs(value) <= 0) throw new DatabaseError("Automation recurrence must be greater than zero");
+}
+
+function parseDurationMs(value: string): number {
+  const match = /^P(?:(\\d+\\.?\\d*)D)?(?:T(?:(\\d+\\.?\\d*)H)?(?:(\\d+\\.?\\d*)M)?(?:(\\d+\\.?\\d*)S)?)?$/.exec(value.trim());
+  if (!match) return 0;
+  const days = Number(match[1] ?? 0);
+  const hours = Number(match[2] ?? 0);
+  const minutes = Number(match[3] ?? 0);
+  const seconds = Number(match[4] ?? 0);
+  return (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000;
+}
+
+function nextRecurrenceAt(recurrence: string, startAt: string, now: string): string {
+  const step = parseDurationMs(recurrence);
+  if (!step) throw new DatabaseError("Automation recurrence is invalid");
+  let current = Date.parse(startAt);
+  const target = Date.parse(now);
+  if (Number.isNaN(current) || Number.isNaN(target)) throw new DatabaseError("Automation recurrence timestamps are invalid");
+  while (current <= target) current += step;
+  return new Date(current).toISOString();
 }
 
 function hashText(value: string): string {
