@@ -261,8 +261,7 @@ export class PrivacyRepository extends Repository {
     input: { readonly requestId: EntityId; readonly now: string },
   ): Promise<PrivacyRequestRecord | null> {
     const before = await this.database.first<PrivacyRequestRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, requestType, status, requested_by AS requestedBy, requested_at AS requestedAt, due_at AS dueAt, completed_at AS completedAt, result_reference AS resultReference, rejection_reason AS rejectionReason, created_at AS createdAt, updated_at AS updatedAt FROM privacy_requests WHERE id=? LIMIT 1"
-        .replace("requestType", "request_type AS requestType"),
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, request_type AS requestType, status, requested_by AS requestedBy, requested_at AS requestedAt, due_at AS dueAt, completed_at AS completedAt, result_reference AS resultReference, rejection_reason AS rejectionReason, created_at AS createdAt, updated_at AS updatedAt FROM privacy_requests WHERE id=? LIMIT 1",
       input.requestId,
     );
     if (!before || (before.status !== "approved" && before.status !== "processing")) return null;
