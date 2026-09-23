@@ -36,39 +36,6 @@ describe("AutomationExecutor", () => {
       outputReference: string | null;
     };
 
-    type RepositoryStub = {
-      getExecution: () => Promise<{
-        id: string;
-        workflowId: string;
-        workflowVersionId: string;
-        triggerId: string;
-        organizationId: string;
-        workspaceId: string;
-        businessId: string | null;
-        status: string;
-        inputReference: string | null;
-        correlationId: string;
-        traceId: string;
-        startedAt: string | null;
-        completedAt: string | null;
-        createdAt: string;
-        updatedAt: string;
-      }>;
-      listActions: () => Promise<readonly [{
-        id: ReturnType<typeof brandId<"EntityId">>;
-        capability: string;
-        inputMappingJson: string;
-        sequence: number;
-      }]>;
-      getStepExecution: (_ctx: RequestContext, _executionId: string, stepId: string) => Promise<StepState | null>;
-      createStepExecution: (_ctx: RequestContext, input: { id: string; executionId: string; stepId: string; sequence: number; now: string }) => Promise<StepState>;
-      updateStepExecution: (_ctx: RequestContext, input: { id: string; status: StepState["status"]; outputReference?: string; inputReference?: string; startedAt?: string; completedAt?: string; now: string }) => Promise<void>;
-      createExecutionAttempt: () => Promise<void>;
-      completeExecutionAttempt: () => Promise<void>;
-      recordExecutionError: () => Promise<void>;
-      setExecutionStatus: (_ctx: RequestContext, _id: string, status: string, now?: string) => Promise<undefined>;
-    };
-
     const existingSteps = new Map<string, StepState>();
     let executionStatus = "running";
 
