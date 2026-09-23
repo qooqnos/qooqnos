@@ -27,7 +27,49 @@ describe("AutomationExecutor", () => {
       },
     });
 
-    const existingSteps = new Map<string, any>();
+    type StepState = {
+      readonly id: string;
+      readonly executionId: string;
+      readonly stepId: string;
+      status: "pending" | "running" | "completed" | "failed";
+      readonly sequence: number;
+      outputReference: string | null;
+    };
+
+    type RepositoryStub = {
+      getExecution: () => Promise<{
+        id: string;
+        workflowId: string;
+        workflowVersionId: string;
+        triggerId: string;
+        organizationId: string;
+        workspaceId: string;
+        businessId: string | null;
+        status: string;
+        inputReference: string | null;
+        correlationId: string;
+        traceId: string;
+        startedAt: string | null;
+        completedAt: string | null;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+      listActions: () => Promise<readonly [{
+        id: ReturnType<typeof brandId<"EntityId">>;
+        capability: string;
+        inputMappingJson: string;
+        sequence: number;
+      }]>;
+      getStepExecution: (_ctx: RequestContext, _executionId: string, stepId: string) => Promise<StepState | null>;
+      createStepExecution: (_ctx: RequestContext, input: { id: string; executionId: string; stepId: string; sequence: number; now: string }) => Promise<StepState>;
+      updateStepExecution: (_ctx: RequestContext, input: { id: string; status: StepState["status"]; outputReference?: string; inputReference?: string; startedAt?: string; completedAt?: string; now: string }) => Promise<void>;
+      createExecutionAttempt: () => Promise<void>;
+      completeExecutionAttempt: () => Promise<void>;
+      recordExecutionError: () => Promise<void>;
+      setExecutionStatus: (_ctx: RequestContext, _id: string, status: string, now?: string) => Promise<undefined>;
+    };
+
+    const existingSteps = new Map<string, StepState>();
     let executionStatus = "running";
 
     const repository = {
@@ -61,14 +103,17 @@ describe("AutomationExecutor", () => {
       async getStepExecution(_ctx: RequestContext, _executionId: string, stepId: string) {
         return existingSteps.get(stepId) ?? null;
       },
-      async createStepExecution(_ctx: RequestContext, input: any) {
-        const row = { id: input.id, executionId: input.executionId, stepId: input.stepId, status: "pending", sequence: input.sequence, outputReference: null };
+      async createStepExecution(_ctx: RequestContext, input: { id: string; executionId: string; stepId: string; sequence: number }) {
+        const row: StepState = { id: input.id, executionId: input.executionId, stepId: input.stepId, status: "pending", sequence: input.sequence, outputReference: null };
         existingSteps.set(input.stepId, row);
         return row;
       },
-      async updateStepExecution(_ctx: RequestContext, input: any) {
-        const row = [...existingSteps.values()].find((entry: any) => entry.id === input.id);
-        if (row) Object.assign(row, { status: input.status, outputReference: input.outputReference ?? row.outputReference });
+      async updateStepExecution(_ctx: RequestContext, input: { id: string; status: StepState["status"]; outputReference?: string }) {
+        const row = [...existingSteps.values()].find((entry) => entry.id === input.id);
+        if (row) {
+          row.status = input.status;
+          row.outputReference = input.outputReference ?? row.outputReference;
+        }
       },
       async createExecutionAttempt() {},
       async completeExecutionAttempt() {},
@@ -77,7 +122,7 @@ describe("AutomationExecutor", () => {
         executionStatus = status;
         return undefined;
       },
-    } as any;
+    } as unknown as RepositoryStub;
 
     const executor = new AutomationExecutor({
       repository,
