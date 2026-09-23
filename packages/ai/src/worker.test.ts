@@ -9,6 +9,7 @@ function operation(status: string = "started"): AiOperationRecord {
     organizationId: brandId<"EntityId">("tenant-1"),
     workspaceId: brandId<"EntityId">("workspace-1"),
     actorId: brandId<"EntityId">("user-1"),
+    sessionId: brandId<"EntityId">("session-1"),
     operationType: "seller.product.generate",
     operationVersion: 1,
     requestId: "request-1",
