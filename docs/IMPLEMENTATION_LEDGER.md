@@ -586,6 +586,7 @@ The API runtime references these migration sources:
 0050_case_support_core.sql
 0051_communication_templates.sql
 0052_moderation_cases.sql
+0053_ai_runtime_worker_leases.sql
 0054_discovery_index_observability.sql
 0055_communication_policy_consent.sql
 0056_communication_required_suppression.sql
@@ -631,14 +632,14 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0056_communication_required_suppression.sql`. The migration lock/catalog has been reconciled through 0056; a fresh CI run for the latest changes is not yet visible.
+The canonical physical inventory reaches migration `0056_communication_required_suppression.sql`. The migration lock/catalog is reconciled through 0056, and the current main head has passed both CI and Phoenix verification.
 
-Current verified head: `9364f37d795b06fa5a3f5b7bba8add074f1478f7`.
+Current verified head: `314333b52091b9c74b991871457c645a02974eb6`.
 GitHub Actions on this exact head completed successfully:
-- Phoenix verification run `35903133578`
-- CI run `35903133615`
+- Phoenix verification run `35915438197`
+- CI run `35915438117`
 
-The current verification workflow checks migration-lock integrity, workspace build and tests.
+The current verification workflows check migration-lock integrity, workspace build and tests; CI additionally runs lint/typecheck/Worker dry-run.
 
 The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above. Privacy subject scope validation was added in commits `afcff1bb0023187024b12508f7eb7cf175d8bec6` and `c121e50055d3a2e3ca1023c88c13a2f5bb403fa0`, then reconciled into the verified checkpoint `d122981098cc1d517664afdce3d33d3333e82afa`.
 
