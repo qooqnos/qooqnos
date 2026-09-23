@@ -34,12 +34,15 @@ describe("PrivacyRepository", () => {
     let writes=0;
     const statement:D1PreparedStatementLike={
       bind(){return this;},
-      async first<T>(){return {
-        id:"consent-1",organizationId:"tenant-1",workspaceId:"workspace-1",subjectType:"customer",
-        subjectId:"customer-1",purpose:"marketing",consentVersion:"v2",status:"granted",source:"web",
-        evidenceReference:null,grantedAt:"2026-09-22T00:00:00.000Z",revokedAt:null,expiresAt:null,
-        createdAt:"2026-09-22T00:00:00.000Z",updatedAt:"2026-09-22T00:00:00.000Z"
-      } as T;},
+      async first<T>(sql?: string){
+        if (sql?.includes("FROM customers")) return { found: 1 } as T;
+        return {
+          id:"consent-1",organizationId:"tenant-1",workspaceId:"workspace-1",subjectType:"customer",
+          subjectId:"customer-1",purpose:"marketing",consentVersion:"v2",status:"granted",source:"web",
+          evidenceReference:null,grantedAt:"2026-09-22T00:00:00.000Z",revokedAt:null,expiresAt:null,
+          createdAt:"2026-09-22T00:00:00.000Z",updatedAt:"2026-09-22T00:00:00.000Z"
+        } as T;
+      },
       async all<T>(){return {results:[] as T[]};},
       async run(){writes+=1;return {success:true};}
     };
@@ -58,6 +61,31 @@ describe("PrivacyRepository", () => {
     expect(result.status).toBe("granted");
     expect(writes).toBe(2);
   });
+
+  it("rejects a subject outside the tenant scope before recording consent", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new PrivacyRepository(new D1Database(raw));
+
+    await expect(repository.createConsent(context(), {
+      id: brandId<"EntityId">("consent-foreign"),
+      subjectType: "customer",
+      subjectId: brandId<"EntityId">("customer-foreign"),
+      purpose: "marketing",
+      consentVersion: "v2",
+      source: "web",
+      now: "2026-09-23T00:00:00.000Z",
+    })).rejects.toThrow("current organization/workspace scope");
+  });
+
   it("expires only currently granted consents", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
