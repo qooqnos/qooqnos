@@ -37,3 +37,13 @@ The repository's CI verifies migration-lock integrity, TypeScript, build, lint/m
 ## Current non-goals
 
 No provider credentials, D1 UUIDs, Queue names, or R2 bucket names are invented in source control.
+
+
+## Production preflight
+
+The repository now provides two fail-closed checks before production deployment:
+
+- `pnpm verify:production-bindings` rejects missing production D1, Queue and R2 bindings or placeholder resource IDs.
+- `pnpm predeploy:prod` runs production binding verification, migration-lock verification, lint, typecheck, build and tests.
+
+These checks intentionally fail until real Cloudflare resources are provisioned and their bindings are uncommented/configured in `wrangler.toml`. No fabricated Cloudflare IDs are stored in source control.
