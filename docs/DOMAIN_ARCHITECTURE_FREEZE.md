@@ -21,14 +21,14 @@ The canonical architecture already established in `DATABASE_MODEL.md`, `ARCHITEC
 | Customer | Customer | Customer, Profile, Relationship |
 | Booking / Availability | Booking | Booking, BookingItem, Appointment, Schedule, Resource, availability rules/results |
 | Commerce | Commerce | Cart, Checkout, Order, commercial snapshots, transaction orchestration and references to financial state |
-| Billing / Payment | Billing | Payment execution, settlement, refunds, invoices and financial ledger |
+| Billing / Payment | Billing | Plans, subscriptions, entitlements, usage, payment execution, settlement, refunds, invoices and financial ledger |
 | Trust / Verification | Trust | Verification cases/evidence/checks/decisions, Reviews, Trust signals |
 | Matching | Matching | Need/request, candidate relation, match run/result |
 | Discovery | Discovery | Search/index/projection state only |
 | Communication | Communication | Conversation, Message, Notification, Delivery |
 | AI | AI + canonical AI Runtime | Agent/context; AI execution via Runtime |
 | Automation | Automation | Workflow and execution |
-| Billing | Billing | Plans, subscriptions, entitlements, usage, customer billing |
+
 | Integration | Integration | External accounts, webhooks, sync state |
 | Platform | Platform | Audit, idempotency, outbox, module lifecycle |
 
