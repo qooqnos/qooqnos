@@ -43,7 +43,7 @@ export class CapabilityRegistry {
       requestContext,
       capability: id,
       input,
-      workflowExecutionId,
+      ...(workflowExecutionId !== undefined ? { workflowExecutionId } : {}),
     });
   }
 
