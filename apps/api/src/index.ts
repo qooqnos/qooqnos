@@ -23,6 +23,7 @@ import { processAutomationExecutions } from "./automation-execution-worker";
 import { processCaseSla } from "./case-sla-worker";
 import { processCaseActions } from "./case-action-worker";
 import { processPrivacyConsentExpiry } from "./privacy-worker";
+import { processIntegration } from "./integration-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 
 const homePage = (version: string): string => `<!doctype html>
@@ -549,6 +550,7 @@ export default {
     await processCaseSla(env, now);
     await processCaseActions(env, now);
     await processPrivacyConsentExpiry(env, now);
+    await processIntegration(env, now);
   },
 
   async queue(
