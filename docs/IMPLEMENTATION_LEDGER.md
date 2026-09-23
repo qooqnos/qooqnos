@@ -402,6 +402,7 @@ Latest verified commits:
 - 1affcd9 — Assert persisted AI provider/model identities
 - 4645d91 — Persist successful AI provider attempts in runtime audit trail
 - bd50aa8 — Test persisted AI provider-attempt audit record
+- fe44de5e — Test Booking availability generation across DST and capacity constraints
 - 426196ce — Finalize Automation lifecycle + Outbox transition verification
 - 793b494 — Test Automation workflow lifecycle controls
 - 1cc6cba — Expose Automation workflow activate/pause/retire routes
