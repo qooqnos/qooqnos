@@ -688,6 +688,8 @@ Lifecycle hardening commits: `77d7945` / `9d3c85f` (Matching latest-decision Con
 
 Business lifecycle reconciliation note: `Business.status` owns marketplace lifecycle (`draft | active | suspended | archived`); `onboarding_profiles.status` owns onboarding workflow (`draft | submitted | verified | rejected`). No additional Business status table/column is authorized by the reconciliation.
 
+Commerce/Billing ownership reconciliation note: Commerce owns Cart/Checkout/Order/commercial transaction orchestration. Billing/Payment owns Payment/Refund/Invoice and financial ledger truth. Existing Commerce payment/refund/invoice capability names remain orchestration contracts and must not create parallel financial aggregates.
+
 Migration continuity remains mandatory: never renumber, rewrite or replace an existing migration. Every physical change must use a new numbered migration and preserve the canonical migration lock.
 
 
