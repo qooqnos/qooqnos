@@ -247,6 +247,32 @@ export class BookingRepository extends Repository {
         ],
       },
       {
+        sql: "INSERT INTO booking_status_history (id, booking_id, from_status, to_status, changed_at, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+        params: [
+          input.bookingId + ":status:confirmed",
+          input.bookingId,
+          null,
+          "confirmed",
+          input.now,
+          input.now,
+        ],
+      },
+      {
+        sql: "INSERT INTO appointment_events (id, appointment_id, event_type, event_version, payload_json, occurred_at, created_at) VALUES (?, ?, 'appointment.confirmed', 1, ?, ?, ?)",
+        params: [
+          input.bookingId + ":appointment:confirmed",
+          input.bookingId + ":appointment",
+          JSON.stringify({
+            bookingId: input.bookingId,
+            startsAt: input.startsAt,
+            endsAt: input.endsAt,
+            resourceId: input.resourceId ?? null,
+          }),
+          input.now,
+          input.now,
+        ],
+      },
+      {
         sql: "INSERT INTO booking_items (id, booking_id, offering_id, quantity, title_snapshot, price_minor_snapshot, currency_snapshot, duration_seconds_snapshot, policy_snapshot, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params: [
           input.bookingId + ":item",
