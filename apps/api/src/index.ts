@@ -18,6 +18,7 @@ import { getDatabase } from "./database";
 import { checkDatabase } from "./readiness";
 import { processPendingTrustExpiries } from "./trust-worker";
 import { processCommunicationDispatch } from "./communication-worker";
+import { processAutomationSchedules } from "./automation-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 
 const homePage = (version: string): string => `<!doctype html>
@@ -539,6 +540,7 @@ export default {
     await publishPendingOutbox(env, now);
     await processCommunicationDispatch(env, now);
     await processPendingTrustExpiries(env, now);
+    await processAutomationSchedules(env, now);
   },
 
   async queue(
