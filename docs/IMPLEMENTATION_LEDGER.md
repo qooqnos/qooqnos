@@ -624,34 +624,14 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0054_discovery_index_observability.sql` and the migration lock/catalog verification is green on the current head. The latest fully verified green head is `de2454120e57b3f771b9f334fed87fd7de66273a`; CI and Phoenix verification are green on this current documentation-reconciled head.
+The canonical physical inventory reaches migration `0054_discovery_index_observability.sql` and the migration lock/catalog verification is green on the current head.
 
-Current engineering state:
+Current verified head: `9364f37d795b06fa5a3f5b7bba8add074f1478f7`.
+GitHub Actions on this exact head completed successfully:
+- Phoenix verification run `35903133578`
+- CI run `35903133615`
 
-```
-CI + Phoenix verification
-→ canonical D1 schema/runtime/build gates green
-→ Booking / Commerce / Billing / Communication / Automation / AI Runtime / Integration
-  / Privacy / Demand-Matching / Trust / Fulfillment / Case Support operational paths implemented
-→ remaining work is provider-specific or explicitly contract-gated
-→ no new schema should be invented to close an external/provider gate
-```
-
-Production binding gate: `wrangler.toml` intentionally keeps D1/Queue/R2 production resources unbound until the real Cloudflare resource IDs/names exist; `scripts/verify-production-bindings.mjs` fails closed rather than accepting placeholders.
-
-Open completion gates are deliberately limited to:
-- real Cloudflare D1 / R2 / Queue provisioning and production binding configuration;
-- provider-specific Integration/Communication/Fulfillment adapters and credential contracts;
-- Billing/Payment invoice, payment execution and financial-ledger contract;
-- Privacy export/delete/retention workers;
-- matching learning-signal and broader Act contracts;
-- concrete Automation rollback/compensation contracts;
-- new AI operation resolvers when additional operation types are introduced;
-- Localization country/legal registries, Documents and Analytics where field-level contracts are closed.
-
-CustomerProfile remains a logical aggregate over existing Customer-owned records; CRM timeline events are canonical projection input and do not require a duplicate timeline table.
-
-Verification checkpoint: `de2454120e57b3f771b9f334fed87fd7de66273a` passed GitHub Actions CI and Phoenix verification. Current successful runs: CI `35899964284`, Phoenix verification `35899964188`. The workflows passed migration-lock verification, typecheck/build, lint and the test suite.
+The current verification workflow checks migration-lock integrity, workspace build and tests.
 
 The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above. Privacy subject scope validation was added in commits `afcff1bb0023187024b12508f7eb7cf175d8bec6` and `c121e50055d3a2e3ca1023c88c13a2f5bb403fa0`, then reconciled into the verified checkpoint `d122981098cc1d517664afdce3d33d3333e82afa`.
 
