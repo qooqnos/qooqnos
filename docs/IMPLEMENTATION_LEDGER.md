@@ -19,6 +19,8 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Migration ownership model | ✅ Canonical | docs/MIGRATION_BLUEPRINT.md |
 | Migration catalog contract | ✅ Implemented | docs/MIGRATION_CATALOG_IMPLEMENTATION.md |
 | Migration lock integrity | ✅ Implemented | docs/MIGRATION_LOCK_STRATEGY.md |
+| Canonical source boundary guard | 🟢 CI guard implemented | scripts/verify-canonical-source-boundary.mjs; package.json; .github/workflows/ci.yml; .github/workflows/phoenix-verification.yml |
+| Runtime module registry guard | 🟢 CI guard implemented | scripts/verify-runtime-module-registry.mjs; package.json; .github/workflows/ci.yml; .github/workflows/phoenix-verification.yml |
 | D1 database client boundary | ✅ Implemented | packages/database/src/client.ts |
 | D1 runtime database boot boundary | ✅ Implemented | packages/runtime/src/boot.ts |
 | Foundation / onboarding / identity / business / catalog SQL | 🟢 Implemented in migration sequence | migrations/0001–0005 |
@@ -427,6 +429,17 @@ Review reputation note: migration 0048 completes Review lifecycle/report/respons
 Automation/Integration API note: Automation workflow/version/execution and Integration account/webhook/sync-job capabilities are registered in the canonical API router; durable claim/sync execution is implemented, while provider-specific adapters/credentials remain external gates.
 
 Latest verified commits:
+- 359d430c6ced62c89b0f3c53bc66beacbfc87275 — latest fully verified checkpoint before the canonical source/module registry guards
+- 2d068b1d1a017691071c54a3e105b508b194a2c5 — canonical source boundary guard
+- 1c0b2901cd9ad14e0ad7547e1734953006d72d0d — source-boundary CI wiring
+- 1e62f4d4ea72fc92c6fd8429e5023c00ac14bd97 — Phoenix verification wiring
+- e92ed1eedabab8c5058c318c2d22fd91f0259758 — production preflight source-boundary guard
+- be475620aff276affc86ade7d12cc24a0f60ae37 — narrowed legacy compatibility allowlist
+- 2f39535db072ee8a28f0b3af973098ce0f6bf15d — runtime module registry guard
+- 07df5600a4b010e94f5dd7e1734953006d72d0d — runtime registry package command
+- 9d83116a203e111986fd2e87bcb5263eedeb0300 — CI runtime registry wiring
+- 87dd3113dfaef658d5defd0c9af9e9f6ac2465de — Phoenix verification runtime registry wiring
+- bb275dc1321ab2ae902725c391794ec8b93dc788 — production preflight runtime registry guard
 - e1769126 — Expose persisted AI Runtime terminal results and normalize abstention operation state
 - d965b2e — Replay persisted AI Runtime terminal results without rerunning providers
 - 134a68a — Test AI Runtime terminal replay and abstention persistence
@@ -634,7 +647,9 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 The canonical physical inventory reaches migration `0056_communication_required_suppression.sql`. The migration lock/catalog is reconciled through 0056, and the current main head has passed both CI and Phoenix verification.
 
-Current verified head: `b4b0f86831c0c89186fd8361f436ea556aa0498d`.
+Current verified head: `359d430c6ced62c89b0f3c53bc66beacbfc87275`.
+
+Post-checkpoint guard changes are currently awaiting their own CI/Phoenix verification checkpoint; do not treat the guard commits above as fully verified until both workflows pass on the final resulting main head.
 GitHub Actions on this exact head completed successfully:
 - Phoenix verification run `35916185529`
 - CI run `35916185591`
