@@ -174,3 +174,43 @@ describe("TrustReviewRepository", () => {
       now: "2026-09-22T00:00:00.000Z",
     })).rejects.toThrow("policy version is required");
   });
+
+it("keeps generic ModerationCase tenant scoped", async () => {
+  const statement: D1PreparedStatementLike = {
+    bind() { return this; },
+    async first<T>() {
+      return {
+        id: "moderation-1",
+        organizationId: "tenant-1",
+        workspaceId: "workspace-1",
+        subjectType: "review",
+        subjectId: "review-1",
+        sourceType: "user_report",
+        sourceId: "report-1",
+        policyId: "policy-1",
+        policyVersion: "v1",
+        status: "open",
+        riskLevel: "medium",
+        createdAt: "2026-09-22T00:00:00.000Z",
+        resolvedAt: null,
+      } as T;
+    },
+    async all<T>() { return { results: [] as T[] }; },
+    async run() { return { success: true }; },
+  };
+  const raw: D1DatabaseLike = { prepare() { return statement; }, async batch() { return []; } };
+  const repository = new TrustReviewRepository(new D1Database(raw));
+
+  await expect(repository.createGenericModerationCase(context(), {
+    id: brandId<"EntityId">("moderation-1"),
+    subjectType: "review",
+    subjectId: brandId<"EntityId">("review-1"),
+    sourceType: "user_report",
+    sourceId: brandId<"EntityId">("report-1"),
+    policyId: "policy-1",
+    policyVersion: "v1",
+    riskLevel: "medium",
+    now: "2026-09-22T00:00:00.000Z",
+  })).resolves.toMatchObject({ status: "open", riskLevel: "medium" });
+});
+
