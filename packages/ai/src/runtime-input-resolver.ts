@@ -1,7 +1,7 @@
 import type { RequestContext } from "@qooqnos/core";
 import type { AIRuntimeRequest } from "@qooqnos/runtime";
 import type { AiOperationRecord } from "./runtime-repository";
-import { SELLER_AI_OPERATION_TYPES, type SellerProductInputRecord, type SellerProductSessionRepository } from "./seller-product-service";
+import { SELLER_AI_OPERATION_TYPES, type SellerProductSessionRepository } from "./seller-product-service";
 
 export interface SellerProductAIRuntimeInputResolverOptions {
   readonly repository: SellerProductSessionRepository;
