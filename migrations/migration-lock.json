@@ -371,6 +371,13 @@
       "moduleId": "ai",
       "checksum": "17ebc6b34653eb3045b836da8459984c0b382ad85d6077821a353c47e70119d1",
       "filename": "0053_ai_runtime_worker_leases.sql"
+    },
+    {
+      "id": "0054_discovery_index_observability",
+      "version": 54,
+      "moduleId": "discovery",
+      "filename": "0054_discovery_index_observability.sql",
+      "checksum": "242b0282b2658d03d3adf4b9ad6754250a809b746653d603ac3a791c6797c1fd"
     }
   ]
 }
