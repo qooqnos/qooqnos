@@ -33,39 +33,44 @@ if (lockChanged && migrationChanges.length === 0) {
   const baseEntries = new Map(
     (baseLock.migrations || []).map((entry) => [entry.id, entry]),
   );
+  const addedEntries = (headLock.migrations || []).filter(
+    (entry) => !baseEntries.has(entry.id),
+  );
   const changedEntries = (headLock.migrations || []).filter((entry) => {
     const previous = baseEntries.get(entry.id);
     return previous && JSON.stringify(previous) !== JSON.stringify(entry);
   });
 
-  if (changedEntries.length === 0) {
+  if (addedEntries.length === 0 && changedEntries.length === 0) {
     throw new Error(
-      "Migration lock changed without a recognized existing migration entry change.",
+      "Migration lock changed without a recognized migration entry add/change.",
     );
   }
 
-  for (const entry of changedEntries) {
+  for (const entry of [...addedEntries, ...changedEntries]) {
     const previous = baseEntries.get(entry.id);
-    if (
-      previous.version !== entry.version ||
-      previous.moduleId !== entry.moduleId ||
-      previous.filename !== entry.filename
-    ) {
-      throw new Error(
-        `Migration lock metadata changed without a migration SQL change: ${entry.filename}`,
-      );
-    }
+    if (previous) {
+      if (
+        previous.version !== entry.version ||
+        previous.moduleId !== entry.moduleId ||
+        previous.filename !== entry.filename
+      ) {
+        throw new Error(
+          `Migration lock metadata changed without a migration SQL change: ${entry.filename}`,
+        );
+      }
 
-    if (previous.checksum === entry.checksum) {
-      throw new Error(
-        `Migration lock changed without a checksum change: ${entry.filename}`,
-      );
+      if (previous.checksum === entry.checksum) {
+        throw new Error(
+          `Migration lock changed without a checksum change: ${entry.filename}`,
+        );
+      }
     }
 
     const sql = readFileSync(entry.filename);
     // A checksum-only correction is safe only when the lock now matches the
-    // canonical SQL source exactly. Any semantic SQL change must still travel
-    // with the migration file in the same commit range.
+    // canonical SQL source exactly. A newly appended lock entry is also valid
+    // when its SQL source exists and the checksum matches the canonical file.
     const { createHash } = await import("node:crypto");
     const checksum = createHash("sha256").update(sql).digest("hex");
     if (checksum !== entry.checksum) {
@@ -76,7 +81,7 @@ if (lockChanged && migrationChanges.length === 0) {
   }
 
   console.log(
-    `Migration history check: ${changedEntries.length} existing migration lock checksum correction(s) validated.`,
+    `Migration history check: ${addedEntries.length} new migration lock entry/entries and ${changedEntries.length} existing checksum correction(s) validated.`,
   );
 } else {
   console.log(
