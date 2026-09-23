@@ -31,7 +31,8 @@ This dictionary is the authoritative vocabulary for Phoenix. New code, schema, A
 | Discovery | Discovery | search, filters, facets, ranking, suggestions, projections |
 | Matching | Matching | requests, candidates, matches, scoring, recommendations |
 | Booking | Booking | availability, bookings, appointments, resources |
-| Commerce | Commerce | carts, orders, payments, refunds, invoices |
+| Commerce | Commerce | carts, checkout, orders, commercial snapshots, payment/refund orchestration references |
+| Billing / Payment | Billing | payment execution, settlement, refunds, invoices and financial truth |
 | Customer | Customer | customer representation, profiles, relationships, addresses |
 | Trust | Trust | verification, reviews, trust signals, moderation |
 | Communication | Communication | conversations, messages, notifications, delivery |
