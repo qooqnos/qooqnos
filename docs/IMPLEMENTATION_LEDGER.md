@@ -370,8 +370,8 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0052 remain numbered and are extended only through new migrations;
-- migrations 0024–0052 are preserved in the canonical lock sequence.
+- canonical migrations 0001–0053 remain numbered and are extended only through new migrations;
+- migrations 0024–0053 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: GitHub Actions now provides the authoritative build/test verification path; the latest observed pipelines progressed through build/typecheck and surfaced only test-suite contract failures, which are being fixed directly.
@@ -386,7 +386,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0052 are registered and locked in sequence from canonical SQL contents. Migration 0051 checksum was reconciled before this update. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0053 are registered and locked in sequence from canonical SQL contents. Migration 0051 checksum was reconciled before this update. Full external D1 application has not yet been executed.
 
 Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, and Matching retrieval/ranking/Connect execution are implemented. Provider-specific adapters, AI durable worker payload resolution, privacy export/delete semantics, communication consent/anti-spam and CustomerProfile remain controlled gates.
 
@@ -629,7 +629,7 @@ AI worker note: migration 0053 adds worker lease ownership to the existing `ai_o
 CaseAction state note: CaseAction now has explicit repository/service/API approval, cancellation and completion transitions with authorization checks. `apps/api/src/case-action-worker.ts` claims approved actions and executes them through the same canonical CapabilityRegistry as Automation, preserving tenant/workspace scope and current actor authorization.
 
 
-CI verification checkpoint: commit `fc03861eccf6d575c1ba68070e82bd4461e17097` passed GitHub CI (run `35835340923`) and Phoenix verification (run `35835340833`). The verification path passed format/lint/migration lock/typecheck/build and **184 tests / 64 suites**.
+CI verification checkpoint: current main commit `8321ad581b3f958d6925117df5244d775074a020` passed GitHub CI run `35839388859` and Phoenix verification run `35839388919`. Earlier full verification had also passed format/lint/migration lock/typecheck/build with **184 tests / 64 suites**; the current run is the authoritative latest green checkpoint.
 
 
 Production deployment preflight: `scripts/verify-production-bindings.mjs` and `predeploy:prod` now fail closed when real production D1/Queue/R2 bindings are absent or still contain placeholders. The repository intentionally does not fabricate Cloudflare resource IDs; remote provisioning remains the final external infrastructure gate.
