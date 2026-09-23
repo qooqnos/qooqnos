@@ -41,6 +41,7 @@ import demandMatchingCore from "../../../migrations/0040_demand_matching_core.sq
 import demandMatchingIntegrity from "../../../migrations/0041_demand_matching_integrity.sql";
 import reviewsModerationReputation from "../../../migrations/0048_reviews_moderation_reputation.sql";
 import fulfillmentCore from "../../../migrations/0049_fulfillment_core.sql";
+import caseSupportCore from "../../../migrations/0050_case_support_core.sql";
 import reviewsCore from "../../../migrations/0042_reviews_core.sql";
 import integrityUpdateGuards from "../../../migrations/0043_integrity_update_guards.sql";
 import billingCounterScope from "../../../migrations/0044_billing_counter_scope.sql";
@@ -99,4 +100,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0047_booking_capacity_update_guards.sql", sql: bookingCapacityUpdateGuards },
   { path: "migrations/0048_reviews_moderation_reputation.sql", sql: reviewsModerationReputation },
   { path: "migrations/0049_fulfillment_core.sql", sql: fulfillmentCore },
+  { path: "migrations/0050_case_support_core.sql", sql: caseSupportCore },
 ];
