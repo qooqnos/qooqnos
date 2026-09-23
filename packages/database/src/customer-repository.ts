@@ -68,17 +68,32 @@ export class CustomerRepository extends Repository {
     if (input.organizationId !== organizationId) {
       throw new DatabaseError("Customer creation scope does not match request context");
     }
-
-    await this.database.run(
-      "INSERT INTO customers (id, organization_id, user_id, status, locale, timezone, created_at, updated_at) VALUES (?, ?, ?, 'active', ?, ?, ?, ?)",
-      input.id,
-      input.organizationId,
-      input.userId ?? null,
-      input.locale ?? null,
-      input.timezone ?? null,
-      input.now,
-      input.now,
-    );
+    await this.database.transaction([
+      {
+        sql: "INSERT INTO customers (id, organization_id, user_id, status, locale, timezone, created_at, updated_at) VALUES (?, ?, ?, 'active', ?, ?, ?, ?)",
+        params: [
+          input.id,
+          input.organizationId,
+          input.userId ?? null,
+          input.locale ?? null,
+          input.timezone ?? null,
+          input.now,
+          input.now,
+        ],
+      },
+      {
+        sql: "INSERT INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'customer.created', 1, 'Customer', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          input.id + ":created",
+          input.id,
+          input.organizationId,
+          context.workspaceId ?? null,
+          JSON.stringify({ customerId: input.id }),
+          input.now,
+          input.now,
+        ],
+      },
+    ]);
 
     const record = await this.get(context, input.id);
     if (!record) throw new DatabaseError("Customer not found after creation");
