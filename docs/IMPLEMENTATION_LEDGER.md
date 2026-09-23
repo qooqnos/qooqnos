@@ -629,10 +629,13 @@ AI worker note: migration 0053 adds worker lease ownership to the existing `ai_o
 CaseAction state note: CaseAction now has explicit repository/service/API approval, cancellation and completion transitions with authorization checks. `apps/api/src/case-action-worker.ts` claims approved actions and executes them through the same canonical CapabilityRegistry as Automation, preserving tenant/workspace scope and current actor authorization.
 
 
-CI verification checkpoint: current main commit `8321ad581b3f958d6925117df5244d775074a020` passed GitHub CI run `35839388859` and Phoenix verification run `35839388919`. Earlier full verification had also passed format/lint/migration lock/typecheck/build with **184 tests / 64 suites**; the current run is the authoritative latest green checkpoint.
+CI verification checkpoint: current main commit `9c78388631658ff5e08a17d980a1a1bec522a907` passed GitHub CI run `35841409745` and Phoenix verification run `35841409696`. Format check, lint, migration lock verification, typecheck, build and unit tests all passed; the run reported **193 tests / 68 test files**. This is the authoritative latest green checkpoint.
 
 
 Production deployment preflight: `scripts/verify-production-bindings.mjs` and `predeploy:prod` now fail closed when real production D1/Queue/R2 bindings are absent or still contain placeholders. The repository intentionally does not fabricate Cloudflare resource IDs; remote provisioning remains the final external infrastructure gate.
 
 
 AI durable worker note: the Worker scheduled hook now runs the canonical Seller AI input resolver, rebuilds persisted session/input state, and executes claimed `seller.product.extract` operations through the same Billing → policy → Runtime composition as the synchronous API path. Unsupported operation types fail closed instead of guessing payloads.
+
+
+AI worker continuity: commit `5030160e76a6ac9a1ba77f0e8d68f0d660d986bb` exposes `session_id`/`actor_id` to the AI worker operation record; subsequent commits add and verify the Seller AI durable input resolver and scheduler composition.
