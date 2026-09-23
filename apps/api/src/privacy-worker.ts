@@ -43,6 +43,12 @@ export async function processApprovedPrivacyRequests(
 
   for (const item of items) {
     try {
+      const processors = registry.resolve(item.requestType, item.subjectType);
+      if (processors.length === 0) {
+        gated += 1;
+        continue;
+      }
+
       const result = await repository.claimOrResumeRequest({
         requestId: item.id,
         now,
@@ -52,12 +58,6 @@ export async function processApprovedPrivacyRequests(
         continue;
       }
       claimed += 1;
-
-      const processors = registry.resolve(item.requestType, item.subjectType);
-      if (processors.length === 0) {
-        gated += 1;
-        continue;
-      }
 
       let allCompleted = true;
       const resultReferences: string[] = [];
