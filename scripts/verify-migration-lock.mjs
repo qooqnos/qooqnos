@@ -44,7 +44,7 @@ async function verifyApiCatalog(sources) {
   const catalog = await readFile(catalogPath, "utf8");
 
   const importFilenames = [...catalog.matchAll(
-    /import\\s+.+?from\\s+"\\.\\.\\/\\.\\.\\/\\.\\.\\/migrations\\/(\\d+_[^"]+\\.sql)";/g,
+    /import\s+.+?from\s+"\.\.\/\.\.\/\.\.\/migrations\/(\d+_[^"]+\.sql)";/g,
   )].map((match) => match[1]);
 
   const sourceFilenames = sources.map((source) => source.filename);
@@ -61,7 +61,7 @@ async function verifyApiCatalog(sources) {
   }
 
   const sourceEntries = [...catalog.matchAll(
-    /\\{\\s*path:\\s*"migrations\\/(\\d+_[^"]+\\.sql)",\\s*sql:\\s*([^,}]+),?\\s*\\}/g,
+    /\{\s*path:\s*"migrations\/(\d+_[^"]+\.sql)",\s*sql:\s*([^,}]+),?\s*\}/g,
   )].map((match) => ({ filename: match[1], symbol: match[2].trim() }));
 
   if (sourceEntries.length !== sourceFilenames.length) {
