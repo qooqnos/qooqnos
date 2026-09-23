@@ -5,6 +5,7 @@ export interface AiOperationRecord {
   readonly id: EntityId;
   readonly organizationId: EntityId;
   readonly workspaceId: EntityId | null;
+  readonly actorId: EntityId | null;
   readonly operationType: string;
   readonly operationVersion: number;
   readonly requestId: string;
@@ -13,6 +14,9 @@ export interface AiOperationRecord {
   readonly status: string;
   readonly inputReference: string | null;
   readonly outputReference: string | null;
+  readonly workerLeaseUntil: string | null;
+  readonly workerClaimedBy: string | null;
+  readonly workerAttempts: number;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -83,7 +87,7 @@ export class AiRuntimeRepository extends Repository {
   async createOperation(context: RequestContext, input: CreateAiOperationInput): Promise<AiOperationRecord> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const existing = await this.database.first<AiOperationRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE organization_id = ? AND idempotency_key = ? LIMIT 1",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, actor_id AS actorId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, worker_lease_until AS workerLeaseUntil, worker_claimed_by AS workerClaimedBy, worker_attempts AS workerAttempts, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE organization_id = ? AND idempotency_key = ? LIMIT 1",
       organizationId,
       input.idempotencyKey,
     );
@@ -107,6 +111,55 @@ export class AiRuntimeRepository extends Repository {
     );
     if (!row) throw new DatabaseError("AI operation not found");
     return row;
+  }
+
+
+  async listRunnableOperations(
+    now: string,
+    limit = 25,
+  ): Promise<readonly AiOperationRecord[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
+    return this.database.all<AiOperationRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, actor_id AS actorId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, worker_lease_until AS workerLeaseUntil, worker_claimed_by AS workerClaimedBy, worker_attempts AS workerAttempts, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE status IN ('created','entitlement_checked','started') AND (worker_lease_until IS NULL OR worker_lease_until <= ?) ORDER BY created_at ASC, id ASC LIMIT ?",
+      now,
+      safeLimit,
+    );
+  }
+
+  async claimOperation(
+    id: EntityId,
+    workerId: string,
+    now: string,
+    leaseUntil: string,
+  ): Promise<AiOperationRecord | null> {
+    await this.database.run(
+      "UPDATE ai_operations SET status='started', worker_lease_until=?, worker_claimed_by=?, worker_attempts=worker_attempts+1, updated_at=? WHERE id=? AND status IN ('created','entitlement_checked','started') AND (worker_lease_until IS NULL OR worker_lease_until <= ?)",
+      leaseUntil,
+      workerId,
+      now,
+      id,
+      now,
+    );
+    return this.database.first<AiOperationRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, actor_id AS actorId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, worker_lease_until AS workerLeaseUntil, worker_claimed_by AS workerClaimedBy, worker_attempts AS workerAttempts, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE id=? AND worker_claimed_by=? LIMIT 1",
+      id,
+      workerId,
+    );
+  }
+
+  async releaseOperationLease(
+    context: RequestContext,
+    id: EntityId,
+    workerId: string,
+    now: string,
+  ): Promise<void> {
+    await this.getOperation(context, id);
+    await this.database.run(
+      "UPDATE ai_operations SET worker_lease_until=NULL, worker_claimed_by=NULL, updated_at=? WHERE id=? AND worker_claimed_by=?",
+      now,
+      id,
+      workerId,
+    );
   }
 
   async setOperationStatus(context: RequestContext, id: EntityId, status: string, now: string, outputReference?: string) {
