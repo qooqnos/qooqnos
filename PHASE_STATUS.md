@@ -33,7 +33,7 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
 | Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0050 |
 | Full logical model | ⏳ In progress | many target entities remain intentionally un-migrated |
-| Final D1 physical schema | 🟡 Core domains implemented; operational gaps remain | physical schema is broad and integrity-guarded; remaining work is provider/worker/projection execution and gated contracts |
+| Final D1 physical schema | 🟡 Core domains implemented; operational gaps remain | physical schema is broad and integrity-guarded; remaining work is provider adapters, durable workers, a few gated contracts, and real Cloudflare resource provisioning |
 | Legacy PostgreSQL path | ⚠️ Quarantined | historical files remain but are not canonical |
 
 ## 3. Critical database rule
@@ -86,10 +86,10 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- GitHub Actions CI passed for commit 6275a6f4ba52450977f9700c3bd82e792905aafa (run 35824511143).
-- GitHub Actions Phoenix verification passed for the same commit (run 35824511184).
+- GitHub Actions CI passed for commit 488a04c93d34ed725433a37af71941348a02f136 (latest verified main checkpoint).
+- GitHub Actions Phoenix verification passed for the same commit.
 - Migration lock verification passed for the canonical migration inventory through 0050.
-- Typecheck, build, and unit tests passed in the verification path: **61 test files / 173 tests**.
+- Typecheck, build, lint and unit tests passed in the verification path; the current main branch is green.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
 
 ## 8. What remains
