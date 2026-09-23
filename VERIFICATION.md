@@ -81,7 +81,7 @@ The physical schema is intentionally broad but not every operational concern is 
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile only when its field-level contract is explicit; CRM timeline is already physically implemented as events/projection input.
 8. CustomerProfile field-level contract, plus Localization / Documents / Analytics contracts where canonical ownership is explicit.
-9. Case queue dispatch / CaseAction execution through canonical capabilities, then remote D1 provisioning and production binding configuration.
+9. Case queue dispatch and cross-domain CaseAction execution through canonical capabilities, then remote D1 provisioning and production binding configuration.
 
 ## Source-of-truth documents
 
