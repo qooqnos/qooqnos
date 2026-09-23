@@ -610,4 +610,4 @@ Privacy consent expiry note: scheduled processing now transitions only expired g
 CaseAction state note: CaseAction now has explicit repository/service/API approval, cancellation and completion transitions with authorization checks. Cross-domain execution remains gated behind the canonical CapabilityRegistry/provider boundary.
 
 
-CI verification checkpoint: commit `488a04c93d34ed725433a37af71941348a02f136` passed GitHub CI and Phoenix verification after the Case SLA worker/first-response implementation and fixes. No PR was created.
+CI verification checkpoint: commit `2fde64e31db2124440d27b7cd64c751ec751d5eb` passed GitHub CI (run `35829052893`) and Phoenix verification (run `35829052883`). The verification path passed format/lint/migration lock/typecheck/build and **182 tests / 63 suites**.
