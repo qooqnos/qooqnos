@@ -146,7 +146,7 @@ export class IntegrationRepository extends Repository {
     );
   }
 
-  async claimWebhook(id: EntityId, now: string): Promise<IntegrationWebhookRecord | null> {
+  async claimWebhook(id: EntityId, _now: string): Promise<IntegrationWebhookRecord | null> {
     await this.database.run(
       "UPDATE integration_webhooks SET processing_status='processing' WHERE id=? AND processing_status IN ('received','queued')",
       id,
