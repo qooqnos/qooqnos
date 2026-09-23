@@ -68,7 +68,7 @@ export class PrivacyRepository extends Repository {
     await this.database.transaction([
       {
         sql: "UPDATE privacy_consents SET status = 'revoked', revoked_at = ?, updated_at = ? WHERE organization_id = ? AND subject_type = ? AND subject_id = ? AND purpose = ? AND status = 'granted'",
-        params: [input.grantedAt ?? input.now, input.now, organizationId, input.subjectType, input.subjectId, input.purpose.trim()],
+        params: [input.now, input.now, organizationId, input.subjectType, input.subjectId, input.purpose.trim()],
       },
       {
         sql: "INSERT INTO privacy_consents (id, organization_id, workspace_id, subject_type, subject_id, purpose, consent_version, status, source, evidence_reference, granted_at, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'granted', ?, ?, ?, ?, ?, ?)",
