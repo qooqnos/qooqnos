@@ -91,6 +91,39 @@ export class PrivacyRepository extends Repository {
     return this.getConsent(context,input.id);
   }
 
+  async expireConsents(now: string, limit = 500): Promise<number> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 1000);
+    const rows = await this.database.all<{ id: EntityId; organizationId: EntityId; workspaceId: EntityId | null }>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId FROM privacy_consents WHERE status='granted' AND expires_at IS NOT NULL AND expires_at <= ? ORDER BY expires_at ASC, id ASC LIMIT ?",
+      now,
+      safeLimit,
+    );
+    let expired = 0;
+    for (const row of rows) {
+      const results = await this.database.transaction([
+        {
+          sql: "UPDATE privacy_consents SET status='expired', updated_at=? WHERE id=? AND status='granted' AND expires_at IS NOT NULL AND expires_at <= ?",
+          params: [now, row.id, now],
+        },
+        {
+          sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?, ?, 1, 'privacy_consent', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+          params: [
+            row.id + ":expired",
+            "privacy.consent.expired",
+            row.id,
+            row.organizationId,
+            row.workspaceId,
+            JSON.stringify({ consentId: row.id, status: "expired" }),
+            now,
+            now,
+          ],
+        },
+      ]);
+      if ((results[0]?.meta?.changes ?? 0) === 1) expired += 1;
+    }
+    return expired;
+  }
+
   async revokeConsent(context:RequestContext,id:EntityId,revokedAt:string,now:string):Promise<ConsentRecord>{
     const current=await this.getConsent(context,id);
     if(!current)throw new DatabaseError("Consent not found");
