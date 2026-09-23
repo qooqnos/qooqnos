@@ -64,7 +64,7 @@ Canonical constraints include opaque immutable IDs, scoped uniqueness, valid mem
 | Table | Owner | Responsibility |
 |---|---|---|
 | `customers` | Customer | tenant-scoped customer representation |
-| `customer_profiles` | Customer | preferences/profile |
+| `customers` | Customer | canonical customer representation, including profile-level lifecycle/locale/timezone fields |
 | `customer_addresses` | Customer | customer address records |
 | `customer_relationships` | Customer | customer ↔ business relationship |
 | `verification_cases` | Trust | verification aggregate |
