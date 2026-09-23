@@ -421,6 +421,88 @@ export class CaseSupportRepository extends Repository {
     return { id: input.id, status: "requested", resultReference: null };
   }
 
+  async getAction(context: RequestContext, caseId: EntityId, actionId: EntityId) {
+    await this.getRequired(context, caseId);
+    return this.database.first<{
+      readonly id: EntityId;
+      readonly caseId: EntityId;
+      readonly capability: string;
+      readonly targetReference: string;
+      readonly requestedBy: string;
+      readonly authorizationReference: string;
+      readonly idempotencyKey: string;
+      readonly status: "requested"|"approved"|"running"|"succeeded"|"failed"|"cancelled";
+      readonly resultReference: string | null;
+      readonly createdAt: string;
+      readonly completedAt: string | null;
+    }>(
+      "SELECT id,case_id AS caseId,capability,target_reference AS targetReference,requested_by AS requestedBy,authorization_reference AS authorizationReference,idempotency_key AS idempotencyKey,status,result_reference AS resultReference,created_at AS createdAt,completed_at AS completedAt FROM case_actions WHERE id=? AND case_id=? LIMIT 1",
+      actionId,
+      caseId,
+    );
+  }
+
+  async approveAction(context: RequestContext, input: {
+    readonly caseId: EntityId;
+    readonly actionId: EntityId;
+    readonly authorizationReference: string;
+    readonly now: string;
+  }): Promise<void> {
+    const action = await this.getAction(context, input.caseId, input.actionId);
+    if (!action) throw new DatabaseError("Case action not found");
+    if (action.status === "approved" || action.status === "running" || action.status === "succeeded") return;
+    if (action.status !== "requested") throw new DatabaseError("Case action cannot be approved from current status");
+    if (!input.authorizationReference.trim()) throw new DatabaseError("Case action authorization reference is required");
+    await this.database.run(
+      "UPDATE case_actions SET status='approved', authorization_reference=?, updated_at=updated_at WHERE id=? AND case_id=? AND status='requested'",
+      input.authorizationReference.trim(),
+      input.actionId,
+      input.caseId,
+    );
+  }
+
+  async cancelAction(context: RequestContext, input: {
+    readonly caseId: EntityId;
+    readonly actionId: EntityId;
+    readonly now: string;
+  }): Promise<void> {
+    const action = await this.getAction(context, input.caseId, input.actionId);
+    if (!action) throw new DatabaseError("Case action not found");
+    if (action.status === "cancelled" || action.status === "succeeded") return;
+    if (!["requested","approved"].includes(action.status)) {
+      throw new DatabaseError("Case action cannot be cancelled from current status");
+    }
+    await this.database.run(
+      "UPDATE case_actions SET status='cancelled', completed_at=?, result_reference=COALESCE(result_reference,'cancelled'), created_at=created_at WHERE id=? AND case_id=? AND status IN ('requested','approved')",
+      input.now,
+      input.actionId,
+      input.caseId,
+    );
+  }
+
+  async completeAction(context: RequestContext, input: {
+    readonly caseId: EntityId;
+    readonly actionId: EntityId;
+    readonly status: "succeeded" | "failed";
+    readonly resultReference?: string;
+    readonly now: string;
+  }): Promise<void> {
+    const action = await this.getAction(context, input.caseId, input.actionId);
+    if (!action) throw new DatabaseError("Case action not found");
+    if (action.status === "succeeded" || action.status === "failed") return;
+    if (!["approved","running"].includes(action.status)) {
+      throw new DatabaseError("Case action cannot be completed from current status");
+    }
+    await this.database.run(
+      "UPDATE case_actions SET status=?, result_reference=?, completed_at=? WHERE id=? AND case_id=? AND status IN ('approved','running')",
+      input.status,
+      input.resultReference?.trim() || null,
+      input.now,
+      input.actionId,
+      input.caseId,
+    );
+  }
+
   private async getRequired(context: RequestContext, id: EntityId): Promise<CaseRecord> {
     const record = await this.get(context, id);
     if (!record) throw new DatabaseError("Case not found");
