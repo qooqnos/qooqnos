@@ -378,7 +378,7 @@
       "moduleId": "discovery",
       "filename": "0054_discovery_index_observability.sql",
       "checksum": "242b0282b2658d03d3adf4b9ad6754250a809b746653d603ac3a791c6797c1fd"
-    }
+    },
     {
       "id": "0055_communication_policy_consent",
       "version": 55,
