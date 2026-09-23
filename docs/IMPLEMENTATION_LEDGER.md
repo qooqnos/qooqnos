@@ -376,8 +376,8 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0053 remain numbered and are extended only through new migrations;
-- migrations 0024–0053 are preserved in the canonical lock sequence.
+- canonical migrations 0001–0054 remain numbered and are extended only through new migrations;
+- migrations 0024–0054 are preserved in the canonical lock sequence.
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: GitHub Actions now provides the authoritative build/test verification path; the latest observed pipelines progressed through build/typecheck and surfaced only test-suite contract failures, which are being fixed directly.
@@ -392,7 +392,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0053 are registered and locked in sequence from canonical SQL contents. Migration 0051 checksum was reconciled before this update. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. Full external D1 application has not yet been executed.
 
 Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, and Matching retrieval/ranking/Connect execution are implemented. Provider-specific adapters, AI durable worker payload resolution, privacy export/delete semantics and communication consent/anti-spam remain controlled gates.
 
