@@ -157,15 +157,15 @@ export class CustomerRelationshipRepository extends Repository {
     const current = await this.get(context, id);
     if (!current) throw new DatabaseError("Customer relationship not found");
 
-    const firstInteractionAt = current.firstInteractionAt ?? occurredAt;
-    const lastInteractionAt = !current.lastInteractionAt || occurredAt > current.lastInteractionAt
-      ? occurredAt
-      : current.lastInteractionAt;
-
     await this.database.run(
-      "UPDATE customer_relationships SET first_interaction_at = ?, last_interaction_at = ?, updated_at = ? WHERE id = ?",
-      firstInteractionAt,
-      lastInteractionAt,
+      "UPDATE customer_relationships SET " +
+        "first_interaction_at = CASE WHEN first_interaction_at IS NULL OR first_interaction_at > ? THEN ? ELSE first_interaction_at END, " +
+        "last_interaction_at = CASE WHEN last_interaction_at IS NULL OR last_interaction_at < ? THEN ? ELSE last_interaction_at END, " +
+        "updated_at = ? WHERE id = ?",
+      occurredAt,
+      occurredAt,
+      occurredAt,
+      occurredAt,
       now,
       id,
     );
