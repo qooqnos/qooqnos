@@ -41,6 +41,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
 | Communication core | 🟢 Schema/package/repository/service/API/outbox-consumer implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts; apps/api/src/outbox-worker.ts |
 | Automation workflow engine | 🟢 Schema/package/repository/service/API implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts |
+| Automation capability executor | 🟢 Runtime registry/executor/test implemented | packages/runtime/src/capabilities.ts; packages/automation/src/executor.ts; packages/automation/src/repository.ts |
 | AI Runtime persistence | 🟢 Schema/repository/runtime composition implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/runtime-client.ts; apps/api/src/ai-composition.ts |
 | Integration core | 🟢 Schema/package/repository/service/API implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; apps/api/src/integration-routes.ts; integration sync-job API |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
@@ -385,7 +386,7 @@ Deployment readiness note: `wrangler.toml` now documents environment-specific D1
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile remains gated on field-level contract.
 
-Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Workflow version activation plus pause/retire lifecycle controls are canonical repository/service/API operations, and those lifecycle transitions now emit transactional Outbox events. Durable scheduler/worker action execution remains gated until the capability invocation contract is executable.
+Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Workflow version activation plus pause/retire lifecycle controls are canonical repository/service/API operations, and those lifecycle transitions now emit transactional Outbox events. Capability invocation contract is now executable through the canonical runtime CapabilityRegistry and idempotent AutomationExecutor. Durable scheduler/worker polling remains the remaining operational layer.
 
 Booking finalization note: migrations 0046–0047 establish idempotent Booking creation, transactional hold consumption, appointment/resource commitment and capacity mutation guards. Availability calculation and schedule-derived slot generation remain separate.
 
