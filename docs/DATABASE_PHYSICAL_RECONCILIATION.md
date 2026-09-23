@@ -436,7 +436,7 @@ This count includes only canonical SQL migration sources. It does not include re
 | Matching | demand_requests, demand_profiles, match_requests, match_candidates, match_decisions | Canonical Demand→Match persistence plus Discovery-backed retrieval/ranking and Match→Connect orchestration implemented; learning signals and broader Act integrations remain |
 | Booking / Availability | bookings, booking_items, appointments, resources, appointment_resources, schedules, availability_rules, availability_exceptions, booking_holds, booking_status_history, appointment_events | Core schema/repositories implemented; finalization/idempotency/capacity guards and derived slot generation implemented; provider/workers remain separate |
 | Trust / Verification / Reviews | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews, review_reports, review_responses, review_moderation_cases, review_moderation_decisions, review_risk_signals, reputation_summaries, reputation_versions | Verification chain, review reporting/moderation/risk and reputation projections implemented; expiry worker and Review API are live; broader TrustSignal/anti-abuse automation remains operational follow-up |
-| Moderation / Privacy / Consent | moderation_cases, privacy_consents, privacy_requests, privacy_processing_records | Core generic moderation/consent/privacy-request storage implemented; retention/export/delete workers and broader moderation actions remain |
+| Moderation / Privacy / Consent | moderation_cases, privacy_consents, privacy_requests, privacy_processing_records | Core generic moderation/consent/privacy-request storage implemented; subject scope validation is implemented; retention/export/delete workers and broader moderation actions remain |
 
 | Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core storage, outbox-linked dispatch worker and in-app delivery adapter implemented; external provider adapters, consent/policy/template registry remain |
 | Commerce | commerce_carts, commerce_cart_lines, commerce_checkout_sessions, commerce_price_snapshots, commerce_orders, commerce_order_lines, commerce_order_adjustments, commerce_transaction_attempts, commerce_fulfillment_references, commerce_cancellations, commerce_refund_references, commerce_order_events | Core transaction boundary implemented; pricing/checkout orchestration, Billing/Payment, Promotion/Loyalty and Fulfillment integrations remain separate capabilities |
@@ -686,13 +686,12 @@ The next implementation work should proceed in this order:
 6. Scheduled Automation polling/misfire execution and CapabilityRegistry-backed scheduled action execution are implemented; capability compensation remains only where a concrete rollback contract exists.
 7. AI Runtime durable worker scheduling and Seller AI input/payload resolution are implemented; add resolvers only when a new AI operation type is introduced.
 8. Complete Integration provider-specific adapters and cross-provider retention/reconciliation semantics; durable claim/sync worker infrastructure is implemented.
-9. Complete Privacy retention/export/delete workers and subject-level identity validation.
+9. Complete Privacy export/delete/retention workers; subject-level identity validation is implemented.
 10. Complete Matching learning signals and broader Act projections; core retrieval/ranking/Connect execution is implemented.
 11. Complete Fulfillment provider-specific adapters, callback reconciliation and durable polling only where an external provider contract exists; canonical tracking/service completion persistence is implemented.
 12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
 13. Complete Case queue dispatch/provider integrations where explicit contracts exist; CaseAction capability execution is already implemented.
-14. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
-15. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
+14. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
 Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables; 0048 completes the Review-owned moderation/reputation projection layer.
 
