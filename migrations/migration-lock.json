@@ -343,6 +343,13 @@
       "moduleId": "fulfillment",
       "checksum": "8c65b06d6a36bcc9e526b0eed3e8d7712a65a83c14837ac2c6c84427d344d856",
       "filename": "0049_fulfillment_core.sql"
+    },
+    {
+      "id": "0050_case_support_core",
+      "version": 50,
+      "moduleId": "case-support",
+      "checksum": "",
+      "filename": "0050_case_support_core.sql"
     }
   ]
 }
