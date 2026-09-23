@@ -405,7 +405,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The current verified head `b9e9a5131e0123450dd8642975ae739537ca278b` passed both CI and Phoenix verification (CI `35897607266`; Phoenix verification `35897607158`). Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint `3782da6c6d0559e6431ec749f7019f93ed44e87a` passed both CI (`35902958843`) and Phoenix verification (`35902958873`). Full external D1 application has not yet been executed.
 
 Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events, Automation scheduled execution, AI durable Seller AI worker resolution, privacy consent expiry and approved-request orchestration are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processing, communication consent/anti-spam policy and external adapters, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
 
@@ -415,7 +415,7 @@ Customer address note: migration 0026 stores the structured Address value object
 
 Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Workflow activation/pause/retire lifecycle, transactional Outbox events, scheduled execution, CapabilityRegistry-backed invocation and idempotent AutomationExecutor are implemented; only concrete rollback/compensation contracts remain gated.
 
-Booking finalization note: migrations 0046–0047 establish idempotent Booking creation, transactional hold consumption, appointment/resource commitment and capacity mutation guards. Availability calculation and schedule-derived slot generation remain separate.
+Booking finalization note: migrations 0046–0047 establish idempotent Booking creation, transactional hold consumption, appointment/resource commitment and capacity mutation guards. `c2943bd` additionally records BookingStatusHistory and AppointmentEvent evidence atomically during finalization; `ed05f89` updates the finalization invariant test to cover the seven-statement atomic batch. Availability calculation and schedule-derived slot generation remain separate.
 
 Trust Review note: migration 0042 physicalizes the canonical Review target from Gate 05 (Business/Offering/Product); 0045 adds target-scope integrity on insert/update and the Trust package exposes the same three-target creation boundary.
 
