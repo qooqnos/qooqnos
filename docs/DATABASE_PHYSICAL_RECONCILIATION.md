@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0049**.
+The current API migration catalog references versions **0001 through 0050**.
 
 ### Foundation — 0001
 
@@ -303,7 +303,60 @@ These migrations add integrity triggers only.
 
 ### Demand / Matching integrity — 0041
 
+- no new tables
+
+0041 hardens typed candidate uniqueness and append-only MatchDecision history.
+
+### Trust Reviews — 0042
+
+- reviews
+
+0042 establishes canonical Review storage with exactly one target from the Review target contract: Business, Offering, or Product.
+
+### Integrity update guards — 0043
+
+- no new tables
+
+0043 hardens update-time tenant integrity for MatchCandidate and Review records.
+
+### Billing counter scope — 0044
+
+- no new tables
+
+0044 corrects Billing usage-counter uniqueness so counters are scoped by Organization, Workspace, Business, Meter and Period.
+
+### Review target integrity — 0045
+
+- no new tables
+
+0045 enforces Review Business/Offering/Product target scope on insert and update.
+
+### Booking finalization guards — 0046
+
+- no new tables
+- adds `bookings.idempotency_key`
+
+0046 hardens Booking finalization/idempotency and resource-capacity protection.
+
+### Booking capacity update guards — 0047
+
+- no new tables
+
+0047 extends capacity protection to appointment status/time mutations and Resource capacity reductions.
+
 ### Review moderation / reputation — 0048
+
+- no new domain owner beyond Trust/Reviews
+- adds Review lifecycle fields on `reviews`
+- review_reports
+- review_responses
+- review_moderation_cases
+- review_moderation_decisions
+- review_risk_signals
+- reputation_summaries
+- reputation_versions
+
+0048 completes the Review-owned reporting/moderation/risk/reputation projection boundary.
 
 ### Fulfillment core — 0049
 
@@ -324,6 +377,24 @@ These migrations add integrity triggers only.
 - fulfillment_completion_evidence
 
 0049 establishes the canonical reusable Fulfillment & Service Delivery execution boundary. Order/OrderLine remain Commerce-owned, Appointment remains Booking-owned, Payment/Refund remains Billing-owned, and Fulfillment stores execution state/evidence only.
+### Case Support core — 0050
+
+- cases
+- case_types
+- case_queues
+- case_assignments
+- case_participants
+- case_events
+- case_notes
+- case_evidence_references
+- case_links
+- case_escalations
+- case_resolutions
+- case_slas
+- case_actions
+- case_templates
+
+0050 establishes the canonical Case & Support Operations engine. Case links/evidence reference other domain authorities instead of duplicating their facts.
 
 
 - no new domain owner beyond Trust/Reviews
@@ -410,6 +481,7 @@ This count includes only canonical SQL migration sources. It does not include re
 | AI Runtime | ai_operation_types, ai_providers, ai_models, ai_prompts, ai_prompt_versions, ai_schemas, ai_schema_versions, ai_policies, ai_operations, ai_model_routing_decisions, ai_policy_decisions, ai_provider_attempts, ai_runtime_results, ai_usage_records | Core shared AI Runtime persistence implemented; provider adapters, routing/validation execution and durable workers remain |
 | Automation | automation_workflows, automation_workflow_versions, automation_triggers, automation_conditions, automation_actions, automation_schedules, automation_executions, automation_step_executions, automation_execution_attempts, automation_execution_errors, automation_variables, automation_policies, automation_approval_references, automation_compensation_references | Core versioned workflow/execution persistence implemented; durable scheduler/worker execution remains |
 | Integration | integration_providers, integration_accounts, integration_webhooks, integration_sync_jobs, integration_external_references | Core external account/webhook/sync/reference persistence implemented; provider adapters and durable sync workers remain |
+| Case & Support Operations | cases, case_types, case_queues, case_assignments, case_participants, case_events, case_notes, case_evidence_references, case_links, case_escalations, case_resolutions, case_slas, case_actions, case_templates | Core case lifecycle/assignment/escalation/resolution persistence implemented; SLA workers, queues/dispatch and cross-domain action execution remain |
 | Localization / Documents / Analytics | no dedicated canonical tables identified in current migration set | Missing |
 
 ## 3. Important semantic mismatches
