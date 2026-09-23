@@ -24,6 +24,7 @@
     { "path": "../../packages/integration" },
     { "path": "../../packages/privacy" },
     { "path": "../../packages/matching" },
+    { "path": "../../packages/customer" },
     { "path": "../../packages/fulfillment" },
     { "path": "../../packages/case-support" },
     { "path": "../../packages/trust" },
