@@ -27,9 +27,10 @@
     "verify:worker": "npx --yes wrangler@4.136.2 deploy --dry-run --outdir .wrangler-dry-run",
     "render:wrangler:prod": "node scripts/render-production-wrangler.mjs",
     "verify:worker:prod": "npx --yes wrangler@4.136.2 deploy --config .wrangler/production.wrangler.toml --env production --dry-run --outdir .wrangler-dry-run-production",
-    "deploy:prod": "npm run predeploy:prod && npx --yes wrangler@4.136.2 deploy --config .wrangler/production.wrangler.toml --env production",
+    "deploy:prod": "npm run predeploy:prod && npm run migrate:prod:canonical && npx --yes wrangler@4.136.2 deploy --config .wrangler/production.wrangler.toml --env production",
     "verify:source-boundary": "node scripts/verify-canonical-source-boundary.mjs",
-    "verify:runtime-registry": "node scripts/verify-runtime-module-registry.mjs"
+    "verify:runtime-registry": "node scripts/verify-runtime-module-registry.mjs",
+    "migrate:prod:canonical": "node scripts/migrate-production-d1.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
