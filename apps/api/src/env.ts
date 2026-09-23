@@ -13,6 +13,7 @@ export interface ApiEnv {
   readonly AI_GATEWAY_ID?: string;
   readonly AI_SELLER_EXTRACT_MODEL_ID?: string;
   readonly AI_SELLER_EXTRACT_MODEL_VERSION?: string;
+  readonly AI_WORKER_ID?: string;
 }
 
 export function requireDatabase(env: ApiEnv): D1DatabaseLike {
