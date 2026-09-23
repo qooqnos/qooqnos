@@ -81,6 +81,19 @@ export function createPersistentAIRuntimeClient(
 
       try {
         const result = await runtime.execute<TOutput>(request);
+        if (result.providerId !== undefined) {
+          await repository.recordProviderAttempt(request.context, {
+            id: options.id(),
+            operationId: operation.id,
+            attemptNumber: request.attemptNumber ?? 1,
+            providerId: brandId<"EntityId">(result.providerId),
+            ...(result.modelId !== undefined ? { modelId: brandId<"EntityId">(result.modelId) } : {}),
+            status: "succeeded",
+            startedAt: now,
+            completedAt: options.now(),
+            now: options.now(),
+          });
+        }
         await repository.recordResult(request.context, {
           id: options.id(),
           operationId: operation.id,
