@@ -44,6 +44,7 @@ export interface NotificationRecord {
   readonly idempotencyKey: string;
   readonly scheduledAt: string | null;
   readonly expiresAt: string | null;
+  readonly policyVersion: string | null;
   readonly lastPolicyEvaluatedAt: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -277,6 +278,116 @@ export class CommunicationRepository extends Repository {
     return row;
   }
 
+  async evaluateNotificationPolicy(
+    context: RequestContext,
+    input: {
+      readonly recipientReference: string;
+      readonly intent: string;
+      readonly channel: CommunicationChannel;
+      readonly now: string;
+    },
+  ): Promise<{
+    readonly result: "allowed" | "denied" | "suppressed";
+    readonly reasonCode: string | null;
+    readonly policyVersion: string;
+    readonly preferenceReference: EntityId | null;
+    readonly suppressionReference: EntityId | null;
+  }> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = context.workspaceId ?? null;
+
+    const policy = await this.database.first<CommunicationIntentPolicyRow>(
+      "SELECT id, intent_key AS intentKey, category, requires_opt_in AS requiresOptIn, allowed_channels_json AS allowedChannelsJson, policy_version AS policyVersion, status FROM communication_intents WHERE intent_key = ? AND status = 'active' LIMIT 1",
+      input.intent.trim(),
+    );
+    if (!policy) {
+      return {
+        result: "denied",
+        reasonCode: "intent_policy_not_active",
+        policyVersion: "unknown",
+        preferenceReference: null,
+        suppressionReference: null,
+      };
+    }
+
+    const allowedChannels = parseStringArray(policy.allowedChannelsJson);
+    if (!allowedChannels.includes(input.channel)) {
+      return {
+        result: "denied",
+        reasonCode: "channel_not_allowed",
+        policyVersion: policy.policyVersion,
+        preferenceReference: null,
+        suppressionReference: null,
+      };
+    }
+
+    const suppression = await this.database.first<{ id: EntityId }>(
+      "SELECT id FROM communication_suppression_records WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND recipient_reference = ? AND status = 'active' AND effective_from <= ? AND (expires_at IS NULL OR expires_at > ?) AND ((scope = 'global') OR (scope = 'category' AND category = ?) OR (scope = 'channel' AND channel = ?) OR (scope = 'intent' AND intent = ?)) ORDER BY CASE WHEN workspace_id = ? THEN 0 ELSE 1 END, created_at DESC, id DESC LIMIT 1",
+      organizationId,
+      workspaceId,
+      input.recipientReference.trim(),
+      input.now,
+      input.now,
+      policy.category,
+      input.channel,
+      input.intent.trim(),
+      workspaceId,
+    );
+    if (suppression) {
+      return {
+        result: "suppressed",
+        reasonCode: "recipient_suppressed",
+        policyVersion: policy.policyVersion,
+        preferenceReference: null,
+        suppressionReference: suppression.id,
+      };
+    }
+
+    const preference = await this.database.first<{
+      id: EntityId;
+      status: "allowed" | "denied";
+    }>(
+      "SELECT id, status FROM communication_preferences WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND recipient_reference = ? AND category = ? AND (channel IS NULL OR channel = ?) AND effective_from <= ? AND (effective_to IS NULL OR effective_to > ?) ORDER BY CASE WHEN workspace_id = ? THEN 0 ELSE 1 END, CASE WHEN channel = ? THEN 0 ELSE 1 END, created_at DESC, id DESC LIMIT 1",
+      organizationId,
+      workspaceId,
+      input.recipientReference.trim(),
+      policy.category,
+      input.channel,
+      input.now,
+      input.now,
+      workspaceId,
+      input.channel,
+    );
+
+    if (policy.requiresOptIn && (!preference || preference.status !== "allowed")) {
+      return {
+        result: "denied",
+        reasonCode: "opt_in_required",
+        policyVersion: policy.policyVersion,
+        preferenceReference: preference?.id ?? null,
+        suppressionReference: null,
+      };
+    }
+
+    if (preference?.status === "denied") {
+      return {
+        result: "suppressed",
+        reasonCode: "preference_denied",
+        policyVersion: policy.policyVersion,
+        preferenceReference: preference.id,
+        suppressionReference: null,
+      };
+    }
+
+    return {
+      result: "allowed",
+      reasonCode: null,
+      policyVersion: policy.policyVersion,
+      preferenceReference: preference?.id ?? null,
+      suppressionReference: null,
+    };
+  }
+
   async createNotification(context: RequestContext, input: {
     id: EntityId; recipientReference: string; intent: string; channel: CommunicationChannel;
     templateReference?: string; templateVersion?: string; locale?: string;
@@ -287,14 +398,24 @@ export class CommunicationRepository extends Repository {
     if (!input.recipientReference.trim()) throw new DatabaseError("Communication recipient is required");
     if (!input.intent.trim()) throw new DatabaseError("Communication intent is required");
     if (!input.idempotencyKey.trim()) throw new DatabaseError("Communication idempotency key is required");
+
     const existing = await this.database.first<NotificationRow>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale, variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey, scheduled_at AS scheduledAt, expires_at AS expiresAt, last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt FROM communication_notifications WHERE organization_id = ? AND idempotency_key = ? LIMIT 1",
-      organizationId, input.idempotencyKey.trim(),
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale, variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey, scheduled_at AS scheduledAt, expires_at AS expiresAt, policy_version AS policyVersion, last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt FROM communication_notifications WHERE organization_id = ? AND idempotency_key = ? LIMIT 1",
+      organizationId,
+      input.idempotencyKey.trim(),
     );
     if (existing) return hydrateNotification(existing);
-    await this.database.transaction([
+
+    const policy = await this.evaluateNotificationPolicy(context, {
+      recipientReference: input.recipientReference,
+      intent: input.intent,
+      channel: input.channel,
+      now: input.now,
+    });
+
+    const transactionStatements = [
       {
-        sql: "INSERT INTO communication_notifications (id, organization_id, workspace_id, recipient_reference, intent, channel, template_reference, template_version, locale, variables_json, priority, status, idempotency_key, scheduled_at, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created', ?, ?, ?, ?, ?)",
+        sql: "INSERT INTO communication_notifications (id, organization_id, workspace_id, recipient_reference, intent, channel, template_reference, template_version, locale, variables_json, priority, status, idempotency_key, scheduled_at, expires_at, policy_version, last_policy_evaluated_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params: [
           input.id,
           organizationId,
@@ -307,17 +428,39 @@ export class CommunicationRepository extends Repository {
           input.locale ?? null,
           input.variables ? JSON.stringify(input.variables) : null,
           input.priority ?? "normal",
+          policy.result === "allowed" ? "created" : "suppressed",
           input.idempotencyKey.trim(),
           input.scheduledAt ?? null,
           input.expiresAt ?? null,
+          policy.policyVersion,
+          input.now,
           input.now,
           input.now,
         ],
       },
       {
+        sql: "INSERT INTO communication_policy_decisions (id, notification_id, organization_id, workspace_id, result, reason_code, policy_version, preference_reference, suppression_reference, evaluated_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params: [
+          input.id + ":policy",
+          input.id,
+          organizationId,
+          context.workspaceId ?? null,
+          policy.result,
+          policy.reasonCode,
+          policy.policyVersion,
+          policy.preferenceReference,
+          policy.suppressionReference,
+          input.now,
+          input.now,
+        ],
+      },
+    ];
+
+    if (policy.result === "allowed") {
+      transactionStatements.push({
         sql: "INSERT INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'communication.notification.created', 1, 'communication_notification', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
         params: [
-          input.id + ':created',
+          input.id + ":created",
           input.id,
           organizationId,
           context.workspaceId ?? null,
@@ -328,15 +471,119 @@ export class CommunicationRepository extends Repository {
           }),
           input.now,
           input.now,
+          input.now,
         ],
-      },
-    ]);
+      });
+    }
+
+    await this.database.transaction(transactionStatements);
+
     const row = await this.database.first<NotificationRow>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale, variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey, scheduled_at AS scheduledAt, expires_at AS expiresAt, last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt FROM communication_notifications WHERE id = ? LIMIT 1",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale, variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey, scheduled_at AS scheduledAt, expires_at AS expiresAt, policy_version AS policyVersion, last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt FROM communication_notifications WHERE id = ? LIMIT 1",
       input.id,
     );
     if (!row) throw new DatabaseError("Communication notification not found after creation");
     return hydrateNotification(row);
+  }
+
+  async listCommunicationPreferences(
+    context: RequestContext,
+    recipientReference: string,
+  ): Promise<readonly CommunicationPreferenceRecord[]> {
+    return this.database.all<CommunicationPreferenceRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, category, channel, status, source, consent_reference AS consentReference, effective_from AS effectiveFrom, effective_to AS effectiveTo, created_at AS createdAt, updated_at AS updatedAt FROM communication_preferences WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND recipient_reference = ? ORDER BY created_at DESC, id DESC",
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+      recipientReference.trim(),
+    );
+  }
+
+  async setCommunicationPreference(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly recipientReference: string;
+      readonly category: "transactional" | "security" | "marketing" | "reminders" | "product_updates";
+      readonly channel?: CommunicationChannel;
+      readonly status: "allowed" | "denied";
+      readonly source: string;
+      readonly consentReference?: string;
+      readonly effectiveFrom: string;
+      readonly effectiveTo?: string;
+      readonly now: string;
+    },
+  ): Promise<CommunicationPreferenceRecord> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    await this.database.run(
+      "INSERT INTO communication_preferences (id, organization_id, workspace_id, recipient_reference, category, channel, status, source, consent_reference, effective_from, effective_to, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      organizationId,
+      context.workspaceId ?? null,
+      input.recipientReference.trim(),
+      input.category,
+      input.channel ?? null,
+      input.status,
+      input.source.trim(),
+      input.consentReference ?? null,
+      input.effectiveFrom,
+      input.effectiveTo ?? null,
+      input.now,
+      input.now,
+    );
+    const row=await this.database.first<CommunicationPreferenceRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, category, channel, status, source, consent_reference AS consentReference, effective_from AS effectiveFrom, effective_to AS effectiveTo, created_at AS createdAt, updated_at AS updatedAt FROM communication_preferences WHERE id=? LIMIT 1",
+      input.id,
+    );
+    if(!row) throw new DatabaseError("Communication preference not found after creation");
+    return row;
+  }
+
+  async createSuppression(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly recipientReference: string;
+      readonly scope: "global" | "category" | "channel" | "intent";
+      readonly category?: "transactional" | "security" | "marketing" | "reminders" | "product_updates";
+      readonly channel?: CommunicationChannel;
+      readonly intent?: string;
+      readonly reasonCode: string;
+      readonly source: string;
+      readonly effectiveFrom: string;
+      readonly expiresAt?: string;
+      readonly now: string;
+    },
+  ): Promise<EntityId> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    await this.database.run(
+      "INSERT INTO communication_suppression_records (id, organization_id, workspace_id, recipient_reference, scope, category, channel, intent, reason_code, source, status, effective_from, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)",
+      input.id,
+      organizationId,
+      context.workspaceId ?? null,
+      input.recipientReference.trim(),
+      input.scope,
+      input.category ?? null,
+      input.channel ?? null,
+      input.intent ?? null,
+      input.reasonCode.trim(),
+      input.source.trim(),
+      input.effectiveFrom,
+      input.expiresAt ?? null,
+      input.now,
+      input.now,
+    );
+    return input.id;
+  }
+
+  async releaseSuppression(context: RequestContext, id: EntityId, now: string): Promise<EntityId> {
+    await this.database.run(
+      "UPDATE communication_suppression_records SET status = 'released', updated_at = ? WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND status = 'active'",
+      now,
+      id,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+    );
+    return id;
   }
 
   async queueNotificationFromSystem(input: {
@@ -359,7 +606,7 @@ export class CommunicationRepository extends Repository {
   async listDispatchableNotifications(now: string, limit = 50): Promise<readonly NotificationRecord[]> {
     const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
     const rows = await this.database.all<NotificationRow>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale, variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey, scheduled_at AS scheduledAt, expires_at AS expiresAt, last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt FROM communication_notifications WHERE status = 'queued' AND (scheduled_at IS NULL OR scheduled_at <= ?) AND (expires_at IS NULL OR expires_at > ?) ORDER BY priority DESC, created_at ASC, id ASC LIMIT ?",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale, variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey, scheduled_at AS scheduledAt, expires_at AS expiresAt, policy_version AS policyVersion, last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt FROM communication_notifications WHERE status = 'queued' AND (scheduled_at IS NULL OR scheduled_at <= ?) AND (expires_at IS NULL OR expires_at > ?) ORDER BY priority DESC, created_at ASC, id ASC LIMIT ?",
       now,
       now,
       safeLimit,
@@ -436,7 +683,7 @@ export class CommunicationRepository extends Repository {
 
   async getNotification(context: RequestContext, id: EntityId): Promise<NotificationRecord | null> {
     const row = await this.database.first<NotificationRow>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale, variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey, scheduled_at AS scheduledAt, expires_at AS expiresAt, last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt FROM communication_notifications WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference, intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale, variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey, scheduled_at AS scheduledAt, expires_at AS expiresAt, policy_version AS policyVersion, last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt FROM communication_notifications WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
       id, this.requireOrganization({ organizationId: context.tenantId }), context.workspaceId ?? null,
     );
     return row ? hydrateNotification(row) : null;
@@ -531,12 +778,48 @@ interface DeliveryRow {
   readonly retryCount: number; readonly nextRetryAt: string | null; readonly failureCode: string | null;
   readonly failureClass: "transient" | "permanent" | null; readonly metadataJson: string | null; readonly createdAt: string;
 }
+interface CommunicationIntentPolicyRow {
+  readonly id: EntityId;
+  readonly intentKey: string;
+  readonly category: "transactional" | "security" | "marketing" | "reminders" | "product_updates";
+  readonly requiresOptIn: number;
+  readonly allowedChannelsJson: string;
+  readonly policyVersion: string;
+  readonly status: "active" | "retired";
+}
+
+export interface CommunicationPreferenceRecord {
+  readonly id: EntityId;
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId | null;
+  readonly recipientReference: string;
+  readonly category: "transactional" | "security" | "marketing" | "reminders" | "product_updates";
+  readonly channel: CommunicationChannel | null;
+  readonly status: "allowed" | "denied";
+  readonly source: string;
+  readonly consentReference: string | null;
+  readonly effectiveFrom: string;
+  readonly effectiveTo: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 function hydrateNotification(row: NotificationRow): NotificationRecord {
   return {...row, variables: parseObject(row.variablesJson)};
 }
 function hydrateDelivery(row: DeliveryRow): DeliveryAttemptRecord {
   return {...row, metadata: parseObject(row.metadataJson)};
 }
+function parseStringArray(value: string): readonly string[] {
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "string")) throw new Error("invalid array");
+    return parsed;
+  } catch {
+    throw new DatabaseError("Stored Communication allowed-channel policy is invalid");
+  }
+}
+
 function parseObject(value: string | null): Readonly<Record<string, unknown>> | null {
   if (!value) return null;
   try { const parsed=JSON.parse(value); return parsed && typeof parsed==="object" && !Array.isArray(parsed) ? parsed : null; }
