@@ -53,6 +53,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Case Support core | 🟢 Schema/package/repository/service/API implemented | migrations/0050_case_support_core.sql; packages/case-support/src/repository.ts; packages/case-support/src/service.ts; apps/api/src/case-support-routes.ts |
 | CaseAction execution worker | 🟢 CapabilityRegistry-backed worker implemented | packages/case-support/src/repository.ts; apps/api/src/capabilities.ts; apps/api/src/case-action-worker.ts |
 | Privacy subject scope validation | 🟢 Repository validation/test implemented | packages/privacy/src/repository.ts; packages/privacy/src/repository.test.ts |
+| Privacy subject-request worker orchestration | 🟢 Scheduler/claim/outbox boundary implemented | packages/privacy/src/repository.ts; apps/api/src/privacy-worker.ts; apps/api/src/index.ts |
 | Lifecycle invariant hardening | 🟢 Implemented through `18342b7` + explicit CAS test `8bf1372` | Billing subscription terminal transitions; Matching latest-decision/terminal request guards; Automation execution/attempt terminal guards; AI operation terminal guard + failed-operation replay; CustomerRelationship interaction CAS; focused repository/client tests |
 | CustomerRelationship concurrency hardening | 🟢 Verified in `90792c7` | `packages/database/src/customer-relationship-repository.ts`; `c2692c8`; `2b98364`; `48af422`; `7573f49` test harness |
 | Business lifecycle concurrency hardening | 🟢 Verified in `90792c7` | `packages/business/src/repository.ts`; `b935137`; `90792c7` test harness |
@@ -405,7 +406,7 @@ Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete
 
 Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The current verified head `076e7863073fa10a1e78624de9467531464242fb` passed both CI and Phoenix verification (CI `35896040161`; Phoenix verification `35896039974`). Full external D1 application has not yet been executed.
 
-Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events, Automation scheduled execution, AI durable Seller AI worker resolution, and privacy consent expiry are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processing, communication consent/anti-spam policy and external adapters, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
+Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events, Automation scheduled execution, AI durable Seller AI worker resolution, privacy consent expiry and approved-request orchestration are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processing, communication consent/anti-spam policy and external adapters, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
 
 Deployment readiness note: `wrangler.toml` now documents environment-specific D1/Queue/R2 bindings without inventing remote resource IDs. Remote D1 provisioning and real Cloudflare binding configuration remain the final infrastructure gate.
 
@@ -453,6 +454,10 @@ Latest verified commits:
 - 085805e — Expose Automation lifecycle service
 - 5c8219f — Complete Automation workflow activation and lifecycle control
 - 076e7863 — Publish canonical Matching outbox events transactionally
+- f178a59 — Add Privacy subject-request claim boundary
+- 397de04 — Implement Privacy approved-request worker orchestration
+- f3d5067 — Run Privacy subject-request worker from scheduled Worker
+- b4db6ef — Test Privacy request claim boundary
 - 5869597 — Test canonical Matching Connect flow
 - 421a91c — Keep Matching Connect dependency optional for non-connect consumers
 - a06eb07 — Make Match Connect selection-bound and replay-safe
@@ -480,7 +485,7 @@ Matching Connect note: `packages/matching/src/service.ts`, `packages/matching/sr
 
 Discovery projection note: Business creation/publication outbox events are now consumed by the Discovery projector; indexed eligibility follows authoritative Business publication state. Catalog/product projection remains derived and non-authoritative. Migration 0054 adds versioned search-index generations, query traces and evaluation evidence.
 
-Privacy note: migration 0039 establishes consent, privacy-request and per-module processing persistence. Canonical subject scope validation now rejects customer/member/user/actor references outside the current organization/workspace before consent or privacy-request writes; durable export/delete/retention workers remain follow-up operational capabilities.
+Privacy note: migration 0039 establishes consent, privacy-request and per-module processing persistence. Canonical subject scope validation now rejects customer/member/user/actor references outside the current organization/workspace before consent or privacy-request writes. The scheduled worker now atomically claims approved requests, records privacy orchestration processing state and emits the existing request-status Outbox event; domain-specific export/delete/retention processors remain policy-gated.
 
 Integration worker note: durable webhook/sync claim/finish semantics and provider-adapter boundaries are now implemented. The scheduled Worker deliberately leaves jobs untouched when no matching provider adapter is registered; actual provider-specific adapters remain external integration work.
 
