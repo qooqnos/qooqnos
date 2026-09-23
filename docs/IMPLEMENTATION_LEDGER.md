@@ -605,5 +605,7 @@ Automation scheduler note: the Worker scheduled hook now plans fixed-duration IS
 
 Case SLA worker note: the Worker scheduled hook now evaluates active cases against explicit CaseSLA first-response and resolution targets, records explicit `case.first_response` events through a protected capability, and emits idempotent `case.sla_breached` case/outbox evidence. No new SLA table was introduced; queue dispatch and CaseAction execution remain behind the canonical capability boundary.
 
+Privacy consent expiry note: scheduled processing now transitions only expired granted consents to `expired` and emits idempotent `privacy.consent.expired` Outbox evidence. Export/delete and subject-level identity validation remain deliberately gated.
+
 
 CI verification checkpoint: commit `488a04c93d34ed725433a37af71941348a02f136` passed GitHub CI and Phoenix verification after the Case SLA worker/first-response implementation and fixes. No PR was created.
