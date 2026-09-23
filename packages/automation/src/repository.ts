@@ -321,6 +321,25 @@ export class AutomationRepository extends Repository {
     return this.getExecution(context, input.id);
   }
 
+  async listPendingExecutions(now: string, limit = 50): Promise<readonly WorkflowExecutionRecord[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
+    return this.database.all<WorkflowExecutionRecord>(
+      "SELECT id, workflow_id AS workflowId, workflow_version_id AS workflowVersionId, trigger_id AS triggerId, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, status, input_reference AS inputReference, correlation_id AS correlationId, trace_id AS traceId, started_at AS startedAt, completed_at AS completedAt, created_at AS createdAt, updated_at AS updatedAt FROM automation_executions WHERE status = 'pending' AND created_at <= ? ORDER BY created_at ASC, id ASC LIMIT ?",
+      now,
+      safeLimit,
+    );
+  }
+
+  async claimPendingExecution(id: EntityId, now: string): Promise<boolean> {
+    const result = await this.database.run(
+      "UPDATE automation_executions SET status = 'running', started_at = COALESCE(started_at, ?), updated_at = ? WHERE id = ? AND status = 'pending'",
+      now,
+      now,
+      id,
+    );
+    return (result.meta?.changes ?? 0) === 1;
+  }
+
   async getExecution(context: RequestContext, id: EntityId): Promise<WorkflowExecutionRecord> {
     const row = await this.database.first<WorkflowExecutionRecord>(
       "SELECT id, workflow_id AS workflowId, workflow_version_id AS workflowVersionId, trigger_id AS triggerId, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, status, input_reference AS inputReference, correlation_id AS correlationId, trace_id AS traceId, started_at AS startedAt, completed_at AS completedAt, created_at AS createdAt, updated_at AS updatedAt FROM automation_executions WHERE id = ? AND (organization_id IS NULL OR organization_id = ?) AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
