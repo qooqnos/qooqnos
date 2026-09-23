@@ -74,7 +74,7 @@ export async function processApprovedPrivacyRequests(
             },
           });
 
-          await repository.recordProcessing({
+          await repository.recordProcessingSystem({
             requestId: item.id,
             moduleId: processor.moduleId,
             action: processorResult.action,
