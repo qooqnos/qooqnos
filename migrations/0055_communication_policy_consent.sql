@@ -165,28 +165,29 @@ BEGIN
     AND NOT EXISTS (
       SELECT 1
       FROM communication_preferences p
-      WHERE p.organization_id = NEW.organization_id
-        AND ((p.workspace_id IS NULL AND NEW.workspace_id IS NULL) OR p.workspace_id = NEW.workspace_id)
-        AND p.recipient_reference = NEW.recipient_reference
-        AND p.status = 'allowed'
-        AND p.category = (
-          SELECT ci2.category FROM communication_intents ci2
-          WHERE ci2.intent_key = NEW.intent
-            AND ci2.status = 'active'
-        )
-        AND (p.channel IS NULL OR p.channel = NEW.channel)
-        AND p.effective_from <= CURRENT_TIMESTAMP
-        AND (p.effective_to IS NULL OR p.effective_to > CURRENT_TIMESTAMP)
-        AND NOT EXISTS (
-          SELECT 1
-          FROM communication_preferences newer
-          WHERE newer.organization_id = p.organization_id
-            AND ((newer.workspace_id IS NULL AND p.workspace_id IS NULL) OR newer.workspace_id = p.workspace_id)
-            AND newer.recipient_reference = p.recipient_reference
-            AND newer.category = p.category
-            AND (newer.channel IS NULL OR newer.channel = p.channel)
-            AND newer.created_at > p.created_at
-        )
+      WHERE p.id = (
+        SELECT latest.id
+        FROM communication_preferences latest
+        WHERE latest.organization_id = NEW.organization_id
+          AND (latest.workspace_id IS NULL OR latest.workspace_id = NEW.workspace_id)
+          AND latest.recipient_reference = NEW.recipient_reference
+          AND latest.category = (
+            SELECT ci2.category
+            FROM communication_intents ci2
+            WHERE ci2.intent_key = NEW.intent
+              AND ci2.status = 'active'
+          )
+          AND (latest.channel IS NULL OR latest.channel = NEW.channel)
+          AND latest.effective_from <= CURRENT_TIMESTAMP
+          AND (latest.effective_to IS NULL OR latest.effective_to > CURRENT_TIMESTAMP)
+        ORDER BY
+          CASE WHEN latest.workspace_id = NEW.workspace_id THEN 0 ELSE 1 END,
+          CASE WHEN latest.channel = NEW.channel THEN 0 ELSE 1 END,
+          latest.created_at DESC,
+          latest.id DESC
+        LIMIT 1
+      )
+      AND p.status = 'allowed'
     )
     THEN RAISE(ABORT, 'Communication opt-in is required')
   END;
