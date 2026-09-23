@@ -348,7 +348,6 @@ export function createApiCapabilityRegistry(
         });
       },
     },
-  ]);
 
     {
       ids: ["CAP.BOOKING.CONFIRM", "booking.confirm"],
