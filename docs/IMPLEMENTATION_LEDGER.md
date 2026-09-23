@@ -625,13 +625,15 @@ Case SLA worker note: the Worker scheduled hook now evaluates active cases again
 
 Privacy consent expiry note: scheduled processing now transitions only expired granted consents to `expired` and emits idempotent `privacy.consent.expired` Outbox evidence. Export/delete and subject-level identity validation remain deliberately gated.
 
-AI worker note: migration 0053 adds worker lease ownership to the existing `ai_operations` record. `packages/ai/src/worker.ts` claims stale/runnable operations, resolves only through a required `AIRuntimeInputResolver`, records failures durably, and releases leases. The Worker scheduler is deliberately not wired until a canonical payload resolver exists.
+AI worker note: migration 0053 adds worker lease ownership to the existing `ai_operations` record. `packages/ai/src/worker.ts` claims stale/runnable operations, resolves only through a required `AIRuntimeInputResolver`, records failures durably, and releases leases. The Worker scheduler invokes the canonical Seller AI input resolver; unsupported AI operation types fail closed until their own explicit resolver is registered.
 
 CaseAction state note: CaseAction now has explicit repository/service/API approval, cancellation and completion transitions with authorization checks. `apps/api/src/case-action-worker.ts` claims approved actions and executes them through the same canonical CapabilityRegistry as Automation, preserving tenant/workspace scope and current actor authorization.
 
 
-Verification checkpoint: current `main` commit `f70c572eb39a092fe54222f934b476a8f7543f93` passed GitHub CI run `35878164561` and Phoenix verification run `35878164342`. The green suite passed format/lint, migration-lock verification, typecheck, build and tests; the head also reconciles the AI scheduler completion status.
+Verification checkpoint: current `main` commit `577d9087873f3101881d16a5483bb46b073a9d6e` passed GitHub CI run `35880130727` and Phoenix verification run `35880131164`. The green suite passed format/lint, migration-lock verification, typecheck, build, Cloudflare Worker dry-run bundling, and tests.
 
+
+Cloudflare bundling note: CI now runs `npm run verify:worker` using Wrangler `4.136.2`; workspace packages are aliased to their canonical source entrypoints, so Worker bundling does not depend on unbuilt `dist/` workspace artifacts.
 
 Production deployment preflight: `scripts/verify-production-bindings.mjs` and `predeploy:prod` now fail closed when real production D1/Queue/R2 bindings are absent or still contain placeholders. The repository intentionally does not fabricate Cloudflare resource IDs; remote provisioning remains the final external infrastructure gate.
 
