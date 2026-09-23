@@ -129,6 +129,11 @@ Opt-out must propagate to all applicable outbound paths.
 
 A business cannot override a customer's global communication restrictions unless an explicit lawful transactional exception applies.
 
+
+## 7.1 Consent and policy enforcement
+
+Before enqueueing an outbound notification, Communications evaluates the registered intent policy, allowed channel, recipient preference state, and active suppression records. The result and policy version are persisted as Communication-owned decision evidence. Policy-denied/suppressed notifications are retained for audit but never published to Outbox dispatch.
+
 ## 8. Authorization and Policy
 
 Before sending:
@@ -336,6 +341,8 @@ AI may not:
 Any AI-created outbound message passes the same schema, policy, consent, authorization, template, audit, and delivery pipeline as a human-created message.
 
 ## 20. Rate Limits and Anti-Spam
+
+Consent/intent/suppression policy is implemented in Communication. Edge/platform rate limiting and anomaly detection remain infrastructure/security controls rather than domain policy tables.
 
 Apply limits at multiple scopes:
 
