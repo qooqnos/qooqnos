@@ -206,6 +206,66 @@ export function registerCaseSupportRoutes(
 
   router.register({
     method: "POST",
+    path: "/api/v1/cases/:caseId/actions/:actionId/approve",
+    module: "case-support",
+    operation: "case.update",
+    permission: "case.update",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      await service.approveAction(context, {
+        caseId: brandId<"EntityId">(requiredParam(params.caseId, context.requestId)),
+        actionId: brandId<"EntityId">(requiredParam(params.actionId, context.requestId)),
+        authorizationReference: requiredString(body.authorizationReference, "authorizationReference", context.requestId),
+      });
+      return json({ approved: true }, 202, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/cases/:caseId/actions/:actionId/cancel",
+    module: "case-support",
+    operation: "case.update",
+    permission: "case.update",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      await service.cancelAction(context, {
+        caseId: brandId<"EntityId">(requiredParam(params.caseId, context.requestId)),
+        actionId: brandId<"EntityId">(requiredParam(params.actionId, context.requestId)),
+      });
+      return json({ cancelled: true }, 202, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/cases/:caseId/actions/:actionId/complete",
+    module: "case-support",
+    operation: "case.update",
+    permission: "case.update",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const status = requiredEnum(body.status, "status", ["succeeded","failed"], context.requestId);
+      await service.completeAction(context, {
+        caseId: brandId<"EntityId">(requiredParam(params.caseId, context.requestId)),
+        actionId: brandId<"EntityId">(requiredParam(params.actionId, context.requestId)),
+        status,
+        ...(body.resultReference !== undefined ? { resultReference: requiredString(body.resultReference, "resultReference", context.requestId) } : {}),
+      });
+      return json({ completed: true, status }, 202, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/cases/:caseId/resolve",
     module: "case-support",
     operation: "case.resolve",
