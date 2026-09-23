@@ -91,7 +91,7 @@ Database completion note: all physical table contracts in docs/PHYSICAL_SCHEMA_B
 
 **Database engineering readiness: 91.7% on the explicit 12-gate rubric:** 11 repository/schema/runtime gates are closed; the remaining gate is credentialed remote application of the canonical migration history to the provisioned production D1. This percentage is a readiness metric, not a product-completion score.
 
-The current main head is 40 commits ahead of the last fully verified checkpoint. The compare shows only documentation/package/deployment-script changes after that checkpoint; no canonical migration SQL was changed. Current connector access did not expose a successful workflow run for the latest head, so the latest CI result is not claimed as current-head verification.
+The current main head is 45 commits ahead of the last fully verified checkpoint. The compare shows no canonical migration SQL changes after that checkpoint; the current delta is documentation, CI/package configuration and database-audit/deployment scripts. The latest head is not claimed as CI-verified because the exposed workflow-run query does not return a successful run for it.
 
 ## 2. Database history
 
