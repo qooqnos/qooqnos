@@ -194,6 +194,158 @@ export class AutomationRepository extends Repository {
     return row;
   }
 
+
+  async listActions(context: RequestContext, workflowVersionId: EntityId): Promise<readonly {
+    readonly id: EntityId;
+    readonly capability: string;
+    readonly inputMappingJson: string;
+    readonly sequence: number;
+  }[]> {
+    const version = await this.database.first<{ workflowId: EntityId }>(
+      "SELECT workflow_id AS workflowId FROM automation_workflow_versions WHERE id = ? LIMIT 1",
+      workflowVersionId,
+    );
+    if (!version) throw new DatabaseError("Automation workflow version not found");
+    await this.getWorkflow(context, version.workflowId);
+    return this.database.all(
+      "SELECT id, capability, input_mapping_json AS inputMappingJson, sequence FROM automation_actions WHERE workflow_version_id = ? ORDER BY sequence ASC, id ASC",
+      workflowVersionId,
+    );
+  }
+
+  async createStepExecution(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly executionId: EntityId;
+      readonly stepId: EntityId;
+      readonly sequence: number;
+      readonly now: string;
+    },
+  ) {
+    await this.getExecution(context, input.executionId);
+    await this.database.run(
+      "INSERT INTO automation_step_executions (id, execution_id, step_id, status, sequence, created_at, updated_at) VALUES (?, ?, ?, 'pending', ?, ?, ?)",
+      input.id,
+      input.executionId,
+      input.stepId,
+      input.sequence,
+      input.now,
+      input.now,
+    );
+    return this.database.first(
+      "SELECT id, execution_id AS executionId, step_id AS stepId, status, sequence, input_reference AS inputReference, output_reference AS outputReference, started_at AS startedAt, completed_at AS completedAt, created_at AS createdAt, updated_at AS updatedAt FROM automation_step_executions WHERE id = ? LIMIT 1",
+      input.id,
+    );
+  }
+
+  async updateStepExecution(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly status: "pending" | "running" | "waiting" | "completed" | "failed" | "skipped";
+      readonly inputReference?: string | undefined;
+      readonly outputReference?: string | undefined;
+      readonly startedAt?: string | undefined;
+      readonly completedAt?: string | undefined;
+      readonly now: string;
+    },
+  ) {
+    const execution = await this.database.first<{ executionId: EntityId }>(
+      "SELECT execution_id AS executionId FROM automation_step_executions WHERE id = ? LIMIT 1",
+      input.id,
+    );
+    if (!execution) throw new DatabaseError("Automation step execution not found");
+    await this.getExecution(context, execution.executionId);
+    await this.database.run(
+      "UPDATE automation_step_executions SET status = ?, input_reference = COALESCE(?, input_reference), output_reference = COALESCE(?, output_reference), started_at = COALESCE(started_at, ?), completed_at = COALESCE(?, completed_at), updated_at = ? WHERE id = ?",
+      input.status,
+      input.inputReference ?? null,
+      input.outputReference ?? null,
+      input.startedAt ?? null,
+      input.completedAt ?? null,
+      input.now,
+      input.id,
+    );
+  }
+
+  async createExecutionAttempt(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly stepExecutionId: EntityId;
+      readonly attemptNumber: number;
+      readonly idempotencyKey: string;
+      readonly now: string;
+    },
+  ) {
+    const step = await this.database.first<{ executionId: EntityId }>(
+      "SELECT execution_id AS executionId FROM automation_step_executions WHERE id = ? LIMIT 1",
+      input.stepExecutionId,
+    );
+    if (!step) throw new DatabaseError("Automation step execution not found");
+    await this.getExecution(context, step.executionId);
+    await this.database.run(
+      "INSERT INTO automation_execution_attempts (id, step_execution_id, attempt_number, idempotency_key, status, started_at) VALUES (?, ?, ?, ?, 'running', ?)",
+      input.id,
+      input.stepExecutionId,
+      input.attemptNumber,
+      input.idempotencyKey,
+      input.now,
+    );
+  }
+
+  async completeExecutionAttempt(
+    context: RequestContext,
+    input: {
+      readonly idempotencyKey: string;
+      readonly status: "succeeded" | "failed" | "cancelled";
+      readonly completedAt: string;
+    },
+  ): Promise<void> {
+    const attempt = await this.database.first<{ id: EntityId; executionId: EntityId }>(
+      "SELECT a.id, se.execution_id AS executionId FROM automation_execution_attempts a INNER JOIN automation_step_executions se ON se.id = a.step_execution_id WHERE a.idempotency_key = ? LIMIT 1",
+      input.idempotencyKey,
+    );
+    if (!attempt) throw new DatabaseError("Automation execution attempt not found");
+    await this.getExecution(context, attempt.executionId);
+    await this.database.run(
+      "UPDATE automation_execution_attempts SET status = ?, completed_at = ? WHERE id = ?",
+      input.status,
+      input.completedAt,
+      attempt.id,
+    );
+  }
+
+  async recordExecutionError(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly executionId: EntityId;
+      readonly stepExecutionId?: EntityId | undefined;
+      readonly attemptId?: EntityId | undefined;
+      readonly errorClass: string;
+      readonly retryable: boolean;
+      readonly safeMessage: string;
+      readonly providerReference?: string | undefined;
+      readonly now: string;
+    },
+  ): Promise<void> {
+    await this.getExecution(context, input.executionId);
+    await this.database.run(
+      "INSERT INTO automation_execution_errors (id, execution_id, step_execution_id, attempt_id, error_class, retryable, safe_message, provider_reference, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      input.executionId,
+      input.stepExecutionId ?? null,
+      input.attemptId ?? null,
+      input.errorClass,
+      input.retryable ? 1 : 0,
+      input.safeMessage,
+      input.providerReference ?? null,
+      input.now,
+    );
+  }
+
   async setExecutionStatus(context: RequestContext, id: EntityId, status: AutomationExecutionStatus, now: string): Promise<WorkflowExecutionRecord> {
     const current = await this.getExecution(context, id);
     const completedAt = ["completed","failed","cancelled"].includes(status) ? now : current.completedAt;
