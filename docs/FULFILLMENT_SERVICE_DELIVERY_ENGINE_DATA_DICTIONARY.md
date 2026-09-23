@@ -14,7 +14,7 @@ This document defines the canonical data model vocabulary for the Fulfillment & 
 | Product / service definition | Catalog |
 | Order / OrderLine | Commerce |
 | Booking / Appointment | Booking |
-| Payment / Refund | Billing / Commerce |
+| Payment / Refund | Billing / Payment |
 | Fulfillment execution | Fulfillment |
 | Customer identity | Identity |
 | Authorization | Authorization |
