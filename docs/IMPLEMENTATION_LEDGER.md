@@ -624,8 +624,8 @@ Open completion gates are deliberately limited to:
 
 CustomerProfile remains a logical aggregate over existing Customer-owned records; CRM timeline events are canonical projection input and do not require a duplicate timeline table.
 
-Verification checkpoint: `fc7f53e1f848094a32aa697d3bafab90197ab9e6` passed GitHub Actions CI run `35883717408` and Phoenix verification run `35883717643`. The verified steps include format/lint, migration-lock verification, typecheck, workspace build, Cloudflare Worker dry-run bundling and unit tests.
+Verification checkpoint: `d122981098cc1d517664afdce3d33d3333e82afa` passed GitHub Actions CI run `35884840249` and Phoenix verification run `35884840411`. The verified steps include format/lint, migration-lock verification, typecheck, workspace build, Cloudflare Worker dry-run bundling and 70 test files / 197 passing tests.
 
-The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above.
+The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above. Privacy subject scope validation was added in commits `afcff1bb0023187024b12508f7eb7cf175d8bec6` and `c121e50055d3a2e3ca1023c88c13a2f5bb403fa0`, then reconciled into the verified checkpoint `d122981098cc1d517664afdce3d33d3333e82afa`.
 
 Migration continuity remains mandatory: never renumber, rewrite or replace an existing migration. Every physical change must use a new numbered migration and preserve the canonical migration lock.
