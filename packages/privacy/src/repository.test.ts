@@ -298,7 +298,7 @@ describe("PrivacyRepository", () => {
     const raw: D1DatabaseLike = { prepare() { return statement; }, async batch(statements) { return statements.map(() => ({ success: true, meta: { changes: 1 } })); } };
     const repository = new PrivacyRepository(new D1Database(raw));
 
-    const result = await repository.claimApprovedRequest({
+    const result = await repository.claimOrResumeRequest({
       requestId: brandId<"EntityId">("request-1"),
       now: "2026-09-23T00:00:00.000Z",
     });
