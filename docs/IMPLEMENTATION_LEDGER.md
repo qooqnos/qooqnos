@@ -598,7 +598,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory now reaches migration 0053. The latest main run is being re-verified after the migration-lock checksum correction; do not treat historical green checkpoints as the current verification state. The remaining work is execution/completion, not schema invention:
+The canonical physical inventory now reaches migration 0053. The latest main checkpoint is green; do not treat older verification snapshots as the current state. The remaining work is execution/completion, not schema invention:
 
 ```
 pass CI build + tests
