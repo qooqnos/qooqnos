@@ -159,6 +159,29 @@ export function registerFulfillmentRoutes(
 
   router.register({
     method: "POST",
+    path: "/api/v1/fulfillment/service-deliveries",
+    module: "fulfillment",
+    operation: "fulfillment.plan",
+    permission: "fulfillment.plan",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const result = await service.createServiceDelivery(context, {
+        fulfillmentItemId: requiredId(body.fulfillmentItemId, "fulfillmentItemId", context.requestId),
+        bookingRef: requiredId(body.bookingRef, "bookingRef", context.requestId),
+        ...(body.providerRef !== undefined ? { providerRef: requiredString(body.providerRef, "providerRef", context.requestId) } : {}),
+        ...(body.serviceLocationRef !== undefined ? { serviceLocationRef: requiredString(body.serviceLocationRef, "serviceLocationRef", context.requestId) } : {}),
+        ...(body.scheduledFrom !== undefined ? { scheduledFrom: requiredString(body.scheduledFrom, "scheduledFrom", context.requestId) } : {}),
+        ...(body.scheduledTo !== undefined ? { scheduledTo: requiredString(body.scheduledTo, "scheduledTo", context.requestId) } : {}),
+      });
+      return json({ data: result }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/fulfillment/service-deliveries/:serviceDeliveryId/complete",
     module: "fulfillment",
     operation: "fulfillment.confirm_service_completion",
