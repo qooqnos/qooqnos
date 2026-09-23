@@ -24,7 +24,7 @@ Phoenix does not use Wrangler's generated D1 migration registry as the applicati
 
 `migrations/*.sql` → migration catalog → migration lock → Phoenix runtime MigrationRunner
 
-The current canonical sequence ends at `0050_case_support_core.sql`.
+The current canonical sequence ends at `0053_ai_runtime_worker_leases.sql`.
 
 ## Runtime safety
 
@@ -43,7 +43,7 @@ No provider credentials, D1 UUIDs, Queue names, or R2 bucket names are invented 
 
 The repository now provides two fail-closed checks before production deployment:
 
-- `pnpm verify:production-bindings` rejects missing production D1, Queue and R2 bindings or placeholder resource IDs.
-- `pnpm predeploy:prod` runs production binding verification, migration-lock verification, lint, typecheck, build and tests.
+- `npm run verify:production-bindings` rejects missing production D1, Queue and R2 bindings or placeholder resource IDs.
+- `npm run predeploy:prod` runs production binding verification, migration-lock verification, lint, typecheck, build and tests.
 
 These checks intentionally fail until real Cloudflare resources are provisioned and their bindings are uncommented/configured in `wrangler.toml`. No fabricated Cloudflare IDs are stored in source control.
