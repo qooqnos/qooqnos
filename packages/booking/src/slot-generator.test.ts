@@ -137,7 +137,7 @@ describe("generateAvailabilitySlots", () => {
     expect(() => generateAvailabilitySlots(
       availability(),
       "2026-01-01T00:00:00.000Z",
-      "2026-02-01T00:00:00.000Z",
+      "2026-02-02T00:00:00.000Z",
       3600,
       "2025-12-01T00:00:00.000Z",
     )).toThrow("31 days");
