@@ -8,14 +8,14 @@
 
 The latest verified `main` checkpoint is:
 
-`1e626926adaa72f8ca7823e546f84710d6b1478c`
+`ea9f4a36d1c3ebb0ecf4103f574e783a87d41ad8`
 
-Current `main` head is `1e626926adaa72f8ca7823e546f84710d6b1478c`; this head is covered by the latest successful CI and Phoenix verification runs.
+Current `main` head is `ea9f4a36d1c3ebb0ecf4103f574e783a87d41ad8`; this head is covered by the latest successful CI and Phoenix verification runs.
 
 Both required workflows passed:
 
-- **CI:** current head verification run `35894788769` — success
-- **Phoenix verification:** current head run `35894788802` — success
+- **CI:** current head verification run `35894980283` — success
+- **Phoenix verification:** current head run `35894980114` — success
 
 The latest verification run on the current `main` head completed successfully. The repository's CI/verification workflows are now the authoritative validation result for build, typecheck, migration integrity and tests on this head.
 
