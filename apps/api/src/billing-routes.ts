@@ -1,7 +1,6 @@
 import { BillingRepository, BillingService } from "@qooqnos/billing";
-import { AuthorizationRepository } from "@qooqnos/database";
-import { createAuthorizationService, type AuthorizationRegistry } from "@qooqnos/runtime";
-import { AppError, brandId, type EntityId } from "@qooqnos/core";
+import type { AuthorizationRegistry } from "@qooqnos/runtime";
+import { AppError, type EntityId } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
@@ -9,7 +8,7 @@ import { json } from "./http";
 export function registerBillingRoutes(
   router: ApiRouter,
   database: D1Database | undefined,
-  authorization: AuthorizationRegistry | undefined,
+  _authorization: AuthorizationRegistry | undefined,
 ): void {
   router.register({
     method: "GET",
@@ -21,7 +20,7 @@ export function registerBillingRoutes(
     requireWorkspace: false,
     handler: async ({ context, request }) => {
       void request;
-      const service = createService(database, authorization, context.requestId);
+      const service = createService(database, context.requestId);
       const plans = await service.listPlans(context);
       return json({ data: plans }, 200, context.requestId);
     },
