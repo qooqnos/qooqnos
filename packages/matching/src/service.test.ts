@@ -366,3 +366,11 @@ describe("MatchingService", () => {
   });
 
 });
+
+import { MATCHING_PERMISSIONS } from "./service";
+
+describe("Matching permissions", () => {
+  it("registers the Connect capability used by the canonical route", () => {
+    expect(MATCHING_PERMISSIONS).toContain("matching.request.connect");
+  });
+});
