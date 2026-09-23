@@ -30,7 +30,8 @@
     "deploy:prod": "npm run predeploy:prod && npm run migrate:prod:canonical && npx --yes wrangler@4.136.2 deploy --config .wrangler/production.wrangler.toml --env production",
     "verify:source-boundary": "node scripts/verify-canonical-source-boundary.mjs",
     "verify:runtime-registry": "node scripts/verify-runtime-module-registry.mjs",
-    "migrate:prod:canonical": "node scripts/migrate-production-d1.mjs"
+    "migrate:prod:canonical": "node scripts/migrate-production-d1.mjs",
+    "report:database": "node scripts/report-database-completion.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
