@@ -589,7 +589,7 @@ Preference history is recipient- and scope-aware. The latest applicable record w
 
 `id`, organization_id, workspace_id?, recipient_reference, scope, category?, channel?, intent?, reason_code, source, status, effective_from, expires_at?, created_at, updated_at.
 
-Suppressions are explicit policy blocks independent from UI preference state.
+Suppressions are explicit policy blocks independent from UI preference state. `applies_to_required` distinguishes global/optional suppression from explicitly required transactional/security traffic.
 
 ### `communication_policy_decisions`
 
