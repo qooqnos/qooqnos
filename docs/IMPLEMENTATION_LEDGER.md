@@ -456,9 +456,9 @@ Privacy note: migration 0039 establishes consent, privacy-request and per-module
 
 Integration note: migration 0038 establishes provider/account/webhook/sync/external-reference persistence; provider adapters and durable sync workers remain operational follow-up.
 
-AI Runtime composition note: Seller AI now persists canonical AI operation/result/usage evidence around the shared Runtime. Repeated Seller AI requests replay the persisted draft before invoking the model again; provider adapters/routing/validation workers remain the next operational layers.
+AI Runtime composition note: Seller AI now persists canonical AI operation/result/usage evidence around the shared Runtime. Repeated Seller AI requests replay the persisted draft before invoking the model again; the remaining AI operational gate is durable/asynchronous worker orchestration.
 
-AI Runtime note: migration 0037 establishes shared operation/provider/model/policy/prompt/schema/result/usage persistence. Runtime provider/model strings are not written into FK fields until a canonical provider/model registry mapping contract is explicit. Persistent Runtime terminal operations now replay stored terminal evidence instead of invoking a provider again; abstention is retained in `ai_runtime_results` while the operation lifecycle uses the canonical `blocked` status. 
+AI Runtime note: migration 0037 establishes shared operation/provider/model/policy/prompt/schema/result/usage persistence. The Runtime now has the canonical provider registry, governance eligibility checks, routing policy, provider/model identity validation and output/safety validation; persistent terminal operations replay stored terminal evidence instead of invoking a provider again, and abstention is retained in `ai_runtime_results` while lifecycle state uses canonical `blocked`. 
 
 Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. External provider adapters plus template/policy/consent layers remain gated.
 
