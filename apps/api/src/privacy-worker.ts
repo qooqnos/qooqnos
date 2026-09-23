@@ -16,3 +16,38 @@ export async function processPrivacyConsentExpiry(
   const repository = new PrivacyRepository(database);
   return { expired: await repository.expireConsents(now, limit) };
 }
+export interface PrivacyRequestWorkResult {
+  readonly claimed: number;
+  readonly skipped: number;
+  readonly failed: number;
+}
+
+export async function processApprovedPrivacyRequests(
+  env: ApiEnv,
+  now = new Date().toISOString(),
+  limit = 50,
+): Promise<PrivacyRequestWorkResult> {
+  const database = getDatabase(env);
+  if (!database) return { claimed: 0, skipped: 0, failed: 0 };
+
+  const repository = new PrivacyRepository(database);
+  const items = await repository.listApprovedRequests(limit);
+  let claimed = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const item of items) {
+    try {
+      const result = await repository.claimApprovedRequest({
+        requestId: item.id,
+        now,
+      });
+      if (result) claimed += 1;
+      else skipped += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  return { claimed, skipped, failed };
+}
