@@ -244,3 +244,20 @@ function requiredIdempotencyKey(request: Request, requestId: EntityId): string {
   if (value.length > 200) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is too long.", requestId });
   return value;
 }
+
+function requiredInteger(value: unknown, field: string, requestId: EntityId): number {
+  if (!Number.isSafeInteger(value)) {
+    throw new AppError({ code: "VALIDATION_ERROR", message: field + " must be an integer.", requestId });
+  }
+  return value as number;
+}
+
+function requiredEnum<T extends string>(
+  value: unknown,
+  field: string,
+  allowed: readonly T[],
+  requestId: EntityId,
+): T {
+  if (typeof value === "string" && allowed.includes(value as T)) return value as T;
+  throw new AppError({ code: "VALIDATION_ERROR", message: field + " is invalid.", requestId });
+}
