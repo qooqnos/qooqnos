@@ -611,7 +611,7 @@ pass CI build + tests
 → Communication template registry and provider-neutral dispatch implemented; external provider adapters plus consent/anti-spam policy remain gated
 → AI durable/asynchronous worker lease/claim/reclaim infrastructure is implemented; production scheduling remains gated only until an explicit input resolver is available
 → Matching learning signals and broader Act integrations remain contract-gated
-→ CustomerProfile remains gated until field-level contract is explicit
+→ CustomerProfile is a logical aggregate; no standalone table or duplicate source of truth
 → define remaining Localization/Documents/Analytics contracts
 → provision real Cloudflare D1/R2/Queue resources and production bindings
 ```
