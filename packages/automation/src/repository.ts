@@ -1,5 +1,6 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
+import { nextAutomationOccurrence, parseAutomationRecurrenceMs } from "./scheduler";
 
 export type AutomationExecutionStatus = "pending"|"running"|"waiting"|"completed"|"failed"|"cancelled";
 
@@ -73,7 +74,7 @@ export class AutomationRepository extends Repository {
     readonly misfirePolicy: AutomationScheduleRecord["misfirePolicy"];
     readonly now: string;
   }): Promise<AutomationScheduleRecord> {
-    validateRecurrence(input.recurrence);
+    parseAutomationRecurrenceMs(input.recurrence);
     if (Number.isNaN(Date.parse(input.startAt))) throw new DatabaseError("Automation schedule startAt is invalid");
     if (input.endAt !== undefined && Number.isNaN(Date.parse(input.endAt))) {
       throw new DatabaseError("Automation schedule endAt is invalid");
@@ -83,7 +84,7 @@ export class AutomationRepository extends Repository {
     }
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = context.workspaceId ?? null;
-    const nextRunAt = input.startAt > input.now ? input.startAt : nextRecurrenceAt(input.recurrence, input.startAt, input.now);
+    const nextRunAt = input.startAt > input.now ? input.startAt : nextAutomationOccurrence(input.recurrence, input.startAt);
     await this.database.run(
       "INSERT INTO automation_schedules (id, organization_id, workspace_id, timezone, recurrence, start_at, end_at, misfire_policy, enabled, next_run_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)",
       input.id,
@@ -511,33 +512,6 @@ export class AutomationRepository extends Repository {
     );
     return this.getExecution(context, id);
   }
-}
-
-function validateRecurrence(value: string): void {
-  if (!/^P(?:(?:\d+\\.?\d*)D)?(?:T(?:(?:\d+\\.?\d*)H)?(?:(?:\d+\\.?\d*)M)?(?:(?:\d+\\.?\d*)S)?)?$/.test(value.trim())) {
-    throw new DatabaseError("Automation recurrence must be an ISO-8601 duration");
-  }
-  if (parseDurationMs(value) <= 0) throw new DatabaseError("Automation recurrence must be greater than zero");
-}
-
-function parseDurationMs(value: string): number {
-  const match = /^P(?:(\d+\\.?\d*)D)?(?:T(?:(\d+\\.?\d*)H)?(?:(\d+\\.?\d*)M)?(?:(\d+\\.?\d*)S)?)?$/.exec(value.trim());
-  if (!match) return 0;
-  const days = Number(match[1] ?? 0);
-  const hours = Number(match[2] ?? 0);
-  const minutes = Number(match[3] ?? 0);
-  const seconds = Number(match[4] ?? 0);
-  return (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000;
-}
-
-function nextRecurrenceAt(recurrence: string, startAt: string, now: string): string {
-  const step = parseDurationMs(recurrence);
-  if (!step) throw new DatabaseError("Automation recurrence is invalid");
-  let current = Date.parse(startAt);
-  const target = Date.parse(now);
-  if (Number.isNaN(current) || Number.isNaN(target)) throw new DatabaseError("Automation recurrence timestamps are invalid");
-  while (current <= target) current += step;
-  return new Date(current).toISOString();
 }
 
 function hashText(value: string): string {
