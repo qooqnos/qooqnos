@@ -6,16 +6,18 @@
 
 ## Verification result
 
-The current `main` commit verified in GitHub Actions is:
+The latest code-bearing `main` checkpoint verified in GitHub Actions is:
 
-`bf1a11a5fd743ea7bb72962722a9f30b2e2c8019`
+`184c5ff9f1230c7f67179e7447a13b73caf87425`
 
 Both required workflows passed:
 
-- **CI:** run `35839653984` — success
-- **Phoenix verification:** run `35839653974` — success
+- **CI:** run `35841847298` — success
+- **Phoenix verification:** run `35841847334` — success
 
-The verification path passed migration-lock verification, TypeScript typecheck, workspace build, lint/migration checks, and the unit-test suite: **64 test files / 184 tests passed**.
+The verification path passed format/lint checks, migration-lock verification, TypeScript typecheck, workspace build, and the unit-test suite: **69 test files / 195 tests passed**.
+
+The current `main` head is `3f43d5cafd665a33c1239ee16be67e8870e0c774`; the three commits after the verified code checkpoint changed only `PHASE_STATUS.md` and `docs/IMPLEMENTATION_LEDGER.md`, so the verified application code remains identical.
 
 ## Canonical runtime baseline
 
