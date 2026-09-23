@@ -21,9 +21,6 @@ describe("persistent AI Runtime client", () => {
     let runtimeCalls = 0;
     let results = 0;
     let statuses = 0;
-    let attempts = 0;
-    let persistedProviderId: string | undefined;
-    let persistedModelId: string | undefined;
 
     const client = createPersistentAIRuntimeClient(
       {
@@ -35,8 +32,6 @@ describe("persistent AI Runtime client", () => {
             operationVersion: 1,
             status: "succeeded" as const,
             output: { ok: true },
-            providerId: "cloudflare-workers-ai",
-            modelId: "@cf/test/model",
             safetyDecision: "allowed" as const,
             provenance: "ai_extracted" as const,
             warnings: [],
@@ -69,13 +64,8 @@ describe("persistent AI Runtime client", () => {
           statuses += 1;
           return {} as never;
         },
-        async recordProviderAttempt() {
-          attempts += 1;
-        },
-        async recordResult(_context: RequestContext, input: { readonly providerId?: string; readonly modelId?: string }) {
+        async recordResult() {
           results += 1;
-          persistedProviderId = input.providerId;
-          persistedModelId = input.modelId;
         },
         async recordUsage() {},
       } as never,
@@ -103,9 +93,6 @@ describe("persistent AI Runtime client", () => {
     expect(runtimeCalls).toBe(1);
     expect(results).toBe(1);
     expect(statuses).toBe(1);
-    expect(attempts).toBe(1);
-    expect(persistedProviderId).toBe("cloudflare-workers-ai");
-    expect(persistedModelId).toBe("@cf/test/model");
   });
 
   it("replays a persisted terminal result without invoking the provider again", async () => {
