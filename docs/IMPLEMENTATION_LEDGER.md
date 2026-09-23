@@ -47,6 +47,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | AI Runtime persistence | 🟢 Schema/repository/runtime composition implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/runtime-client.ts; apps/api/src/ai-composition.ts |
 | AI Runtime worker lease boundary | 🟢 Durable lease/claim/reclaim/resolver/scheduler implemented | migrations/0053_ai_runtime_worker_leases.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/worker.ts; packages/ai/src/runtime-input-resolver.ts; apps/api/src/ai-composition.ts; apps/api/src/index.ts |
 | Integration core | 🟢 Schema/package/repository/service/API/durable worker-boundary implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; packages/integration/src/adapter.ts; packages/integration/src/worker.ts; apps/api/src/integration-routes.ts; apps/api/src/integration-worker.ts |
+| Discovery index generation / evaluation | 🟢 Schema/package/repository/service/test implemented | migrations/0054_discovery_index_observability.sql; packages/discovery/src/repository.ts; packages/discovery/src/service.ts; packages/discovery/src/index-observability.test.ts |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Fulfillment / Service Delivery core | 🟢 Schema/package/repository/service/API/provider-boundary implemented | migrations/0049_fulfillment_core.sql; packages/fulfillment/src/repository.ts; packages/fulfillment/src/service.ts; packages/fulfillment/src/adapter.ts; apps/api/src/fulfillment-routes.ts |
 | Case Support core | 🟢 Schema/package/repository/service/API implemented | migrations/0050_case_support_core.sql; packages/case-support/src/repository.ts; packages/case-support/src/service.ts; apps/api/src/case-support-routes.ts |
@@ -465,7 +466,7 @@ Matching execution note: retrieval/ranking is wired through Discovery projection
 
 Matching Connect note: `packages/matching/src/service.ts`, `packages/matching/src/repository.ts`, `apps/api/src/matching-routes.ts`, and `packages/database/src/customer-relationship-repository.ts` provide the canonical connection boundary. Commit `5869597` is covered by green CI and Phoenix verification runs.
 
-Discovery projection note: Business creation/publication outbox events are now consumed by the Discovery projector; indexed eligibility follows authoritative Business publication state. Catalog/product projection remains derived and non-authoritative.
+Discovery projection note: Business creation/publication outbox events are now consumed by the Discovery projector; indexed eligibility follows authoritative Business publication state. Catalog/product projection remains derived and non-authoritative. Migration 0054 adds versioned search-index generations, query traces and evaluation evidence.
 
 Privacy note: migration 0039 establishes consent, privacy-request and per-module processing persistence. Canonical subject scope validation now rejects customer/member/user/actor references outside the current organization/workspace before consent or privacy-request writes; durable export/delete/retention workers remain follow-up operational capabilities.
 
@@ -561,6 +562,7 @@ The API runtime references these migration sources:
 0051_communication_templates.sql
 0052_moderation_cases.sql
 0053_ai_runtime_worker_leases.sql
+0054_discovery_index_observability.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
@@ -603,7 +605,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0053_ai_runtime_worker_leases.sql`. The latest fully verified green code checkpoint remains `b2cd1044cf5908b4308094af092ca586005a8fa9`; later lifecycle hardening commits are present on `main` and are pending the current CI/Phoenix verification runs.
+The canonical physical inventory reaches migration `0054_discovery_index_observability.sql`. The latest fully verified green code checkpoint is `90792c7a0e52ec40b00eb4ebf6d2d3d4a7da62e6`; the current main branch contains later lifecycle/documentation changes and this 0054 slice, so it must not be described as CI-verified until a fresh workflow run passes.
 
 Current engineering state:
 
