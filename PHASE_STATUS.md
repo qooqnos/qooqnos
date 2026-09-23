@@ -86,8 +86,8 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- Latest verified `main` checkpoint before this status-only refresh is commit `b8c9071a1dc0c561df58a38f1627cd26bb7ac9a2`.
-- GitHub Actions CI run `35869786946` and Phoenix verification run `35869786824` both passed for that `main` head.
+- Latest verified `main` checkpoint is commit `c8d17d7e4350978a23081ee6a04c6330671aea14`.
+- GitHub Actions CI run `35877556187` and Phoenix verification run `35877556254` both passed for that `main` head.
 - Migration lock verification passed through migration `0053`.
 - The latest checkpoint completed with 70 test files / 196 tests and passed format, lint, migration-lock verification, typecheck and build.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
