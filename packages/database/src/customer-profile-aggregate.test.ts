@@ -38,7 +38,10 @@ describe("CustomerRepository profile aggregate boundary", () => {
     };
     const raw: D1DatabaseLike = {
       prepare() { return statement; },
-      async batch() { return []; },
+      async batch() {
+        writes += 1;
+        return [{ success: true }, { success: true }];
+      },
     };
     const repository = new CustomerRepository(new D1Database(raw));
 
