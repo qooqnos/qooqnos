@@ -104,29 +104,10 @@ export class CustomerService {
       requireAuthentication: true,
       requireWorkspace: false,
     });
-    const current = await this.options.repository.get(context, customerId);
-    if (!current) throw new Error("Customer not found");
-
-    const nextStatus = input.status ?? current.status;
-    const now = this.options.now();
-    if (input.locale === undefined && input.timezone === undefined && input.status !== undefined) {
-      return this.options.repository.setStatus(context, customerId, nextStatus, now);
-    }
-
-    const database = (this.options.repository as unknown as { database?: { run: (...args: unknown[]) => Promise<unknown> } }).database;
-    if (!database) throw new Error("Customer database boundary unavailable");
-    await database.run(
-      "UPDATE customers SET locale = ?, timezone = ?, status = ?, updated_at = ? WHERE id = ? AND organization_id = ?",
-      input.locale === undefined ? current.locale : input.locale,
-      input.timezone === undefined ? current.timezone : input.timezone,
-      nextStatus,
-      now,
-      customerId,
-      current.organizationId,
-    );
-    const updated = await this.options.repository.get(context, customerId);
-    if (!updated) throw new Error("Customer not found after profile update");
-    return updated;
+    return this.options.repository.updateProfile(context, customerId, {
+      ...input,
+      now: this.options.now(),
+    });
   }
 
   async setPreference(
