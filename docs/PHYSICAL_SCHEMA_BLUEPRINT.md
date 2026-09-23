@@ -1063,7 +1063,7 @@ The following remain controlled architecture/operational gates:
 6. Integration/Webhook/Sync retention semantics and provider-specific adapter implementations.
 7. Communication consent/anti-spam policy and external provider adapter implementations. Template registry and provider-neutral dispatch are implemented.
 8. Business conceptual lifecycle vocabulary reconciliation.
-9. AI durable worker input/payload resolution contract. Seller AI `seller.product.extract` resolution and scheduled execution are implemented; new AI operation types require their own explicit resolver contract.
+9. AI durable worker input/payload resolution contract is closed for Seller AI `seller.product.extract`; new AI operation types require their own explicit resolver contract.
 10. Matching learning-signal persistence/derivation contract and broader Act projections where required. Core retrieval/ranking/Connect execution is implemented.
 11. Privacy export/delete/retention processing semantics and subject-level identity validation.
 
