@@ -304,7 +304,7 @@ describe("PrivacyRepository", () => {
     });
 
     expect(result?.status).toBe("approved");
-    expect(updateCalls).toBe(0);
+    expect(updateCalls).toBe(1);
   });
 
 });
