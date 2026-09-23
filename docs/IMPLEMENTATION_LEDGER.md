@@ -50,7 +50,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Fulfillment / Service Delivery core | 🟢 Schema/package/repository/service/API/provider-boundary implemented | migrations/0049_fulfillment_core.sql; packages/fulfillment/src/repository.ts; packages/fulfillment/src/service.ts; packages/fulfillment/src/adapter.ts; apps/api/src/fulfillment-routes.ts |
 | Case Support core | 🟢 Schema/package/repository/service/API implemented | migrations/0050_case_support_core.sql; packages/case-support/src/repository.ts; packages/case-support/src/service.ts; apps/api/src/case-support-routes.ts |
-| CaseAction execution worker | 🟢 CapabilityRegistry-backed worker implemented | packages/case-support/src/repository.ts; apps/api/src/capabilities.ts; apps/api/src/case-action-worker.ts |
+| CaseAction execution worker | 🟢 CapabilityRegistry-backed worker implemented | packages/case-support/src/repository.ts; apps/api/src/capabilities.ts; apps/api/src/case-action-worker.ts |\n| Privacy subject scope validation | 🟢 Repository validation/test implemented | packages/privacy/src/repository.ts; packages/privacy/src/repository.test.ts |
 | Demand / Matching core | 🟢 Schema/package/repository/service/API/retrieval/ranking/connect implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts; apps/api/src/matching-routes.ts |
 | Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts; Review lifecycle fields exposed from repository |
 | Generic ModerationCase | 🟢 Schema/repository/service/test implemented | migrations/0052_moderation_cases.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; packages/trust/src/repository.test.ts |
@@ -463,7 +463,7 @@ Matching Connect note: `packages/matching/src/service.ts`, `packages/matching/sr
 
 Discovery projection note: Business creation/publication outbox events are now consumed by the Discovery projector; indexed eligibility follows authoritative Business publication state. Catalog/product projection remains derived and non-authoritative.
 
-Privacy note: migration 0039 establishes consent, privacy-request and per-module processing persistence. Durable export/delete/retention workers remain follow-up operational capabilities.
+Privacy note: migration 0039 establishes consent, privacy-request and per-module processing persistence. Canonical subject scope validation now rejects customer/member/user/actor references outside the current organization/workspace before consent or privacy-request writes; durable export/delete/retention workers remain follow-up operational capabilities.
 
 Integration worker note: durable webhook/sync claim/finish semantics and provider-adapter boundaries are now implemented. The scheduled Worker deliberately leaves jobs untouched when no matching provider adapter is registered; actual provider-specific adapters remain external integration work.
 
