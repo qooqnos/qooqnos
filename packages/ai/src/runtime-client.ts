@@ -86,6 +86,8 @@ export function createPersistentAIRuntimeClient(
           operationId: operation.id,
           status: result.status,
           schemaVersionReference: request.outputSchemaVersion,
+          ...(result.providerId !== undefined ? { providerId: result.providerId as EntityId } : {}),
+          ...(result.modelId !== undefined ? { modelId: result.modelId as EntityId } : {}),
           safetyOutcome: result.safetyDecision,
           provenance: [result.provenance],
           warnings: result.warnings,
@@ -107,6 +109,8 @@ export function createPersistentAIRuntimeClient(
             operationVersion: request.operationVersion,
             meterUnit: "provider_unit",
             quantity: Math.max(0, Math.trunc(providerUnits)),
+            ...(result.providerId !== undefined ? { providerId: result.providerId as EntityId } : {}),
+            ...(result.modelId !== undefined ? { modelId: result.modelId as EntityId } : {}),
             idempotencyKey: request.idempotencyKey,
             now: options.now(),
           });
