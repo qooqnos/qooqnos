@@ -45,6 +45,7 @@ const modules: readonly RuntimeModule[] = [
   INTEGRATION_MODULE,
   PRIVACY_MODULE,
   MATCHING_MODULE,
+  FULFILLMENT_MODULE,
   TRUST_MODULE,
   onboardingModule,
   AI_MODULE,
