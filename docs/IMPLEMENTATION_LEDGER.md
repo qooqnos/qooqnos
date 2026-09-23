@@ -388,7 +388,7 @@ Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete
 
 Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0053 are registered and locked in sequence from canonical SQL contents. Migration 0051 checksum was reconciled before this update. Full external D1 application has not yet been executed.
 
-Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, and Matching retrieval/ranking/Connect execution are implemented. Provider-specific adapters, AI durable worker payload resolution, privacy export/delete semantics, communication consent/anti-spam and CustomerProfile remain controlled gates.
+Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, and Matching retrieval/ranking/Connect execution are implemented. Provider-specific adapters, AI durable worker payload resolution, privacy export/delete semantics and communication consent/anti-spam remain controlled gates.
 
 Deployment readiness note: `wrangler.toml` now documents environment-specific D1/Queue/R2 bindings without inventing remote resource IDs. Remote D1 provisioning and real Cloudflare binding configuration remain the final infrastructure gate.
 
