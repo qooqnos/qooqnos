@@ -68,104 +68,29 @@ jobs:
 ```
 
 ### Deployment Pipeline
-```yaml
-name: Deploy
 
-on:
-  push:
-    branches: [main]
-    tags: [v*]
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
+Production deployment is implemented by `.github/workflows/production-deploy.yml` and is intentionally separate from the ordinary CI workflow.
 
-jobs:
-  deploy-staging:
-    if: github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'staging'
-    runs-on: ubuntu-latest
-    environment: staging
+The production workflow:
 
-    steps:
-      - uses: actions/checkout@v3
+1. runs for version tags (`v*`) or manual dispatch;
+2. uses the protected GitHub `production` environment;
+3. requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets;
+4. reads real Cloudflare resource values from deployment variables:
+   - `PHOENIX_PROD_D1_DATABASE_ID`
+   - `PHOENIX_PROD_D1_DATABASE_NAME`
+   - `PHOENIX_PROD_R2_BUCKET_NAME`
+   - `PHOENIX_PROD_OUTBOX_QUEUE_NAME`
+   - `PHOENIX_PROD_AI_MODEL_ID`
+   - optional `PHOENIX_PROD_AI_MODEL_VERSION`
+   - optional `PHOENIX_PROD_AI_GATEWAY_ID`
+5. renders a temporary production Wrangler config;
+6. verifies D1/R2/Queue/Workers AI bindings and migration integrity;
+7. runs lint, typecheck, build, Worker dry-run and tests;
+8. deploys only after every gate succeeds.
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 22.x
-          cache: 'npm'
+No production Cloudflare resource ID or bucket/queue name is committed to the repository. The generated Wrangler config is ignored by Git.
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm run test
-
-      - name: Build
-        run: npm run build
-
-      - name: Deploy to staging
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npm run deploy:staging
-
-      - name: Run smoke tests
-        run: npm run test:smoke -- --env staging
-        env:
-          API_URL: https://staging.phoenix.app
-
-  deploy-production:
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    environment: production
-    needs: deploy-staging
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 22.x
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Create database backup
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npm run backup:database -- --env production
-
-      - name: Run migrations
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npm run migrate -- --env production
-
-      - name: Deploy to production
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npm run deploy:production
-
-      - name: Wait for deployment
-        run: sleep 30
-
-      - name: Run smoke tests
-        run: npm run test:smoke -- --env production
-        env:
-          API_URL: https://api.phoenix.app
-```
 
 ## CI/CD Configuration Files
 
