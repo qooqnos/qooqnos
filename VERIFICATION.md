@@ -15,7 +15,7 @@ Both required workflows passed:
 - **CI:** run `35869786946` — success
 - **Phoenix verification:** run `35869786824` — success
 
-The verification path passed format/lint checks, migration-lock verification, TypeScript typecheck, workspace build, and the unit-test suite: **69 test files / 195 tests passed**.
+The verification path passed format/lint checks, migration-lock verification, TypeScript typecheck, workspace build, and the unit-test suite: **70 test files / 196 tests passed**.
 
 Current `main` points to `b8c9071a1dc0c561df58a38f1627cd26bb7ac9a2`; the latest `main` head has passed CI and Phoenix verification.
 
