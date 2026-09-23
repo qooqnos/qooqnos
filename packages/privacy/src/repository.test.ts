@@ -86,6 +86,63 @@ describe("PrivacyRepository", () => {
     })).rejects.toThrow("current organization/workspace scope");
   });
 
+
+  it("rejects out-of-scope member and user subjects", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new PrivacyRepository(new D1Database(raw));
+
+    await expect(repository.createRequest(context(), {
+      id: brandId<"EntityId">("request-member"),
+      subjectType: "member",
+      subjectId: brandId<"EntityId">("member-foreign"),
+      requestType: "export",
+      requestedBy: "user-1",
+      now: "2026-09-23T00:00:00.000Z",
+    })).rejects.toThrow("current organization/workspace scope");
+
+    await expect(repository.createRequest(context(), {
+      id: brandId<"EntityId">("request-user"),
+      subjectType: "user",
+      subjectId: brandId<"EntityId">("user-foreign"),
+      requestType: "delete",
+      requestedBy: "user-1",
+      now: "2026-09-23T00:00:00.000Z",
+    })).rejects.toThrow("current organization/workspace scope");
+  });
+
+  it("rejects out-of-scope actor subjects", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new PrivacyRepository(new D1Database(raw));
+
+    await expect(repository.createConsent(context(), {
+      id: brandId<"EntityId">("consent-actor"),
+      subjectType: "actor",
+      subjectId: brandId<"EntityId">("actor-foreign"),
+      purpose: "personalization",
+      consentVersion: "v1",
+      source: "api",
+      now: "2026-09-23T00:00:00.000Z",
+    })).rejects.toThrow("current organization/workspace scope");
+  });
+
   it("expires only currently granted consents", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
