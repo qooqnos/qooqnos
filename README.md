@@ -30,7 +30,7 @@ SQL migrations live under migrations/ and are the only source of migration conte
 The current API migration sequence is:
 
 ```text
-0001_foundation … 0048_reviews_moderation_reputation
+0001_foundation … 0054_discovery_index_observability
 ```
 
 See `apps/api/src/migrations.ts` and `migrations/migration-lock.json` for the authoritative ordered sequence.
