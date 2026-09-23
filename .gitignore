@@ -4,3 +4,5 @@ coverage/
 *.tsbuildinfo
 
 .wrangler-dry-run/
+.wrangler/production.wrangler.toml
+.wrangler-dry-run-production/
