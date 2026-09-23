@@ -587,7 +587,7 @@ Preference history is recipient- and scope-aware. The latest applicable record w
 
 ### `communication_suppression_records`
 
-`id`, organization_id, workspace_id?, recipient_reference, scope, category?, channel?, intent?, reason_code, source, status, effective_from, expires_at?, created_at, updated_at.
+`id`, organization_id, workspace_id?, recipient_reference, scope, category?, channel?, intent?, reason_code, source, applies_to_required, status, effective_from, expires_at?, created_at, updated_at.
 
 Suppressions are explicit policy blocks independent from UI preference state. `applies_to_required` distinguishes global/optional suppression from explicitly required transactional/security traffic.
 
@@ -1104,7 +1104,7 @@ The following remain controlled architecture/operational gates:
 3. Payment provider reference/invoice/financial-ledger contract.
 4. AI Memory physical storage/retention contract.
 5. Integration/Webhook/Sync retention semantics and provider-specific adapter implementations.
-6. Communication consent/anti-spam policy and external provider adapter implementations. Template registry and provider-neutral dispatch are implemented.
+6. Communication external provider adapter implementations and platform rate-limit/anomaly controls. Intent/consent/suppression policy, template registry and provider-neutral dispatch are implemented.
 7. Business conceptual lifecycle vocabulary reconciliation.
 8. AI durable worker input/payload resolution contract is closed for Seller AI `seller.product.extract`; new AI operation types require their own explicit resolver contract.
 9. Matching learning-signal persistence/derivation contract and broader Act projections where required. Core retrieval/ranking/Connect execution is implemented.
