@@ -33,7 +33,7 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
 | Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0056 |
 | Full logical model | 🟢 Core logical model resolved | remaining work is operational/provider/projection gates, not an unimplemented CustomerProfile table |
-| Final D1 physical schema | 🟢 Physical blueprint complete | 190 physical tables across migrations 0001–0056; remaining work is explicit contract/provider/worker gates and real Cloudflare resource provisioning |
+| Final D1 physical schema | 🟢 Physical blueprint complete | 190 physical tables across migrations 0001–0056; remaining work is explicit contract/provider/worker gates and credentialed remote D1 migration/application |
 | Legacy PostgreSQL path | ✅ Removed from active source | historical git history only |
 
 ## 3. Critical database rule
@@ -112,11 +112,13 @@ Canonical logical model
 → integrity/tenant-isolation tests
 ```
 
-The application/runtime and physical schema gates are complete; remaining work is operational/provider-specific plus real Cloudflare resource provisioning. Cloudflare D1 production provisioning is the final infrastructure step.
+The application/runtime and physical schema gates are complete; remaining work is operational/provider-specific plus credentialed remote D1 migration/application. The production D1 resource has now been provisioned externally.
 
 ## 9. Remote D1 provisioning gate
 
-The application/runtime is D1-ready, but the repository does not contain a fabricated remote database UUID. Wrangler requires a real `database_id` for a D1 binding; staging and production bindings are therefore documented but remain commented until the corresponding Cloudflare databases exist. The runtime deliberately fails closed when `env.DB` is absent.
+The production D1 resource is provisioned externally as `qooqnos-production`. The repository intentionally does not hard-code the real UUID into `wrangler.toml`; production continues to consume `PHOENIX_PROD_D1_DATABASE_NAME` and `PHOENIX_PROD_D1_DATABASE_ID` through the protected deployment environment.
+
+The remaining infrastructure action is credentialed execution of `npm run migrate:prod:canonical` against that D1. The runtime still fails closed when `env.DB` is absent.
 
 ## 10. Historical documents
 
