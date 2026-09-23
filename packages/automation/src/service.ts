@@ -15,6 +15,45 @@ export interface AutomationServiceOptions {
 export class AutomationService {
   constructor(private readonly options: AutomationServiceOptions) {}
 
+  async createSchedule(context: RequestContext, input: {
+    readonly timezone: string;
+    readonly recurrence: string;
+    readonly startAt: string;
+    readonly endAt?: string;
+    readonly misfirePolicy: "skip" | "catch_up_once" | "catch_up_all";
+  }) {
+    await this.options.authorization.assert({
+      context,
+      permission: "automation.workflow.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.createSchedule(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async attachScheduleTrigger(context: RequestContext, input: {
+    readonly workflowId: EntityId;
+    readonly workflowVersionId: EntityId;
+    readonly scheduleId: EntityId;
+    readonly enabled?: boolean;
+  }): Promise<void> {
+    await this.options.authorization.assert({
+      context,
+      permission: "automation.workflow.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    await this.options.repository.createScheduleTrigger(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
   async execute(
     context: RequestContext,
     executionId: EntityId,
