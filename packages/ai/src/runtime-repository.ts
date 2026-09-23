@@ -105,7 +105,7 @@ export class AiRuntimeRepository extends Repository {
 
   async getOperation(context: RequestContext, id: EntityId): Promise<AiOperationRecord> {
     const row = await this.database.first<AiOperationRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, actor_id AS actorId, session_id AS sessionId, operation_type AS operationType, operation_version AS operationVersion, request_id AS requestId, correlation_id AS correlationId, idempotency_key AS idempotencyKey, status, input_reference AS inputReference, output_reference AS outputReference, worker_lease_until AS workerLeaseUntil, worker_claimed_by AS workerClaimedBy, worker_attempts AS workerAttempts, created_at AS createdAt, updated_at AS updatedAt FROM ai_operations WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
       id,
       this.requireOrganization({ organizationId: context.tenantId }),
       context.workspaceId ?? null,
