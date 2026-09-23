@@ -95,9 +95,29 @@ export class MatchingRepository extends Repository {
   }):Promise<MatchRequestRecord>{
     const demand=await this.getDemandRequest(context,input.demandRequestId);
     const organizationId=this.requireOrganization({organizationId:context.tenantId});
-    await this.database.run(
-      "INSERT INTO match_requests (id,demand_request_id,organization_id,workspace_id,algorithm_version,policy_version,status,requested_at,created_at,updated_at) VALUES (?,?,?,?,?,?, 'created',?,?,?)",
-      input.id,input.demandRequestId,organizationId,demand.workspaceId,input.algorithmVersion.trim(),input.policyVersion.trim(),input.now,input.now,input.now);
+    await this.database.transaction([
+      {
+        sql: "INSERT INTO match_requests (id,demand_request_id,organization_id,workspace_id,algorithm_version,policy_version,status,requested_at,created_at,updated_at) VALUES (?,?,?,?,?,?, 'created',?,?,?)",
+        params: [input.id,input.demandRequestId,organizationId,demand.workspaceId,input.algorithmVersion.trim(),input.policyVersion.trim(),input.now,input.now,input.now],
+      },
+      {
+        sql: "INSERT INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?, 'matching.request.created', 1, 'match_request', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          input.id + ':created',
+          input.id,
+          organizationId,
+          demand.workspaceId,
+          JSON.stringify({
+            matchRequestId: input.id,
+            demandRequestId: input.demandRequestId,
+            algorithmVersion: input.algorithmVersion.trim(),
+            policyVersion: input.policyVersion.trim(),
+          }),
+          input.now,
+          input.now,
+        ],
+      },
+    ]);
     return this.getMatchRequest(context,input.id);
   }
 
@@ -186,9 +206,42 @@ export class MatchingRepository extends Repository {
     const request=await this.getMatchRequest(context,input.matchRequestId);
     const candidate=await this.getCandidate(context,input.candidateId);
     if(candidate.matchRequestId!==request.id)throw new DatabaseError("Candidate does not belong to match request");
-    await this.database.run(
-      "INSERT INTO match_decisions (id,match_request_id,candidate_id,decision,reason_code,decision_source,policy_version,actor_reference,decided_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
-      input.id,input.matchRequestId,input.candidateId,input.decision,input.reasonCode??null,input.decisionSource.trim(),input.policyVersion.trim(),context.actorId??"system",input.now,input.now);
+    await this.database.transaction([
+      {
+        sql: "INSERT INTO match_decisions (id,match_request_id,candidate_id,decision,reason_code,decision_source,policy_version,actor_reference,decided_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        params: [
+          input.id,
+          input.matchRequestId,
+          input.candidateId,
+          input.decision,
+          input.reasonCode??null,
+          input.decisionSource.trim(),
+          input.policyVersion.trim(),
+          context.actorId??"system",
+          input.now,
+          input.now,
+        ],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?, 'matching.match.created', 1, 'match_decision', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          input.id + ':created',
+          input.matchRequestId,
+          request.organizationId,
+          request.workspaceId,
+          JSON.stringify({
+            matchRequestId: input.matchRequestId,
+            candidateId: input.candidateId,
+            decisionId: input.id,
+            decision: input.decision,
+            reasonCode: input.reasonCode ?? null,
+            policyVersion: input.policyVersion.trim(),
+          }),
+          input.now,
+          input.now,
+        ],
+      },
+    ]);
   }
 
   async listCandidates(context:RequestContext,matchRequestId:EntityId,limit=100):Promise<readonly MatchCandidateRecord[]>{
