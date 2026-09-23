@@ -157,18 +157,23 @@ export class CustomerRelationshipRepository extends Repository {
     const current = await this.get(context, id);
     if (!current) throw new DatabaseError("Customer relationship not found");
 
-    await this.database.run(
+    const result = await this.database.run(
       "UPDATE customer_relationships SET " +
         "first_interaction_at = CASE WHEN first_interaction_at IS NULL OR first_interaction_at > ? THEN ? ELSE first_interaction_at END, " +
         "last_interaction_at = CASE WHEN last_interaction_at IS NULL OR last_interaction_at < ? THEN ? ELSE last_interaction_at END, " +
-        "updated_at = ? WHERE id = ?",
+        "updated_at = ? WHERE id = ? AND updated_at = ?",
       occurredAt,
       occurredAt,
       occurredAt,
       occurredAt,
       now,
       id,
+      current.updatedAt,
     );
+
+    if ((result.meta?.changes ?? 0) !== 1) {
+      throw new DatabaseError("Customer relationship changed concurrently");
+    }
 
     const updated = await this.get(context, id);
     if (!updated) throw new DatabaseError("Customer relationship not found after interaction update");
