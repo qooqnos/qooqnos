@@ -12,7 +12,7 @@ TENANCY: organizations, workspaces, locations, memberships, roles, permissions, 
 MARKETPLACE: businesses, categories, business_categories, services, business_services, products, product_variants, inventory, reviews
 MEDIA: media_assets, media_variants, media_links
 AI: user_requests, match_runs, match_results, search_documents, ai_conversations, ai_messages, ai_tool_calls, ai_safety_events
-BOOKING/CRM: customers, customer_profiles, availability_rules, appointment_slots, appointments, crm_interactions, loyalty_accounts
+BOOKING/CRM: customers, customer_preferences, customer_addresses, availability_rules, appointments, crm_timeline_events, loyalty_accounts
 COMMUNICATION: notifications, notification_deliveries, messaging_threads
 BILLING: plans, subscriptions, usage_events, payment_intents, payment_transactions
 GOVERNANCE: verification_cases, verification_documents, moderation_cases, consent_records, audit_events
