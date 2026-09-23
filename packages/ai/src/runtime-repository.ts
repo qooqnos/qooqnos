@@ -165,12 +165,20 @@ export class AiRuntimeRepository extends Repository {
 
   async setOperationStatus(context: RequestContext, id: EntityId, status: string, now: string, outputReference?: string) {
     const current = await this.getOperation(context, id);
+    if (current.status === status) return current;
+    if (isTerminalAiOperationStatus(current.status)) {
+      throw new DatabaseError("Terminal AI operation cannot be reopened");
+    }
     await this.database.run(
       "UPDATE ai_operations SET status = ?, output_reference = COALESCE(?, output_reference), updated_at = ? WHERE id = ?",
       status, outputReference ?? null, now, id,
     );
     return this.getOperation(context, current.id);
   }
+
+function isTerminalAiOperationStatus(status: string): boolean {
+  return ["succeeded", "partially_succeeded", "failed", "cancelled", "expired", "blocked"].includes(status);
+}
 
   async recordProviderAttempt(context: RequestContext, input: {
     readonly id: EntityId; readonly operationId: EntityId; readonly attemptNumber: number;
