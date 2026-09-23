@@ -63,6 +63,16 @@ The renderer writes only to `.wrangler/production.wrangler.toml`, which is ignor
 
 Wrangler named environments do not inherit bindings/vars, so the generated production config explicitly defines D1, R2, Queue producer/consumer and Workers AI bindings for `env.production`.
 
+The production deploy path now also executes `npm run migrate:prod:canonical` after the predeploy gates and before Worker deployment. That executor:
+
+- verifies the requested Cloudflare D1 name resolves to the expected `PHOENIX_PROD_D1_DATABASE_ID`;
+- verifies the canonical SQL files against `migrations/migration-lock.json`;
+- reads `schema_migrations` directly from the remote D1;
+- applies only pending canonical migrations, one migration at a time, and records the same `id/version/checksum/module_id/applied_at` history consumed by Phoenix `MigrationRunner`;
+- re-reads the applied row after every migration and fails closed on any identity/checksum drift.
+
+The production path deliberately does **not** use `wrangler d1 migrations apply`, because Phoenix owns the migration registry in `schema_migrations`; using Wrangler's separate D1 migration registry would create a second source of truth. Cloudflare's D1 execute command supports remote SQL-file execution against the named remote database. citeturn811106search1turn811106search3
+
 The repository now provides two fail-closed checks before production deployment:
 
 - `npm run verify:production-bindings` rejects missing production D1, Queue and R2 bindings or placeholder resource IDs.
