@@ -1,7 +1,7 @@
 # Phoenix Database Physical Reconciliation
 
 **Status:** Canonical database-planning record  
-**Last reviewed:** 2026-09-22  
+**Last reviewed:** 2026-09-23  
 **Source branch:** main
 
 ## Purpose
@@ -675,13 +675,13 @@ The next implementation work should proceed in this order:
 2. Complete CustomerProfile only after its field-level contract is closed; keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit.
 3. Complete Booking availability calculation and slot-generation semantics; transactional finalization/capacity guards are implemented in 0046–0047.
 4. Complete Billing provider adapters/reconciliation workers and invoice/financial-ledger foundation only where their contracts are explicit.
-5. Complete Communication consent/policy/template registry and durable dispatch/provider-adapter contracts.
+5. Complete Communication consent/policy/anti-spam and external provider-adapter contracts; provider-neutral template/dispatch infrastructure is implemented.
 6. Scheduled Automation polling/misfire execution and CapabilityRegistry-backed scheduled action execution are implemented; capability compensation remains only where a concrete rollback contract exists.
 7. Complete AI Runtime durable/asynchronous worker orchestration over the existing provider/routing/validation runtime.
-8. Complete Integration provider adapters and durable sync workers.
+8. Complete Integration provider-specific adapters and cross-provider retention/reconciliation semantics; durable claim/sync worker infrastructure is implemented.
 9. Complete Privacy retention/export/delete workers and subject-level identity validation.
-10. Complete Matching retrieval/ranking execution, learning signals and Connect/Act integration.
-11. Complete Fulfillment provider adapters, callback reconciliation and durable execution workers.
+10. Complete Matching learning signals and broader Act projections; core retrieval/ranking/Connect execution is implemented.
+11. Complete Fulfillment provider-specific adapters, callback reconciliation and durable polling only where an external provider contract exists; canonical tracking/service completion persistence is implemented.
 12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
 13. Complete Case queue dispatch/provider integrations where explicit contracts exist; CaseAction capability execution is already implemented.
 14. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
