@@ -61,6 +61,24 @@ export class TrustReviewRepository extends Repository {
       input.now,
     );
 
+    await this.database.run(
+      "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at) VALUES (?, 'moderation.case.created', 1, 'ModerationCase', ?, ?, ?, ?, 'pending', 0, ?, ?)",
+      input.id + ":created",
+      input.id,
+      organizationId,
+      context.workspaceId ?? null,
+      JSON.stringify({
+        moderationCaseId: input.id,
+        subjectType: input.subjectType.trim(),
+        subjectId: input.subjectId,
+        policyId: input.policyId.trim(),
+        policyVersion: input.policyVersion.trim(),
+        riskLevel: input.riskLevel,
+      }),
+      input.now,
+      input.now,
+    );
+
     return this.getGenericModerationCase(context, input.id);
   }
 
