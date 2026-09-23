@@ -84,7 +84,7 @@ The physical schema is intentionally broad but not every operational concern is 
 5. AI durable worker lease/claim/reclaim infrastructure is implemented; production scheduler execution remains gated by an explicit canonical input/payload resolver.
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile only when its field-level contract is explicit; CRM timeline is already physically implemented as events/projection input.
-8. CustomerProfile field-level contract, plus Localization / Documents / Analytics contracts where canonical ownership is explicit.
+8. CustomerProfile remains field-contract gated; localization context interfaces are implemented, while physical country/legal/profile registries, Documents and Analytics remain contract-gated.
 9. Case queue/provider dispatch remains external-provider gated; CaseAction approval/completion and CapabilityRegistry-backed execution are implemented. Remote D1 provisioning and production binding configuration remain the final infrastructure gate.
 
 ## Source-of-truth documents
