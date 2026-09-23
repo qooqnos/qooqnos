@@ -34,7 +34,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | CRM timeline events | 🟢 Schema/repository implemented | migrations/0020_crm_timeline_events.sql; packages/database/src/crm-timeline-repository.ts; projections remain gated |
 | Customer addresses | 🟢 Schema/repository implemented | migrations/0026_customer_addresses.sql; packages/database/src/customer-address-repository.ts |
 | Customer capability package | 🟢 Package/service/manifest/API/history implemented | packages/customer/src/service.ts; packages/customer/src/manifest.ts; apps/api/src/customer-routes.ts; `CustomerProfile` remains a logical aggregate; Customer mutations publish transactional outbox events |
-| Business status history | 🟢 Schema/repository implemented | migrations/0027_business_status_history.sql; packages/business/src/repository.ts |
+| Business lifecycle history / onboarding reconciliation | 🟢 Schema/repository + semantic contract reconciled | migrations/0027_business_status_history.sql; packages/business/src/repository.ts; packages/onboarding/src/contract.ts; docs/BUSINESS_DATA_DICTIONARY.md |
 | Booking core | 🟢 Schema/package/repository implemented | migrations/0028_booking_core.sql; packages/booking/src/repository.ts; packages/booking/src/service.ts |
 | Booking availability rules | 🟢 Schema/repository implemented | migrations/0029_availability_schedules.sql; packages/booking/src/availability-repository.ts |
 | Booking holds / lifecycle history | 🟢 Schema/repository implemented | migrations/0030_booking_holds_history.sql; packages/booking/src/repository.ts |
@@ -685,6 +685,8 @@ Discovery index observability implementation commits:
 - b688ba5bc8d118896c45e3bb1c315ae3a84520a3 — reconcile physical inventory through migration 0054
 
 Lifecycle hardening commits: `77d7945` / `9d3c85f` (Matching latest-decision Connect invariant), `a70fa84` / `df9c33b` (MatchRequest lifecycle), `e4f018d` / `5a361f2` (Billing subscription terminal lifecycle), `9158971` / `8fc9619` (Automation execution lifecycle), `25c70aa` / `b2cd1044` (AI failed-operation replay), `8a4af78` / `c48e5949` / `26ace41` (AI terminal lifecycle), `ed90ca6` / `28af923` (Automation attempt lifecycle), `c2692c8` / `2b98364` / `48af422` / `7573f49` (CustomerRelationship CAS/monotonic interactions), and `b935137` / `90792c7` (Business status lifecycle atomicity/CAS).
+
+Business lifecycle reconciliation note: `Business.status` owns marketplace lifecycle (`draft | active | suspended | archived`); `onboarding_profiles.status` owns onboarding workflow (`draft | submitted | verified | rejected`). No additional Business status table/column is authorized by the reconciliation.
 
 Migration continuity remains mandatory: never renumber, rewrite or replace an existing migration. Every physical change must use a new numbered migration and preserve the canonical migration lock.
 
