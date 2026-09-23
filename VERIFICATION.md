@@ -8,14 +8,14 @@
 
 The current `main` commit verified in GitHub Actions is:
 
-`586959738b01c635dd5022fb24b2aa7f25dcb439`
+`d32953ab4b9957d2256fe5d485ca0188befb4eb8`
 
 Both required workflows passed:
 
-- **CI:** run `35785791295` — success
-- **Phoenix verification:** run `35785791200` — success
+- **CI:** run `35824011221` — success
+- **Phoenix verification:** run `35824011195` — success
 
-The verification path passed migration-lock verification, TypeScript typecheck, workspace build, lint/migration checks, and the unit-test suite.
+The verification path passed migration-lock verification, TypeScript typecheck, workspace build, lint/migration checks, and the unit-test suite: **61 test files / 173 tests passed**.
 
 ## Canonical runtime baseline
 
@@ -36,7 +36,7 @@ The product loop remains:
 
 ## Canonical implementation coverage
 
-Current canonical migrations reach `0048_reviews_moderation_reputation.sql`.
+Current canonical migrations reach `0050_case_support_core.sql`.
 
 Implemented core capability families include:
 
@@ -73,14 +73,14 @@ Implemented core capability families include:
 
 The physical schema is intentionally broad but not every operational concern is closed. Remaining work is primarily execution rather than schema invention:
 
-1. Durable Automation scheduler/worker execution and capability invocation.
-2. Integration provider adapters and durable sync workers.
+1. Durable Automation schedule polling and misfire semantics (the recurrence/misfire contract is still intentionally open).
+2. Integration provider adapters and durable sync workers; adapter payload/credential contracts remain provider-specific.
 3. Privacy export/delete/retention workers with subject-level identity validation.
-4. External Communication provider adapters plus template/policy/consent layers.
-5. AI Runtime provider routing/validation workers.
-6. Matching learning signals and Connect/Act integrations beyond the canonical Customer relationship.
-7. CustomerProfile and CRM timeline projection only when field-level contracts are explicit.
-8. Localization / Documents / Analytics contracts where their canonical ownership is explicit.
+4. External Communication provider adapters plus template/policy registry; provider-neutral dispatch is already live.
+5. AI provider routing/validation execution beyond the current in-process Runtime/registry, specifically durable/asynchronous worker orchestration where required.
+6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
+7. CustomerProfile only when its field-level contract is explicit; CRM timeline is already physically implemented as events/projection input.
+8. Localization / Documents / Analytics contracts where canonical ownership is explicit.
 9. Remote D1 provisioning and production binding configuration.
 
 ## Source-of-truth documents
