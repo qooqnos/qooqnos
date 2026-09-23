@@ -172,6 +172,8 @@ Hard constraints must be applied before semantic similarity can influence rankin
 
 Historical order/payment values are snapshots; consumers must not reconstruct old transactions from mutable Catalog data.
 
+Commerce payment/refund orchestration note: `CAP.COMMERCE.CREATE_PAYMENT`, `CAP.COMMERCE.CAPTURE_PAYMENT`, `CAP.COMMERCE.REFUND_PAYMENT`, and `CAP.COMMERCE.CREATE_INVOICE` are Commerce-facing orchestration capabilities. They may create requests, references, and transaction state, but the authoritative Payment/Refund/Invoice financial records, provider execution, settlement, and ledger remain owned by Billing/Payment. This preserves the existing capability names without creating a second financial source of truth.
+
 ## 12. Customer capabilities
 
 | Capability | Type | Owner | Scope | Dependencies |
