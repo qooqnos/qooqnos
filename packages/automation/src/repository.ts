@@ -213,6 +213,27 @@ export class AutomationRepository extends Repository {
     );
   }
 
+
+  async getStepExecution(
+    context: RequestContext,
+    executionId: EntityId,
+    stepId: EntityId,
+  ): Promise<{
+    readonly id: EntityId;
+    readonly executionId: EntityId;
+    readonly stepId: EntityId;
+    readonly status: "pending" | "running" | "waiting" | "completed" | "failed" | "skipped";
+    readonly sequence: number;
+    readonly outputReference: string | null;
+  } | null> {
+    await this.getExecution(context, executionId);
+    return this.database.first(
+      "SELECT id, execution_id AS executionId, step_id AS stepId, status, sequence, output_reference AS outputReference FROM automation_step_executions WHERE execution_id = ? AND step_id = ? LIMIT 1",
+      executionId,
+      stepId,
+    );
+  }
+
   async createStepExecution(
     context: RequestContext,
     input: {
