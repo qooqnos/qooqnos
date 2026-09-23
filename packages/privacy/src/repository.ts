@@ -63,6 +63,7 @@ export class PrivacyRepository extends Repository {
     readonly evidenceReference?: string; readonly grantedAt?: string; readonly expiresAt?: string; readonly now: string;
   }): Promise<ConsentRecord> {
     const organizationId=this.requireOrganization({organizationId:context.tenantId});
+    await this.assertSubjectScope(context, input.subjectType, input.subjectId);
     if(!input.purpose.trim()||!input.consentVersion.trim()||!input.source.trim()) throw new DatabaseError("Consent purpose/version/source are required");
     await this.database.transaction([
       {
@@ -151,6 +152,7 @@ export class PrivacyRepository extends Repository {
     readonly requestedBy:string; readonly dueAt?:string; readonly now:string;
   }):Promise<PrivacyRequestRecord>{
     const organizationId=this.requireOrganization({organizationId:context.tenantId});
+    await this.assertSubjectScope(context, input.subjectType, input.subjectId);
     if(!input.requestedBy.trim())throw new DatabaseError("Privacy request requester is required");
     await this.database.run(
       "INSERT INTO privacy_requests (id, organization_id, workspace_id, subject_type, subject_id, request_type, status, requested_by, requested_at, due_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'requested', ?, ?, ?, ?, ?)",
@@ -174,6 +176,42 @@ export class PrivacyRepository extends Repository {
       "UPDATE privacy_requests SET status=?, completed_at=?, result_reference=COALESCE(?,result_reference), rejection_reason=COALESCE(?,rejection_reason), updated_at=? WHERE id=?",
       status,completedAt,details?.resultReference??null,details?.rejectionReason??null,now,id);
     return this.getRequest(context,id);
+  }
+
+  private async assertSubjectScope(
+    context: RequestContext,
+    subjectType: PrivacySubjectType,
+    subjectId: EntityId,
+  ): Promise<void> {
+    const organizationId=this.requireOrganization({organizationId:context.tenantId});
+    const workspaceId=context.workspaceId ?? null;
+    let row:{readonly found:number}|null=null;
+
+    if(subjectType === "customer"){
+      row=await this.database.first<{readonly found:number}>(
+        "SELECT 1 AS found FROM customers WHERE id=? AND organization_id=? LIMIT 1",
+        subjectId,
+        organizationId,
+      );
+    } else if(subjectType === "member"){
+      row=await this.database.first<{readonly found:number}>(
+        "SELECT 1 AS found FROM memberships m INNER JOIN workspaces w ON w.id=m.workspace_id WHERE m.id=? AND w.organization_id=? AND (? IS NULL OR m.workspace_id=?) LIMIT 1",
+        subjectId,
+        organizationId,
+        workspaceId,
+        workspaceId,
+      );
+    } else {
+      row=await this.database.first<{readonly found:number}>(
+        "SELECT 1 AS found FROM users u WHERE u.id=? AND EXISTS (SELECT 1 FROM memberships m INNER JOIN workspaces w ON w.id=m.workspace_id WHERE m.user_id=u.id AND w.organization_id=? AND (? IS NULL OR m.workspace_id=?)) LIMIT 1",
+        subjectId,
+        organizationId,
+        workspaceId,
+        workspaceId,
+      );
+    }
+
+    if(!row) throw new DatabaseError("Privacy subject does not belong to the current organization/workspace scope");
   }
 
   async recordProcessing(context:RequestContext,input:{
