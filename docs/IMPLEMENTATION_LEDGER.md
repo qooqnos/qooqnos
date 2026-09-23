@@ -616,7 +616,7 @@ Open completion gates are deliberately limited to:
 - real Cloudflare D1 / R2 / Queue provisioning and production binding configuration;
 - provider-specific Integration/Communication/Fulfillment adapters and credential contracts;
 - Billing/Payment invoice, payment execution and financial-ledger contract;
-- Privacy export/delete/retention workers with subject identity validation;
+- Privacy export/delete/retention workers;
 - matching learning-signal and broader Act contracts;
 - concrete Automation rollback/compensation contracts;
 - new AI operation resolvers when additional operation types are introduced;
