@@ -64,21 +64,6 @@
     },
     {
       "path": "./packages/onboarding"
-    },
-    {
-      "path": "./packages/api-contracts"
-    },
-    {
-      "path": "./packages/ai"
-    },
-    {
-      "path": "./packages/business"
-    },
-    {
-      "path": "./packages/catalog"
-    },
-    {
-      "path": "./apps/api"
     }
   ],
   "files": []
