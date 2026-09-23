@@ -679,7 +679,7 @@ new migrations must follow ownership + no-duplication gates
 The next implementation work should proceed in this order:
 
 1. Define AttributeValue backfill/conflict/cutover rules without duplicating current JSON-backed state.
-2. Complete CustomerProfile only after its field-level contract is closed; keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit.
+2. Keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit; CustomerProfile is a logical aggregate over existing Customer-owned records and requires no standalone table.
 3. Complete Booking availability calculation and slot-generation semantics; transactional finalization/capacity guards are implemented in 0046–0047.
 4. Complete Billing provider adapters/reconciliation workers and invoice/financial-ledger foundation only where their contracts are explicit.
 5. Complete Communication consent/policy/anti-spam and external provider-adapter contracts; provider-neutral template/dispatch infrastructure is implemented.
