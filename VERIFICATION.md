@@ -79,11 +79,11 @@ Implemented core capability families include:
 
 The physical schema is intentionally broad but not every operational concern is closed. Remaining work is primarily execution rather than schema invention:
 
-1. Scheduled Automation polling, misfire handling, and CapabilityRegistry-backed scheduled action execution are implemented; compensation remains gated by concrete rollback contracts.
+1. Scheduled Automation polling, misfire handling, and CapabilityRegistry-backed scheduled action execution are implemented; only concrete rollback/compensation contracts remain gated.
 2. Integration durable claim/sync workers and provider-neutral adapter boundary are implemented; provider-specific adapters and credential contracts remain external integration work.
 3. Privacy consent expiry is live; export/delete/retention workers with subject-level identity validation remain.
 4. External Communication provider adapters plus consent/anti-spam policy remain gated; template registry and provider-neutral dispatch are live.
-5. AI durable worker lease/claim/reclaim infrastructure is implemented; production scheduler execution remains gated by an explicit canonical input/payload resolver.
+5. AI durable worker lease/claim/reclaim infrastructure and the Seller AI production scheduler/input resolver are implemented; new AI operation types require an explicit resolver contract.
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile is resolved as a logical aggregate over existing Customer-owned records; CRM timeline is already physically implemented as events/projection input.
 8. Localization context interfaces are implemented; physical country/legal/profile registries, Documents and Analytics remain contract-gated.
