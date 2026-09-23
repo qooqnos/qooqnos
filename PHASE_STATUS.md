@@ -52,7 +52,7 @@ Before adding a table:
 
 ## 4. Migration sequence currently registered
 
-The API runtime currently references the ordered canonical migration sequence `0001` through `0053`.
+The API runtime currently references the ordered canonical migration sequence `0001` through `0054`.
 
 Do not renumber or replace these migrations.
 
