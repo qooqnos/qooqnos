@@ -191,7 +191,7 @@ DRAFT → ACTIVE → INACTIVE
 | Public discovery projection | Discovery |
 | Media assets | Media |
 | Communications | Communications |
-| Financial truth | Billing/Commerce |
+| Financial truth | Billing/Payment |
 
 ## 11. Privacy and Security
 
