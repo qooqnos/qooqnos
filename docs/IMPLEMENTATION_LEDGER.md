@@ -406,7 +406,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0056 are registered and locked in sequence from canonical SQL contents. Migration 0055 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint remains `90e202f14db7a55a155aaf677a1991205165647b` (CI `35915869788`, Phoenix verification `35915869688`). Subsequent status-document-only commits are being validated by the same CI/Phoenix workflows. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0056 are registered and locked in sequence from canonical SQL contents. Migration 0055 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint is `b4b0f86831c0c89186fd8361f436ea556aa0498d` (CI `35916185591`, Phoenix verification `35916185529`). Full external D1 application has not yet been executed.
 
 Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events, Automation scheduled execution, AI durable Seller AI worker resolution, privacy consent expiry and approved-request orchestration, and Communication intent/consent/suppression policy are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processors, communication external provider adapters and platform rate-limit/anomaly controls, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
 
@@ -634,10 +634,10 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 The canonical physical inventory reaches migration `0056_communication_required_suppression.sql`. The migration lock/catalog is reconciled through 0056, and the current main head has passed both CI and Phoenix verification.
 
-Current verified head before the final status-document reconciliation: `90e202f14db7a55a155aaf677a1991205165647b`.
-GitHub Actions on this checkpoint completed successfully:
-- Phoenix verification run `35915869688`
-- CI run `35915869788`
+Current verified head: `b4b0f86831c0c89186fd8361f436ea556aa0498d`.
+GitHub Actions on this exact head completed successfully:
+- Phoenix verification run `35916185529`
+- CI run `35916185591`
 
 The current verification workflows check migration-lock integrity, workspace build and tests; CI additionally runs lint/typecheck/Worker dry-run.
 
