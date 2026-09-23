@@ -364,6 +364,13 @@
       "moduleId": "trust",
       "checksum": "9e300d5a50b5a5dd5ffc455a4c553f1aaba9a12c6562954a0c9f92a91b135b80",
       "filename": "0052_moderation_cases.sql"
+    },
+    {
+      "id": "0053_ai_runtime_worker_leases",
+      "version": 53,
+      "moduleId": "ai",
+      "checksum": "2a7dca5c189fe7c7c74b029935f0e22a25b8b447bf5d3ef8f43c5744f878f492",
+      "filename": "0053_ai_runtime_worker_leases.sql"
     }
   ]
 }
