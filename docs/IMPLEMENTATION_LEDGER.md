@@ -398,6 +398,14 @@ Latest verified commits:
 - e1769126 — Expose persisted AI Runtime terminal results and normalize abstention operation state
 - d965b2e — Replay persisted AI Runtime terminal results without rerunning providers
 - 134a68a — Test AI Runtime terminal replay and abstention persistence
+- 556a4086 — Add canonical Fulfillment migration 0049
+- 9d5f4383 — Implement Fulfillment repository
+- b9f6a27a — Implement Fulfillment service capability
+- 87e38c92 — Add Fulfillment service-delivery route
+- d790c08c — Register Fulfillment routes in canonical router
+- 833e169f — Test Fulfillment commitment idempotency/lifecycle
+- 17a21774 — Test protected Fulfillment API registration
+- d31481e4 — Repair migration lock JSON separator after 0049
 - fe44de5e — Test Booking availability generation across DST and capacity constraints
 - 426196ce — Finalize Automation lifecycle + Outbox transition verification
 - 793b494 — Test Automation workflow lifecycle controls
@@ -420,6 +428,8 @@ Latest verified commits:
 CI verification: commit `426196ce1758a3f73499c22b59f520be29315401` passed both GitHub Actions `CI` and `Phoenix verification` (run IDs `35786881635` and `35786881674`). Migration lock verification, typecheck, build and unit tests were green in that verification path.
 
 Review moderation note: migration 0048 completes moderation/reporting/reputation projection storage and API/service behavior.
+
+Fulfillment 0049 note: package `@qooqnos/fulfillment` and canonical API routes are registered; lifecycle intake is idempotent and status transitions emit Outbox + append-only history.
 
 Fulfillment note: migration 0049 establishes the reusable Fulfillment & Service Delivery execution model across physical, digital and service obligations. Commerce/Booking/Billing remain authoritative for upstream commitments and finance; Fulfillment owns execution state and evidence. Review target types remain canonical Business/Offering/Product only.
 
