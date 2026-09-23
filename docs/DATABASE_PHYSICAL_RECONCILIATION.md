@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0052**.
+The current API migration catalog references versions **0001 through 0053**.
 
 ### Foundation — 0001
 
@@ -412,6 +412,13 @@ These migrations add integrity triggers only.
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
+### AI Runtime worker leases — 0053
+
+- no new tables
+- adds AI operation worker lease/claim columns and indexes
+
+0053 adds durable execution ownership to the existing AI Runtime operation aggregate without creating a second execution ledger.
+
 ## 2. Domain coverage matrix
 
 | Domain | Current physical state | Reconciliation status |
@@ -654,7 +661,7 @@ The database is broad but not yet production-complete.
 The accurate state is:
 
 ```
-183 physical tables defined across 52 ordered migrations
+183 physical tables defined across 53 ordered migrations
         ↓
 core foundation + identity + business + catalog + media + discovery
 + seller AI + customer/CRM + trust + booking + commerce + billing
@@ -677,7 +684,7 @@ The next implementation work should proceed in this order:
 4. Complete Billing provider adapters/reconciliation workers and invoice/financial-ledger foundation only where their contracts are explicit.
 5. Complete Communication consent/policy/anti-spam and external provider-adapter contracts; provider-neutral template/dispatch infrastructure is implemented.
 6. Scheduled Automation polling/misfire execution and CapabilityRegistry-backed scheduled action execution are implemented; capability compensation remains only where a concrete rollback contract exists.
-7. Complete AI Runtime durable/asynchronous worker orchestration over the existing provider/routing/validation runtime.
+7. Complete AI Runtime production worker scheduling only after a canonical input/payload resolver is available; lease/claim/reclaim infrastructure is implemented.
 8. Complete Integration provider-specific adapters and cross-provider retention/reconciliation semantics; durable claim/sync worker infrastructure is implemented.
 9. Complete Privacy retention/export/delete workers and subject-level identity validation.
 10. Complete Matching learning signals and broader Act projections; core retrieval/ranking/Connect execution is implemented.
@@ -708,10 +715,3 @@ The database is ready for production provisioning only when:
 
 Until then, adding another generic database schema would create unnecessary divergence.
 
-
-### AI Runtime worker leases — 0053
-
-- no new tables
-- adds AI operation worker lease/claim columns and indexes
-
-0053 adds durable execution ownership to the existing AI Runtime operation aggregate without creating a second execution ledger.
