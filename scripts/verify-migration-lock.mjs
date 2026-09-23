@@ -38,6 +38,45 @@ async function sourceMigrations() {
   );
 }
 
+
+async function verifyApiCatalog(sources) {
+  const catalogPath = path.join(root, "apps", "api", "src", "migrations.ts");
+  const catalog = await readFile(catalogPath, "utf8");
+
+  const importFilenames = [...catalog.matchAll(
+    /import\\s+.+?from\\s+"\\.\\.\\/\\.\\.\\/\\.\\.\\/migrations\\/(\\d+_[^"]+\\.sql)";/g,
+  )].map((match) => match[1]);
+
+  const sourceFilenames = sources.map((source) => source.filename);
+  if (importFilenames.length !== sourceFilenames.length) {
+    fail(`API migration catalog imports ${importFilenames.length} migrations; source contains ${sourceFilenames.length}`);
+  }
+
+  for (let index = 0; index < sourceFilenames.length; index += 1) {
+    if (importFilenames[index] !== sourceFilenames[index]) {
+      fail(
+        `API migration import ordering differs at version ${index + 1}: catalog=${importFilenames[index]} source=${sourceFilenames[index]}`,
+      );
+    }
+  }
+
+  const sourceEntries = [...catalog.matchAll(
+    /\\{\\s*path:\\s*"migrations\\/(\\d+_[^"]+\\.sql)",\\s*sql:\\s*([^,}]+),?\\s*\\}/g,
+  )].map((match) => ({ filename: match[1], symbol: match[2].trim() }));
+
+  if (sourceEntries.length !== sourceFilenames.length) {
+    fail(`API migrationSources contains ${sourceEntries.length} entries; source contains ${sourceFilenames.length}`);
+  }
+
+  for (let index = 0; index < sourceFilenames.length; index += 1) {
+    if (sourceEntries[index]?.filename !== sourceFilenames[index]) {
+      fail(
+        `migrationSources ordering differs at version ${index + 1}: catalog=${sourceEntries[index]?.filename} source=${sourceFilenames[index]}`,
+      );
+    }
+  }
+}
+
 async function verify() {
   const sources = await sourceMigrations();
   const lock = JSON.parse(await readFile(lockPath, "utf8"));
@@ -61,6 +100,8 @@ async function verify() {
       }
     }
   }
+  await verifyApiCatalog(sources);
+
   for (const entry of lock.migrations) {
     if (!sourceById.has(entry.id)) fail(`manifest entry ${entry.id} has no source migration`);
   }
