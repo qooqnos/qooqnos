@@ -65,7 +65,7 @@ describe("MatchingRepository",()=>{
   it("uses the latest Match decision when determining Connect eligibility", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
-      async first<T>(/* eslint-disable @typescript-eslint/no-unused-vars */) { return { decision: "rejected" } as T; },
+      async first<T>() { return { decision: "rejected" } as T; },
       async all<T>() { return { results: [] as T[] }; },
       async run() { return { success: true }; },
     };
