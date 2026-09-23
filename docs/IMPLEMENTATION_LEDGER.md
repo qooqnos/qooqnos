@@ -31,6 +31,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | CRM Customer relationships | 🟢 Schema/repository implemented | migrations/0019_crm_customer_relationships.sql; packages/database/src/customer-relationship-repository.ts |
 | CRM timeline events | 🟢 Schema/repository implemented | migrations/0020_crm_timeline_events.sql; packages/database/src/crm-timeline-repository.ts; projections remain gated |
 | Customer addresses | 🟢 Schema/repository implemented | migrations/0026_customer_addresses.sql; packages/database/src/customer-address-repository.ts |
+| Customer capability package | 🟢 Package/service/manifest/API implemented | packages/customer/src/service.ts; packages/customer/src/manifest.ts; apps/api/src/customer-routes.ts; CustomerProfile remains a logical aggregate |
 | Business status history | 🟢 Schema/repository implemented | migrations/0027_business_status_history.sql; packages/business/src/repository.ts |
 | Booking core | 🟢 Schema/package/repository implemented | migrations/0028_booking_core.sql; packages/booking/src/repository.ts; packages/booking/src/service.ts |
 | Booking availability rules | 🟢 Schema/repository implemented | migrations/0029_availability_schedules.sql; packages/booking/src/availability-repository.ts |
