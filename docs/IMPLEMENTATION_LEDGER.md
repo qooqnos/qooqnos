@@ -406,6 +406,9 @@ Latest verified commits:
 - 833e169f — Test Fulfillment commitment idempotency/lifecycle
 - 17a21774 — Test protected Fulfillment API registration
 - d31481e4 — Repair migration lock JSON separator after 0049
+- 5199e4a — Make Fulfillment a composite workspace build target
+- 1b4011cb — Add Fulfillment to root TypeScript build graph
+- e15e16e — Finalize Fulfillment continuity ledger after migration verification reset
 - fe44de5e — Test Booking availability generation across DST and capacity constraints
 - 426196ce — Finalize Automation lifecycle + Outbox transition verification
 - 793b494 — Test Automation workflow lifecycle controls
@@ -425,11 +428,11 @@ Latest verified commits:
 - e15721d — Expose Integration sync job API capability
 - 56591ab — Test protected Integration sync job route
 
-CI verification: commit `426196ce1758a3f73499c22b59f520be29315401` passed both GitHub Actions `CI` and `Phoenix verification` (run IDs `35786881635` and `35786881674`). Migration lock verification, typecheck, build and unit tests were green in that verification path.
+CI verification: commit `1b4011cb32f7a9a6be98575e8bfd4391e0dcd805` passed both GitHub Actions `CI` and `Phoenix verification` (run IDs `35819495147` and `35819495077`). Format, lint, migration lock verification, typecheck, build and unit tests were green.
 
 Review moderation note: migration 0048 completes moderation/reporting/reputation projection storage and API/service behavior.
 
-Fulfillment 0049 note: package `@qooqnos/fulfillment` and canonical API routes are registered; lifecycle intake is idempotent and status transitions emit Outbox + append-only history.
+Fulfillment 0049 note: package `@qooqnos/fulfillment` and canonical API routes are registered; lifecycle intake is idempotent, status transitions emit transactional Outbox + append-only history, and the package is included in the composite root build graph. CI/Phoenix verification are green.
 
 Fulfillment note: migration 0049 establishes the reusable Fulfillment & Service Delivery execution model across physical, digital and service obligations. Commerce/Booking/Billing remain authoritative for upstream commitments and finance; Fulfillment owns execution state and evidence. Review target types remain canonical Business/Offering/Product only.
 
