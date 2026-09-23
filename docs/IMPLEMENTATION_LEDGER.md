@@ -44,6 +44,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Automation workflow engine | 🟢 Schema/package/repository/service/API/worker implemented | migrations/0036_automation_core.sql; packages/automation/src/repository.ts; packages/automation/src/service.ts; apps/api/src/automation-routes.ts; apps/api/src/automation-worker.ts; apps/api/src/automation-execution-worker.ts |
 | Automation capability executor | 🟢 Runtime registry/executor/composition/worker implemented | packages/runtime/src/capabilities.ts; packages/automation/src/executor.ts; packages/automation/src/repository.ts; apps/api/src/capabilities.ts |
 | AI Runtime persistence | 🟢 Schema/repository/runtime composition implemented | migrations/0037_ai_runtime_core.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/runtime-client.ts; apps/api/src/ai-composition.ts |
+| AI Runtime worker lease boundary | 🟢 Durable lease/claim/reclaim worker implemented; production scheduling gated by input resolver | migrations/0053_ai_runtime_worker_leases.sql; packages/ai/src/runtime-repository.ts; packages/ai/src/worker.ts; packages/ai/src/worker.test.ts |
 | Integration core | 🟢 Schema/package/repository/service/API/durable worker-boundary implemented | migrations/0038_integration_core.sql; packages/integration/src/repository.ts; packages/integration/src/service.ts; packages/integration/src/adapter.ts; packages/integration/src/worker.ts; apps/api/src/integration-routes.ts; apps/api/src/integration-worker.ts |
 | Privacy / Consent core | 🟢 Schema/package/repository/service implemented | migrations/0039_privacy_consent_requests.sql; packages/privacy/src/repository.ts; packages/privacy/src/service.ts |
 | Fulfillment / Service Delivery core | 🟢 Schema/package/repository/service/API/provider-boundary implemented | migrations/0049_fulfillment_core.sql; packages/fulfillment/src/repository.ts; packages/fulfillment/src/service.ts; packages/fulfillment/src/adapter.ts; apps/api/src/fulfillment-routes.ts |
@@ -554,6 +555,7 @@ The API runtime references these migration sources:
 0050_case_support_core.sql
 0051_communication_templates.sql
 0052_moderation_cases.sql
+0053_ai_runtime_worker_leases.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
@@ -607,7 +609,7 @@ pass CI build + tests
 → Integration provider adapters and durable sync workers remain provider-specific
 → Privacy export/delete/retention workers remain gated by subject-validation semantics
 → Communication template registry and provider-neutral dispatch implemented; external provider adapters plus consent/anti-spam policy remain gated
-→ AI durable/asynchronous worker orchestration remains after the in-process governance/runtime
+→ AI durable/asynchronous worker lease/claim/reclaim infrastructure is implemented; scheduler wiring remains gated only until an explicit input resolver is available
 → Matching learning signals and broader Act integrations remain contract-gated
 → CustomerProfile remains gated until field-level contract is explicit
 → define remaining Localization/Documents/Analytics contracts
@@ -621,6 +623,8 @@ Automation scheduler note: the Worker scheduled hook now plans fixed-duration IS
 Case SLA worker note: the Worker scheduled hook now evaluates active cases against explicit CaseSLA first-response and resolution targets, records explicit `case.first_response` events through a protected capability, and emits idempotent `case.sla_breached` case/outbox evidence. No new SLA table was introduced; queue dispatch and CaseAction execution remain behind the canonical capability boundary.
 
 Privacy consent expiry note: scheduled processing now transitions only expired granted consents to `expired` and emits idempotent `privacy.consent.expired` Outbox evidence. Export/delete and subject-level identity validation remain deliberately gated.
+
+AI worker note: migration 0053 adds worker lease ownership to the existing `ai_operations` record. `packages/ai/src/worker.ts` claims stale/runnable operations, resolves only through a required `AIRuntimeInputResolver`, records failures durably, and releases leases. The Worker scheduler is deliberately not wired until a canonical payload resolver exists.
 
 CaseAction state note: CaseAction now has explicit repository/service/API approval, cancellation and completion transitions with authorization checks. `apps/api/src/case-action-worker.ts` claims approved actions and executes them through the same canonical CapabilityRegistry as Automation, preserving tenant/workspace scope and current actor authorization.
 
