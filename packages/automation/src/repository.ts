@@ -524,6 +524,10 @@ export class AutomationRepository extends Repository {
 
   async setExecutionStatus(context: RequestContext, id: EntityId, status: AutomationExecutionStatus, now: string): Promise<WorkflowExecutionRecord> {
     const current = await this.getExecution(context, id);
+    if (current.status === status) return current;
+    if (["completed", "failed", "cancelled"].includes(current.status)) {
+      throw new DatabaseError("Terminal automation execution cannot be reopened");
+    }
     const completedAt = ["completed","failed","cancelled"].includes(status) ? now : current.completedAt;
     await this.database.run(
       "UPDATE automation_executions SET status = ?, completed_at = ?, started_at = COALESCE(started_at, ?), updated_at = ? WHERE id = ?",
