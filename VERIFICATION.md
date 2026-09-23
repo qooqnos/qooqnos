@@ -8,12 +8,12 @@
 
 The current `main` commit verified in GitHub Actions is:
 
-`6275a6f4ba52450977f9700c3bd82e792905aafa`
+`488a04c93d34ed725433a37af71941348a02f136`
 
 Both required workflows passed:
 
-- **CI:** run `35824511143` — success
-- **Phoenix verification:** run `35824511184` — success
+- **CI:** latest verified main CI run — success
+- **Phoenix verification:** latest verified main Phoenix verification run — success
 
 The verification path passed migration-lock verification, TypeScript typecheck, workspace build, lint/migration checks, and the unit-test suite: **61 test files / 173 tests passed**.
 
@@ -73,15 +73,15 @@ Implemented core capability families include:
 
 The physical schema is intentionally broad but not every operational concern is closed. Remaining work is primarily execution rather than schema invention:
 
-1. Durable Automation schedule polling and misfire semantics (the recurrence/misfire contract is still intentionally open).
+1. Scheduled Automation polling and misfire semantics are implemented; scheduled action execution still requires canonical CapabilityRegistry composition.
 2. Integration provider adapters and durable sync workers; adapter payload/credential contracts remain provider-specific.
 3. Privacy export/delete/retention workers with subject-level identity validation.
 4. External Communication provider adapters plus template/policy registry; provider-neutral dispatch is already live.
 5. AI provider routing/validation execution beyond the current in-process Runtime/registry, specifically durable/asynchronous worker orchestration where required.
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile only when its field-level contract is explicit; CRM timeline is already physically implemented as events/projection input.
-8. Localization / Documents / Analytics contracts where canonical ownership is explicit.
-9. Remote D1 provisioning and production binding configuration.
+8. CustomerProfile field-level contract, plus Localization / Documents / Analytics contracts where canonical ownership is explicit.
+9. Case queue dispatch / CaseAction execution through canonical capabilities, then remote D1 provisioning and production binding configuration.
 
 ## Source-of-truth documents
 
