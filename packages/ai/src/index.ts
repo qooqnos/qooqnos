@@ -8,3 +8,5 @@ export * from "./runtime-repository";
 
 export * from "./runtime-service";
 export * from "./worker";
+
+export * from "./runtime-input-resolver";
