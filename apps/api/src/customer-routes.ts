@@ -244,6 +244,31 @@ export function registerCustomerRoutes(
 
   router.register({
     method: "GET",
+    path: "/api/v1/customers/:customerId/history",
+    module: "customer",
+    operation: "customer.get_history",
+    permission: "customer.get_history",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const url = new URL(request.url);
+      const rawLimit = url.searchParams.get("limit");
+      const limit = rawLimit === null ? 100 : Number(rawLimit);
+      if (!Number.isSafeInteger(limit) || limit < 1) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "limit must be a positive integer.", requestId: context.requestId });
+      }
+      const history = await service.getHistory(
+        context,
+        requiredParam(params.customerId, context.requestId),
+        Math.min(limit, 500),
+      );
+      return json({ data: history }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/customers/relationships/:relationshipId/history",
     module: "customer",
     operation: "customer.get_history",
