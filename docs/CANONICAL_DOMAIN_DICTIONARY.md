@@ -172,7 +172,7 @@ This dictionary is the authoritative vocabulary for Phoenix. New code, schema, A
 
 **Customer** — business/customer representation used by the marketplace. It may optionally map to a User and may support guests.
 
-**CustomerProfile** — customer-specific preferences and profile information.
+**CustomerProfile** — logical Customer aggregate composed from `customers`, `customer_preferences`, and `customer_addresses`; it is a capability-level composition, not a separate physical source of truth.
 
 **CustomerAddress** — address record associated with a Customer.
 
