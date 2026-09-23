@@ -10,6 +10,8 @@ The latest verified `main` checkpoint is:
 
 `90792c7a0e52ec40b00eb4ebf6d2d3d4a7da62e6`
 
+Current `main` head is `614c7cfd7fbc05e061ee5a97538c4fd4357bb46a`; commits after the verified checkpoint include code-level reconciliation (CustomerRelationship interaction CAS and migration-catalog import ordering) and are not represented by the above historical CI result.
+
 Both required workflows passed:
 
 - **CI:** run `35888657937` — success
@@ -17,7 +19,7 @@ Both required workflows passed:
 
 The verification path passed format/lint checks, migration-lock verification, TypeScript typecheck, workspace build, Cloudflare Worker dry-run bundling, and the unit-test suite: **70 test files / 197 tests passed**.
 
-Current `main` contains the verified code checkpoint `90792c7a0e52ec40b00eb4ebf6d2d3d4a7da62e6` plus subsequent documentation-only synchronization commits.; this head has passed CI and Phoenix verification.
+Current `main` contains code changes after the verified checkpoint. The historical CI/Phoenix result above should not be treated as verification of those later code changes until the workflows run on the new head.
 
 ## Canonical runtime baseline
 
