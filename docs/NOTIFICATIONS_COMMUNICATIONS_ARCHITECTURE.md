@@ -342,7 +342,7 @@ Any AI-created outbound message passes the same schema, policy, consent, authori
 
 ## 20. Rate Limits and Anti-Spam
 
-Consent/intent/suppression policy is implemented in Communication. Edge/platform rate limiting and anomaly detection remain infrastructure/security controls rather than domain policy tables.
+Consent/intent/suppression policy is implemented in Communication. Suppression records explicitly identify whether required transactional/security traffic is included. Edge/platform rate limiting and anomaly detection remain infrastructure/security controls rather than domain policy tables.
 
 Apply limits at multiple scopes:
 
