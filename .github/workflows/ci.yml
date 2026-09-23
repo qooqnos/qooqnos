@@ -45,6 +45,9 @@ jobs:
       - name: Verify canonical source boundary
         run: npm run verify:source-boundary
 
+      - name: Verify runtime module registry
+        run: npm run verify:runtime-registry
+
       - name: Verify migration history changes
         run: npm run migration:check:changes
         env:
