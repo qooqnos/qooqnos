@@ -32,8 +32,8 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | D1 database boundary | ✅ Implemented | packages/database exposes D1-compatible access |
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
 | Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0053 |
-| Full logical model | ⏳ In progress | many target entities remain intentionally un-migrated |
-| Final D1 physical schema | 🟢 Core physical domains and integrity guards implemented; 1 blueprint contract remains gated | 183 physical tables across migrations 0001–0053; remaining work is explicit contract/provider/worker gates and real Cloudflare resource provisioning |
+| Full logical model | 🟢 Core logical model resolved | remaining work is operational/provider/projection gates, not an unimplemented CustomerProfile table |
+| Final D1 physical schema | 🟢 Physical blueprint complete | 183 physical tables across migrations 0001–0053; remaining work is explicit contract/provider/worker gates and real Cloudflare resource provisioning |
 | Legacy PostgreSQL path | ✅ Removed from active source | historical git history only |
 
 ## 3. Critical database rule
