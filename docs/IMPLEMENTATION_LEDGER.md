@@ -63,10 +63,10 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Trust reviews / expiry | 🟢 Schema/repository implemented | migrations/0025_verification_review_expiry.sql; review/expiry methods and tests in verification-repository.ts |
 | Catalog Attribute repositories | 🟢 Implemented | packages/catalog/src/attribute-repository.ts; packages/catalog/src/attribute-value-repository.ts |
 | Media / discovery / seller-AI migrations | 🟢 Implemented in migration sequence | migrations/0009–0013 |
-| Full canonical logical model | ⏳ Partial | most core entities are physical; remaining work is mainly gated profile fields, projections, workers, provider adapters and operational integrations
+| Full canonical logical model | 🟢 Core logical model resolved | physical coverage is complete for the canonical physical blueprint; remaining work is operational/provider/projection gates rather than an unimplemented CustomerProfile table
 
-Database completion note: 122 of 123 table contracts in docs/PHYSICAL_SCHEMA_BLUEPRINT.md now have canonical physical tables (99.2%). The remaining table contract is customer_profiles; it remains deliberately gated because its current field dictionary is still too vague to implement without inventing semantics. |
-| Final physical D1 schema | 🟢 99.2% of Physical Schema Blueprint table contracts have canonical physical tables; 1 contract remains gated | only customer_profiles lacks a sufficiently specific field-level contract |
+Database completion note: all physical table contracts in docs/PHYSICAL_SCHEMA_BLUEPRINT.md have canonical physical representations; CustomerProfile is intentionally represented as a logical aggregate over Customer-owned records rather than a separate table. |
+| Final physical D1 schema | 🟢 Physical blueprint complete | all physical table contracts have canonical representations; remaining work is operational/provider/projection gates |
 | Legacy PostgreSQL database path | ✅ Removed from active source | historical git history only |
 | Legacy in-memory database path | 🟡 Isolated compatibility path | packages/database/src/legacy.ts; not exported by canonical package root |
 | Legacy onboarding compatibility | 🟡 Explicit compatibility path | packages/onboarding/src/legacy.ts; package subpath `@qooqnos/onboarding/legacy`; canonical root no longer exports legacy workflow |
