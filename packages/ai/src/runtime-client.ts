@@ -47,7 +47,34 @@ export function createPersistentAIRuntimeClient(
       });
 
       if (operation.status === "succeeded" || operation.status === "blocked" || operation.status === "abstained") {
-        return runtime.execute<TOutput>(request);
+        const persisted = await repository.getResult(request.context, operation.id);
+        if (!persisted) {
+          throw new Error("AI Runtime terminal operation has no persisted result");
+        }
+        const safetyDecision =
+          persisted.safetyOutcome === "abstained" || persisted.status === "abstained"
+            ? "abstained"
+            : persisted.safetyOutcome === "blocked" || persisted.status === "blocked"
+              ? "blocked"
+              : "allowed";
+        const provenance =
+          persisted.provenance.find((value) => value === "ai_extracted" || value === "ai_generated" || value === "system_derived") as
+            | "ai_generated"
+            | "ai_extracted"
+            | "system_derived"
+            | undefined;
+        return {
+          operationId: request.operationId,
+          operationType: request.operationType,
+          operationVersion: request.operationVersion,
+          status: persisted.status === "abstained" ? "abstained" : persisted.status === "blocked" ? "blocked" : persisted.status,
+          ...(persisted.providerId ? { providerId: persisted.providerId } : {}),
+          ...(persisted.modelId ? { modelId: persisted.modelId } : {}),
+          safetyDecision,
+          provenance: provenance ?? "none",
+          warnings: [...persisted.warnings, "replayed_from_persisted_runtime_result"],
+          retryable: false,
+        };
       }
 
       await repository.setOperationStatus(request.context, operation.id, "started", now);
