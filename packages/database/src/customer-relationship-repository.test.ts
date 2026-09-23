@@ -61,4 +61,40 @@ describe("CustomerRelationshipRepository", () => {
       now: "2026-09-22T00:00:00.000Z",
     })).rejects.toThrow("not available in the current workspace");
   });
+  it("rejects a stale relationship status transition", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        return {
+          id: "relationship-1",
+          organizationId: "tenant-1",
+          workspaceId: "workspace-1",
+          customerId: "customer-1",
+          businessId: "business-1",
+          relationshipType: "match",
+          status: "prospect",
+          firstInteractionAt: null,
+          lastInteractionAt: null,
+          source: "matching",
+          createdAt: "2026-09-23T00:00:00.000Z",
+          updatedAt: "2026-09-23T00:00:00.000Z",
+        } as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true, meta: { changes: 0 } }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CustomerRelationshipRepository(new D1Database(raw));
+
+    await expect(repository.setStatus(
+      context(),
+      brandId<"EntityId">("relationship-1"),
+      "active",
+      "2026-09-23T00:01:00.000Z",
+    )).rejects.toThrow("changed concurrently");
+  });
+
 });
