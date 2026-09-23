@@ -93,6 +93,12 @@ A PostgreSQL-oriented Phase 4 implementation was created, including:
 This work is preserved as history but is superseded.
 
 - 4d9916c — Test CustomerRelationship interaction CAS guard
+- b02d42a — Restore canonical migration import ordering
+- 8bf1372 — Add explicit CustomerRelationship interaction CAS test
+- 614c7cf — Record explicit CustomerRelationship CAS test
+- 0bd7f8a — Refresh verification snapshot after post-checkpoint code fixes
+- c64b9af — Verify migration API catalog ordering against canonical SQL
+- 4393a09 — Fix migration catalog verifier regexes
 - 8bf1372 — Add explicit CustomerRelationship interaction CAS test
 
 ### Current canonical path
@@ -395,7 +401,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script now also checks API migration import order and migrationSources order against the canonical SQL sequence. Full external D1 application has not yet been executed.
 
 Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, and Matching retrieval/ranking/Connect execution are implemented. Provider-specific adapters, AI durable worker payload resolution, privacy export/delete semantics and communication consent/anti-spam remain controlled gates.
 
