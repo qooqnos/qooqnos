@@ -369,7 +369,7 @@
       "id": "0053_ai_runtime_worker_leases",
       "version": 53,
       "moduleId": "ai",
-      "checksum": "2a7dca5c189fe7c7c74b029935f0e22a25b8b447bf5d3ef8f43c5744f878f492",
+      "checksum": "17ebc6b34653eb3045b836da8459984c0b382ad85d6077821a353c47e70119d1",
       "filename": "0053_ai_runtime_worker_leases.sql"
     }
   ]
