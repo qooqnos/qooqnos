@@ -606,4 +606,4 @@ Automation scheduler note: the Worker scheduled hook now plans fixed-duration IS
 Case SLA worker note: the Worker scheduled hook now evaluates active cases against explicit CaseSLA first-response and resolution targets, records explicit `case.first_response` events through a protected capability, and emits idempotent `case.sla_breached` case/outbox evidence. No new SLA table was introduced; queue dispatch and CaseAction execution remain behind the canonical capability boundary.
 
 
-CI verification checkpoint: commit `6275a6f4ba52450977f9700c3bd82e792905aafa` passed GitHub CI and Phoenix verification with Format, Lint, migration lock, Typecheck, Build and **173 tests / 61 suites** passing. No PR was created.
+CI verification checkpoint: commit `488a04c93d34ed725433a37af71941348a02f136` passed GitHub CI and Phoenix verification after the Case SLA worker/first-response implementation and fixes. No PR was created.
