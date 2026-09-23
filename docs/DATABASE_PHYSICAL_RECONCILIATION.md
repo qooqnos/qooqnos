@@ -729,7 +729,7 @@ The next implementation work should proceed in this order:
 9. Complete Privacy export/delete/retention processors; approved-request orchestration, subject-level identity validation and consent expiry are implemented.
 10. Complete Matching learning signals and broader Act projections; core retrieval/ranking/Connect execution is implemented.
 11. Complete Fulfillment provider-specific adapters, callback reconciliation and durable polling only where an external provider contract exists; canonical tracking/service completion persistence is implemented.
-12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
+12. Business lifecycle vocabulary reconciliation is closed; do not introduce another Business status model.
 13. Complete Case queue dispatch/provider integrations where explicit contracts exist; CaseAction capability execution is already implemented.
 14. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
