@@ -1,4 +1,4 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
+import { brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
 
 export type CaseStatus = "open"|"triaged"|"assigned"|"in_progress"|"waiting"|"escalated"|"resolved"|"closed"|"reopened";
@@ -79,7 +79,7 @@ export class CaseSupportRepository extends Repository {
       input.now,
     );
     await this.appendEvent(context, {
-      id: input.id + ":created:" + input.now,
+      id: brandId<"EntityId">(input.id + ":created:" + input.now),
       caseId: input.id,
       eventType: "case.created",
       fromStatus: null,
