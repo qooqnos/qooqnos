@@ -1,4 +1,4 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
+import type { RequestContext } from "@qooqnos/core";
 import type { AIRuntimeRequest } from "@qooqnos/runtime";
 import type { AiOperationRecord } from "./runtime-repository";
 import { SELLER_AI_OPERATION_TYPES, type SellerProductInputRecord, type SellerProductSessionRepository } from "./seller-product-service";
@@ -52,7 +52,7 @@ export function createSellerProductAIRuntimeInputResolver(
         idempotencyKey: operation.idempotencyKey,
         input: {
           sessionId: operation.sessionId,
-          inputs: toWorkerInputRecords(inputs),
+          inputs,
         },
         dataClassification,
         promptVersion,
@@ -65,8 +65,3 @@ export function createSellerProductAIRuntimeInputResolver(
   };
 }
 
-function toWorkerInputRecords(
-  inputs: readonly SellerProductInputRecord[],
-): readonly SellerProductInputRecord[] {
-  return inputs;
-}
