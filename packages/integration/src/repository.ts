@@ -138,7 +138,7 @@ export class IntegrationRepository extends Repository {
   }
 
 
-  async listProcessableWebhooks(now: string, limit = 50): Promise<readonly IntegrationWebhookRecord[]> {
+  async listProcessableWebhooks(_now: string, limit = 50): Promise<readonly IntegrationWebhookRecord[]> {
     const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
     return this.database.all<IntegrationWebhookRecord>(
       "SELECT id, integration_account_id AS integrationAccountId, external_event_id AS externalEventId, event_type AS eventType, signature_status AS signatureStatus, received_at AS receivedAt, payload_reference AS payloadReference, processing_status AS processingStatus, processed_at AS processedAt, retry_count AS retryCount, last_error_reference AS lastErrorReference, correlation_id AS correlationId FROM integration_webhooks WHERE processing_status IN ('received','queued') ORDER BY received_at ASC, id ASC LIMIT ?",
