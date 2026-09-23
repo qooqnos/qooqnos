@@ -12,6 +12,64 @@ export interface CommunicationServiceOptions {
 export class CommunicationService {
   constructor(private readonly options: CommunicationServiceOptions) {}
 
+  async createTemplate(context: RequestContext, input: {
+    readonly templateKey: string;
+    readonly intent: string;
+    readonly channel: CommunicationChannel;
+    readonly ownerReference: string;
+    readonly status?: "draft" | "active" | "retired";
+  }) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.template.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.createTemplate(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async createTemplateVersion(context: RequestContext, input: {
+    readonly templateId: EntityId;
+    readonly version: number;
+    readonly locale: string;
+    readonly variablesSchema: Readonly<Record<string, unknown>>;
+    readonly contentReference: string;
+    readonly contentChecksum: string;
+    readonly approvalState?: "not_required" | "pending";
+    readonly effectiveFrom?: string;
+    readonly effectiveTo?: string;
+  }) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.template.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.createTemplateVersion(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async approveTemplateVersion(context: RequestContext, templateVersionId: EntityId) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.template.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.approveTemplateVersion(
+      context,
+      templateVersionId,
+      this.options.now(),
+    );
+  }
+
   async createConversation(context: RequestContext, input: { readonly customerId?: EntityId | undefined }) {
     await this.options.authorization.assert({
       context,
@@ -42,9 +100,35 @@ export class CommunicationService {
     readonly variables?: Readonly<Record<string, unknown>>; readonly idempotencyKey: string;
     readonly priority?: "low"|"normal"|"high"|"urgent"; readonly scheduledAt?: string; readonly expiresAt?: string;
   }) {
-    await this.options.authorization.assert({context,permission:"communication.notification.send",requireAuthentication:true,requireWorkspace:false});
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.notification.send",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    if (input.templateReference || input.templateVersion) {
+      if (!input.templateReference || !input.templateVersion) {
+        throw new Error("Approved Communication template reference and version are required together");
+      }
+      const version = Number(input.templateVersion);
+      if (!Number.isSafeInteger(version) || version < 1) {
+        throw new Error("Communication template version must be a positive integer");
+      }
+      await this.options.repository.getApprovedTemplateVersion(context, {
+        templateKey: input.templateReference,
+        version,
+        channel: input.channel,
+        locale: input.locale ?? context.locale ?? "en",
+        intent: input.intent,
+        now: this.options.now(),
+      });
+    }
     return this.options.repository.createNotification(context,{
-      ...input,id:this.options.id(),now:this.options.now(),
+      ...input,
+      ...(input.templateReference ? { templateReference: input.templateReference.trim() } : {}),
+      ...(input.templateVersion ? { templateVersion: String(Number(input.templateVersion)) } : {}),
+      id:this.options.id(),
+      now:this.options.now(),
     });
   }
 
@@ -70,5 +154,6 @@ export const COMMUNICATION_PERMISSIONS = [
   "communication.conversation.manage",
   "communication.message.send",
   "communication.notification.send",
+  "communication.template.manage",
   "communication.delivery.manage",
 ] as const;
