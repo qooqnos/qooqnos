@@ -8,12 +8,12 @@
 
 The current `main` commit verified in GitHub Actions is:
 
-`2441bb4bd34cc423b31ac7a3e6d6e72a05b3516d`
+`c4e61e5cb90dc7a08b973e2d1c0d4657a37f8703`
 
 Both required workflows passed:
 
-- **CI:** run `35835340923` — success
-- **Phoenix verification:** run `35835340833` — success
+- **CI:** run `35836006573` — success
+- **Phoenix verification:** run `35836006591` — success
 
 The verification path passed migration-lock verification, TypeScript typecheck, workspace build, lint/migration checks, and the unit-test suite: **64 test files / 184 tests passed**.
 
