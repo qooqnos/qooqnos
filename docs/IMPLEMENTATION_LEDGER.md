@@ -477,7 +477,7 @@ Communication template note: migration 0051 establishes the scoped versioned tem
 
 Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. External provider adapters plus template/policy/consent layers remain gated.
 
-Billing runtime note: the API Seller AI composition now uses the real D1-backed BillingService. No fallback unavailable Billing service is used for the production path; missing plan/subscription/entitlement state fails the operation closed.
+Billing runtime note: the API Seller AI composition uses the real D1-backed BillingService. Missing plan/subscription/entitlement state fails the operation closed.
 
 Billing note: migrations 0033–0034 establish plan/price/subscription/entitlement/usage/provider-reference/reconciliation storage plus an atomic quota counter. Billing is the commercial entitlement authority; payment execution, invoices and financial ledger remain gated. `GET /api/v1/billing/plans` is now exposed through the canonical BillingService and router permission `billing.plan.read`; subscription/entitlement/usage routes remain gated until a precise business-scope selector contract exists.
 
@@ -610,7 +610,7 @@ pass CI build + tests
 → Integration provider adapters and durable sync workers remain provider-specific
 → Privacy export/delete/retention workers remain gated by subject-validation semantics
 → Communication template registry and provider-neutral dispatch implemented; external provider adapters plus consent/anti-spam policy remain gated
-→ AI durable/asynchronous worker lease/claim/reclaim infrastructure is implemented; production scheduling remains gated only until an explicit input resolver is available
+→ AI durable/asynchronous worker lease/claim/reclaim infrastructure and Seller AI scheduled input resolution are implemented; new AI operation types require explicit resolvers
 → Matching learning signals and broader Act integrations remain contract-gated
 → CustomerProfile is a logical aggregate; no standalone table or duplicate source of truth
 → define remaining Localization/Documents/Analytics contracts
@@ -645,4 +645,4 @@ AI worker continuity: commit `5030160e76a6ac9a1ba77f0e8d68f0d660d986bb` exposes 
 Localization note: locale, direction, timezone, calendar, currency, market and policy context contracts are now executable in `@qooqnos/i18n`; physical country/legal profile registries remain gated until their field-level data dictionary is explicit.
 
 
-Final implementation boundary: all schema and runtime work with an explicit contract is implemented on `main`. Remaining gates are external or deliberately contract-gated: real Cloudflare D1/R2/Queue provisioning, provider-specific integrations, financial ledger/invoicing, matching learning-signal contract, Privacy export/delete semantics, Business lifecycle vocabulary, and additional AI operation resolvers. CustomerProfile is closed as a logical aggregate with no standalone table. No new table or parallel source of truth should be introduced without a closed contract.
+Final implementation boundary: all schema and runtime work with an explicit contract is implemented on `main`. Remaining gates are external or deliberately contract-gated: real Cloudflare D1/R2/Queue provisioning, provider-specific integrations, financial ledger/invoicing, matching learning-signal contract, Privacy export/delete semantics, Business lifecycle vocabulary, concrete rollback/compensation contracts, and additional AI operation resolvers. CustomerProfile is closed as a logical aggregate with no standalone table. No new table or parallel source of truth should be introduced without a closed contract.
