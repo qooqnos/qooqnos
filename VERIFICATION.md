@@ -38,7 +38,7 @@ The product loop remains:
 
 ## Canonical implementation coverage
 
-Current canonical migrations reach `0053_ai_runtime_worker_leases.sql`.
+Current canonical migrations reach `0054_discovery_index_observability.sql`.
 
 Implemented core capability families include:
 
