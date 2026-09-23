@@ -1,8 +1,6 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import {
   AuthorizationRepository,
-  CustomerRelationshipRepository,
-  OutboxService,
 } from "@qooqnos/database";
 import {
   BookingRepository,
