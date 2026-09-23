@@ -303,12 +303,6 @@ These migrations add integrity triggers only.
 
 ### Demand / Matching integrity — 0041
 
-### Booking idempotency — 0042
-
-- no new tables
-
-0042 aligns the canonical Booking repository with D1 by adding the missing scoped `idempotency_key` contract and unique index to `bookings`.
-
 - no new tables
 
 0041 hardens typed candidate uniqueness and append-only MatchDecision history.
@@ -414,10 +408,6 @@ These migrations add integrity triggers only.
 
 0052 establishes the canonical generic moderation workflow record. Review-specific moderation remains owned by the existing review moderation tables; this record is the cross-domain moderation case coordinator.
 
-**Total currently defined physical tables: 186.**
-
-This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
-
 ### AI Runtime worker leases — 0053
 
 - no new tables
@@ -432,6 +422,10 @@ This count includes only canonical SQL migration sources. It does not include re
 - discovery_evaluation_records
 
 0054 closes the Discovery index-generation/versioning gap and persists query/evaluation evidence without turning derived search state into domain truth.
+
+**Total currently defined physical tables: 186.**
+
+This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
 ## 2. Domain coverage matrix
 
