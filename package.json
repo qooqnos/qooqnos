@@ -23,7 +23,7 @@
     "format:check": "prettier --check .",
     "migration:check:changes": "node scripts/migration-check-changes.mjs",
     "verify:production-bindings": "node scripts/verify-production-bindings.mjs .wrangler/production.wrangler.toml",
-    "predeploy:prod": "npm run render:wrangler:prod && npm run verify:production-bindings && npm run verify:migrations && npm run lint && npm run typecheck && npm run build && npm run verify:worker:prod && npm run test",
+    "predeploy:prod": "npm run render:wrangler:prod && npm run verify:production-bindings && npm run verify:migrations && npm run verify:source-boundary && npm run lint && npm run typecheck && npm run build && npm run verify:worker:prod && npm run test",
     "verify:worker": "npx --yes wrangler@4.136.2 deploy --dry-run --outdir .wrangler-dry-run",
     "render:wrangler:prod": "node scripts/render-production-wrangler.mjs",
     "verify:worker:prod": "npx --yes wrangler@4.136.2 deploy --config .wrangler/production.wrangler.toml --env production --dry-run --outdir .wrangler-dry-run-production",
