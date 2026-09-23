@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { brandId } from "@qooqnos/core";
 import type {
   AvailabilityContext,
   AvailabilityRuleRecord,
@@ -7,10 +8,10 @@ import type {
 import { generateAvailabilitySlots } from "./slot-generator";
 
 const schedule: ScheduleRecord = {
-  id: "schedule-1",
-  businessId: "business-1",
+  id: brandId<"EntityId">("schedule-1"),
+  businessId: brandId<"EntityId">("business-1"),
   locationId: null,
-  resourceId: "resource-1",
+  resourceId: brandId<"EntityId">("resource-1"),
   timezone: "America/New_York",
   recurrenceDefinition: JSON.stringify({ version: 1, slotGranularityMinutes: 60 }),
   bookingHorizonMinutes: null,
@@ -24,8 +25,8 @@ const schedule: ScheduleRecord = {
 };
 
 const rule = (weekdays: number[], start: string, end: string, capacity = 1): AvailabilityRuleRecord => ({
-  id: "rule-1",
-  scheduleId: "schedule-1",
+  id: brandId<"EntityId">("rule-1"),
+  scheduleId: brandId<"EntityId">("schedule-1"),
   ruleType: "weekly_window",
   recurrencePayload: JSON.stringify({ version: 1, weekdays, start, end, capacity }),
   startConstraint: null,
@@ -71,8 +72,8 @@ describe("generateAvailabilitySlots", () => {
     const slots = generateAvailabilitySlots(
       availability({
         exceptions: [{
-          id: "exception-1",
-          scheduleId: "schedule-1",
+          id: brandId<"EntityId">("exception-1"),
+          scheduleId: brandId<"EntityId">("schedule-1"),
           effectiveStart: "2026-03-07T14:30:00.000Z",
           effectiveEnd: "2026-03-07T15:30:00.000Z",
           exceptionType: "closure",
@@ -111,7 +112,7 @@ describe("generateAvailabilitySlots", () => {
         rules: [rule([6], "09:00", "11:00", 3)],
         resourceCapacity: 3,
         appointments: [{
-          id: "appointment-1",
+          id: brandId<"EntityId">("appointment-1"),
           startsAt: "2026-03-07T14:00:00.000Z",
           endsAt: "2026-03-07T15:00:00.000Z",
           quantity: 1,
