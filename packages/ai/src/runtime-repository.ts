@@ -176,10 +176,6 @@ export class AiRuntimeRepository extends Repository {
     return this.getOperation(context, current.id);
   }
 
-function isTerminalAiOperationStatus(status: string): boolean {
-  return ["succeeded", "partially_succeeded", "failed", "cancelled", "expired", "blocked"].includes(status);
-}
-
   async recordProviderAttempt(context: RequestContext, input: {
     readonly id: EntityId; readonly operationId: EntityId; readonly attemptNumber: number;
     readonly providerId: EntityId; readonly modelId?: EntityId; readonly status: string;
@@ -286,4 +282,9 @@ function parseStringArray(value: string | null): string[] {
   } catch {
     throw new DatabaseError("Stored AI Runtime string array is invalid");
   }
+function isTerminalAiOperationStatus(status: string): boolean {
+  return ["succeeded", "partially_succeeded", "failed", "cancelled", "expired", "blocked"].includes(status);
+}
+
+
 }
