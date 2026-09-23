@@ -26,13 +26,17 @@ Phoenix does not use Wrangler's generated D1 migration registry as the applicati
 
 The current canonical sequence ends at `0053_ai_runtime_worker_leases.sql`.
 
+## Cloudflare Worker bundling
+
+`npm run verify:worker` executes a pinned Wrangler `4.136.2` dry-run. Wrangler source aliases map `@qooqnos/*` workspace imports to their canonical `packages/*/src/index.ts` entrypoints, so deployment does not depend on prebuilt workspace `dist/` artifacts.
+
 ## Runtime safety
 
 The API fails closed when the D1 binding is absent. This is intentional: deployment without D1 must not silently fall back to an in-memory or alternate database implementation.
 
 ## Verification gate
 
-The repository's CI verifies migration-lock integrity, TypeScript, build, lint/migration checks and unit tests. The final infrastructure gate is the existence of real Cloudflare resource IDs/bindings for the deployment environment.
+The repository's CI verifies migration-lock integrity, TypeScript, build, lint/migration checks, Cloudflare Worker dry-run bundling with pinned Wrangler 4.136.2, and unit tests. The final infrastructure gate is the existence of real Cloudflare resource IDs/bindings for the deployment environment.
 
 ## Current non-goals
 
