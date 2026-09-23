@@ -1,0 +1,41 @@
+name: Phoenix production deploy
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy Phoenix to Cloudflare production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PHOENIX_PROD_D1_DATABASE_ID: ${{ vars.PHOENIX_PROD_D1_DATABASE_ID }}
+          PHOENIX_PROD_D1_DATABASE_NAME: ${{ vars.PHOENIX_PROD_D1_DATABASE_NAME }}
+          PHOENIX_PROD_R2_BUCKET_NAME: ${{ vars.PHOENIX_PROD_R2_BUCKET_NAME }}
+          PHOENIX_PROD_OUTBOX_QUEUE_NAME: ${{ vars.PHOENIX_PROD_OUTBOX_QUEUE_NAME }}
+          PHOENIX_PROD_AI_MODEL_ID: ${{ vars.PHOENIX_PROD_AI_MODEL_ID }}
+          PHOENIX_PROD_AI_MODEL_VERSION: ${{ vars.PHOENIX_PROD_AI_MODEL_VERSION }}
+          PHOENIX_PROD_AI_GATEWAY_ID: ${{ vars.PHOENIX_PROD_AI_GATEWAY_ID }}
+        run: npm run deploy:prod
