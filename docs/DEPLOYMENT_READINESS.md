@@ -24,7 +24,7 @@ Phoenix does not use Wrangler's generated D1 migration registry as the applicati
 
 `migrations/*.sql` → migration catalog → migration lock → Phoenix runtime MigrationRunner
 
-The current canonical sequence ends at `0048_reviews_moderation_reputation.sql`.
+The current canonical sequence ends at `0050_case_support_core.sql`.
 
 ## Runtime safety
 
