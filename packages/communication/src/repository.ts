@@ -322,12 +322,13 @@ export class CommunicationRepository extends Repository {
     }
 
     const suppression = await this.database.first<{ id: EntityId }>(
-      "SELECT id FROM communication_suppression_records WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND recipient_reference = ? AND status = 'active' AND effective_from <= ? AND (expires_at IS NULL OR expires_at > ?) AND ((scope = 'global') OR (scope = 'category' AND category = ?) OR (scope = 'channel' AND channel = ?) OR (scope = 'intent' AND intent = ?)) ORDER BY CASE WHEN workspace_id = ? THEN 0 ELSE 1 END, created_at DESC, id DESC LIMIT 1",
+      "SELECT id FROM communication_suppression_records WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND recipient_reference = ? AND status = 'active' AND effective_from <= ? AND (expires_at IS NULL OR expires_at > ?) AND (applies_to_required = 1 OR ? NOT IN ('transactional','security')) AND ((scope = 'global') OR (scope = 'category' AND category = ?) OR (scope = 'channel' AND channel = ?) OR (scope = 'intent' AND intent = ?)) ORDER BY CASE WHEN workspace_id = ? THEN 0 ELSE 1 END, created_at DESC, id DESC LIMIT 1",
       organizationId,
       workspaceId,
       input.recipientReference.trim(),
       input.now,
       input.now,
+      policy.category,
       policy.category,
       input.channel,
       input.intent.trim(),
@@ -549,6 +550,7 @@ export class CommunicationRepository extends Repository {
       readonly intent?: string;
       readonly reasonCode: string;
       readonly source: string;
+      readonly appliesToRequired?: boolean;
       readonly effectiveFrom: string;
       readonly expiresAt?: string;
       readonly now: string;
@@ -556,7 +558,7 @@ export class CommunicationRepository extends Repository {
   ): Promise<EntityId> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     await this.database.run(
-      "INSERT INTO communication_suppression_records (id, organization_id, workspace_id, recipient_reference, scope, category, channel, intent, reason_code, source, status, effective_from, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)",
+      "INSERT INTO communication_suppression_records (id, organization_id, workspace_id, recipient_reference, scope, category, channel, intent, reason_code, source, applies_to_required, status, effective_from, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?)",
       input.id,
       organizationId,
       context.workspaceId ?? null,
@@ -567,6 +569,7 @@ export class CommunicationRepository extends Repository {
       input.intent ?? null,
       input.reasonCode.trim(),
       input.source.trim(),
+      input.appliesToRequired === false ? 0 : 1,
       input.effectiveFrom,
       input.expiresAt ?? null,
       input.now,
