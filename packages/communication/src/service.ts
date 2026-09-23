@@ -131,6 +131,81 @@ export class CommunicationService {
       now:this.options.now(),
     });
   }
+  async listPreferences(
+    context: RequestContext,
+    recipientReference: string,
+  ) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.preference.read",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.listCommunicationPreferences(context, recipientReference);
+  }
+
+  async setPreference(
+    context: RequestContext,
+    input: {
+      readonly recipientReference: string;
+      readonly category: "transactional" | "security" | "marketing" | "reminders" | "product_updates";
+      readonly channel?: CommunicationChannel;
+      readonly status: "allowed" | "denied";
+      readonly source: string;
+      readonly consentReference?: string;
+      readonly effectiveFrom: string;
+      readonly effectiveTo?: string;
+    },
+  ) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.preference.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.setCommunicationPreference(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async suppressRecipient(
+    context: RequestContext,
+    input: {
+      readonly recipientReference: string;
+      readonly scope: "global" | "category" | "channel" | "intent";
+      readonly category?: "transactional" | "security" | "marketing" | "reminders" | "product_updates";
+      readonly channel?: CommunicationChannel;
+      readonly intent?: string;
+      readonly reasonCode: string;
+      readonly source: string;
+      readonly effectiveFrom: string;
+      readonly expiresAt?: string;
+    },
+  ) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.suppression.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.createSuppression(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async releaseSuppression(context: RequestContext, id: EntityId) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.suppression.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.releaseSuppression(context, id, this.options.now());
+  }
 
   async updateDeliveryStatus(context: RequestContext, notificationId: EntityId, status: CommunicationMessageStatus) {
     await this.options.authorization.assert({context,permission:"communication.delivery.manage",requireAuthentication:true,requireWorkspace:false});
@@ -154,6 +229,9 @@ export const COMMUNICATION_PERMISSIONS = [
   "communication.conversation.manage",
   "communication.message.send",
   "communication.notification.send",
+  "communication.preference.read",
+  "communication.preference.manage",
+  "communication.suppression.manage",
   "communication.template.manage",
   "communication.delivery.manage",
 ] as const;
