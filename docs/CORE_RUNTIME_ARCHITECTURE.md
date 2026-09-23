@@ -654,3 +654,8 @@ Core Runtime is production-ready only when:
 Phoenix Core Runtime is the **control plane for modular capabilities**.
 
 It does not contain Beauty, Fashion, Medical, Booking, CRM, PDF, or other industry/domain business logic. It provides the stable execution contracts that let those modules evolve independently while sharing one secure, fast, multilingual platform.
+
+
+## 13.1 Capability Registry
+
+Runtime exposes one in-process CapabilityRegistry for executable capability handlers. Automation, AI tool execution and future orchestrators consume this registry rather than maintaining feature-local handler maps. Registration rejects duplicate capability IDs. Invocation carries RequestContext and optional workflow execution identity.
