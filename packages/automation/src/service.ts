@@ -1,5 +1,6 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import type { AuthorizationService } from "@qooqnos/runtime";
+import { AutomationExecutor } from "./executor";
 import { AutomationRepository } from "./repository";
 
 export interface AutomationServiceOptions {
@@ -8,10 +9,25 @@ export interface AutomationServiceOptions {
   readonly id: () => EntityId;
   readonly traceId: () => string;
   readonly now: () => string;
+  readonly executor?: AutomationExecutor;
 }
 
 export class AutomationService {
   constructor(private readonly options: AutomationServiceOptions) {}
+
+  async execute(
+    context: RequestContext,
+    executionId: EntityId,
+  ): Promise<"completed" | "failed" | "waiting"> {
+    await this.options.authorization.assert({
+      context,
+      permission: "automation.execution.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    if (!this.options.executor) throw new Error("Automation executor is not configured");
+    return this.options.executor.execute(context, executionId);
+  }
 
   async createWorkflow(context: RequestContext, input: {
     readonly name: string; readonly scope: "platform"|"organization"|"workspace"|"business"; readonly businessId?: EntityId;
