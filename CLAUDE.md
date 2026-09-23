@@ -47,77 +47,22 @@ D1 is the canonical relational source of truth. Do not reintroduce PostgreSQL, O
 
 Read `docs/IMPLEMENTATION_LEDGER.md`, `docs/DATABASE_PHYSICAL_RECONCILIATION.md`, and `docs/PHYSICAL_SCHEMA_BLUEPRINT.md` before substantial schema work.
 
-## Status Definitions
+## Canonical Continuity State
 
-* `PLANNED` — Not implemented.
-* `IN_PROGRESS` — Currently being implemented.
-* `COMPLETED` — Implemented, verified and committed.
-* `BLOCKED` — Cannot proceed without resolving a dependency.
-* `NEEDS_REVIEW` — Existing implementation requires investigation.
-* `DEPRECATED` — No longer part of the active architecture.
+The authoritative implementation ledger is \`docs/IMPLEMENTATION_LEDGER.md\`. Do not maintain a second capability/migration ledger in this file.
 
----
+Current verified architecture state is summarized in \`VERIFICATION.md\` and \`PHASE_STATUS.md\`. Always read those plus the implementation ledger before substantial continuation work.
 
-## Completed Capabilities
+## Agent Operating Rules
 
-| Capability | Module | Status | Implementation | Tests | Commit |
-| ---------- | ------ | ------ | -------------- | ----- | ------ |
-| —          | —      | —      | —              | —     | —      |
-
----
-
-## In Progress
-
-| Capability | Module | Status | Current Work | Files |
-| ---------- | ------ | ------ | ------------ | ----- |
-| —          | —      | —      | —            | —     |
-
----
-
-## Remaining Work
-
-| Capability | Module | Status | Dependencies | Notes |
-| ---------- | ------ | ------ | ------------ | ----- |
-| —          | —      | —      | —            | —     |
-
----
-
-## Architectural Implementations
-
-| Component | Location | Status | Commit | Do Not Duplicate |
-| --------- | -------- | ------ | ------ | ---------------- |
-| —         | —        | —      | —      | —                |
-
----
-
-## Database / Migration Implementations
-
-| Domain | Tables / Migration | Status | Commit |
-| ------ | ------------------ | ------ | ------ |
-| —      | —                  | —      | —      |
-
----
-
-## Important Existing Services
-
-| Service / Abstraction | Location | Purpose | Status |
-| --------------------- | -------- | ------- | ------ |
-| —                     | —        | —       | —      |
-
----
-
-## Session Continuation Notes
-
-Only record information required for the next implementation session.
-
-* Current implementation area:
-* Next capability:
-* Blocking issue:
-* Important dependency:
-* Last commit:
-* Last verification:
-
----
+1. Never duplicate a completed capability, repository, table, service, runtime boundary, or provider owner.
+2. Continue from the latest ledger/checkpoint instead of re-reviewing the entire repository.
+3. For schema work, use exactly one module-owned numbered migration and preserve migration-lock integrity.
+4. For runtime work, keep tenant/workspace authorization and module ownership explicit.
+5. Add/update focused tests for each meaningful invariant.
+6. Commit directly to \`main\` unless the user explicitly asks for a branch or PR.
+7. After each meaningful slice, update \`docs/IMPLEMENTATION_LEDGER.md\` and continue to the next safe slice.
+8. Stop only at a genuine external/provider/infrastructure gate or actual project completion.
 
 ## Rules
 
