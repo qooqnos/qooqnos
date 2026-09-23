@@ -639,3 +639,6 @@ AI durable worker note: the Worker scheduled hook now runs the canonical Seller 
 
 
 AI worker continuity: commit `5030160e76a6ac9a1ba77f0e8d68f0d660d986bb` exposes `session_id`/`actor_id` to the AI worker operation record; subsequent commits add and verify the Seller AI durable input resolver and scheduler composition.
+
+
+Localization note: locale, direction, timezone, calendar, currency, market and policy context contracts are now executable in `@qooqnos/i18n`; physical country/legal profile registries remain gated until their field-level data dictionary is explicit.
