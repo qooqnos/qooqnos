@@ -269,4 +269,42 @@ describe("PrivacyRepository", () => {
     )).rejects.toThrow("Invalid Privacy request status transition");
   });
 
+  it("claims an approved privacy request exactly once", async () => {
+    let updateCalls = 0;
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        return {
+          id: "request-1",
+          organizationId: "tenant-1",
+          workspaceId: "workspace-1",
+          subjectType: "customer",
+          subjectId: "customer-1",
+          requestType: "export",
+          status: "approved",
+          requestedBy: "privacy-admin",
+          requestedAt: "2026-09-22T00:00:00.000Z",
+          dueAt: null,
+          completedAt: null,
+          resultReference: null,
+          rejectionReason: null,
+          createdAt: "2026-09-22T00:00:00.000Z",
+          updatedAt: "2026-09-22T00:00:00.000Z",
+        } as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { updateCalls += 1; return { success: true, meta: { changes: 1 } }; },
+    };
+    const raw: D1DatabaseLike = { prepare() { return statement; }, async batch(statements) { return statements.map(() => ({ success: true, meta: { changes: 1 } })); } };
+    const repository = new PrivacyRepository(new D1Database(raw));
+
+    const result = await repository.claimApprovedRequest({
+      requestId: brandId<"EntityId">("request-1"),
+      now: "2026-09-23T00:00:00.000Z",
+    });
+
+    expect(result?.status).toBe("approved");
+    expect(updateCalls).toBe(0);
+  });
+
 });
