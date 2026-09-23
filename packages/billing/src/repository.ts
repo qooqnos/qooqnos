@@ -234,6 +234,12 @@ export class BillingRepository extends Repository {
     const current = await this.getSubscription(context, id);
     if (!current) throw new DatabaseError("Billing subscription not found");
     if (current.status === status) return current;
+    if (current.status === "expired") {
+      throw new DatabaseError("Expired Billing subscription cannot be reopened");
+    }
+    if (current.status === "cancelled" && status !== "expired") {
+      throw new DatabaseError("Cancelled Billing subscription can only expire");
+    }
 
     await this.database.transaction([
       {
