@@ -86,7 +86,7 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- Latest verified `main` documentation/runtime checkpoint is commit `a2542730d92a57c5554a590b62e5cbd9baf99cae`.
+- Latest verified `main` documentation/runtime checkpoint before the current status-only refresh is commit `a2542730d92a57c5554a590b62e5cbd9baf99cae`.
 - GitHub Actions CI run `35867835880` and Phoenix verification run `35867835863` both passed for that `main` head.
 - Migration lock verification passed through migration `0053`.
 - The latest code-bearing checkpoint remains `184c5ff9f1230c7f67179e7447a13b73caf87425` with 195 tests across 69 files; changes after it are documentation/status reconciliation.
