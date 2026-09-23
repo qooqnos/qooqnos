@@ -49,6 +49,15 @@ export class IntegrationRepository extends Repository {
     return this.getAccount(context,input.id);
   }
 
+  async getAccountForWorker(id: EntityId): Promise<IntegrationAccountRecord> {
+    const row = await this.database.first<IntegrationAccountRow>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, provider_id AS providerId, account_type AS accountType, external_account_reference AS externalAccountReference, status, credential_reference AS credentialReference, metadata_json AS metadataJson, connected_at AS connectedAt, disconnected_at AS disconnectedAt, created_at AS createdAt, updated_at AS updatedAt FROM integration_accounts WHERE id = ? LIMIT 1",
+      id,
+    );
+    if (!row) throw new DatabaseError("Integration account not found");
+    return { ...row, metadata: parseObject(row.metadataJson) };
+  }
+
   async getAccount(context: RequestContext,id: EntityId): Promise<IntegrationAccountRecord>{
     const row=await this.database.first<IntegrationAccountRow>(
       "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, provider_id AS providerId, account_type AS accountType, external_account_reference AS externalAccountReference, status, credential_reference AS credentialReference, metadata_json AS metadataJson, connected_at AS connectedAt, disconnected_at AS disconnectedAt, created_at AS createdAt, updated_at AS updatedAt FROM integration_accounts WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
