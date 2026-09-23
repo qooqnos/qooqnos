@@ -1,5 +1,6 @@
 import type { D1DatabaseLike } from "@qooqnos/database";
 import type { CloudflareAIBinding } from "@qooqnos/runtime";
+import type { CloudflareQueueBinding, CloudflareR2Binding } from "./infrastructure";
 
 export interface CloudflareQueueBinding {
   send(message: unknown): Promise<void>;
@@ -7,8 +8,10 @@ export interface CloudflareQueueBinding {
 
 export interface ApiEnv {
   readonly APP_VERSION?: string;
+  readonly ENVIRONMENT?: string;
   readonly DB?: D1DatabaseLike;
   readonly AI?: CloudflareAIBinding;
+  readonly MEDIA_BUCKET?: CloudflareR2Binding;
   readonly OUTBOX_QUEUE?: CloudflareQueueBinding;
   readonly AI_GATEWAY_ID?: string;
   readonly AI_SELLER_EXTRACT_MODEL_ID?: string;
@@ -19,6 +22,11 @@ export interface ApiEnv {
 export function requireDatabase(env: ApiEnv): D1DatabaseLike {
   if (!env.DB) throw new Error("D1 database binding is not configured");
   return env.DB;
+}
+
+export function requireR2(env: ApiEnv): CloudflareR2Binding {
+  if (!env.MEDIA_BUCKET) throw new Error("R2 media bucket binding is not configured");
+  return env.MEDIA_BUCKET;
 }
 
 export function requireAI(env: ApiEnv): CloudflareAIBinding {
