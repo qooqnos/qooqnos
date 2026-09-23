@@ -598,7 +598,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory now reaches migration 0052 and the current main branch is green in both verification workflows. The remaining work is execution/completion, not schema invention:
+The canonical physical inventory now reaches migration 0053. The latest main run is being re-verified after the migration-lock checksum correction; do not treat historical green checkpoints as the current verification state. The remaining work is execution/completion, not schema invention:
 
 ```
 pass CI build + tests
@@ -609,7 +609,7 @@ pass CI build + tests
 → Integration provider adapters and durable sync workers remain provider-specific
 → Privacy export/delete/retention workers remain gated by subject-validation semantics
 → Communication template registry and provider-neutral dispatch implemented; external provider adapters plus consent/anti-spam policy remain gated
-→ AI durable/asynchronous worker lease/claim/reclaim infrastructure is implemented; scheduler wiring remains gated only until an explicit input resolver is available
+→ AI durable/asynchronous worker lease/claim/reclaim infrastructure is implemented; production scheduling remains gated only until an explicit input resolver is available
 → Matching learning signals and broader Act integrations remain contract-gated
 → CustomerProfile remains gated until field-level contract is explicit
 → define remaining Localization/Documents/Analytics contracts
