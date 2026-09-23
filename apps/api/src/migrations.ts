@@ -43,6 +43,7 @@ import reviewsModerationReputation from "../../../migrations/0048_reviews_modera
 import fulfillmentCore from "../../../migrations/0049_fulfillment_core.sql";
 import caseSupportCore from "../../../migrations/0050_case_support_core.sql";
 import communicationTemplates from "../../../migrations/0051_communication_templates.sql";
+import moderationCases from "../../../migrations/0052_moderation_cases.sql";
 import reviewsCore from "../../../migrations/0042_reviews_core.sql";
 import integrityUpdateGuards from "../../../migrations/0043_integrity_update_guards.sql";
 import billingCounterScope from "../../../migrations/0044_billing_counter_scope.sql";
@@ -103,4 +104,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0049_fulfillment_core.sql", sql: fulfillmentCore },
   { path: "migrations/0050_case_support_core.sql", sql: caseSupportCore },
   { path: "migrations/0051_communication_templates.sql", sql: communicationTemplates },
+  { path: "migrations/0052_moderation_cases.sql", sql: moderationCases },
 ];
