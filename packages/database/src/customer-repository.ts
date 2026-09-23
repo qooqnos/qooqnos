@@ -85,6 +85,34 @@ export class CustomerRepository extends Repository {
     return record;
   }
 
+  async updateProfile(
+    context: RequestContext,
+    id: EntityId,
+    input: {
+      readonly locale?: string | null;
+      readonly timezone?: string | null;
+      readonly status?: CustomerStatus;
+      readonly now: string;
+    },
+  ): Promise<CustomerRecord> {
+    const current = await this.get(context, id);
+    if (!current) throw new DatabaseError("Customer not found");
+
+    await this.database.run(
+      "UPDATE customers SET locale = ?, timezone = ?, status = ?, updated_at = ? WHERE id = ? AND organization_id = ?",
+      input.locale === undefined ? current.locale : input.locale,
+      input.timezone === undefined ? current.timezone : input.timezone,
+      input.status ?? current.status,
+      input.now,
+      id,
+      current.organizationId,
+    );
+
+    const updated = await this.get(context, id);
+    if (!updated) throw new DatabaseError("Customer not found after profile update");
+    return updated;
+  }
+
   async setStatus(
     context: RequestContext,
     id: EntityId,
