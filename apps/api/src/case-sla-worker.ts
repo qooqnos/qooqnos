@@ -1,5 +1,4 @@
 import { CaseSupportRepository } from "@qooqnos/case-support";
-import { brandId } from "@qooqnos/core";
 import { getDatabase } from "./database";
 import { createRequestContext } from "./context";
 import type { ApiEnv } from "./env";
