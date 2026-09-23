@@ -83,7 +83,7 @@ No consumer is allowed to create a second domain model or second implementation 
 | Slot | Booking | computed/operational | Not authoritative unless later ADR approves durable slots |
 | Cart | Commerce | `Cart` | Mutable purchase intent |
 | Order | Commerce | `Order` | Commercial transaction |
-| Payment | Commerce | `Payment` | Payment aggregate |
+| Payment | Billing/Payment | `Payment` | Financial payment aggregate; Commerce stores orchestration/reference state |
 | PaymentAttempt | Commerce | `PaymentAttempt` | Provider execution attempt |
 | Refund | Commerce | `Refund` | Payment reversal |
 | Invoice | Commerce/Billing contract | `Invoice` | Financial document |
