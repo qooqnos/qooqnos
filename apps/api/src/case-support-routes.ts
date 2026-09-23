@@ -72,6 +72,24 @@ export function registerCaseSupportRoutes(
 
   router.register({
     method: "POST",
+    path: "/api/v1/cases/:caseId/first-response",
+    module: "case-support",
+    operation: "case.update",
+    permission: "case.update",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      await service.recordFirstResponse(
+        context,
+        brandId<"EntityId">(requiredParam(params.caseId, context.requestId)),
+      );
+      return json({ recorded: true }, 202, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/cases/:caseId/status",
     module: "case-support",
     operation: "case.update",
