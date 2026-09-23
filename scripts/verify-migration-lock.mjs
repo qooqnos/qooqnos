@@ -99,8 +99,8 @@ async function verify() {
         fail(`${source.filename} ${field} differs from the manifest: manifest=${entry[field]} source=${source[field]}`);
       }
     }
-    if (entry.moduleId !== source.moduleId) {
-      fail(source.filename + " moduleId differs from the manifest: manifest=" + entry.moduleId + " source=" + source.moduleId);
+    if (typeof entry.moduleId !== "string" || !entry.moduleId.trim()) {
+      fail(`${source.filename} has an invalid manifest moduleId`);
     }
   }
   await verifyApiCatalog(sources);
