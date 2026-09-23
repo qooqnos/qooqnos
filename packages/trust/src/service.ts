@@ -61,6 +61,50 @@ export class TrustService {
     );
   }
 
+  async openGenericModerationCase(
+    context: RequestContext,
+    input: {
+      readonly subjectType: string;
+      readonly subjectId: EntityId;
+      readonly sourceType: string;
+      readonly sourceId: EntityId;
+      readonly policyId: string;
+      readonly policyVersion: string;
+      readonly riskLevel: "low" | "medium" | "high" | "critical";
+    },
+  ) {
+    await this.options.authorization.assert({
+      context,
+      permission: "trust.moderation.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.createGenericModerationCase(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
+  async transitionGenericModerationCase(
+    context: RequestContext,
+    id: EntityId,
+    status: "open" | "reviewing" | "decided" | "actioned" | "closed" | "escalated",
+  ) {
+    await this.options.authorization.assert({
+      context,
+      permission: "trust.moderation.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.transitionGenericModerationCase(
+      context,
+      id,
+      status,
+      this.options.now(),
+    );
+  }
+
   async reportReview(
     context: RequestContext,
     input: { readonly reviewId: EntityId; readonly reporterReference: string; readonly reasonCode: string; readonly details?: string },
@@ -189,6 +233,7 @@ export const TRUST_PERMISSIONS = [
   "trust.review.moderate",
   "trust.review.report",
   "trust.review.respond",
+  "trust.moderation.manage",
   "trust.reputation.read",
   "trust.reputation.rebuild",
   "trust.verification.read",
