@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0054**.
+The current API migration catalog references versions **0001 through 0055**.
 
 ### Foundation — 0001
 
@@ -417,13 +417,22 @@ These migrations add integrity triggers only.
 
 ### Discovery index observability — 0054
 
+### Communication policy / consent enforcement — 0055
+
+- communication_intents
+- communication_preferences
+- communication_suppression_records
+- communication_policy_decisions
+
+0055 closes the Communication intent/channel policy, preference, opt-in and suppression boundary. Policy-denied/suppressed notifications remain recorded but are not published to Outbox dispatch.
+
 - search_index_versions
 - discovery_query_traces
 - discovery_evaluation_records
 
 0054 closes the Discovery index-generation/versioning gap and persists query/evaluation evidence without turning derived search state into domain truth.
 
-**Total currently defined physical tables: 186.**
+**Total currently defined physical tables: 190.**
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
@@ -446,7 +455,7 @@ This count includes only canonical SQL migration sources. It does not include re
 | Trust / Verification / Reviews | verification_cases, verification_documents, verification_policies, verification_requirements, verification_checks, verification_check_documents, verification_decisions, verification_decision_checks, verification_reviews, verification_expiries, reviews, review_reports, review_responses, review_moderation_cases, review_moderation_decisions, review_risk_signals, reputation_summaries, reputation_versions | Verification chain, review reporting/moderation/risk and reputation projections implemented; expiry worker and Review API are live; broader TrustSignal/anti-abuse automation remains operational follow-up |
 | Moderation / Privacy / Consent | moderation_cases, privacy_consents, privacy_requests, privacy_processing_records | Core generic moderation/consent/privacy-request storage plus PrivacyProcessor orchestration boundary implemented; subject scope validation and consent expiry are live; domain-specific retention/export/delete processors remain policy-gated |
 
-| Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts | Core storage, outbox-linked dispatch worker, versioned template registry and in-app delivery adapter implemented; external provider adapters and consent/anti-spam policy remain |
+| Communication | communication_conversations, communication_messages, communication_notifications, communication_delivery_attempts, communication_intents, communication_preferences, communication_suppression_records, communication_policy_decisions, communication_templates, communication_template_versions | Core storage, policy/consent/suppression enforcement, outbox-linked dispatch worker, versioned template registry and in-app delivery adapter implemented; external provider adapters and platform rate-limit/anomaly controls remain |
 | Commerce | commerce_carts, commerce_cart_lines, commerce_checkout_sessions, commerce_price_snapshots, commerce_orders, commerce_order_lines, commerce_order_adjustments, commerce_transaction_attempts, commerce_fulfillment_references, commerce_cancellations, commerce_refund_references, commerce_order_events | Core transaction boundary implemented; pricing/checkout orchestration, Billing/Payment, Promotion/Loyalty and Fulfillment integrations remain separate capabilities |
 | Billing | billing_plans, billing_prices, billing_plan_entitlements, billing_subscriptions, billing_subscription_events, billing_usage_meters, billing_usage_events, billing_usage_counters, billing_entitlement_snapshots, billing_provider_refs, billing_reconciliation_cases | Core plan/subscription/entitlement/usage/quota/reconciliation storage implemented; provider adapters and invoice/financial-ledger layers remain |
 | AI Runtime | ai_operation_types, ai_providers, ai_models, ai_prompts, ai_prompt_versions, ai_schemas, ai_schema_versions, ai_policies, ai_operations, ai_model_routing_decisions, ai_policy_decisions, ai_provider_attempts, ai_runtime_results, ai_usage_records | Core persistence plus provider registry/governance/routing/output-safety validation and Seller AI durable worker scheduling implemented; new AI operation types require explicit input resolvers |
@@ -690,7 +699,7 @@ The next implementation work should proceed in this order:
 2. Keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit; CustomerProfile is a logical aggregate over existing Customer-owned records and requires no standalone table.
 3. Complete Booking availability calculation and slot-generation semantics; transactional finalization/capacity guards are implemented in 0046–0047.
 4. Complete Billing provider adapters/reconciliation workers and invoice/financial-ledger foundation only where their contracts are explicit.
-5. Complete Communication consent/policy/anti-spam and external provider-adapter contracts; provider-neutral template/dispatch infrastructure is implemented.
+5. Complete Communication external provider-adapter contracts and platform rate-limit/anomaly controls; intent/consent/suppression policy is now implemented.
 6. Scheduled Automation polling/misfire execution and CapabilityRegistry-backed scheduled action execution are implemented; capability compensation remains only where a concrete rollback contract exists.
 7. AI Runtime durable worker scheduling and Seller AI input/payload resolution are implemented; add resolvers only when a new AI operation type is introduced.
 8. Complete Integration provider-specific adapters and cross-provider retention/reconciliation semantics; durable claim/sync worker infrastructure is implemented.
