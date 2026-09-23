@@ -86,10 +86,10 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- GitHub Actions CI passed for commit 488a04c93d34ed725433a37af71941348a02f136 (latest verified main checkpoint).
+- GitHub Actions CI passed for commit `2fde64e31db2124440d27b7cd64c751ec751d5eb`.
 - GitHub Actions Phoenix verification passed for the same commit.
 - Migration lock verification passed for the canonical migration inventory through 0050.
-- Typecheck, build, lint and unit tests passed in the verification path; the current main branch is green.
+- Typecheck, build, lint, migration verification and unit tests passed on the same checkpoint.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
 
 ## 8. What remains
