@@ -47,4 +47,43 @@ describe("AutomationRepository", () => {
     expect(result.id).toBe("execution-1");
     expect(writes).toBe(0);
   });
+  it("rejects reopening a completed execution", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        return {
+          id: "execution-1",
+          workflowId: "workflow-1",
+          workflowVersionId: "version-1",
+          triggerId: "trigger-1",
+          organizationId: "tenant-1",
+          workspaceId: "workspace-1",
+          businessId: null,
+          status: "completed",
+          inputReference: null,
+          correlationId: "corr-1",
+          traceId: "trace-1",
+          startedAt: "2026-09-22T00:00:00.000Z",
+          completedAt: "2026-09-22T00:01:00.000Z",
+          createdAt: "2026-09-22T00:00:00.000Z",
+          updatedAt: "2026-09-22T00:01:00.000Z",
+        } as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new AutomationRepository(new D1Database(raw));
+
+    await expect(repository.setExecutionStatus(
+      context(),
+      brandId<"EntityId">("execution-1"),
+      "running",
+      "2026-09-23T00:02:00.000Z",
+    )).rejects.toThrow("cannot be reopened");
+  });
+
 });
