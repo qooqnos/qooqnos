@@ -599,52 +599,33 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory now reaches migration 0053. The latest main checkpoint is green; do not treat older verification snapshots as the current state. The remaining work is execution/completion, not schema invention:
+The canonical physical inventory reaches migration `0053_ai_runtime_worker_leases.sql`. The latest verified code checkpoint is `fc7f53e1f848094a32aa697d3bafab90197ab9e6`.
+
+Current engineering state:
 
 ```
-pass CI build + tests
-→ keep canonical runtime free of legacy implementations
-→ complete only the remaining operational gates with explicit provider/worker contracts
-→ durable Automation scheduler polling and misfire semantics implemented; scheduled action execution still requires canonical capability-registry composition
-→ Case SLA breach monitoring implemented; queue dispatch and CaseAction execution still require canonical capability-registry composition
-→ Integration provider adapters and durable sync workers remain provider-specific
-→ Privacy export/delete/retention workers remain gated by subject-validation semantics
-→ Communication template registry and provider-neutral dispatch implemented; external provider adapters plus consent/anti-spam policy remain gated
-→ AI durable/asynchronous worker lease/claim/reclaim infrastructure and Seller AI scheduled input resolution are implemented; new AI operation types require explicit resolvers
-→ Matching learning signals and broader Act integrations remain contract-gated
-→ CustomerProfile is a logical aggregate; no standalone table or duplicate source of truth
-→ define remaining Localization/Documents/Analytics contracts
-→ provision real Cloudflare D1/R2/Queue resources and production bindings
+CI + Phoenix verification
+→ canonical D1 schema/runtime/build gates green
+→ Booking / Commerce / Billing / Communication / Automation / AI Runtime / Integration
+  / Privacy / Demand-Matching / Trust / Fulfillment / Case Support operational paths implemented
+→ remaining work is provider-specific or explicitly contract-gated
+→ no new schema should be invented to close an external/provider gate
 ```
 
-No new table should be introduced merely to move the completion checklist forward.
+Open completion gates are deliberately limited to:
+- real Cloudflare D1 / R2 / Queue provisioning and production binding configuration;
+- provider-specific Integration/Communication/Fulfillment adapters and credential contracts;
+- Billing/Payment invoice, payment execution and financial-ledger contract;
+- Privacy export/delete/retention workers with subject identity validation;
+- matching learning-signal and broader Act contracts;
+- concrete Automation rollback/compensation contracts;
+- new AI operation resolvers when additional operation types are introduced;
+- Localization country/legal registries, Documents and Analytics where field-level contracts are closed.
 
-Automation scheduler note: the Worker scheduled hook now plans fixed-duration ISO-8601 schedules, applies SKIP/CATCH_UP_ONCE/CATCH_UP_ALL misfire policies, atomically claims schedule occurrences, creates idempotent pending WorkflowExecution records, and executes approved actions through the canonical CapabilityRegistry using the workflow creator's current authorization context.
+CustomerProfile remains a logical aggregate over existing Customer-owned records; CRM timeline events are canonical projection input and do not require a duplicate timeline table.
 
-Case SLA worker note: the Worker scheduled hook now evaluates active cases against explicit CaseSLA first-response and resolution targets, records explicit `case.first_response` events through a protected capability, and emits idempotent `case.sla_breached` case/outbox evidence. No new SLA table was introduced; queue dispatch and CaseAction execution remain behind the canonical capability boundary.
+Verification checkpoint: `fc7f53e1f848094a32aa697d3bafab90197ab9e6` passed GitHub Actions CI run `35883717408` and Phoenix verification run `35883717643`. The verified steps include format/lint, migration-lock verification, typecheck, workspace build, Cloudflare Worker dry-run bundling and unit tests.
 
-Privacy consent expiry note: scheduled processing now transitions only expired granted consents to `expired` and emits idempotent `privacy.consent.expired` Outbox evidence. Export/delete and subject-level identity validation remain deliberately gated.
+The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above.
 
-AI worker note: migration 0053 adds worker lease ownership to the existing `ai_operations` record. `packages/ai/src/worker.ts` claims stale/runnable operations, resolves only through a required `AIRuntimeInputResolver`, records failures durably, and releases leases. The Worker scheduler invokes the canonical Seller AI input resolver; unsupported AI operation types fail closed until their own explicit resolver is registered.
-
-CaseAction state note: CaseAction now has explicit repository/service/API approval, cancellation and completion transitions with authorization checks. `apps/api/src/case-action-worker.ts` claims approved actions and executes them through the same canonical CapabilityRegistry as Automation, preserving tenant/workspace scope and current actor authorization.
-
-
-Verification checkpoint: current `main` commit `577d9087873f3101881d16a5483bb46b073a9d6e` passed GitHub CI run `35880130727` and Phoenix verification run `35880131164`. The green suite passed format/lint, migration-lock verification, typecheck, build, Cloudflare Worker dry-run bundling, and tests.
-
-
-Cloudflare bundling note: CI now runs `npm run verify:worker` using Wrangler `4.136.2`; workspace packages are aliased to their canonical source entrypoints, so Worker bundling does not depend on unbuilt `dist/` workspace artifacts.
-
-Production deployment preflight: `scripts/verify-production-bindings.mjs` and `predeploy:prod` now fail closed when real production D1/Queue/R2 bindings are absent or still contain placeholders. The repository intentionally does not fabricate Cloudflare resource IDs; remote provisioning remains the final external infrastructure gate.
-
-
-AI durable worker note: the Worker scheduled hook now runs the canonical Seller AI input resolver, rebuilds persisted session/input state, and executes claimed `seller.product.extract` operations through the same Billing → policy → Runtime composition as the synchronous API path. Unsupported operation types fail closed instead of guessing payloads.
-
-
-AI worker continuity: commit `5030160e76a6ac9a1ba77f0e8d68f0d660d986bb` exposes `session_id`/`actor_id` to the AI worker operation record; subsequent commits add and verify the Seller AI durable input resolver and scheduler composition.
-
-
-Localization note: locale, direction, timezone, calendar, currency, market and policy context contracts are now executable in `@qooqnos/i18n`; physical country/legal profile registries remain gated until their field-level data dictionary is explicit.
-
-
-Final implementation boundary: all schema and runtime work with an explicit contract is implemented on `main`. Remaining gates are external or deliberately contract-gated: real Cloudflare D1/R2/Queue provisioning, provider-specific integrations, financial ledger/invoicing, matching learning-signal contract, Privacy export/delete semantics, Business lifecycle vocabulary, concrete rollback/compensation contracts, and additional AI operation resolvers. CustomerProfile is closed as a logical aggregate with no standalone table. No new table or parallel source of truth should be introduced without a closed contract.
+Migration continuity remains mandatory: never renumber, rewrite or replace an existing migration. Every physical change must use a new numbered migration and preserve the canonical migration lock.
