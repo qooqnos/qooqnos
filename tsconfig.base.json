@@ -25,7 +25,8 @@
       "@qooqnos/runtime": ["packages/runtime/src"],
       "@qooqnos/api": ["packages/api/src"],
       "@qooqnos/i18n": ["packages/i18n/src"],
-      "@qooqnos/onboarding": ["packages/onboarding/src"]
+      "@qooqnos/onboarding": ["packages/onboarding/src"],
+      "@qooqnos/customer": ["packages/customer/src"]
     }
   },
   "exclude": ["node_modules", "dist"]
