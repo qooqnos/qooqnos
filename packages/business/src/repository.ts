@@ -205,24 +205,19 @@ export class BusinessRepository extends Repository {
     if (!current) throw new DatabaseError("Business not found");
     if (current.status === status) return current;
 
-    await this.database.run(
-      "UPDATE businesses SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?",
-      status,
-      now,
-      id,
-      current.organizationId,
-      current.workspaceId,
-    );
-
-    await this.database.run(
-      "INSERT INTO business_status_history (id, business_id, from_status, to_status, changed_at, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-      historyId,
-      id,
-      current.status,
-      status,
-      now,
-      now,
-    );
+    const results = await this.database.transaction([
+      {
+        sql: "UPDATE businesses SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ? AND workspace_id = ? AND status = ?",
+        params: [status, now, id, current.organizationId, current.workspaceId, current.status],
+      },
+      {
+        sql: "INSERT INTO business_status_history (id, business_id, from_status, to_status, changed_at, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+        params: [historyId, id, current.status, status, now, now],
+      },
+    ]);
+    if ((results[0]?.meta?.changes ?? 0) !== 1) {
+      throw new DatabaseError("Concurrent business status transition rejected");
+    }
 
     const updated = await this.get(context, id);
     if (!updated) throw new DatabaseError("Business not found after status update");
