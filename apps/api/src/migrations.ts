@@ -39,7 +39,6 @@ import integrationCore from "../../../migrations/0038_integration_core.sql";
 import privacyConsentRequests from "../../../migrations/0039_privacy_consent_requests.sql";
 import demandMatchingCore from "../../../migrations/0040_demand_matching_core.sql";
 import demandMatchingIntegrity from "../../../migrations/0041_demand_matching_integrity.sql";
-import bookingIdempotency from "../../../migrations/0042_booking_idempotency.sql";
 import reviewsCore from "../../../migrations/0042_reviews_core.sql";
 import integrityUpdateGuards from "../../../migrations/0043_integrity_update_guards.sql";
 import billingCounterScope from "../../../migrations/0044_billing_counter_scope.sql";
@@ -53,6 +52,7 @@ import communicationTemplates from "../../../migrations/0051_communication_templ
 import moderationCases from "../../../migrations/0052_moderation_cases.sql";
 import aiRuntimeWorkerLeases from "../../../migrations/0053_ai_runtime_worker_leases.sql";
 import discoveryIndexObservability from "../../../migrations/0054_discovery_index_observability.sql";
+import bookingIdempotency from "../../../migrations/0055_booking_idempotency.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -97,7 +97,6 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0039_privacy_consent_requests.sql", sql: privacyConsentRequests },
   { path: "migrations/0040_demand_matching_core.sql", sql: demandMatchingCore },
   { path: "migrations/0041_demand_matching_integrity.sql", sql: demandMatchingIntegrity },
-  { path: "migrations/0042_booking_idempotency.sql", sql: bookingIdempotency },
   { path: "migrations/0042_reviews_core.sql", sql: reviewsCore },
   { path: "migrations/0043_integrity_update_guards.sql", sql: integrityUpdateGuards },
   { path: "migrations/0044_billing_counter_scope.sql", sql: billingCounterScope },
@@ -111,4 +110,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0052_moderation_cases.sql", sql: moderationCases },
   { path: "migrations/0053_ai_runtime_worker_leases.sql", sql: aiRuntimeWorkerLeases },
   { path: "migrations/0054_discovery_index_observability.sql", sql: discoveryIndexObservability },
+  { path: "migrations/0055_booking_idempotency.sql", sql: bookingIdempotency },
 ];
