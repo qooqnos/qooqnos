@@ -113,15 +113,31 @@ export class CustomerRepository extends Repository {
     const current = await this.get(context, id);
     if (!current) throw new DatabaseError("Customer not found");
 
-    await this.database.run(
-      "UPDATE customers SET locale = ?, timezone = ?, status = ?, updated_at = ? WHERE id = ? AND organization_id = ?",
-      input.locale === undefined ? current.locale : input.locale,
-      input.timezone === undefined ? current.timezone : input.timezone,
-      input.status ?? current.status,
-      input.now,
-      id,
-      current.organizationId,
-    );
+    await this.database.transaction([
+      {
+        sql: "UPDATE customers SET locale = ?, timezone = ?, status = ?, updated_at = ? WHERE id = ? AND organization_id = ?",
+        params: [
+          input.locale === undefined ? current.locale : input.locale,
+          input.timezone === undefined ? current.timezone : input.timezone,
+          input.status ?? current.status,
+          input.now,
+          id,
+          current.organizationId,
+        ],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'customer.updated', 1, 'Customer', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          id + ":updated:" + input.now,
+          id,
+          current.organizationId,
+          context.workspaceId ?? null,
+          JSON.stringify({ customerId: id, change: "profile" }),
+          input.now,
+          input.now,
+        ],
+      },
+    ]);
 
     const updated = await this.get(context, id);
     if (!updated) throw new DatabaseError("Customer not found after profile update");
@@ -135,14 +151,25 @@ export class CustomerRepository extends Repository {
     now: string,
   ): Promise<CustomerRecord> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
-    const result = await this.database.run(
-      "UPDATE customers SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ?",
-      status,
-      now,
-      id,
-      organizationId,
-    );
-    if ((result.meta?.changes ?? 0) !== 1) throw new DatabaseError("Customer status update was rejected");
+    const result = await this.database.transaction([
+      {
+        sql: "UPDATE customers SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ?",
+        params: [status, now, id, organizationId],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'customer.updated', 1, 'Customer', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          id + ":updated:" + now,
+          id,
+          organizationId,
+          context.workspaceId ?? null,
+          JSON.stringify({ customerId: id, change: "status", status }),
+          now,
+          now,
+        ],
+      },
+    ]);
+    if ((result[0]?.meta?.changes ?? 0) !== 1) throw new DatabaseError("Customer status update was rejected");
 
     const updated = await this.get(context, id);
     if (!updated) throw new DatabaseError("Customer not found after status update");
@@ -160,19 +187,35 @@ export class CustomerRepository extends Repository {
     if (!input.attribute.trim()) throw new DatabaseError("Customer preference attribute is required");
     if (!input.valueReference.trim()) throw new DatabaseError("Customer preference value reference is required");
 
-    await this.database.run(
-      "INSERT INTO customer_preferences (id, customer_id, attribute, value_reference, source, confidence, persistence, consent_scope, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      input.id,
-      input.customerId,
-      input.attribute.trim(),
-      input.valueReference,
-      input.source,
-      input.confidence ?? null,
-      input.persistence,
-      input.consentScope ?? null,
-      input.now,
-      input.expiresAt ?? null,
-    );
+    await this.database.transaction([
+      {
+        sql: "INSERT INTO customer_preferences (id, customer_id, attribute, value_reference, source, confidence, persistence, consent_scope, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params: [
+          input.id,
+          input.customerId,
+          input.attribute.trim(),
+          input.valueReference,
+          input.source,
+          input.confidence ?? null,
+          input.persistence,
+          input.consentScope ?? null,
+          input.now,
+          input.expiresAt ?? null,
+        ],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) VALUES (?, 'customer.preference.changed', 1, 'Customer', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          input.id + ":changed",
+          input.customerId,
+          context.tenantId ?? null,
+          context.workspaceId ?? null,
+          JSON.stringify({ customerId: input.customerId, preferenceId: input.id, attribute: input.attribute.trim() }),
+          input.now,
+          input.now,
+        ],
+      },
+    ]);
 
     const preference = await this.database.first<CustomerPreferenceRecord>(
       "SELECT id, customer_id AS customerId, attribute, value_reference AS valueReference, source, confidence, persistence, consent_scope AS consentScope, created_at AS createdAt, expires_at AS expiresAt FROM customer_preferences WHERE id = ? LIMIT 1",
