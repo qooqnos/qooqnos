@@ -26,6 +26,42 @@ describe("MatchingRepository",()=>{
   })).rejects.toThrow("exactly one");
  });
 
+
+  it("rejects reopening a terminal MatchRequest", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        return {
+          id: "match-1",
+          demandRequestId: "demand-1",
+          organizationId: "tenant-1",
+          workspaceId: "workspace-1",
+          algorithmVersion: "v1",
+          policyVersion: "p1",
+          status: "cancelled",
+          requestedAt: "2026-09-23T00:00:00.000Z",
+          completedAt: "2026-09-23T00:01:00.000Z",
+          createdAt: "2026-09-23T00:00:00.000Z",
+          updatedAt: "2026-09-23T00:01:00.000Z",
+        } as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new MatchingRepository(new D1Database(raw));
+
+    await expect(repository.setMatchStatus(
+      context(),
+      brandId<"EntityId">("match-1"),
+      "connected",
+      "2026-09-23T00:02:00.000Z",
+    )).rejects.toThrow("cannot be reopened");
+  });
+
   it("uses the latest Match decision when determining Connect eligibility", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
