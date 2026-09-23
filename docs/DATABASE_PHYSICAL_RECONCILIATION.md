@@ -417,22 +417,6 @@ These migrations add integrity triggers only.
 
 ### Discovery index observability — 0054
 
-### Communication policy / consent enforcement — 0055
-
-### Communication required-message suppression — 0056
-
-- no new tables
-- adds `communication_suppression_records.applies_to_required`
-
-0056 preserves explicit suppression history while allowing policy to distinguish optional communications from required transactional/security traffic.
-
-- communication_intents
-- communication_preferences
-- communication_suppression_records
-- communication_policy_decisions
-
-0055 closes the Communication intent/channel policy, preference, opt-in and suppression boundary. Policy-denied/suppressed notifications remain recorded but are not published to Outbox dispatch.
-
 - search_index_versions
 - discovery_query_traces
 - discovery_evaluation_records
@@ -446,7 +430,7 @@ These migrations add integrity triggers only.
 - communication_suppression_records
 - communication_policy_decisions
 
-0055 closes Communication intent/channel policy, preference, opt-in and suppression policy.
+0055 closes the Communication intent/channel policy, preference, opt-in and suppression boundary. Policy-denied/suppressed notifications remain recorded but are not published to Outbox dispatch.
 
 ### Communication required-message suppression — 0056
 
@@ -458,6 +442,18 @@ These migrations add integrity triggers only.
 **Total currently defined physical tables: 190.**
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
+
+## Database completion audit
+
+The canonical schema audit is executable through the repository command "npm run report:database".
+
+Current main schema baseline:
+- **56** ordered SQL migrations.
+- **190** canonical physical tables defined by those migrations.
+- API migration catalog and migration lock must contain the same ordered migration set.
+- This document's physical-table inventory must equal the tables parsed from canonical SQL migrations.
+- **Physical schema completion: 100%** when those integrity conditions hold.
+- Production D1 application is reported separately because it requires credentialed Cloudflare access; it is not conflated with schema completeness.
 
 ## 2. Domain coverage matrix
 
