@@ -707,3 +707,11 @@ The database is ready for production provisioning only when:
 - tenant-isolation and integrity tests pass.
 
 Until then, adding another generic database schema would create unnecessary divergence.
+
+
+### AI Runtime worker leases — 0053
+
+- no new tables
+- adds AI operation worker lease/claim columns and indexes
+
+0053 adds durable execution ownership to the existing AI Runtime operation aggregate without creating a second execution ledger.
