@@ -97,4 +97,50 @@ describe("CustomerRelationshipRepository", () => {
     )).rejects.toThrow("changed concurrently");
   });
 
+  it("keeps interaction timestamps monotonic in the database", async () => {
+    const queries: Array<{ sql: string; params: readonly unknown[] }> = [];
+    const record = {
+      id: "relationship-1",
+      organizationId: "tenant-1",
+      workspaceId: "workspace-1",
+      customerId: "customer-1",
+      businessId: "business-1",
+      relationshipType: "match",
+      status: "prospect",
+      firstInteractionAt: "2026-09-20T00:00:00.000Z",
+      lastInteractionAt: "2026-09-22T00:00:00.000Z",
+      source: "matching",
+      createdAt: "2026-09-20T00:00:00.000Z",
+      updatedAt: "2026-09-22T00:00:00.000Z",
+    };
+    const statement: D1PreparedStatementLike = {
+      bind(...values) {
+        queries.push({ sql: queries[queries.length - 1]?.sql ?? "", params: values });
+        return this;
+      },
+      async first<T>() { return record as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true, meta: { changes: 1 } }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) {
+        queries.push({ sql, params: [] });
+        return statement;
+      },
+      async batch() { return []; },
+    };
+    const repository = new CustomerRelationshipRepository(new D1Database(raw));
+
+    await repository.recordInteraction(
+      context(),
+      brandId<"EntityId">("relationship-1"),
+      "2026-09-19T00:00:00.000Z",
+      "2026-09-23T00:00:00.000Z",
+    );
+
+    const update = queries.find((query) => query.sql.includes("first_interaction_at = CASE"));
+    expect(update?.sql).toContain("last_interaction_at = CASE");
+    expect(update?.params[0]).toBe("2026-09-19T00:00:00.000Z");
+  });
+
 });
