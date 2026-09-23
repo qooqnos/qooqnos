@@ -48,6 +48,9 @@
       "path": "./packages/matching"
     },
     {
+      "path": "./packages/customer"
+    },
+    {
       "path": "./packages/fulfillment"
     },
     {
