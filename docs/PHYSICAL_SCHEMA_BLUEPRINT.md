@@ -272,11 +272,15 @@ Invariant: reserved quantity cannot exceed available stock; quantities cannot be
 
 A Customer may be a guest. `user_id` is an optional mapping, never the Customer identity itself.
 
-### `customer_profiles`
+### CustomerProfile logical aggregate
 
-`customer_id`, preferences/profile data, locale/timezone?, timestamps.
+`CustomerProfile` is not a physical table. Its canonical representation is the existing Customer aggregate:
 
-The profile shape remains intentionally open until its field-level contract is finalized. Do not create physical columns or JSON blobs merely to reserve this concept.
+- `customers` owns lifecycle, locale, timezone and identity mapping;
+- `customer_preferences` owns explicit/inferred preference records with provenance and consent scope;
+- `customer_addresses` owns structured address records.
+
+`CustomerProfile` is a read/write capability-level composition over those canonical records. A new physical profile table would duplicate Customer source-of-truth fields and is prohibited unless a future architecture decision introduces a genuinely distinct profile fact set.
 
 ### `customer_preferences`
 
