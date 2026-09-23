@@ -159,15 +159,15 @@ This dictionary is the authoritative vocabulary for Phoenix. New code, schema, A
 
 **OrderItem** — immutable historical line in an Order.
 
-**Payment** — commercial payment aggregate associated with an order, booking, or other explicitly payable transaction.
+**Payment** — financial payment aggregate owned by Billing/Payment and referenced by Commerce orchestration.
 
-**PaymentAttempt** — individual provider/payment execution attempt.
+**PaymentAttempt** — individual provider/payment execution attempt owned by Billing/Payment.
 
-**Refund** — reversal of a captured payment amount subject to refund rules.
+**Refund** — financial reversal of a captured payment amount owned and executed by Billing/Payment.
 
-**Invoice** — financial document representing an amount due/charged.
+**Invoice** — financial document owned by Billing.
 
-**InvoiceLine** — immutable component of an Invoice.
+**InvoiceLine** — immutable component of a Billing-owned Invoice.
 
 ### Customer
 
