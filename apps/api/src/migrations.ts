@@ -35,7 +35,6 @@ import billingUsageCounters from "../../../migrations/0034_billing_usage_counter
 import communicationCore from "../../../migrations/0035_communication_core.sql";
 import automationCore from "../../../migrations/0036_automation_core.sql";
 import aiRuntimeCore from "../../../migrations/0037_ai_runtime_core.sql";
-import aiRuntimeWorkerLeases from "../../../migrations/0053_ai_runtime_worker_leases.sql";
 import integrationCore from "../../../migrations/0038_integration_core.sql";
 import privacyConsentRequests from "../../../migrations/0039_privacy_consent_requests.sql";
 import demandMatchingCore from "../../../migrations/0040_demand_matching_core.sql";
@@ -51,6 +50,7 @@ import billingCounterScope from "../../../migrations/0044_billing_counter_scope.
 import reviewTargetIntegrity from "../../../migrations/0045_review_target_integrity.sql";
 import bookingFinalizationGuards from "../../../migrations/0046_booking_finalization_guards.sql";
 import bookingCapacityUpdateGuards from "../../../migrations/0047_booking_capacity_update_guards.sql";
+import aiRuntimeWorkerLeases from "../../../migrations/0053_ai_runtime_worker_leases.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -91,7 +91,6 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0035_communication_core.sql", sql: communicationCore },
   { path: "migrations/0036_automation_core.sql", sql: automationCore },
   { path: "migrations/0037_ai_runtime_core.sql", sql: aiRuntimeCore },
-  { path: "migrations/0053_ai_runtime_worker_leases.sql", sql: aiRuntimeWorkerLeases },
   { path: "migrations/0038_integration_core.sql", sql: integrationCore },
   { path: "migrations/0039_privacy_consent_requests.sql", sql: privacyConsentRequests },
   { path: "migrations/0040_demand_matching_core.sql", sql: demandMatchingCore },
@@ -107,4 +106,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0050_case_support_core.sql", sql: caseSupportCore },
   { path: "migrations/0051_communication_templates.sql", sql: communicationTemplates },
   { path: "migrations/0052_moderation_cases.sql", sql: moderationCases },
+  { path: "migrations/0053_ai_runtime_worker_leases.sql", sql: aiRuntimeWorkerLeases },
 ];
