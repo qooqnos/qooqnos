@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0055**.
+The current API migration catalog references versions **0001 through 0056**.
 
 ### Foundation — 0001
 
@@ -419,6 +419,13 @@ These migrations add integrity triggers only.
 
 ### Communication policy / consent enforcement — 0055
 
+### Communication required-message suppression — 0056
+
+- no new tables
+- adds `communication_suppression_records.applies_to_required`
+
+0056 preserves explicit suppression history while allowing policy to distinguish optional communications from required transactional/security traffic.
+
 - communication_intents
 - communication_preferences
 - communication_suppression_records
@@ -699,7 +706,7 @@ The next implementation work should proceed in this order:
 2. Keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit; CustomerProfile is a logical aggregate over existing Customer-owned records and requires no standalone table.
 3. Complete Booking availability calculation and slot-generation semantics; transactional finalization/capacity guards are implemented in 0046–0047.
 4. Complete Billing provider adapters/reconciliation workers and invoice/financial-ledger foundation only where their contracts are explicit.
-5. Complete Communication external provider-adapter contracts and platform rate-limit/anomaly controls; intent/consent/suppression policy is now implemented.
+5. Complete Communication external provider-adapter contracts and platform rate-limit/anomaly controls; intent/consent/suppression policy and required-message exception semantics are implemented.
 6. Scheduled Automation polling/misfire execution and CapabilityRegistry-backed scheduled action execution are implemented; capability compensation remains only where a concrete rollback contract exists.
 7. AI Runtime durable worker scheduling and Seller AI input/payload resolution are implemented; add resolvers only when a new AI operation type is introduced.
 8. Complete Integration provider-specific adapters and cross-provider retention/reconciliation semantics; durable claim/sync worker infrastructure is implemented.
