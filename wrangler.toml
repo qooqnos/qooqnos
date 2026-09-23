@@ -44,6 +44,7 @@ binding = "AI"
 "@qooqnos/booking" = "./packages/booking/src/index.ts"
 "@qooqnos/commerce" = "./packages/commerce/src/index.ts"
 "@qooqnos/catalog" = "./packages/catalog/src/index.ts"
+"@qooqnos/media" = "./packages/media/src/index.ts"
 "@qooqnos/core" = "./packages/core/src/index.ts"
 "@qooqnos/database" = "./packages/database/src/index.ts"
 "@qooqnos/discovery" = "./packages/discovery/src/index.ts"
@@ -56,11 +57,11 @@ APP_VERSION = "0.1.0"
 
 [env.staging]
 name = "qooqnos-staging"
-vars = { APP_VERSION = "staging" }
+vars = { APP_VERSION = "staging", ENVIRONMENT = "staging" }
 
 [env.production]
 name = "qooqnos-production"
-vars = { APP_VERSION = "production" }
+vars = { APP_VERSION = "production", ENVIRONMENT = "production" }
 
 # Queue and R2 resources are also environment-specific. Keep these examples commented
 # until the real Cloudflare resources exist.
