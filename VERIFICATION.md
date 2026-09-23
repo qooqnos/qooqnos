@@ -8,7 +8,7 @@
 
 The current `main` commit verified in GitHub Actions is:
 
-`fc03861eccf6d575c1ba68070e82bd4461e17097`
+`2441bb4bd34cc423b31ac7a3e6d6e72a05b3516d`
 
 Both required workflows passed:
 
