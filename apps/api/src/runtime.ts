@@ -9,6 +9,7 @@ import { AUTOMATION_MODULE } from "@qooqnos/automation";
 import { INTEGRATION_MODULE } from "@qooqnos/integration";
 import { PRIVACY_MODULE } from "@qooqnos/privacy";
 import { MATCHING_MODULE } from "@qooqnos/matching";
+import { FULFILLMENT_MODULE } from "@qooqnos/fulfillment";
 import { TRUST_MODULE } from "@qooqnos/trust";
 import { onboardingModule } from "@qooqnos/onboarding";
 import {
