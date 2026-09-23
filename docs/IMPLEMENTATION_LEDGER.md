@@ -624,7 +624,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0054_discovery_index_observability.sql`. The latest fully verified green head is `aad9585e19c4326cb853f0facf2514cac5e20593`; CI and Phoenix verification are green on this current documentation-reconciled head.
+The canonical physical inventory reaches migration `0054_discovery_index_observability.sql` and the migration lock/catalog verification is green on the current head. The latest fully verified green head is `c620a231b58ab9223d5330df1d8514f28f3c9166`; CI and Phoenix verification are green on this current documentation-reconciled head.
 
 Current engineering state:
 
@@ -651,7 +651,7 @@ Open completion gates are deliberately limited to:
 
 CustomerProfile remains a logical aggregate over existing Customer-owned records; CRM timeline events are canonical projection input and do not require a duplicate timeline table.
 
-Verification checkpoint: `aad9585e19c4326cb853f0facf2514cac5e20593` passed GitHub Actions CI and Phoenix verification. Current successful runs: CI `35897887513`, Phoenix verification `35897887763`. The workflows passed migration-lock verification, typecheck/build and the test suite.
+Verification checkpoint: `c620a231b58ab9223d5330df1d8514f28f3c9166` passed GitHub Actions CI and Phoenix verification. Current successful runs: CI `35899387247`, Phoenix verification `35899387211`. The workflows passed migration-lock verification, typecheck/build and the test suite.
 
 The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above. Privacy subject scope validation was added in commits `afcff1bb0023187024b12508f7eb7cf175d8bec6` and `c121e50055d3a2e3ca1023c88c13a2f5bb403fa0`, then reconciled into the verified checkpoint `d122981098cc1d517664afdce3d33d3333e82afa`.
 
