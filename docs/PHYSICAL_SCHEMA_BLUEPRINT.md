@@ -1057,14 +1057,14 @@ The following remain controlled architecture/operational gates:
 4. Payment provider reference/invoice/financial-ledger contract.
 5. Search/vector projection versioning/storage details.
 6. AI Memory physical storage/retention contract.
-7. Integration/Webhook/Sync retention, retry and provider-adapter contracts.
-8. Communication consent/anti-spam policy and external provider adapter contracts. Template registry itself is implemented in migration 0051.
+7. Integration/Webhook/Sync retention semantics and provider-specific adapter implementations.
+8. Communication consent/anti-spam policy and external provider adapter implementations. Template registry and provider-neutral dispatch are implemented.
 9. Business conceptual lifecycle vocabulary reconciliation.
 10. AI durable worker input/payload resolution contract. The current Runtime/provider/routing/validation path is implemented; the worker must not infer request payloads from opaque references.
-11. Matching learning-signal persistence/derivation contract and broader Act projections where required.
+11. Matching learning-signal persistence/derivation contract and broader Act projections where required. Core retrieval/ranking/Connect execution is implemented.
 12. Privacy export/delete/retention processing semantics and subject-level identity validation.
 
-Closed implementation gates must not be reopened by future agents: Booking slot generation, Review target integrity, Matching retrieval/ranking, Automation scheduled execution and CaseAction capability execution are implemented and tested.
+Closed implementation gates must not be reopened by future agents: Booking transactional finalization/capacity guards, Review target integrity, Matching retrieval/ranking/Connect execution, Automation scheduled execution, Integration durable claim/worker boundaries, Fulfillment provider-adapter boundary and CaseAction capability execution are implemented and tested.
 
 ## 20. Definition of Done
 
