@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0048**.
+The current API migration catalog references versions **0001 through 0049**.
 
 ### Foundation — 0001
 
@@ -305,6 +305,27 @@ These migrations add integrity triggers only.
 
 ### Review moderation / reputation — 0048
 
+### Fulfillment core — 0049
+
+- fulfillment_orders
+- fulfillment_items
+- fulfillment_plans
+- fulfillment_tasks
+- fulfillment_assignments
+- shipments
+- shipment_packages
+- tracking_events
+- delivery_attempts
+- service_deliveries
+- service_completions
+- digital_deliveries
+- fulfillment_exceptions
+- fulfillment_status_history
+- fulfillment_completion_evidence
+
+0049 establishes the canonical reusable Fulfillment & Service Delivery execution boundary. Order/OrderLine remain Commerce-owned, Appointment remains Booking-owned, Payment/Refund remains Billing-owned, and Fulfillment stores execution state/evidence only.
+
+
 - no new domain owner beyond Trust/Reviews
 - adds Review lifecycle fields on `reviews`
 - review_reports
@@ -359,7 +380,7 @@ These migrations add integrity triggers only.
 
 0047 extends capacity protection to appointment status/time mutations and Resource capacity reductions.
 
-**Total currently defined physical tables: 151.**
+**Total currently defined physical tables: 166.**
 
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
@@ -632,8 +653,9 @@ The next implementation work should proceed in this order:
 8. Complete Integration provider adapters and durable sync workers.
 9. Complete Privacy retention/export/delete workers and subject-level identity validation.
 10. Complete Matching retrieval/ranking execution, learning signals and Connect/Act integration.
-11. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
-12. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
+11. Complete Fulfillment provider adapters, callback reconciliation and durable execution workers.
+12. Reconcile Business lifecycle vocabulary only where a precise mapping is available.
+13. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
 
 Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables; 0048 completes the Review-owned moderation/reputation projection layer.
 
