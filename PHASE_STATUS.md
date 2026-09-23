@@ -86,8 +86,8 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- Latest fully verified code checkpoint is commit `ed05f899b5de241f1f208fdd5eb0040429b08176`.
-- GitHub Actions CI run `35902569467` and Phoenix verification run `35902569466` both passed for the current `main` checkpoint.
+- Latest fully verified code checkpoint is commit `90e202f14db7a55a155aaf677a1991205165647b`.
+- GitHub Actions CI run `35915438117` and Phoenix verification run `35915438197` both passed for the current `main` checkpoint.
 - Migration lock verification is registered through migration `0056` and passed in the latest CI/Phoenix verification workflows.
 - The current checkpoint is covered by successful CI/Phoenix verification; historical run details remain available in GitHub Actions.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
