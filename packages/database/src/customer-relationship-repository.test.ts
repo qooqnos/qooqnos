@@ -144,4 +144,42 @@ describe("CustomerRelationshipRepository", () => {
     expect(update?.sql).toContain("last_interaction_at < ?");
   });
 
+  it("fails closed when CustomerRelationship changes concurrently during interaction recording", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        return {
+          id: "relationship-1",
+          organizationId: "tenant-1",
+          workspaceId: "workspace-1",
+          customerId: "customer-1",
+          businessId: "business-1",
+          relationshipType: "match",
+          status: "prospect",
+          firstInteractionAt: null,
+          lastInteractionAt: null,
+          source: "matching",
+          createdAt: "2026-09-23T00:00:00.000Z",
+          updatedAt: "2026-09-23T00:00:00.000Z",
+        } as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true, meta: { changes: 0 } }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CustomerRelationshipRepository(new D1Database(raw));
+
+    await expect(
+      repository.recordInteraction(
+        context(),
+        brandId<"EntityId">("relationship-1"),
+        "2026-09-23T01:00:00.000Z",
+        "2026-09-23T01:00:01.000Z",
+      ),
+    ).rejects.toThrow("changed concurrently");
+  });
+
 });
