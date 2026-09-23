@@ -137,20 +137,43 @@ Business owns activation/visibility eligibility; Discovery owns searchable proje
 
 ## 9. State Machines
 
-### Business
-```text
-DRAFT → ONBOARDING → ACTIVE
-                  ↘ SUSPENDED
-ACTIVE → SUSPENDED → ACTIVE
-ACTIVE → DEACTIVATED
-```
+### Business lifecycle
 
-Activation requires applicable verification/policy gates.
+The physical \`businesses.status\` vocabulary is canonical and intentionally remains:
+
+\`\`\`text
+DRAFT → ACTIVE
+DRAFT → SUSPENDED
+ACTIVE ↔ SUSPENDED
+ACTIVE → ARCHIVED
+SUSPENDED → ARCHIVED
+\`\`\`
+
+\`Business.status\` is the marketplace-supply lifecycle. It is **not** the onboarding workflow state and it is **not** the verification decision.
+
+### Onboarding workflow
+
+The existing \`onboarding_profiles.status\` vocabulary is a separate workflow state:
+
+\`\`\`text
+DRAFT → SUBMITTED → VERIFIED
+                    └→ REJECTED
+\`\`\`
+
+The onboarding capability owns this workflow. Trust owns verification evidence/decisions; the onboarding status is the workflow outcome/reference used by Business activation policy.
+
+Therefore:
+
+- \`submitted\`, \`verified\`, and \`rejected\` must not be added to \`businesses.status\`.
+- \`onboarding_profiles.status\` must not be duplicated into a new Business lifecycle table.
+- Business activation remains policy-gated and may require a verified onboarding/trust state.
+- Suspension/archival are Business lifecycle transitions and remain in \`business_status_history\`.
 
 ### Location
-```text
+
+\`\`\`text
 DRAFT → ACTIVE → INACTIVE
-```
+\`\`\`
 
 ## 10. Ownership Matrix
 
