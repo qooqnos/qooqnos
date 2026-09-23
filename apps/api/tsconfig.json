@@ -29,6 +29,7 @@
     { "path": "../../packages/case-support" },
     { "path": "../../packages/trust" },
     { "path": "../../packages/catalog" },
+    { "path": "../../packages/media" },
     { "path": "../../packages/discovery" },
     { "path": "../../packages/onboarding" },
     { "path": "../../packages/ai" },
