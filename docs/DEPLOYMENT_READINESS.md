@@ -8,7 +8,7 @@
 
 The Worker must receive a `DB` D1 binding for production and staging. The real `database_id` must come from the provisioned Cloudflare D1 database.
 
-The repository deliberately keeps the example binding commented in `wrangler.toml` until those real IDs exist.
+The repository deliberately keeps real production resource IDs out of `wrangler.toml`; production renders a temporary Wrangler config from protected deployment variables.
 
 ### Queue
 
@@ -36,7 +36,7 @@ The API fails closed when the D1 binding is absent. This is intentional: deploym
 
 ## Verification gate
 
-The repository's CI verifies migration-lock integrity, TypeScript, build, lint/migration checks, Cloudflare Worker dry-run bundling with pinned Wrangler 4.136.2, and unit tests. The final infrastructure gate is the existence of real Cloudflare resource IDs/bindings for the deployment environment.
+The repository's CI verifies migration-lock integrity, TypeScript, build, lint/migration checks, Cloudflare Worker dry-run bundling with pinned Wrangler 4.136.2, and unit tests. The production D1 resource now exists externally. The remaining infrastructure gate is credentialed configuration/application of the production deployment variables and canonical D1 migration run.
 
 ## Current non-goals
 
