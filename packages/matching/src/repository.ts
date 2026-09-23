@@ -115,6 +115,13 @@ export class MatchingRepository extends Repository {
     now: string,
   ): Promise<MatchRequestRecord> {
     const current = await this.getMatchRequest(context, id);
+    if (current.status === status) return current;
+    if (isTerminalMatchStatus(current.status)) {
+      throw new DatabaseError("Terminal MatchRequest cannot be reopened");
+    }
+    if (!isAllowedMatchTransition(current.status, status)) {
+      throw new DatabaseError(`Invalid MatchRequest transition: ${current.status} -> ${status}`);
+    }
     const completedAt = status === "decided" || status === "connected" || status === "expired" || status === "cancelled"
       ? now
       : current.completedAt;
@@ -197,5 +204,22 @@ export class MatchingRepository extends Repository {
 interface DemandRequestRow extends Omit<DemandRequestRecord,"normalizedDemand">{readonly normalizedDemandJson:string|null;}
 interface DemandProfileRow extends Omit<DemandProfileRecord,"profile"|"provenance">{readonly profileJson:string;readonly provenanceJson:string|null;}
 interface MatchCandidateRow extends Omit<MatchCandidateRecord,"reasons"|"featureSnapshot">{readonly reasonsJson:string|null;readonly featureSnapshotJson:string|null;}
+function isTerminalMatchStatus(status:MatchRequestStatus):boolean {
+  return status === "connected" || status === "expired" || status === "cancelled";
+}
+
+function isAllowedMatchTransition(from:MatchRequestStatus,to:MatchRequestStatus):boolean {
+  const transitions: Record<MatchRequestStatus, readonly MatchRequestStatus[]> = {
+    created: ["retrieving","ranking","decided","cancelled","expired"],
+    retrieving: ["ranking","decided","cancelled","expired"],
+    ranking: ["decided","cancelled","expired"],
+    decided: ["connected","cancelled","expired"],
+    connected: [],
+    expired: [],
+    cancelled: [],
+  };
+  return transitions[from].includes(to);
+}
+
 function parseJson(v:string|null):unknown{if(!v)return null;try{return JSON.parse(v);}catch{throw new DatabaseError("Stored Matching JSON is invalid");}}
 function parseObject(v:string|null):Readonly<Record<string,unknown>>|null{const p=parseJson(v);return p&&typeof p==="object"&&!Array.isArray(p)?p as Readonly<Record<string,unknown>>:null;}
