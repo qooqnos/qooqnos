@@ -6,18 +6,18 @@
 
 ## Verification result
 
-The latest code-bearing `main` checkpoint verified in GitHub Actions is:
+The latest verified `main` checkpoint is:
 
-`b8c9071a1dc0c561df58a38f1627cd26bb7ac9a2`
+`c8d17d7e4350978a23081ee6a04c6330671aea14`
 
 Both required workflows passed:
 
-- **CI:** run `35869786946` — success
-- **Phoenix verification:** run `35869786824` — success
+- **CI:** run `35877556187` — success
+- **Phoenix verification:** run `35877556254` — success
 
 The verification path passed format/lint checks, migration-lock verification, TypeScript typecheck, workspace build, and the unit-test suite: **70 test files / 196 tests passed**.
 
-Current `main` points to `b8c9071a1dc0c561df58a38f1627cd26bb7ac9a2`; the latest `main` head has passed CI and Phoenix verification.
+Current `main` points to `c8d17d7e4350978a23081ee6a04c6330671aea14`; this head has passed CI and Phoenix verification.
 
 ## Canonical runtime baseline
 
