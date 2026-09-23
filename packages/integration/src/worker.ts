@@ -1,10 +1,10 @@
 import { brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import {
   IntegrationRepository,
-  type IntegrationProviderRegistry,
   type IntegrationSyncJobRecord,
   type IntegrationWebhookRecord,
 } from "./repository";
+import type { IntegrationProviderRegistry } from "./adapter";
 
 export interface IntegrationWorkerResult {
   readonly webhooksSeen: number;
@@ -34,6 +34,25 @@ export async function processIntegrationWork(
   let syncJobsFailed = 0;
 
   for (const webhook of webhooks) {
+    const account = await repository.getAccountForWorker(webhook.integrationAccountId);
+    const adapter = registry.resolve(account.providerId);
+
+    if (!adapter || !adapter.supportedWebhookTypes.includes(webhook.eventType)) {
+      if (webhook.signatureStatus === "invalid" || webhook.signatureStatus === "missing") {
+        const invalidClaim = await repository.claimWebhook(webhook.id, now);
+        if (invalidClaim) {
+          const accountContext = await buildContextForAccount(repository, webhook.integrationAccountId, webhook.correlationId);
+          await repository.finishWebhook(accountContext, {
+            id: invalidClaim.id,
+            status: "ignored",
+            errorReference: "webhook_signature_invalid_or_missing",
+            now,
+          });
+        }
+      }
+      continue;
+    }
+
     const claimed = await repository.claimWebhook(webhook.id, now);
     if (!claimed) continue;
     webhooksClaimed += 1;
@@ -46,19 +65,6 @@ export async function processIntegrationWork(
         errorReference: "webhook_signature_invalid_or_missing",
         now,
       });
-      continue;
-    }
-
-    const account = await repository.getAccountForWorker(webhook.integrationAccountId);
-    const adapter = registry.resolve(account.providerId);
-    if (!adapter || !adapter.supportedWebhookTypes.includes(claimed.eventType)) {
-      await repository.finishWebhook(accountContext, {
-        id: claimed.id,
-        status: "failed",
-        errorReference: "integration_webhook_adapter_unconfigured",
-        now,
-      });
-      webhooksFailed += 1;
       continue;
     }
 
@@ -107,23 +113,15 @@ export async function processIntegrationWork(
   }
 
   for (const sync of syncJobs) {
+    const account = await repository.getAccountForWorker(sync.integrationAccountId);
+    const adapter = registry.resolve(account.providerId);
+    if (!adapter || !adapter.supportedSyncTypes.includes(sync.syncType)) continue;
+
     const claimed = await repository.claimSyncJob(sync.id, now);
     if (!claimed) continue;
     syncJobsClaimed += 1;
 
     const accountContext = await buildContextForAccount(repository, claimed.integrationAccountId, claimed.correlationId);
-    const account = await repository.getAccountForWorker(claimed.integrationAccountId);
-    const adapter = registry.resolve(account.providerId);
-    if (!adapter || !adapter.supportedSyncTypes.includes(claimed.syncType)) {
-      await repository.finishSyncJob(accountContext, {
-        id: claimed.id,
-        status: "failed",
-        errorCount: 1,
-        now,
-      });
-      syncJobsFailed += 1;
-      continue;
-    }
 
     try {
       const result = await adapter.processSync(
