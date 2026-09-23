@@ -1105,7 +1105,7 @@ The following remain controlled architecture/operational gates:
 4. AI Memory physical storage/retention contract.
 5. Integration/Webhook/Sync retention semantics and provider-specific adapter implementations.
 6. Communication external provider adapter implementations and platform rate-limit/anomaly controls. Intent/consent/suppression policy, template registry and provider-neutral dispatch are implemented.
-7. Business conceptual lifecycle vocabulary reconciliation.
+7. Business lifecycle vocabulary is reconciled: `businesses.status` owns marketplace lifecycle; `onboarding_profiles.status` owns onboarding workflow; no parallel Business lifecycle/status table is permitted.
 8. AI durable worker input/payload resolution contract is closed for Seller AI `seller.product.extract`; new AI operation types require their own explicit resolver contract.
 9. Matching learning-signal persistence/derivation contract and broader Act projections where required. Core retrieval/ranking/Connect execution is implemented.
 10. Privacy export/delete/retention processing semantics; subject-level identity validation is implemented.
