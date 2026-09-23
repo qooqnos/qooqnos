@@ -122,7 +122,7 @@ describe("AutomationExecutor", () => {
         executionStatus = status;
         return undefined;
       },
-    } as unknown as RepositoryStub;
+    } as unknown as import("./repository").AutomationRepository;
 
     const executor = new AutomationExecutor({
       repository,
