@@ -243,6 +243,22 @@ export class CustomerService {
     return this.options.relationshipRepository.setStatus(context, relationshipId, status, this.options.now());
   }
 
+  async getHistory(
+    context: RequestContext,
+    customerId: EntityId,
+    limit = 100,
+  ): Promise<readonly CrmTimelineEventRecord[]> {
+    await this.options.authorization.assert({
+      context,
+      permission: "customer.get_history",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    const customer = await this.options.repository.get(context, customerId);
+    if (!customer) throw new Error("Customer not found");
+    return this.options.timelineRepository.listCustomerTimeline(context, customerId, limit);
+  }
+
   async getRelationshipHistory(
     context: RequestContext,
     relationshipId: EntityId,
