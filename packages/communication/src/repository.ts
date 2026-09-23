@@ -49,6 +49,35 @@ export interface NotificationRecord {
   readonly updatedAt: string;
 }
 
+export interface CommunicationTemplateRecord {
+  readonly id: EntityId;
+  readonly organizationId: EntityId | null;
+  readonly workspaceId: EntityId | null;
+  readonly templateKey: string;
+  readonly intent: string;
+  readonly channel: CommunicationChannel;
+  readonly ownerReference: string;
+  readonly status: "draft" | "active" | "retired";
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface CommunicationTemplateVersionRecord {
+  readonly id: EntityId;
+  readonly templateId: EntityId;
+  readonly version: number;
+  readonly locale: string;
+  readonly variablesSchema: Readonly<Record<string, unknown>>;
+  readonly contentReference: string;
+  readonly contentChecksum: string;
+  readonly approvalState: "not_required" | "pending" | "approved" | "rejected" | "expired";
+  readonly effectiveFrom: string | null;
+  readonly effectiveTo: string | null;
+  readonly createdBy: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export interface DeliveryAttemptRecord {
   readonly id: EntityId;
   readonly notificationId: EntityId;
@@ -67,6 +96,142 @@ export interface DeliveryAttemptRecord {
 
 export class CommunicationRepository extends Repository {
   constructor(database: D1Database) { super(database); }
+
+  async createTemplate(context: RequestContext, input: {
+    readonly id: EntityId;
+    readonly templateKey: string;
+    readonly intent: string;
+    readonly channel: CommunicationChannel;
+    readonly ownerReference: string;
+    readonly status?: "draft" | "active" | "retired";
+    readonly now: string;
+  }): Promise<CommunicationTemplateRecord> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = context.workspaceId ?? null;
+    if (!input.templateKey.trim() || !input.intent.trim() || !input.ownerReference.trim()) {
+      throw new DatabaseError("Communication template key, intent and owner reference are required");
+    }
+    await this.database.run(
+      "INSERT INTO communication_templates (id, organization_id, workspace_id, template_key, intent, channel, owner_reference, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      organizationId,
+      workspaceId,
+      input.templateKey.trim(),
+      input.intent.trim(),
+      input.channel,
+      input.ownerReference.trim(),
+      input.status ?? "draft",
+      input.now,
+      input.now,
+    );
+    return this.getTemplate(context, input.id);
+  }
+
+  async getTemplate(context: RequestContext, id: EntityId): Promise<CommunicationTemplateRecord> {
+    const row = await this.database.first<CommunicationTemplateRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, template_key AS templateKey, intent, channel, owner_reference AS ownerReference, status, created_at AS createdAt, updated_at AS updatedAt FROM communication_templates WHERE id=? AND organization_id=? AND (workspace_id IS NULL OR workspace_id=?) LIMIT 1",
+      id,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+    );
+    if (!row) throw new DatabaseError("Communication template not found");
+    return row;
+  }
+
+  async createTemplateVersion(context: RequestContext, input: {
+    readonly id: EntityId;
+    readonly templateId: EntityId;
+    readonly version: number;
+    readonly locale: string;
+    readonly variablesSchema: Readonly<Record<string, unknown>>;
+    readonly contentReference: string;
+    readonly contentChecksum: string;
+    readonly approvalState?: CommunicationTemplateVersionRecord["approvalState"];
+    readonly effectiveFrom?: string;
+    readonly effectiveTo?: string;
+    readonly now: string;
+  }): Promise<CommunicationTemplateVersionRecord> {
+    const template = await this.getTemplate(context, input.templateId);
+    if (!Number.isSafeInteger(input.version) || input.version < 1) {
+      throw new DatabaseError("Communication template version must be a positive integer");
+    }
+    if (!input.locale.trim() || !input.contentReference.trim() || !input.contentChecksum.trim()) {
+      throw new DatabaseError("Communication template version metadata is incomplete");
+    }
+    await this.database.run(
+      "INSERT INTO communication_template_versions (id, template_id, version, locale, variables_schema_json, content_reference, content_checksum, approval_state, effective_from, effective_to, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      input.id,
+      template.id,
+      input.version,
+      input.locale.trim(),
+      JSON.stringify(input.variablesSchema),
+      input.contentReference.trim(),
+      input.contentChecksum.trim(),
+      input.approvalState ?? "pending",
+      input.effectiveFrom ?? null,
+      input.effectiveTo ?? null,
+      context.actorId ?? "system",
+      input.now,
+      input.now,
+    );
+    return this.getTemplateVersion(context, input.id);
+  }
+
+  async getTemplateVersion(context: RequestContext, id: EntityId): Promise<CommunicationTemplateVersionRecord> {
+    const row = await this.database.first<CommunicationTemplateVersionRow>(
+      "SELECT v.id,v.template_id AS templateId,v.version,v.locale,v.variables_schema_json AS variablesSchemaJson,v.content_reference AS contentReference,v.content_checksum AS contentChecksum,v.approval_state AS approvalState,v.effective_from AS effectiveFrom,v.effective_to AS effectiveTo,v.created_by AS createdBy,v.created_at AS createdAt,v.updated_at AS updatedAt FROM communication_template_versions v INNER JOIN communication_templates t ON t.id=v.template_id WHERE v.id=? AND t.organization_id=? AND (t.workspace_id IS NULL OR t.workspace_id=?) LIMIT 1",
+      id,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+    );
+    if (!row) throw new DatabaseError("Communication template version not found");
+    return hydrateTemplateVersion(row);
+  }
+
+  async approveTemplateVersion(
+    context: RequestContext,
+    templateVersionId: EntityId,
+    now: string,
+  ): Promise<CommunicationTemplateVersionRecord> {
+    const version = await this.getTemplateVersion(context, templateVersionId);
+    if (version.approvalState === "approved") return version;
+    if (version.approvalState === "rejected" || version.approvalState === "expired") {
+      throw new DatabaseError("Rejected or expired Communication template version cannot be approved");
+    }
+    await this.database.run(
+      "UPDATE communication_template_versions SET approval_state='approved', updated_at=? WHERE id=? AND approval_state IN ('pending','not_required')",
+      now,
+      templateVersionId,
+    );
+    return this.getTemplateVersion(context, templateVersionId);
+  }
+
+  async getApprovedTemplateVersion(
+    context: RequestContext,
+    input: {
+      readonly templateKey: string;
+      readonly version: number;
+      readonly channel: CommunicationChannel;
+      readonly locale: string;
+      readonly intent: string;
+      readonly now: string;
+    },
+  ): Promise<CommunicationTemplateVersionRecord> {
+    const row = await this.database.first<CommunicationTemplateVersionRow>(
+      "SELECT v.id,v.template_id AS templateId,v.version,v.locale,v.variables_schema_json AS variablesSchemaJson,v.content_reference AS contentReference,v.content_checksum AS contentChecksum,v.approval_state AS approvalState,v.effective_from AS effectiveFrom,v.effective_to AS effectiveTo,v.created_by AS createdBy,v.created_at AS createdAt,v.updated_at AS updatedAt FROM communication_template_versions v INNER JOIN communication_templates t ON t.id=v.template_id WHERE t.organization_id=? AND (t.workspace_id IS NULL OR t.workspace_id=?) AND t.template_key=? AND t.channel=? AND t.intent=? AND t.status='active' AND v.version=? AND v.locale=? AND v.approval_state='approved' AND (v.effective_from IS NULL OR v.effective_from <= ?) AND (v.effective_to IS NULL OR v.effective_to > ?) LIMIT 1",
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+      input.templateKey.trim(),
+      input.channel,
+      input.intent.trim(),
+      input.version,
+      input.locale.trim(),
+      input.now,
+      input.now,
+    );
+    if (!row) throw new DatabaseError("Approved Communication template version not found");
+    return hydrateTemplateVersion(row);
+  }
 
   async createConversation(context: RequestContext, input: {
     id: EntityId; customerId?: EntityId; now: string;
@@ -307,6 +472,49 @@ export class CommunicationRepository extends Repository {
     );
     return row ? hydrateDelivery(row) : null;
   }
+}
+
+interface CommunicationTemplateVersionRow {
+  readonly id: EntityId;
+  readonly templateId: EntityId;
+  readonly version: number;
+  readonly locale: string;
+  readonly variablesSchemaJson: string;
+  readonly contentReference: string;
+  readonly contentChecksum: string;
+  readonly approvalState: CommunicationTemplateVersionRecord["approvalState"];
+  readonly effectiveFrom: string | null;
+  readonly effectiveTo: string | null;
+  readonly createdBy: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+function hydrateTemplateVersion(row: CommunicationTemplateVersionRow): CommunicationTemplateVersionRecord {
+  let variablesSchema: Readonly<Record<string, unknown>>;
+  try {
+    const parsed = JSON.parse(row.variablesSchemaJson);
+    variablesSchema = parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed as Readonly<Record<string, unknown>>
+      : {};
+  } catch {
+    throw new DatabaseError("Stored Communication template variables schema is invalid");
+  }
+  return {
+    id: row.id,
+    templateId: row.templateId,
+    version: row.version,
+    locale: row.locale,
+    variablesSchema,
+    contentReference: row.contentReference,
+    contentChecksum: row.contentChecksum,
+    approvalState: row.approvalState,
+    effectiveFrom: row.effectiveFrom,
+    effectiveTo: row.effectiveTo,
+    createdBy: row.createdBy,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
 }
 
 interface NotificationRow {
