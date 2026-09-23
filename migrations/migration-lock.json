@@ -378,13 +378,6 @@
       "moduleId": "discovery",
       "filename": "0054_discovery_index_observability.sql",
       "checksum": "242b0282b2658d03d3adf4b9ad6754250a809b746653d603ac3a791c6797c1fd"
-    },
-    {
-      "id": "0055_booking_idempotency",
-      "version": 55,
-      "moduleId": "booking",
-      "filename": "0055_booking_idempotency.sql",
-      "checksum": "b197251c9cc439410a8dad470eda750287ecc72cde921c6596bf18d63164a849"
     }
   ]
 }
