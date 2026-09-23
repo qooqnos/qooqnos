@@ -129,7 +129,24 @@ export class PrivacyRepository extends Repository {
     const current=await this.getConsent(context,id);
     if(!current)throw new DatabaseError("Consent not found");
     if(current.status!=="granted")return current;
-    await this.database.run("UPDATE privacy_consents SET status='revoked', revoked_at=?, updated_at=? WHERE id=?",revokedAt,now,id);
+    await this.database.transaction([
+      {
+        sql: "UPDATE privacy_consents SET status='revoked', revoked_at=?, updated_at=? WHERE id=? AND status='granted'",
+        params: [revokedAt, now, id],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?, 'privacy.consent.revoked', 1, 'privacy_consent', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          id + ":revoked:" + revokedAt,
+          id,
+          current.organizationId,
+          current.workspaceId,
+          JSON.stringify({ consentId: id, status: "revoked", purpose: current.purpose }),
+          now,
+          now,
+        ],
+      },
+    ]);
     return this.getConsent(context,id);
   }
 
@@ -170,11 +187,29 @@ export class PrivacyRepository extends Repository {
 
   async transitionRequest(context:RequestContext,id:EntityId,status:PrivacyRequestStatus,now:string,details?:{resultReference?:string;rejectionReason?:string}):Promise<PrivacyRequestRecord>{
     const current=await this.getRequest(context,id);
-    if(current.status==="completed"||current.status==="cancelled") return current;
+    if(current.status===status) return current;
+    if(current.status==="completed"||current.status==="cancelled"||!isAllowedPrivacyRequestTransition(current.status,status)){
+      throw new DatabaseError("Invalid Privacy request status transition");
+    }
     const completedAt=["completed","rejected","cancelled"].includes(status)?now:current.completedAt;
-    await this.database.run(
-      "UPDATE privacy_requests SET status=?, completed_at=?, result_reference=COALESCE(?,result_reference), rejection_reason=COALESCE(?,rejection_reason), updated_at=? WHERE id=?",
-      status,completedAt,details?.resultReference??null,details?.rejectionReason??null,now,id);
+    await this.database.transaction([
+      {
+        sql: "UPDATE privacy_requests SET status=?, completed_at=?, result_reference=COALESCE(?,result_reference), rejection_reason=COALESCE(?,rejection_reason), updated_at=? WHERE id=? AND status=?",
+        params: [status, completedAt, details?.resultReference??null, details?.rejectionReason??null, now, id, current.status],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?, 'privacy.request.status_changed', 1, 'privacy_request', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          id + ":status:" + status + ":" + now,
+          id,
+          current.organizationId,
+          current.workspaceId,
+          JSON.stringify({ requestId: id, from: current.status, to: status, requestType: current.requestType }),
+          now,
+          now,
+        ],
+      },
+    ]);
     return this.getRequest(context,id);
   }
 
@@ -223,4 +258,21 @@ export class PrivacyRepository extends Repository {
       "INSERT INTO privacy_processing_records (id, request_id, module_id, action, resource_reference, status, error_reference, processed_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
       input.id,input.requestId,input.moduleId.trim(),input.action.trim(),input.resourceReference??null,input.status,input.errorReference??null,input.processedAt??null,input.now);
   }
+}
+
+
+function isAllowedPrivacyRequestTransition(
+  from: PrivacyRequestStatus,
+  to: PrivacyRequestStatus,
+): boolean {
+  const transitions: Readonly<Record<PrivacyRequestStatus, readonly PrivacyRequestStatus[]>> = {
+    requested: ["validating", "approved", "rejected", "cancelled"],
+    validating: ["approved", "processing", "rejected", "cancelled"],
+    approved: ["processing", "rejected", "cancelled"],
+    processing: ["completed", "rejected", "cancelled"],
+    completed: [],
+    rejected: [],
+    cancelled: [],
+  };
+  return transitions[from].includes(to);
 }
