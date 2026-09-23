@@ -86,4 +86,36 @@ describe("AutomationRepository", () => {
     )).rejects.toThrow("cannot be reopened");
   });
 
+  it("rejects reopening a terminal execution attempt", async () => {
+    let query = "";
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        if (query.includes("automation_execution_attempts")) {
+          return { id: "attempt-1", executionId: "execution-1", status: "succeeded" } as T;
+        }
+        return {
+          id: "execution-1", workflowId: "workflow-1", workflowVersionId: "version-1", triggerId: "trigger-1",
+          organizationId: "tenant-1", workspaceId: "workspace-1", businessId: null,
+          status: "running", inputReference: null, correlationId: "corr-1", traceId: "trace-1",
+          startedAt: "2026-09-23T00:00:00.000Z", completedAt: null,
+          createdAt: "2026-09-23T00:00:00.000Z", updatedAt: "2026-09-23T00:00:00.000Z",
+        } as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { query = sql; return statement; },
+      async batch() { return []; },
+    };
+    const repository = new AutomationRepository(new D1Database(raw));
+
+    await expect(repository.completeExecutionAttempt(context(), {
+      idempotencyKey: "execution-1:action-1:1",
+      status: "failed",
+      completedAt: "2026-09-23T00:03:00.000Z",
+    })).rejects.toThrow("cannot be reopened");
+  });
+
 });
