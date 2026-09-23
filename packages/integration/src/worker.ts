@@ -1,7 +1,7 @@
 import { brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import {
   IntegrationRepository,
-  type IntegrationSyncJobRecord ,
+  type IntegrationSyncJobRecord,
 } from "./repository";
 import type { IntegrationProviderRegistry } from "./adapter";
 
