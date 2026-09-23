@@ -1065,7 +1065,7 @@ The following remain controlled architecture/operational gates:
 8. Business conceptual lifecycle vocabulary reconciliation.
 9. AI durable worker input/payload resolution contract is closed for Seller AI `seller.product.extract`; new AI operation types require their own explicit resolver contract.
 10. Matching learning-signal persistence/derivation contract and broader Act projections where required. Core retrieval/ranking/Connect execution is implemented.
-11. Privacy export/delete/retention processing semantics and subject-level identity validation.
+11. Privacy export/delete/retention processing semantics; subject-level identity validation is implemented.
 
 Closed implementation gates must not be reopened by future agents: Booking transactional finalization/capacity guards, Review target integrity, Matching retrieval/ranking/Connect execution, Automation scheduled execution, Integration durable claim/worker boundaries, Fulfillment provider-adapter boundary and CaseAction capability execution are implemented and tested.
 
