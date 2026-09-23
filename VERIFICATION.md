@@ -81,7 +81,7 @@ The physical schema is intentionally broad but not every operational concern is 
 
 1. Scheduled Automation polling, misfire handling, and CapabilityRegistry-backed scheduled action execution are implemented; only concrete rollback/compensation contracts remain gated.
 2. Integration durable claim/sync workers and provider-neutral adapter boundary are implemented; provider-specific adapters and credential contracts remain external integration work.
-3. Privacy consent expiry is live; export/delete/retention workers with subject-level identity validation remain.
+3. Privacy consent expiry and subject-level organization/workspace validation are live; export/delete/retention workers remain.
 4. External Communication provider adapters plus consent/anti-spam policy remain gated; template registry and provider-neutral dispatch are live.
 5. AI durable worker lease/claim/reclaim infrastructure and the Seller AI production scheduler/input resolver are implemented; new AI operation types require an explicit resolver contract.
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
