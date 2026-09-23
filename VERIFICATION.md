@@ -38,7 +38,7 @@ The product loop remains:
 
 ## Canonical implementation coverage
 
-Current canonical migrations reach `0054_discovery_index_observability.sql`.
+Current canonical migrations reach `0056_communication_required_suppression.sql`.
 
 Implemented core capability families include:
 
@@ -82,7 +82,7 @@ The physical schema is intentionally broad but not every operational concern is 
 1. Scheduled Automation polling, misfire handling, and CapabilityRegistry-backed scheduled action execution are implemented; only concrete rollback/compensation contracts remain gated.
 2. Integration durable claim/sync workers and provider-neutral adapter boundary are implemented; provider-specific adapters and credential contracts remain external integration work.
 3. Privacy consent expiry, subject scope validation, approved-request orchestration and the domain PrivacyProcessor registry are live; actual export/delete/retention processors remain policy-gated.
-4. External Communication provider adapters plus consent/anti-spam policy remain gated; template registry and provider-neutral dispatch are live.
+4. Communication intent/consent/suppression policy, template registry and provider-neutral dispatch are live; external provider adapters plus platform rate-limit/anomaly controls remain gated.
 5. AI durable worker lease/claim/reclaim infrastructure and the Seller AI production scheduler/input resolver are implemented; new AI operation types require an explicit resolver contract.
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile is resolved as a logical aggregate over existing Customer-owned records; CRM timeline is already physically implemented as events/projection input.
