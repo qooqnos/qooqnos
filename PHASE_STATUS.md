@@ -86,8 +86,8 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- GitHub Actions CI passed for commit d32953ab4b9957d2256fe5d485ca0188befb4eb8 (run 35824011221).
-- GitHub Actions Phoenix verification passed for the same commit (run 35824011195).
+- GitHub Actions CI passed for commit 6275a6f4ba52450977f9700c3bd82e792905aafa (run 35824511143).
+- GitHub Actions Phoenix verification passed for the same commit (run 35824511184).
 - Migration lock verification passed for the canonical migration inventory through 0050.
 - Typecheck, build, and unit tests passed in the verification path: **61 test files / 173 tests**.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
