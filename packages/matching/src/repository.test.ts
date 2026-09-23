@@ -25,4 +25,27 @@ describe("MatchingRepository",()=>{
    retrievalSource:"search",now:"2026-09-22T00:00:00.000Z"
   })).rejects.toThrow("exactly one");
  });
+
+  it("uses the latest Match decision when determining Connect eligibility", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>(/* eslint-disable @typescript-eslint/no-unused-vars */) { return { decision: "rejected" } as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new MatchingRepository(new D1Database(raw));
+
+    const selected = await repository.hasSelectedDecision(
+      context(),
+      brandId<"EntityId">("match-1"),
+      brandId<"EntityId">("candidate-1"),
+    );
+
+    expect(selected).toBe(false);
+  });
+
 });
