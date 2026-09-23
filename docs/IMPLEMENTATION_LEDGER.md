@@ -403,9 +403,9 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The current verified head `f9666b0252cb175fa48052467c919d93ede44427` passed both CI and Phoenix verification (CI `35895454714`; Phoenix verification `35895454663`). Full external D1 application has not yet been executed.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0054 are registered and locked in sequence from canonical SQL contents. Migration 0054 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The current verified head `076e7863073fa10a1e78624de9467531464242fb` passed both CI and Phoenix verification (CI `35896040161`; Phoenix verification `35896039974`). Full external D1 application has not yet been executed.
 
-Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution, Automation scheduled execution, AI durable Seller AI worker resolution, and privacy consent expiry are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processing, communication consent/anti-spam policy and external adapters, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
+Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events, Automation scheduled execution, AI durable Seller AI worker resolution, and privacy consent expiry are implemented. Remaining controlled gates are provider-specific adapters/credentials, privacy export/delete/retention processing, communication consent/anti-spam policy and external adapters, matching learning signals/broader Act projections, localization/legal/document/analytics registries, case provider dispatch, and real Cloudflare D1 resource provisioning.
 
 Deployment readiness note: `wrangler.toml` now documents environment-specific D1/Queue/R2 bindings without inventing remote resource IDs. Remote D1 provisioning and real Cloudflare binding configuration remain the final infrastructure gate.
 
@@ -452,6 +452,7 @@ Latest verified commits:
 - 1cc6cba — Expose Automation workflow activate/pause/retire routes
 - 085805e — Expose Automation lifecycle service
 - 5c8219f — Complete Automation workflow activation and lifecycle control
+- 076e7863 — Publish canonical Matching outbox events transactionally
 - 5869597 — Test canonical Matching Connect flow
 - 421a91c — Keep Matching Connect dependency optional for non-connect consumers
 - a06eb07 — Make Match Connect selection-bound and replay-safe
