@@ -249,8 +249,10 @@ The source of truth remains Business/Catalog/Verification data. Discovery owns d
 - `embedding_records`
 - `ranking_features`
 - `indexing_jobs`
+- `discovery_query_traces`
+- `discovery_evaluation_records`
 
-Every projection records resource ID, module, tenant/workspace scope, visibility, locale, source version and indexed timestamp.
+`search_index_versions` records rebuild/generation metadata; `discovery_query_traces` and `discovery_evaluation_records` record operational/evaluation evidence. All remain derived and disposable. Every projection records resource ID, module, tenant/workspace scope, visibility, locale, source version and indexed timestamp.
 
 Only eligible published records may be indexed.
 
