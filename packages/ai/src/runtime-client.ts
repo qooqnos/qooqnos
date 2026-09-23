@@ -81,27 +81,12 @@ export function createPersistentAIRuntimeClient(
 
       try {
         const result = await runtime.execute<TOutput>(request);
-        if (result.providerId !== undefined) {
-          await repository.recordProviderAttempt(request.context, {
-            id: options.id(),
-            operationId: operation.id,
-            attemptNumber: request.attemptNumber ?? 1,
-            providerId: brandId<"EntityId">(result.providerId),
-            ...(result.modelId !== undefined ? { modelId: brandId<"EntityId">(result.modelId) } : {}),
-            status: "succeeded",
-            startedAt: now,
-            completedAt: options.now(),
-            now: options.now(),
-          });
-        }
         await repository.recordResult(request.context, {
           id: options.id(),
           operationId: operation.id,
           status: result.status,
           schemaVersionReference: request.outputSchemaVersion,
-          ...(result.providerId !== undefined ? { providerId: result.providerId as EntityId } : {}),
-          ...(result.modelId !== undefined ? { modelId: result.modelId as EntityId } : {}),
-          safetyOutcome: result.safetyDecision,
+safetyOutcome: result.safetyDecision,
           provenance: [result.provenance],
           warnings: result.warnings,
           now: options.now(),
@@ -122,8 +107,6 @@ export function createPersistentAIRuntimeClient(
             operationVersion: request.operationVersion,
             meterUnit: "provider_unit",
             quantity: Math.max(0, Math.trunc(providerUnits)),
-            ...(result.providerId !== undefined ? { providerId: result.providerId as EntityId } : {}),
-            ...(result.modelId !== undefined ? { modelId: result.modelId as EntityId } : {}),
             idempotencyKey: request.idempotencyKey,
             now: options.now(),
           });
