@@ -40,6 +40,20 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 
 - **Physical D1 schema: 100% complete** — 56 ordered migrations define the canonical physical schema and the reconciled inventory is 190 tables.
 - **Database engineering readiness: 91.7%** on the explicit 12-gate readiness rubric: 11 repository/schema/runtime gates are closed; one credentialed remote-D1 application gate remains.
+
+The 12-gate rubric is:
+1. canonical logical model;
+2. physical schema blueprint/reconciliation;
+3. migration ownership;
+4. migration catalog;
+5. migration lock/checksum integrity;
+6. D1 client/database boundary;
+7. runtime boot/migration boundary;
+8. tenant/workspace isolation;
+9. database/domain integrity constraints;
+10. repository/service coverage;
+11. critical invariant verification;
+12. credentialed remote production-D1 application.
 - **Production remote migration state:** not verified from this runtime because no Cloudflare credential/connector is exposed here. The canonical remote migration executor is implemented and verifies D1 identity plus migration checksums before applying anything.
 - Provider-specific adapters, Analytics, Documents, Localization registries and AI Memory are not counted as missing relational schema where their physical contracts are intentionally gated.
 
