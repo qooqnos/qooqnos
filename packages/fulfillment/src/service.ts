@@ -1,6 +1,6 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import type { AuthorizationService } from "@qooqnos/runtime";
-import { FulfillmentRepository } from "./repository";
+import { FulfillmentRepository, type FulfillmentOrderStatus } from "./repository";
 
 export interface FulfillmentServiceOptions {
   readonly repository:FulfillmentRepository; readonly authorization:AuthorizationService; readonly id:()=>EntityId; readonly now:()=>string;
