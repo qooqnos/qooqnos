@@ -86,11 +86,10 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- The latest code-bearing green verification checkpoint is commit `184c5ff9f1230c7f67179e7447a13b73caf87425`.
-- GitHub Actions CI run `35841847298` and Phoenix verification run `35841847334` passed for that checkpoint.
+- Latest verified `main` documentation/runtime checkpoint is commit `ae40f7783411757505ace3962301d1f84b2b13cc`.
+- GitHub Actions CI run `35843039989` and Phoenix verification run `35843040039` both passed for that `main` head.
 - Migration lock verification passed through migration `0053`.
-- Format, lint, typecheck, workspace build and the unit-test suite passed; the checkpoint reported 195 tests across 69 test files.
-- `main` now points to `3f43d5cafd665a33c1239ee16be67e8870e0c774`; the commits after the green code checkpoint only refresh status/ledger documentation, so they do not change the verified code state.
+- The latest code-bearing checkpoint remains `184c5ff9f1230c7f67179e7447a13b73caf87425` with 195 tests across 69 files; changes after it are documentation/status reconciliation.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
 
 ## 8. What remains
