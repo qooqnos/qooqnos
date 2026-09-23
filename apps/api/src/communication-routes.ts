@@ -118,6 +118,94 @@ export function registerCommunicationRoutes(
   });
 
   router.register({
+    method: "GET",
+    path: "/api/v1/communications/preferences",
+    module: "communication",
+    operation: "communication.preference.read",
+    permission: "communication.preference.read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const recipientReference = new URL(request.url).searchParams.get("recipientReference");
+      if (!recipientReference?.trim()) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "recipientReference is required.", requestId: context.requestId });
+      }
+      const preferences = await service.listPreferences(context, recipientReference);
+      return json({ data: preferences }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "PATCH",
+    path: "/api/v1/communications/preferences",
+    module: "communication",
+    operation: "communication.preference.manage",
+    permission: "communication.preference.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const preference = await service.setPreference(context, {
+        recipientReference: requiredString(body.recipientReference, "recipientReference", context.requestId),
+        category: requiredEnum(body.category, "category", ["transactional","security","marketing","reminders","product_updates"] as const, context.requestId),
+        ...(body.channel !== undefined ? { channel: requiredChannel(body.channel, context.requestId) } : {}),
+        status: requiredEnum(body.status, "status", ["allowed","denied"] as const, context.requestId),
+        source: requiredString(body.source, "source", context.requestId),
+        ...(body.consentReference !== undefined ? { consentReference: requiredString(body.consentReference, "consentReference", context.requestId) } : {}),
+        effectiveFrom: requiredString(body.effectiveFrom, "effectiveFrom", context.requestId),
+        ...(body.effectiveTo !== undefined ? { effectiveTo: requiredString(body.effectiveTo, "effectiveTo", context.requestId) } : {}),
+      });
+      return json({ data: preference }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/communications/suppressions",
+    module: "communication",
+    operation: "communication.suppression.manage",
+    permission: "communication.suppression.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const suppression = await service.suppressRecipient(context, {
+        recipientReference: requiredString(body.recipientReference, "recipientReference", context.requestId),
+        scope: requiredEnum(body.scope, "scope", ["global","category","channel","intent"] as const, context.requestId),
+        ...(body.category !== undefined ? { category: requiredEnum(body.category, "category", ["transactional","security","marketing","reminders","product_updates"] as const, context.requestId) } : {}),
+        ...(body.channel !== undefined ? { channel: requiredChannel(body.channel, context.requestId) } : {}),
+        ...(body.intent !== undefined ? { intent: requiredString(body.intent, "intent", context.requestId) } : {}),
+        reasonCode: requiredString(body.reasonCode, "reasonCode", context.requestId),
+        source: requiredString(body.source, "source", context.requestId),
+        effectiveFrom: requiredString(body.effectiveFrom, "effectiveFrom", context.requestId),
+        ...(body.expiresAt !== undefined ? { expiresAt: requiredString(body.expiresAt, "expiresAt", context.requestId) } : {}),
+      });
+      return json({ data: suppression }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/communications/suppressions/:suppressionId/release",
+    module: "communication",
+    operation: "communication.suppression.manage",
+    permission: "communication.suppression.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const released = await service.releaseSuppression(
+        context,
+        brandId<"EntityId">(requiredParam(params.suppressionId, context.requestId)),
+      );
+      return json({ data: released }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "POST",
     path: "/api/v1/communications/notifications",
     module: "communication",
