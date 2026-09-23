@@ -180,6 +180,7 @@ export class CommunicationService {
       readonly intent?: string;
       readonly reasonCode: string;
       readonly source: string;
+      readonly appliesToRequired?: boolean;
       readonly effectiveFrom: string;
       readonly expiresAt?: string;
     },
