@@ -114,6 +114,10 @@ export class BillingService implements BillingAIEntitlementService {
       reservedUnits: quantity,
     };
   }
+
+  async listPlans(context: RequestContext) {
+    return this.options.repository.listPlans();
+  }
 }
 
 function buildPeriodKey(
