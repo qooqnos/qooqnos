@@ -21,6 +21,8 @@ describe("persistent AI Runtime client", () => {
     let runtimeCalls = 0;
     let results = 0;
     let statuses = 0;
+    let persistedProviderId: string | undefined;
+    let persistedModelId: string | undefined;
 
     const client = createPersistentAIRuntimeClient(
       {
@@ -64,8 +66,10 @@ describe("persistent AI Runtime client", () => {
           statuses += 1;
           return {} as never;
         },
-        async recordResult() {
+        async recordResult(_context: RequestContext, input: { readonly providerId?: string; readonly modelId?: string }) {
           results += 1;
+          persistedProviderId = input.providerId;
+          persistedModelId = input.modelId;
         },
         async recordUsage() {},
       } as never,
@@ -93,6 +97,8 @@ describe("persistent AI Runtime client", () => {
     expect(runtimeCalls).toBe(1);
     expect(results).toBe(1);
     expect(statuses).toBe(1);
+    expect(persistedProviderId).toBeUndefined();
+    expect(persistedModelId).toBeUndefined();
   });
 
   it("replays a persisted terminal result without invoking the provider again", async () => {
