@@ -249,50 +249,59 @@ export class PrivacyRepository extends Repository {
     if(!row) throw new DatabaseError("Privacy subject does not belong to the current organization/workspace scope");
   }
 
-  async listApprovedRequests(limit = 50): Promise<readonly PrivacyRequestRecord[]> {
+  async listClaimableRequests(limit = 50): Promise<readonly PrivacyRequestRecord[]> {
     const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
     return this.database.all<PrivacyRequestRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, request_type AS requestType, status, requested_by AS requestedBy, requested_at AS requestedAt, due_at AS dueAt, completed_at AS completedAt, result_reference AS resultReference, rejection_reason AS rejectionReason, created_at AS createdAt, updated_at AS updatedAt FROM privacy_requests WHERE status='approved' ORDER BY requested_at ASC, id ASC LIMIT ?",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, request_type AS requestType, status, requested_by AS requestedBy, requested_at AS requestedAt, due_at AS dueAt, completed_at AS completedAt, result_reference AS resultReference, rejection_reason AS rejectionReason, created_at AS createdAt, updated_at AS updatedAt FROM privacy_requests WHERE status IN ('approved','processing') ORDER BY requested_at ASC, id ASC LIMIT ?",
       safeLimit,
     );
   }
 
-  async claimApprovedRequest(
+  async claimOrResumeRequest(
     input: { readonly requestId: EntityId; readonly now: string },
   ): Promise<PrivacyRequestRecord | null> {
     const before = await this.database.first<PrivacyRequestRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, request_type AS requestType, status, requested_by AS requestedBy, requested_at AS requestedAt, due_at AS dueAt, completed_at AS completedAt, result_reference AS resultReference, rejection_reason AS rejectionReason, created_at AS createdAt, updated_at AS updatedAt FROM privacy_requests WHERE id=? AND status='approved' LIMIT 1",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, requestType, status, requested_by AS requestedBy, requested_at AS requestedAt, due_at AS dueAt, completed_at AS completedAt, result_reference AS resultReference, rejection_reason AS rejectionReason, created_at AS createdAt, updated_at AS updatedAt FROM privacy_requests WHERE id=? LIMIT 1"
+        .replace("requestType", "request_type AS requestType"),
       input.requestId,
     );
-    if (!before) return null;
+    if (!before || (before.status !== "approved" && before.status !== "processing")) return null;
+
+    if (before.status === "approved") {
+      const claimed = await this.database.run(
+        "UPDATE privacy_requests SET status='processing', updated_at=? WHERE id=? AND status='approved'",
+        input.now,
+        input.requestId,
+      );
+      if ((claimed.meta?.changes ?? 0) !== 1) return null;
+    }
+
+    const current = await this.database.first<PrivacyRequestRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, request_type AS requestType, status, requested_by AS requestedBy, requested_at AS requestedAt, due_at AS dueAt, completed_at AS completedAt, result_reference AS resultReference, rejection_reason AS rejectionReason, created_at AS createdAt, updated_at AS updatedAt FROM privacy_requests WHERE id=? AND status='processing' LIMIT 1",
+      input.requestId,
+    );
+    if (!current) return null;
 
     await this.database.transaction([
       {
-        sql: "UPDATE privacy_requests SET status='processing', updated_at=? WHERE id=? AND status='approved'",
-        params: [input.now, input.requestId],
-      },
-      {
         sql: "INSERT OR IGNORE INTO privacy_processing_records (id, request_id, module_id, action, resource_reference, status, error_reference, processed_at, created_at) VALUES (?, ?, 'privacy', 'orchestrate', NULL, 'processing', NULL, NULL, ?)",
-        params: [input.requestId + ':orchestrate:' + input.now, input.requestId, input.now],
+        params: [input.requestId + ':orchestrate', input.requestId, input.now],
       },
       {
         sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?, 'privacy.request.status_changed', 1, 'privacy_request', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
         params: [
-          input.requestId + ':status:processing:' + input.now,
+          input.requestId + ':status:processing',
           input.requestId,
-          before.organizationId,
-          before.workspaceId,
-          JSON.stringify({ requestId: input.requestId, from: 'approved', to: 'processing', requestType: before.requestType, subjectType: before.subjectType }),
+          current.organizationId,
+          current.workspaceId,
+          JSON.stringify({ requestId: input.requestId, to: 'processing', requestType: current.requestType, subjectType: current.subjectType }),
           input.now,
           input.now,
         ],
       },
     ]);
 
-    return this.database.first<PrivacyRequestRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, request_type AS requestType, status, requested_by AS requestedBy, requested_at AS requestedAt, due_at AS dueAt, completed_at AS completedAt, result_reference AS resultReference, rejection_reason AS rejectionReason, created_at AS createdAt, updated_at AS updatedAt FROM privacy_requests WHERE id=? LIMIT 1",
-      input.requestId,
-    );
+    return current;
   }
 
   async recordProcessing(context:RequestContext,input:{
