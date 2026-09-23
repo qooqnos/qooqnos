@@ -39,3 +39,12 @@ Implement in this order:
 ## Completion Criteria
 
 A foundation implementation is not complete until a business can be onboarded and verified, a Beauty offer can be published and indexed, and a customer can discover it through the typed API and frontend while tenant/security tests pass.
+
+## Continuation / North-Star Guard
+
+Phoenix implementation work follows:
+`Understand Demand → Understand Supply → Decide → Match → Connect → Act → Learn`.
+
+Before changing code, inspect `docs/IMPLEMENTATION_LEDGER.md` and the latest verified checkpoint. Reuse completed canonical capabilities and never create a parallel owner/source of truth.
+
+For each meaningful slice: implement vertically, test critical invariants, commit directly to `main`, update the implementation ledger with files/commit/tests/open gate, then continue. Stop only at a genuine external/provider/infrastructure gate or actual project completion.
