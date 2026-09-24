@@ -1369,7 +1369,7 @@ function renderProductStudio(): string {
 
     <section class="studio-grid">
       <article class="glass-card studio-input">
-        <div class="studio-tabs"><button class="studio-tab active" type="button">ورودی</button><button class="studio-tab" type="button" data-toast="آپلود تصویر در slice بعدی فعال می‌شود.">تصویر</button></div>
+        <div class="studio-tabs"><button class="studio-tab active" type="button">ورودی</button><button class="studio-tab" type="button">تصویر</button></div>
         <div class="studio-meta-fields">
           <div>
             <label class="field-label" for="studio-business">شناسه کسب‌وکار</label>
@@ -1381,7 +1381,13 @@ function renderProductStudio(): string {
           </div>
         </div>
         <label class="field-label" for="studio-text">توضیح محصول</label>
-        <textarea id="studio-text" rows="9" placeholder="مثلاً: کفش چرمی دست‌دوز، رنگ قهوه‌ای، مناسب استفاده روزمره..."></textarea>
+        <textarea id="studio-text" rows="7" placeholder="مثلاً: کفش چرمی دست‌دوز، رنگ قهوه‌ای، مناسب استفاده روزمره..."></textarea>
+        <label class="media-dropzone" for="studio-file">
+          <input id="studio-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic" />
+          <span class="media-drop-icon">＋</span>
+          <span><strong>عکس محصول را اینجا اضافه کنید</strong><small>JPG / PNG / WebP · حداکثر 10MB</small></span>
+          <span id="studio-file-name" class="media-file-name">بدون تصویر</span>
+        </label>
         <div class="studio-actions">
           <span class="field-hint">ورودی می‌تواند ناقص باشد؛ ققنوس سؤال‌های ضروری را مشخص می‌کند.</span>
           <button class="button button-primary" type="button" data-generate-draft>ساخت پیش‌نویس <span>✦</span></button>
@@ -1474,6 +1480,12 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-start-checkout]")?.addEventListener("click", startCheckoutFlow);
 
   document.querySelector<HTMLButtonElement>("[data-generate-draft]")?.addEventListener("click", generateDraft);
+  document.querySelector<HTMLInputElement>("#studio-file")?.addEventListener("change", (event) => {
+    const input = event.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    const name = document.querySelector<HTMLElement>("#studio-file-name");
+    if (name) name.textContent = file ? `${file.name} · ${Math.round(file.size / 1024)}KB` : "بدون تصویر";
+  });
   document.querySelectorAll<HTMLButtonElement>("[data-open-connection]").forEach((button) => button.addEventListener("click", openConnectionPanel));
   document.querySelector<HTMLButtonElement>("[data-confirm-seller-draft]")?.addEventListener("click", confirmSellerDraft);
   document.querySelector<HTMLButtonElement>("[data-cancel-seller-draft]")?.addEventListener("click", cancelSellerDraft);
@@ -1530,6 +1542,18 @@ function renderSkeletonCards(count: number): string {
   return Array.from({ length: count }, () => '<article class="result-card skeleton-card"><div class="skeleton skeleton-art"></div><div class="result-content"><div class="skeleton line short"></div><div class="skeleton line long"></div><div class="skeleton line medium"></div><div class="skeleton line short"></div></div></article>').join("");
 }
 
+async function uploadSellerMedia(file: File, businessId: string): Promise<string> {
+  if (!file.type.startsWith("image/")) throw new Error("فایل انتخاب‌شده تصویر نیست.");
+  if (file.size > 10 * 1024 * 1024) throw new Error("حجم تصویر باید کمتر از 10MB باشد.");
+  const form = new FormData();
+  form.set("file", file);
+  form.set("ownerType", "business");
+  form.set("ownerId", businessId);
+  form.set("metadata", JSON.stringify({ source: "seller-product-studio", originalName: file.name }));
+  const response = await apiFormData<{ data: { id: string; storageKey?: string; status?: string } }>("/api/v1/media/assets", form);
+  return response.data.id;
+}
+
 async function generateDraft(): Promise<void> {
   const input = document.querySelector<HTMLTextAreaElement>("#studio-text");
   const draft = document.querySelector<HTMLDivElement>("#studio-draft");
@@ -1539,11 +1563,12 @@ async function generateDraft(): Promise<void> {
   if (!input || !draft || !status || !businessInput || !workspaceInput) return;
 
   const text = input.value.trim();
+  const file = document.querySelector<HTMLInputElement>("#studio-file")?.files?.[0] ?? null;
   const businessId = businessInput.value.trim();
   const workspaceId = workspaceInput.value.trim();
 
-  if (!text) {
-    showToast("یک توضیح کوتاه از محصول وارد کن.");
+  if (!text && !file) {
+    showToast("توضیح یا تصویر محصول لازم است.");
     input.focus();
     return;
   }
@@ -1582,10 +1607,15 @@ async function generateDraft(): Promise<void> {
     });
 
     const sessionId = sessionResponse.session.id;
+    const mediaAssetId = file ? await uploadSellerMedia(file, businessId) : undefined;
 
+    if (!text && !mediaAssetId) throw new Error("Seller AI input is empty.");
     await apiJson<{ accepted: boolean }>(`/api/v1/ai/seller/product-creation-sessions/${encodeURIComponent(sessionId)}/inputs`, {
       method: "POST",
-      body: { rawText: text },
+      body: {
+        ...(text ? { rawText: text } : {}),
+        ...(mediaAssetId ? { mediaAssetId } : {}),
+      },
     });
 
     const result = await apiJson<{ data: SellerRunResult }>(
@@ -1593,7 +1623,7 @@ async function generateDraft(): Promise<void> {
       {
         method: "POST",
         body: {
-          input: { rawText: text },
+          input: { ...(text ? { rawText: text } : {}), ...(mediaAssetId ? { mediaAssetId } : {}) },
           dataClassification: "internal",
           promptVersion: "seller-product-v1",
           outputSchemaVersion: "seller-product-draft-v1",
@@ -1917,6 +1947,25 @@ function guessCategory(value: string): string {
 
 function renderDraftSkeleton(): string {
   return '<div class="draft-loading"><div class="draft-loading-orb"></div><div class="skeleton line long"></div><div class="skeleton line medium"></div><div class="skeleton line short"></div><p>ققنوس در حال ساختن یک پیش‌نویس قابل بازبینی است…</p></div>';
+}
+
+async function apiFormData<T>(url: string, form: FormData): Promise<T> {
+  const headers = new Headers({ Accept: "application/json" });
+  const token = sessionStorage.getItem(STORAGE.accessToken);
+  const workspace = localStorage.getItem(STORAGE.workspace);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (workspace) headers.set("x-workspace-id", workspace);
+
+  const response = await fetch(url, { method: "POST", headers, body: form });
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message =
+      body && typeof body === "object" && "error" in body && body.error && typeof body.error === "object" && "message" in body.error && typeof body.error.message === "string"
+        ? body.error.message
+        : `Request failed with ${response.status}`;
+    throw new Error(message);
+  }
+  return body as T;
 }
 
 async function apiJson<T>(url: string, options: ApiOptions = {}): Promise<T> {
