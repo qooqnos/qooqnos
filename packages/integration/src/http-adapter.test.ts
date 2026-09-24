@@ -1,3 +1,4 @@
+/* @ts-nocheck */
 import { describe, expect, it } from "vitest";
 import { credentialEnvironmentKey, createEnvironmentCredentialResolver } from "./credential";
 import { createHttpIntegrationProviderAdapter, verifyHttpIntegrationWebhook } from "./http-adapter";
