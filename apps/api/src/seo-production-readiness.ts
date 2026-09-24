@@ -18,6 +18,6 @@ export function evaluateSeoProductionReadiness(env: ApiEnv): SeoProductionReadin
   if (aiConfigured && !aiReady) warnings.push("AI citation measurement is partially configured; it must not be interpreted as zero visibility.");
   if (competitiveConfigured && !competitiveReady) warnings.push("Competitive intelligence is partially configured and is not production-ready.");
   const configuredProviders = [searchConsoleReady, bingReady, aiReady, competitiveReady].filter(Boolean).length;
-  const state: SeoProductionState = blockers.length > 0 ? "invalid" : configuredProviders === 0 ? "unconfigured" : warnings.length > 0 ? "partial" : "ready";
+  const state: SeoProductionState = blockers.length > 0 ? "invalid" : warnings.length > 0 ? "partial" : configuredProviders === 0 ? "unconfigured" : "ready";
   return { state, canonical: { ready: canonicalReady, ...(canonicalReason ? { reason: canonicalReason } : {}) }, providers: { searchConsole: { configured: searchConsoleConfigured, ready: searchConsoleReady }, bing: { configured: bingConfigured, ready: bingReady }, aiCitation: { configured: aiConfigured, ready: aiReady }, competitive: { configured: competitiveConfigured, ready: competitiveReady } }, blockers, warnings };
 }
