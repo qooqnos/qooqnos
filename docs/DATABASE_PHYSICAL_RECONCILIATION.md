@@ -218,6 +218,12 @@ These migrations add integrity triggers only.
 - billing_provider_refs
 - billing_reconciliation_cases
 
+### Financial audit trail — 0058
+
+- billing_financial_audit_events
+
+0058 closes the append-only financial evidence boundary. It is tenant-scoped, idempotency-aware, hash-verifiable, and protected against UPDATE/DELETE. It records financial actions without becoming the future double-entry accounting ledger.
+
 0033 establishes the Billing authority for plans, prices, subscriptions, entitlements, usage events, provider references and reconciliation cases. It does not create marketplace payment execution or financial ledger tables.
 
 ### Billing quota counters — 0034
