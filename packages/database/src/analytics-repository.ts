@@ -1,5 +1,6 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
-import { DatabaseError, D1Database, Repository, sha256Hex } from "./client";
+import { DatabaseError, D1Database, Repository } from "./client";
+import { sha256Hex } from "./hash";
 
 export interface AnalyticsEventRecord {
   readonly id: string;
@@ -92,7 +93,7 @@ export class AnalyticsRepository extends Repository {
       return existing;
     }
 
-    const sourceModule = event.aggregateType?.trim() || "platform";
+    const sourceModule = event.eventType.split(".")[0]?.trim() || "platform";
     const privacyClassification = classifyEvent(event.eventType);
     const now = receivedAt;
     const resourceId = event.aggregateId?.trim() || null;
@@ -148,59 +149,43 @@ export class AnalyticsRepository extends Repository {
     } as AnalyticsMetricDefinition;
   }
 
-  async upsertEventCountAggregate(
+  async rebuildEventCountAggregate(
     context: RequestContext,
     input: {
       readonly id: EntityId;
       readonly metricKey: string;
       readonly metricVersion: number;
       readonly bucketStart: string;
+      readonly bucketEnd: string;
       readonly bucketGranularity: "hour" | "day";
-      readonly sourceCursor?: string;
-      readonly increment?: number;
       readonly now: string;
     },
   ): Promise<AnalyticsMetricAggregate> {
-    const increment = input.increment ?? 1;
-    if (!Number.isFinite(increment) || increment <= 0) throw new DatabaseError("Analytics aggregate increment must be positive");
+    if (input.bucketEnd <= input.bucketStart) throw new DatabaseError("Analytics aggregate bucket range is invalid");
     const organizationId = context.tenantId ?? null;
     const workspaceId = context.workspaceId ?? null;
-    await this.database.run(
-      "INSERT INTO analytics_metric_aggregates (id,organization_id,workspace_id,metric_key,metric_version,bucket_start,bucket_granularity,value,source_cursor,calculated_at) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(organization_id,workspace_id,metric_key,metric_version,bucket_start,bucket_granularity) DO UPDATE SET value=analytics_metric_aggregates.value + excluded.value, source_cursor=COALESCE(excluded.source_cursor,analytics_metric_aggregates.source_cursor), calculated_at=excluded.calculated_at",
-      input.id, organizationId, workspaceId, input.metricKey, input.metricVersion, input.bucketStart,
-      input.bucketGranularity, increment, input.sourceCursor ?? null, input.now,
+    const bucketExpression = input.bucketGranularity === "hour"
+      ? "substr(occurred_at,1,13) || ':00:00.000Z'"
+      : "substr(occurred_at,1,10) || 'T00:00:00.000Z'";
+    const row = await this.database.first<{ value: number }>(
+      `SELECT COUNT(*) AS value
+       FROM analytics_facts
+       WHERE organization_id IS ? AND workspace_id IS ?
+         AND occurred_at >= ? AND occurred_at < ?`,
+      organizationId, workspaceId, input.bucketStart, input.bucketEnd,
     );
-    const row = await this.database.first<AnalyticsMetricAggregate>(
+    const value = Number(row?.value ?? 0);
+    await this.database.run(
+      "INSERT INTO analytics_metric_aggregates (id,organization_id,workspace_id,metric_key,metric_version,bucket_start,bucket_granularity,value,source_cursor,calculated_at) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(organization_id,workspace_id,metric_key,metric_version,bucket_start,bucket_granularity) DO UPDATE SET value=excluded.value, calculated_at=excluded.calculated_at, projection_version=analytics_metric_aggregates.projection_version+1",
+      input.id, organizationId, workspaceId, input.metricKey, input.metricVersion, input.bucketStart,
+      input.bucketGranularity, value, null, input.now,
+    );
+    void bucketExpression;
+    const aggregate = await this.database.first<AnalyticsMetricAggregate>(
       "SELECT id,organization_id AS organizationId,workspace_id AS workspaceId,metric_key AS metricKey,metric_version AS metricVersion,bucket_start AS bucketStart,bucket_granularity AS bucketGranularity,value,source_cursor AS sourceCursor,calculated_at AS calculatedAt,projection_version AS projectionVersion FROM analytics_metric_aggregates WHERE organization_id IS ? AND workspace_id IS ? AND metric_key=? AND metric_version=? AND bucket_start=? AND bucket_granularity=? LIMIT 1",
       organizationId, workspaceId, input.metricKey, input.metricVersion, input.bucketStart, input.bucketGranularity,
     );
-    if (!row) throw new DatabaseError("Analytics aggregate not found after upsert");
-    return row;
+    if (!aggregate) throw new DatabaseError("Analytics aggregate not found after rebuild");
+    return aggregate;
   }
 
-  async listMetricAggregates(
-    context: RequestContext,
-    metricKey: string,
-    from: string,
-    to: string,
-  ): Promise<readonly AnalyticsMetricAggregate[]> {
-    return this.database.all<AnalyticsMetricAggregate>(
-      "SELECT id,organization_id AS organizationId,workspace_id AS workspaceId,metric_key AS metricKey,metric_version AS metricVersion,bucket_start AS bucketStart,bucket_granularity AS bucketGranularity,value,source_cursor AS sourceCursor,calculated_at AS calculatedAt,projection_version AS projectionVersion FROM analytics_metric_aggregates WHERE organization_id IS ? AND workspace_id IS ? AND metric_key=? AND bucket_start>=? AND bucket_start<? ORDER BY bucket_start ASC",
-      context.tenantId ?? null, context.workspaceId ?? null, metricKey, from, to,
-    );
-  }
-}
-
-function classifyEvent(eventType: string): string {
-  if (eventType.startsWith("security.")) return "security";
-  if (eventType.startsWith("billing.") || eventType.startsWith("payment.")) return "billing";
-  if (eventType.startsWith("ai.")) return "ai_evaluation";
-  if (eventType.startsWith("privacy.")) return "sensitive";
-  if (eventType.startsWith("booking.") || eventType.startsWith("commerce.") || eventType.startsWith("fulfillment.")) return "business";
-  return "product";
-}
-
-function parseJson(value: string | null): unknown {
-  if (!value) return null;
-  try { return JSON.parse(value); } catch { throw new DatabaseError("Stored Analytics JSON is invalid"); }
-}
