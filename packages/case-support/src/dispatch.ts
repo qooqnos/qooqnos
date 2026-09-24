@@ -62,7 +62,7 @@ export async function processCaseDispatches(
         id: item.dispatch.id,
         ...(result.externalReference ? { externalReference: result.externalReference } : {}),
         now,
-        attemptId: brandId<EntityId>(item.dispatch.id + ":attempt:" + item.dispatch.attempts),
+        attemptId: brandId<"EntityId">(item.dispatch.id + ":attempt:" + item.dispatch.attempts),
       });
       accepted += 1;
     } catch (error) {
@@ -79,7 +79,7 @@ export async function processCaseDispatches(
         failureClass,
         nextAvailableAt,
         now,
-        attemptId: brandId<EntityId>(item.dispatch.id + ":attempt:" + item.dispatch.attempts),
+        attemptId: brandId<"EntityId">(item.dispatch.id + ":attempt:" + item.dispatch.attempts),
       });
       failed += 1;
       if (failureClass === "transient") retried += 1;
