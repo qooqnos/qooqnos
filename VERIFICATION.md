@@ -90,9 +90,9 @@ The physical schema is intentionally broad but not every operational concern is 
 3. Privacy consent expiry, subject scope validation, approved-request orchestration and the domain PrivacyProcessor registry are live; Customer export/delete processors and the tenant-safe retention sweep are implemented.
 4. Communication intent/consent/suppression policy, template registry, provider-neutral dispatch, runtime-configured Email/SMS/WhatsApp/Push HTTP adapters, optional secondary-provider health/cooldown failover, scoped dispatch rate limits and bounded burst-anomaly detection are implemented; provider credentials remain runtime configuration.
 5. AI durable worker lease/claim/reclaim infrastructure and the Seller AI production scheduler/input resolver are implemented; new AI operation types require an explicit resolver contract.
-6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
+6. Matching learning signals and broader Act outcome integrations are implemented through the existing append-only Learning Signal boundary; additional provider-specific outcomes remain contract-driven.
 7. CustomerProfile is resolved as a logical aggregate over existing Customer-owned records; CRM timeline is already physically implemented as events/projection input.
-8. Localization context interfaces are implemented; physical country/legal/profile registries, Documents and Analytics remain contract-gated.
+8. Localization context plus canonical locale/country/region/market/legal registry structures are implemented by migration 0072; Documents and Analytics remain contract-gated.
 9. Case queue/provider dispatch is implemented through the canonical CaseDispatch persistence/attempt boundary, transactional outbox trigger, scheduled worker, provider registry, runtime-configured HTTP adapter, idempotency and transient/permanent retry classification. Concrete vendor onboarding and credentials remain external operational configuration. Production D1 is externally provisioned; credentialed remote migration/application and final binding configuration remain the infrastructure gate.
 
 ## Source-of-truth documents
