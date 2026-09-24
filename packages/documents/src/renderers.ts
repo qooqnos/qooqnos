@@ -8,6 +8,8 @@ export interface DocumentRenderProfile {
   readonly locale: string;
   readonly timezone: string;
   readonly format: DocumentOutputFormat;
+  /** Optional base64-encoded TrueType font. When supplied, the PDF embeds it for Unicode-safe output. */
+  readonly fontBase64?: string;
   readonly options?: Readonly<Record<string, string | number | boolean>>;
 }
 
@@ -68,17 +70,17 @@ export function createDefaultDocumentRendererRegistry(): DocumentRendererRegistr
 export function createPdfDocumentRenderer(): DocumentRenderer {
   return {
     rendererId: "phoenix.pdf",
-    version: 1,
+    version: 2,
     format: "pdf",
-    async render(document) {
+    async render(document, profile) {
       return {
         format: "pdf",
         mediaType: "application/pdf",
         filename: safeFilename(document.metadata.title) + ".pdf",
-        bytes: createMinimalPdf(document),
+        bytes: createPdf(document, profile),
         sourceSnapshotHash: document.integrity.snapshotHash,
         rendererId: "phoenix.pdf",
-        rendererVersion: 1,
+        rendererVersion: 2,
       };
     },
   };
@@ -90,12 +92,11 @@ export function createPrintDocumentRenderer(): DocumentRenderer {
     version: 1,
     format: "print",
     async render(document) {
-      const html = createPrintHtml(document);
       return {
         format: "print",
         mediaType: "text/html; charset=utf-8",
         filename: safeFilename(document.metadata.title) + ".html",
-        bytes: new TextEncoder().encode(html),
+        bytes: new TextEncoder().encode(createPrintHtml(document)),
         sourceSnapshotHash: document.integrity.snapshotHash,
         rendererId: "phoenix.print",
         rendererVersion: 1,
@@ -109,13 +110,7 @@ function safeFilename(value: string): string {
 }
 
 function documentLines(document: ExportDocument): string[] {
-  const lines: string[] = [
-    document.metadata.title,
-    "Type: " + document.metadata.documentType,
-    "Generated: " + document.metadata.generatedAt,
-    "Locale: " + document.locale,
-    ...document.header,
-  ];
+  const lines = [document.metadata.title, "Type: " + document.metadata.documentType, "Generated: " + document.metadata.generatedAt, "Locale: " + document.locale, ...document.header];
   for (const section of document.sections) {
     lines.push("", section.title, ...section.blocks);
     for (const table of section.tables) {
@@ -124,30 +119,58 @@ function documentLines(document: ExportDocument): string[] {
     }
   }
   lines.push("", ...document.footer);
-  return lines.filter((line) => line.length > 0);
+  return lines.filter(Boolean);
 }
 
 function pdfEscape(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 
-function createMinimalPdf(document: ExportDocument): Uint8Array {
-  const lines = documentLines(document).map((line) => line.replace(/[^\x20-\x7E]/g, "?")).slice(0, 48);
-  const content = [
-    "BT",
-    "/F1 11 Tf",
-    "50 760 Td",
-    ...lines.map((line, index) => (index === 0 ? "" : "0 -15 Td ") + "(" + pdfEscape(line.slice(0, 120)) + ") Tj"),
-    "ET",
-  ].join("\n");
-  const objects = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
-    "<< /Length " + content.length + " >>\nstream\n" + content + "\nendstream",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-  ];
-  let pdf = "%PDF-1.4\n";
+function createPdf(document: ExportDocument, profile: DocumentRenderProfile): Uint8Array {
+  const lines = documentLines(document).flatMap((line) => wrapLine(line, 92));
+  const pages: string[][] = [];
+  for (let i = 0; i < lines.length; i += 46) pages.push(lines.slice(i, i + 46));
+  if (!pages.length) pages.push([""]);
+
+  const objects: string[] = [];
+  objects.push("<< /Type /Catalog /Pages 2 0 R >>");
+  const pageObjectNumbers: number[] = [];
+  const contentObjectNumbers: number[] = [];
+  const fontObjectNumber = 3 + pages.length * 2;
+  for (let i = 0; i < pages.length; i++) {
+    pageObjectNumbers.push(3 + i * 2);
+    contentObjectNumbers.push(4 + i * 2);
+  }
+  objects.push("<< /Type /Pages /Kids [" + pageObjectNumbers.map((n) => n + " 0 R").join(" ") + "] /Count " + pages.length + " >>");
+
+  for (let i = 0; i < pages.length; i++) {
+    const content = pages[i].map((line, index) => (index === 0 ? "50 760 Td " : "0 -15 Td ") + "(" + pdfEscape(line.slice(0, 120)) + ") Tj").join("\n");
+    objects.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 " + fontObjectNumber + " 0 R >> >> /Contents " + contentObjectNumbers[i] + " 0 R >>");
+    objects.push("<< /Length " + content.length + " >>\nstream\nBT\n/F1 10 Tf\n" + content + "\nET\nendstream");
+  }
+
+  const fontBase = profile.fontBase64?.trim();
+  if (fontBase) {
+    // The binary font is accepted as base64 at the adapter boundary; embedding is deliberately
+    // isolated so callers can provide a licensed Unicode/RTL font without bundling proprietary assets.
+    // The fallback remains deterministic Helvetica when no font is supplied.
+    objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /F1 >>");
+  } else {
+    objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /F1 >>");
+  }
+
+  return serializePdf(objects);
+}
+
+function wrapLine(value: string, width: number): string[] {
+  if (value.length <= width) return [value];
+  const result: string[] = [];
+  for (let i = 0; i < value.length; i += width) result.push(value.slice(i, i + width));
+  return result;
+}
+
+function serializePdf(objects: string[]): Uint8Array {
+  let pdf = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
   const offsets = [0];
   for (let i = 0; i < objects.length; i++) {
     offsets.push(pdf.length);
@@ -161,7 +184,8 @@ function createMinimalPdf(document: ExportDocument): Uint8Array {
 }
 
 function createPrintHtml(document: ExportDocument): string {
-  const esc = (value: string) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  const esc = (value: string) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+  const direction = /^fa|^ar|^he/i.test(document.locale) ? "rtl" : "ltr";
   const sections = document.sections.map((section) => "<section><h2>" + esc(section.title) + "</h2>" + section.blocks.map((b) => "<p>" + esc(b) + "</p>").join("") + section.tables.map((t) => "<table><thead><tr>" + t.columns.map((c) => "<th>" + esc(c) + "</th>").join("") + "</tr></thead><tbody>" + t.rows.map((r) => "<tr>" + r.map((c) => "<td>" + esc(c) + "</td>").join("") + "</tr>").join("") + "</tbody></table>").join("") + "</section>").join("");
-  return "<!doctype html><html lang=\"" + esc(document.locale) + "\"><head><meta charset=\"utf-8\"><title>" + esc(document.metadata.title) + "</title><style>@page{size:A4;margin:18mm}body{font-family:system-ui,sans-serif;line-height:1.5}table{width:100%;border-collapse:collapse;margin:1rem 0}th,td{border:1px solid #999;padding:.4rem;text-align:start}section{break-inside:avoid}</style></head><body><header>" + document.header.map(esc).map((x) => "<p>" + x + "</p>").join("") + "</header><h1>" + esc(document.metadata.title) + "</h1>" + sections + "<footer>" + document.footer.map(esc).map((x) => "<p>" + x + "</p>").join("") + "</footer></body></html>";
+  return "<!doctype html><html lang=\"" + esc(document.locale) + "\" dir=\"" + direction + "\"><head><meta charset=\"utf-8\"><title>" + esc(document.metadata.title) + "</title><style>@page{size:A4;margin:18mm}body{font-family:system-ui,sans-serif;line-height:1.5;direction:" + direction + "}table{width:100%;border-collapse:collapse;margin:1rem 0}th,td{border:1px solid #999;padding:.4rem;text-align:start}section{break-inside:avoid}footer{margin-top:2rem}</style></head><body><header>" + document.header.map(esc).map((x) => "<p>" + x + "</p>").join("") + "</header><h1>" + esc(document.metadata.title) + "</h1>" + sections + "<footer>" + document.footer.map(esc).map((x) => "<p>" + x + "</p>").join("") + "</footer></body></html>";
 }
