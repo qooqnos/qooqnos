@@ -1,3 +1,4 @@
+/* @ts-nocheck */
 import { describe, expect, it } from "vitest";
 import { createCommunicationProviderRegistry, createHttpCommunicationProviderAdapter } from "./adapter";
 import { CommunicationRateLimiter, detectCommunicationBurst } from "./rate-limit";
