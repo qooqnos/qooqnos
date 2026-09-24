@@ -31,7 +31,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Catalog AttributeValue storage | 🟢 Cutover completed | migrations/0017_catalog_attribute_values.sql; migrations/0063_catalog_attribute_cutover.sql; packages/catalog/src/attribute-value-repository.ts; packages/catalog/src/repository.ts |
 | Customer core | 🟢 Schema/repository implemented | migrations/0018_customer_core.sql; packages/database/src/customer-repository.ts |
 | CRM Customer relationships | 🟢 Schema/repository implemented | migrations/0019_crm_customer_relationships.sql; packages/database/src/customer-relationship-repository.ts |
-| CRM timeline events | 🟢 Schema/repository implemented | migrations/0020_crm_timeline_events.sql; packages/database/src/crm-timeline-repository.ts; projections remain gated |
+| CRM timeline + projection | 🟢 Event store, rebuildable read model, atomic projection, history reads and tests implemented | migrations/0020_crm_timeline_events.sql; migrations/0074_crm_timeline_projection.sql; packages/database/src/crm-timeline-repository.ts; packages/database/src/crm-timeline-projection-repository.ts; packages/customer/src/service.ts; apps/api/src/customer-routes.ts; docs/CRM_TIMELINE_PROJECTION_CONTRACT.md |
 | Customer addresses | 🟢 Schema/repository implemented | migrations/0026_customer_addresses.sql; packages/database/src/customer-address-repository.ts |
 | Customer capability package | 🟢 Package/service/manifest/API/history implemented | packages/customer/src/service.ts; packages/customer/src/manifest.ts; apps/api/src/customer-routes.ts; `CustomerProfile` remains a logical aggregate; Customer mutations publish transactional outbox events |
 | Business lifecycle history / onboarding reconciliation | 🟢 Schema/repository + semantic contract reconciled | migrations/0027_business_status_history.sql; packages/business/src/repository.ts; packages/onboarding/src/contract.ts; docs/BUSINESS_DATA_DICTIONARY.md |
@@ -554,7 +554,7 @@ Booking note: migrations 0028–0030 establish the canonical Booking/Availabilit
 
 Business lifecycle note: migration 0027 records immutable transitions for the existing physical `draft/active/suspended/archived` Business statuses. It intentionally does not invent a new status vocabulary.
 
-CRM timeline note: normalized event storage and idempotent source-event handling are implemented. A separate timeline projection table remains gated pending a field-level read-model/rebuild contract.
+CRM timeline note: migrations 0020 and 0074 implement the canonical event store plus rebuildable timeline read model. Projection writes are atomic on new event append, idempotent/monotonic on retries, history reads use the projection, and workspace/relationship/customer rebuilds are available from canonical events. Contract: `docs/CRM_TIMELINE_PROJECTION_CONTRACT.md`. Implementation commits: `c48f0db`, `d12759f`, `51278b4`, `b226f02`, `8175887`, `29ad354`, `19650fb`, `bea89c9`, `d78ce7f`, `b06c3fe`, `6167289`, `2754fe7`, `f241a8c`, `d5049bd`, `a902777`. Status: 🟢 Complete.
 
 Trust note: migrations 0021–0025 implement the canonical VerificationCase → Policy/Requirement → Check/Evidence → append-only Decision → Review/Expiry chain. Migration 0064 adds the canonical TrustSignal evidence/projection store and anti-abuse moderation idempotency boundary. Reviewer completion now requires the assigned-reviewer authorization permission and owner policy.
 
