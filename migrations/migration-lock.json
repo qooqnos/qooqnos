@@ -423,8 +423,7 @@
       "id": "0061_billing_settlement",
       "version": 61,
       "moduleId": "billing",
-      "checksum": "611d97c8bc86292295afc3d549f818c8bef38097c372a78ad16c718af75d21a9",
-      "filename": "0061_billing_settlement.sql"
+      "checksum": "e5d48022741486b98c4b51a2b6053aa367932d1af39fbe6e625a7819031b4217",      "filename": "0061_billing_settlement.sql"
     },
     {
       "id": "0062_billing_reconciliation_hardening",
