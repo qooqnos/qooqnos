@@ -2,7 +2,7 @@
 
 **Status:** Canonical runtime contract  
 **Owner:** Automation  
-**Schema migration:** `0067_automation_compensation_contract.sql`
+**Schema migration:** `0069_automation_compensation_contract.sql`
 
 ## Recovery flow
 
