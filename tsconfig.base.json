@@ -38,6 +38,9 @@
       ],
       "@qooqnos/customer": [
         "packages/customer/src"
+      ],
+      "@qooqnos/documents": [
+        "packages/documents/src"
       ]
     }
   },
