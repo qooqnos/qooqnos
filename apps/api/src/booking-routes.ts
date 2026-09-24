@@ -101,6 +101,8 @@ export function registerBookingRoutes(
         ...(body.timezone !== undefined ? { timezone: requiredString(body.timezone, "timezone", context.requestId) } : {}),
         ...(body.locationId !== undefined ? { locationId: requiredId(body.locationId, "locationId", context.requestId) } : {}),
         ...(body.resourceId !== undefined ? { resourceId: requiredId(body.resourceId, "resourceId", context.requestId) } : {}),
+        ...(body.matchRequestId !== undefined ? { matchRequestId: requiredId(body.matchRequestId, "matchRequestId", context.requestId) } : {}),
+        ...(body.matchCandidateId !== undefined ? { matchCandidateId: requiredId(body.matchCandidateId, "matchCandidateId", context.requestId) } : {}),
       });
       return json({ data: booking }, 201, context.requestId);
     },
