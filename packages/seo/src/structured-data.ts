@@ -139,15 +139,20 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
     if (entity.updatedAt) x.dateModified = entity.updatedAt;
   }
 
-  if (options.breadcrumbs?.length) {
-    x.breadcrumb = {
-      "@type": "BreadcrumbList",
-      itemListElement: options.breadcrumbs.map((item, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        name: item.name,
-        item: item.url,
-      })),
+  if (options.breadcrumbs?.length && canonicalUrl) {
+    x.mainEntityOfPage = {
+      "@type": "WebPage",
+      "@id": canonicalUrl,
+      url: canonicalUrl,
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: options.breadcrumbs.map((item, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: item.name,
+          item: item.url,
+        })),
+      },
     };
   }
 
