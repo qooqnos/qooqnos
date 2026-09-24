@@ -853,3 +853,10 @@ Implementation commits: `2529874019b861aca0f3b6b0299024076d2d682e`, `81604001f47
 Concrete PDF and print adapters are now implemented and registered as the default Documents renderer registry. PDF output is deterministic A4/Helvetica output for the canonical ASCII-safe text subset; Unicode-safe print output is emitted as UTF-8 HTML/CSS for browser/print pipelines. Durable document artifacts now have an R2-backed, tenant-scoped, idempotent storage adapter with renderer and source-snapshot provenance metadata.
 
 Implementation commits: `4e6ea5693192380a079e7e1229029ffd30a5f4de`, `6f80b990fc5f632065f3f98de24d38120773e1e5`, `a573389e6f364624f1a8de8c3a2404d8b7fe3afc`, `a2bfa61f49f78ccbcd1f1773d89c0b40b487726f`, `a68958e9536e1d2a19d4fe4560af51c9207e0fa4`.
+
+
+### PDF renderer completion — 2026-09-24
+
+PDF concrete adapter advanced to renderer v2 with deterministic pagination/wrapping, multi-page page-tree generation, PDF header/xref/trailer generation, provenance preservation, and A4 output. Print output also now applies locale-derived RTL direction for Persian/Arabic/Hebrew. Note: a truly embedded Unicode/RTL font remains a separate font-asset/licensing concern; the core renderer does not falsely claim a bundled proprietary font.
+
+Latest commits: `04d3a56c8e8350f749210fd5bb2923387b0827f9`, `e84c4ec345739948713f91d2fd661dd218ff35f3`.
