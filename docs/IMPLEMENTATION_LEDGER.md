@@ -1324,7 +1324,7 @@ Public canonical entity pages are now rendered at the edge from the persisted SE
 - A sanitized hydration payload lets the SPA reuse the same canonical SEO representation after JavaScript loads.
 - Internal answer source identifiers/types are excluded from the public hydration payload.
 - SPA navigation removes entity JSON-LD/hydration state and restores route-appropriate metadata.
-- Public canonical URL lookup is indexed through migration 0082_seo_public_render_index.sql.
+- Public canonical URL lookup is indexed through migration 0083_seo_public_render_index.sql.
 - Root / now falls through to the actual Cloudflare Assets web shell instead of the legacy API home fallback whenever Assets are available.
 - Public SEO presentation styles are included in the deployed apps/web/public/styles.css asset.
 - Unit coverage was added for initial-HTML metadata/JSON-LD/answer injection and public payload sanitization.
