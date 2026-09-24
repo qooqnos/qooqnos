@@ -236,6 +236,50 @@ export class CustomerRepository extends Repository {
     );
   }
 
+  async privacyExport(context: RequestContext, customerId: EntityId): Promise<{
+    readonly customer: CustomerRecord;
+    readonly preferences: readonly CustomerPreferenceRecord[];
+    readonly addresses: readonly import("./customer-address-repository").CustomerAddressRecord[];
+  }> {
+    const customer = await this.requireCustomer(context, customerId);
+    const preferences = await this.listPreferences(context, customerId);
+    const addresses = await this.database.all<import("./customer-address-repository").CustomerAddressRecord>(
+      "SELECT id, customer_id AS customerId, country_code AS countryCode, administrative_area AS administrativeArea, locality, district, postal_code AS postalCode, street_line_1 AS streetLine1, street_line_2 AS streetLine2, building_number AS buildingNumber, unit, formatted, locale, created_at AS createdAt, updated_at AS updatedAt FROM customer_addresses WHERE customer_id = ? ORDER BY created_at ASC, id ASC",
+      customerId,
+    );
+    return { customer, preferences, addresses };
+  }
+
+  async privacyAnonymize(context: RequestContext, customerId: EntityId, now: string): Promise<void> {
+    const customer = await this.requireCustomer(context, customerId);
+    await this.database.transaction([
+      {
+        sql: "DELETE FROM customer_preferences WHERE customer_id = ?",
+        params: [customerId],
+      },
+      {
+        sql: "DELETE FROM customer_addresses WHERE customer_id = ?",
+        params: [customerId],
+      },
+      {
+        sql: "UPDATE customers SET user_id = NULL, status = 'deactivated', locale = NULL, timezone = NULL, updated_at = ? WHERE id = ? AND organization_id = ?",
+        params: [now, customerId, customer.organizationId],
+      },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?, 'customer.privacy.anonymized', 1, 'Customer', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          customerId + ":privacy:anonymized",
+          customerId,
+          customer.organizationId,
+          context.workspaceId ?? null,
+          JSON.stringify({ customerId, action: "anonymized", preservedRecords: ["regulated_financial", "audit", "timeline"] }),
+          now,
+          now,
+        ],
+      },
+    ]);
+  }
+
   private async requireCustomer(context: RequestContext, customerId: EntityId): Promise<CustomerRecord> {
     const customer = await this.get(context, customerId);
     if (!customer) throw new DatabaseError("Customer is not available in the current organization");
