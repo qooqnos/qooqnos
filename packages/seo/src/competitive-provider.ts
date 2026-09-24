@@ -1,0 +1,203 @@
+export interface CompetitiveQuery {
+  readonly queryText: string;
+  readonly locale: string;
+  readonly locationName?: string;
+  readonly locationCode?: number;
+  readonly languageCode?: string;
+  readonly device?: "desktop" | "mobile";
+  readonly depth?: number;
+  readonly targetDomains?: readonly string[];
+}
+
+export interface CompetitiveResult {
+  readonly queryText: string;
+  readonly datetime?: string;
+  readonly checkUrl?: string;
+  readonly locationCode?: number;
+  readonly languageCode?: string;
+  readonly results: readonly CompetitiveResultItem[];
+  readonly aiCitations: readonly CompetitiveCitation[];
+  readonly provenance: Record<string, unknown>;
+}
+
+export interface CompetitiveResultItem {
+  readonly type: string;
+  readonly domain?: string;
+  readonly url?: string;
+  readonly title?: string;
+  readonly snippet?: string;
+  readonly rankGroup?: number;
+  readonly rankAbsolute?: number;
+  readonly aiCitation?: boolean;
+}
+
+export interface CompetitiveCitation {
+  readonly url: string;
+  readonly domain?: string;
+  readonly title?: string;
+  readonly position: number;
+}
+
+export interface DataForSeoCompetitiveConfig {
+  readonly login: string;
+  readonly password: string;
+  readonly endpoint?: string;
+}
+
+export class DataForSeoGoogleCompetitiveProvider {
+  readonly id = "dataforseo-google-organic";
+  constructor(private readonly config: DataForSeoCompetitiveConfig) {}
+
+  async observe(query: CompetitiveQuery): Promise<CompetitiveResult> {
+    if (!query.queryText.trim()) throw new Error("Competitive query cannot be empty.");
+    if (!query.locationCode && !query.locationName) throw new Error("Competitive query requires a location.");
+    if (!query.languageCode) throw new Error("Competitive query requires a language.");
+    const endpoint = this.config.endpoint?.trim() || "https://api.dataforseo.com/v3/serp/google/organic/live/advanced";
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Basic " + bytesToBase64(new TextEncoder().encode(this.config.login + ":" + this.config.password)),
+      },
+      body: JSON.stringify([{
+        keyword: query.queryText,
+        ...(query.locationCode ? { location_code: query.locationCode } : { location_name: query.locationName }),
+        language_code: query.languageCode,
+        device: query.device ?? "desktop",
+        depth: Math.min(Math.max(Math.trunc(query.depth ?? 20), 10), 100),
+        load_async_ai_overview: true,
+        ...(query.targetDomains?.length ? { stop_crawl_on_match: query.targetDomains } : {}),
+      }]),
+    });
+    if (!response.ok) throw new Error("DataForSEO competitive provider returned HTTP " + response.status);
+    const payload = await response.json() as {
+      status_code?: number;
+      tasks?: readonly {
+        status_code?: number;
+        status_message?: string;
+        result?: readonly {
+          keyword?: string;
+          datetime?: string;
+          check_url?: string;
+          location_code?: number;
+          language_code?: string;
+          items?: readonly Record<string, unknown>[];
+        }[];
+      }[];
+    };
+    const task = payload.tasks?.[0];
+    if (!task || task.status_code !== 20000) {
+      throw new Error("DataForSEO competitive provider failed: " + (task?.status_message || "unknown provider error"));
+    }
+    const result = task.result?.[0];
+    if (!result) throw new Error("DataForSEO competitive provider returned no SERP result.");
+    const items: CompetitiveResultItem[] = [];
+    const citations: CompetitiveCitation[] = [];
+    const walk = (nodes: readonly Record<string, unknown>[]): void => {
+      for (const raw of nodes) {
+        const type = typeof raw.type === "string" ? raw.type : "unknown";
+        const url = firstUrl(raw.url, raw.link);
+        const domain = typeof raw.domain === "string" ? normalizeDomain(raw.domain) : url ? normalizeDomain(new URL(url).hostname) : undefined;
+        const title = typeof raw.title === "string" ? raw.title : undefined;
+        const snippet = typeof raw.description === "string" ? raw.description : typeof raw.snippet === "string" ? raw.snippet : undefined;
+        const rankGroup = finiteInteger(raw.rank_group);
+        const rankAbsolute = finiteInteger(raw.rank_absolute);
+        const itemIsCitation = type.includes("reference") || type.includes("citation");
+        if (url || title) {
+          items.push({
+            type,
+            ...(domain ? { domain } : {}),
+            ...(url ? { url } : {}),
+            ...(title ? { title } : {}),
+            ...(snippet ? { snippet } : {}),
+            ...(rankGroup !== undefined ? { rankGroup } : {}),
+            ...(rankAbsolute !== undefined ? { rankAbsolute } : {}),
+            ...(itemIsCitation ? { aiCitation: true } : {}),
+          });
+        }
+        if (itemIsCitation && url) citations.push({ url, ...(domain ? { domain } : {}), ...(title ? { title } : {}), position: citations.length + 1 });
+        const nested = Array.isArray(raw.items) ? raw.items.filter(isRecord) : [];
+        if (nested.length) walk(nested);
+        const refs = Array.isArray(raw.references) ? raw.references.filter(isRecord) : [];
+        for (const ref of refs) {
+          const refUrl = firstUrl(ref.url, ref.link);
+          if (refUrl) citations.push({
+            url: refUrl,
+            ...(typeof ref.domain === "string" ? { domain: normalizeDomain(ref.domain) } : {}),
+            ...(typeof ref.title === "string" ? { title: ref.title } : {}),
+            position: citations.length + 1,
+          });
+        }
+      }
+    };
+    walk((result.items ?? []).filter(isRecord));
+    const dedupedCitations = dedupeCitations(citations);
+    return {
+      queryText: result.keyword ?? query.queryText,
+      ...(result.datetime ? { datetime: result.datetime } : {}),
+      ...(result.check_url ? { checkUrl: result.check_url } : {}),
+      ...(result.location_code !== undefined ? { locationCode: result.location_code } : {}),
+      ...(result.language_code ? { languageCode: result.language_code } : {}),
+      results: dedupeResults(items),
+      aiCitations: dedupedCitations,
+      provenance: {
+        provider: this.id,
+        endpoint,
+        query: query.queryText,
+        locationCode: result.location_code ?? query.locationCode ?? null,
+        locationName: query.locationName ?? null,
+        languageCode: result.language_code ?? query.languageCode,
+        device: query.device ?? "desktop",
+        depth: query.depth ?? 20,
+        observedAt: new Date().toISOString(),
+      },
+    };
+  }
+}
+
+function firstUrl(...values: unknown[]): string | undefined {
+  for (const value of values) if (typeof value === "string" && /^https?:\/\//i.test(value)) return value;
+  return undefined;
+}
+
+function normalizeDomain(value: string): string {
+  return value.trim().toLowerCase().replace(/^www\./, "").replace(/\/$/, "");
+}
+
+function finiteInteger(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isInteger(value) ? value : undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function dedupeResults(values: readonly CompetitiveResultItem[]): readonly CompetitiveResultItem[] {
+  const seen = new Set<string>();
+  const output: CompetitiveResultItem[] = [];
+  for (const value of values) {
+    const key = [value.type, value.url ?? "", value.rankAbsolute ?? ""].join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    output.push(value);
+  }
+  return output;
+}
+
+function dedupeCitations(values: readonly CompetitiveCitation[]): readonly CompetitiveCitation[] {
+  const seen = new Set<string>();
+  const output: CompetitiveCitation[] = [];
+  for (const value of values) {
+    const key = value.url.replace(/#.*$/, "");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    output.push({ ...value, position: output.length + 1 });
+  }
+  return output;
+}
+
+function bytesToBase64(value: Uint8Array): string {
+  let binary = "";
+  for (const byte of value) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
