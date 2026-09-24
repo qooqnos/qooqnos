@@ -951,3 +951,21 @@ Implementation commits:
 - `ecc69d3b1a81f47e2697e801a87461a3c4ff32f5` — include web app in workspace typecheck
 
 Next frontend slices should reuse this shell and connect the operational pages to the existing canonical API instead of creating parallel domain state.
+
+### Frontend operational connectivity — 2026-09-24
+
+The web application now connects its first operational customer/partner flows to canonical backend contracts without duplicating domain logic.
+
+Implemented:
+- Phoenix Connection panel using the existing bearer-session contract and workspace context;
+- access tokens are held in browser `sessionStorage`, while workspace/business identifiers remain in `localStorage`;
+- live `GET /api/v1/session` and `GET /api/v1/context` verification from the frontend;
+- canonical Business creation through `POST /api/v1/businesses` with idempotency;
+- Seller AI Product Studio now performs the real session → input → run sequence against `/api/v1/ai/seller/product-creation-sessions`;
+- remote Seller AI success/pending/error states are represented in the UI.
+
+Implementation commits:
+- `f847ddc84a1f4461bb41c682c1df3a0b4bf97015` — frontend continuity checkpoint
+- current follow-up commits — workspace/session connectivity, Seller AI execution, Business creation and token-storage hardening.
+
+Authentication/login remains intentionally outside this slice because the current backend exposes session verification/revocation but does not expose a public credential-login endpoint; the frontend does not invent a second authentication authority.
