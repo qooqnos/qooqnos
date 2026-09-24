@@ -20,6 +20,8 @@ interface MeasurementQueryRow {
 }
 
 export interface SeoVisibilityWorkerConfig {
+  readonly organizationId?: string;
+  readonly workspaceId?: string | null;
   readonly entityId?: string;
   readonly queryText?: string;
   readonly google?: {
@@ -50,6 +52,8 @@ export async function runSeoVisibilityMeasurements(
   const limit = Math.min(Math.max(Math.trunc(config.limit ?? 25), 1), 100);
   const filters: string[] = ["q.lifecycle_state='active'"];
   const params: unknown[] = [];
+  if (config.organizationId) { filters.push("q.organization_id=?"); params.push(config.organizationId); }
+  if (config.workspaceId !== undefined) { filters.push("q.workspace_id IS ?"); params.push(config.workspaceId); }
   if (config.entityId) { filters.push("q.entity_id=?"); params.push(config.entityId); }
   if (config.queryText) { filters.push("q.query_text=?"); params.push(config.queryText); }
   params.push(limit);
