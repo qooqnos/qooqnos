@@ -100,7 +100,7 @@ export function createCommunicationProviderRegistry(
         const state = healthMap.get(provider.providerId);
         return !state || state.nextProbeAtMs <= now;
       });
-      return healthy ?? providers[0];
+      return healthy ?? providers[0] ?? null;
     },
     report(providerId, result, now) {
       const state = healthMap.get(providerId);
