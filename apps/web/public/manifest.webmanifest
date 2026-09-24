@@ -1,0 +1,13 @@
+{
+  "name": "ققنوس | Phoenix Intelligence",
+  "short_name": "ققنوس",
+  "description": "لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار.",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#08101e",
+  "theme_color": "#08101e",
+  "icons": []
+}
