@@ -240,3 +240,14 @@ export class AnalyticsRepository extends Repository {
     return updated;
   }
 
+
+}
+
+function parseJson(value: string | null): unknown {
+  if (value === null || value === "") return null;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    throw new DatabaseError("Analytics stored JSON is invalid");
+  }
+}
