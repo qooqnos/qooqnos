@@ -96,6 +96,17 @@ export async function enqueueSeoPublication(
   if (!reason) return 0;
   const entity = payloadEntity(event.payloadJson);
   if (!entity) return 0;
+  const invalidationChange: SeoDomainChange = {
+    eventId: event.id,
+    entityId: entity.id,
+    entityType: entity.type,
+    sourceModule: entity.sourceModule,
+    sourceVersion: entity.sourceVersion,
+    reason: reason === "dependency-changed" ? "relationship-changed" : reason,
+    occurredAt: event.occurredAt,
+    ...(entity.relatedEntityIds ? { relatedEntityIds: entity.relatedEntityIds } : {}),
+  };
+  const invalidationTargets = planSeoInvalidation(invalidationChange, []);
   const id = `seo-job:${event.id}:${entity.id}:${entity.locale}:${reason}`;
   await database.run(
     `INSERT INTO seo_publication_jobs
