@@ -62,6 +62,7 @@ export function validateAnswerRepresentation(
   const nowMs = timestamp(now);
   for (let index = 0; index < answer.facts.length; index += 1) {
     const fact = answer.facts[index];
+    if (!fact) continue;
     if (fact.sourceEntityId !== entity.id) {
       issues.push({ code: "ENTITY_MISMATCH", severity: "error", path: `facts[${index}].sourceEntityId`, message: "Answer facts must cite the canonical entity." });
     }
