@@ -43,6 +43,7 @@ export interface SeoCompetitiveWorkerResult {
   readonly failures: number;
   readonly pageSnapshots: number;
   readonly keywordGaps: number;
+  readonly linkGaps: number;
 }
 
 export async function runSeoCompetitiveIntelligence(
@@ -67,6 +68,7 @@ export async function runSeoCompetitiveIntelligence(
   let failures = 0;
   let pageSnapshots = 0;
   let keywordGaps = 0;
+  let linkGaps = 0;
   const discoveredDomainKeys = new Set<string>();
 
   for (const row of rows) {
@@ -219,6 +221,40 @@ export async function runSeoCompetitiveIntelligence(
         }
       }
 
+      const linkGapDomains = [...new Set(
+        result.results
+          .filter((item) => item.domain && !sameDomain(item.domain, ownDomain))
+          .map((item) => item.domain!)
+      )].slice(0, Math.min(Math.max(Math.trunc(config.linkGapCompetitorLimit ?? 2), 1), 4));
+      const linkGapLimit = Math.min(Math.max(Math.trunc(config.linkGapLimit ?? 15), 1), 50);
+      for (const domain of linkGapDomains) {
+        try {
+          const competitorId = await repository.upsertCompetitor(context, {
+            domain,
+            now,
+            provenance: result.provenance,
+          });
+          const gaps = await provider.observeLinkGaps(domain, ownDomain, linkGapLimit);
+          for (const gap of gaps) {
+            await repository.recordLinkGap(context, {
+              id: runId + ":link-gap:" + crypto.randomUUID(),
+              competitorId,
+              ...(row.entityId ? { entityId: row.entityId } : {}),
+              competitorDomain: domain,
+              referringDomain: gap.referringDomain,
+              ...(gap.competitorBacklinks !== undefined ? { competitorBacklinks: gap.competitorBacklinks } : {}),
+              ...(gap.competitorDomainRank !== undefined ? { competitorDomainRank: gap.competitorDomainRank } : {}),
+              observedAt: now,
+              provenance: gap.provenance,
+            });
+            linkGaps += 1;
+          }
+        } catch (error) {
+          failures += 1;
+          partialError = error instanceof Error ? error.message : "Competitive link-gap measurement failed.";
+        }
+      }
+
       const competitorPageUrls = selectCompetitorPageUrls(
         result.results,
         ownDomain,
@@ -337,7 +373,7 @@ export async function runSeoCompetitiveIntelligence(
     }
   }
 
-  return { queries: rows.length, runs, observations, discoveredCompetitors, changes, failures, pageSnapshots, keywordGaps };
+  return { queries: rows.length, runs, observations, discoveredCompetitors, changes, failures, pageSnapshots, keywordGaps, linkGaps };
 }
 
 async function selectQueries(database: D1Database, config: SeoCompetitiveWorkerConfig): Promise<readonly CompetitiveQueryRow[]> {
