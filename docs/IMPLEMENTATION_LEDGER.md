@@ -737,3 +737,6 @@ Implementation commits:
 - 163a163d — type learning signal route input
 - 929390f3 — document matching learning signal data model
 - 7354ceee — document matching learning signal physical contract
+
+
+| Invoice system | 🟢 Canonical Billing invoice lifecycle + immutable lines + payment applications + tenant/currency/amount integrity implemented | migrations/0060_billing_invoice_system.sql; packages/billing/src/invoice-repository.ts; packages/billing/src/invoice-repository.test.ts |
