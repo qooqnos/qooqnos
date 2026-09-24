@@ -205,13 +205,14 @@ describe("SEO/GEO core", () => {
   it("builds a truth-bound graph and deterministic internal links", () => {
     const graph = buildEntityGraph(
       [
-        { entityId: "biz-1", entityType: "Business", sourceModule: "business", sourceVersion: "1", publicationState: "published", visibility: "public" },
-        { entityId: "service-1", entityType: "Service", sourceModule: "catalog", sourceVersion: "1", publicationState: "published", visibility: "public" },
+        { entityId: "biz-1", entityType: "Business", sourceModule: "business", sourceVersion: "1", publicationState: "published", visibility: "public", preferredName: "Phoenix Studio", canonicalUrl: "https://example.com/en-US/business/phoenix-studio-biz-1" },
+        { entityId: "service-1", entityType: "Service", sourceModule: "catalog", sourceVersion: "1", publicationState: "published", visibility: "public", preferredName: "Creative Service", canonicalUrl: "https://example.com/en-US/service/creative-service-service-1" },
       ],
       [{ sourceEntityId: "biz-1", targetEntityId: "service-1", relation: "offers", provenance: "catalog", confidence: 0.94 }],
     );
     expect(graph.edges).toHaveLength(1);
     expect(recommendInternalLinks(graph, "biz-1")[0]?.targetEntityId).toBe("service-1");
+    expect(recommendInternalLinks(graph, "biz-1")[0]?.targetUrl).toContain("/service/creative-service-service-1");
   });
 
   it("keeps geographic truth explicit", () => {
