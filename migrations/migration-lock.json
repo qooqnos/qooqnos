@@ -411,8 +411,7 @@
       "id": "0059_billing_refund_financial_accounting",
       "version": 59,
       "moduleId": "billing",
-      "checksum": "b7c13af1542fa2287d9064a885faffa0d70b6ed101399d0279d8971b39d1d73c",
-      "filename": "0059_billing_refund_financial_accounting.sql"
+      "checksum": "dec1c904db7837d5579175cb4f426cca6e439a325f0069a427df5c4e2c887383",      "filename": "0059_billing_refund_financial_accounting.sql"
     },
     {
       "id": "0060_billing_invoice_system",
