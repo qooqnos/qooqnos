@@ -72,6 +72,7 @@ import crmTimelineProjection from "../../../migrations/0074_crm_timeline_project
 import analyticsPlatform from "../../../migrations/0075_analytics_platform.sql";
 import aiMemory from "../../../migrations/0076_ai_memory.sql";
 import seoGeoEngine from "../../../migrations/0077_seo_geo_engine.sql";
+import seoGeoGraph from "../../../migrations/0078_seo_geo_graph.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -149,4 +150,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0075_analytics_platform.sql", sql: analyticsPlatform },
   { path: "migrations/0076_ai_memory.sql", sql: aiMemory },
   { path: "migrations/0077_seo_geo_engine.sql", sql: seoGeoEngine },
+  { path: "migrations/0078_seo_geo_graph.sql", sql: seoGeoGraph },
 ];
