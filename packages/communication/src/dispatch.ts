@@ -72,7 +72,7 @@ export async function dispatchQueuedNotifications(
           channel: notification.channel,
           status: "failed",
           attemptedAt: now,
-          failureCode: "platform_rate_limited_" + decision.scope,
+          failureCode: decision.anomalyDetected ? "communication_burst_anomaly_" + decision.scope : "platform_rate_limited_" + decision.scope,
           failureClass: "transient",
           nextRetryAt: new Date(Date.parse(now) + decision.retryAfterSeconds * 1000).toISOString(),
           now,
