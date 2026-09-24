@@ -86,6 +86,26 @@ const hydration: SeoFrontendHydration = {
   metadata,
   structuredData,
   answer,
+  page: {
+    canonicalUrl: metadata.canonicalUrl,
+    breadcrumbs: [
+      { name: "Phoenix", url: "https://qooqnos.com/" },
+      { name: "Businesses", url: "https://qooqnos.com/discover?type=business" },
+      { name: "Phoenix Studio", url: metadata.canonicalUrl },
+    ],
+    actions: [
+      { kind: "primary", label: "Discover", href: "/discover?q=Phoenix%20Studio", reason: "continue-discovery" },
+    ],
+    relatedLinks: [
+      { label: "Creative Service", url: "https://qooqnos.com/en-US/service/creative-service-service-1", relation: "offers", priority: 94 },
+    ],
+    sections: [
+      { id: "overview", title: "Overview", kind: "overview" },
+      { id: "facts", title: "Verified facts", kind: "facts" },
+      { id: "relationships", title: "Related", kind: "relationships" },
+      { id: "action", title: "Next action", kind: "action" },
+    ],
+  },
   entity: {
     id: entity.id,
     type: entity.type,
@@ -122,6 +142,8 @@ describe("SEO frontend surface", () => {
     expect(html).toContain('"@type":"LocalBusiness"');
     expect(html).toContain("What is Phoenix Studio?");
     expect(html).toContain("Open daily");
+    expect(html).toContain("Creative Service");
+    expect(html).toContain("Breadcrumb");
     expect(html).not.toContain("\"sourceEntityId\"");
     expect(html).not.toContain("\"sourceType\"");
     expect(html).toContain('id="phoenix-seo-data"');
