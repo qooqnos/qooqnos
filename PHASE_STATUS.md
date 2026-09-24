@@ -55,7 +55,7 @@ The 12-gate rubric is:
 11. critical invariant verification;
 12. credentialed remote production-D1 application.
 - **Production remote migration state:** not verified from this runtime because no Cloudflare credential/connector is exposed here. The canonical remote migration executor is implemented and verifies D1 identity plus migration checksums before applying anything.
-- Provider-specific adapters, Analytics, Documents, Localization registries and AI Memory are not counted as missing relational schema where their physical contracts are intentionally gated.
+- Payment provider adapters are implemented behind the Billing boundary; other provider-specific adapters, Analytics, Documents, Localization registries and AI Memory are not counted as missing relational schema where their physical contracts are intentionally gated.
 
 ## 3. Critical database rule
 
