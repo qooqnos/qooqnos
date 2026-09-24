@@ -1554,3 +1554,11 @@ Competitive intelligence evidence layers now include:
 - Extended structured-data validation allowlist for `ProductGroup`.
 - Added focused tests covering ProductGroup, variant, shipping and return structured data.
 - Catalog already has a canonical `ProductVariant` domain model and authoritative AttributeValue storage; future SEO publication adapters should hydrate the new SEO contract from that canonical boundary rather than duplicating catalog logic.
+
+## SEO/GEO LocalBusiness Enrichment — September 2026
+- Added canonical `SeoGeoPoint` and `SeoOpeningHours` contracts.
+- Structured data now emits validated `GeoCoordinates` and `OpeningHoursSpecification` for Business/Branch entities only when authoritative values are present.
+- Coordinates are range-validated; no location inference or geocoding is performed by SEO.
+- Opening-hours output is sourced from canonical business schedule data and does not claim appointment availability, which remains Booking-owned.
+- Added regression coverage for geo coordinates and opening-hours structured data.
+- Next integration step: hydrate these fields from the Business domain's canonical `locations.geo_point_json` and `business_hours` projection through the existing SEO publication boundary; do not query private domain tables directly from the SEO package.
