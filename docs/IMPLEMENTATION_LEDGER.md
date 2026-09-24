@@ -87,9 +87,15 @@ Database completion note: all physical table contracts in docs/PHYSICAL_SCHEMA_B
 | Database completion audit | 🟢 Executable integrity audit | scripts/report-database-completion.mjs; package.json `report:database` |
 | Production D1 migration executor | 🟢 Canonical remote execution path implemented | scripts/migrate-production-d1.mjs; package.json `migrate:prod:canonical`; production deploy invokes it before Worker deploy |
 | Legacy PostgreSQL database path | ✅ Removed from active source | historical git history only |
-| Legacy in-memory database path | 🟡 Isolated compatibility path | packages/database/src/legacy.ts; not exported by canonical package root |
-| Legacy onboarding compatibility | 🟡 Explicit compatibility path | packages/onboarding/src/legacy.ts; package subpath `@qooqnos/onboarding/legacy`; canonical root no longer exports legacy workflow |
-| Legacy Node server | 🟡 Isolated compatibility source | packages/runtime/src/legacy-server.ts; canonical runtime no longer exports `./server` and legacy server is excluded from runtime build |
+| Legacy in-memory database path | 🟢 Removed from active source | legacy implementation deleted; canonical D1 database is the only active database path |
+| Legacy onboarding compatibility | 🟢 Removed from active source | legacy workflow/test deleted; canonical D1 onboarding service is the only active onboarding path |
+| Legacy Node server | 🟢 Removed from active source | legacy Node server deleted; canonical runtime/Worker path is authoritative |
+
+### Legacy compatibility cleanup — 2026-09-24
+
+The remaining yellow legacy compatibility paths were removed from the active source tree. The in-memory database, legacy onboarding workflow/test, and legacy Node HTTP server are no longer part of the repository. The obsolete TypeScript aliases, lint exclusions, canonical-source allowlist entries and runtime exclusion were removed as well. The canonical D1 database, D1 onboarding service and Worker runtime are now the only active paths.
+
+Cleanup commits: `3fe67d1`, `8f02cfc`, `aa75afe`, `81162b0`, `6f7fe40`, `ed39a42`, `7fc6f16`, `4055287`.
 
 ## Database completion status — 2026-09-24
 
@@ -682,7 +688,7 @@ GitHub Actions on the current head completed successfully:
 
 Verification coverage on this checkpoint includes migration-lock integrity, canonical-source legacy boundary, runtime-module registry completeness, migration-history rules, lint, typecheck, workspace build, Cloudflare Worker dry-run, and unit tests.
 
-The current verification workflows check migration-lock integrity, workspace build and tests; CI additionally runs lint/typecheck/Worker dry-run.
+The current verification workflows check migration-lock integrity, workspace build and tests; CI additionally runs lint/typecheck/Worker dry-run. The legacy compatibility cleanup must receive a fresh CI/Phoenix verification run before its head is considered a verified checkpoint.
 
 The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above. Privacy subject scope validation was added in commits `afcff1bb0023187024b12508f7eb7cf175d8bec6` and `c121e50055d3a2e3ca1023c88c13a2f5bb403fa0`, then reconciled into the verified checkpoint `d122981098cc1d517664afdce3d33d3333e82afa`.
 
