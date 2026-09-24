@@ -1562,3 +1562,11 @@ Competitive intelligence evidence layers now include:
 - Opening-hours output is sourced from canonical business schedule data and does not claim appointment availability, which remains Booking-owned.
 - Added regression coverage for geo coordinates and opening-hours structured data.
 - Next integration step: hydrate these fields from the Business domain's canonical `locations.geo_point_json` and `business_hours` projection through the existing SEO publication boundary; do not query private domain tables directly from the SEO package.
+
+## SEO/GEO Canonical Publication Boundary — September 2026
+- Catalog now exposes tenant/workspace-scoped `listProductVariants()` through its canonical repository, including normalized AttributeValue data; SEO does not query Catalog tables directly.
+- Business now exposes tenant/workspace-scoped `listLocations()` with parsed canonical address and validated geo coordinates from the Business location model.
+- The API outbox composition boundary hydrates SEO publication payloads from Catalog/Business repositories before handing them to the SEO publication pipeline.
+- Product SEO payloads now carry active canonical variants and stable `productGroupId` when available; no price, image, availability, shipping, or return facts are invented.
+- Business SEO payloads now carry an active physical location's canonical geo/address when available; coordinates are validated and never inferred.
+- Opening-hours structured data remains contract-ready but is not hydrated yet because the physical `business_hours` table is documented but not currently implemented in the reconciled database schema. This is intentionally left unimplemented rather than creating a parallel or speculative source of truth.
