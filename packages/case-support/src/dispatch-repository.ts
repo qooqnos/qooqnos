@@ -62,7 +62,7 @@ export class CaseDispatchRepository extends Repository {
       "UPDATE case_dispatches SET status='dispatching',attempts=attempts+1,last_attempt_at=?,updated_at=? WHERE id=? AND (status='pending' OR (status='failed' AND failure_class='transient')) AND available_at<=?",
       now, now, id, now,
     );
-    return (result.meta.changes ?? 0) === 1;
+    return (result.meta?.changes ?? 0) === 1;
   }
 
   async recordAccepted(input: {
@@ -80,7 +80,7 @@ export class CaseDispatchRepository extends Repository {
       },
       {
         sql: "INSERT INTO case_dispatch_attempts (id,dispatch_id,attempt_number,status,provider_reference,occurred_at) VALUES (?,?,?,?,?,?)",
-        params: [input.attemptId, input.id, dispatch.attempts, "accepted", input.externalReference ?? null, input.now],
+        params: [input.attemptId, input.id, dispatch.dispatch.attempts, "accepted", input.externalReference ?? null, input.now],
       },
       {
         sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?,?,1,'case',?,?,?,?, 'pending',0,?,?,NULL)",
@@ -90,7 +90,7 @@ export class CaseDispatchRepository extends Repository {
           input.id,
           dispatch.organizationId,
           dispatch.workspaceId,
-          JSON.stringify({ caseId: input.id, dispatchId: input.id, providerId: dispatch.providerId, externalReference: input.externalReference ?? null }),
+          JSON.stringify({ caseId: input.id, dispatchId: input.id, providerId: dispatch.dispatch.providerId, externalReference: input.externalReference ?? null }),
           input.now,
           input.now,
         ],
@@ -117,7 +117,7 @@ export class CaseDispatchRepository extends Repository {
       },
       {
         sql: "INSERT INTO case_dispatch_attempts (id,dispatch_id,attempt_number,status,failure_code,failure_class,occurred_at) VALUES (?,?,?,?,?,?,?)",
-        params: [input.attemptId, input.id, dispatch.attempts, "failed", input.failureCode, input.failureClass, input.now],
+        params: [input.attemptId, input.id, dispatch.dispatch.attempts, "failed", input.failureCode, input.failureClass, input.now],
       },
     ]);
   }
