@@ -43,6 +43,7 @@ interface StoredRepresentation {
   readonly publicationState: string;
   readonly visibility: string;
   readonly representationJson: string;
+  readonly contentHash: string;
 }
 
 export async function renderSeoAwareDocument(
@@ -60,7 +61,7 @@ export async function renderSeoAwareDocument(
 
   const row = await database.first<StoredRepresentation>(
     `SELECT canonical_url AS canonicalUrl, indexability, publication_state AS publicationState,
-       visibility, representation_json AS representationJson
+       visibility, representation_json AS representationJson, content_hash AS contentHash
      FROM seo_entity_representations
      WHERE canonical_url=? AND publication_state='published' AND visibility='public'
      ORDER BY generated_at DESC
@@ -131,12 +132,18 @@ export async function renderSeoAwareDocument(
     },
   };
 
+  const etag = `"${row.contentHash}"`;
+  const requestEtag = request.headers.get("if-none-match");
+  const baseHeaders = new Headers(assetResponse.headers);
+  baseHeaders.set("content-type", "text/html; charset=utf-8");
+  baseHeaders.set("cache-control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+  baseHeaders.set("etag", etag);
+
+  if (requestEtag === etag) return new Response(null, { status: 304, headers: baseHeaders });
+
   const html = injectSeoRepresentation(await assetResponse.text(), hydration);
-  const headers = new Headers(assetResponse.headers);
-  headers.set("content-type", "text/html; charset=utf-8");
-  headers.set("cache-control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
-  headers.set("vary", "Accept-Language");
-  return new Response(html, { status: 200, headers });
+  baseHeaders.set("x-robots-tag", hydration.metadata.robots);
+  return new Response(html, { status: 200, headers: baseHeaders });
 }
 
 export function injectSeoRepresentation(html: string, hydration: SeoFrontendHydration): string {
