@@ -5,6 +5,7 @@ export * from "./url";
 export * from "./metadata";
 export * from "./structured-data";
 export * from "./answer";
+export * from "./answer-validation";
 export * from "./sitemap";
 export * from "./audit";
 export * from "./entity-graph";
