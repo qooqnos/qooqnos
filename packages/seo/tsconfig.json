@@ -1,0 +1,1 @@
+{"extends":"../../tsconfig.base.json","compilerOptions":{"composite":true,"declaration":true,"declarationMap":true,"sourceMap":true,"outDir":"./dist"},"references":[{"path":"../runtime"}],"files":["src/index.ts","src/manifest.ts","src/types.ts","src/policy.ts","src/url.ts","src/metadata.ts","src/structured-data.ts","src/answer.ts","src/sitemap.ts","src/audit.ts"]}
