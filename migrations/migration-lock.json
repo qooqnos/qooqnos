@@ -547,5 +547,13 @@
       "checksum": "cf5966e4e0ff9c3d52c348afa23f939c3456220f38c4b5cd5b18dc5493933f47",
       "filename": "0081_loyalty_core.sql"
     }
+,
+    {
+      "id": "0082_seo_public_render_index",
+      "version": 82,
+      "moduleId": "seo",
+      "checksum": "93a04ce4fca516343a101f750ce7207fa154d7a0bdc46102a078676030274218",
+      "filename": "0082_seo_public_render_index.sql"
+    }
   ]
 }
