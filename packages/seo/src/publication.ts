@@ -106,18 +106,34 @@ export async function enqueueSeoPublication(
     occurredAt: event.occurredAt,
     ...(entity.relatedEntityIds ? { relatedEntityIds: entity.relatedEntityIds } : {}),
   };
-  const invalidationTargets = planSeoInvalidation(invalidationChange, []);
-  const id = `seo-job:${event.id}:${entity.id}:${entity.locale}:${reason}`;
-  await database.run(
-    `INSERT INTO seo_publication_jobs
-      (id, organization_id, workspace_id, entity_id, entity_type, locale, reason, status, attempts,
-       available_at, source_event_id, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?, ?, ?)
-     ON CONFLICT(organization_id, workspace_id, entity_id, entity_type, locale, reason, source_event_id)
-     DO UPDATE SET updated_at=excluded.updated_at, available_at=excluded.available_at, status='pending'`,
-    id, event.organizationId, event.workspaceId, entity.id, entity.type, entity.locale, reason,
-    now, event.id, now, now,
+  const dependencyRows = await database.all<{ representationEntityId: string; dependencyEntityId: string }>(
+    `SELECT r.entity_id AS representationEntityId, d.dependency_entity_id AS dependencyEntityId
+     FROM seo_dependencies d
+     JOIN seo_entity_representations r ON r.id=d.representation_id
+     WHERE d.organization_id=? AND d.workspace_id IS ? AND d.dependency_entity_id=?`,
+    event.organizationId, event.workspaceId, entity.id,
   );
+  const targets = planSeoInvalidation(invalidationChange, dependencyRows);
+  for (const target of targets) {
+    const targetRow = await database.first<{ entityId: string; entityType: string; locale: string }>(
+      `SELECT entity_id AS entityId, entity_type AS entityType, locale
+       FROM seo_entity_representations
+       WHERE organization_id=? AND workspace_id IS ? AND entity_id=? LIMIT 1`,
+      event.organizationId, event.workspaceId, target.entityId,
+    );
+    if (!targetRow) continue;
+    const targetId = `seo-job:${event.id}:${targetRow.entityId}:${targetRow.locale}:${target.reason}`;
+    await database.run(
+      `INSERT INTO seo_publication_jobs
+        (id, organization_id, workspace_id, entity_id, entity_type, locale, reason, status, attempts,
+         available_at, source_event_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?, ?, ?)
+       ON CONFLICT(organization_id, workspace_id, entity_id, entity_type, locale, reason, source_event_id)
+       DO UPDATE SET updated_at=excluded.updated_at, available_at=excluded.available_at, status='pending'`,
+      targetId, event.organizationId, event.workspaceId, targetRow.entityId, targetRow.entityType, targetRow.locale,
+      target.reason, now, event.id, now, now,
+    );
+  }
   return 1;
 }
 
