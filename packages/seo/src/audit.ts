@@ -60,7 +60,13 @@ export function auditEntity(
   if (surface?.now) {
     const freshness = evaluateFreshness(e, surface.now);
     if (freshness.stale && e.publicationState === "published" && e.visibility === "public") {
-      issues.push(issue("STALE_ENTITY_SOURCE", "error", freshness.reason, owner, "Refresh canonical entity data before allowing public indexing"));
+      issues.push(issue(
+        "STALE_ENTITY_SOURCE",
+        surface?.policy?.indexability === "index" ? "error" : "warning",
+        freshness.reason,
+        owner,
+        "Refresh canonical entity data before allowing public indexing",
+      ));
     }
   }
 
