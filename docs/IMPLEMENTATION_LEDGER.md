@@ -521,9 +521,11 @@ Discovery projection note: Business creation/publication outbox events are now c
 
 Privacy note: migration 0039 establishes consent, privacy-request and per-module processing persistence. Canonical subject scope validation rejects customer/member/user/actor references outside the current organization/workspace before consent or privacy-request writes. The scheduled worker atomically claims approved requests and now executes registered domain PrivacyProcessors through a provider-neutral registry; requests with no registered processor remain explicitly gated, while completed processor sets transition the request and emit the request-status Outbox event.
 
-Integration worker note: durable webhook/sync claim/finish semantics and provider-adapter boundaries are now implemented. The scheduled Worker deliberately leaves jobs untouched when no matching provider adapter is registered; actual provider-specific adapters remain external integration work.
+Integration worker note: durable webhook/sync claim/finish semantics and provider-adapter boundaries are implemented. The worker now accepts wildcard provider capabilities, while preserving provider-specific type matching.
 
-Integration note: migration 0038 establishes provider/account/webhook/sync/external-reference persistence; provider adapters and durable sync workers remain operational follow-up.
+Integration provider-adapter note: `packages/integration/src/credential.ts` establishes the provider credential resolver contract with environment-backed runtime provisioning; `packages/integration/src/http-adapter.ts` establishes the configurable HTTP adapter, transient/permanent failure classification, credential injection, normalized sync results and signed webhook verification with replay-age protection. `docs/INTEGRATION_PROVIDER_ADAPTERS.md` is the canonical operational contract. No vendor-specific provider has been invented without an explicit provider contract; concrete vendor onboarding remains an external operational step.
+
+Integration note: migration 0038 remains the canonical provider/account/webhook/sync/external-reference persistence boundary. No credential secret is persisted in the Integration schema.
 
 AI Runtime composition note: Seller AI now persists canonical AI operation/result/usage evidence around the shared Runtime. Repeated Seller AI requests replay the persisted draft before invoking the model again; durable/asynchronous worker lease, claim/reclaim and Seller AI resolver execution are implemented.
 
@@ -750,3 +752,16 @@ Invoice runtime/API note: `GET /api/v1/billing/invoices` is implemented through 
 | Billing Reconciliation | 🟢 Case lifecycle + mismatch financial evidence + idempotency + immutable event history + scoped resolution implemented | migrations/0062_billing_reconciliation_hardening.sql; packages/billing/src/reconciliation-repository.ts; packages/billing/src/reconciliation-repository.test.ts |
 
 | TrustSignal / anti-abuse | 🟢 Operational | migrations/0064_trust_signals_anti_abuse.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-worker.ts; apps/api/src/trust-routes.ts |
+
+
+### Integration provider adapters — 2026-09-24
+
+| Capability | Status | Canonical source |
+|---|---|---|
+| Integration provider adapter runtime | 🟢 Complete | `packages/integration/src/adapter.ts`, `packages/integration/src/worker.ts` |
+| Integration credential contract/provisioning boundary | 🟢 Complete | `packages/integration/src/credential.ts` |
+| Configurable HTTP provider adapter | 🟢 Complete | `packages/integration/src/http-adapter.ts` |
+| Signed webhook verification | 🟢 Complete | `packages/integration/src/http-adapter.ts` |
+| Provider-specific vendor onboarding | 🟡 External operational work | `docs/INTEGRATION_PROVIDER_ADAPTERS.md` |
+
+Implementation commits: `a51897e`, `e6bad36`, `a00a183`, `3e39a95`, `224b884`, `1ad3881`, `be974cf`.
