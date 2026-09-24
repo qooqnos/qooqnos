@@ -57,7 +57,7 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     path: "/robots.txt",
     module: "seo",
     operation: "robots.read",
-    handler: ({ context }) => {
+    handler: () => {
       const origin = canonicalBaseUrl.replace(/\/$/, "");
       return new Response(buildRobotsTxt(`${origin}/sitemap.xml`), { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" } });
     },
