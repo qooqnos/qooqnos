@@ -167,7 +167,18 @@ export async function processSeoPublicationJobs(
       const row = job.sourceEventId ? await database.first<{ payloadJson: string }>(
         `SELECT payload_json AS payloadJson FROM outbox_events WHERE id=? LIMIT 1`, job.sourceEventId,
       ) : null;
-      const payload = row ? payloadEntity(row.payloadJson) : null;
+      let payload = row ? payloadEntity(row.payloadJson) : null;
+      if (job.reason === "dependency-changed" && payload?.id !== job.entityId) {
+        const stored = await database.first<{ representationJson: string }>(
+          `SELECT representation_json AS representationJson FROM seo_entity_representations
+           WHERE organization_id=? AND workspace_id IS ? AND entity_id=? AND entity_type=? AND locale=? LIMIT 1`,
+          job.organizationId, job.workspaceId, job.entityId, job.entityType, job.locale,
+        );
+        if (stored) {
+          const representation = JSON.parse(stored.representationJson) as { entity?: SeoEntity };
+          payload = representation.entity ?? null;
+        }
+      }
       if (!payload) {
         throw new Error("SEO publication job has no canonical entity payload; source adapter must provide one.");
       }
