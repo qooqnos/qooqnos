@@ -102,6 +102,8 @@ The originating source and correlation ID are mandatory.
 
 Cases are routed to queues according to deterministic routing policy.
 
+A queue may optionally enable external dispatch with a runtime-configured provider identifier and route reference. Provider credentials and endpoints remain outside Case persistence.
+
 Routing may consider:
 - case type;
 - tenant/workspace;
@@ -378,6 +380,38 @@ Forbidden:
 
 Verticals and domains create case types and adapters, not separate engines.
 
-## 27. Definition of Done
+## 27. External Queue / Provider Dispatch
 
-The engine is complete when case intake, lifecycle, queues, assignments, priority, SLA, escalation, evidence references, resolution, authorization, privacy, automation integration, AI boundaries, capabilities, events, tenancy, and auditability are canonical.
+When an assigned queue enables external dispatch:
+
+```text
+Case
+ ↓
+CaseAssignment
+ ↓
+CaseDispatch
+ ↓
+Transactional Outbox
+ ↓
+Cloudflare Queue / Worker
+ ↓
+Provider-neutral CaseDispatchProviderAdapter
+ ↓
+External queue/provider
+```
+
+The dispatch boundary provides:
+- durable dispatch state and append-only attempt evidence;
+- deterministic idempotency per assignment;
+- transient/permanent failure classification and bounded retry;
+- runtime-only provider credentials;
+- normalized external references;
+- tenant/workspace scope validation;
+- provider registry and generic HTTP adapter;
+- fail-closed behavior when no provider adapter is configured.
+
+Concrete vendor onboarding remains configuration/operational work and must not create a second Case engine.
+
+## 28. Definition of Done
+
+The engine is complete when case intake, lifecycle, queues, assignments, priority, SLA, escalation, evidence references, resolution, authorization, privacy, automation integration, AI boundaries, external dispatch boundary, capabilities, events, tenancy, and auditability are canonical.
