@@ -1592,3 +1592,10 @@ Competitive intelligence evidence layers now include:
 - Business SEO canonical enrichment now rehydrates the canonical Business projection on those lifecycle events, so contact, social, location, and operating-schedule changes are not dependent on stale event payload snapshots.
 - The existing EntityGraph/InternalLink recommendation layer remains the sole semantic-linking mechanism; no SEO-owned relationship source was introduced.
 - Undocumented `*.v1` location/schedule event names were deliberately not registered; future event contracts must be added only when the Business module emits a concrete versioned event.
+
+## SEO/GEO Canonical Entity Graph & Bidirectional Link Traversal — September 2026
+- SEO publication now persists the canonical entity as a derived graph node and materializes declared `relatedEntityIds` as provenance-aware directional graph edges only when the target has a public published representation.
+- Relationship facts remain owned by canonical domain payloads; SEO graph storage is derived and rebuildable.
+- Graph loading now traverses both outgoing and incoming edges, enabling internal-link recommendations from either side without fabricating a reciprocal domain relationship.
+- Existing `seo_dependencies` remains the invalidation mechanism; no second relationship source of truth was introduced.
+- Self-links and cross-tenant/workspace links remain protected by existing database constraints.
