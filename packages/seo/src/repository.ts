@@ -75,6 +75,7 @@ export class SeoRepository extends Repository {
       input.plan.policy.indexability,
       JSON.stringify({
         entity: input.plan.entity,
+        policy: input.plan.policy,
         metadata: input.plan.metadata,
         structuredData: input.plan.structuredData,
         answer: input.plan.answer,
@@ -120,6 +121,7 @@ export class SeoRepository extends Repository {
     }
     const representationJson = JSON.stringify({
       entity: input.plan.entity,
+      policy: input.plan.policy,
       metadata: input.plan.metadata,
       structuredData: input.plan.structuredData,
       answer: input.plan.answer,
