@@ -92,6 +92,57 @@ export class CatalogRepository extends Repository {
     );
   }
 
+  async listProductVariants(context: RequestContext, productId: EntityId): Promise<readonly ProductVariantRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const rows = await this.database.all<{
+      id: EntityId; productId: EntityId; sku: string | null; status: CatalogStatus; createdAt: string; updatedAt: string;
+    }>(
+      `SELECT pv.id, pv.product_id AS productId, pv.sku, pv.status,
+              pv.created_at AS createdAt, pv.updated_at AS updatedAt
+       FROM product_variants pv
+       INNER JOIN products p ON p.id = pv.product_id
+       INNER JOIN businesses b ON b.id = p.business_id
+       WHERE pv.product_id = ? AND b.organization_id = ? AND b.workspace_id = ?
+       ORDER BY pv.id ASC`,
+      productId, organizationId, workspaceId,
+    );
+    const attributes = new CatalogAttributeValueRepository(this.database);
+    const result: ProductVariantRecord[] = [];
+    for (const row of rows) {
+      const values = await attributes.listForTarget(context, "product_variant", row.id);
+      const mapped: Record<string, unknown> = {};
+      for (const value of values) {
+        const definition = await this.database.first<{ canonicalKey: string }>(
+          "SELECT canonical_key AS canonicalKey FROM attribute_definitions WHERE id = ? LIMIT 1",
+          value.attributeDefinitionId,
+        );
+        if (!definition) continue;
+        if (value.scalar) mapped[definition.canonicalKey] = value.scalar.value;
+        else if (value.optionId) {
+          const option = await this.database.first<{ canonicalValue: string }>(
+            "SELECT canonical_value AS canonicalValue FROM attribute_options WHERE id = ? LIMIT 1",
+            value.optionId,
+          );
+          if (option) mapped[definition.canonicalKey] = option.canonicalValue;
+        } else if (value.multiEnumOptionIds.length) {
+          const placeholders = value.multiEnumOptionIds.map(() => "?").join(", ");
+          const options = await this.database.all<{ canonicalValue: string }>(
+            "SELECT canonical_value AS canonicalValue FROM attribute_options WHERE id IN (" + placeholders + ") ORDER BY canonical_value ASC",
+            ...value.multiEnumOptionIds,
+          );
+          mapped[definition.canonicalKey] = options.map((option) => option.canonicalValue);
+        }
+      }
+      result.push({
+        id: row.id, productId: row.productId, sku: row.sku,
+        attributes: Object.keys(mapped).length ? mapped : null,
+        status: row.status, createdAt: row.createdAt, updatedAt: row.updatedAt,
+      });
+    }
+    return result;
+  }
+
   async getOffering(context: RequestContext, id: EntityId): Promise<OfferingRecord | null> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
