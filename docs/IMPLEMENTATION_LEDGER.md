@@ -937,7 +937,7 @@ Implemented:
 - modern dashboard and discovery experience with loading states, responsive cards, and keyboard `/` focus shortcut;
 - Discovery API integration through `GET /api/v1/discovery/search`, with tenant/workspace/access-token forwarding when configured and a safe demo fallback;
 - Seller AI Product Studio UX for raw seller input, draft generation preview, review-oriented state and AI usage messaging;
-- root TypeScript build references `apps/web` so the workspace build now type-checks the frontend.
+- root TypeScript build now references `apps/web`, so the frontend is included in the workspace typecheck/build graph; execution of the Node toolchain remains a CI/runtime verification step.
 
 Canonical source:
 - `apps/web/src/main.ts`
