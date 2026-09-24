@@ -212,19 +212,27 @@ export class SeoCompetitiveRepository extends Repository {
       scope.organizationId, scope.workspaceId,
     );
     const opportunities = await this.database.all(
-      `SELECT q.query_text AS queryText,
+      `SELECT o.query_text AS queryText,
               MIN(o.rank_absolute) AS competitorBestRank,
               COUNT(DISTINCT o.domain) AS competitorDomains
          FROM seo_queries q
          JOIN seo_competitive_observations o
-           ON o.organization_id=q.organization_id AND o.workspace_id IS q.workspace_id AND o.query_text=q.query_text
+           ON o.organization_id=q.organization_id
+          AND o.workspace_id IS q.workspace_id
+          AND o.query_text=q.query_text
+          AND o.result_type<>'ai_citation'
+         JOIN seo_competitive_runs r
+           ON r.id=o.run_id
+          AND r.organization_id=o.organization_id
+          AND r.workspace_id IS o.workspace_id
         WHERE q.organization_id=? AND q.workspace_id IS ? AND q.entity_id=?
           AND NOT EXISTS (
-            SELECT 1 FROM seo_measurements m
-             WHERE m.organization_id=q.organization_id AND m.workspace_id IS q.workspace_id
-               AND m.entity_id=q.entity_id AND m.metric='search-page-observed' AND json_extract(m.provenance_json,'$.queryId')=q.id
+            SELECT 1
+              FROM seo_competitive_observations own
+             WHERE own.run_id=o.run_id
+               AND own.entity_id=q.entity_id
           )
-        GROUP BY q.query_text
+        GROUP BY o.query_text
         ORDER BY competitorBestRank ASC
         LIMIT 50`,
       scope.organizationId, scope.workspaceId, entityId,
