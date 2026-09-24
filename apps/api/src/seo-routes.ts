@@ -94,7 +94,7 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     operation: "crawl.run",
     requireAuthentication: true,
     requireWorkspace: true,
-    handler: async ({ context, params }) => {
+    handler: async ({ context, params, request }) => {
       if (!database) return json({ status: "unavailable" }, 503, context.requestId);
       const repository = new (await import("@qooqnos/seo")).SeoRepository(database);
       const locale = new URL(request.url).searchParams.get("locale") ?? undefined;
