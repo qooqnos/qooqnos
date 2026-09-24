@@ -42,6 +42,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Platform Outbox / Queue boundary | 🟢 Publisher/lease/worker boundary implemented | packages/database/src/services.ts; apps/api/src/outbox-worker.ts; apps/api/src/index.ts; apps/api/src/env.ts |
 | Commerce transaction core | 🟢 Schema/package/repository/service/API implemented | migrations/0031_commerce_transaction_core.sql; migrations/0032_commerce_integrity_hardening.sql; packages/commerce/src/repository.ts; packages/commerce/src/service.ts; apps/api/src/commerce-routes.ts |
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
+| Financial audit trail | 🟢 Append-only schema/repository/integrity tests implemented | migrations/0058_billing_financial_audit_trail.sql; packages/billing/src/financial-audit.ts; packages/billing/src/financial-audit.test.ts |
 | Communication core | 🟢 Schema/package/repository/service/API/outbox-consumer implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts; apps/api/src/outbox-worker.ts |
 | Communication template registry | 🟢 Schema/package/repository/service/API implemented | migrations/0051_communication_templates.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts |
 | Communication policy / consent enforcement | 🟢 Schema/package/repository/service/API/test implemented | migrations/0055_communication_policy_consent.sql; migrations/0056_communication_required_suppression.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts |
@@ -88,7 +89,7 @@ Database completion note: all physical table contracts in docs/PHYSICAL_SCHEMA_B
 
 ## Database completion status — 2026-09-24
 
-**Physical D1 schema: 100%.** The canonical migration set reaches 0056 and the reconciled inventory contains 190 physical tables. The repository now has an executable audit that cross-checks SQL migration count, API catalog count, migration-lock count, sequence continuity and the documented physical-table total.
+**Physical D1 schema: 100%.** The canonical migration set reaches 0058 and the reconciled inventory contains the physical tables from the current migration catalog. The repository now has an executable audit that cross-checks SQL migration count, API catalog count, migration-lock count, sequence continuity and the documented physical-table total.
 
 **Database engineering readiness: 91.7% on the explicit 12-gate rubric:** 11 repository/schema/runtime gates are closed; the remaining gate is credentialed remote application of the canonical migration history to the provisioned production D1. This percentage is a readiness metric, not a product-completion score.
 
@@ -419,7 +420,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0056 are registered and locked in sequence from canonical SQL contents. Migration 0055 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint is `b4b0f86831c0c89186fd8361f436ea556aa0498d` (CI `35916185591`, Phoenix verification `35916185529`). Full external D1 application has not yet been executed because the current runtime environment does not expose Cloudflare API credentials.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0058 are registered and locked in sequence from canonical SQL contents. Migration 0055 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint is `b4b0f86831c0c89186fd8361f436ea556aa0498d` (CI `35916185591`, Phoenix verification `35916185529`). Full external D1 application has not yet been executed because the current runtime environment does not expose Cloudflare API credentials.
 
 Production D1 execution note: the repository now verifies the supplied production D1 identity and applies pending canonical migrations through Cloudflare D1 remote SQL execution while preserving Phoenix `schema_migrations`; the live Cloudflare call has not been executed from this ChatGPT runtime because Cloudflare credentials/connector are not exposed here.
 
@@ -535,7 +536,7 @@ Communication note: migration 0035 establishes provider-neutral Conversation/Mes
 
 Billing runtime note: the API Seller AI composition uses the real D1-backed BillingService. Missing plan/subscription/entitlement state fails the operation closed.
 
-Billing note: migrations 0033–0034 establish plan/price/subscription/entitlement/usage/provider-reference/reconciliation storage plus an atomic quota counter. Billing is the commercial entitlement authority; payment execution, invoices and financial ledger remain gated. `GET /api/v1/billing/plans` is now exposed through the canonical BillingService and router permission `billing.plan.read`; subscription/entitlement/usage routes remain gated until a precise business-scope selector contract exists.
+Billing note: migrations 0033–0034 establish plan/price/subscription/entitlement/usage/provider-reference/reconciliation storage plus an atomic quota counter. Migration 0058 adds the append-only financial audit evidence boundary with tenant isolation, idempotency, immutable before/after evidence, monetary context and integrity hashes. Billing is the commercial entitlement authority; payment execution, invoices and the double-entry financial ledger remain separate capabilities. `GET /api/v1/billing/plans` is now exposed through the canonical BillingService and router permission `billing.plan.read`; subscription/entitlement/usage routes remain gated until a precise business-scope selector contract exists.
 
 Commerce note: migrations 0031–0032 establish the Commerce-owned Cart/Checkout/PriceSnapshot/Order transaction boundary and integrity hardening. Cart/Checkout/Order API routes are live in the canonical router; Order creation/status transitions are idempotent/CAS and emit Outbox events. Billing/Payment remains authoritative for payment execution, financial settlement, refunds and invoices.
 
