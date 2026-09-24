@@ -342,7 +342,7 @@ Any AI-created outbound message passes the same schema, policy, consent, authori
 
 ## 20. Rate Limits and Anti-Spam
 
-Consent/intent/suppression policy is implemented in Communication. Suppression records explicitly identify whether required transactional/security traffic is included. Edge/platform rate limiting and anomaly detection remain infrastructure/security controls rather than domain policy tables.
+Consent/intent/suppression policy is implemented in Communication. Suppression records explicitly identify whether required transactional/security traffic is included. Provider adapters are runtime-configured behind a provider-neutral boundary; Email, SMS, WhatsApp and Push are supported through the canonical HTTP adapter, with optional secondary providers and deterministic health/cooldown failover. Dispatch enforces tenant/recipient/channel/intent/provider/platform limits and bounded burst-anomaly cooldowns; credentials remain runtime-only.
 
 Apply limits at multiple scopes:
 
