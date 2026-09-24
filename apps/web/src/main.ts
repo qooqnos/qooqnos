@@ -58,7 +58,7 @@ type PublicSeoHydration = {
     canonicalUrl: string;
     breadcrumbs: readonly { name: string; url: string }[];
     actions: readonly { kind: "primary" | "secondary"; label: string; href: string; reason: string }[];
-    relatedLinks: readonly { targetEntityId: string; targetType?: string; targetLabel?: string; targetUrl?: string; relation: string; priority: number; reason: string }[];
+    relatedLinks: readonly { label: string; url: string; relation: string; priority: number }[];
     sections: readonly { id: string; title: string; kind: string }[];
   };
   answer: {
@@ -299,7 +299,7 @@ function renderSeoEntity(payload: PublicSeoHydration): string {
   ].filter(Boolean).join("");
   const breadcrumbs = payload.page.breadcrumbs.map((item) => `<a href="${escapeAttr(item.url)}" data-nav>${escapeHtml(item.name)}</a>`).join(`<span aria-hidden="true">/</span>`);
   const actions = payload.page.actions.map((action) => `<a class="button ${action.kind === "primary" ? "button-primary" : "button-ghost"}" href="${escapeAttr(action.href)}" data-nav>${escapeHtml(action.label)} →</a>`).join("");
-  const related = payload.page.relatedLinks.map((link) => `<a class="seo-related-link" href="${escapeAttr(link.targetUrl ?? "/discover?q=" + encodeURIComponent(link.targetLabel ?? link.targetEntityId))}" data-nav><span>${escapeHtml(link.targetLabel ?? link.targetEntityId)}</span><small>${escapeHtml(link.relation)}</small></a>`).join("");
+  const related = payload.page.relatedLinks.map((link) => `<a class="seo-related-link" href="${escapeAttr(link.url)}" data-nav><span>${escapeHtml(link.label)}</span><small>${escapeHtml(link.relation)}</small></a>`).join("");
   const geo = answer.geography
     ? [
         answer.geography.country ? `<span>کشور: ${escapeHtml(answer.geography.country)}</span>` : "",
