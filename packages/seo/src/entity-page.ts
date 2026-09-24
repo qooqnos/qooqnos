@@ -1,4 +1,5 @@
-import type { AnswerRepresentation, BreadcrumbItem, InternalLinkRecommendation, SeoEntity, SeoMetadata } from "./types";
+import type { AnswerRepresentation, BreadcrumbItem, SeoEntity, SeoMetadata } from "./types";
+import type { InternalLinkRecommendation } from "./internal-links";
 
 export interface EntityPageAction {
   readonly kind: "primary" | "secondary";
@@ -7,11 +8,18 @@ export interface EntityPageAction {
   readonly reason: string;
 }
 
+export interface EntityPageLink {
+  readonly label: string;
+  readonly url: string;
+  readonly relation: string;
+  readonly priority: number;
+}
+
 export interface EntityPageModel {
   readonly canonicalUrl: string;
   readonly breadcrumbs: readonly BreadcrumbItem[];
   readonly actions: readonly EntityPageAction[];
-  readonly relatedLinks: readonly InternalLinkRecommendation[];
+  readonly relatedLinks: readonly EntityPageLink[];
   readonly sections: readonly {
     id: string;
     title: string;
@@ -93,7 +101,15 @@ export function buildEntityPageModel(
     canonicalUrl: metadata.canonicalUrl,
     breadcrumbs: buildBreadcrumbs(entity, canonicalBaseUrl, metadata.canonicalUrl),
     actions,
-    relatedLinks,
+    relatedLinks: relatedLinks
+      .filter((link) => Boolean(link.targetUrl) && Boolean(link.targetLabel))
+      .map((link) => ({
+        label: link.targetLabel!,
+        url: link.targetUrl!,
+        relation: link.relation,
+        priority: link.priority,
+      }))
+      .sort((left, right) => right.priority - left.priority || left.url.localeCompare(right.url)),
     sections,
   };
 }
