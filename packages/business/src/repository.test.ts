@@ -205,6 +205,31 @@ describe("BusinessRepository", () => {
     expect(firstCalls).toBe(1);
   });
 
+  it("reads only public active contacts and social links", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return { id: "workspace-1" } as T; },
+      async all<T>() {
+        return {
+          results: [{
+            id: "contact-1", businessId: "business-1", locationId: null,
+            contactType: "phone", value: "+491234567890", isPrimary: 1,
+          }] as T[],
+        };
+      },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new BusinessRepository(new D1Database(raw));
+    const contacts = await repository.listPublicContacts(context(), brandId<"EntityId">("business-1"));
+    const links = await repository.listPublicSocialLinks(context(), brandId<"EntityId">("business-1"));
+    expect(contacts[0]).toMatchObject({ contactType: "phone", value: "+491234567890" });
+    expect(links[0]).toMatchObject({ id: "contact-1" });
+  });
+
   it("reads active canonical operating hours within tenant and workspace scope", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
