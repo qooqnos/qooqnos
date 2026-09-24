@@ -78,6 +78,10 @@ function toRequestContext(input: PrivacyProcessorRequest): RequestContext {
     ...(input.request.requestedBy ? { actorId: input.request.requestedBy as EntityId } : {}),
     requestId: input.context.requestId,
     correlationId: input.context.correlationId,
+    module: "privacy",
+    operation: "privacy.processor",
+    locale: "en",
+    timezone: "UTC",
   };
 }
 
