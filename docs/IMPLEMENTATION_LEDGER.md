@@ -93,7 +93,7 @@ Database completion note: all physical table contracts in docs/PHYSICAL_SCHEMA_B
 
 ## Database completion status — 2026-09-24
 
-**Physical D1 schema: 100%.** The canonical migration set reaches 0060 and the reconciled inventory contains the physical tables from the current migration catalog. The repository now has an executable audit that cross-checks SQL migration count, API catalog count, migration-lock count, sequence continuity and the documented physical-table total; invoice and refund financial migrations are included in the current canonical sequence.
+**Physical D1 schema: 100%.** The canonical migration set reaches 0073 and the reconciled inventory contains the physical tables from the current migration catalog. The repository now has an executable audit that cross-checks SQL migration count, API catalog count, migration-lock count, sequence continuity and the documented physical-table total; invoice and refund financial migrations are included in the current canonical sequence.
 
 **Database engineering readiness: 91.7% on the explicit 12-gate rubric:** 11 repository/schema/runtime gates are closed; the remaining gate is credentialed remote application of the canonical migration history to the provisioned production D1. This percentage is a readiness metric, not a product-completion score.
 
