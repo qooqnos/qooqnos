@@ -455,6 +455,13 @@
       "moduleId": "automation",
       "checksum": "b3a64eed9080e54c57105b92a9e1b9cef928eae671740b792f57bf16f3d9b7b3",
       "filename": "0065_automation_compensation_contract.sql"
+    },
+    {
+      "id": "0065_communication_push_channel",
+      "version": 65,
+      "moduleId": "communication",
+      "checksum": "48fb0a79600dbf6986aeb1af4d8a2ebc1f9b1bf1a7c20531d096f4fd24be6199",
+      "filename": "0065_communication_push_channel.sql"
     }
   ]
 }
