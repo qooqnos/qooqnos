@@ -6,12 +6,20 @@ import {
 export interface CommunicationProviderEnvironment {
   readonly EMAIL_PROVIDER_ENDPOINT?: string;
   readonly EMAIL_PROVIDER_TOKEN?: string;
+  readonly EMAIL_PROVIDER_FALLBACK_ENDPOINT?: string;
+  readonly EMAIL_PROVIDER_FALLBACK_TOKEN?: string;
   readonly SMS_PROVIDER_ENDPOINT?: string;
   readonly SMS_PROVIDER_TOKEN?: string;
+  readonly SMS_PROVIDER_FALLBACK_ENDPOINT?: string;
+  readonly SMS_PROVIDER_FALLBACK_TOKEN?: string;
   readonly WHATSAPP_PROVIDER_ENDPOINT?: string;
   readonly WHATSAPP_PROVIDER_TOKEN?: string;
+  readonly WHATSAPP_PROVIDER_FALLBACK_ENDPOINT?: string;
+  readonly WHATSAPP_PROVIDER_FALLBACK_TOKEN?: string;
   readonly PUSH_PROVIDER_ENDPOINT?: string;
   readonly PUSH_PROVIDER_TOKEN?: string;
+  readonly PUSH_PROVIDER_FALLBACK_ENDPOINT?: string;
+  readonly PUSH_PROVIDER_FALLBACK_TOKEN?: string;
 }
 
 /**
@@ -29,6 +37,9 @@ export function createConfiguredCommunicationProviders(
       endpoint: env.EMAIL_PROVIDER_ENDPOINT,
       authorization: { scheme: "Bearer", credential: env.EMAIL_PROVIDER_TOKEN },
     }));
+    if (env.EMAIL_PROVIDER_FALLBACK_ENDPOINT && env.EMAIL_PROVIDER_FALLBACK_TOKEN) {
+      adapters.push(createHttpCommunicationProviderAdapter({ providerId: "email.fallback.http", channels: ["email"], endpoint: env.EMAIL_PROVIDER_FALLBACK_ENDPOINT, authorization: { scheme: "Bearer", credential: env.EMAIL_PROVIDER_FALLBACK_TOKEN } }));
+    }
   }
   if (env.SMS_PROVIDER_ENDPOINT && env.SMS_PROVIDER_TOKEN) {
     adapters.push(createHttpCommunicationProviderAdapter({
@@ -37,6 +48,9 @@ export function createConfiguredCommunicationProviders(
       endpoint: env.SMS_PROVIDER_ENDPOINT,
       authorization: { scheme: "Bearer", credential: env.SMS_PROVIDER_TOKEN },
     }));
+    if (env.SMS_PROVIDER_FALLBACK_ENDPOINT && env.SMS_PROVIDER_FALLBACK_TOKEN) {
+      adapters.push(createHttpCommunicationProviderAdapter({ providerId: "sms.fallback.http", channels: ["sms"], endpoint: env.SMS_PROVIDER_FALLBACK_ENDPOINT, authorization: { scheme: "Bearer", credential: env.SMS_PROVIDER_FALLBACK_TOKEN } }));
+    }
   }
   if (env.PUSH_PROVIDER_ENDPOINT && env.PUSH_PROVIDER_TOKEN) {
     adapters.push(createHttpCommunicationProviderAdapter({
@@ -45,6 +59,9 @@ export function createConfiguredCommunicationProviders(
       endpoint: env.PUSH_PROVIDER_ENDPOINT,
       authorization: { scheme: "Bearer", credential: env.PUSH_PROVIDER_TOKEN },
     }));
+    if (env.PUSH_PROVIDER_FALLBACK_ENDPOINT && env.PUSH_PROVIDER_FALLBACK_TOKEN) {
+      adapters.push(createHttpCommunicationProviderAdapter({ providerId: "push.fallback.http", channels: ["push"], endpoint: env.PUSH_PROVIDER_FALLBACK_ENDPOINT, authorization: { scheme: "Bearer", credential: env.PUSH_PROVIDER_FALLBACK_TOKEN } }));
+    }
   }
   if (env.WHATSAPP_PROVIDER_ENDPOINT && env.WHATSAPP_PROVIDER_TOKEN) {
     adapters.push(createHttpCommunicationProviderAdapter({
@@ -53,6 +70,9 @@ export function createConfiguredCommunicationProviders(
       endpoint: env.WHATSAPP_PROVIDER_ENDPOINT,
       authorization: { scheme: "Bearer", credential: env.WHATSAPP_PROVIDER_TOKEN },
     }));
+    if (env.WHATSAPP_PROVIDER_FALLBACK_ENDPOINT && env.WHATSAPP_PROVIDER_FALLBACK_TOKEN) {
+      adapters.push(createHttpCommunicationProviderAdapter({ providerId: "whatsapp.fallback.http", channels: ["whatsapp"], endpoint: env.WHATSAPP_PROVIDER_FALLBACK_ENDPOINT, authorization: { scheme: "Bearer", credential: env.WHATSAPP_PROVIDER_FALLBACK_TOKEN } }));
+    }
   }
   return adapters;
 }
