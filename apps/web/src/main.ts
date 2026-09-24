@@ -70,6 +70,7 @@ const routes: Route[] = [
   { path: "/discover", label: "کشف", icon: "⌕", render: renderDiscover },
   { path: "/business", label: "کسب‌وکار", icon: "▦", render: renderBusiness },
   { path: "/product-studio", label: "استودیو محصول", icon: "✦", render: renderProductStudio },
+  { path: "/account", label: "حساب", icon: "◉", render: renderAccount },
 ];
 
 const theme = getInitialTheme();
@@ -132,6 +133,7 @@ function render(): void {
   `;
   bindGlobalEvents();
   syncThemeButtons();
+  if (route.path === "/account") void loadAccountState();
 }
 
 function renderHeader(route: Route): string {
@@ -151,11 +153,11 @@ function renderHeader(route: Route): string {
         </div>
         <div class="header-actions">
           <button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button>
-          <button class="profile-chip" type="button" data-profile-toggle>
+          <a class="profile-chip" href="/account" data-nav aria-label="حساب کاربری">
             <span class="avatar">ق</span>
             <span class="profile-copy"><strong>فضای شما</strong><small>${route.label}</small></span>
             <span class="chevron">⌄</span>
-          </button>
+          </a>
         </div>
       </div>
     </header>
@@ -260,6 +262,80 @@ function renderHome(): string {
       </div>
     </section>
   `;
+}
+
+function renderAccount(): string {
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Account & Session</span><h1>کنترل اتصال و <em>فضای کاری</em> شما.</h1><p>وضعیت session و context مستقیماً از runtime ققنوس خوانده می‌شود.</p></div>
+      <button class="button button-primary" type="button" data-refresh-account>بروزرسانی وضعیت</button>
+    </section>
+    <section class="account-grid">
+      <article class="glass-card account-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Session</span><h2>وضعیت احراز</h2></div><span id="account-status" class="pill">در حال بررسی</span></div>
+        <div id="account-details" class="account-details">
+          <div class="account-row"><span>Actor</span><strong>—</strong></div>
+          <div class="account-row"><span>Tenant</span><strong>—</strong></div>
+          <div class="account-row"><span>Workspace</span><strong>—</strong></div>
+        </div>
+        <div class="account-actions">
+          <button class="button button-ghost" type="button" data-account-connect>تنظیم اتصال</button>
+          <button class="button button-danger" type="button" data-account-revoke>خروج از session</button>
+        </div>
+      </article>
+      <article class="glass-card account-card">
+        <span class="section-kicker">Runtime Context</span>
+        <h2>مجوزهای فعال</h2>
+        <div id="account-permissions" class="permission-cloud"><span class="permission-empty">برای مشاهده مجوزها به session متصل شوید.</span></div>
+      </article>
+    </section>
+  `;
+}
+
+async function loadAccountState(): Promise<void> {
+  const status = document.querySelector<HTMLElement>("#account-status");
+  const details = document.querySelector<HTMLElement>("#account-details");
+  const permissions = document.querySelector<HTMLElement>("#account-permissions");
+  if (!status || !details || !permissions) return;
+
+  try {
+    const [session, context] = await Promise.all([
+      apiJson<{ session: { authenticated: boolean; actorId?: string; tenantId?: string; workspaceId?: string } }>("/api/v1/session"),
+      apiJson<{ authenticated: boolean; actorId?: string; tenantId?: string; workspaceId?: string; permissions?: string[] }>("/api/v1/context"),
+    ]);
+
+    status.textContent = session.session.authenticated ? "متصل" : "احراز نشده";
+    status.className = session.session.authenticated ? "pill success" : "pill warning";
+    details.innerHTML = `
+      <div class="account-row"><span>Actor</span><strong>${escapeHtml(context.actorId ?? session.session.actorId ?? "—")}</strong></div>
+      <div class="account-row"><span>Tenant</span><strong>${escapeHtml(context.tenantId ?? session.session.tenantId ?? "—")}</strong></div>
+      <div class="account-row"><span>Workspace</span><strong>${escapeHtml(context.workspaceId ?? session.session.workspaceId ?? "—")}</strong></div>`;
+    const permissionList = context.permissions ?? [];
+    permissions.innerHTML = permissionList.length
+      ? permissionList.map((permission) => `<span class="permission-chip">${escapeHtml(permission)}</span>`).join("")
+      : '<span class="permission-empty">مجوزی در context فعلی برنگشت.</span>';
+  } catch (error) {
+    status.textContent = "متصل نیست";
+    status.className = "pill warning";
+    const message = error instanceof Error ? error.message : "session در دسترس نیست.";
+    details.innerHTML = `<div class="account-empty"><span>!</span><p>${escapeHtml(message)}</p></div>`;
+    permissions.innerHTML = '<span class="permission-empty">ابتدا اتصال را تنظیم کنید.</span>';
+  }
+}
+
+async function revokeCurrentSession(): Promise<void> {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    showToast("session فعالی در مرورگر ثبت نشده است.");
+    return;
+  }
+  try {
+    await apiJson<{ revoked: boolean }>("/api/v1/session/revoke", { method: "POST" });
+    sessionStorage.removeItem(STORAGE.accessToken);
+    showToast("session با موفقیت خارج شد.");
+    render();
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "خروج از session ناموفق بود.");
+  }
 }
 
 function renderDiscover(): string {
@@ -426,6 +502,9 @@ function bindGlobalEvents(): void {
 
   document.querySelector<HTMLElement>("[data-profile-toggle]")?.addEventListener("click", openConnectionPanel);
   document.querySelector<HTMLButtonElement>("[data-business-create]")?.addEventListener("click", openBusinessCreatePanel);
+  document.querySelector<HTMLButtonElement>("[data-refresh-account]")?.addEventListener("click", loadAccountState);
+  document.querySelector<HTMLButtonElement>("[data-account-connect]")?.addEventListener("click", openConnectionPanel);
+  document.querySelector<HTMLButtonElement>("[data-account-revoke]")?.addEventListener("click", revokeCurrentSession);
 
   document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
