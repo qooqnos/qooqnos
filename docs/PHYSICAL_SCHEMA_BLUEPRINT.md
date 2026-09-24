@@ -1286,3 +1286,9 @@ These projections are external-observation evidence. They do not establish marke
 `seo_competitive_keyword_gaps` stores provider-observed domain-intersection evidence: competitor domain, tracked Entity, keyword, search volume, CPC, competitor/Phoenix ranks when supplied, location/language, gap type, observation time and provenance.
 
 The record is evidence from an external provider dataset and never represents an invented market-share or universal ranking claim.
+
+## 18.10 SEO competitive backlink-gap evidence
+
+`seo_competitive_link_gaps` stores referring domains observed for competitor targets and explicitly excluded from Phoenix results, with competitor backlink count/domain rank and full provider provenance.
+
+This is external backlink evidence only; it does not assert that a referring domain will link to Phoenix or that the backlink is commercially valuable.
