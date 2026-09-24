@@ -64,6 +64,42 @@ describe("competitive SERP provider", () => {
     expect(result.aiCitations.some((item) => item.url === "https://competitor.com/studio")).toBe(true);
     fetcher.mockRestore();
   });
+  it("parses provider-observed competitor-only keyword gaps", async () => {
+    const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(
+      JSON.stringify({
+        status_code: 20000,
+        tasks: [{
+          status_code: 20000,
+          result: [{
+            target1: "competitor.com",
+            target2: "qooqnos.com",
+            location_code: 1025287,
+            language_code: "en",
+            items: [{
+              keyword_data: {
+                keyword: "best phoenix studio",
+                keyword_info: { search_volume: 900, cpc: 2.5 },
+              },
+              first_domain_serp_element: { type: "organic", rank_absolute: 3, url: "https://competitor.com/studio" },
+            }],
+          }],
+        }],
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    ));
+    const provider = new DataForSeoGoogleCompetitiveProvider({ login: "login", password: "password" });
+    const gaps = await provider.observeKeywordGaps("competitor.com", "qooqnos.com", {
+      locationCode: 1025287,
+      languageCode: "en",
+      limit: 10,
+    });
+    expect(gaps[0]?.keyword).toBe("best phoenix studio");
+    expect(gaps[0]?.searchVolume).toBe(900);
+    expect(gaps[0]?.competitorRank).toBe(3);
+    expect(gaps[0]?.gapType).toBe("competitor-only");
+    fetcher.mockRestore();
+  });
+
   it("parses page-level competitor SEO evidence from Instant Pages", async () => {
     const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(
       JSON.stringify({
