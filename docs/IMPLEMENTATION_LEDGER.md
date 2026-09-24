@@ -1570,3 +1570,11 @@ Competitive intelligence evidence layers now include:
 - Product SEO payloads now carry active canonical variants and stable `productGroupId` when available; no price, image, availability, shipping, or return facts are invented.
 - Business SEO payloads now carry an active physical location's canonical geo/address when available; coordinates are validated and never inferred.
 - Opening-hours structured data remains contract-ready but is not hydrated yet because the physical `business_hours` table is documented but not currently implemented in the reconciled database schema. This is intentionally left unimplemented rather than creating a parallel or speculative source of truth.
+
+## SEO/GEO Canonical Operating Hours — September 2026
+- Added migration `0091_business_hours.sql` for canonical recurring operating hours, scoped to Business and optionally Location.
+- Registered migration 91 in `migration-lock.json` with SHA-256 checksum.
+- Added `BusinessRepository.listHours()` as the tenant/workspace-scoped projection boundary.
+- SEO publication enrichment now maps canonical active physical-location hours to Schema.org day-of-week values and `OpeningHoursSpecification`.
+- Added repository regression coverage.
+- The SEO layer still does not infer hours, appointment availability, or exceptional closures; those remain explicit Business-domain facts.
