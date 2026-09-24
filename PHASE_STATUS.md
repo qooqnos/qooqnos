@@ -107,10 +107,8 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- The last fully verified code checkpoint is recorded in the verification snapshot; the current main head includes subsequent implementation changes and awaits fresh CI/Phoenix verification.
-- Current main is beyond that checkpoint and has not been independently CI-verified through the currently exposed connector.
-- Migration lock verification covers the current canonical migration catalog and was passed in the latest fully verified checkpoint.
-- The prior checkpoint is covered by successful CI/Phoenix verification. The current cleanup head requires a fresh CI/Phoenix verification run before it is treated as a verified checkpoint.
+- The current main head `30cf6fe4b1e95dda5ccd91af20b7001bb0e39192` is freshly verified by both required GitHub Actions workflows.
+- CI run `36010494882` and Phoenix verification run `36010494895` are green; migration integrity, source-boundary, runtime-registry, lint, typecheck, build, Worker dry-run and unit tests all passed.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
 
 ## 7.1 Runtime continuity guards
@@ -133,7 +131,7 @@ Canonical logical model
 → integrity/tenant-isolation tests
 ```
 
-The application/runtime and physical schema gates are complete; remaining work is operational/provider-specific plus credentialed remote D1 migration/application. The production D1 resource has now been provisioned externally.
+The application/runtime and physical schema gates are complete; remaining work is limited to external provider/vendor activation and credentialed remote D1 migration/application. The production D1 resource has now been provisioned externally.
 
 ## 9. Remote D1 provisioning gate
 
