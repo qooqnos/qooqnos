@@ -86,6 +86,7 @@ const routes: Route[] = [
   { path: "/billing", label: "مالی", icon: "◈", render: renderBilling },
   { path: "/trust", label: "اعتماد", icon: "✓", render: renderTrust },
   { path: "/operations", label: "عملیات", icon: "⚙", render: renderOperations },
+  { path: "/seo", label: "SEO", icon: "◎", render: renderSeo },
 ];
 
 const theme = getInitialTheme();
@@ -155,6 +156,7 @@ function render(): void {
   if (route.path === "/business") void loadBusinessAccess();
   if (route.path === "/trust") void loadTrustSignals();
   if (route.path === "/operations") void loadCases();
+  if (route.path === "/seo") void loadSeoHealth();
 }
 
 function renderHeader(route: Route): string {
@@ -283,6 +285,83 @@ function renderHome(): string {
       </div>
     </section>
   `;
+}
+
+function renderSeo(): string {
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> SEO / GEO</span><h1>حضور بیرونی ققنوس را <em>قابل اندازه‌گیری</em> کنید.</h1><p>Audit و publication health مستقیماً از SEO canonical خوانده می‌شوند.</p></div>
+      <div class="heading-actions"><a class="button button-ghost" href="/sitemap.xml" target="_blank" rel="noreferrer">Sitemap ↗</a><a class="button button-ghost" href="/robots.txt" target="_blank" rel="noreferrer">Robots ↗</a></div>
+    </section>
+    <section class="seo-grid">
+      <article class="glass-card seo-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Audit</span><h2>Entity SEO Audit</h2></div><span id="seo-audit-status" class="pill">آماده</span></div>
+        <div class="seo-form">
+          <input id="seo-entity" class="studio-input-line" type="text" placeholder="Entity ID" />
+          <input id="seo-locale" class="studio-input-line" type="text" value="fa-IR" placeholder="Locale" />
+          <button class="button button-primary" type="button" data-seo-audit>اجرای Audit</button>
+        </div>
+        <div id="seo-audit-result" class="seo-result"><div class="slot-empty"><span>◎</span><p>Entity ID را وارد کنید.</p></div></div>
+      </article>
+      <article class="glass-card seo-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Publication</span><h2>سلامت انتشار</h2></div><span id="seo-health-status" class="pill">—</span></div>
+        <div id="seo-health-result" class="seo-health-result"><div class="slot-empty"><span>◌</span><p>در حال خواندن…</p></div></div>
+        <button class="button button-ghost" type="button" data-seo-health>بروزرسانی health</button>
+      </article>
+    </section>
+  `;
+}
+
+async function loadSeoHealth(): Promise<void> {
+  const status = document.querySelector<HTMLElement>("#seo-health-status");
+  const host = document.querySelector<HTMLDivElement>("#seo-health-result");
+  if (!status || !host) return;
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  host.innerHTML = '<div class="slot-loading">در حال خواندن SEO health…</div>';
+  try {
+    const response = await apiJson<{ status: string; publication?: { pending: number; failed: number } }>("/api/v1/seo/health");
+    const pending = response.publication?.pending ?? 0;
+    const failed = response.publication?.failed ?? 0;
+    status.textContent = failed ? "نیازمند توجه" : "سالم";
+    status.className = failed ? "pill warning" : "pill success";
+    host.innerHTML = `
+      <div class="seo-health-metrics">
+        <div><span>Pending</span><strong>${pending}</strong></div>
+        <div><span>Failed</span><strong>${failed}</strong></div>
+        <div><span>Health</span><strong>${escapeHtml(response.status)}</strong></div>
+      </div>`;
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "SEO health ناموفق بود.")}</p></div>`;
+  }
+}
+
+async function runSeoAudit(): Promise<void> {
+  const entityId = document.querySelector<HTMLInputElement>("#seo-entity")?.value.trim() ?? "";
+  const locale = document.querySelector<HTMLInputElement>("#seo-locale")?.value.trim() ?? "";
+  const status = document.querySelector<HTMLElement>("#seo-audit-status");
+  const host = document.querySelector<HTMLDivElement>("#seo-audit-result");
+  if (!entityId || !status || !host) { showToast("Entity ID لازم است."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  status.textContent = "در حال اجرا";
+  status.className = "pill warning";
+  host.innerHTML = '<div class="slot-loading">در حال اجرای SEO audit…</div>';
+  try {
+    const response = await apiJson<{ audit: Record<string, unknown> }>(
+      `/api/v1/seo/audit/${encodeURIComponent(entityId)}?locale=${encodeURIComponent(locale || "fa-IR")}`,
+      { method: "POST" },
+    );
+    const audit = response.audit ?? {};
+    const entries = Object.entries(audit).filter(([key]) => !["payload","raw"].includes(key)).slice(0, 16);
+    host.innerHTML = `<div class="seo-audit-list">${entries.map(([key,value]) => `<div><span>${escapeHtml(key)}</span><strong>${escapeHtml(typeof value === "string" ? value : JSON.stringify(value) ?? "—")}</strong></div>`).join("")}</div>`;
+    status.textContent = "انجام شد";
+    status.className = "pill success";
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "SEO audit ناموفق بود.")}</p></div>`;
+  }
 }
 
 function renderOperations(): string {
@@ -1468,6 +1547,8 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-ops-refresh]")?.addEventListener("click", () => { void loadCases(); });
   document.querySelector<HTMLButtonElement>("[data-load-cases]")?.addEventListener("click", () => { void loadCases(); });
   document.querySelector<HTMLButtonElement>("[data-load-fulfillment]")?.addEventListener("click", () => { void loadFulfillment(); });
+  document.querySelector<HTMLButtonElement>("[data-seo-audit]")?.addEventListener("click", () => { void runSeoAudit(); });
+  document.querySelector<HTMLButtonElement>("[data-seo-health]")?.addEventListener("click", () => { void loadSeoHealth(); });
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
