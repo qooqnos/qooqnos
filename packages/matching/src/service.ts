@@ -56,7 +56,7 @@ export class MatchingService {
     const ranked=rankEligibleCandidates(discoveryCandidates,request.algorithmVersion);
     await this.options.repository.setMatchStatus(context,request.id,"ranking",this.options.now());
     const created=[];
-    for(const [index,candidate] of ranked.candidates.entries())created.push(await this.options.repository.addCandidate(context,{id:this.options.id(),matchRequestId:request.id,businessId:candidate.id,retrievalSource:"discovery.lexical",retrievalScore:candidate.signals.retrievalScore,rankingScore:candidate.score,rankPosition:index+1,eligibilityStatus:"eligible",reasons:candidate.eligibility.reasons,featureSnapshot:{...candidate.signals,rankingVersion:ranked.rankingVersion,sourceDocumentId:candidate.id},now:this.options.now()}));
+    for(const [index,candidate] of ranked.candidates.entries())created.push(await this.options.repository.addCandidate(context,{id:this.options.id(),matchRequestId:request.id,businessId:candidate.id,retrievalSource:"discovery.lexical",...(candidate.signals.retrievalScore !== undefined ? { retrievalScore: candidate.signals.retrievalScore } : {}),rankingScore:candidate.score,rankPosition:index+1,eligibilityStatus:"eligible",reasons:candidate.eligibility.reasons,featureSnapshot:{...candidate.signals,rankingVersion:ranked.rankingVersion,sourceDocumentId:candidate.id},now:this.options.now()}));
     return {request:await this.options.repository.setMatchStatus(context,request.id,"decided",this.options.now()),candidates:created};
   }
 
