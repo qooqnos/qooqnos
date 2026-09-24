@@ -50,7 +50,14 @@ export class TrustService {
   }
 
   async completeVerificationReview(context: RequestContext, reviewId: EntityId, outcome: string, escalationReason?: string) {
-    await this.options.authorization.assert({context,permission:"trust.verification.manage",requireAuthentication:true,requireWorkspace:false});
+    const review = await this.options.verification.getReview(context, reviewId);
+    await this.options.authorization.assert({
+      context,
+      permission: "trust.verification.review",
+      resource: { ownerId: review.reviewerId, tenantId: context.tenantId, workspaceId: context.workspaceId },
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
     return this.options.verification.updateReview(
       context,
       reviewId,
@@ -180,6 +187,49 @@ export class TrustService {
     });
   }
 
+  async recordTrustSignal(
+    context: RequestContext,
+    input: {
+      readonly subjectType: string;
+      readonly subjectId: EntityId;
+      readonly signalType: string;
+      readonly severity: "info" | "low" | "medium" | "high" | "critical";
+      readonly value?: unknown;
+      readonly confidence?: number;
+      readonly sourceType: string;
+      readonly sourceId: EntityId;
+      readonly policyVersion?: string;
+      readonly detectedAt?: string;
+      readonly expiresAt?: string;
+    },
+  ) {
+    await this.options.authorization.assert({
+      context,
+      permission: "trust.moderation.manage",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.recordTrustSignal(context, {
+      ...input,
+      id: this.options.id(),
+      detectedAt: input.detectedAt ?? this.options.now(),
+      now: this.options.now(),
+    });
+  }
+
+  async listTrustSignals(
+    context: RequestContext,
+    input: { readonly subjectType?: string; readonly subjectId?: EntityId; readonly status?: "active" | "expired" | "superseded" | "dismissed"; readonly limit?: number },
+  ) {
+    await this.options.authorization.assert({
+      context,
+      permission: "trust.reputation.read",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    return this.options.repository.listTrustSignals(context, input);
+  }
+
   async rebuildReputation(
     context: RequestContext,
     input: { readonly targetType: ReviewTargetType; readonly targetId: EntityId; readonly policyVersion: string },
@@ -238,4 +288,5 @@ export const TRUST_PERMISSIONS = [
   "trust.reputation.rebuild",
   "trust.verification.read",
   "trust.verification.manage",
+  "trust.verification.review",
 ] as const;
