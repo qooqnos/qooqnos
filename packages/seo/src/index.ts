@@ -27,3 +27,4 @@ export * from "./experiments";
 export * from "./observability";
 export * from "./query-repository";
 export * from "./entity-page";
+export * from "./crawler";
