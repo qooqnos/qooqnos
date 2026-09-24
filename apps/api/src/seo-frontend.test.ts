@@ -122,6 +122,8 @@ describe("SEO frontend surface", () => {
     expect(html).toContain('"@type":"LocalBusiness"');
     expect(html).toContain("What is Phoenix Studio?");
     expect(html).toContain("Open daily");
+    expect(html).not.toContain("\"sourceEntityId\"");
+    expect(html).not.toContain("\"sourceType\"");
     expect(html).toContain('id="phoenix-seo-data"');
     expect(html.match(/name="description"/gi)?.length).toBe(1);
     expect(html.match(/rel="canonical"/gi)?.length).toBe(1);
