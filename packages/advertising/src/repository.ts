@@ -277,7 +277,7 @@ export class AdvertisingRepository extends Repository {
       input.deliveryDecisionId, this.requireOrganization({ organizationId: context.tenantId }), this.requireWorkspace({ workspaceId: context.workspaceId }),
     );
     if (!decision) throw new DatabaseError("Advertising delivery decision not found");
-    const existing = await this.database.first(
+    const existing = await this.database.first<{ id: EntityId }>(
       "SELECT id FROM advertising_impressions WHERE organization_id=? AND workspace_id=? AND deduplication_key=? LIMIT 1",
       decision.organizationId, decision.workspaceId, input.deduplicationKey.trim(),
     );
@@ -295,7 +295,7 @@ export class AdvertisingRepository extends Repository {
       input.impressionId, this.requireOrganization({ organizationId: context.tenantId }), this.requireWorkspace({ workspaceId: context.workspaceId }),
     );
     if (!impression) throw new DatabaseError("Advertising impression not found");
-    const existing = await this.database.first(
+    const existing = await this.database.first<{ id: EntityId }>(
       "SELECT id FROM advertising_clicks WHERE organization_id=? AND workspace_id=? AND deduplication_key=? LIMIT 1",
       impression.organizationId, impression.workspaceId, input.deduplicationKey.trim(),
     );
