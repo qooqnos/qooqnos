@@ -14,8 +14,13 @@ export function registerSeoCompetitiveRoutes(router: ApiRouter, database: D1Data
     requireWorkspace: true,
     handler: async ({ context, params, request }) => {
       if (!database) return json({ status: "unavailable" }, 503, context.requestId);
-      if (!env.SEO_COMPETITIVE_LOGIN || !env.SEO_COMPETITIVE_PASSWORD) {
-        return json({ error: { code: "PROVIDER_UNCONFIGURED", message: "Competitive intelligence provider is not configured." } }, 503, context.requestId);
+      if (
+        !env.SEO_COMPETITIVE_LOGIN
+        || !env.SEO_COMPETITIVE_PASSWORD
+        || (!(env.SEO_COMPETITIVE_LOCATION_CODE || env.SEO_COMPETITIVE_LOCATION_NAME))
+        || !env.SEO_COMPETITIVE_LANGUAGE_CODE
+      ) {
+        return json({ error: { code: "PROVIDER_UNCONFIGURED", message: "Competitive intelligence requires credentials, location and language configuration." } }, 503, context.requestId);
       }
       const search = new URL(request.url).searchParams;
       const limitValue = Number(search.get("limit") ?? "5");
@@ -30,7 +35,7 @@ export function registerSeoCompetitiveRoutes(router: ApiRouter, database: D1Data
           ...(env.SEO_COMPETITIVE_ENDPOINT ? { endpoint: env.SEO_COMPETITIVE_ENDPOINT } : {}),
           ...(Number.isFinite(locationCodeValue) ? { locationCode: locationCodeValue } : {}),
           ...(env.SEO_COMPETITIVE_LOCATION_NAME ? { locationName: env.SEO_COMPETITIVE_LOCATION_NAME } : {}),
-          languageCode: search.get("language") || env.SEO_COMPETITIVE_LANGUAGE_CODE || "en",
+          languageCode: search.get("language") || env.SEO_COMPETITIVE_LANGUAGE_CODE,
           device: env.SEO_COMPETITIVE_DEVICE || "desktop",
           depth: Number.isFinite(depthValue) ? depthValue : 20,
           ...(Number.isFinite(pageSampleLimit) ? { pageSampleLimit: Math.min(Math.max(Math.trunc(pageSampleLimit), 1), 10) } : {}),
