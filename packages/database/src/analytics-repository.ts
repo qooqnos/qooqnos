@@ -164,9 +164,6 @@ export class AnalyticsRepository extends Repository {
     if (input.bucketEnd <= input.bucketStart) throw new DatabaseError("Analytics aggregate bucket range is invalid");
     const organizationId = context.tenantId ?? null;
     const workspaceId = context.workspaceId ?? null;
-    const bucketExpression = input.bucketGranularity === "hour"
-      ? "substr(occurred_at,1,13) || ':00:00.000Z'"
-      : "substr(occurred_at,1,10) || 'T00:00:00.000Z'";
     const row = await this.database.first<{ value: number }>(
       `SELECT COUNT(*) AS value
        FROM analytics_facts
@@ -180,7 +177,6 @@ export class AnalyticsRepository extends Repository {
       input.id, organizationId, workspaceId, input.metricKey, input.metricVersion, input.bucketStart,
       input.bucketGranularity, value, null, input.now,
     );
-    void bucketExpression;
     const aggregate = await this.database.first<AnalyticsMetricAggregate>(
       "SELECT id,organization_id AS organizationId,workspace_id AS workspaceId,metric_key AS metricKey,metric_version AS metricVersion,bucket_start AS bucketStart,bucket_granularity AS bucketGranularity,value,source_cursor AS sourceCursor,calculated_at AS calculatedAt,projection_version AS projectionVersion FROM analytics_metric_aggregates WHERE organization_id IS ? AND workspace_id IS ? AND metric_key=? AND metric_version=? AND bucket_start=? AND bucket_granularity=? LIMIT 1",
       organizationId, workspaceId, input.metricKey, input.metricVersion, input.bucketStart, input.bucketGranularity,
