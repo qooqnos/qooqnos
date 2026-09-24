@@ -24,6 +24,40 @@ export interface ReviewRecord {
   readonly updatedAt: string;
 }
 
+export interface TrustSignalRecord {
+  readonly id: EntityId;
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId | null;
+  readonly subjectType: string;
+  readonly subjectId: EntityId;
+  readonly signalType: string;
+  readonly severity: "info" | "low" | "medium" | "high" | "critical";
+  readonly valueJson: string | null;
+  readonly confidence: number | null;
+  readonly sourceType: string;
+  readonly sourceId: EntityId;
+  readonly policyVersion: string | null;
+  readonly status: "active" | "expired" | "superseded" | "dismissed";
+  readonly detectedAt: string;
+  readonly expiresAt: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface TrustAbuseInput {
+  readonly sourceType: "review_risk_signal" | "review_report";
+  readonly sourceId: EntityId;
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId | null;
+  readonly reviewId: EntityId;
+  readonly signalType: string;
+  readonly valueJson: string | null;
+  readonly confidence: number | null;
+  readonly policyVersion: string | null;
+  readonly detectedAt: string;
+  readonly reasonCode: string | null;
+}
+
 export class TrustReviewRepository extends Repository {
   constructor(database: D1Database) { super(database); }
 
@@ -383,6 +417,108 @@ export class TrustReviewRepository extends Repository {
     return this.database.first(
       "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, target_type AS targetType, target_id AS targetId, published_review_count AS publishedReviewCount, rating_sum AS ratingSum, rating_distribution_json AS ratingDistributionJson, report_count AS reportCount, projection_version AS projectionVersion, source_review_cursor AS sourceReviewCursor, calculated_at AS calculatedAt, created_at AS createdAt, updated_at AS updatedAt FROM reputation_summaries WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND target_type = ? AND target_id = ? LIMIT 1",
       organizationId, target.workspaceId, input.targetType, input.targetId,
+    );
+  }
+
+  async recordTrustSignal(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly subjectType: TrustSignalRecord["subjectType"];
+      readonly subjectId: EntityId;
+      readonly signalType: string;
+      readonly severity: TrustSignalRecord["severity"];
+      readonly value?: unknown;
+      readonly confidence?: number;
+      readonly sourceType: string;
+      readonly sourceId: EntityId;
+      readonly policyVersion?: string;
+      readonly detectedAt: string;
+      readonly expiresAt?: string;
+      readonly now: string;
+    },
+  ): Promise<TrustSignalRecord> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    if (!input.signalType.trim()) throw new DatabaseError("Trust signal type is required");
+    if (!input.sourceType.trim()) throw new DatabaseError("Trust signal source type is required");
+    if (input.confidence !== undefined && (input.confidence < 0 || input.confidence > 1)) {
+      throw new DatabaseError("Trust signal confidence must be between 0 and 1");
+    }
+
+    await this.database.run(
+      "INSERT OR IGNORE INTO trust_signals (id, organization_id, workspace_id, subject_type, subject_id, signal_type, severity, value_json, confidence, source_type, source_id, policy_version, status, detected_at, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)",
+      input.id,
+      organizationId,
+      context.workspaceId ?? null,
+      input.subjectType,
+      input.subjectId,
+      input.signalType.trim(),
+      input.severity,
+      input.value === undefined ? null : JSON.stringify(input.value),
+      input.confidence ?? null,
+      input.sourceType.trim(),
+      input.sourceId,
+      input.policyVersion?.trim() || null,
+      input.detectedAt,
+      input.expiresAt ?? null,
+      input.now,
+      input.now,
+    );
+
+    const record = await this.database.first<TrustSignalRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, signal_type AS signalType, severity, value_json AS valueJson, confidence, source_type AS sourceType, source_id AS sourceId, policy_version AS policyVersion, status, detected_at AS detectedAt, expires_at AS expiresAt, created_at AS createdAt, updated_at AS updatedAt FROM trust_signals WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND source_type = ? AND source_id = ? AND signal_type = ? AND (policy_version = ? OR (policy_version IS NULL AND ? IS NULL)) LIMIT 1",
+      organizationId,
+      context.workspaceId ?? null,
+      input.sourceType.trim(),
+      input.sourceId,
+      input.signalType.trim(),
+      input.policyVersion?.trim() || null,
+      input.policyVersion?.trim() || null,
+    );
+    if (!record) throw new DatabaseError("Trust signal not found after persistence");
+    return record;
+  }
+
+  async listTrustSignals(
+    context: RequestContext,
+    input: { readonly subjectType?: string; readonly subjectId?: EntityId; readonly status?: TrustSignalRecord["status"]; readonly limit?: number },
+  ): Promise<readonly TrustSignalRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const limit = Math.min(Math.max(Math.trunc(input.limit ?? 50), 1), 200);
+    const clauses = ["organization_id = ?", "(workspace_id IS NULL OR workspace_id = ?)"];
+    const params: unknown[] = [organizationId, context.workspaceId ?? null];
+    if (input.subjectType) { clauses.push("subject_type = ?"); params.push(input.subjectType); }
+    if (input.subjectId) { clauses.push("subject_id = ?"); params.push(input.subjectId); }
+    if (input.status) { clauses.push("status = ?"); params.push(input.status); }
+    params.push(limit);
+    return this.database.all<TrustSignalRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, signal_type AS signalType, severity, value_json AS valueJson, confidence, source_type AS sourceType, source_id AS sourceId, policy_version AS policyVersion, status, detected_at AS detectedAt, expires_at AS expiresAt, created_at AS createdAt, updated_at AS updatedAt FROM trust_signals WHERE " + clauses.join(" AND ") + " ORDER BY detected_at DESC, id DESC LIMIT ?",
+      ...params,
+    );
+  }
+
+  async listAbuseInputs(limit = 100): Promise<readonly TrustAbuseInput[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+    return this.database.all<TrustAbuseInput>(
+      "SELECT 'review_risk_signal' AS sourceType, rs.id AS sourceId, r.organization_id AS organizationId, r.workspace_id AS workspaceId, r.id AS reviewId, rs.signal_type AS signalType, rs.value_json AS valueJson, rs.confidence, rs.policy_version AS policyVersion, rs.created_at AS detectedAt, NULL AS reasonCode FROM review_risk_signals rs INNER JOIN reviews r ON r.id = rs.review_id UNION ALL SELECT 'review_report' AS sourceType, rr.id AS sourceId, r.organization_id AS organizationId, r.workspace_id AS workspaceId, r.id AS reviewId, 'reported_review' AS signalType, rr.details AS valueJson, NULL AS confidence, r.policy_version AS policyVersion, rr.created_at AS detectedAt, rr.reason_code AS reasonCode FROM review_reports rr INNER JOIN reviews r ON r.id = rr.review_id WHERE rr.status = 'open' ORDER BY detectedAt ASC, sourceId ASC LIMIT ?",
+      safeLimit,
+    );
+  }
+
+  async findModerationCaseBySource(
+    organizationId: EntityId,
+    sourceType: string,
+    sourceId: EntityId,
+    policyId: string,
+    policyVersion: string,
+  ) {
+    return this.database.first<{ readonly id: EntityId; readonly status: string }>(
+      "SELECT id, status FROM moderation_cases WHERE organization_id = ? AND source_type = ? AND source_id = ? AND policy_id = ? AND policy_version = ? LIMIT 1",
+      organizationId,
+      sourceType,
+      sourceId,
+      policyId,
+      policyVersion,
     );
   }
 
