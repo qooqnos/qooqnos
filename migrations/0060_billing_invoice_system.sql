@@ -213,3 +213,17 @@ WHEN NOT EXISTS (
 BEGIN
   SELECT RAISE(ABORT, 'Invoice payment application references missing invoice');
 END;
+
+
+CREATE TRIGGER trg_billing_invoice_payment_scope_match
+BEFORE INSERT ON billing_invoice_payment_applications
+FOR EACH ROW
+WHEN EXISTS (
+  SELECT 1
+  FROM billing_invoices i
+  WHERE i.id = NEW.invoice_id
+    AND i.organization_id <> NEW.organization_id
+)
+BEGIN
+  SELECT RAISE(ABORT, 'Invoice payment application crosses organization boundary');
+END;
