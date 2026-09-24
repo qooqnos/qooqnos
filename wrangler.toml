@@ -7,7 +7,7 @@ workers_dev = true
 directory = "./apps/web/public"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
-run_worker_first = ["/api/*", "/health", "/ready", "/*"]
+run_worker_first = ["/*"]
 
 [ai]
 binding = "AI"
