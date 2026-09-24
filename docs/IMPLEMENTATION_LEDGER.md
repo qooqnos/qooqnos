@@ -846,3 +846,10 @@ AI Memory is now physically and operationally implemented as a tenant/workspace-
 Canonical contract: `docs/AI_MEMORY_IMPLEMENTATION_CONTRACT.md`.
 
 Implementation commits: `2529874019b861aca0f3b6b0299024076d2d682e`, `81604001f47a00e2700bc68516411f51f01b8acb`, `8ecf459d83ac98e91b17bace042b1b8e1ad96627`, `6284f1d7af87062d61acbb385f4b43bb371f6c1d`, `1da25e144a96650e81fb477a13488289cdfe4faa`, `d738af41bd3049417de84f861ea87ce0a420c110`, `034ba57a36d08fda7ffc3ee31d6f719b8cab8b5d`, `05985f78a419788d781a231480b978f1746e34db`.
+
+
+### Document concrete adapters — 2026-09-24
+
+Concrete PDF and print adapters are now implemented and registered as the default Documents renderer registry. PDF output is deterministic A4/Helvetica output for the canonical ASCII-safe text subset; Unicode-safe print output is emitted as UTF-8 HTML/CSS for browser/print pipelines. Durable document artifacts now have an R2-backed, tenant-scoped, idempotent storage adapter with renderer and source-snapshot provenance metadata.
+
+Implementation commits: `4e6ea5693192380a079e7e1229029ffd30a5f4de`, `6f80b990fc5f632065f3f98de24d38120773e1e5`, `a573389e6f364624f1a8de8c3a2404d8b7fe3afc`, `a2bfa61f49f78ccbcd1f1773d89c0b40b487726f`, `a68958e9536e1d2a19d4fe4560af51c9207e0fa4`.
