@@ -1486,3 +1486,11 @@ Implemented real competitive intelligence from external SERP evidence:
 Provider activation remains configuration-gated through DataForSEO credentials and a deliberate location/language configuration.
 
 Provider activation contract: `docs/SEO_COMPETITIVE_INTELLIGENCE_ACTIVATION.md`.
+
+Competitive intelligence hardening completed after initial implementation:
+- deduplicated competitor discovery and change events;
+- scoped competitor summaries, changes and page snapshots to the requested Entity/query set;
+- own Phoenix domain excluded from competitor change feed while remaining available for same-run gap evidence;
+- added DataForSEO Labs Domain Intersection keyword-gap evidence with bounded competitor/keyword sampling;
+- added durable `seo_competitive_keyword_gaps` state and Control Plane display;
+- page snapshot failures mark a CI run partial instead of discarding the underlying SERP evidence.
