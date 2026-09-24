@@ -135,7 +135,7 @@ export async function runSeoCompetitiveIntelligence(
           observedAt: now,
           provenance: result.provenance,
         });
-        if (!currentSerpDomains.has(item.domain)) {
+        if (!isOwn && !currentSerpDomains.has(item.domain)) {
           changes += await repository.detectChanges(context, {
             queryText: row.queryText,
             currentRunId: runId,
