@@ -1257,3 +1257,12 @@ Rebuildable hourly/daily metric projection. Aggregate replacement is idempotent;
 Durable invalid-event evidence containing source identity, scope, reason, payload hash, attempts and resolution state. Quarantine prevents malformed analytics data from silently contaminating aggregates.
 
 Analytics tables are projection-owned and may be dropped/rebuilt from durable source events. They do not authorize, price, book, settle, communicate, verify, or otherwise mutate domain state.
+
+## 18.6 SEO audit operational state
+
+`seo_audits` remains a rebuildable diagnostic projection. It now persists:
+- `overall_score` — deterministic weighted quality score;
+- `status` — `pass`, `warning`, or `blocked`;
+- `blocking_issue_codes_json` — machine-readable publication blockers.
+
+Migration `0085_seo_audit_quality_gate.sql` owns these additions. Audit state is diagnostic/projection data and never becomes domain truth or an authorization source.
