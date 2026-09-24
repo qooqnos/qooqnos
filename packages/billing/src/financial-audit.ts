@@ -1,5 +1,5 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
-import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
+import { DatabaseError, D1Database, Repository, sha256Hex } from "@qooqnos/database";
 
 export type FinancialAuditOutcome = "succeeded" | "failed" | "rejected";
 
@@ -190,7 +190,6 @@ interface FinancialAuditEventRow {
 function mapRecord(row: FinancialAuditEventRow): FinancialAuditEventRecord {
   return {
     ...row,
-    businessId: row.businessId ?? undefined,
     before: parseJson(row.beforeJson),
     after: parseJson(row.afterJson),
     metadata: parseJson(row.metadataJson),
