@@ -582,6 +582,7 @@ export default {
   async scheduled(controller: ScheduledControllerLike, env: ApiEnv): Promise<void> {
     assertProductionInfrastructure(env);
     const now = new Date(controller.scheduledTime).toISOString();
+    const database = getDatabase(env);
     await publishPendingOutbox(env, now);
     await processCommunicationDispatch(env, now);
     await processPendingTrustExpiries(env, now);
@@ -604,7 +605,6 @@ export default {
       }
     }
 
-    const database = getDatabase(env);
     if (database && env.AI && env.AI_SELLER_EXTRACT_MODEL_ID) {
       const authorizationRegistry = createApiAuthorizationRegistry();
       const authorization = createAuthorizationService(
