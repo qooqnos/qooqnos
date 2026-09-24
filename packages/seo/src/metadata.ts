@@ -1,0 +1,1 @@
+import type {SeoContext,SeoMetadata} from "./types"; export function generateMetadata(c:SeoContext,url:string):SeoMetadata{const title=c.entity.preferredName.trim();const description=(c.entity.summary||c.entity.description||"").trim().slice(0,160);return{title,description,canonicalUrl:url,robots:"index,follow",headings:[title],altTexts:[]}}
