@@ -109,4 +109,17 @@ describe("SEO audit quality gate", () => {
     expect(audit.status).toBe("blocked");
     expect(audit.blockingIssueCodes).toContain("STALE_ENTITY_SOURCE");
   });
+
+  it("blocks robots directives that contradict a non-indexable policy", () => {
+    const s = surface();
+    const audit = auditEntity(baseEntity, s.canonicalUrl, "noindex", "2026-09-24T12:00:00Z", {
+      ...s,
+      metadata: { ...s.metadata, robots: "index,follow" },
+      policy: { ...s.policy, indexability: "noindex", includeInSitemap: false },
+      now: "2026-09-24T12:00:00Z",
+    });
+    expect(audit.status).toBe("blocked");
+    expect(audit.blockingIssueCodes).toContain("ROBOTS_NONINDEXABILITY_MISMATCH");
+  });
+
 });
