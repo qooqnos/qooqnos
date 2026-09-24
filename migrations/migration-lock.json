@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T11:30:46.087Z",
+  "generatedAt": "2026-09-24T18:41:51.140Z",
   "migrations": [
     {
       "id": "0001_foundation",
@@ -525,6 +525,13 @@
       "moduleId": "seo",
       "filename": "0078_seo_geo_graph.sql",
       "checksum": "c2d3e5d8d0782551f59e3d0b25c227a223381ceeb71b06c144b84cb76fc63a7b"
+    },
+    {
+      "id": "0079_seo_operational_control_plane",
+      "version": 79,
+      "moduleId": "seo",
+      "filename": "0079_seo_operational_control_plane.sql",
+      "checksum": "2e19f47cbf6b2bc862c8fd8fb8d512d3264d1266dcc394b86c703e2889328762"
     }
   ]
 }
