@@ -663,3 +663,15 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
   .engine-card:last-child:nth-child(odd){grid-column:auto}
   .engine-form{grid-template-columns:1fr}
 }
+
+
+.seo-breadcrumbs{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:14px;color:var(--faint);font-size:8px}
+.seo-breadcrumbs a{color:var(--muted)}
+.seo-breadcrumbs a:hover{color:var(--primary)}
+.seo-action-row{display:flex;flex-wrap:wrap;gap:8px}
+.seo-related-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:15px}
+.seo-related-link{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2)}
+.seo-related-link span{font-size:9px;color:var(--text);overflow:hidden;text-overflow:ellipsis}
+.seo-related-link small{color:var(--faint);font-size:7px;white-space:nowrap}
+.seo-public-actions{margin-top:20px}
+@media(max-width:820px){.seo-related-list{grid-template-columns:1fr}}
