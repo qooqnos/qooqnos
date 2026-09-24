@@ -29,6 +29,7 @@ const STORAGE = {
   workspace: "phoenix-workspace-id",
   accessToken: "phoenix-access-token",
   business: "phoenix-business-id",
+  customer: "phoenix-customer-id",
 };
 
 type ApiOptions = {
@@ -80,6 +81,7 @@ const routes: Route[] = [
   { path: "/account", label: "حساب", icon: "◉", render: renderAccount },
   { path: "/booking", label: "رزرو", icon: "◷", render: renderBooking },
   { path: "/checkout", label: "خرید", icon: "◫", render: renderCheckout },
+  { path: "/customer", label: "مشتری", icon: "♙", render: renderCustomer },
 ];
 
 const theme = getInitialTheme();
@@ -143,6 +145,7 @@ function render(): void {
   bindGlobalEvents();
   syncThemeButtons();
   if (route.path === "/account") void loadAccountState();
+  if (route.path === "/customer") void loadCustomerState();
 }
 
 function renderHeader(route: Route): string {
@@ -271,6 +274,235 @@ function renderHome(): string {
       </div>
     </section>
   `;
+}
+
+function renderCustomer(): string {
+  const customerId = localStorage.getItem(STORAGE.customer) ?? "";
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Customer & CRM</span><h1>رابطه را بشناسید، <em>دوباره ارزش بسازید.</em></h1><p>پروفایل، ترجیحات و timeline مشتری از قراردادهای canonical Customer/CRM خوانده می‌شوند.</p></div>
+      <div class="heading-actions">
+        <button class="button button-ghost" type="button" data-customer-refresh>بروزرسانی</button>
+        <button class="button button-primary" type="button" data-customer-create>${customerId ? "مشتری جدید" : "ایجاد مشتری"}</button>
+      </div>
+    </section>
+    <section class="customer-grid">
+      <article class="glass-card customer-profile-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Profile</span><h2>پروفایل مشتری</h2></div><span id="customer-status" class="pill">در حال بررسی</span></div>
+        <div id="customer-profile" class="customer-profile-body">
+          <div class="account-empty"><span>♙</span><p>${customerId ? "در حال خواندن پروفایل…" : "یک Customer ID ایجاد یا ثبت کنید."}</p></div>
+        </div>
+      </article>
+      <article class="glass-card customer-timeline-card">
+        <div class="card-section-heading"><div><span class="section-kicker">CRM Timeline</span><h2>آخرین تعاملات</h2></div><span id="customer-history-meta">—</span></div>
+        <div id="customer-history" class="timeline-list"><div class="slot-empty"><span>◌</span><p>هنوز timeline خوانده نشده است.</p></div></div>
+      </article>
+    </section>
+    <section class="customer-grid customer-grid-secondary">
+      <article class="glass-card customer-profile-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Preferences</span><h2>ترجیحات ثبت‌شده</h2></div></div>
+        <div id="customer-preferences" class="preference-list"><div class="slot-empty"><span>✦</span><p>ترجیحات بعد از اتصال نمایش داده می‌شوند.</p></div></div>
+        <div class="preference-add">
+          <input class="studio-input-line" id="customer-pref-key" type="text" placeholder="مثلاً category" />
+          <input class="studio-input-line" id="customer-pref-value" type="text" placeholder="مثلاً beauty" />
+          <button class="button button-primary" type="button" data-customer-add-pref>ثبت ترجیح</button>
+        </div>
+      </article>
+      <article class="glass-card customer-profile-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Context</span><h2>شناسه‌های فعال</h2></div></div>
+        <div class="account-details">
+          <div class="account-row"><span>Customer ID</span><strong id="customer-id-display">${escapeHtml(customerId || "—")}</strong></div>
+          <div class="account-row"><span>Workspace</span><strong>${escapeHtml(localStorage.getItem(STORAGE.workspace) ?? "—")}</strong></div>
+          <div class="account-row"><span>Business</span><strong>${escapeHtml(localStorage.getItem(STORAGE.business) ?? "—")}</strong></div>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+async function loadCustomerState(): Promise<void> {
+  const customerId = localStorage.getItem(STORAGE.customer);
+  const status = document.querySelector<HTMLElement>("#customer-status");
+  const profile = document.querySelector<HTMLElement>("#customer-profile");
+  const history = document.querySelector<HTMLElement>("#customer-history");
+  const historyMeta = document.querySelector<HTMLElement>("#customer-history-meta");
+  const preferences = document.querySelector<HTMLElement>("#customer-preferences");
+  if (!status || !profile || !history || !historyMeta || !preferences) return;
+
+  if (!customerId) {
+    status.textContent = "نیازمند Customer";
+    status.className = "pill warning";
+    profile.innerHTML = '<div class="account-empty"><span>♙</span><p>Customer ID ثبت نشده است. از «ایجاد مشتری» استفاده کنید.</p></div>';
+    history.innerHTML = '<div class="slot-empty"><span>◌</span><p>ابتدا Customer ایجاد شود.</p></div>';
+    preferences.innerHTML = '<div class="slot-empty"><span>✦</span><p>ابتدا Customer ایجاد شود.</p></div>';
+    return;
+  }
+
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    status.textContent = "بدون session";
+    status.className = "pill warning";
+    profile.innerHTML = '<div class="account-empty"><span>!</span><p>برای خواندن Customer باید session متصل باشد.</p></div>';
+    return;
+  }
+
+  profile.innerHTML = '<div class="slot-loading">در حال خواندن Customer profile…</div>';
+  history.innerHTML = '<div class="slot-loading">در حال خواندن timeline…</div>';
+  preferences.innerHTML = '<div class="slot-loading">در حال خواندن ترجیحات…</div>';
+
+  try {
+    const [profileResponse, historyResponse, preferenceResponse] = await Promise.all([
+      apiJson<{ data: { customer: CustomerRecordView; preferences: CustomerPreferenceView[]; addresses: CustomerAddressView[] } }>(
+        `/api/v1/customers/${encodeURIComponent(customerId)}/profile`,
+      ),
+      apiJson<{ data: CustomerHistoryView[] }>(
+        `/api/v1/customers/${encodeURIComponent(customerId)}/history?limit=20`,
+      ),
+      apiJson<{ data: CustomerPreferenceView[] }>(
+        `/api/v1/customers/${encodeURIComponent(customerId)}/preferences`,
+      ),
+    ]);
+
+    const customer = profileResponse.data.customer;
+    status.textContent = customer.status ?? "active";
+    status.className = customer.status === "active" ? "pill success" : "pill warning";
+    profile.innerHTML = `
+      <div class="customer-identity">
+        <div class="customer-avatar">♙</div>
+        <div><span class="section-kicker">Customer</span><h3>${escapeHtml(customer.id)}</h3><p>${escapeHtml(customer.locale ?? "locale unset")} · ${escapeHtml(customer.timezone ?? "timezone unset")}</p></div>
+      </div>
+      <div class="account-details">
+        <div class="account-row"><span>Created</span><strong>${escapeHtml(formatDate(customer.createdAt))}</strong></div>
+        <div class="account-row"><span>User</span><strong>${escapeHtml(customer.userId ?? "—")}</strong></div>
+        <div class="account-row"><span>Addresses</span><strong>${profileResponse.data.addresses.length}</strong></div>
+      </div>`;
+
+    const timeline = historyResponse.data ?? [];
+    history.innerHTML = timeline.length
+      ? timeline.map((event) => `
+        <div class="timeline-item">
+          <span class="timeline-dot"></span>
+          <div><strong>${escapeHtml(event.eventType ?? event.type ?? "event")}</strong><p>${escapeHtml(event.summary ?? event.description ?? "تعامل ثبت‌شده در CRM")}</p><small>${escapeHtml(formatDate(event.occurredAt ?? event.createdAt))}</small></div>
+        </div>`).join("")
+      : '<div class="slot-empty"><span>◌</span><p>timeline خالی است.</p></div>';
+    historyMeta.textContent = `${timeline.length} رویداد`;
+
+    const pref = preferenceResponse.data ?? profileResponse.data.preferences ?? [];
+    preferences.innerHTML = pref.length
+      ? pref.map((item) => `<div class="preference-item"><span>${escapeHtml(item.attribute)}</span><strong>${escapeHtml(item.valueReference)}</strong><small>${escapeHtml(item.source)}</small></div>`).join("")
+      : '<div class="slot-empty"><span>✦</span><p>هنوز ترجیحی ثبت نشده است.</p></div>';
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    const message = error instanceof Error ? error.message : "خواندن Customer ناموفق بود.";
+    profile.innerHTML = `<div class="account-empty"><span>!</span><p>${escapeHtml(message)}</p></div>`;
+    history.innerHTML = '<div class="slot-empty"><span>!</span><p>timeline در دسترس نیست.</p></div>';
+    historyMeta.textContent = "خطا";
+  }
+}
+
+type CustomerRecordView = {
+  id: string;
+  userId?: string | null;
+  status?: string | null;
+  locale?: string | null;
+  timezone?: string | null;
+  createdAt: string;
+};
+
+type CustomerPreferenceView = {
+  attribute: string;
+  valueReference: string;
+  source: string;
+  confidence?: number;
+  persistence?: string;
+};
+
+type CustomerAddressView = { id: string; formatted?: string | null };
+
+type CustomerHistoryView = {
+  eventType?: string | null;
+  type?: string | null;
+  summary?: string | null;
+  description?: string | null;
+  occurredAt?: string | null;
+  createdAt?: string;
+};
+
+function formatDate(value?: string | null): string {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+function openCustomerCreatePanel(): void {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    showToast("ابتدا session را متصل کنید.");
+    return;
+  }
+  const overlay = document.createElement("div");
+  overlay.className = "connection-overlay";
+  overlay.innerHTML = `
+    <div class="connection-backdrop" data-close-customer></div>
+    <section class="connection-modal glass-card" role="dialog" aria-modal="true" aria-labelledby="customer-create-title">
+      <button class="connection-close" type="button" data-close-customer aria-label="بستن">×</button>
+      <span class="eyebrow"><i></i> Customer Setup</span>
+      <h2 id="customer-create-title">Customer جدید</h2>
+      <p>این موجودیت مستقیماً از Customer canonical ساخته می‌شود.</p>
+      <label class="field-label" for="customer-locale">Locale <span class="field-optional">اختیاری</span></label>
+      <input id="customer-locale" class="studio-input-line" type="text" placeholder="fa-IR" value="fa-IR" />
+      <label class="field-label" for="customer-timezone">Timezone <span class="field-optional">اختیاری</span></label>
+      <input id="customer-timezone" class="studio-input-line" type="text" placeholder="Asia/Baku" value="Asia/Baku" />
+      <div id="customer-create-state" class="connection-state">وضعیت: آماده</div>
+      <div class="connection-actions">
+        <button class="button button-ghost" type="button" data-close-customer>لغو</button>
+        <button class="button button-primary" type="button" data-submit-customer>ایجاد Customer</button>
+      </div>
+    </section>`;
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll<HTMLElement>("[data-close-customer]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
+  overlay.querySelector<HTMLButtonElement>("[data-submit-customer]")?.addEventListener("click", async () => {
+    const locale = overlay.querySelector<HTMLInputElement>("#customer-locale")?.value.trim() ?? "";
+    const timezone = overlay.querySelector<HTMLInputElement>("#customer-timezone")?.value.trim() ?? "";
+    const state = overlay.querySelector<HTMLElement>("#customer-create-state");
+    if (!state) return;
+    state.textContent = "در حال ایجاد…";
+    try {
+      const response = await apiJson<{ data: { id: string } }>("/api/v1/customers", {
+        method: "POST",
+        body: { ...(locale ? { locale } : {}), ...(timezone ? { timezone } : {}) },
+      });
+      localStorage.setItem(STORAGE.customer, response.data.id);
+      state.textContent = "Customer ساخته شد.";
+      state.className = "connection-state success";
+      showToast("Customer ساخته شد.");
+      window.setTimeout(() => {
+        overlay.remove();
+        render();
+      }, 600);
+    } catch (error) {
+      state.textContent = error instanceof Error ? error.message : "ساخت Customer ناموفق بود.";
+      state.className = "connection-state error";
+    }
+  });
+}
+
+async function addCustomerPreference(): Promise<void> {
+  const customerId = localStorage.getItem(STORAGE.customer);
+  const key = document.querySelector<HTMLInputElement>("#customer-pref-key")?.value.trim() ?? "";
+  const value = document.querySelector<HTMLInputElement>("#customer-pref-value")?.value.trim() ?? "";
+  if (!customerId) { showToast("ابتدا Customer ایجاد کنید."); return; }
+  if (!key || !value) { showToast("کلید و مقدار ترجیح الزامی است."); return; }
+  try {
+    await apiJson(`/api/v1/customers/${encodeURIComponent(customerId)}/preferences`, {
+      method: "POST",
+      body: { attribute: key, valueReference: value, source: "web", confidence: 1, persistence: "persistent" },
+    });
+    showToast("ترجیح ثبت شد.");
+    void loadCustomerState();
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "ثبت ترجیح ناموفق بود.");
+  }
 }
 
 function renderAccount(): string {
@@ -637,6 +869,9 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-refresh-account]")?.addEventListener("click", loadAccountState);
   document.querySelector<HTMLButtonElement>("[data-account-connect]")?.addEventListener("click", openConnectionPanel);
   document.querySelector<HTMLButtonElement>("[data-account-revoke]")?.addEventListener("click", revokeCurrentSession);
+  document.querySelector<HTMLButtonElement>("[data-customer-refresh]")?.addEventListener("click", loadCustomerState);
+  document.querySelector<HTMLButtonElement>("[data-customer-create]")?.addEventListener("click", openCustomerCreatePanel);
+  document.querySelector<HTMLButtonElement>("[data-customer-add-pref]")?.addEventListener("click", addCustomerPreference);
 
   document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
