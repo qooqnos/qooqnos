@@ -285,6 +285,7 @@ async function enrichSeoPayload(
         ...(product.description ? { description: product.description } : {}),
         locale: typeof payload.locale === "string" ? payload.locale : "en",
         relatedEntityIds: [product.businessId],
+        relatedEntities: [{ entityId: product.businessId, relation: "ownedByBusiness" }],
         productGroupId: product.id,
         ...(variants.length ? { productVariants: variants } : {}),
         updatedAt: product.updatedAt,
@@ -301,11 +302,12 @@ async function enrichSeoPayload(
       if (record) {
         const locations = await business.listLocations(context, record.id);
         const catalogRelationships = catalog ? await catalog.listBusinessEntityIds(context, record.id) : { productIds: [], serviceIds: [] };
-        const relatedEntityIds = [
-          ...catalogRelationships.productIds,
-          ...catalogRelationships.serviceIds,
-          ...locations.filter((item) => item.status === "active").map((item) => item.id),
-        ].filter((id) => id !== record.id);
+        const relatedEntities = [
+          ...catalogRelationships.productIds.map((entityId) => ({ entityId, relation: "offersProduct" })),
+          ...catalogRelationships.serviceIds.map((entityId) => ({ entityId, relation: "offersService" })),
+          ...locations.filter((item) => item.status === "active").map((item) => ({ entityId: item.id, relation: "hasLocation" })),
+        ].filter((item) => item.entityId !== record.id);
+        const relatedEntityIds = relatedEntities.map((item) => item.entityId);
         const location = locations.find((item) => item.status === "active" && item.locationType === "physical" && item.geoPoint);
         if (location) {
           const hours = await business.listHours(context, record.id, location.id);
@@ -329,6 +331,7 @@ async function enrichSeoPayload(
             preferredName: record.displayName,
             locale: record.defaultLocale ?? "en",
             ...(relatedEntityIds.length ? { relatedEntityIds } : {}),
+            ...(relatedEntities.length ? { relatedEntities } : {}),
             ...(location.id ? { locationId: location.id } : {}),
             geoScope: "exact",
             geoPoint: location.geoPoint ?? undefined,
