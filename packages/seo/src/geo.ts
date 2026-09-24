@@ -16,7 +16,11 @@ export function buildGeoTruthSignal(entity: SeoEntity): GeoTruthSignal | null {
   const serviceAreaIds = (entity.serviceArea ?? []).filter((id) => id.trim().length > 0);
   if (!scope) return null;
   const country = entity.country?.trim() || null;
-  if (!hasLocation && serviceAreaIds.length === 0 && !country) return null;
+  const locationRequired = scope === "exact" || scope === "city" || scope === "region";
+  const countryOnlyScope = scope === "country" && Boolean(country);
+  const serviceAreaScope = scope === "service-area" && serviceAreaIds.length > 0;
+  if (locationRequired && !hasLocation) return null;
+  if (!locationRequired && !countryOnlyScope && !serviceAreaScope && !hasLocation) return null;
 
   return {
     entityId: entity.id,
