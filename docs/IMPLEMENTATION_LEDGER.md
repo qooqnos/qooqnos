@@ -1069,3 +1069,19 @@ Canonical files:
 - `apps/web/src/main.ts`
 - `apps/web/styles.css`
 - `apps/web/public/styles.css`
+
+### Frontend Billing Workspace — 2026-09-25
+
+The frontend now exposes canonical Billing visibility.
+
+Implemented:
+- dedicated `/billing` route;
+- plans loaded from `GET /api/v1/billing/plans`;
+- invoices loaded from `GET /api/v1/billing/invoices` with business/customer filters;
+- currency/amount display is presentation-only and uses returned minor-unit values;
+- no pricing, plan entitlement, invoice calculation, or payment policy is duplicated in frontend.
+
+Canonical files:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
