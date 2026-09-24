@@ -342,7 +342,7 @@ Recommended tables:
 - `billing_usage_meters`
 - `billing_usage_events`
 - `billing_entitlement_snapshots`
-- `billing_invoices` (when invoicing is active)
+- `billing_invoices`, `billing_invoice_lines`, `billing_invoice_payment_applications`
 - `billing_payment_provider_refs`
 - `billing_reconciliation_cases`
 - `billing_refunds`
@@ -433,7 +433,7 @@ Required tests:
 8. payment provider adapter
 9. subscription checkout
 10. webhook/reconciliation
-11. invoice foundation
+11. invoice system
 12. AI usage/cost metering
 13. future marketplace transaction ledger
 14. future transaction fees/payouts
