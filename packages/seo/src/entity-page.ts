@@ -31,7 +31,7 @@ export function buildBreadcrumbs(
 
   return [
     { name: "Phoenix", url: base + "/" },
-    { name: label, url: base + "/" + locale + "/" + type },
+    { name: label, url: "/discover?locale=" + locale + "&type=" + encodeURIComponent(type) },
     { name: entity.preferredName, url: canonicalUrl },
   ];
 }
