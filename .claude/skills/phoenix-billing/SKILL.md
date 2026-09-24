@@ -32,3 +32,12 @@ Verify tenant isolation, lifecycle transitions, AI usage metering, quota concurr
 - Provider credentials and signing secrets are runtime configuration only; never persist them in Billing or Commerce tables.
 - Record normalized external references through `BillingRepository.recordProviderReference`.
 - Commerce must never call a provider SDK directly.
+
+## Settlement
+- Settlement is Billing-owned financial truth; Commerce may reference it but must not implement payout state.
+- Settlement amounts use integer minor units and immutable settlement items.
+- Enforce gross = fee + refund + net and reconcile item net total before ledger posting.
+- Require approval separation from requester before processing.
+- Execute provider payouts only through `PaymentProviderAdapter.payoutSettlement` with an idempotency key.
+- Record provider references as execution evidence; never store provider credentials in the financial schema.
+- Post settlement accounting only after item reconciliation and use immutable double-entry ledger transactions.
