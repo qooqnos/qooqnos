@@ -70,7 +70,7 @@ export class MatchingOutcomeProcessor {
       ...(candidateId ? { candidateId } : {}),
       signalType,
       source: event.eventType,
-      actorReference: typeof payload.actorReference === "string" ? payload.actorReference : undefined,
+      ...(typeof payload.actorReference === "string" ? { actorReference: payload.actorReference } : {}),
       metadata: {
         eventId: event.id,
         aggregateType: event.aggregateType,
