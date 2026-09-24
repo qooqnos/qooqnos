@@ -241,7 +241,7 @@ export class AutomationExecutor {
 
       try {
         const originalOutput = parseReference(step.outputReference);
-        const originalInput = parseReference(step.outputReference);
+        const originalInput = null;
         const output = await this.options.capabilities.invoke(
           context,
           policy.capability,
