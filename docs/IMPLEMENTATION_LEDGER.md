@@ -910,3 +910,9 @@ Concurrent publication is now guarded at persistence level: representation upser
 - Artifact replacement is complete-set based: prior artifacts for the active representation are removed and the current metadata/structured-data/answer artifacts are inserted in the same atomic operation.
 - Dependency replacement is included in the same publication boundary; a worker is marked succeeded only after the atomic bundle completes.
 - Existing single-artifact repository APIs remain available for non-publication use, while the publication worker uses the atomic bundle boundary.
+
+
+## SEO/GEO operational audit pipeline — 2026-09-24
+- Persisted entity audits are now executable operationally, not only computed in memory.
+- Audit rules include entity completeness, semantic relationships, geographic consistency, publication/visibility consistency, and canonical identity presence.
+- Authenticated workspace-scoped API endpoints expose latest audit results and allow explicit audit execution against the current canonical SEO representation.
