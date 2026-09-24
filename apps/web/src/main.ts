@@ -54,6 +54,13 @@ type PublicSeoHydration = {
     locale: string;
   };
   structuredData: Record<string, unknown>;
+  page: {
+    canonicalUrl: string;
+    breadcrumbs: readonly { name: string; url: string }[];
+    actions: readonly { kind: "primary" | "secondary"; label: string; href: string; reason: string }[];
+    relatedLinks: readonly { targetEntityId: string; targetType?: string; targetLabel?: string; targetUrl?: string; relation: string; priority: number; reason: string }[];
+    sections: readonly { id: string; title: string; kind: string }[];
+  };
   answer: {
     entityId: string;
     locale: string;
@@ -272,6 +279,9 @@ function renderSeoEntity(payload: PublicSeoHydration): string {
       <span>${escapeHtml(fact.fact)}</span>
       ${fact.verifiedAt ? `<small>تأیید: ${escapeHtml(fact.verifiedAt)}</small>` : ""}
     </li>`).join("");
+  const breadcrumbs = payload.page.breadcrumbs.map((item) => `<a href="${escapeAttr(item.url)}" data-nav>${escapeHtml(item.name)}</a>`).join(`<span aria-hidden="true">/</span>`);
+  const actions = payload.page.actions.map((action) => `<a class="button ${action.kind === "primary" ? "button-primary" : "button-ghost"}" href="${escapeAttr(action.href)}" data-nav>${escapeHtml(action.label)} →</a>`).join("");
+  const related = payload.page.relatedLinks.map((link) => `<a class="seo-related-link" href="${escapeAttr(link.targetUrl ?? "/discover?q=" + encodeURIComponent(link.targetLabel ?? link.targetEntityId))}" data-nav><span>${escapeHtml(link.targetLabel ?? link.targetEntityId)}</span><small>${escapeHtml(link.relation)}</small></a>`).join("");
   const geo = answer.geography
     ? [
         answer.geography.country ? `<span>کشور: ${escapeHtml(answer.geography.country)}</span>` : "",
@@ -283,6 +293,7 @@ function renderSeoEntity(payload: PublicSeoHydration): string {
   applyHydratedSeoHead(payload);
 
   return `
+    <nav class="seo-breadcrumbs" aria-label="Breadcrumb">${breadcrumbs}</nav>
     <section class="page-heading seo-public-heading">
       <div>
         <span class="eyebrow"><i></i> ${escapeHtml(entity.type)}</span>
@@ -310,6 +321,14 @@ function renderSeoEntity(payload: PublicSeoHydration): string {
         ${facts ? `<ul class="seo-fact-list">${facts}</ul>` : `<p class="seo-public-muted">برای این موجودیت هنوز fact مستقلی ثبت نشده است.</p>`}
         ${geo ? `<div class="metadata-cloud">${geo}</div>` : ""}
       </article>
+    </section>
+    ${related ? `
+      <section class="section-block seo-public-related">
+        <div class="section-topline"><div><span class="section-kicker">Relationships</span><h2>مرتبط با این موجودیت</h2></div></div>
+        <div class="seo-related-list">${related}</div>
+      </section>` : ""}
+    <section class="section-block seo-public-actions">
+      <div class="seo-action-row">${actions}</div>
     </section>`;
 }
 
