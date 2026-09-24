@@ -1034,3 +1034,21 @@ Implemented:
 
 Canonical file:
 - `apps/web/src/main.ts`
+
+### Frontend Customer / CRM Workspace — 2026-09-25
+
+The frontend now has a canonical Customer/CRM workspace.
+
+Implemented:
+- dedicated `/customer` route;
+- Customer creation through `POST /api/v1/customers`;
+- Customer profile hydration through `GET /api/v1/customers/:customerId/profile`;
+- preference reads/writes through the canonical preferences endpoints;
+- CRM timeline hydration through `GET /api/v1/customers/:customerId/history`;
+- explicit Customer, Workspace and Business context display;
+- no CRM timeline or customer-domain rules are duplicated in frontend.
+
+Canonical files:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
