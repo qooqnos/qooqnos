@@ -20,6 +20,7 @@ export interface SaveSeoRepresentationInput {
   readonly plan: SeoProjectionPlan;
   readonly contentHash: string;
   readonly sourceUpdatedAt: string;
+  readonly sourceVersion: string;
   readonly now: string;
 }
 
@@ -65,7 +66,7 @@ export class SeoRepository extends Repository {
       input.plan.entityType,
       input.plan.locale,
       input.plan.sourceModule,
-      input.plan.sourceVersion,
+      input.sourceVersion,
       input.plan.publicationState,
       input.plan.visibility,
       input.plan.canonicalUrl,
