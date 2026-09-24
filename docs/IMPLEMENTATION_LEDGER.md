@@ -774,6 +774,6 @@ Implementation commits: `a51897e`, `e6bad36`, `a00a183`, `3e39a95`, `224b884`, `
 
 `0071_matching_act_outcome_links.sql` adds optional MatchRequest/Candidate references to authoritative Booking and Commerce Act records. `MatchingOutcomeProcessor` consumes the existing transactional outbox and maps `booking.completed`, `booking.no_show`, `booking.cancelled`, `commerce.order.completed`, `commerce.payment.completed`, `payment.captured`, and `fulfillment.completed` into the existing append-only Learning Signal repository. Event IDs are used as deterministic signal IDs for retry idempotency; ambiguous or unlinked outcomes are ignored rather than guessed. No second Learning system or duplicate outcome table was introduced.
 
-Implementation commits: migration `0071_matching_act_outcome_links.sql`; `packages/matching/src/outcome-processor.ts`; `apps/api/src/outbox-worker.ts`; Booking/Commerce reference propagation.
+Implementation commits: `35ef63e` (migration), `f71191f` (processor), `b7ee74d` (export), `1f7f0f1` (outbox consumer), `6023b33` / `bd6d8b2` (Booking), `98b8932` / `ee6cda0` / `fad742c` / `849b8f4` (Commerce), `f95cb36` (retry-idempotent learning recording).
 
 Status: 🟢 Complete
