@@ -1,4 +1,4 @@
-import { brandId, type EntityId } from "@qooqnos/core";
+import { brandId } from "@qooqnos/core";
 import { D1Database } from "@qooqnos/database";
 import { CaseDispatchProviderRegistry, classifyCaseDispatchError } from "./dispatch-adapter";
 import { CaseDispatchRepository } from "./dispatch-repository";
