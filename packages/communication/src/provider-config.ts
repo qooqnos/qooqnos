@@ -10,6 +10,8 @@ export interface CommunicationProviderEnvironment {
   readonly SMS_PROVIDER_TOKEN?: string;
   readonly WHATSAPP_PROVIDER_ENDPOINT?: string;
   readonly WHATSAPP_PROVIDER_TOKEN?: string;
+  readonly PUSH_PROVIDER_ENDPOINT?: string;
+  readonly PUSH_PROVIDER_TOKEN?: string;
 }
 
 /**
@@ -34,6 +36,14 @@ export function createConfiguredCommunicationProviders(
       channels: ["sms"],
       endpoint: env.SMS_PROVIDER_ENDPOINT,
       authorization: { scheme: "Bearer", credential: env.SMS_PROVIDER_TOKEN },
+    }));
+  }
+  if (env.PUSH_PROVIDER_ENDPOINT && env.PUSH_PROVIDER_TOKEN) {
+    adapters.push(createHttpCommunicationProviderAdapter({
+      providerId: "push.http",
+      channels: ["push"],
+      endpoint: env.PUSH_PROVIDER_ENDPOINT,
+      authorization: { scheme: "Bearer", credential: env.PUSH_PROVIDER_TOKEN },
     }));
   }
   if (env.WHATSAPP_PROVIDER_ENDPOINT && env.WHATSAPP_PROVIDER_TOKEN) {
