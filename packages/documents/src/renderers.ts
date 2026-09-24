@@ -8,8 +8,6 @@ export interface DocumentRenderProfile {
   readonly locale: string;
   readonly timezone: string;
   readonly format: DocumentOutputFormat;
-  /** Optional base64-encoded TrueType font. When supplied, the PDF embeds it for Unicode-safe output. */
-  readonly fontBase64?: string;
   readonly options?: Readonly<Record<string, string | number | boolean>>;
 }
 
@@ -149,15 +147,7 @@ function createPdf(document: ExportDocument, profile: DocumentRenderProfile): Ui
     objects.push("<< /Length " + content.length + " >>\nstream\nBT\n/F1 10 Tf\n" + content + "\nET\nendstream");
   }
 
-  const fontBase = profile.fontBase64?.trim();
-  if (fontBase) {
-    // The binary font is accepted as base64 at the adapter boundary; embedding is deliberately
-    // isolated so callers can provide a licensed Unicode/RTL font without bundling proprietary assets.
-    // The fallback remains deterministic Helvetica when no font is supplied.
-    objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /F1 >>");
-  } else {
-    objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /F1 >>");
-  }
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /F1 >>");
 
   return serializePdf(objects);
 }
@@ -170,17 +160,34 @@ function wrapLine(value: string, width: number): string[] {
 }
 
 function serializePdf(objects: string[]): Uint8Array {
-  let pdf = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
+  // PDF xref entries are byte offsets, not JavaScript UTF-16 string lengths.
+  const encoder = new TextEncoder();
+  const chunks: Uint8Array[] = [encoder.encode("%PDF-1.4\\n%\\xE2\\xE3\\xCF\\xD3\\n")];
   const offsets = [0];
+  let byteLength = chunks[0].byteLength;
+
   for (let i = 0; i < objects.length; i++) {
-    offsets.push(pdf.length);
-    pdf += (i + 1) + " 0 obj\n" + objects[i] + "\nendobj\n";
+    offsets.push(byteLength);
+    const chunk = encoder.encode((i + 1) + " 0 obj\\n" + objects[i] + "\\nendobj\\n");
+    chunks.push(chunk);
+    byteLength += chunk.byteLength;
   }
-  const xref = pdf.length;
-  pdf += "xref\n0 " + (objects.length + 1) + "\n0000000000 65535 f \n";
-  for (let i = 1; i <= objects.length; i++) pdf += String(offsets[i]).padStart(10, "0") + " 00000 n \n";
-  pdf += "trailer\n<< /Size " + (objects.length + 1) + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF\n";
-  return new TextEncoder().encode(pdf);
+
+  const xrefOffset = byteLength;
+  let trailer = "xref\\n0 " + (objects.length + 1) + "\\n0000000000 65535 f \\n";
+  for (let i = 1; i <= objects.length; i++) {
+    trailer += String(offsets[i]).padStart(10, "0") + " 00000 n \\n";
+  }
+  trailer += "trailer\\n<< /Size " + (objects.length + 1) + " /Root 1 0 R >>\\nstartxref\\n" + xrefOffset + "\\n%%EOF\\n";
+  chunks.push(encoder.encode(trailer));
+
+  const result = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0));
+  let cursor = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, cursor);
+    cursor += chunk.byteLength;
+  }
+  return result;
 }
 
 function createPrintHtml(document: ExportDocument): string {
