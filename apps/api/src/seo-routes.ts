@@ -146,6 +146,49 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
 
   router.register({
     method: "GET",
+    path: "/api/v1/seo/visibility/:entityId",
+    module: "seo",
+    operation: "visibility.read",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params }) => {
+      if (!database) return json({ status: "unavailable" }, 503, context.requestId);
+      const rows = await database.all(
+        `SELECT id, observed_at AS observedAt, surface, metric, query_class AS queryClass,
+                value_numeric AS valueNumeric, value_text AS valueText, provenance_json AS provenanceJson
+           FROM seo_measurements
+          WHERE organization_id=? AND workspace_id IS ? AND entity_id=?
+          ORDER BY observed_at DESC
+          LIMIT 200`,
+        context.tenantId, context.workspaceId ?? null, params.entityId,
+      );
+      const citations = await database.all(
+        `SELECT id, run_id AS runId, citation_url AS citationUrl, citation_title AS citationTitle,
+                citation_position AS citationPosition, citation_count AS citationCount,
+                source_type AS sourceType, observed_at AS observedAt, provenance_json AS provenanceJson
+           FROM seo_measurement_citations
+          WHERE organization_id=? AND workspace_id IS ? AND entity_id=?
+          ORDER BY observed_at DESC
+          LIMIT 100`,
+        context.tenantId, context.workspaceId ?? null, params.entityId,
+      );
+      return json({
+        visibility: {
+          measurements: rows.map((row) => ({
+            ...row,
+            provenance: JSON.parse(String(row.provenanceJson)),
+          })),
+          citations: citations.map((row) => ({
+            ...row,
+            provenance: JSON.parse(String(row.provenanceJson)),
+          })),
+        },
+      }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/seo/health",
     module: "seo",
     operation: "health.read",
