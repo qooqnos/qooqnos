@@ -723,7 +723,7 @@ The accurate state is:
 core foundation + identity + business + catalog + media + discovery
 + seller AI + customer/CRM + trust + booking + commerce + billing
 + communication + automation + AI Runtime + integration + privacy
-+ Demand/Matching + reviews + Fulfillment + Case Support are physically implemented
++ Demand/Matching + reviews + Fulfillment + Case Support + Case external dispatch are physically implemented
         ↓
 remaining work is primarily operational execution, derived projections,
 provider adapters, lifecycle workers and a small set of explicitly gated contracts
@@ -747,7 +747,7 @@ The remaining implementation work is operational/provider/projection work; Catal
 10. Matching learning signals and broader Act outcome integration are complete; core retrieval/ranking/Connect execution is implemented.
 11. Complete Fulfillment provider-specific adapters, callback reconciliation and durable polling only where an external provider contract exists; canonical tracking/service completion persistence is implemented.
 12. Business lifecycle vocabulary reconciliation is closed; do not introduce another Business status model.
-13. Complete Case queue dispatch/provider integrations where explicit contracts exist; CaseAction capability execution is already implemented.
+13. Case queue/provider dispatch is implemented through migration `0073_case_queue_provider_dispatch.sql`, durable CaseDispatch state/attempt evidence, a provider-neutral adapter/registry, a runtime-configured HTTP adapter, and the scheduled dispatch worker. Concrete vendor onboarding remains external operational work.
 14. Add Documents and Analytics structures where their contracts are sufficiently explicit; Localization registry contract is now implemented by migration 0072.
 
 Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables; 0048 completes the Review-owned moderation/reputation projection layer; 0054 adds Discovery index generations and observability evidence; 0064 completes the TrustSignal/anti-abuse physical boundary.
