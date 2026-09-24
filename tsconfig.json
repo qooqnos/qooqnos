@@ -81,6 +81,9 @@
       "path": "./packages/loyalty"
     },
     {
+      "path": "./packages/advertising"
+    },
+    {
       "path": "./apps/web"
     }
   ],
