@@ -825,3 +825,8 @@ Implementation commits: `039fda222cbd184cfce03383c6da055bf6f38694`.
 The Documents module now also defines the downstream renderer/artifact contracts: versioned PDF/Print renderer profiles, renderer registry, immutable `DocumentArtifact` output tied to the source snapshot hash, and an idempotent `DocumentArtifactStore` boundary. Renderer implementations remain intentionally adapter-specific; the canonical composition engine does not query domain storage or render output formats itself.
 
 Implementation commits: `73b060bef3710a384dd40618ed43b17a7ab7945b`, `0afa9282c445a48db5bc0c0180c7d4b0ce0e378f`, `2a3dfa54f09c386b4c02e5193628a9862375ddab`, `4ca264c0d4cda854453ccbcf635e18702c899e84`, plus the document composition/renderer files now present on `main`.
+
+
+### Documents project-graph integration — 2026-09-24
+
+The root TypeScript project graph now includes `packages/documents`, and the Documents package declares its `core` and `runtime` project references. This closes the build-graph integration gap for the new Documents module; it does not claim concrete PDF/Print renderer implementations or remote artifact storage.
