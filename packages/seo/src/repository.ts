@@ -215,7 +215,7 @@ export class SeoRepository extends Repository {
 
   async saveAudit(context: RequestContext, input: { id: EntityId; entity: SeoEntity; canonicalUrl: string; indexability: string; now: string }): Promise<void> {
     const scope = this.scope(context);
-    const audit = auditEntity(input.entity, input.canonicalUrl, input.now);
+    const audit = auditEntity(input.entity, input.canonicalUrl, input.indexability, input.now);
     await this.database.run(`INSERT INTO seo_audits (id, organization_id, workspace_id, entity_id, entity_type, generated_at, scores_json, issues_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, input.id, scope.organizationId, scope.workspaceId, input.entity.id, input.entity.type, input.now, JSON.stringify(audit.scores), JSON.stringify(audit.issues));
   }
 
