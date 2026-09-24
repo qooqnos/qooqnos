@@ -159,7 +159,7 @@ export async function renderSeoAwareDocument(
   baseHeaders.set("content-language", hydration.metadata.language || hydration.metadata.locale);
   baseHeaders.set("vary", "Accept-Encoding");
   baseHeaders.set("x-content-type-options", "nosniff");
-  if (parsed.entity.updatedAt) baseHeaders.set("last-modified", parsed.entity.updatedAt);
+  if (parsed.entity.updatedAt) { const updated = new Date(parsed.entity.updatedAt); if (Number.isFinite(updated.getTime())) baseHeaders.set("last-modified", updated.toUTCString()); }
 
   if (requestEtag === etag) return new Response(null, { status: 304, headers: baseHeaders });
 
