@@ -12,3 +12,5 @@ export * from "./internal-links";
 export * from "./geo";
 export * from "./projection";
 export * from "./repository";
+export * from "./query-intelligence";
+export * from "./freshness";
