@@ -87,6 +87,7 @@ const routes: Route[] = [
   { path: "/trust", label: "اعتماد", icon: "✓", render: renderTrust },
   { path: "/operations", label: "عملیات", icon: "⚙", render: renderOperations },
   { path: "/seo", label: "SEO", icon: "◎", render: renderSeo },
+  { path: "/control", label: "کنترل", icon: "⌘", render: renderControlCenter },
 ];
 
 const theme = getInitialTheme();
@@ -285,6 +286,141 @@ function renderHome(): string {
       </div>
     </section>
   `;
+}
+
+function renderControlCenter(): string {
+  const customer = localStorage.getItem(STORAGE.customer) ?? "";
+  const business = localStorage.getItem(STORAGE.business) ?? "";
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Control Plane</span><h1>اتوماسیون، اتصال و حریم خصوصی را <em>کنترل کنید.</em></h1><p>فرم‌های این صفحه فقط commandهای canonical را اجرا می‌کنند؛ state و policy در domainهای اصلی باقی می‌ماند.</p></div>
+      <div class="heading-actions"><button class="button button-ghost" type="button" data-control-connect>تنظیم اتصال</button></div>
+    </section>
+    <section class="control-grid">
+      <article class="glass-card control-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Automation</span><h2>Workflow جدید</h2></div></div>
+        <div class="control-form">
+          <input id="auto-name" class="studio-input-line" type="text" placeholder="نام workflow" />
+          <select id="auto-scope" class="studio-input-line"><option value="workspace">workspace</option><option value="business">business</option><option value="organization">organization</option><option value="platform">platform</option></select>
+          <input id="auto-business" class="studio-input-line" type="text" value="${escapeAttr(business)}" placeholder="Business ID (برای business)" />
+          <button class="button button-primary" type="button" data-auto-create>ایجاد workflow</button>
+        </div>
+        <div id="auto-result" class="connection-state">هنوز اجرا نشده است.</div>
+      </article>
+
+      <article class="glass-card control-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Integration</span><h2>اتصال حساب خارجی</h2></div></div>
+        <div class="control-form">
+          <input id="integration-provider" class="studio-input-line" type="text" placeholder="Provider ID" />
+          <input id="integration-type" class="studio-input-line" type="text" placeholder="account type" value="merchant" />
+          <input id="integration-external" class="studio-input-line" type="text" placeholder="External account reference" />
+          <input id="integration-credential" class="studio-input-line" type="text" placeholder="Credential reference (optional)" />
+          <button class="button button-primary" type="button" data-integration-connect>اتصال</button>
+        </div>
+        <div id="integration-result" class="connection-state">Credential واقعی را اینجا وارد نکنید؛ فقط reference canonical ثبت می‌شود.</div>
+      </article>
+
+      <article class="glass-card control-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Privacy</span><h2>Consent / Data Request</h2></div></div>
+        <div class="control-form">
+          <input id="privacy-subject" class="studio-input-line" type="text" value="${escapeAttr(customer)}" placeholder="Subject ID" />
+          <select id="privacy-subject-type" class="studio-input-line"><option value="customer">customer</option><option value="user">user</option><option value="member">member</option><option value="actor">actor</option></select>
+          <input id="privacy-purpose" class="studio-input-line" type="text" placeholder="Purpose" value="product_updates" />
+          <input id="privacy-version" class="studio-input-line" type="text" placeholder="Consent version" value="privacy-v1" />
+          <button class="button button-primary" type="button" data-privacy-consent>ثبت Consent</button>
+          <select id="privacy-request-type" class="studio-input-line"><option value="access">access</option><option value="export">export</option><option value="delete">delete</option><option value="restrict">restrict</option><option value="correct">correct</option></select>
+          <button class="button button-ghost" type="button" data-privacy-request>ایجاد Data Request</button>
+        </div>
+        <div id="privacy-result" class="connection-state">وضعیت privacy commandها اینجا نمایش داده می‌شود.</div>
+      </article>
+    </section>
+  `;
+}
+
+async function createAutomationWorkflow(): Promise<void> {
+  const name = document.querySelector<HTMLInputElement>("#auto-name")?.value.trim() ?? "";
+  const scope = document.querySelector<HTMLSelectElement>("#auto-scope")?.value ?? "";
+  const businessId = document.querySelector<HTMLInputElement>("#auto-business")?.value.trim() ?? "";
+  const state = document.querySelector<HTMLElement>("#auto-result");
+  if (!state) return;
+  if (!name) { showToast("نام workflow لازم است."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  try {
+    const response = await apiJson<{ data: { id: string; name?: string } }>("/api/v1/automation/workflows", {
+      method: "POST",
+      body: { name, scope, ...(scope === "business" && businessId ? { businessId } : {}) },
+    });
+    state.textContent = `Workflow ساخته شد · ${response.data.id}`;
+    state.className = "connection-state success";
+  } catch (error) {
+    state.textContent = error instanceof Error ? error.message : "ساخت workflow ناموفق بود.";
+    state.className = "connection-state error";
+  }
+}
+
+async function connectIntegrationAccount(): Promise<void> {
+  const providerId = document.querySelector<HTMLInputElement>("#integration-provider")?.value.trim() ?? "";
+  const accountType = document.querySelector<HTMLInputElement>("#integration-type")?.value.trim() ?? "";
+  const externalAccountReference = document.querySelector<HTMLInputElement>("#integration-external")?.value.trim() ?? "";
+  const credentialReference = document.querySelector<HTMLInputElement>("#integration-credential")?.value.trim() ?? "";
+  const state = document.querySelector<HTMLElement>("#integration-result");
+  if (!state) return;
+  if (!providerId || !accountType || !externalAccountReference) { showToast("Provider، account type و external reference لازم هستند."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  try {
+    const response = await apiJson<{ data: { id: string } }>("/api/v1/integrations/accounts", {
+      method: "POST",
+      body: { providerId, accountType, externalAccountReference, ...(credentialReference ? { credentialReference } : {}) },
+    });
+    state.textContent = `Integration account ساخته شد · ${response.data.id}`;
+    state.className = "connection-state success";
+  } catch (error) {
+    state.textContent = error instanceof Error ? error.message : "اتصال integration ناموفق بود.";
+    state.className = "connection-state error";
+  }
+}
+
+async function grantPrivacyConsent(): Promise<void> {
+  const subjectId = document.querySelector<HTMLInputElement>("#privacy-subject")?.value.trim() ?? "";
+  const subjectType = document.querySelector<HTMLSelectElement>("#privacy-subject-type")?.value ?? "";
+  const purpose = document.querySelector<HTMLInputElement>("#privacy-purpose")?.value.trim() ?? "";
+  const consentVersion = document.querySelector<HTMLInputElement>("#privacy-version")?.value.trim() ?? "";
+  const state = document.querySelector<HTMLElement>("#privacy-result");
+  if (!state) return;
+  if (!subjectId || !purpose || !consentVersion) { showToast("Subject، Purpose و Consent version لازم هستند."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  try {
+    const response = await apiJson<{ data: { id: string } }>("/api/v1/privacy/consents", {
+      method: "POST",
+      body: { subjectType, subjectId, purpose, consentVersion, source: "web", grantedAt: new Date().toISOString() },
+    });
+    state.textContent = `Consent ثبت شد · ${response.data.id}`;
+    state.className = "connection-state success";
+  } catch (error) {
+    state.textContent = error instanceof Error ? error.message : "ثبت consent ناموفق بود.";
+    state.className = "connection-state error";
+  }
+}
+
+async function createPrivacyRequest(): Promise<void> {
+  const subjectId = document.querySelector<HTMLInputElement>("#privacy-subject")?.value.trim() ?? "";
+  const subjectType = document.querySelector<HTMLSelectElement>("#privacy-subject-type")?.value ?? "";
+  const requestType = document.querySelector<HTMLSelectElement>("#privacy-request-type")?.value ?? "";
+  const state = document.querySelector<HTMLElement>("#privacy-result");
+  if (!state) return;
+  if (!subjectId) { showToast("Subject ID لازم است."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  try {
+    const response = await apiJson<{ data: { id: string; status?: string } }>("/api/v1/privacy/requests", {
+      method: "POST",
+      body: { subjectType, subjectId, requestType, requestedBy: "web" },
+    });
+    state.textContent = `Data Request ساخته شد · ${response.data.id} · ${response.data.status ?? "requested"}`;
+    state.className = "connection-state success";
+  } catch (error) {
+    state.textContent = error instanceof Error ? error.message : "ساخت privacy request ناموفق بود.";
+    state.className = "connection-state error";
+  }
 }
 
 function renderSeo(): string {
@@ -1549,6 +1685,11 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-load-fulfillment]")?.addEventListener("click", () => { void loadFulfillment(); });
   document.querySelector<HTMLButtonElement>("[data-seo-audit]")?.addEventListener("click", () => { void runSeoAudit(); });
   document.querySelector<HTMLButtonElement>("[data-seo-health]")?.addEventListener("click", () => { void loadSeoHealth(); });
+  document.querySelector<HTMLElement>("[data-control-connect]")?.addEventListener("click", openConnectionPanel);
+  document.querySelector<HTMLButtonElement>("[data-auto-create]")?.addEventListener("click", () => { void createAutomationWorkflow(); });
+  document.querySelector<HTMLButtonElement>("[data-integration-connect]")?.addEventListener("click", () => { void connectIntegrationAccount(); });
+  document.querySelector<HTMLButtonElement>("[data-privacy-consent]")?.addEventListener("click", () => { void grantPrivacyConsent(); });
+  document.querySelector<HTMLButtonElement>("[data-privacy-request]")?.addEventListener("click", () => { void createPrivacyRequest(); });
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
