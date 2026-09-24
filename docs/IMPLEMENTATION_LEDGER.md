@@ -3,6 +3,8 @@
 **Status:** Current implementation ledger
 **Core implementation completion:** 100%  
 **Last reviewed:** 2026-09-24
+
+SEO/GEO implementation has started from the frozen architecture contracts; all future SEO/GEO work must extend the single reusable platform capability and never duplicate SEO logic inside vertical modules.
 **Documentation reconciliation:** 2026-09-22; see repository history and this ledger for the latest commit references.
 
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
@@ -11,6 +13,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 
 | Capability | Status | Canonical source |
 |---|---|---|
+| SEO/GEO Engine core | 🟡 Foundation implemented | packages/seo; migrations/0077_seo_geo_engine.sql; docs/SEO_GEO_ENGINE_ARCHITECTURE.md; docs/SEO_GEO_WORLD_CLASS_ENGINE.md | Canonical entity representation, indexability policy, canonical URLs, metadata, structured data, GEO answer representation, sitemap/robots generation, explainable audit, tenant-scoped persistence, dependency/invalidation foundation and measurement storage. Full ingestion/publication workers, domain adapters, internal-link graph, observability integrations and external search-provider connectors remain next implementation layers. |
 | Product North Star | ✅ Complete | docs/PHOENIX_PRODUCT_NORTH_STAR.md |
 | AI product direction | ✅ Complete | docs/AI_PRODUCT_DIRECTION.md |
 | Capability decision rules | ✅ Complete | docs/CAPABILITY_DECISION_RULES.md |
