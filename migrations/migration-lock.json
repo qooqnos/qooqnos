@@ -555,13 +555,6 @@
       "filename": "0082_advertising_core.sql"
     },
     {
-      "id": "0083_seo_public_render_index",
-      "version": 83,
-      "moduleId": "seo",
-      "checksum": "93a04ce4fca516343a101f750ce7207fa154d7a0bdc46102a078676030274218",
-      "filename": "0083_seo_public_render_index.sql"
-    },
-    {
       "id": "0083_authorization_approval_workflow",
       "version": 83,
       "moduleId": "authorization-governance",
