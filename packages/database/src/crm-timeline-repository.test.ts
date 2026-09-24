@@ -20,7 +20,6 @@ function context(): RequestContext {
 describe("CrmTimelineRepository", () => {
   it("enforces organization and workspace scope on reads", async () => {
     const statements: string[] = [];
-    let firstCall = 0;
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
       async first<T>() { return null as T | null; },
