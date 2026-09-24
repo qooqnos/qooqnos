@@ -672,3 +672,10 @@ Measurement semantics are explicit:
 - scheduled and manual execution with tenant scoping.
 
 Competitive Intelligence is an observation system, not an invented market-share model. All observations retain provider/query/location/time provenance.
+
+Competitive Intelligence now has three evidence layers:
+1. live Google SERP observations;
+2. competitor on-page SEO snapshots;
+3. DataForSEO Labs keyword-gap evidence showing competitor-only queries under an explicit market/language configuration.
+
+No synthetic market-share score is produced.
