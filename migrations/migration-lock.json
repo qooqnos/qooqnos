@@ -595,6 +595,13 @@
       "moduleId": "seo",
       "checksum": "8ad1ce8a1d33b1e84bc6b7d37fa0c0a7d08126257e1bacec5c7fd1b592befb6c",
       "filename": "0088_seo_competitor_page_snapshots.sql"
+    },
+    {
+      "id": "0089_seo_competitive_keyword_gaps",
+      "version": 89,
+      "moduleId": "seo",
+      "checksum": "d25e396afaf9eff15761c4a57e77899309d8fad8f6c5d62a777f36ddad2099a0",
+      "filename": "0089_seo_competitive_keyword_gaps.sql"
     }
   ]
 }
