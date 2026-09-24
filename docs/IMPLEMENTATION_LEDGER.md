@@ -1484,3 +1484,5 @@ Implemented real competitive intelligence from external SERP evidence:
 - no synthetic market share or inferred universal rank is generated.
 
 Provider activation remains configuration-gated through DataForSEO credentials and a deliberate location/language configuration.
+
+Provider activation contract: `docs/SEO_COMPETITIVE_INTELLIGENCE_ACTIVATION.md`.
