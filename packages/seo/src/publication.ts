@@ -298,13 +298,14 @@ async function loadSeoEntityGraph(
             confidence,
             verified_at AS verifiedAt
        FROM seo_entity_graph_edges
-      WHERE organization_id=? AND workspace_id IS ? AND source_entity_id=?
+      WHERE organization_id=? AND workspace_id IS ?
+        AND (source_entity_id=? OR target_entity_id=?)
       ORDER BY confidence DESC, target_entity_id ASC`,
-    organizationId, workspaceId, entityId,
+    organizationId, workspaceId, entityId, entityId,
   );
   if (!edgeRows.length) return null;
 
-  const entityIds = [...new Set([entityId, ...edgeRows.map((row) => row.targetEntityId)])];
+  const entityIds = [...new Set([entityId, ...edgeRows.flatMap((row) => [row.sourceEntityId, row.targetEntityId])])];
   const placeholders = entityIds.map(() => "?").join(", ");
   const nodeRows = await database.all<{
     entityId: string;
