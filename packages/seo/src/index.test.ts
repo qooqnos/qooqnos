@@ -76,7 +76,7 @@ describe("SEO/GEO core", () => {
     expect(structured.url).toBe(url);
     expect(structured.telephone).toBe("+12025550123");
     expect(structured.priceRange).toBe("$");
-    expect((structured.breadcrumb as Record<string, unknown>)["@type"]).toBe("BreadcrumbList");
+    expect(((structured.mainEntityOfPage as Record<string, unknown>).breadcrumb as Record<string, unknown>)["@type"]).toBe("BreadcrumbList");
     expect(structured["@id"]).toBe("https://example.com/entities/biz-1");
     expect(structured.sameAs).toEqual(["https://example.com/about"]);
     expect(Array.isArray(structured.areaServed)).toBe(true);
