@@ -36,6 +36,38 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
 
   router.register({
     method: "GET",
+    path: "/api/v1/seo/audit/:entityId",
+    module: "seo",
+    operation: "audit.read",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params }) => {
+      if (!database) return json({ status: "unavailable" }, 503, context.requestId);
+      const audit = await new (await import("@qooqnos/seo")).SeoRepository(database).getLatestAudit(context, params.entityId);
+      return audit ? json({ audit }, 200, context.requestId) : json({ error: { code: "NOT_FOUND", message: "SEO audit not found." } }, 404, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/audit/:entityId",
+    module: "seo",
+    operation: "audit.run",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params, request }) => {
+      if (!database) return json({ status: "unavailable" }, 503, context.requestId);
+      const repository = new (await import("@qooqnos/seo")).SeoRepository(database);
+      const locale = new URL(request.url).searchParams.get("locale") ?? undefined;
+      const representation = await repository.getRepresentation(context, params.entityId, locale);
+      if (!representation) return json({ error: { code: "NOT_FOUND", message: "SEO representation not found." } }, 404, context.requestId);
+      await repository.saveAudit(context, { id: `seo-audit:${params.entityId}:${crypto.randomUUID()}`, ...representation, now: new Date().toISOString() });
+      return json({ audit: await repository.getLatestAudit(context, params.entityId) }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/seo/health",
     module: "seo",
     operation: "health.read",
