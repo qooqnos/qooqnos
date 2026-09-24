@@ -1501,3 +1501,10 @@ Competitive intelligence evidence layers now include:
 - provider-observed keyword gaps;
 - provider-observed referring-domain/backlink gaps;
 - AI Overview/reference URL changes.
+
+
+## Production SEO Hardening — Control Plane
+- **Status:** In progress / production activation gated.
+- **Completed:** production readiness evaluator; canonical HTTPS gate; provider readiness states; explicit non-zero-visibility semantics; SEO health/control-plane exposure; control-plane contract tests.
+- **Commits:** `877d7dd`, `2aa6b91`, `889e055`.
+- **Remaining:** end-to-end production verification and real external provider activation/evidence collection (Search Console, AI citation, competitive intelligence where configured).
