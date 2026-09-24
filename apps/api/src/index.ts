@@ -16,7 +16,7 @@ import { consumeOutbox, publishPendingOutbox, type QueueBatchLike, type Schedule
 import type { OutboxEventRecord } from "@qooqnos/database";
 import { getDatabase } from "./database";
 import { checkDatabase } from "./readiness";
-import { processPendingTrustExpiries } from "./trust-worker";
+import { processPendingTrustExpiries, processTrustAntiAbuseSignals } from "./trust-worker";
 import { processCommunicationDispatch } from "./communication-worker";
 import { processAutomationSchedules } from "./automation-worker";
 import { processAutomationExecutions } from "./automation-execution-worker";
@@ -544,6 +544,7 @@ export default {
     await publishPendingOutbox(env, now);
     await processCommunicationDispatch(env, now);
     await processPendingTrustExpiries(env, now);
+    await processTrustAntiAbuseSignals(env, now);
     await processAutomationSchedules(env, now);
     await processAutomationExecutions(env, now);
     await processCaseSla(env, now);
