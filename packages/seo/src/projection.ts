@@ -47,14 +47,14 @@ export interface SeoProjectionInput {
 export function buildSeoProjectionPlan(input: SeoProjectionInput): SeoProjectionPlan {
   const canonicalUrl = canonicalEntityUrl(input.canonicalBaseUrl, input.entity);
   const policy = evaluateSeoPolicy(input.entity, canonicalUrl, input.now);
-  const metadata = generateMetadata({ entity: input.entity, canonicalBaseUrl: input.canonicalBaseUrl }, canonicalUrl);
+  const metadata = generateMetadata({ entity: input.entity, canonicalBaseUrl: input.canonicalBaseUrl }, canonicalUrl, policy);
   const structuredData = generateStructuredData(input.entity);
   const answer = buildAnswerRepresentation(input.entity, input.facts ?? [], input.now);
   const internalLinks = input.graph
     ? recommendInternalLinks(input.graph, input.entity.id, input.linkLimit)
     : [];
   const geoSignal = buildGeoTruthSignal(input.entity);
-  const audit = auditEntity(input.entity, canonicalUrl, input.now);
+  const audit = auditEntity(input.entity, canonicalUrl, policy.indexability, input.now);
   const dependencyFingerprint = input.graph ? graphVersionFingerprint(input.graph) : "";
 
   return {
