@@ -1153,6 +1153,27 @@ Query traces are operational/evaluation evidence and never an authorization boun
 
 Evaluation records are immutable evidence for retrieval/ranking/matching quality.
 
+## 18.6 SEO/GEO derived representations and observability
+
+SEO/GEO is a derived platform capability. Its persistence never becomes source of truth for Business, Catalog, Customer, Trust, Location, or other domain facts.
+
+### `seo_entity_representations`
+Tenant/workspace-scoped canonical derived representation keyed by source entity, type and locale. Stores publication/indexability policy, canonical URL, source version, generated representation, source freshness and content hash.
+
+### `seo_artifacts`
+Versioned deterministic outputs such as metadata, structured data, GEO answers, sitemap/robots representations and internal-link artifacts. Artifacts are rebuildable from canonical source representations.
+
+### `seo_dependencies`
+Explicit entity dependency edges used for incremental invalidation. Dependencies do not transfer ownership of source facts.
+
+### `seo_audits`
+Explainable SEO/GEO quality evidence with decomposable scores and issue/remediation records. Audits are diagnostic and never authoritative.
+
+### `seo_measurements`
+Observed discovery/visibility measurements with surface, metric, entity/query context and provenance. The table must never invent rankings, impressions, citations or referrals that were not actually observed.
+
+SEO/GEO publication must remain truth-first, tenant-safe, provenance-aware and policy-controlled. Search indexes, structured data, answer representations and measurements are rebuildable projections.
+
 ## 19. Explicit gates still open
 
 The following remain controlled architecture/operational gates:
