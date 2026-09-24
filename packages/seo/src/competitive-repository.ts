@@ -124,6 +124,7 @@ export class SeoCompetitiveRepository extends Repository {
     },
   ): Promise<void> {
     const scope = this.scope(context);
+    const resultTypeFilter = input.observationType === "ai_citation" ? "result_type='ai_citation'" : "result_type<>'ai_citation'";
     const previous = await this.database.first<{
       resultUrl: string;
       rankAbsolute: number | null;
@@ -133,7 +134,7 @@ export class SeoCompetitiveRepository extends Repository {
       `SELECT result_url AS resultUrl, rank_absolute AS rankAbsolute, ai_citation AS aiCitation, observed_at AS observedAt
          FROM seo_competitive_observations
         WHERE organization_id=? AND workspace_id IS ? AND query_text=? AND domain=? AND run_id<>?
-          AND result_type != 'ai_citation'
+          AND ${resultTypeFilter}
         ORDER BY observed_at DESC LIMIT 1`,
       scope.organizationId, scope.workspaceId, input.queryText, input.domain, input.currentRunId,
     );
