@@ -853,3 +853,8 @@ Implementation commits: `2529874019b861aca0f3b6b0299024076d2d682e`, `81604001f47
 Concrete PDF and print adapters are now implemented and registered as the default Documents renderer registry. PDF output is deterministic A4/Helvetica output for the canonical ASCII-safe text subset; Unicode-safe print output is emitted as UTF-8 HTML/CSS for browser/print pipelines. Durable document artifacts now have an R2-backed, tenant-scoped, idempotent storage adapter with renderer and source-snapshot provenance metadata.
 
 Implementation commits: `4e6ea5693192380a079e7e1229029ffd30a5f4de`, `6f80b990fc5f632065f3f98de24d38120773e1e5`, `a573389e6f364624f1a8de8c3a2404d8b7fe3afc`, `a2bfa61f49f78ccbcd1f1773d89c0b40b487726f`, `a68958e9536e1d2a19d4fe4560af51c9207e0fa4`.
+
+
+### Fresh verification trigger — 2026-09-24
+
+The concrete document renderer and R2 artifact-store changes are queued for fresh CI/Phoenix verification on this head. No green verification status is claimed until GitHub Actions reports the current head as passing.
