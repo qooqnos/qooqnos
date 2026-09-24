@@ -73,7 +73,7 @@ Before adding a table:
 
 ## 4. Migration sequence currently registered
 
-The API runtime references the ordered canonical migration set through `0073`; intentional unused version numbers remain unassigned.
+The API runtime references the ordered canonical migration set through `0074`; intentional unused version numbers remain unassigned.
 
 Do not renumber or replace existing migrations.
 
