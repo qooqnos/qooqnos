@@ -142,7 +142,7 @@ export class SeoRepository extends Repository {
     await this.database.transaction(statements);
   }
 
-  private scope(context: RequestContext): { organizationId: EntityId; workspaceId: EntityId | null } {
+  private scope(context: RequestContext): { organizationId: string; workspaceId: string | null } {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = context.workspaceId ? this.requireWorkspace({ workspaceId: context.workspaceId }) : null;
     return { organizationId, workspaceId };
