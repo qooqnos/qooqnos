@@ -460,7 +460,7 @@ export function createApiCapabilityRegistry(
         return communication.sendNotification(requestContext, {
           recipientReference: requireString(body.recipientReference, "recipientReference"),
           intent: requireString(body.intent, "intent"),
-          channel: requireEnum(body.channel, "channel", ["in_app", "whatsapp", "sms", "email"] as const),
+          channel: requireEnum(body.channel, "channel", ["in_app", "whatsapp", "sms", "email", "push"] as const),
           ...(body.templateReference !== undefined ? { templateReference: requireString(body.templateReference, "templateReference") } : {}),
           ...(body.templateVersion !== undefined ? { templateVersion: requireString(body.templateVersion, "templateVersion") } : {}),
           ...(body.locale !== undefined ? { locale: requireString(body.locale, "locale") } : {}),
