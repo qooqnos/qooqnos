@@ -24,7 +24,7 @@ export async function crawlStoredSeoRepresentation(
     metric: 'render-errors',
     entityId: representation.entityId,
     numericValue: result.errors.length,
-    textValue: result.errors.join(' | ') || null as unknown as string | undefined,
+    ...(result.errors.length ? { textValue: result.errors.join(' | ') } : {}),
     provenance: { url: result.url, finalUrl: result.finalUrl, status: result.status, renderMode: result.renderMode, warnings: result.warnings },
     observedAt: now,
   });
