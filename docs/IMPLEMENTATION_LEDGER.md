@@ -925,3 +925,29 @@ Concurrent publication is now guarded at persistence level: representation upser
 - Unit coverage verifies publication/indexability conflicts and canonical identity diagnostics.
 
 Implementation commits: cb1fe23d24279264e5e8ba85a79bd9368c7b5acc, 684804634150c5afb0f49e5ee506a591c8bdb781, 58fb3fb7a23d013f71562d444bac1989afb538bd.
+
+## Frontend implementation — 2026-09-24
+
+The first production frontend slice is now implemented in `apps/web` as a dependency-light TypeScript SPA designed for the Cloudflare Worker asset boundary.
+
+Implemented:
+- application shell with responsive sidebar/header/mobile navigation;
+- RTL-first design system with dark/light themes and reduced-motion support;
+- client-side routing for `/`, `/discover`, `/business`, and `/product-studio`;
+- modern dashboard and discovery experience with loading states, responsive cards, and keyboard `/` focus shortcut;
+- Discovery API integration through `GET /api/v1/discovery/search`, with tenant/workspace/access-token forwarding when configured and a safe demo fallback;
+- Seller AI Product Studio UX for raw seller input, draft generation preview, review-oriented state and AI usage messaging;
+- root TypeScript build references `apps/web` so the workspace build now type-checks the frontend.
+
+Canonical source:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/index.html`
+
+Implementation commits:
+- `01b5f9f3ec4c2475c0121d942f51c45ed0c571e8` — build Phoenix application shell and core experiences
+- `8fa1b9a776ca3ee0f098713a3568d4717faaef39` — add modern Phoenix design system and responsive shell
+- `df52ff2297718198379b0273ddc110f98ad3c1ef` — harden client routing and global shortcuts
+- `ecc69d3b1a81f47e2697e801a87461a3c4ff32f5` — include web app in workspace typecheck
+
+Next frontend slices should reuse this shell and connect the operational pages to the existing canonical API instead of creating parallel domain state.
