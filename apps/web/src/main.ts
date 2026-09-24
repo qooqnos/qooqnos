@@ -37,6 +37,8 @@ type ApiOptions = {
   headers?: Record<string, string>;
 };
 
+let activeDiscoveryItems: DiscoveryResult[] = [];
+
 const demoBusinesses: DiscoveryResult[] = [
   {
     id: "demo-1",
@@ -371,178 +373,57 @@ function renderDiscover(): string {
 }
 
 function renderResultCards(items: DiscoveryResult[]): string {
+  activeDiscoveryItems = items;
   return items.map((item,index) => {
-    const title = escapeHtml(item.displayName ?? item.name ?? "کسب‌وکار");
-    const description = escapeHtml(item.description ?? "یک پیشنهاد مناسب از شبکه ققنوس.");
-    const locality = escapeHtml(item.locality ?? item.city ?? "نزدیک شما");
-    const score = item.score ?? Math.round((item.rating ?? 4.7) * 20);
-    const rating = item.rating ?? 4.7;
+    const title = escapeHtml(item.title ?? item.displayName ?? item.name ?? "مورد قابل کشف");
+    const description = escapeHtml(item.description ?? item.body ?? "یک موجودیت قابل کشف از شبکه ققنوس.");
+    const locality = escapeHtml(item.locality ?? item.city ?? "در فضای کاری شما");
+    const score = item.score ?? 0;
+    const rating = item.rating;
+    const sourceType = escapeHtml(item.sourceType ?? "resource");
     return `
-      <article class="result-card">
+      <button class="result-card result-card-button" type="button" data-discovery-index="${index}">
         <div class="result-art result-${index % 3}"><span>${["ک","س","ب"][index % 3]}</span></div>
         <div class="result-content">
-          <div class="result-head"><span class="tiny-status">● فعال</span><span class="score-chip">${score} <small>تناسب</small></span></div>
+          <div class="result-head"><span class="tiny-status">● eligible</span><span class="score-chip">${score ? String(Math.round(score)) : "—"} <small>score</small></span></div>
           <h3>${title}</h3>
           <p>${description}</p>
-          <div class="result-meta"><span>⌖ ${locality}</span><span>★ ${rating.toFixed(1)}</span></div>
+          <div class="result-meta"><span>⌖ ${locality}</span><span>◈ ${sourceType}</span>${rating !== undefined && rating !== null ? `<span>★ ${Number(rating).toFixed(1)}</span>` : ""}</div>
         </div>
-      </article>`;
+      </button>`;
   }).join("");
 }
 
-function renderBooking(): string {
-  const now = new Date();
-  const from = new Date(now.getTime() + 30 * 60_000);
-  const to = new Date(from.getTime() + 24 * 60 * 60_000);
-  return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Booking</span><h1>زمان مناسب را پیدا کنید، <em>بعد اقدام کنید.</em></h1><p>در این مرحله UI مستقیماً availability و holdهای canonical Booking را کنترل می‌کند.</p></div>
-      <div class="heading-actions"><button class="button button-ghost" type="button" data-account-connect>تنظیم اتصال</button></div>
-    </section>
-    <section class="booking-grid">
-      <article class="glass-card booking-panel">
-        <div class="card-section-heading"><div><span class="section-kicker">Availability</span><h2>بررسی زمان‌های آزاد</h2></div><span id="booking-status" class="pill">آماده</span></div>
-        <div class="booking-fields">
-          <div><label class="field-label" for="booking-schedule">Schedule ID</label><input class="studio-input-line" id="booking-schedule" type="text" placeholder="Schedule ID" /></div>
-          <div><label class="field-label" for="booking-resource">Resource ID <span class="field-optional">اختیاری</span></label><input class="studio-input-line" id="booking-resource" type="text" placeholder="Resource ID" /></div>
-          <div><label class="field-label" for="booking-from">از</label><input class="studio-input-line" id="booking-from" type="datetime-local" value="${toDateTimeLocal(from)}" /></div>
-          <div><label class="field-label" for="booking-to">تا</label><input class="studio-input-line" id="booking-to" type="datetime-local" value="${toDateTimeLocal(to)}" /></div>
-          <div><label class="field-label" for="booking-duration">مدت (ثانیه)</label><input class="studio-input-line" id="booking-duration" type="number" min="60" step="60" value="3600" /></div>
-          <div><label class="field-label" for="booking-business">Business ID</label><input class="studio-input-line" id="booking-business" type="text" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" placeholder="Business ID" /></div>
-        </div>
-        <div class="booking-actions"><button class="button button-primary button-lg" type="button" data-load-slots>نمایش زمان‌های آزاد <span>→</span></button></div>
-      </article>
-      <article class="glass-card slots-panel">
-        <div class="card-section-heading"><div><span class="section-kicker">Live slots</span><h2>زمان‌های پیشنهادی</h2></div><span id="slots-meta">هنوز جست‌وجو نشده</span></div>
-        <div id="booking-slots" class="slot-list"><div class="slot-empty"><span>◷</span><p>Schedule و بازه زمانی را وارد کنید.</p></div></div>
-      </article>
-    </section>
-  `;
-}
-
-function toDateTimeLocal(value: Date): string {
-  const pad = (number: number) => String(number).padStart(2, "0");
-  return `${value.getFullYear()}-${pad(value.getMonth()+1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
-}
-
-type AvailabilitySlot = {
-  slotReference?: string;
-  startsAt?: string;
-  endsAt?: string;
-  resourceId?: string;
-};
-
-async function loadBookingSlots(): Promise<void> {
-  const schedule = document.querySelector<HTMLInputElement>("#booking-schedule");
-  const resource = document.querySelector<HTMLInputElement>("#booking-resource");
-  const from = document.querySelector<HTMLInputElement>("#booking-from");
-  const to = document.querySelector<HTMLInputElement>("#booking-to");
-  const duration = document.querySelector<HTMLInputElement>("#booking-duration");
-  const business = document.querySelector<HTMLInputElement>("#booking-business");
-  const host = document.querySelector<HTMLDivElement>("#booking-slots");
-  const status = document.querySelector<HTMLElement>("#booking-status");
-  const meta = document.querySelector<HTMLElement>("#slots-meta");
-  if (!schedule || !resource || !from || !to || !duration || !business || !host || !status || !meta) return;
-
-  if (!schedule.value.trim() || !from.value || !to.value || !duration.value) {
-    showToast("Schedule، بازه زمانی و مدت الزامی هستند.");
-    return;
-  }
-  const token = sessionStorage.getItem(STORAGE.accessToken);
-  if (!token) {
-    openConnectionPanel();
-    showToast("برای خواندن availability باید session متصل باشد.");
-    return;
-  }
-
-  host.innerHTML = '<div class="slot-loading">در حال خواندن availability…</div>';
-  status.textContent = "در حال بررسی";
-  status.className = "pill warning";
-  meta.textContent = "Live";
-
-  try {
-    const params = new URLSearchParams({
-      from: new Date(from.value).toISOString(),
-      to: new Date(to.value).toISOString(),
-      durationSeconds: String(Number(duration.value)),
-    });
-    if (resource.value.trim()) params.set("resourceId", resource.value.trim());
-
-    const response = await apiJson<{ data: AvailabilitySlot[] }>(
-      `/api/v1/availability/schedules/${encodeURIComponent(schedule.value.trim())}/slots?${params.toString()}`,
-    );
-    const slots = Array.isArray(response.data) ? response.data : [];
-    host.innerHTML = slots.length
-      ? slots.map((slot, index) => `
-          <button class="slot-card" type="button" data-slot-index="${index}" data-slot-reference="${escapeAttr(slot.slotReference ?? "")}" data-slot-start="${escapeAttr(slot.startsAt ?? "")}" data-slot-end="${escapeAttr(slot.endsAt ?? "")}">
-            <span class="slot-time">${escapeHtml(formatSlotTime(slot.startsAt, slot.endsAt))}</span>
-            <span class="slot-arrow">←</span>
-          </button>`).join("")
-      : '<div class="slot-empty"><span>×</span><p>در این بازه slot قابل رزرو پیدا نشد.</p></div>';
-    status.textContent = slots.length ? "در دسترس" : "بدون slot";
-    status.className = slots.length ? "pill success" : "pill warning";
-    meta.textContent = `${slots.length} slot`;
-    document.querySelectorAll<HTMLButtonElement>("[data-slot-index]").forEach((button) => {
-      button.addEventListener("click", () => openBookingHoldPanel({
-        businessId: business.value.trim(),
-        slotReference: button.dataset.slotReference ?? "",
-        startsAt: button.dataset.slotStart ?? "",
-        endsAt: button.dataset.slotEnd ?? "",
-      }));
-    });
-  } catch (error) {
-    host.innerHTML = '<div class="slot-empty"><span>!</span><p>خواندن availability ناموفق بود.</p></div>';
-    status.textContent = "خطا";
-    status.className = "pill warning";
-    meta.textContent = "Request failed";
-    showToast(error instanceof Error ? error.message : "خطا در availability.");
-  }
-}
-
-function formatSlotTime(startsAt?: string, endsAt?: string): string {
-  if (!startsAt) return "زمان ثبت نشده";
-  const start = new Date(startsAt);
-  const end = endsAt ? new Date(endsAt) : null;
-  const formatter = new Intl.DateTimeFormat("fa-IR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-  return end ? `${formatter.format(start)} تا ${new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit" }).format(end)}` : formatter.format(start);
-}
-
-function openBookingHoldPanel(slot: { businessId: string; slotReference: string; startsAt: string; endsAt: string }): void {
-  if (!slot.businessId) {
-    showToast("Business ID برای ساخت hold لازم است.");
-    return;
-  }
-  const expiresAt = new Date(Date.now() + 10 * 60_000).toISOString();
+function openDiscoveryResultPanel(item: DiscoveryResult): void {
+  const title = item.title ?? item.displayName ?? item.name ?? "مورد قابل کشف";
+  const body = item.body ?? item.description ?? "توضیحی برای این projection ثبت نشده است.";
+  const metadataEntries = Object.entries(item.metadata ?? {}).slice(0, 8);
   const overlay = document.createElement("div");
   overlay.className = "connection-overlay";
   overlay.innerHTML = `
-    <div class="connection-backdrop" data-close-hold></div>
-    <section class="connection-modal glass-card" role="dialog" aria-modal="true">
-      <button class="connection-close" type="button" data-close-hold aria-label="بستن">×</button>
-      <span class="eyebrow"><i></i> Booking Hold</span>
-      <h2>این زمان را موقتاً نگه دار؟</h2>
-      <p>${escapeHtml(formatSlotTime(slot.startsAt, slot.endsAt))}</p>
-      <div class="connection-state">Hold تا ${escapeHtml(new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit" }).format(new Date(expiresAt)))} معتبر است.</div>
-      <div class="connection-actions">
-        <button class="button button-ghost" type="button" data-close-hold>لغو</button>
-        <button class="button button-primary" type="button" data-create-hold>ایجاد Hold</button>
+    <div class="connection-backdrop" data-close-discovery></div>
+    <section class="connection-modal glass-card discovery-detail-modal" role="dialog" aria-modal="true" aria-labelledby="discovery-detail-title">
+      <button class="connection-close" type="button" data-close-discovery aria-label="بستن">×</button>
+      <span class="eyebrow"><i></i> Discovery Projection</span>
+      <h2 id="discovery-detail-title">${escapeHtml(title)}</h2>
+      <p>${escapeHtml(body)}</p>
+      <div class="discovery-detail-grid">
+        <div><span>Source type</span><strong>${escapeHtml(item.sourceType ?? "—")}</strong></div>
+        <div><span>Source ID</span><strong>${escapeHtml(item.sourceId ?? "—")}</strong></div>
+        <div><span>Document version</span><strong>${item.documentVersion ?? "—"}</strong></div>
+        <div><span>Score</span><strong>${item.score ?? "—"}</strong></div>
       </div>
+      ${metadataEntries.length ? `<div class="metadata-cloud">${metadataEntries.map(([key,value]) => `<span><b>${escapeHtml(key)}</b> ${escapeHtml(String(value))}</span>`).join("")}</div>` : ""}
+      <div class="connection-actions"><button class="button button-primary" type="button" data-open-booking-from-discovery>بررسی رزرو</button><button class="button button-ghost" type="button" data-close-discovery>بستن</button></div>
     </section>`;
   document.body.appendChild(overlay);
-  overlay.querySelectorAll<HTMLElement>("[data-close-hold]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
-  overlay.querySelector<HTMLButtonElement>("[data-create-hold]")?.addEventListener("click", async () => {
-    try {
-      const result = await apiJson<{ data: { id: string; slotReference?: string; expiresAt?: string } }>("/api/v1/booking/holds", {
-        method: "POST",
-        body: { businessId: slot.businessId, slotReference: slot.slotReference, expiresAt },
-      });
-      overlay.remove();
-      showToast(`Hold ساخته شد: ${result.data.id}`);
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : "ساخت Hold ناموفق بود.");
-    }
+  overlay.querySelectorAll<HTMLElement>("[data-close-discovery]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
+  overlay.querySelector<HTMLButtonElement>("[data-open-booking-from-discovery]")?.addEventListener("click", () => {
+    overlay.remove();
+    navigate("/booking");
   });
 }
+
 function renderBusiness(): string {
   return `
     <section class="page-heading">
@@ -624,6 +505,15 @@ function renderProductStudio(): string {
   `;
 }
 
+function bindDiscoveryResultEvents(): void {
+  document.querySelectorAll<HTMLButtonElement>("[data-discovery-index]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.discoveryIndex);
+      const item = Number.isInteger(index) ? activeDiscoveryItems[index] : undefined;
+      if (item) openDiscoveryResultPanel(item);
+    });
+  });
+}
 function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLElement>("[data-nav]").forEach((element) => {
     element.addEventListener("click", (event) => {
@@ -709,14 +599,17 @@ async function runDiscovery(): Promise<void> {
       resultHost.innerHTML = renderResultCards(demoBusinesses);
       meta.textContent = "نمونه جایگزین؛ داده‌ای از API برنگشت";
       showToast("نتیجه‌ای از Discovery برنگشت؛ نتایج نمونه نمایش داده شدند.");
+      bindDiscoveryResultEvents();
       return;
     }
     resultHost.innerHTML = renderResultCards(items);
     meta.textContent = `${items.length} نتیجه`;
+    bindDiscoveryResultEvents();
   } catch (error) {
     resultHost.innerHTML = renderResultCards(demoBusinesses);
     meta.textContent = "Demo mode";
     showToast(error instanceof Error ? error.message : "اتصال به Discovery برقرار نشد؛ حالت نمایشی فعال شد.");
+    bindDiscoveryResultEvents();
   }
 }
 
