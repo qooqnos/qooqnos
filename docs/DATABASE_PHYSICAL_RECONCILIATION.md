@@ -733,7 +733,7 @@ The remaining implementation work is operational/provider/projection work; Catal
 2. Complete Booking availability calculation and slot-generation semantics; transactional finalization/capacity guards are implemented in 0046–0047.
 3. Complete remaining Billing provider adapters/reconciliation workers and ledger/provider operational gates; invoice, refund accounting, settlement and reconciliation are now implemented.
 4. Continue the remaining Automation, Integration, Privacy, Communication, AI, Matching, Localization, Documents and Analytics operational/contract gates without introducing duplicate sources of truth.
-5. Complete Communication external provider-adapter contracts and platform rate-limit/anomaly controls; intent/consent/suppression policy and required-message exception semantics are implemented.
+5. Communication external provider-adapter contracts and scoped dispatch rate-limit/anomaly controls are implemented; intent/consent/suppression policy and required-message exception semantics are implemented. Provider credentials remain runtime-only.
 6. Scheduled Automation polling/misfire execution and CapabilityRegistry-backed scheduled action execution are implemented; capability compensation remains only where a concrete rollback contract exists.
 7. AI Runtime durable worker scheduling and Seller AI input/payload resolution are implemented; add resolvers only when a new AI operation type is introduced.
 8. Complete Integration provider-specific adapters and cross-provider retention/reconciliation semantics; durable claim/sync worker infrastructure is implemented.
