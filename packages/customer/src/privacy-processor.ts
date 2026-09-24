@@ -73,7 +73,7 @@ function createCustomerDeleteProcessor(options: CustomerPrivacyProcessorOptions)
 
 function toRequestContext(input: PrivacyProcessorRequest): RequestContext {
   return {
-    tenantId: input.context.organizationId,
+    tenantId: input.context.organizationId as EntityId,
     ...(input.context.workspaceId ? { workspaceId: input.context.workspaceId } : {}),
     ...(input.request.requestedBy ? { actorId: input.request.requestedBy as EntityId } : {}),
     requestId: brandId<"RequestId">(input.context.requestId),
