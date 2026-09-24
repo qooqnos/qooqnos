@@ -80,6 +80,10 @@ export class BillingInvoiceRepository extends Repository {
     },
   ): Promise<BillingInvoiceRecord> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    if (!input.invoiceNumber.trim()) throw new DatabaseError("Invoice number is required");
+    if (!input.policyVersion.trim()) throw new DatabaseError("Invoice policy version is required");
+    if (!input.idempotencyKey.trim()) throw new DatabaseError("Invoice idempotency key is required");
+    if (!input.correlationId.trim()) throw new DatabaseError("Invoice correlation id is required");
     const existing = await this.database.first<BillingInvoiceRecord>(
       "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, customer_id AS customerId, order_id AS orderId, subscription_id AS subscriptionId, invoice_number AS invoiceNumber, status, currency, subtotal_minor AS subtotalMinor, adjustment_total_minor AS adjustmentTotalMinor, tax_total_minor AS taxTotalMinor, total_minor AS totalMinor, amount_paid_minor AS amountPaidMinor, amount_due_minor AS amountDueMinor, issue_date AS issueDate, due_date AS dueDate, issued_at AS issuedAt, paid_at AS paidAt, voided_at AS voidedAt, notes, policy_version AS policyVersion, idempotency_key AS idempotencyKey, correlation_id AS correlationId, created_at AS createdAt, updated_at AS updatedAt FROM billing_invoices WHERE organization_id = ? AND idempotency_key = ? LIMIT 1",
       organizationId, input.idempotencyKey,
@@ -184,6 +188,16 @@ export class BillingInvoiceRepository extends Repository {
   ): Promise<BillingInvoiceRecord> {
     const invoice = await this.get(context, input.invoiceId);
     if (!invoice) throw new DatabaseError("Invoice not found");
+    const existingApplication = await this.database.first<{ readonly amountMinor: number; readonly currency: string }>(
+      "SELECT amount_minor AS amountMinor, currency FROM billing_invoice_payment_applications WHERE organization_id = ? AND idempotency_key = ? LIMIT 1",
+      invoice.organizationId, input.idempotencyKey.trim(),
+    );
+    if (existingApplication) {
+      if (existingApplication.amountMinor !== input.amountMinor || existingApplication.currency !== normalizeCurrency(input.currency)) {
+        throw new DatabaseError("Invoice payment idempotency key was reused with different financial input");
+      }
+      return invoice;
+    }
     if (invoice.status === "draft" || invoice.status === "void" || invoice.status === "paid") {
       throw new DatabaseError("Invoice is not payable");
     }
