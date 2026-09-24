@@ -528,7 +528,7 @@ No new tables; adds authoritative Booking/Commerce references back to MatchReque
 
 0073 extends case_queues with runtime provider/route configuration references and establishes durable external-dispatch state plus append-only attempt evidence. Provider credentials remain runtime-only.
 
-**Total currently defined physical tables: 219.**
+**Total currently defined physical tables: 229.**
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
