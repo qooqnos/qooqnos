@@ -20,7 +20,7 @@ const ctx: RequestContext = {
 describe("RefundAccountingRepository", () => {
   it("creates an idempotent refund request with integer minor-unit money", async () => {
     let inserted = false;
-    let firstRead = true;
+    let lastSql = "";
     const row = {
       id: "refund-1",
       organizationId: "tenant-1",
@@ -50,12 +50,12 @@ describe("RefundAccountingRepository", () => {
     };
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
-      async first<T>() { if (firstRead) { firstRead = false; return null; } return row as unknown as T; },
+      async first<T>() { return lastSql.includes("idempotency_key") ? null : row as unknown as T; },
       async all<T>() { return { results: [] as T[] }; },
       async run() { inserted = true; return { success: true, meta: { changes: 1 } }; },
     };
     const raw: D1DatabaseLike = {
-      prepare() { return statement; },
+      prepare(sql) { lastSql = sql; return statement; },
       async batch() { return []; },
     };
     const repo = new RefundAccountingRepository(new D1Database(raw));
@@ -187,7 +187,7 @@ describe("RefundAccountingRepository", () => {
     };
     const raw: D1DatabaseLike = {
       prepare() { return statement; },
-      async batch(statements) { batches = statements.length; return statements.map(() => ({ success: true, meta: { changes: 1 } })); },
+      async batch(statements) { batches = statements.length; refund.status = "succeeded"; refund.ledgerTransactionId = "ledger-3"; return statements.map(() => ({ success: true, meta: { changes: 1 } })); },
     };
     const repo = new RefundAccountingRepository(new D1Database(raw));
     const result = await repo.postSuccessfulRefundAccounting(ctx, {
