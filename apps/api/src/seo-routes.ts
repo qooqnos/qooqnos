@@ -12,14 +12,18 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     operation: "sitemap.read",
     handler: async ({ context }) => {
       if (!database) return new Response("Database is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
-      const rows = await database.all<{ canonicalUrl: string }>(
-        `SELECT canonical_url AS canonicalUrl
+      const canonicalPrefix = canonicalBaseUrl.replace(/\/$/, "") + "/";
+      const rows = await database.all<{ canonicalUrl: string; lastmod: string | null }>(
+        `SELECT canonical_url AS canonicalUrl, MAX(generated_at) AS lastmod
          FROM seo_entity_representations
-         WHERE organization_id=? AND workspace_id IS ? AND indexability='index' AND publication_state='published' AND visibility='public'
-         ORDER BY canonical_url ASC`,
-        context.tenantId, context.workspaceId ?? null,
+         WHERE indexability='index' AND publication_state='published' AND visibility='public'
+           AND canonical_url LIKE ?
+         GROUP BY canonical_url
+         ORDER BY canonical_url ASC
+         LIMIT 50000`,
+        canonicalPrefix + "%",
       );
-      const xml = buildSitemapXml(rows.map((row) => row.canonicalUrl));
+      const xml = buildSitemapXml(rows.map((row) => ({ url: row.canonicalUrl, ...(row.lastmod ? { lastmod: row.lastmod } : {}) })));
       return new Response(xml, { status: 200, headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300" } });
     },
   });
