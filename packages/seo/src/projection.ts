@@ -46,7 +46,7 @@ export interface SeoProjectionInput {
 
 export function buildSeoProjectionPlan(input: SeoProjectionInput): SeoProjectionPlan {
   const canonicalUrl = canonicalEntityUrl(input.canonicalBaseUrl, input.entity);
-  const policy = evaluateSeoPolicy(input.entity, canonicalUrl);
+  const policy = evaluateSeoPolicy(input.entity, canonicalUrl, input.now);
   const metadata = generateMetadata({ entity: input.entity, canonicalBaseUrl: input.canonicalBaseUrl }, canonicalUrl);
   const structuredData = generateStructuredData(input.entity);
   const answer = buildAnswerRepresentation(input.entity, input.facts ?? [], input.now);
