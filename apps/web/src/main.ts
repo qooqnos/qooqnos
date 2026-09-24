@@ -806,6 +806,23 @@ function renderControlCenter(): string {
       </article>
 
       <article class="glass-card control-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Authorization Governance</span><h2>Approval Request</h2></div><span id="approval-status" class="pill">—</span></div>
+        <div class="control-form">
+          <input id="approval-action" class="studio-input-line" type="text" value="business.publish" placeholder="Action" />
+          <input id="approval-resource-type" class="studio-input-line" type="text" value="business" placeholder="Resource type" />
+          <input id="approval-resource-id" class="studio-input-line" type="text" placeholder="Resource ID" />
+          <input id="approval-reason" class="studio-input-line" type="text" placeholder="Reason" />
+          <input id="approval-approver-role" class="studio-input-line" type="text" value="admin" placeholder="Required approver role" />
+          <button class="button button-primary" type="button" data-approval-create>درخواست تأیید</button>
+          <input id="approval-id" class="studio-input-line" type="text" placeholder="Approval ID" />
+          <input id="approval-decision-reason" class="studio-input-line" type="text" value="Reviewed by authorized approver" />
+          <button class="button button-primary" type="button" data-approval-approve>تأیید</button>
+          <button class="button button-ghost" type="button" data-approval-reject>رد</button>
+        </div>
+        <div id="approval-result" class="connection-state">هیچ Approval Requestی اجرا نشده است.</div>
+      </article>
+
+      <article class="glass-card control-card">
         <div class="card-section-heading"><div><span class="section-kicker">Privacy</span><h2>Consent / Data Request</h2></div></div>
         <div class="control-form">
           <input id="privacy-subject" class="studio-input-line" type="text" value="${escapeAttr(customer)}" placeholder="Subject ID" />
@@ -820,6 +837,62 @@ function renderControlCenter(): string {
       </article>
     </section>
   `;
+}
+
+async function createApprovalRequest(): Promise<void> {
+  const result = document.querySelector<HTMLElement>("#approval-result");
+  const status = document.querySelector<HTMLElement>("#approval-status");
+  if (!result || !status) return;
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  const action = document.querySelector<HTMLInputElement>("#approval-action")?.value.trim() ?? "";
+  const resourceType = document.querySelector<HTMLInputElement>("#approval-resource-type")?.value.trim() ?? "";
+  const resourceId = document.querySelector<HTMLInputElement>("#approval-resource-id")?.value.trim() ?? "";
+  const reason = document.querySelector<HTMLInputElement>("#approval-reason")?.value.trim() ?? "";
+  if (!action || !resourceType || !resourceId || !reason) { showToast("Action، Resource و Reason الزامی هستند."); return; }
+  try {
+    const response = await apiJson<{ data: { id: string; status: string } }>("/api/v1/authorization/approval-requests", {
+      method: "POST",
+      body: {
+        action,
+        resourceType,
+        resourceId,
+        reason,
+        requiredApproverRole: document.querySelector<HTMLInputElement>("#approval-approver-role")?.value.trim() || undefined,
+        idempotencyKey: crypto.randomUUID(),
+      },
+    });
+    document.querySelector<HTMLInputElement>("#approval-id")!.value = response.data.id;
+    status.textContent = response.data.status;
+    status.className = "pill warning";
+    result.textContent = "Approval Request ساخته شد · " + response.data.id;
+    result.className = "connection-state success";
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    result.textContent = error instanceof Error ? error.message : "ساخت Approval ناموفق بود.";
+    result.className = "connection-state error";
+  }
+}
+
+async function decideApproval(decision: "approve" | "reject"): Promise<void> {
+  const result = document.querySelector<HTMLElement>("#approval-result");
+  const status = document.querySelector<HTMLElement>("#approval-status");
+  const id = document.querySelector<HTMLInputElement>("#approval-id")?.value.trim() ?? "";
+  const reason = document.querySelector<HTMLInputElement>("#approval-decision-reason")?.value.trim() ?? "";
+  if (!result || !status || !id || !reason) { showToast("Approval ID و reason لازم هستند."); return; }
+  try {
+    const response = await apiJson<{ data: { id: string; status: string } }>(
+      "/api/v1/authorization/approval-requests/" + encodeURIComponent(id) + "/" + decision,
+      { method: "POST", body: { reason } },
+    );
+    status.textContent = response.data.status;
+    status.className = response.data.status === "approved" ? "pill success" : "pill warning";
+    result.textContent = "Approval " + response.data.status + " شد · " + response.data.id;
+    result.className = "connection-state success";
+  } catch (error) {
+    result.textContent = error instanceof Error ? error.message : "تصمیم Approval ناموفق بود.";
+    result.className = "connection-state error";
+  }
 }
 
 async function createAutomationWorkflow(): Promise<void> {
@@ -2181,6 +2254,9 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-seo-audit]")?.addEventListener("click", () => { void runSeoAudit(); });
   document.querySelector<HTMLButtonElement>("[data-seo-health]")?.addEventListener("click", () => { void loadSeoHealth(); });
   document.querySelector<HTMLElement>("[data-control-connect]")?.addEventListener("click", openConnectionPanel);
+  document.querySelector<HTMLButtonElement>("[data-approval-create]")?.addEventListener("click", () => { void createApprovalRequest(); });
+  document.querySelector<HTMLButtonElement>("[data-approval-approve]")?.addEventListener("click", () => { void decideApproval("approve"); });
+  document.querySelector<HTMLButtonElement>("[data-approval-reject]")?.addEventListener("click", () => { void decideApproval("reject"); });
   document.querySelector<HTMLButtonElement>("[data-auto-create]")?.addEventListener("click", () => { void createAutomationWorkflow(); });
   document.querySelector<HTMLButtonElement>("[data-integration-connect]")?.addEventListener("click", () => { void connectIntegrationAccount(); });
   document.querySelector<HTMLButtonElement>("[data-privacy-consent]")?.addEventListener("click", () => { void grantPrivacyConsent(); });
