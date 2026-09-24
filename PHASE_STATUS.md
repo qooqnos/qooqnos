@@ -38,7 +38,7 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 
 ## 2.1 Database completion percentage
 
-- **Physical D1 schema: 100% complete** — 63 ordered migrations define the canonical physical schema and the reconciled inventory is 190 tables.
+- **Physical D1 schema: 100% complete** — 64 ordered migrations define the canonical physical schema and the reconciled inventory is 192 tables.
 - **Database engineering readiness: 91.7%** on the explicit 12-gate readiness rubric: 11 repository/schema/runtime gates are closed; one credentialed remote-D1 application gate remains.
 
 The 12-gate rubric is:
@@ -73,7 +73,7 @@ Before adding a table:
 
 ## 4. Migration sequence currently registered
 
-The API runtime currently references the ordered canonical migration sequence `0001` through `0056`.
+The API runtime currently references the ordered canonical migration sequence `0001` through `0064`.
 
 Do not renumber or replace these migrations.
 
