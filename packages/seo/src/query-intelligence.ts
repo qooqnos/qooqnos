@@ -87,7 +87,7 @@ export function evaluateQueryCoverage(
   entities: readonly SeoEntity[],
 ): QueryCoverage {
   const candidates = entities.filter((entity) => entity.locale === query.locale && entity.visibility === "public");
-  const q = query.normalizedQuery;
+  const q = query.normalizedQuery.replace(/\b(?:near me|nearby|local)\b/gu, " ").replace(/\b(?:نزدیک|اطراف)\b/gu, " ").replace(/\s+/g, " ").trim();
   const matches = candidates.filter((entity) => {
     const haystack = [
       entity.preferredName,
