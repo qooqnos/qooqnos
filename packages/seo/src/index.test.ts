@@ -190,6 +190,8 @@ describe("SEO/GEO core", () => {
     );
     expect(result.issues.some((item) => item.code === "INDEXABILITY_PUBLICATION_CONFLICT")).toBe(true);
     expect(result.issues.some((item) => item.code === "MISSING_CANONICAL_ID")).toBe(true);
+    expect(result.status).toBe("blocked");
+    expect(result.overallScore).toBeLessThan(100);
     expect(result.issues.some((item) => item.code === "MISSING_CANONICAL_URL")).toBe(false);
   });
 
