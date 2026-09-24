@@ -48,6 +48,22 @@ export interface BusinessHoursRecord {
   readonly updatedAt: string;
 }
 
+export interface BusinessPublicContactRecord {
+  readonly id: EntityId;
+  readonly businessId: EntityId;
+  readonly locationId: EntityId | null;
+  readonly contactType: "phone" | "email" | "website";
+  readonly value: string;
+  readonly isPrimary: boolean;
+}
+
+export interface BusinessSocialLinkRecord {
+  readonly id: EntityId;
+  readonly businessId: EntityId;
+  readonly platform: string;
+  readonly url: string;
+}
+
 export interface BusinessStatusHistoryRecord {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -102,6 +118,35 @@ export class BusinessRepository extends Repository {
        WHERE id = ? AND organization_id = ? AND workspace_id = ?
        LIMIT 1`,
       id, organizationId, workspaceId,
+    );
+  }
+
+  async listPublicContacts(context: RequestContext, businessId: EntityId): Promise<readonly BusinessPublicContactRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    return this.database.all<BusinessPublicContactRecord>(
+      `SELECT c.id, c.business_id AS businessId, c.location_id AS locationId,
+              c.contact_type AS contactType, c.value, c.is_primary AS isPrimary
+       FROM business_contacts c
+       INNER JOIN businesses b ON b.id = c.business_id
+       WHERE c.business_id = ? AND b.organization_id = ? AND b.workspace_id = ?
+         AND c.visibility = 'public' AND c.status = 'active'
+       ORDER BY c.is_primary DESC, c.contact_type ASC, c.id ASC`,
+      businessId, organizationId, workspaceId,
+    );
+  }
+
+  async listPublicSocialLinks(context: RequestContext, businessId: EntityId): Promise<readonly BusinessSocialLinkRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    return this.database.all<BusinessSocialLinkRecord>(
+      `SELECT s.id, s.business_id AS businessId, s.platform, s.url
+       FROM business_social_links s
+       INNER JOIN businesses b ON b.id = s.business_id
+       WHERE s.business_id = ? AND b.organization_id = ? AND b.workspace_id = ?
+         AND s.visibility = 'public' AND s.status = 'active'
+       ORDER BY s.platform ASC, s.id ASC`,
+      businessId, organizationId, workspaceId,
     );
   }
 
