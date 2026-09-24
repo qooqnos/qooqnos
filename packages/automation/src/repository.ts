@@ -553,7 +553,7 @@ export class AutomationRepository extends Repository {
     context: RequestContext,
     executionId: EntityId,
     failedActionId: EntityId,
-    compensatedActionId: EntityId,
+    _compensatedActionId: EntityId,
   ): Promise<AutomationCompensationReferenceRecord | null> {
     await this.getExecution(context, executionId);
     return this.database.first<AutomationCompensationReferenceRecord>(
