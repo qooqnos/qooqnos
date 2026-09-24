@@ -703,3 +703,9 @@ Migration continuity remains mandatory: never renumber, rewrite or replace an ex
 
 
 Production D1 handoff: the production D1 resource `qooqnos-production` is now provisioned externally and its real UUID has been supplied to the project. The repository intentionally does not hard-code that identifier; production configuration must continue to consume `PHOENIX_PROD_D1_DATABASE_NAME` and `PHOENIX_PROD_D1_DATABASE_ID` through the protected deployment environment. The remaining remote step is credentialed execution of the canonical migration runner.
+
+### Verification checkpoint — 2026-09-24
+
+- Main head `5f0c9b00189aef2c43acebcf6b9e4d74bcacc5b3` has successful **CI** and **Phoenix verification** workflow runs.
+- Verified steps include format, lint, migration catalog/lock, database completion report, canonical-source boundary, runtime-module registry, migration-history checks, typecheck, build, Cloudflare Worker dry-run and unit tests.
+- Production deployment remains intentionally separate and is protected by the production environment plus Cloudflare credentials; the canonical deploy path runs the full predeploy verification, then `migrate:prod:canonical`, then Worker deploy.
