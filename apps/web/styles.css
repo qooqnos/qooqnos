@@ -472,3 +472,103 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+.studio-meta-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.studio-input-line {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  outline: 0;
+  background: var(--surface-2);
+  font-size: 10px;
+}
+.studio-input-line:focus {
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 6%, transparent);
+}
+.field-optional {
+  color: var(--faint);
+  font-size: 8px;
+  font-weight: 500;
+}
+.connection-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+.connection-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.48);
+  backdrop-filter: blur(10px);
+}
+.connection-modal {
+  position: relative;
+  width: min(100%, 470px);
+  padding: 25px;
+  z-index: 1;
+}
+.connection-modal h2 {
+  margin: 11px 0 7px;
+  font-size: 25px;
+  letter-spacing: -.04em;
+}
+.connection-modal > p {
+  margin: 0 0 22px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.85;
+}
+.connection-close {
+  position: absolute;
+  inset-inline-end: 14px;
+  top: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 20px;
+}
+.connection-modal .field-label {
+  margin-top: 13px;
+}
+.connection-state {
+  margin-top: 15px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  color: var(--faint);
+  background: var(--surface-2);
+  font-size: 9px;
+}
+.connection-state.success {
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 8%, transparent);
+  border-color: color-mix(in srgb, var(--success) 20%, transparent);
+}
+.connection-state.error {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 20%, transparent);
+}
+.connection-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+@media (max-width: 700px) {
+  .studio-meta-fields { grid-template-columns: 1fr; }
+  .connection-modal { padding: 21px; }
+}
