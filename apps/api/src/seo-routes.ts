@@ -93,7 +93,7 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     handler: async ({ context, params }) => {
       if (!database) return json({ status: "unavailable" }, 503, context.requestId);
       const repository = new (await import("@qooqnos/seo")).SeoRepository(database);
-      const locale = "en-US";
+      const locale = new URL(request.url).searchParams.get("locale") ?? undefined;
       const representation = await repository.getRepresentation(context, params.entityId, locale);
       if (!representation) return json({ error: { code: "NOT_FOUND", message: "SEO representation not found." } }, 404, context.requestId);
       const scope = context.tenantId;
