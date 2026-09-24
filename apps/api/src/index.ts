@@ -32,6 +32,7 @@ import { processSeoPublicationJobs } from "@qooqnos/seo";
 import { registerSeoRoutes } from "./seo-routes";
 import { registerMediaRoutes } from "./media-routes";
 import { registerPromotionRoutes } from "./promotion-routes";
+import { registerLoyaltyRoutes } from "./loyalty-routes";
 import { renderSeoAwareDocument } from "./seo-frontend";
 
 const homePage = (version: string): string => `<!doctype html>
@@ -80,6 +81,7 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   registerSeoRoutes(router, database);
   registerMediaRoutes(router, database, env, authorization);
   registerPromotionRoutes(router, database, authorization);
+  registerLoyaltyRoutes(router, database, authorization);
 
   router.register({
     method: "GET",
