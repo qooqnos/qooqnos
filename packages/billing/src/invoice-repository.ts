@@ -244,6 +244,23 @@ export class BillingInvoiceRepository extends Repository {
     return updated;
   }
 
+  async list(
+    context: RequestContext,
+    input: { readonly limit?: number; readonly businessId?: EntityId; readonly customerId?: EntityId },
+  ): Promise<readonly BillingInvoiceRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const limit = Math.min(Math.max(input.limit ?? 50, 1), 100);
+    const clauses = ["organization_id = ?", "(workspace_id IS NULL OR workspace_id = ?)"];
+    const params: Array<string | number | null> = [organizationId, context.workspaceId ?? null];
+    if (input.businessId) { clauses.push("business_id = ?"); params.push(input.businessId); }
+    if (input.customerId) { clauses.push("customer_id = ?"); params.push(input.customerId); }
+    params.push(limit);
+    return this.database.all<BillingInvoiceRecord>(
+      `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, customer_id AS customerId, order_id AS orderId, subscription_id AS subscriptionId, invoice_number AS invoiceNumber, status, currency, subtotal_minor AS subtotalMinor, adjustment_total_minor AS adjustmentTotalMinor, tax_total_minor AS taxTotalMinor, total_minor AS totalMinor, amount_paid_minor AS amountPaidMinor, amount_due_minor AS amountDueMinor, issue_date AS issueDate, due_date AS dueDate, issued_at AS issuedAt, paid_at AS paidAt, voided_at AS voidedAt, notes, policy_version AS policyVersion, idempotency_key AS idempotencyKey, correlation_id AS correlationId, created_at AS createdAt, updated_at AS updatedAt FROM billing_invoices WHERE ${clauses.join(" AND ")} ORDER BY created_at DESC, id DESC LIMIT ?`,
+      ...params,
+    );
+  }
+
   async get(context: RequestContext, invoiceId: EntityId): Promise<BillingInvoiceRecord | null> {
     return this.database.first<BillingInvoiceRecord>(
       "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, customer_id AS customerId, order_id AS orderId, subscription_id AS subscriptionId, invoice_number AS invoiceNumber, status, currency, subtotal_minor AS subtotalMinor, adjustment_total_minor AS adjustmentTotalMinor, tax_total_minor AS taxTotalMinor, total_minor AS totalMinor, amount_paid_minor AS amountPaidMinor, amount_due_minor AS amountDueMinor, issue_date AS issueDate, due_date AS dueDate, issued_at AS issuedAt, paid_at AS paidAt, voided_at AS voidedAt, notes, policy_version AS policyVersion, idempotency_key AS idempotencyKey, correlation_id AS correlationId, created_at AS createdAt, updated_at AS updatedAt FROM billing_invoices WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
