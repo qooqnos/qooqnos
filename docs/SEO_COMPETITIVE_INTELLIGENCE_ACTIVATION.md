@@ -46,3 +46,8 @@ Phoenix does not infer revenue, market share, popularity, universal rank, or com
 - `POST /api/v1/seo/competitive/competitors` registers a known competitor domain with an explicit classification.
 
 All endpoints are organization/workspace scoped and require authentication.
+## Page-level competitor snapshots
+
+For the top observed competitor URLs, Phoenix also uses DataForSEO Instant Pages to record page-level SEO evidence such as title, description, canonical URL, H1 count, text-word count, internal/external links, images and SEO checks.
+
+Page snapshot sampling is bounded by `SEO_COMPETITIVE_PAGE_SAMPLE_LIMIT` (default 5) and selects at most one URL per competitor domain per run.
