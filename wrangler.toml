@@ -51,6 +51,7 @@ binding = "AI"
 "@qooqnos/onboarding" = "./packages/onboarding/src/index.ts"
 "@qooqnos/runtime" = "./packages/runtime/src/index.ts"
 "@qooqnos/api-contracts" = "./packages/api-contracts/src/index.ts"
+"@qooqnos/documents" = "./packages/documents/src/index.ts"
 
 [vars]
 APP_VERSION = "0.1.0"
