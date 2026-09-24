@@ -1910,6 +1910,11 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
 }
 
 function renderCheckout(): string {
+  const params = new URLSearchParams(location.search);
+  const product = params.get("product") ?? "";
+  const entity = params.get("entity") ?? "";
+  const resource = product || entity;
+  const resourceType = product ? "product_variant" : entity ? "offering" : "product_variant";
   return `
     <section class="page-heading">
       <div><span class="eyebrow"><i></i> Commerce</span><h1>از انتخاب تا <em>Checkout</em> بدون پرش.</h1><p>این سطح فقط orchestration می‌کند؛ cart و checkout state از Commerce canonical می‌آیند.</p></div>
@@ -1921,8 +1926,8 @@ function renderCheckout(): string {
         <div class="booking-fields">
           <div><label class="field-label" for="checkout-currency">Currency</label><input class="studio-input-line" id="checkout-currency" type="text" value="USD" maxlength="8" /></div>
           <div><label class="field-label" for="checkout-customer">Customer ID <span class="field-optional">اختیاری</span></label><input class="studio-input-line" id="checkout-customer" type="text" placeholder="Customer ID" /></div>
-          <div><label class="field-label" for="checkout-resource-type">Resource type</label><select class="studio-input-line" id="checkout-resource-type"><option value="product_variant">product_variant</option><option value="offering">offering</option><option value="service">service</option></select></div>
-          <div><label class="field-label" for="checkout-resource">Resource ID</label><input class="studio-input-line" id="checkout-resource" type="text" placeholder="Product / offering ID" /></div>
+          <div><label class="field-label" for="checkout-resource-type">Resource type</label><select class="studio-input-line" id="checkout-resource-type"><option value="product_variant" ${resourceType === "product_variant" ? "selected" : ""}>product_variant</option><option value="offering" ${resourceType === "offering" ? "selected" : ""}>offering</option><option value="service" ${resourceType === "service" ? "selected" : ""}>service</option></select></div>
+          <div><label class="field-label" for="checkout-resource">Resource ID</label><input class="studio-input-line" id="checkout-resource" type="text" value="${escapeAttr(resource)}" placeholder="Product / offering ID" /></div>
           <div><label class="field-label" for="checkout-quantity">Quantity</label><input class="studio-input-line" id="checkout-quantity" type="number" min="1" step="1" value="1" /></div>
         </div>
         <div class="checkout-actions"><button class="button button-primary button-lg" type="button" data-start-checkout>ساخت Cart و شروع Checkout <span>→</span></button></div>
