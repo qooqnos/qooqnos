@@ -1413,3 +1413,21 @@ Implemented:
 
 Important ownership boundary:
 approval governance records and decides approval state; the protected domain module must still enforce the approved state before performing its own high-risk mutation.
+
+
+### SEO Audit — completed — 2026-09-25
+
+The SEO Audit is now a deterministic production quality gate across the full canonical SEO projection:
+- entity identity, publication, visibility, canonical URL, freshness and geographic truth;
+- metadata title/description/canonical/robots/hreflang/OpenGraph/Twitter checks;
+- Structured Data validation plus canonical binding, BreadcrumbList presence, Product Offer and Event checks;
+- Answer Representation provenance, freshness, entity binding and citation readiness;
+- Entity Page architecture, breadcrumbs, contextual actions, related canonical links and required sections;
+- sitemap/indexability policy consistency;
+- decomposable dimension scores plus overall score;
+- explicit `pass`, `warning`, or `blocked` status and machine-readable blocking issue codes;
+- publication blocks only when an actually indexable representation has a hard SEO error; stale representations that policy marks noindex remain auditable and persistable;
+- manual Audit API now re-audits the complete persisted projection rather than only the Entity row;
+- Audit result status, overall score and blockers are persisted for operational dashboards;
+- frontend SEO dashboard exposes overall score, status, blockers, dimension scores and remediation evidence.
+- migration `0085_seo_audit_quality_gate.sql` persists the operational audit gate fields.
