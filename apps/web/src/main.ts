@@ -79,6 +79,7 @@ const routes: Route[] = [
   { path: "/product-studio", label: "استودیو محصول", icon: "✦", render: renderProductStudio },
   { path: "/account", label: "حساب", icon: "◉", render: renderAccount },
   { path: "/booking", label: "رزرو", icon: "◷", render: renderBooking },
+  { path: "/checkout", label: "خرید", icon: "◫", render: renderCheckout },
 ];
 
 const theme = getInitialTheme();
@@ -424,6 +425,88 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
   });
 }
 
+function renderCheckout(): string {
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Commerce</span><h1>از انتخاب تا <em>Checkout</em> بدون پرش.</h1><p>این سطح فقط orchestration می‌کند؛ cart و checkout state از Commerce canonical می‌آیند.</p></div>
+      <div class="heading-actions"><button class="button button-ghost" type="button" data-account-connect>تنظیم اتصال</button></div>
+    </section>
+    <section class="checkout-grid">
+      <article class="glass-card checkout-panel">
+        <div class="card-section-heading"><div><span class="section-kicker">Cart</span><h2>شروع سبد خرید</h2></div><span id="checkout-status" class="pill">آماده</span></div>
+        <div class="booking-fields">
+          <div><label class="field-label" for="checkout-currency">Currency</label><input class="studio-input-line" id="checkout-currency" type="text" value="USD" maxlength="8" /></div>
+          <div><label class="field-label" for="checkout-customer">Customer ID <span class="field-optional">اختیاری</span></label><input class="studio-input-line" id="checkout-customer" type="text" placeholder="Customer ID" /></div>
+          <div><label class="field-label" for="checkout-resource-type">Resource type</label><select class="studio-input-line" id="checkout-resource-type"><option value="product_variant">product_variant</option><option value="offering">offering</option><option value="service">service</option></select></div>
+          <div><label class="field-label" for="checkout-resource">Resource ID</label><input class="studio-input-line" id="checkout-resource" type="text" placeholder="Product / offering ID" /></div>
+          <div><label class="field-label" for="checkout-quantity">Quantity</label><input class="studio-input-line" id="checkout-quantity" type="number" min="1" step="1" value="1" /></div>
+        </div>
+        <div class="checkout-actions"><button class="button button-primary button-lg" type="button" data-start-checkout>ساخت Cart و شروع Checkout <span>→</span></button></div>
+      </article>
+      <article class="glass-card checkout-result">
+        <div class="card-section-heading"><div><span class="section-kicker">Live state</span><h2>وضعیت Checkout</h2></div></div>
+        <div id="checkout-result-body" class="checkout-result-body"><div class="slot-empty"><span>◫</span><p>اطلاعات checkout بعد از اجرای جریان نمایش داده می‌شود.</p></div></div>
+      </article>
+    </section>
+  `;
+}
+
+async function startCheckoutFlow(): Promise<void> {
+  const currency = document.querySelector<HTMLInputElement>("#checkout-currency")?.value.trim() ?? "";
+  const customerId = document.querySelector<HTMLInputElement>("#checkout-customer")?.value.trim() ?? "";
+  const resourceType = document.querySelector<HTMLSelectElement>("#checkout-resource-type")?.value ?? "";
+  const resourceId = document.querySelector<HTMLInputElement>("#checkout-resource")?.value.trim() ?? "";
+  const quantity = Number(document.querySelector<HTMLInputElement>("#checkout-quantity")?.value ?? "0");
+  const status = document.querySelector<HTMLElement>("#checkout-status");
+  const result = document.querySelector<HTMLDivElement>("#checkout-result-body");
+  if (!status || !result) return;
+
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    showToast("برای شروع Checkout باید session متصل باشد.");
+    return;
+  }
+  if (!currency || !resourceId || !Number.isSafeInteger(quantity) || quantity < 1) {
+    showToast("Currency، Resource ID و Quantity معتبر لازم است.");
+    return;
+  }
+
+  status.textContent = "در حال اجرا";
+  status.className = "pill warning";
+  result.innerHTML = '<div class="slot-loading">در حال ساخت Cart و Checkout…</div>';
+
+  try {
+    const cartResponse = await apiJson<{ data: { id: string; status: string; currency: string } }>("/api/v1/commerce/carts", {
+      method: "POST",
+      body: { currency, ...(customerId ? { customerId } : {}) },
+    });
+    const cartId = cartResponse.data.id;
+    await apiJson<{ data: { id: string } }>(`/api/v1/commerce/carts/${encodeURIComponent(cartId)}/lines`, {
+      method: "POST",
+      body: { resourceType, resourceId, quantity },
+    });
+    const checkoutResponse = await apiJson<{ data: { id: string; cartId: string; status: string; startedAt?: string } }>("/api/v1/commerce/checkout", {
+      method: "POST",
+      body: { cartId },
+      headers: { "Idempotency-Key": crypto.randomUUID() },
+    });
+    status.textContent = checkoutResponse.data.status;
+    status.className = "pill success";
+    result.innerHTML = `
+      <div class="checkout-success">
+        <div class="draft-orb">✓</div>
+        <span class="section-kicker">Checkout session</span>
+        <h3>${escapeHtml(checkoutResponse.data.id)}</h3>
+        <div class="account-row"><span>Cart</span><strong>${escapeHtml(cartId)}</strong></div>
+        <div class="account-row"><span>Status</span><strong>${escapeHtml(checkoutResponse.data.status)}</strong></div>
+        <p>Checkout canonical ساخته شد. پرداخت و fulfillment در لایه‌های تخصصی خودشان ادامه پیدا می‌کنند.</p>
+      </div>`;
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    result.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "Checkout ناموفق بود.")}</p></div>`;
+  }
+}
 function renderBusiness(): string {
   return `
     <section class="page-heading">
@@ -561,6 +644,7 @@ function bindGlobalEvents(): void {
   });
 
   document.querySelector<HTMLButtonElement>("[data-load-slots]")?.addEventListener("click", loadBookingSlots);
+  document.querySelector<HTMLButtonElement>("[data-start-checkout]")?.addEventListener("click", startCheckoutFlow);
 
   document.querySelector<HTMLButtonElement>("[data-generate-draft]")?.addEventListener("click", generateDraft);
   document.querySelectorAll<HTMLButtonElement>("[data-open-connection]").forEach((button) => button.addEventListener("click", openConnectionPanel));
