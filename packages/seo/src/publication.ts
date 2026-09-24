@@ -31,6 +31,13 @@ export interface SeoPublicationJob {
   readonly sourceEventId: string | null;
 }
 
+const DOMAIN_EVENT_REASONS: Readonly<Record<string, SeoPublicationReason>> = {
+  "entity.relationship.changed": "dependency-changed",
+  "entity.location.changed": "dependency-changed",
+  "entity.locale.published": "entity-published",
+  "credential.changed": "dependency-changed",
+};
+
 const EVENT_REASON: Readonly<Record<string, SeoPublicationReason>> = {
   "entity.created": "entity-created",
   "entity.updated": "entity-updated",
@@ -85,7 +92,7 @@ export async function enqueueSeoPublication(
   event: SeoPublicationEvent,
   now: string,
 ): Promise<number> {
-  const reason = EVENT_REASON[event.eventType];
+  const reason = EVENT_REASON[event.eventType] ?? DOMAIN_EVENT_REASONS[event.eventType];
   if (!reason) return 0;
   const entity = payloadEntity(event.payloadJson);
   if (!entity) return 0;
