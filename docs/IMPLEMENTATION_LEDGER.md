@@ -1094,3 +1094,19 @@ Implemented:
 - real authorized/unauthorized/error state;
 - live workspace and tenant context visibility;
 - no business policy or authorization logic duplicated in frontend.
+
+### Frontend Trust / Verification Workspace — 2026-09-25
+
+The frontend now exposes canonical Trust operations.
+
+Implemented:
+- dedicated `/trust` route;
+- live trust signal reads via `GET /api/v1/trust/signals`;
+- canonical reputation rebuild via `POST /api/v1/trust/reputation/rebuild`;
+- customer review creation via `POST /api/v1/trust/reviews`;
+- no verification, moderation, reputation or policy rules are duplicated in frontend.
+
+Canonical files:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
