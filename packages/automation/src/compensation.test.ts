@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it } from "vitest";
 import { brandId, type RequestContext } from "@qooqnos/core";
 import { CapabilityRegistry } from "@qooqnos/runtime";
