@@ -483,7 +483,7 @@
       "moduleId": "localization",
       "checksum": "4e8064d5373145ceeed66597b21b0a4ca0e4a04ae64832c092b025eb798840c4",
       "filename": "0072_localization_registry.sql"
-    }
+    },
     {
       "id": "0073_case_queue_provider_dispatch",
       "version": 73,
