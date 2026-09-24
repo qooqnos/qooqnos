@@ -77,8 +77,18 @@ export async function runSeoVisibilityMeasurements(
         AND r.indexability='index'
         AND r.publication_state='published'
         AND r.visibility='public'
+       LEFT JOIN (
+         SELECT organization_id, workspace_id, query_id, MAX(started_at) AS lastMeasuredAt
+           FROM seo_measurement_runs
+          GROUP BY organization_id, workspace_id, query_id
+       ) m
+         ON m.organization_id=q.organization_id
+        AND m.workspace_id IS q.workspace_id
+        AND m.query_id=q.id
       WHERE ${filters.join(" AND ")}
-      ORDER BY q.updated_at DESC
+      ORDER BY CASE WHEN m.lastMeasuredAt IS NULL THEN 0 ELSE 1 END,
+               m.lastMeasuredAt ASC,
+               q.updated_at DESC
       LIMIT ?`,
     ...params,
   );
