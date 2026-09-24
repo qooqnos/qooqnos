@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-22T10:36:00.000Z",
+  "generatedAt": "2026-09-24T09:00:00.000Z",
   "migrations": [
     {
       "id": "0001_foundation",
@@ -392,6 +392,13 @@
       "moduleId": "communication",
       "checksum": "877b142d6b8fb49bbff20b7f9e4a3eda16b7057cf07ccb61abb0a5e70cffa72c",
       "filename": "0056_communication_required_suppression.sql"
+    },
+    {
+      "id": "0057_matching_learning_signals",
+      "version": 57,
+      "moduleId": "matching",
+      "checksum": "6676683a3123d671a1f1a4c4c09fac40658ab795651e7c7e81b23a76a4edad37",
+      "filename": "0057_matching_learning_signals.sql"
     }
   ]
 }
