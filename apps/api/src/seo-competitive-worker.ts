@@ -42,6 +42,7 @@ export interface SeoCompetitiveWorkerResult {
   readonly changes: number;
   readonly failures: number;
   readonly pageSnapshots: number;
+  readonly keywordGaps: number;
 }
 
 export async function runSeoCompetitiveIntelligence(
@@ -65,6 +66,7 @@ export async function runSeoCompetitiveIntelligence(
   let changes = 0;
   let failures = 0;
   let pageSnapshots = 0;
+  let keywordGaps = 0;
   const discoveredDomainKeys = new Set<string>();
 
   for (const row of rows) {
@@ -172,6 +174,51 @@ export async function runSeoCompetitiveIntelligence(
       }
 
       let partialError: string | undefined;
+      const competitorGapDomains = [...new Set(
+        result.results
+          .filter((item) => item.domain && !sameDomain(item.domain, ownDomain))
+          .map((item) => item.domain!)
+      )].slice(0, Math.min(Math.max(Math.trunc(config.keywordGapCompetitorLimit ?? 3), 1), 5));
+      const gapLimit = Math.min(Math.max(Math.trunc(config.keywordGapLimit ?? 15), 1), 50);
+      for (const domain of competitorGapDomains) {
+        try {
+          const competitorId = await repository.upsertCompetitor(context, {
+            domain,
+            now,
+            provenance: result.provenance,
+          });
+          const gaps = await provider.observeKeywordGaps(domain, ownDomain, {
+            ...(config.locationCode !== undefined ? { locationCode: config.locationCode } : {}),
+            ...(config.locationName ? { locationName: config.locationName } : {}),
+            languageCode: config.languageCode,
+            limit: gapLimit,
+          });
+          for (const gap of gaps) {
+            await repository.recordKeywordGap(context, {
+              id: runId + ":gap:" + crypto.randomUUID(),
+              competitorId,
+              ...(row.entityId ? { entityId: row.entityId } : {}),
+              competitorDomain: domain,
+              queryText: row.queryText,
+              keyword: gap.keyword,
+              ...(gap.searchVolume !== undefined ? { searchVolume: gap.searchVolume } : {}),
+              ...(gap.cpc !== undefined ? { cpc: gap.cpc } : {}),
+              ...(gap.competitorRank !== undefined ? { competitorRank: gap.competitorRank } : {}),
+              ...(gap.phoenixRank !== undefined ? { phoenixRank: gap.phoenixRank } : {}),
+              ...(config.locationCode !== undefined ? { locationCode: config.locationCode } : {}),
+              languageCode: config.languageCode,
+              gapType: gap.gapType,
+              observedAt: now,
+              provenance: gap.provenance,
+            });
+            keywordGaps += 1;
+          }
+        } catch (error) {
+          failures += 1;
+          partialError = error instanceof Error ? error.message : "Competitive keyword-gap measurement failed.";
+        }
+      }
+
       const competitorPageUrls = selectCompetitorPageUrls(
         result.results,
         ownDomain,
@@ -290,7 +337,7 @@ export async function runSeoCompetitiveIntelligence(
     }
   }
 
-  return { queries: rows.length, runs, observations, discoveredCompetitors, changes, failures, pageSnapshots };
+  return { queries: rows.length, runs, observations, discoveredCompetitors, changes, failures, pageSnapshots, keywordGaps };
 }
 
 async function selectQueries(database: D1Database, config: SeoCompetitiveWorkerConfig): Promise<readonly CompetitiveQueryRow[]> {
