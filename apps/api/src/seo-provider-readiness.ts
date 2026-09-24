@@ -1,0 +1,1 @@
+export const SEO_PROVIDER_READINESS_VERSION = 1;
