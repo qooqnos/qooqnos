@@ -44,7 +44,8 @@ function buildGeography(entity: SeoEntity): AnswerGeography | undefined {
   if (!entity.geoScope) return undefined;
   const serviceAreaIds = [...new Set((entity.serviceArea ?? []).map(clean).filter(Boolean))].sort();
   const locationId = clean(entity.locationId);
-  if (!locationId && !serviceAreaIds.length) return undefined;
+  const country = clean(entity.country);
+  if (!locationId && !serviceAreaIds.length && !country) return undefined;
   return {
     scope: entity.geoScope,
     ...(clean(entity.country) ? { country: clean(entity.country) } : {}),
@@ -74,7 +75,13 @@ export function buildAnswerRepresentation(
   facts: readonly AnswerFact[],
   now: string,
 ): AnswerRepresentation {
-  const normalizedFacts = uniqueFacts(facts.filter((fact) => fact.sourceEntityId === entity.id));
+  const suppliedFacts = uniqueFacts(facts.filter((fact) => fact.sourceEntityId === entity.id));
+  const canonicalSummary = clean(entity.summary) || clean(entity.description);
+  const normalizedFacts = suppliedFacts.length
+    ? suppliedFacts
+    : canonicalSummary
+      ? [{ fact: canonicalSummary, sourceEntityId: entity.id, verifiedAt: entity.updatedAt, sourceType: "canonical-entity" }]
+      : [];
   const answer = answerText(entity);
   const restricted = entity.visibility !== "public" || entity.publicationState !== "published";
   const allFactsVerified = normalizedFacts.length > 0 && normalizedFacts.every((fact) => validTimestamp(fact.verifiedAt));
