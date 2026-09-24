@@ -64,17 +64,18 @@ export async function runProductionSeoCrawler(database: D1Database, canonicalBas
       ORDER BY generated_at DESC, canonical_url ASC LIMIT ?`,
     safeLimit,
   );
-  let passed = 0; let failed = 0; let warnings = 0;
+  let crawled = 0; let passed = 0; let failed = 0; let warnings = 0;
   for (const row of rows) {
-    const url = new URL(row.canonicalUrl);
-    if (url.protocol !== 'https:') continue;
     try {
+      const url = new URL(row.canonicalUrl);
+      if (url.protocol !== 'https:') { failed += 1; continue; }
+      crawled += 1;
       const result = await crawlStoredSeoRepresentation(database, row, now, fetcher, canonicalBaseUrl);
       if (result.errors.length === 0) passed += 1; else failed += 1;
       warnings += result.warnings.length;
     } catch { failed += 1; }
   }
-  return { crawled: rows.length, passed, failed, warnings };
+  return { crawled, passed, failed, warnings };
 }
 
 function crawlerContext(organizationId: string, workspaceId: string | null): RequestContext {
