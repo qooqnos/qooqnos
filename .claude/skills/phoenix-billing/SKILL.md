@@ -23,3 +23,12 @@ Read `docs/PHOENIX_PRODUCT_NORTH_STAR.md`, `docs/AI_PRODUCT_DIRECTION.md`, `docs
 - Sensitive financial actions require elevated authorization and audit.
 ## Done
 Verify tenant isolation, lifecycle transitions, AI usage metering, quota concurrency, idempotency, reconciliation, money arithmetic, audit, and security.
+
+
+## Payment Provider Adapters
+- Payment provider SDK/API calls must stay behind `PaymentProviderAdapter` and `PaymentProviderRegistry`.
+- Propagate idempotency keys to providers; normalize provider status and failure class before domain handling.
+- Verify webhook signatures against the raw payload, enforce replay-age constraints when timestamps are supplied, validate event shape, and keep webhook processing idempotent.
+- Provider credentials and signing secrets are runtime configuration only; never persist them in Billing or Commerce tables.
+- Record normalized external references through `BillingRepository.recordProviderReference`.
+- Commerce must never call a provider SDK directly.
