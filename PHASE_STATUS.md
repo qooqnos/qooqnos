@@ -31,7 +31,7 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Migration lock | ✅ Implemented | reviewed SQL identity/checksum is enforced |
 | D1 database boundary | ✅ Implemented | packages/database exposes D1-compatible access |
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
-| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0056 |
+| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0063 |
 | Full logical model | 🟢 Core logical model resolved | remaining work is operational/provider/projection gates, not an unimplemented CustomerProfile table |
 | Final D1 physical schema | 🟢 Physical blueprint complete | 190 physical tables across migrations 0001–0056; remaining work is explicit contract/provider/worker gates and credentialed remote D1 migration/application |
 | Legacy PostgreSQL path | ✅ Removed from active source | historical git history only |
