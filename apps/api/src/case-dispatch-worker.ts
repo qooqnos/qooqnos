@@ -3,31 +3,26 @@ import type { D1Database } from "@qooqnos/database";
 import type { ApiEnv } from "./env";
 import { getDatabase } from "./database";
 
-export async function processCaseDispatch(env: ApiEnv, now = new Date().toISOString()): Promise<void> {
-  const database = getDatabase(env) as D1Database | undefined;
-  if (!database) return;
-
+export function createCaseDispatchRegistry(env: ApiEnv) {
   const providerId = env.CASE_DISPATCH_PROVIDER_ID?.trim();
   const endpoint = env.CASE_DISPATCH_PROVIDER_ENDPOINT?.trim();
   const path = env.CASE_DISPATCH_PROVIDER_PATH?.trim() || "/cases";
   const token = env.CASE_DISPATCH_PROVIDER_TOKEN?.trim();
-  if (!providerId || !endpoint || !token) {
-    return;
-  }
+  if (!providerId || !endpoint || !token) return createCaseDispatchProviderRegistry();
 
-  const registry = createCaseDispatchProviderRegistry([
+  return createCaseDispatchProviderRegistry([
     createHttpCaseDispatchProviderAdapter({
       providerId,
       baseUrl: endpoint,
       dispatchPath: path,
       credentialReference: "env://CASE_DISPATCH_PROVIDER_TOKEN",
-      credentialResolver: {
-        async resolve() {
-          return { secret: token };
-        },
-      },
+      credentialResolver: { async resolve() { return { secret: token }; } },
     }),
   ]);
+}
 
-  await processCaseDispatches(database, registry, now);
+export async function processCaseDispatch(env: ApiEnv, now = new Date().toISOString()): Promise<void> {
+  const database = getDatabase(env) as D1Database | undefined;
+  if (!database) return;
+  await processCaseDispatches(database, createCaseDispatchRegistry(env), now);
 }
