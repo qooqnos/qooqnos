@@ -119,7 +119,15 @@ export function injectSeoRepresentation(html: string, hydration: SeoFrontendHydr
   ].join("");
   const bodyMarkup = renderAnswerMarkup(entity, answer);
 
-  return html
+  const cleanedHtml = html
+    .replace(/<meta[^>]+name=["']description["'][^>]*>/gi, "")
+    .replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, "")
+    .replace(/<meta[^>]+name=["']twitter:[^"']+["'][^>]*>/gi, "")
+    .replace(/<meta[^>]+property=["']og:[^"']+["'][^>]*>/gi, "")
+    .replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, "")
+    .replace(/<link[^>]+rel=["']alternate["'][^>]*>/gi, "");
+
+  return cleanedHtml
     .replace(/<html[^>]*>/i, `<html lang="${escapeAttribute(metadata.locale)}" dir="${direction}">`)
     .replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(metadata.title)}</title>`)
     .replace("</head>", `${headMarkup}</head>`)
@@ -197,8 +205,8 @@ function safeJson(value: unknown): string {
     .replace(/</g, "\\u003c")
     .replace(/>/g, "\\u003e")
     .replace(/&/g, "\\u0026")
-    .replace(/\\u2028/g, "\\u2028")
-    .replace(/\\u2029/g, "\\u2029");
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 function escapeHtml(value: string): string {
