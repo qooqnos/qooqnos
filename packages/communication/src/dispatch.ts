@@ -95,6 +95,8 @@ export async function dispatchQueuedNotifications(
       };
     }
 
+    registry.report?.(adapter.providerId, result, now);
+
     await repository.appendDeliveryAttempt(
       systemContext(notification),
       {
