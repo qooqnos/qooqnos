@@ -12,3 +12,5 @@ export * from "./payment-provider-service";
 export * from "./settlement-repository";
 
 export * from "./settlement-service";
+
+export * from "./reconciliation-repository";
