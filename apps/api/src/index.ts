@@ -137,7 +137,7 @@ function buildSeoCompetitiveWorkerConfig(env: ApiEnv, limit: number) {
 
 function createRouter(version: string, database: D1Database | undefined, env: ApiEnv): ApiRouter {
   const authorization = createApiAuthorizationRegistry();
-  const router = new ApiRouter({ authorization, ...(database ? { database } : {}), seoCanonicalBaseUrl: env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com" });
+  const router = new ApiRouter({ authorization, ...(database ? { database } : {}), seoCanonicalBaseUrl: env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com", seoEnvironment: env });
   registerMediaRoutes(router, database, env, authorization);
   registerPromotionRoutes(router, database, authorization);
   registerLoyaltyRoutes(router, database, authorization);
