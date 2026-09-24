@@ -8,6 +8,8 @@ import { createRequestContext } from "./context";
 import type { ApiEnv } from "./env";
 import { processCaseDispatch } from "./case-dispatch-worker";
 import { enqueueSeoPublication } from "@qooqnos/seo";
+import { CatalogRepository } from "@qooqnos/catalog";
+import { BusinessRepository } from "@qooqnos/business";
 
 export interface ScheduledControllerLike {
   readonly scheduledTime: number;
@@ -67,6 +69,8 @@ export async function consumeOutbox(
   const discovery = database ? new DiscoveryOutboxProcessor({ repository: new DiscoveryRepository(database) }) : null;
   const matchingOutcomes = database ? new MatchingOutcomeProcessor({ learning: new MatchingLearningRepository(database), database }) : null;
   const analytics = database ? new AnalyticsRepository(database) : null;
+  const catalog = database ? new CatalogRepository(database) : null;
+  const business = database ? new BusinessRepository(database) : null;
 
   for (const message of batch.messages) {
     try {
@@ -150,7 +154,7 @@ export async function consumeOutbox(
           organizationId: event.organizationId,
           workspaceId: event.workspaceId ?? null,
           ...(event.aggregateId ? { aggregateId: event.aggregateId } : {}),
-          payloadJson: event.payloadJson,
+          payloadJson: await enrichSeoPayload(event, catalog, business),
           occurredAt: event.occurredAt,
         };
         await enqueueSeoPublication(database, seoContext, new Date().toISOString());
@@ -240,4 +244,91 @@ function retryAt(attempt: number, now: string): string {
   const boundedAttempt = Math.min(Math.max(attempt, 1), 10);
   const delayMs = Math.min(5 * 60_000, 1_000 * 2 ** boundedAttempt);
   return new Date(Date.parse(now) + delayMs).toISOString();
+}
+
+async function enrichSeoPayload(
+  event: OutboxEventRecord,
+  catalog: CatalogRepository | null,
+  business: BusinessRepository | null,
+): Promise<string> {
+  if (!event.organizationId || !event.workspaceId) return event.payloadJson;
+  const payload = parsePayload(event.payloadJson);
+  const context = createRequestContext({
+    module: "seo",
+    operation: "seo.canonical-source.enrich",
+    actorId: "system",
+    tenantId: event.organizationId,
+    workspaceId: event.workspaceId,
+    correlationId: event.id,
+    requestId: event.id,
+    authenticated: true,
+  });
+
+  if (catalog && event.eventType === "catalog.product.created" && typeof payload.productId === "string") {
+    const product = await catalog.getProduct(context, brandId<"EntityId">(payload.productId));
+    if (product) {
+      const variants = (await catalog.listProductVariants(context, product.id))
+        .filter((variant) => variant.status === "active")
+        .map((variant) => ({
+          id: variant.id,
+          ...(variant.sku ? { sku: variant.sku } : {}),
+          attributes: Object.fromEntries(Object.entries(variant.attributes ?? {}).map(([key, value]) => [key, Array.isArray(value) ? value.join(", ") : String(value)])),
+        }));
+      payload.seoEntity = {
+        id: product.id,
+        type: "Product",
+        sourceModule: "catalog",
+        sourceVersion: "1",
+        publicationState: "published",
+        visibility: "public",
+        preferredName: product.name,
+        ...(product.description ? { description: product.description } : {}),
+        locale: typeof payload.locale === "string" ? payload.locale : "en",
+        relatedEntityIds: [product.businessId],
+        productGroupId: product.id,
+        ...(variants.length ? { productVariants: variants } : {}),
+        updatedAt: product.updatedAt,
+      };
+    }
+  }
+
+  if (business && (event.eventType === "business.created.v1" || event.eventType === "business.publication.changed.v1")) {
+    const businessId = typeof payload.businessId === "string" ? payload.businessId : undefined;
+    if (businessId) {
+      const record = await business.get(context, brandId<"EntityId">(businessId));
+      if (record) {
+        const locations = await business.listLocations(context, record.id);
+        const location = locations.find((item) => item.status === "active" && item.locationType === "physical" && item.geoPoint);
+        if (location) {
+          payload.seoEntity = {
+            id: record.id,
+            type: "Business",
+            sourceModule: "business",
+            sourceVersion: "1",
+            publicationState: record.publicationStatus === "published" ? "published" : "unpublished",
+            visibility: "public",
+            preferredName: record.displayName,
+            locale: record.defaultLocale ?? "en",
+            ...(location.id ? { locationId: location.id } : {}),
+            geoScope: "exact",
+            geoPoint: location.geoPoint ?? undefined,
+            ...(location.address ? { address: mapSeoAddress(location.address) } : {}),
+            updatedAt: record.updatedAt,
+          };
+        }
+      }
+    }
+  }
+
+  return JSON.stringify(payload);
+}
+
+function mapSeoAddress(value: Readonly<Record<string, unknown>>): Record<string, string> {
+  const fields = ["streetAddress", "addressLocality", "addressRegion", "postalCode", "addressCountry"] as const;
+  const result: Record<string, string> = {};
+  for (const field of fields) {
+    const item = value[field];
+    if (typeof item === "string" && item.trim()) result[field] = item.trim();
+  }
+  return result;
 }
