@@ -22,6 +22,7 @@ import { processAutomationSchedules } from "./automation-worker";
 import { processAutomationExecutions } from "./automation-execution-worker";
 import { processCaseSla } from "./case-sla-worker";
 import { processCaseActions } from "./case-action-worker";
+import { processCaseDispatch } from "./case-dispatch-worker";
 import { processPrivacyConsentExpiry, processApprovedPrivacyRequests, processPrivacyRetention } from "./privacy-worker";
 import { processIntegration } from "./integration-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
@@ -549,6 +550,7 @@ export default {
     await processAutomationExecutions(env, now);
     await processCaseSla(env, now);
     await processCaseActions(env, now);
+    await processCaseDispatch(env, now);
     await processPrivacyConsentExpiry(env, now);
     await processApprovedPrivacyRequests(env, now);
     await processPrivacyRetention(env, now);
