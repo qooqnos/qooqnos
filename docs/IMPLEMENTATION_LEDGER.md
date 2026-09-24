@@ -740,3 +740,5 @@ Implementation commits:
 
 
 | Invoice system | 🟢 Canonical Billing invoice lifecycle + immutable lines + payment applications + tenant/currency/amount integrity implemented | migrations/0060_billing_invoice_system.sql; packages/billing/src/invoice-repository.ts; packages/billing/src/invoice-repository.test.ts |
+
+Invoice runtime/API note: `GET /api/v1/billing/invoices` is implemented through `BillingInvoiceRepository.list`, protected by `billing.invoice.read`, with tenant/workspace/business/customer scoping. Invoice creation/payment execution remain inside the Billing financial boundary rather than Commerce.
