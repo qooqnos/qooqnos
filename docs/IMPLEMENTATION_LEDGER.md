@@ -1578,3 +1578,11 @@ Competitive intelligence evidence layers now include:
 - SEO publication enrichment now maps canonical active physical-location hours to Schema.org day-of-week values and `OpeningHoursSpecification`.
 - Added repository regression coverage.
 - The SEO layer still does not infer hours, appointment availability, or exceptional closures; those remain explicit Business-domain facts.
+
+## SEO/GEO Public Business Contact & Social Signals — September 2026
+- Added canonical `business_contacts` and `business_social_links` tables, matching the existing Business data dictionary instead of introducing SEO-owned contact storage.
+- Added tenant/workspace-scoped Business repository projections for public, active contact channels and social links.
+- SEO publication enrichment now maps public phone/email to `telephone`/`email` and authoritative social URLs to `sameAs`.
+- Private/inactive/archived contact and social records are excluded at the Business boundary.
+- Added repository regression coverage.
+- No `knowsAbout`, fabricated category, review, rating, or website signals were added without a canonical Business source.
