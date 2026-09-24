@@ -60,6 +60,10 @@ ENVIRONMENT = "production"
 SEO_CANONICAL_BASE_URL = "https://qooqnos.com"
 SEO_CRAWLER_SAMPLE_LIMIT = "25"
 SEO_MEASUREMENT_SAMPLE_LIMIT = "25"
+SEO_COMPETITIVE_SAMPLE_LIMIT = "10"
+SEO_COMPETITIVE_LOCATION_NAME = "United States"
+SEO_COMPETITIVE_LANGUAGE_CODE = "en"
+SEO_COMPETITIVE_DEPTH = "20"
 SEO_GSC_SITE_URL = "https://qooqnos.com/"
 SEO_GSC_LOOKBACK_DAYS = "7"
 SEO_GSC_END_LAG_DAYS = "3"
@@ -68,7 +72,7 @@ AI_SELLER_EXTRACT_MODEL_ID = "${modelId}"
 AI_SELLER_EXTRACT_MODEL_VERSION = "${modelVersion}"${gatewayId ? `\nAI_GATEWAY_ID = "${gatewayId}"` : ""}
 
 [env.production.triggers]
-crons = [ "17 * * * *", "41 2 * * *" ]
+crons = [ "17 * * * *", "41 2 * * *", "17 3 * * *" ]
 
 [env.production.ai]
 binding = "AI"
