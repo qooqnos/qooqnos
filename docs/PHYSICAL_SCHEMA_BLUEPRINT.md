@@ -941,6 +941,10 @@ Candidates reference canonical Business/Offering authority; Matching never copie
 
 `id`, match_request_id, candidate_id, decision, reason_code?, decision_source, policy_version, actor_reference?, decided_at, created_at.
 
+### `match_learning_signals`
+
+Append-only outcome evidence linked to a MatchRequest and optional Candidate: `id`, match_request_id, candidate_id?, organization_id, workspace_id?, signal_type, signal_value?, source, actor_reference?, metadata_json?, occurred_at, created_at. Learning signals are evidence, not authoritative supply or transaction state.
+
 Match decisions are immutable historical decisions.
 
 ## 18.2 Reviews / Reputation
