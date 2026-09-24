@@ -80,9 +80,11 @@ describe("SEO/GEO core", () => {
       entity,
       [{ fact: "Open daily", sourceEntityId: "biz-1", verifiedAt: "2026-09-24T00:00:00Z", sourceType: "business-record" }],
       "2026-09-24T00:00:00Z",
+      "https://example.com/en-US/business/biz-1",
     );
     expect(answer.entityId).toBe("biz-1");
     expect(answer.locale).toBe("en-US");
+    expect(answer.canonicalUrl).toBe("https://example.com/en-US/business/biz-1");
     expect(answer.confidence).toBe("verified");
     expect(answer.citationReady).toBe(true);
     expect(answer.facts).toHaveLength(1);
@@ -105,10 +107,21 @@ describe("SEO/GEO core", () => {
       entity,
       [{ fact: "Open daily", sourceEntityId: "biz-1", verifiedAt: "2026-09-24T00:00:00Z", validUntil: "2026-09-24T01:00:00Z" }],
       "2026-09-25T00:00:00Z",
+      "https://example.com/en-US/business/biz-1",
     );
     const validation = validateAnswerRepresentation(answer, entity, "2026-09-25T00:00:00Z");
     expect(validation.citationReady).toBe(false);
     expect(validation.issues.some((issue) => issue.code === "STALE_SOURCE")).toBe(true);
+  });
+
+  it("localizes answer questions from the canonical locale", () => {
+    const answer = buildAnswerRepresentation(
+      { ...entity, locale: "fa-IR", preferredName: "ققنوس" },
+      [],
+      "2026-09-24T00:00:00Z",
+      "https://example.com/fa-IR/business/biz-1",
+    );
+    expect(answer.question).toBe("ققنوس چیست؟");
   });
 
   it("emits deterministic crawl artifacts", () => {
