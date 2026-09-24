@@ -23,17 +23,26 @@ for (const filename of filenames) {
   const tables = [...sql.matchAll(/\bCREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+([A-Za-z_][A-Za-z0-9_]*)/gi)].map(
     (match) => match[1],
   );
+  const rebuiltTables = new Set(
+    [...sql.matchAll(/\bALTER\s+TABLE\s+([A-Za-z_][A-Za-z0-9_]*)\s+RENAME\s+TO\s+\1_legacy\b/gi)]
+      .map((match) => match[1]),
+  );
+  const newlyDefinedTables = [];
   for (const table of tables) {
     if (physicalTables.has(table)) {
-      throw new Error(
-        "Duplicate physical table definition: " + table +
-        " in " + physicalTables.get(table) + " and " + filename,
-      );
+      if (!rebuiltTables.has(table)) {
+        throw new Error(
+          "Duplicate physical table definition: " + table +
+          " in " + physicalTables.get(table) + " and " + filename,
+        );
+      }
+      continue;
     }
     physicalTables.set(table, filename);
+    newlyDefinedTables.push(table);
   }
-  physicalTableCount += tables.length;
-  migrations.push({ filename, version: Number(filename.slice(0, 4)), tables: tables.length });
+  physicalTableCount += newlyDefinedTables.length;
+  migrations.push({ filename, version: Number(filename.slice(0, 4)), tables: newlyDefinedTables.length });
 }
 
 const catalog = await readFile(catalogPath, "utf8");
