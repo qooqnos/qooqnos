@@ -74,10 +74,8 @@ describe("case dispatch provider adapters", () => {
       correlationId: "dispatch-1",
     });
     expect(result).toMatchObject({ status: "accepted", externalReference: "ext-1", providerId: "queue-a" });
-    expect(capturedHeaders).toMatchObject({
-      authorization: "Bearer secret",
-      "idempotency-key": "case-dispatch:assignment-1",
-      "x-correlation-id": "dispatch-1",
-    });
+    expect(capturedHeaders?.get("authorization")).toBe("Bearer secret");
+    expect(capturedHeaders?.get("idempotency-key")).toBe("case-dispatch:assignment-1");
+    expect(capturedHeaders?.get("x-correlation-id")).toBe("dispatch-1");
   });
 });
