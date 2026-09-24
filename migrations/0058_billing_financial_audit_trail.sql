@@ -28,6 +28,21 @@ CREATE TABLE billing_financial_audit_events (
   CHECK (idempotency_key IS NULL OR length(trim(idempotency_key)) > 0)
 );
 
+CREATE TRIGGER trg_billing_financial_audit_business_scope_insert
+BEFORE INSERT ON billing_financial_audit_events
+FOR EACH ROW
+WHEN NEW.business_id IS NOT NULL
+ AND NOT EXISTS (
+  SELECT 1
+  FROM businesses b
+  WHERE b.id = NEW.business_id
+    AND b.organization_id = NEW.organization_id
+    AND (NEW.workspace_id IS NULL OR b.workspace_id = NEW.workspace_id)
+ )
+BEGIN
+  SELECT RAISE(ABORT, 'Financial audit business crosses organization/workspace boundary');
+END;
+
 CREATE INDEX idx_billing_financial_audit_scope_time
   ON billing_financial_audit_events(organization_id, workspace_id, occurred_at DESC, id DESC);
 
