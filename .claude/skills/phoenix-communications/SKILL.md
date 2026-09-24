@@ -8,6 +8,9 @@ Native Claude Code entrypoint. Read `skills/phoenix-communications/SKILL.md` and
 ## Rules
 - Communications owns delivery, templates, provider adapters, preferences, schedules, retries, webhooks, and inbox projections—not domain state.
 - Provider SDKs stay behind adapters.
+- External provider adapters use runtime-only endpoint/credential configuration; provider secrets never enter Communication tables or source control.
+- Dispatch rate limits cover tenant, recipient, channel, provider and platform scopes; provider `429` / `Retry-After` is normalized as transient delivery state.
+- Burst anomaly detection is bounded and advisory; distributed edge/platform enforcement remains authoritative in production.
 - Outbound flow: domain command/event → policy → template → provider adapter → provider → normalized event.
 - Authorization, consent, opt-out, anti-spam, recipient validation, and audit precede delivery.
 - Sends and callbacks are idempotent; webhook signatures/schema/replay controls are mandatory.
