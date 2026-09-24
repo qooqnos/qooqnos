@@ -1269,3 +1269,9 @@ Implemented:
 - service worker registration is initiated after page load.
 
 No application state or authenticated API responses are cached.
+
+### Frontend Session Context Hydration — 2026-09-25
+
+Active bearer sessions now hydrate the workspace context automatically from `GET /api/v1/session`.
+
+This removes repeated manual workspace entry when a valid session already contains the workspace scope. Expired/invalid sessions are cleared from browser session storage without blocking shell rendering.
