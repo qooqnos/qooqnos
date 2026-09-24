@@ -13,7 +13,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 
 | Capability | Status | Canonical source |
 |---|---|---|
-| SEO/GEO Engine core | 🟡 Active implementation | packages/seo; migrations/0077–0078; docs/SEO_GEO_ENGINE_ARCHITECTURE.md; docs/SEO_GEO_WORLD_CLASS_ENGINE.md | Core entity model, centralized canonical URLs, publication/indexability policy, freshness gates, metadata/structured data, GEO answers, sitemap/robots, entity graph, internal-link planning, geographic truth, query/intent coverage, consistency diagnostics, agentic readiness, tenant-scoped derived persistence, dependency/invalidation foundation, audits and measurement storage are implemented and verified. Remaining SEO/GEO work is publication/event workers, broader domain adapters, external search/AI observability connectors, richer structured-data validation, query persistence/experimentation and production route integration. |
+| SEO/GEO Engine core | 🟢 Core implementation complete | packages/seo; migrations/0077–0079; apps/api/src/seo-routes.ts; docs/SEO_GEO_ENGINE_ARCHITECTURE.md; docs/SEO_GEO_WORLD_CLASS_ENGINE.md | Canonical entity model, centralized URLs/policy/freshness, metadata/structured data, GEO answers, sitemap/robots, entity graph, internal links, geographic truth, query-intent model, consistency diagnostics, agentic readiness, tenant-scoped persistence, dependency/invalidation, audits/measurements, durable publication jobs, canonical business/catalog event adapters, structured-data validation, query persistence, controlled experiments, visibility-provider boundary, scheduled worker and production API routes are implemented. External vendor credentials/connectors remain deployment/provider activation gates, not missing SEO engine core. |
 | Product North Star | ✅ Complete | docs/PHOENIX_PRODUCT_NORTH_STAR.md |
 | AI product direction | ✅ Complete | docs/AI_PRODUCT_DIRECTION.md |
 | Capability decision rules | ✅ Complete | docs/CAPABILITY_DECISION_RULES.md |
@@ -882,3 +882,11 @@ SEO/GEO now has explicit canonical-domain ingestion and incremental invalidation
 Implementation commits: `de65967cf6e44ac7dac642baed50d37effb0b6f7`, `4e98517320097af7eeefe6a628ed869441d01397`, `091aa690358fe85dd2c9d44897548a3618199703`, `5f715ee9ed7f972bba8870ced2eeb2da22d7fc54`.
 
 Status: 🟢 Canonical ingestion + invalidation contract complete; external domain adapters/event wiring remain the next operational layer.
+
+### SEO/GEO operational control plane — 2026-09-24
+
+The SEO/GEO engine control plane is now wired end-to-end: canonical domain/outbox events enqueue durable publication jobs; the scheduled Worker regenerates tenant-scoped representations and derived artifacts with retry/terminal-failure handling; business and catalog creation/publication events have concrete adapters; structured-data validation is explicit; query-intent persistence and deterministic experiment assignment are durable; visibility observability has a provider-neutral HTTP adapter boundary; and production API routes expose sitemap, robots and SEO health.
+
+Operational implementation commits: `68558fea703113788d2ce0c7c9809e5dbcc624c7`, `f226977697f25b4377ab55cdf842476433985af3`, `bbdc3d89502116899825955c533412b8a039d44d`, `17904dbd259237a733422f8f35ad5759f12c3771`, `db19f07c52eef16e7a13312f8a53fd2f8f6e2b12`, `689a150f0914be1e143b7cd1f7c31b414c371787`, `a0366f8711723979a578e3f71f294ce190cdaa4c`, `2283fa62e9eaf3e8d2d1a44876bbc1958db5e084`, `5fd49aab67f0442b38ae2959fa63ab3533a1d7a2`, `11c19dde03b64f207a6bd0db304a6dcebdd875cf`, plus migration registration/lock commits.
+
+The engine remains truth-first: SEO/GEO is derived from canonical domain state and never becomes a second source of truth. External search/AI vendor activation is intentionally separated from repository-owned core implementation.
