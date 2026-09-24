@@ -72,7 +72,7 @@ Implemented core capability families include:
 - Match decisions are append-only.
 - Matching Connect requires an explicit selected candidate and reuses the canonical Customer↔Business relationship.
 - Communication delivery state is provider-neutral; provider adapters remain behind the Communication boundary.
-- Billing owns commercial entitlement/usage authority; Payment execution, invoices and financial ledger remain separate ownership gates.
+- Billing owns commercial entitlement/usage authority; invoice/refund financial truth and the provider execution adapter boundary are implemented under Billing/Payment, with provider credentials kept outside domain storage.
 - Booking slots remain derived projections; there is no authoritative slots table.
 
 ## Repository continuity guards
