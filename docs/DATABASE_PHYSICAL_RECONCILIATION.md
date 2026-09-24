@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0056**.
+The current API migration catalog references versions **0001 through 0063**.
 
 ### Foundation — 0001
 
