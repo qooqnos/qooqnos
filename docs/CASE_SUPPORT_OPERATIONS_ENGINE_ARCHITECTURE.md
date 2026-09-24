@@ -322,6 +322,8 @@ case.closed
 case.reopened
 case.sla_risk
 case.sla_breached
+case.dispatch.requested
+case.dispatch.accepted
 ```
 
 Events are versioned, tenant-scoped, correlated, and idempotently consumable.
