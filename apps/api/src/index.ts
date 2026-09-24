@@ -128,12 +128,14 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
       const search = new URL(request.url).searchParams;
       const configuredLimit = Number(search.get("limit") ?? "10");
       const queryText = search.get("query")?.trim() || undefined;
+      const locale = search.get("locale")?.trim() || undefined;
       const result = await runSeoVisibilityMeasurements(database, {
         ...buildSeoVisibilityWorkerConfig(env, Number.isFinite(configuredLimit) ? Math.min(Math.max(Math.trunc(configuredLimit), 1), 25) : 10),
         organizationId: context.tenantId,
         workspaceId: context.workspaceId ?? null,
         entityId: params.entityId,
         ...(queryText ? { queryText } : {}),
+        ...(locale ? { locale } : {}),
       }, new Date().toISOString());
       const status = result.providerRuns === 0 ? 503 : result.failures > 0 ? 207 : 200;
       return json({ measurement: result }, status, context.requestId);
