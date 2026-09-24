@@ -1312,3 +1312,21 @@ Ownership remains explicit:
 - Commerce/Billing remain authoritative for monetary truth and transactions;
 - Booking remains authoritative for booking facts;
 - frontend/AI cannot decide promotion winners outside this capability.
+
+### Dynamic Frontend SEO Surface — implemented — 2026-09-25
+
+Public canonical entity pages are now rendered at the edge from the persisted SEO projection instead of relying on client-side metadata mutation:
+- Cloudflare Worker intercepts public document paths before SPA fallback.
+- Published/public SEO representations are looked up by canonical URL.
+- Static index.html is used as the presentation shell, then canonical metadata is injected into the initial HTML.
+- JSON-LD Structured Data is injected into the initial HTML head.
+- Answer Representation is rendered as visible first-party page content in the initial HTML, including verified facts, freshness, and geographic context.
+- A sanitized hydration payload lets the SPA reuse the same canonical SEO representation after JavaScript loads.
+- Internal answer source identifiers/types are excluded from the public hydration payload.
+- SPA navigation removes entity JSON-LD/hydration state and restores route-appropriate metadata.
+- Public canonical URL lookup is indexed through migration 0082_seo_public_render_index.sql.
+- Root / now falls through to the actual Cloudflare Assets web shell instead of the legacy API home fallback whenever Assets are available.
+- Public SEO presentation styles are included in the deployed apps/web/public/styles.css asset.
+- Unit coverage was added for initial-HTML metadata/JSON-LD/answer injection and public payload sanitization.
+
+Deployment verification remains a runtime step: production HTML should still be checked with URL Inspection / fetched-source verification after the worker and migration are deployed.
