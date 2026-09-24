@@ -478,3 +478,7 @@ Provider-specific SDKs or credentials must remain behind this adapter boundary. 
 ### Settlement — implemented
 
 Provider payout/settlement is now a canonical Billing aggregate. `billing_settlements` represents a provider/business settlement period and `billing_settlement_items` preserves immutable source-level financial composition. Settlement lifecycle is `pending → approved → processing → paid` with failed/cancelled terminal states. Approval has separation-of-duties, idempotency is mandatory, gross/fee/refund/net reconciliation is enforced, and settlement posting creates immutable double-entry ledger entries. Provider payout execution remains behind `PaymentProviderAdapter.payoutSettlement`; provider credentials never enter the financial database.
+
+### Reconciliation — implemented
+
+Billing reconciliation is an explicit operational control, not a silent mutation path. `billing_reconciliation_cases` records provider/local discrepancies with expected and observed minor-unit amounts, scope, references, correlation and idempotency keys. `billing_reconciliation_case_events` provides an immutable lifecycle history. Cases move through `open → investigating → resolved/ignored`; financial records are not rewritten to hide discrepancies. Settlement/provider execution remains the source of external execution evidence, while reconciliation records the exception and its resolution.
