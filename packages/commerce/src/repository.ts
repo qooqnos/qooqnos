@@ -85,6 +85,8 @@ export interface OrderRecord {
   readonly workspaceId: EntityId;
   readonly businessId: EntityId;
   readonly customerId: EntityId;
+  readonly matchRequestId: EntityId | null;
+  readonly matchCandidateId: EntityId | null;
   readonly priceSnapshotId: EntityId | null;
   readonly status: OrderStatus;
   readonly currency: string;
@@ -177,6 +179,8 @@ export interface CreateOrderInput {
   readonly id: EntityId;
   readonly businessId: EntityId;
   readonly customerId: EntityId;
+  readonly matchRequestId?: EntityId | undefined;
+  readonly matchCandidateId?: EntityId | undefined;
   readonly priceSnapshotId?: EntityId | undefined;
   readonly currency: string;
   readonly subtotalMinor: number;
@@ -374,7 +378,7 @@ export class CommerceRepository extends Repository {
         existing.id,
         existing.organizationId,
         existing.workspaceId,
-        JSON.stringify({ orderId: existing.id, sourceChannel: existing.sourceChannel }),
+        JSON.stringify({ orderId: existing.id, sourceChannel: existing.sourceChannel, matchRequestId: existing.matchRequestId, matchCandidateId: existing.matchCandidateId, businessId: existing.businessId }),
         existing.createdAt,
         existing.createdAt,
       );
@@ -385,13 +389,15 @@ export class CommerceRepository extends Repository {
     const orderId = input.id;
     await this.database.transaction([
       {
-        sql: "INSERT OR IGNORE INTO commerce_orders (id, organization_id, workspace_id, business_id, customer_id, price_snapshot_id, status, currency, subtotal_minor, adjustment_total_minor, tax_total_minor, fee_total_minor, grand_total_minor, source_channel, policy_version, idempotency_key, correlation_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        sql: "INSERT OR IGNORE INTO commerce_orders (id, organization_id, workspace_id, business_id, customer_id, match_request_id, match_candidate_id, price_snapshot_id, status, currency, subtotal_minor, adjustment_total_minor, tax_total_minor, fee_total_minor, grand_total_minor, source_channel, policy_version, idempotency_key, correlation_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params: [
           orderId,
           organizationId,
           workspaceId,
           input.businessId,
           input.customerId,
+          input.matchRequestId ?? null,
+          input.matchCandidateId ?? null,
           input.priceSnapshotId ?? null,
           normalizeCurrency(input.currency),
           input.subtotalMinor,
@@ -410,7 +416,7 @@ export class CommerceRepository extends Repository {
       {
         sql: "INSERT OR IGNORE INTO outbox_events (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at) SELECT o.id || ':created', 'commerce.order.created', 1, 'commerce_order', o.id, o.organization_id, o.workspace_id, ?, 'pending', 0, ?, ?, NULL FROM commerce_orders o WHERE o.organization_id = ? AND o.workspace_id = ? AND o.idempotency_key = ?",
         params: [
-          JSON.stringify({ sourceChannel: input.sourceChannel }),
+          JSON.stringify({ sourceChannel: input.sourceChannel, matchRequestId: input.matchRequestId ?? null, matchCandidateId: input.matchCandidateId ?? null, businessId: input.businessId }),
           now,
           now,
           organizationId,
@@ -429,7 +435,7 @@ export class CommerceRepository extends Repository {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
     return this.database.first<OrderRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, customer_id AS customerId, price_snapshot_id AS priceSnapshotId, status, currency, subtotal_minor AS subtotalMinor, adjustment_total_minor AS adjustmentTotalMinor, tax_total_minor AS taxTotalMinor, fee_total_minor AS feeTotalMinor, grand_total_minor AS grandTotalMinor, payment_status_ref AS paymentStatusRef, fulfillment_status_ref AS fulfillmentStatusRef, source_channel AS sourceChannel, policy_version AS policyVersion, idempotency_key AS idempotencyKey, correlation_id AS correlationId, created_at AS createdAt, updated_at AS updatedAt, confirmed_at AS confirmedAt, completed_at AS completedAt FROM commerce_orders WHERE organization_id = ? AND workspace_id = ? AND idempotency_key = ? LIMIT 1",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, customer_id AS customerId, match_request_id AS matchRequestId, match_candidate_id AS matchCandidateId, price_snapshot_id AS priceSnapshotId, status, currency, subtotal_minor AS subtotalMinor, adjustment_total_minor AS adjustmentTotalMinor, tax_total_minor AS taxTotalMinor, fee_total_minor AS feeTotalMinor, grand_total_minor AS grandTotalMinor, payment_status_ref AS paymentStatusRef, fulfillment_status_ref AS fulfillmentStatusRef, source_channel AS sourceChannel, policy_version AS policyVersion, idempotency_key AS idempotencyKey, correlation_id AS correlationId, created_at AS createdAt, updated_at AS updatedAt, confirmed_at AS confirmedAt, completed_at AS completedAt FROM commerce_orders WHERE organization_id = ? AND workspace_id = ? AND idempotency_key = ? LIMIT 1",
       organizationId,
       workspaceId,
       idempotencyKey.trim(),
@@ -721,7 +727,7 @@ export class CommerceRepository extends Repository {
           id,
           current.organizationId,
           current.workspaceId,
-          JSON.stringify({ orderId: id, fromStatus: current.status, toStatus: status }),
+          JSON.stringify({ orderId: id, fromStatus: current.status, toStatus: status, matchRequestId: current.matchRequestId, matchCandidateId: current.matchCandidateId, businessId: current.businessId }),
           now,
           now,
         ],
