@@ -830,3 +830,10 @@ Implementation commits: `73b060bef3710a384dd40618ed43b17a7ab7945b`, `0afa9282c44
 ### Documents project-graph integration — 2026-09-24
 
 The root TypeScript project graph now includes `packages/documents`, and the Documents package declares its `core` and `runtime` project references. This closes the build-graph integration gap for the new Documents module; it does not claim concrete PDF/Print renderer implementations or remote artifact storage.
+
+
+### Documents composition test coverage — 2026-09-24
+
+Added `packages/documents/src/export-document.test.ts` covering tenant-scoped composition, Query capability/resource-scope propagation, provenance, snapshot integrity, and fail-closed tenant validation. This closes the missing unit-test artifact for the canonical export composition boundary.
+
+Implementation commit: `e92b9fb4acd3c63d108691164eff714037630698`.
