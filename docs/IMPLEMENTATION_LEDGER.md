@@ -535,7 +535,7 @@ Communication policy note: migration 0055 establishes intent/channel policy, rec
 
 Communication template note: migration 0051 establishes the scoped versioned template registry. Notification sends referencing templates now require an approved active version matching intent/channel/locale; approved versions are immutable.
 
-Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. External provider adapters and platform rate-limit/anomaly controls remain gated; intent/consent/suppression policy and the scoped versioned template registry are implemented.
+Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. Runtime-configured external HTTP provider adapters and scoped rate-limit/anomaly controls are implemented; provider credentials remain runtime-only, while intent/consent/suppression policy and the scoped versioned template registry remain canonical policy controls.
 
 Billing runtime note: the API Seller AI composition uses the real D1-backed BillingService. Missing plan/subscription/entitlement state fails the operation closed.
 
