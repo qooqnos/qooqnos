@@ -733,6 +733,12 @@ Counters are enforcement state for concurrency-safe hard quotas; usage events re
 
 `id`, organization_id, provider, reference_type, external_reference?, local_reference?, status, category, details_json?, opened_at, resolved_at?, created_at, updated_at.
 
+### `billing_financial_audit_events`
+
+`id`, organization_id, workspace_id?, business_id?, actor_id?, event_type, entity_type, entity_id, outcome, amount_minor?, currency?, reason_code?, reason?, source, request_id?, correlation_id, idempotency_key?, before_json?, after_json?, metadata_json?, integrity_hash, occurred_at, created_at.
+
+Financial audit events are append-only, tenant-scoped evidence. UPDATE/DELETE are database-blocked, idempotency is scoped to the organization, and monetary values use integer minor units. The event hash provides independent integrity verification; the table is not the accounting ledger.
+
 Billing owns commercial entitlement and usage authority. Payment execution, invoices and financial ledger remain gated until their provider/legal contracts are explicit.
 
 ### Media
