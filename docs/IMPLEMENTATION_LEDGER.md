@@ -1227,3 +1227,17 @@ Canonical files:
 - `apps/web/src/main.ts`
 - `apps/web/styles.css`
 - `apps/web/public/styles.css`
+
+
+### SEO metadata generation — completed — 2026-09-25
+
+Metadata generation is now treated as a production SEO contract:
+- validates and normalizes canonical URLs;
+- honors explicit SEO policy canonical/indexability decisions;
+- generates bounded, deterministic title and description values;
+- emits locale and language separately;
+- supports locale alternates plus x-default;
+- emits Open Graph and Twitter metadata including resolved image URLs;
+- selects article Open Graph type for Article entities;
+- provides a deterministic default social image;
+- covers the above behavior with unit tests.
