@@ -413,6 +413,13 @@
       "moduleId": "billing",
       "checksum": "b7c13af1542fa2287d9064a885faffa0d70b6ed101399d0279d8971b39d1d73c",
       "filename": "0059_billing_refund_financial_accounting.sql"
+    },
+    {
+      "id": "0060_billing_invoice_system",
+      "version": 60,
+      "moduleId": "billing",
+      "checksum": "427d9eed554ab6aa5fb1949a30474daf381970b84a484024740ba3d92841bcd8",
+      "filename": "0060_billing_invoice_system.sql"
     }
   ]
 }
