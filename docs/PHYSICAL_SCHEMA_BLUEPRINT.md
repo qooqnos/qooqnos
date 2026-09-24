@@ -1266,3 +1266,11 @@ Analytics tables are projection-owned and may be dropped/rebuilt from durable so
 - `blocking_issue_codes_json` — machine-readable publication blockers.
 
 Migration `0085_seo_audit_quality_gate.sql` owns these additions. Audit state is diagnostic/projection data and never becomes domain truth or an authorization source.
+
+## 18.7 SEO visibility measurement state
+
+`seo_measurement_runs` and `seo_measurement_citations` are rebuildable operational projections for real external visibility evidence.
+
+`seo_measurement_runs` records provider/surface/query/entity context, execution status, observation count and provenance. `seo_measurement_citations` records the exact observed citation URL/title/position and source type.
+
+These tables do not invent ranking, impression or citation values. Search-engine metrics come from authenticated provider APIs; AI citation metrics come from provider responses that explicitly expose URL citations.
