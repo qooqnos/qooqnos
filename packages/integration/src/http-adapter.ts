@@ -215,7 +215,7 @@ export async function verifyHttpIntegrationWebhook(
   } catch {
     return { verified: false, payload };
   }
-  const verified = await crypto.subtle.verify(
+  const verified = await globalThis.crypto.subtle.verify(
     "HMAC",
     key,
     signatureBytes,
