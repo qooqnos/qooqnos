@@ -466,3 +466,5 @@ Implemented contract:
 - payment-provider execution remains outside the invoice aggregate; invoice payment application records financial evidence after authoritative payment success.
 
 Invoice data is financial truth owned by Billing. Commerce may reference invoices but must not create a parallel invoice aggregate.
+
+The documented `GET /api/v1/billing/invoices` surface is now live for scoped invoice retrieval. Payment-provider execution and provider reconciliation remain separate contracts.
