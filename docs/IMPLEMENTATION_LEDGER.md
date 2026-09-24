@@ -1586,3 +1586,9 @@ Competitive intelligence evidence layers now include:
 - Private/inactive/archived contact and social records are excluded at the Business boundary.
 - Added repository regression coverage.
 - No `knowsAbout`, fabricated category, review, rating, or website signals were added without a canonical Business source.
+
+## SEO/GEO Entity Relationship Publication Triggers — September 2026
+- Aligned SEO publication event contracts with documented versioned Business profile lifecycle events: `business.profile.updated.v1`, `business.profile.published.v1`, and `business.profile.suspended.v1`.
+- Business SEO canonical enrichment now rehydrates the canonical Business projection on those lifecycle events, so contact, social, location, and operating-schedule changes are not dependent on stale event payload snapshots.
+- The existing EntityGraph/InternalLink recommendation layer remains the sole semantic-linking mechanism; no SEO-owned relationship source was introduced.
+- Undocumented `*.v1` location/schedule event names were deliberately not registered; future event contracts must be added only when the Business module emits a concrete versioned event.
