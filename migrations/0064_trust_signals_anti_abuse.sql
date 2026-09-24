@@ -23,6 +23,9 @@ CREATE TABLE trust_signals (
   UNIQUE(organization_id, COALESCE(workspace_id, ''), source_type, source_id, signal_type, COALESCE(policy_version, ''))
 );
 
+CREATE UNIQUE INDEX uq_moderation_case_source_idempotency
+  ON moderation_cases(organization_id, source_type, source_id, policy_id, policy_version);
+
 CREATE INDEX idx_trust_signals_subject_status
   ON trust_signals(organization_id, workspace_id, subject_type, subject_id, status, detected_at DESC);
 
