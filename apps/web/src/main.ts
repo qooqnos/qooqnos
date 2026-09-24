@@ -1778,6 +1778,16 @@ function bindGlobalEvents(): void {
     const file = input.files?.[0];
     const name = document.querySelector<HTMLElement>("#studio-file-name");
     if (name) name.textContent = file ? `${file.name} · ${Math.round(file.size / 1024)}KB` : "بدون تصویر";
+    const preview = document.querySelector<HTMLImageElement>("#studio-image-preview");
+    if (preview) {
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.hidden = false;
+      } else {
+        preview.removeAttribute("src");
+        preview.hidden = true;
+      }
+    }
   });
   document.querySelectorAll<HTMLButtonElement>("[data-open-connection]").forEach((button) => button.addEventListener("click", openConnectionPanel));
   document.querySelector<HTMLButtonElement>("[data-confirm-seller-draft]")?.addEventListener("click", confirmSellerDraft);
