@@ -993,7 +993,7 @@ function renderSeo(): string {
         <div class="seo-form">
           <input id="seo-entity" class="studio-input-line" type="text" placeholder="Entity ID" />
           <input id="seo-locale" class="studio-input-line" type="text" value="fa-IR" placeholder="Locale" />
-          <button class="button button-primary" type="button" data-seo-audit>اجرای Audit</button>
+          <button class="button button-primary" type="button" data-seo-audit>اجرای Audit</button><button class="button button-ghost" type="button" data-seo-crawl>Production Crawl</button>
         </div>
         <div id="seo-audit-result" class="seo-result"><div class="slot-empty"><span>◎</span><p>Entity ID را وارد کنید.</p></div></div>
       </article>
@@ -1013,21 +1013,65 @@ async function loadSeoHealth(): Promise<void> {
   if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
   host.innerHTML = '<div class="slot-loading">در حال خواندن SEO health…</div>';
   try {
-    const response = await apiJson<{ status: string; publication?: { pending: number; failed: number } }>("/api/v1/seo/health");
+    const response = await apiJson<{ status: string; publication?: { pending: number; failed: number }; productionCrawler?: { recentFailures: number; lastObservedAt: string | null } }>("/api/v1/seo/health");
     const pending = response.publication?.pending ?? 0;
     const failed = response.publication?.failed ?? 0;
-    status.textContent = failed ? "نیازمند توجه" : "سالم";
-    status.className = failed ? "pill warning" : "pill success";
+    const crawlFailures = response.productionCrawler?.recentFailures ?? 0;
+    status.textContent = failed || crawlFailures ? "نیازمند توجه" : "سالم";
+    status.className = failed || crawlFailures ? "pill warning" : "pill success";
     host.innerHTML = `
       <div class="seo-health-metrics">
         <div><span>Pending</span><strong>${pending}</strong></div>
         <div><span>Failed</span><strong>${failed}</strong></div>
+        <div><span>Crawler failures</span><strong>${crawlFailures}</strong></div>
         <div><span>Health</span><strong>${escapeHtml(response.status)}</strong></div>
       </div>`;
   } catch (error) {
     status.textContent = "خطا";
     status.className = "pill warning";
     host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "SEO health ناموفق بود.")}</p></div>`;
+  }
+}
+
+async function runSeoProductionCrawl(): Promise<void> {
+  const entityId = document.querySelector<HTMLInputElement>("#seo-entity")?.value.trim() ?? "";
+  const locale = document.querySelector<HTMLInputElement>("#seo-locale")?.value.trim() ?? "";
+  const status = document.querySelector<HTMLElement>("#seo-audit-status");
+  const host = document.querySelector<HTMLDivElement>("#seo-audit-result");
+  if (!entityId || !status || !host) { showToast("Entity ID لازم است."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  status.textContent = "در حال Crawl";
+  status.className = "pill warning";
+  host.innerHTML = '<div class="slot-loading">در حال دریافت HTML واقعی production…</div>';
+  try {
+    const response = await apiJson<{
+      crawl: {
+        status: number;
+        finalUrl: string;
+        renderMode: string;
+        errors: string[];
+        warnings: string[];
+      };
+    }>(`/api/v1/seo/crawl/${encodeURIComponent(entityId)}?locale=${encodeURIComponent(locale || "fa-IR")}`, { method: "POST" });
+    const crawl = response.crawl;
+    const failed = crawl.errors.length > 0;
+    host.innerHTML = `
+      <div class="seo-audit-summary">
+        <div class="seo-audit-score"><span>HTTP</span><strong>${crawl.status}</strong></div>
+        <div><span>Render</span><strong>${escapeHtml(crawl.renderMode)}</strong></div>
+        <div><span>Errors</span><strong>${crawl.errors.length}</strong></div>
+        <div><span>Warnings</span><strong>${crawl.warnings.length}</strong></div>
+      </div>
+      <div class="seo-audit-list"><div><span>Final URL</span><strong>${escapeHtml(crawl.finalUrl)}</strong></div></div>
+      ${crawl.errors.length ? `<div class="seo-audit-issues">${crawl.errors.map((item) => `<article><strong>ERROR</strong><p>${escapeHtml(item)}</p></article>`).join("")}</div>` : ""}
+      ${crawl.warnings.length ? `<div class="seo-audit-issues">${crawl.warnings.map((item) => `<article><strong>WARNING</strong><p>${escapeHtml(item)}</p></article>`).join("")}</div>` : ""}
+    `;
+    status.textContent = failed ? "Crawler Error" : "Crawler Pass";
+    status.className = failed ? "pill danger" : "pill success";
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "Production crawl ناموفق بود.")}</p></div>`;
   }
 }
 
@@ -2273,6 +2317,7 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-load-cases]")?.addEventListener("click", () => { void loadCases(); });
   document.querySelector<HTMLButtonElement>("[data-load-fulfillment]")?.addEventListener("click", () => { void loadFulfillment(); });
   document.querySelector<HTMLButtonElement>("[data-seo-audit]")?.addEventListener("click", () => { void runSeoAudit(); });
+  document.querySelector<HTMLButtonElement>("[data-seo-crawl]")?.addEventListener("click", () => { void runSeoProductionCrawl(); });
   document.querySelector<HTMLButtonElement>("[data-seo-health]")?.addEventListener("click", () => { void loadSeoHealth(); });
   document.querySelector<HTMLElement>("[data-control-connect]")?.addEventListener("click", openConnectionPanel);
   document.querySelector<HTMLButtonElement>("[data-approval-create]")?.addEventListener("click", () => { void createApprovalRequest(); });
