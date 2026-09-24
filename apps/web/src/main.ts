@@ -231,6 +231,7 @@ function navigate(path: string): void {
 function render(): void {
   const route = currentRoute();
   const page = route.render();
+  if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   app.innerHTML = `
     <div class="app-shell">
       ${renderHeader(route)}
@@ -344,6 +345,34 @@ function setMetaProperty(property: string, content: string): void {
     document.head.appendChild(tag);
   }
   tag.content = content;
+}
+
+function clearHydratedSeoSurface(route: Route): void {
+  document.getElementById("phoenix-seo-data")?.remove();
+  document.getElementById("phoenix-seo-jsonld")?.remove();
+
+  if (route.path === "/") {
+    document.title = "ققنوس | Phoenix Intelligence";
+    document.documentElement.lang = "fa";
+    document.documentElement.dir = "rtl";
+    setMeta("description", "ققنوس؛ لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار.");
+    setMeta("robots", "index,follow");
+    setLink("canonical", new URL("/", location.origin).toString());
+    return;
+  }
+
+  const labels: Record<string, { title: string; description: string }> = {
+    "/discover": { title: "کشف | ققنوس", description: "کشف عرضه و گزینه‌های مرتبط در ققنوس." },
+    "/business": { title: "کسب‌وکار | ققنوس", description: "فضای مدیریت کسب‌وکار و عرضه در ققنوس." },
+    "/product-studio": { title: "استودیو محصول | ققنوس", description: "ساخت و غنی‌سازی محصول با Seller AI در ققنوس." },
+    "/catalog": { title: "کاتالوگ | ققنوس", description: "مدیریت موجودیت‌های canonical محصول در ققنوس." },
+  };
+  const seo = labels[route.path];
+  if (!seo) return;
+  document.title = seo.title;
+  setMeta("description", seo.description);
+  setMeta("robots", "noindex,nofollow");
+  setLink("canonical", new URL(route.path, location.origin).toString());
 }
 
 function setLink(rel: string, href: string): void {
