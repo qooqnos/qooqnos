@@ -40,6 +40,17 @@ export interface CompetitiveCitation {
 }
 
 
+
+export interface CompetitiveKeywordGap {
+  readonly keyword: string;
+  readonly searchVolume?: number;
+  readonly cpc?: number;
+  readonly competitorRank?: number;
+  readonly phoenixRank?: number;
+  readonly gapType: "competitor-only" | "shared";
+  readonly provenance: Record<string, unknown>;
+}
+
 export interface CompetitivePageSnapshot {
   readonly url: string;
   readonly statusCode?: number;
@@ -175,6 +186,90 @@ export class DataForSeoGoogleCompetitiveProvider {
         observedAt: new Date().toISOString(),
       },
     };
+  }
+
+
+  async observeKeywordGaps(
+    competitorDomain: string,
+    phoenixDomain: string,
+    options: {
+      readonly locationName?: string;
+      readonly locationCode?: number;
+      readonly languageCode: string;
+      readonly limit?: number;
+    },
+  ): Promise<readonly CompetitiveKeywordGap[]> {
+    const endpoint = "https://api.dataforseo.com/v3/dataforseo_labs/google/domain_intersection/live";
+    const payload = [{
+      target1: normalizeDomain(competitorDomain),
+      target2: normalizeDomain(phoenixDomain),
+      ...(options.locationCode !== undefined ? { location_code: options.locationCode } : {}),
+      ...(options.locationName ? { location_name: options.locationName } : {}),
+      language_code: options.languageCode,
+      intersections: false,
+      include_serp_info: true,
+      item_types: ["organic"],
+      order_by: ["keyword_data.keyword_info.search_volume,desc"],
+      limit: Math.min(Math.max(Math.trunc(options.limit ?? 25), 1), 100),
+    }];
+    if (options.locationCode === undefined && !options.locationName) {
+      throw new Error("Competitive keyword-gap measurement requires a location.");
+    }
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Basic " + bytesToBase64(new TextEncoder().encode(this.config.login + ":" + this.config.password)),
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error("DataForSEO Labs Domain Intersection returned HTTP " + response.status);
+    const payloadJson = await response.json() as {
+      tasks?: readonly {
+        status_code?: number;
+        status_message?: string;
+        result?: readonly {
+          target1?: string;
+          target2?: string;
+          location_code?: number;
+          language_code?: string;
+          items?: readonly Record<string, unknown>[];
+        }[];
+      }[];
+    };
+    const task = payloadJson.tasks?.[0];
+    if (!task || task.status_code !== 20000) {
+      throw new Error("DataForSEO Labs Domain Intersection failed: " + (task?.status_message || "unknown provider error"));
+    }
+    const result = task.result?.[0];
+    const output: CompetitiveKeywordGap[] = [];
+    for (const item of result?.items ?? []) {
+      const keywordData = isRecord(item.keyword_data) ? item.keyword_data : {};
+      const keyword = typeof keywordData.keyword === "string" ? keywordData.keyword : undefined;
+      const info = isRecord(keywordData.keyword_info) ? keywordData.keyword_info : {};
+      if (!keyword) continue;
+      const first = isRecord(item.first_domain_serp_element) ? item.first_domain_serp_element : {};
+      const second = isRecord(item.second_domain_serp_element) ? item.second_domain_serp_element : {};
+      output.push({
+        keyword,
+        ...(finiteInteger(info.search_volume) !== undefined ? { searchVolume: finiteInteger(info.search_volume) } : {}),
+        ...(finiteNumber(info.cpc) !== undefined ? { cpc: finiteNumber(info.cpc) } : {}),
+        ...(finiteInteger(first.rank_absolute) !== undefined ? { competitorRank: finiteInteger(first.rank_absolute) } : {}),
+        ...(finiteInteger(second.rank_absolute) !== undefined ? { phoenixRank: finiteInteger(second.rank_absolute) } : {}),
+        gapType: isRecord(item.second_domain_serp_element) ? "shared" : "competitor-only",
+        provenance: {
+          provider: this.id,
+          endpoint,
+          competitorDomain: normalizeDomain(competitorDomain),
+          phoenixDomain: normalizeDomain(phoenixDomain),
+          locationCode: result?.location_code ?? options.locationCode ?? null,
+          locationName: options.locationName ?? null,
+          languageCode: result?.language_code ?? options.languageCode,
+          observedAt: new Date().toISOString(),
+        },
+      });
+    }
+    return output;
   }
 
   async observePages(urls: readonly string[], acceptLanguage = "en"): Promise<readonly CompetitivePageSnapshot[]> {
