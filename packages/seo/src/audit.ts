@@ -62,7 +62,7 @@ export function auditEntity(
     if (freshness.stale && e.publicationState === "published" && e.visibility === "public") {
       issues.push(issue(
         "STALE_ENTITY_SOURCE",
-        surface?.policy?.indexability === "index" ? "error" : "warning",
+        "error",
         freshness.reason,
         owner,
         "Refresh canonical entity data before allowing public indexing",
