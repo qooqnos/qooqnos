@@ -125,7 +125,7 @@ The existing \`business_status_history\` remains the append-only history for Bus
 - `attribute_values`: typed AttributeValue records for supported catalog targets with provenance.
 - `attribute_value_options`: multi-enum option membership for an AttributeValue.
 
-The current physical implementation establishes the Attribute vocabulary in migration 0016 and typed AttributeValue storage in migration 0017. The 0017 storage is an expand-only layer: `product_variants.attributes_json` remains the active authoritative value path until an explicit backfill/conflict-resolution/cutover contract is implemented.
+Migrations 0016–0017 establish the Attribute vocabulary and typed AttributeValue storage. Migration 0063 completes the controlled cutover: legacy `product_variants.attributes_json` values are validated and backfilled losslessly into canonical `attribute_values` / `attribute_value_options`; the legacy column is then cleared and guarded against future writes. Canonical AttributeValue storage is now authoritative for variant attributes.
 
 ### Services
 
