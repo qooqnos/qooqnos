@@ -143,7 +143,8 @@ function createPdf(document: ExportDocument, profile: DocumentRenderProfile): Ui
   objects.push("<< /Type /Pages /Kids [" + pageObjectNumbers.map((n) => n + " 0 R").join(" ") + "] /Count " + pages.length + " >>");
 
   for (let i = 0; i < pages.length; i++) {
-    const content = pages[i].map((line, index) => (index === 0 ? "50 760 Td " : "0 -15 Td ") + "(" + pdfEscape(line.slice(0, 120)) + ") Tj").join("\n");
+    const page = pages[i] ?? [];
+    const content = page.map((line, index) => (index === 0 ? "50 760 Td " : "0 -15 Td ") + "(" + pdfEscape(line.slice(0, 120)) + ") Tj").join("\n");
     objects.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 " + fontObjectNumber + " 0 R >> >> /Contents " + contentObjectNumbers[i] + " 0 R >>");
     objects.push("<< /Length " + content.length + " >>\nstream\nBT\n/F1 10 Tf\n" + content + "\nET\nendstream");
   }
@@ -165,7 +166,7 @@ function serializePdf(objects: string[]): Uint8Array {
   const encoder = new TextEncoder();
   const chunks: Uint8Array[] = [encoder.encode("%PDF-1.4\\n%\\xE2\\xE3\\xCF\\xD3\\n")];
   const offsets = [0];
-  let byteLength = chunks[0].byteLength;
+  let byteLength = chunks[0]?.byteLength ?? 0;
 
   for (let i = 0; i < objects.length; i++) {
     offsets.push(byteLength);
