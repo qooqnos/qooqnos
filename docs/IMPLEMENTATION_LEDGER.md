@@ -1195,3 +1195,20 @@ Canonical files:
 - `apps/web/src/main.ts`
 - `apps/web/styles.css`
 - `apps/web/public/styles.css`
+
+### Frontend Automation / Integration / Privacy Control Plane — 2026-09-25
+
+The frontend now exposes an action-oriented control plane for three canonical domains.
+
+Implemented:
+- dedicated `/control` route;
+- Automation workflow creation via `POST /api/v1/automation/workflows`;
+- Integration account connection via `POST /api/v1/integrations/accounts`;
+- Privacy consent creation via `POST /api/v1/privacy/consents`;
+- Privacy access/export/delete/restrict/correct request creation via `POST /api/v1/privacy/requests`;
+- no provider credential storage, automation policy, privacy policy, or integration synchronization logic is duplicated in frontend.
+
+Canonical files:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
