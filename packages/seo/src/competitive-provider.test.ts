@@ -100,6 +100,32 @@ describe("competitive SERP provider", () => {
     fetcher.mockRestore();
   });
 
+  it("parses provider-observed backlink gaps", async () => {
+    const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(
+      JSON.stringify({
+        status_code: 20000,
+        tasks: [{
+          status_code: 20000,
+          result: [{
+            items: [{
+              domain_intersection: {
+                "1": { target: "referrer.com", backlinks: 40, rank: 75 },
+              },
+              summary: { intersections_count: 1 },
+            }],
+          }],
+        }],
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    ));
+    const provider = new DataForSeoGoogleCompetitiveProvider({ login: "login", password: "password" });
+    const gaps = await provider.observeLinkGaps("competitor.com", "qooqnos.com", 10);
+    expect(gaps[0]?.referringDomain).toBe("referrer.com");
+    expect(gaps[0]?.competitorBacklinks).toBe(40);
+    expect(gaps[0]?.competitorDomainRank).toBe(75);
+    fetcher.mockRestore();
+  });
+
   it("parses page-level competitor SEO evidence from Instant Pages", async () => {
     const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(
       JSON.stringify({
