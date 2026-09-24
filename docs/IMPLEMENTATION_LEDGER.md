@@ -1275,3 +1275,20 @@ No application state or authenticated API responses are cached.
 Active bearer sessions now hydrate the workspace context automatically from `GET /api/v1/session`.
 
 This removes repeated manual workspace entry when a valid session already contains the workspace scope. Expired/invalid sessions are cleared from browser session storage without blocking shell rendering.
+
+
+### GEO / Answer representation — completed — 2026-09-25
+
+The GEO answer layer is now a canonical, provenance-aware publication artifact:
+- AnswerRepresentation is explicitly bound to entity identity and locale.
+- Each answer contains atomic entity-attributable facts with optional verification time, validity window, provenance URL, and source type.
+- Canonical entity summaries can become first-party evidence without inventing external facts.
+- Citation readiness is explicit rather than inferred from confidence alone.
+- Citation-ready answers require a valid canonical HTTP(S) source URL, verified evidence, a public/published entity, and valid generation time.
+- Stale evidence can invalidate citation readiness without invalidating the entire SEO representation.
+- Non-ready answers remain representable as `pending-review`/non-citation-ready instead of blocking publication of unrelated SEO artifacts.
+- Answer questions are localized for common Phoenix locales, including Persian, Arabic, Azerbaijani, Turkish, Russian, German, French, and Spanish.
+- Geographic context is embedded in answer representation and remains derived only from canonical country/location/service-area truth.
+- Geographic truth fingerprints now include country to prevent cross-country collisions.
+- A dedicated answer validator enforces entity binding, timestamps, provenance URLs, publication visibility, citation readiness, and validity windows.
+- SEO publication validates both Structured Data and Answer Representation before persisting the publication bundle.
