@@ -679,3 +679,12 @@ Competitive Intelligence now has three evidence layers:
 3. DataForSEO Labs keyword-gap evidence showing competitor-only queries under an explicit market/language configuration.
 
 No synthetic market-share score is produced.
+
+Competitive Intelligence evidence layers are now:
+1. live SERP/rank observation;
+2. competitor on-page page snapshots;
+3. DataForSEO Labs keyword gaps;
+4. DataForSEO Backlinks referring-domain gaps;
+5. AI citation/reference change evidence.
+
+All layers are persisted with provider provenance and explicit market/query context.
