@@ -25,7 +25,7 @@ export interface CompetitiveResultItem {
   readonly type: string;
   readonly domain?: string;
   readonly url?: string;
-  readonly title?: string;
+  readonly title?: string | undefined;
   readonly snippet?: string;
   readonly rankGroup?: number;
   readonly rankAbsolute?: number;
@@ -44,39 +44,39 @@ export interface CompetitiveCitation {
 
 export interface CompetitiveLinkGap {
   readonly referringDomain: string;
-  readonly competitorBacklinks?: number;
-  readonly competitorDomainRank?: number;
+  readonly competitorBacklinks?: number | undefined;
+  readonly competitorDomainRank?: number | undefined;
   readonly provenance: Record<string, unknown>;
 }
 
 export interface CompetitiveKeywordGap {
   readonly keyword: string;
-  readonly searchVolume?: number;
-  readonly cpc?: number;
-  readonly competitorRank?: number;
-  readonly phoenixRank?: number;
+  readonly searchVolume?: number | undefined;
+  readonly cpc?: number | undefined;
+  readonly competitorRank?: number | undefined;
+  readonly phoenixRank?: number | undefined;
   readonly gapType: "competitor-only" | "shared";
   readonly provenance: Record<string, unknown>;
 }
 
 export interface CompetitivePageSnapshot {
   readonly url: string;
-  readonly statusCode?: number;
+  readonly statusCode?: number | undefined;
   readonly title?: string;
-  readonly description?: string;
-  readonly canonicalUrl?: string;
-  readonly h1Count?: number;
-  readonly wordCount?: number;
-  readonly internalLinksCount?: number;
-  readonly externalLinksCount?: number;
-  readonly imagesCount?: number;
-  readonly titleLength?: number;
-  readonly descriptionLength?: number;
-  readonly noH1Tag?: boolean;
-  readonly noTitle?: boolean;
-  readonly noDescription?: boolean;
-  readonly seoFriendlyUrl?: boolean;
-  readonly structuredDataErrors?: number;
+  readonly description?: string | undefined;
+  readonly canonicalUrl?: string | undefined;
+  readonly h1Count?: number | undefined;
+  readonly wordCount?: number | undefined;
+  readonly internalLinksCount?: number | undefined;
+  readonly externalLinksCount?: number | undefined;
+  readonly imagesCount?: number | undefined;
+  readonly titleLength?: number | undefined;
+  readonly descriptionLength?: number | undefined;
+  readonly noH1Tag?: boolean | undefined;
+  readonly noTitle?: boolean | undefined;
+  readonly noDescription?: boolean | undefined;
+  readonly seoFriendlyUrl?: boolean | undefined;
+  readonly structuredDataErrors?: number | undefined;
   readonly provenance: Record<string, unknown>;
 }
 
@@ -452,4 +452,8 @@ function bytesToBase64(value: Uint8Array): string {
   let binary = "";
   for (const byte of value) binary += String.fromCharCode(byte);
   return btoa(binary);
+}
+
+function finiteNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
