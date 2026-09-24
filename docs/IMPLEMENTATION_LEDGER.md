@@ -1379,3 +1379,21 @@ Additional hardening completed after initial Dynamic Frontend SEO Surface implem
 - SPA navigation to dynamic entity URLs forces a full navigation so the request reaches the edge renderer and cannot reuse stale entity hydration.
 - Unknown public entity-like paths return a real 404 from the edge renderer when no published/public representation exists.
 - Migration numbering was reconciled with the existing repository chain: the public-render index is migration `0083`, after existing `0082_advertising_core`.
+
+
+### Public Entity Page Architecture — implemented — 2026-09-25
+
+Canonical public entity pages are now a first-class SEO projection surface:
+- stable localized canonical URL structure remains `/{locale}/{entity-type}/{slug}-{id}`;
+- Entity Page Model is derived from canonical entity, metadata, answer, geography and semantic graph only;
+- visible breadcrumb trail is generated from the same canonical URL contract and emits BreadcrumbList semantics;
+- Business, Branch, Product, Offer, Service, Location, Person, Article and Event schemas receive specialized properties only when those canonical facts exist;
+- Product pages expose brand/category/price/currency/availability through Product + Offer markup;
+- Business/Branch pages expose contact, price range, address and geographic truth when canonical fields exist;
+- public pages expose verified facts, freshness, commerce context and geographic context;
+- contextual actions are derived by entity type for Discovery, Booking and Checkout;
+- public related links are derived only from verified semantic graph edges with canonical target URLs;
+- internal graph hydration is now part of SEO publication, using persisted SEO graph nodes/edges and published representations for canonical labels/URLs;
+- internal-link public payload is sanitized so private source entity IDs are not exposed as UI-only fallback data;
+- Discovery breadcrumb links carry query context into the real Discovery page;
+- Checkout actions hydrate Product/Offering context from URL parameters.
