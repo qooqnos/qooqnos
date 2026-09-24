@@ -76,7 +76,10 @@ export function buildSearchQuery(
           : intent === "local"
             ? "discover"
             : "discover";
-  return geoScope === undefined\n    ? { normalizedQuery, intent, locale, commercialIntent, journeyStage }\n    : { normalizedQuery, intent, locale, geoScope, commercialIntent, journeyStage };
+  if (geoScope === undefined) {
+    return { normalizedQuery, intent, locale, commercialIntent, journeyStage };
+  }
+  return { normalizedQuery, intent, locale, geoScope, commercialIntent, journeyStage };
 }
 
 export function evaluateQueryCoverage(
