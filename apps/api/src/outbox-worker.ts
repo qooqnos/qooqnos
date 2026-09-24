@@ -7,6 +7,7 @@ import { getDatabase } from "./database";
 import { createRequestContext } from "./context";
 import type { ApiEnv } from "./env";
 import { processCaseDispatch } from "./case-dispatch-worker";
+import { enqueueSeoPublication } from "@qooqnos/seo";
 
 export interface ScheduledControllerLike {
   readonly scheduledTime: number;
@@ -139,6 +140,20 @@ export async function consumeOutbox(
           payloadJson: event.payloadJson,
           occurredAt: event.occurredAt,
         });
+      }
+
+      if (database && event.organizationId) {
+        const seoContext = {
+          id: event.id,
+          eventType: event.eventType,
+          eventVersion: event.eventVersion,
+          organizationId: event.organizationId,
+          workspaceId: event.workspaceId ?? null,
+          ...(event.aggregateId ? { aggregateId: event.aggregateId } : {}),
+          payloadJson: event.payloadJson,
+          occurredAt: event.occurredAt,
+        };
+        await enqueueSeoPublication(database, seoContext, new Date().toISOString());
       }
 
       if (event.eventType === "case.dispatch.requested") {
