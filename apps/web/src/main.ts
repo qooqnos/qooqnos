@@ -1013,17 +1013,19 @@ async function loadSeoHealth(): Promise<void> {
   if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
   host.innerHTML = '<div class="slot-loading">در حال خواندن SEO health…</div>';
   try {
-    const response = await apiJson<{ status: string; publication?: { pending: number; failed: number }; productionCrawler?: { recentFailures: number; lastObservedAt: string | null } }>("/api/v1/seo/health");
+    const response = await apiJson<{ status: string; publication?: { pending: number; failed: number }; productionCrawler?: { recentFailures: number; lastObservedAt: string | null }; visibilityMeasurement?: { recentFailures: number; runs: number; lastObservedAt: string | null } }>("/api/v1/seo/health");
     const pending = response.publication?.pending ?? 0;
     const failed = response.publication?.failed ?? 0;
     const crawlFailures = response.productionCrawler?.recentFailures ?? 0;
-    status.textContent = failed || crawlFailures ? "نیازمند توجه" : "سالم";
-    status.className = failed || crawlFailures ? "pill warning" : "pill success";
+    const measurementFailures = response.visibilityMeasurement?.recentFailures ?? 0;
+    status.textContent = failed || crawlFailures || measurementFailures ? "نیازمند توجه" : "سالم";
+    status.className = failed || crawlFailures || measurementFailures ? "pill warning" : "pill success";
     host.innerHTML = `
       <div class="seo-health-metrics">
         <div><span>Pending</span><strong>${pending}</strong></div>
         <div><span>Failed</span><strong>${failed}</strong></div>
         <div><span>Crawler failures</span><strong>${crawlFailures}</strong></div>
+        <div><span>Measurement failures</span><strong>${measurementFailures}</strong></div>
         <div><span>Health</span><strong>${escapeHtml(response.status)}</strong></div>
       </div>`;
   } catch (error) {
