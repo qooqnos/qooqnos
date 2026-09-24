@@ -29,14 +29,17 @@ export function recommendInternalLinks(
       return score(right) - score(left) || left.targetEntityId.localeCompare(right.targetEntityId);
     })
     .slice(0, limit)
-    .map((edge) => ({
-      sourceEntityId: edge.sourceEntityId,
-      targetEntityId: edge.targetEntityId,
-      ...(target?.entityType ? { targetType: target.entityType } : {}),
-      ...(target?.preferredName ? { targetLabel: target.preferredName } : {}),
-      ...(target?.canonicalUrl ? { targetUrl: target.canonicalUrl } : {}),
-      relation: edge.relation,
+    .map((edge) => {
+      const target = graph.nodes.get(edge.targetEntityId);
+      return {
+        sourceEntityId: edge.sourceEntityId,
+        targetEntityId: edge.targetEntityId,
+        ...(target?.entityType ? { targetType: target.entityType } : {}),
+        ...(target?.preferredName ? { targetLabel: target.preferredName } : {}),
+        ...(target?.canonicalUrl ? { targetUrl: target.canonicalUrl } : {}),
+        relation: edge.relation,
       priority: Math.round(edge.confidence * 100),
-      reason: "canonical-semantic-relationship",
-    }));
+        reason: "canonical-semantic-relationship",
+      };
+    });
 }
