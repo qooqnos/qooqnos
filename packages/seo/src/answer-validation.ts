@@ -43,6 +43,18 @@ export function validateAnswerRepresentation(
   if (!answer.answer.trim()) {
     issues.push({ code: "MISSING_ANSWER", severity: "error", path: "answer", message: "Answer representation requires a non-empty answer." });
   }
+  if (answer.citationReady) {
+    if (!answer.canonicalUrl) {
+      issues.push({ code: "INVALID_FACT_PROVENANCE", severity: "error", path: "canonicalUrl", message: "Citation-ready answers require a canonical HTTP(S) URL." });
+    } else {
+      try {
+        const url = new URL(answer.canonicalUrl);
+        if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("invalid protocol");
+      } catch {
+        issues.push({ code: "INVALID_FACT_PROVENANCE", severity: "error", path: "canonicalUrl", message: "Canonical citation URL must be HTTP(S)." });
+      }
+    }
+  }
   if (!Number.isFinite(timestamp(answer.freshnessAt)) || !Number.isFinite(timestamp(answer.sourceUpdatedAt)) || !Number.isFinite(timestamp(now))) {
     issues.push({ code: "INVALID_REPRESENTATION_TIMESTAMP", severity: "error", path: "freshnessAt", message: "Answer timestamps must be valid ISO timestamps." });
   }
