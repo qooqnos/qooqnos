@@ -2,7 +2,7 @@ import { CommunicationRepository } from "@qooqnos/communication";
 import { MatchingLearningRepository, MatchingOutcomeProcessor } from "@qooqnos/matching";
 import { DiscoveryOutboxProcessor, DiscoveryRepository } from "@qooqnos/discovery";
 import { brandId } from "@qooqnos/core";
-import { OutboxService, type OutboxEventRecord } from "@qooqnos/database";
+import { AnalyticsRepository, OutboxService, type OutboxEventRecord } from "@qooqnos/database";
 import { getDatabase } from "./database";
 import { createRequestContext } from "./context";
 import type { ApiEnv } from "./env";
@@ -65,10 +65,35 @@ export async function consumeOutbox(
   const communication = database ? new CommunicationRepository(database) : null;
   const discovery = database ? new DiscoveryOutboxProcessor({ repository: new DiscoveryRepository(database) }) : null;
   const matchingOutcomes = database ? new MatchingOutcomeProcessor({ learning: new MatchingLearningRepository(database), database }) : null;
+  const analytics = database ? new AnalyticsRepository(database) : null;
 
   for (const message of batch.messages) {
     try {
       const event = message.body;
+
+      if (analytics) {
+        const analyticsContext = createRequestContext({
+          module: "analytics",
+          operation: "analytics.event.ingest",
+          actorId: "system",
+          tenantId: event.organizationId ?? undefined,
+          workspaceId: event.workspaceId ?? undefined,
+          correlationId: event.id,
+          requestId: event.id,
+          authenticated: true,
+        });
+        await analytics.ingestOutboxEvent(analyticsContext, {
+          id: event.id,
+          eventType: event.eventType,
+          eventVersion: event.eventVersion,
+          aggregateType: event.aggregateType,
+          aggregateId: event.aggregateId,
+          organizationId: event.organizationId,
+          workspaceId: event.workspaceId,
+          payloadJson: event.payloadJson,
+          occurredAt: event.occurredAt,
+        }, new Date().toISOString());
+      }
 
       if (matchingOutcomes && isMatchingOutcomeEvent(event.eventType)) {
         if (!event.organizationId || !event.workspaceId) {
