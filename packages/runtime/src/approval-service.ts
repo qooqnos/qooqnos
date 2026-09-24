@@ -84,3 +84,13 @@ export const AUTHORIZATION_APPROVAL_PERMISSIONS = [
   "authorization.approval.approve",
   "authorization.approval.reject",
 ] as const;
+
+export const AUTHORIZATION_GOVERNANCE_MODULE = {
+  id: "authorization-governance",
+  version: "0.1.0",
+  dependencies: [],
+  permissions: [...AUTHORIZATION_APPROVAL_PERMISSIONS],
+  registerAuthorization(registry: { registerPermission(permission: string): void }) {
+    for (const permission of AUTHORIZATION_APPROVAL_PERMISSIONS) registry.registerPermission(permission);
+  },
+} as const;
