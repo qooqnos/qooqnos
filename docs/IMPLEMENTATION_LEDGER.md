@@ -1612,3 +1612,9 @@ Competitive intelligence evidence layers now include:
 - Product SEO continues to reference its canonical owning Business.
 - Graph publication turns only relationships whose public representations exist into linkable graph edges, while `seo_dependencies` records the same related entities for invalidation propagation.
 - This establishes the canonical Business ↔ Product/Service/Location relationship path without inventing undocumented service/location event contracts.
+
+## SEO/GEO Semantic Canonical Relationships — September 2026
+- `SeoEntity` now optionally carries `relatedEntities` with canonical target IDs and explicit relationship semantics while retaining `relatedEntityIds` compatibility.
+- Product projections emit `ownedByBusiness`; Business projections emit `offersProduct`, `offersService`, and `hasLocation` from canonical repositories.
+- SEO graph persistence preserves the semantic relation instead of collapsing every canonical relationship to `relatedTo`.
+- Legacy ID-only payloads remain supported through a `relatedTo` fallback.
