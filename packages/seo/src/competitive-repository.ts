@@ -186,12 +186,70 @@ export class SeoCompetitiveRepository extends Repository {
     );
   }
 
+  async recordPageSnapshot(
+    context: RequestContext,
+    input: {
+      readonly id: string;
+      readonly competitorId?: string;
+      readonly queryText?: string;
+      readonly resultUrl: string;
+      readonly observedAt: string;
+      readonly statusCode?: number;
+      readonly title?: string;
+      readonly description?: string;
+      readonly canonicalUrl?: string;
+      readonly h1Count?: number;
+      readonly wordCount?: number;
+      readonly internalLinksCount?: number;
+      readonly externalLinksCount?: number;
+      readonly imagesCount?: number;
+      readonly titleLength?: number;
+      readonly descriptionLength?: number;
+      readonly noH1Tag?: boolean;
+      readonly noTitle?: boolean;
+      readonly noDescription?: boolean;
+      readonly seoFriendlyUrl?: boolean;
+      readonly structuredDataErrors?: number;
+      readonly provenance: Record<string, unknown>;
+    },
+  ): Promise<void> {
+    const scope = this.scope(context);
+    await this.database.run(
+      `INSERT INTO seo_competitor_page_snapshots
+       (id, organization_id, workspace_id, competitor_id, query_text, result_url, observed_at, status_code, title, description,
+        canonical_url, h1_count, word_count, internal_links_count, external_links_count, images_count, title_length,
+        description_length, no_h1_tag, no_title, no_description, seo_friendly_url, structured_data_errors, provenance_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      input.id, scope.organizationId, scope.workspaceId, input.competitorId ?? null, input.queryText ?? null,
+      input.resultUrl, input.observedAt, input.statusCode ?? null, input.title ?? null, input.description ?? null,
+      input.canonicalUrl ?? null, input.h1Count ?? null, input.wordCount ?? null, input.internalLinksCount ?? null,
+      input.externalLinksCount ?? null, input.imagesCount ?? null, input.titleLength ?? null, input.descriptionLength ?? null,
+      input.noH1Tag === undefined ? null : input.noH1Tag ? 1 : 0,
+      input.noTitle === undefined ? null : input.noTitle ? 1 : 0,
+      input.noDescription === undefined ? null : input.noDescription ? 1 : 0,
+      input.seoFriendlyUrl === undefined ? null : input.seoFriendlyUrl ? 1 : 0,
+      input.structuredDataErrors ?? null, JSON.stringify(input.provenance),
+    );
+  }
+
   async latestSummary(context: RequestContext, entityId: string): Promise<{
     competitors: readonly Record<string, unknown>[];
     changes: readonly Record<string, unknown>[];
     opportunities: readonly Record<string, unknown>[];
   }> {
     const scope = this.scope(context);
+    const pageSnapshots = await this.database.all(
+      `SELECT s.result_url AS resultUrl, s.observed_at AS observedAt, s.status_code AS statusCode, s.title, s.description,
+              s.canonical_url AS canonicalUrl, s.h1_count AS h1Count, s.word_count AS wordCount,
+              s.internal_links_count AS internalLinksCount, s.external_links_count AS externalLinksCount,
+              s.images_count AS imagesCount, s.title_length AS titleLength, s.description_length AS descriptionLength,
+              c.domain
+         FROM seo_competitor_page_snapshots s
+         LEFT JOIN seo_competitors c ON c.id=s.competitor_id
+        WHERE s.organization_id=? AND s.workspace_id IS ?
+        ORDER BY s.observed_at DESC LIMIT 50`,
+      scope.organizationId, scope.workspaceId,
+    );
     const competitors = await this.database.all(
       `SELECT c.id, c.domain, c.display_name AS displayName, c.competitor_type AS competitorType, c.last_observed_at AS lastObservedAt,
               COUNT(o.id) AS observations, MIN(o.rank_absolute) AS bestObservedRank
@@ -237,7 +295,7 @@ export class SeoCompetitiveRepository extends Repository {
         LIMIT 50`,
       scope.organizationId, scope.workspaceId, entityId,
     );
-    return { competitors, changes, opportunities };
+    return { competitors, changes, opportunities, pageSnapshots };
   }
 
   private scope(context: RequestContext): { organizationId: string; workspaceId: string | null } {
