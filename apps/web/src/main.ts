@@ -312,7 +312,10 @@ function renderBusiness(): string {
   return `
     <section class="page-heading">
       <div><span class="eyebrow"><i></i> Business Workspace</span><h1>کسب‌وکارتان را <em>قابل کشف</em> کنید.</h1><p>یک فضای کاری تمیز برای ساخت عرضه، رشد و کنترل عملیات.</p></div>
-      <a class="button button-primary" href="/product-studio" data-nav>ساخت محصول با AI <span>✦</span></a>
+      <div class="heading-actions">
+        <button class="button button-ghost" type="button" data-business-create>ساخت کسب‌وکار</button>
+        <a class="button button-primary" href="/product-studio" data-nav>ساخت محصول با AI <span>✦</span></a>
+      </div>
     </section>
 
     <section class="business-grid">
@@ -422,6 +425,7 @@ function bindGlobalEvents(): void {
   });
 
   document.querySelector<HTMLElement>("[data-profile-toggle]")?.addEventListener("click", openConnectionPanel);
+  document.querySelector<HTMLButtonElement>("[data-business-create]")?.addEventListener("click", openBusinessCreatePanel);
 
   document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
@@ -626,6 +630,86 @@ function stringField(value: Record<string, unknown>, key: string): string | unde
   return typeof candidate === "string" && candidate.trim() ? candidate.trim() : undefined;
 }
 
+
+function openBusinessCreatePanel(): void {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    showToast("ابتدا session را به ققنوس متصل کن.");
+    return;
+  }
+  if (!localStorage.getItem(STORAGE.workspace)) {
+    openConnectionPanel();
+    showToast("برای ساخت کسب‌وکار Workspace ID لازم است.");
+    return;
+  }
+
+  const overlay = document.createElement("div");
+  overlay.className = "connection-overlay";
+  overlay.innerHTML = `
+    <div class="connection-backdrop" data-close-business></div>
+    <section class="connection-modal glass-card" role="dialog" aria-modal="true" aria-labelledby="business-create-title">
+      <button class="connection-close" type="button" data-close-business aria-label="بستن">×</button>
+      <span class="eyebrow"><i></i> Business Setup</span>
+      <h2 id="business-create-title">کسب‌وکار جدید بسازید</h2>
+      <p>این فرم مستقیماً Business canonical را از طریق API ققنوس ایجاد می‌کند.</p>
+      <label class="field-label" for="business-name">نام فنی</label>
+      <input id="business-name" class="studio-input-line" type="text" placeholder="my-business" />
+      <label class="field-label" for="business-display-name">نام نمایشی</label>
+      <input id="business-display-name" class="studio-input-line" type="text" placeholder="کسب‌وکار من" />
+      <label class="field-label" for="business-type">نوع کسب‌وکار <span class="field-optional">اختیاری</span></label>
+      <input id="business-type" class="studio-input-line" type="text" placeholder="مثلاً beauty" />
+      <div id="business-create-state" class="connection-state">وضعیت: آماده</div>
+      <div class="connection-actions">
+        <button class="button button-ghost" type="button" data-close-business>لغو</button>
+        <button class="button button-primary" type="button" data-submit-business>ایجاد کسب‌وکار</button>
+      </div>
+    </section>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelectorAll<HTMLElement>("[data-close-business]").forEach((node) =>
+    node.addEventListener("click", () => overlay.remove()),
+  );
+
+  overlay.querySelector<HTMLButtonElement>("[data-submit-business]")?.addEventListener("click", async () => {
+    const name = overlay.querySelector<HTMLInputElement>("#business-name")?.value.trim() ?? "";
+    const displayName = overlay.querySelector<HTMLInputElement>("#business-display-name")?.value.trim() ?? "";
+    const businessType = overlay.querySelector<HTMLInputElement>("#business-type")?.value.trim() ?? "";
+    const state = overlay.querySelector<HTMLElement>("#business-create-state");
+    if (!state) return;
+
+    if (!name || !displayName) {
+      state.textContent = "نام فنی و نام نمایشی الزامی هستند.";
+      state.className = "connection-state error";
+      return;
+    }
+
+    state.textContent = "در حال ایجاد…";
+    state.className = "connection-state";
+
+    try {
+      const response = await apiJson<{ data: { id: string; name?: string; displayName?: string } }>("/api/v1/businesses", {
+        method: "POST",
+        body: {
+          name,
+          displayName,
+          ...(businessType ? { businessType } : {}),
+        },
+        headers: { "Idempotency-Key": crypto.randomUUID() },
+      });
+      localStorage.setItem(STORAGE.business, response.data.id);
+      state.textContent = "کسب‌وکار با موفقیت ایجاد شد.";
+      state.className = "connection-state success";
+      showToast("Business ساخته شد و Business ID ذخیره شد.");
+      window.setTimeout(() => {
+        overlay.remove();
+        navigate("/product-studio");
+      }, 700);
+    } catch (error) {
+      state.textContent = error instanceof Error ? error.message : "ساخت کسب‌وکار ناموفق بود.";
+      state.className = "connection-state error";
+    }
+  });
+}
 
 function openConnectionPanel(): void {
   const existing = document.querySelector(".connection-overlay");
