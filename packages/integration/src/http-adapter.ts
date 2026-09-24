@@ -15,6 +15,8 @@ export interface HttpIntegrationProviderConfig {
   readonly credentialResolver: IntegrationCredentialResolver;
   readonly fetchImpl?: typeof fetch;
   readonly authorizationScheme?: "Bearer" | "ApiKey";
+  readonly webhookSecret?: string;
+  readonly webhookMaxAgeSeconds?: number;
 }
 
 export class IntegrationProviderError extends Error {
@@ -174,4 +176,77 @@ function normalizeReference(value: unknown): NonNullable<IntegrationAdapterResul
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+export interface IntegrationWebhookVerificationResult {
+  readonly verified: boolean;
+  readonly eventId?: string;
+  readonly eventType?: string;
+  readonly payload: string;
+}
+
+export async function verifyHttpIntegrationWebhook(
+  payload: string,
+  signature: string | null,
+  timestamp: string | null,
+  secret: string,
+  nowEpochSeconds = Math.floor(Date.now() / 1000),
+  maxAgeSeconds = 300,
+): Promise<IntegrationWebhookVerificationResult> {
+  if (!signature || !secret) return { verified: false, payload };
+  if (timestamp && !/^\d+$/.test(timestamp)) return { verified: false, payload };
+
+  const timestampSeconds = timestamp ? Number(timestamp) : null;
+  if (timestampSeconds !== null && Math.abs(nowEpochSeconds - timestampSeconds) > maxAgeSeconds) {
+    return { verified: false, payload };
+  }
+
+  const signedPayload = timestamp ? timestamp + "." + payload : payload;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["verify"],
+  );
+  let signatureBytes: Uint8Array;
+  try {
+    signatureBytes = hexOrBase64ToBytes(signature);
+  } catch {
+    return { verified: false, payload };
+  }
+  const verified = await crypto.subtle.verify(
+    "HMAC",
+    key,
+    signatureBytes,
+    new TextEncoder().encode(signedPayload),
+  );
+  if (!verified) return { verified: false, payload };
+
+  try {
+    const event = JSON.parse(payload) as Record<string, unknown>;
+    return {
+      verified: true,
+      payload,
+      ...(typeof event.id === "string" ? { eventId: event.id } : {}),
+      ...(typeof event.type === "string" ? { eventType: event.type } : {}),
+    };
+  } catch {
+    return { verified: true, payload };
+  }
+}
+
+function hexOrBase64ToBytes(value: string): Uint8Array {
+  const clean = value.trim();
+  if (/^[0-9a-fA-F]+$/.test(clean) && clean.length % 2 === 0) {
+    const bytes = new Uint8Array(clean.length / 2);
+    for (let i = 0; i < bytes.length; i++) {
+      bytes[i] = Number.parseInt(clean.slice(i * 2, i * 2 + 2), 16);
+    }
+    return bytes;
+  }
+  const binary = atob(clean);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
 }
