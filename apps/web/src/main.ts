@@ -513,7 +513,7 @@ async function generateDraft(): Promise<void> {
   localStorage.setItem(STORAGE.business, businessId);
   localStorage.setItem(STORAGE.workspace, workspaceId);
 
-  const token = localStorage.getItem(STORAGE.accessToken);
+  const token = sessionStorage.getItem(STORAGE.accessToken);
   if (!token) {
     openConnectionPanel();
     showToast("ابتدا access token را در اتصال ققنوس ثبت کن.");
@@ -631,7 +631,7 @@ function openConnectionPanel(): void {
   const existing = document.querySelector(".connection-overlay");
   if (existing) return;
 
-  const token = localStorage.getItem(STORAGE.accessToken) ?? "";
+  const token = sessionStorage.getItem(STORAGE.accessToken) ?? "";
   const workspace = localStorage.getItem(STORAGE.workspace) ?? "";
   const business = localStorage.getItem(STORAGE.business) ?? "";
 
@@ -679,7 +679,7 @@ function openConnectionPanel(): void {
       return;
     }
 
-    localStorage.setItem(STORAGE.accessToken, accessToken);
+    sessionStorage.setItem(STORAGE.accessToken, accessToken);
     localStorage.setItem(STORAGE.workspace, workspaceId);
     if (businessId) localStorage.setItem(STORAGE.business, businessId);
 
@@ -726,7 +726,7 @@ function renderDraftSkeleton(): string {
 
 async function apiJson<T>(url: string, options: ApiOptions = {}): Promise<T> {
   const headers = new Headers({ Accept: "application/json" });
-  const token = localStorage.getItem(STORAGE.accessToken);
+  const token = sessionStorage.getItem(STORAGE.accessToken);
   const workspace = localStorage.getItem(STORAGE.workspace);
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (workspace) headers.set("x-workspace-id", workspace);
