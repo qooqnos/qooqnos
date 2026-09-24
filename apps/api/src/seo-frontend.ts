@@ -67,7 +67,12 @@ export async function renderSeoAwareDocument(
      LIMIT 1`,
     canonicalUrl,
   );
-  if (!row) return null;
+  if (!row) {
+    return new Response("SEO entity page not found.", {
+      status: 404,
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=30" },
+    });
+  }
 
   let parsed: {
     entity?: SeoEntity;
