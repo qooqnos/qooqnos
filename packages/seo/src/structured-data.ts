@@ -93,9 +93,29 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
   }
 
   if (entity.type === "Product") {
+    const variants = entity.productVariants ?? [];
+    if (variants.length) {
+      x["@type"] = "ProductGroup";
+      if (entity.productGroupId) x.productGroupID = clean(entity.productGroupId);
+      const dimensions = unique(entity.variantDimensions ?? []);
+      if (dimensions.length) x.variesBy = dimensions;
+      x.hasVariant = variants.map((variant) => {
+        const item: Record<string, unknown> = { "@type": "Product" };
+        if (variant.name) item.name = clean(variant.name);
+        if (variant.sku) item.sku = clean(variant.sku);
+        if (variant.url && validHttpUrl(variant.url)) item.url = variant.url;
+        if (variant.imageUrl && validHttpUrl(variant.imageUrl)) item.image = variant.imageUrl;
+        if (variant.price !== undefined && Number.isFinite(variant.price)) {
+          item.offers = { "@type": "Offer", price: variant.price, ...(variant.currency ? { priceCurrency: clean(variant.currency) } : {}), ...(normalizeAvailability(variant.availability) ? { availability: normalizeAvailability(variant.availability) } : {}) };
+        }
+        const attrs = variant.attributes ?? {};
+        for (const [key, value] of Object.entries(attrs)) if (clean(value)) item[key] = clean(value);
+        return item;
+      });
+    }
     if (entity.brandName) x.brand = { "@type": "Brand", name: clean(entity.brandName) };
     if (entity.categoryName) x.category = clean(entity.categoryName);
-    if (entity.price !== undefined || entity.currency || entity.availability) {
+    if (entity.price !== undefined || entity.currency || entity.availability || entity.shippingDetails || entity.returnPolicy) {
       const offer: Record<string, unknown> = { "@type": "Offer" };
       if (canonicalUrl) offer.url = canonicalUrl;
       if (entity.price !== undefined && Number.isFinite(entity.price)) offer.price = entity.price;
