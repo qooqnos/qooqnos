@@ -107,3 +107,8 @@ Read these before making substantial changes:
 - `PHASE_STATUS.md`
 
 This document is a current verification snapshot. Historical implementation narratives remain in git history and must not override the canonical documents above.
+
+
+## Current verification state
+
+Fresh CI/Phoenix verification is exercised by the current protected-branch PR workflow; this snapshot is updated only after the resulting runs are inspected.
