@@ -1547,3 +1547,10 @@ Competitive intelligence evidence layers now include:
 - **Bing/GEO:** Bing Webmaster Tools now exposes AI Performance insights including citations, intents, topics, citation share and compare. Phoenix already measures AI citations/competitive intelligence, but should add first-party Bing AI Performance ingestion when an official machine-readable API becomes available; until then, portal-only metrics must not be synthesized. citeturn0search7turn0search8
 - **Not recommended as a standards requirement:** `llms.txt` or custom AI-only schema should not be added merely for Google AI visibility; Google's current guidance explicitly says there are no additional AI-specific technical requirements or special schema. citeturn1search0
 - **Next implementation priorities:** (1) canonical catalog variant/ProductGroup contract, (2) shipping/returns/category structured-data contract, (3) canonical coordinates/opening-hours model and LocalBusiness emission, (4) multimodal Search Console measurement once API support is verified, (5) official Bing AI Performance ingestion if/when an API exists.
+## SEO/GEO Commerce Schema Implementation — September 2026
+- Added canonical SEO contract types for product variants, shipping details, and merchant return policy in `packages/seo/src/types.ts`.
+- Added truth-bound `ProductGroup` emission with `productGroupID`, `variesBy`, and `hasVariant`; variants are emitted only when the canonical SEO entity explicitly carries variant data.
+- Added optional `OfferShippingDetails` and `MerchantReturnPolicy` emission from canonical entity facts; no shipping/return claims are inferred.
+- Extended structured-data validation allowlist for `ProductGroup`.
+- Added focused tests covering ProductGroup, variant, shipping and return structured data.
+- Catalog already has a canonical `ProductVariant` domain model and authoritative AttributeValue storage; future SEO publication adapters should hydrate the new SEO contract from that canonical boundary rather than duplicating catalog logic.
