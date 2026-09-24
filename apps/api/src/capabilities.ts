@@ -176,6 +176,8 @@ export function createApiCapabilityRegistry(
         return commerce.createOrder(requestContext, {
           businessId: requireId(body.businessId, "businessId"),
           customerId: requireId(body.customerId, "customerId"),
+          ...(body.matchRequestId !== undefined ? { matchRequestId: requireId(body.matchRequestId, "matchRequestId") } : {}),
+          ...(body.matchCandidateId !== undefined ? { matchCandidateId: requireId(body.matchCandidateId, "matchCandidateId") } : {}),
           ...(body.priceSnapshotId !== undefined ? { priceSnapshotId: requireId(body.priceSnapshotId, "priceSnapshotId") } : {}),
           currency: requireString(body.currency, "currency"),
           subtotalMinor: requireInteger(body.subtotalMinor, "subtotalMinor"),
