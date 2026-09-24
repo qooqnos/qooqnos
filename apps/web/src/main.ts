@@ -93,6 +93,17 @@ type PublicSeoHydration = {
     locationId?: string;
     serviceArea?: readonly string[];
     imageUrl?: string;
+    telephone?: string;
+    email?: string;
+    priceRange?: string;
+    price?: number;
+    currency?: string;
+    availability?: string;
+    brandName?: string;
+    categoryName?: string;
+    startDate?: string;
+    endDate?: string;
+    address?: { streetAddress?: string; addressLocality?: string; addressRegion?: string; postalCode?: string; addressCountry?: string };
     updatedAt: string;
   };
 };
@@ -279,6 +290,13 @@ function renderSeoEntity(payload: PublicSeoHydration): string {
       <span>${escapeHtml(fact.fact)}</span>
       ${fact.verifiedAt ? `<small>تأیید: ${escapeHtml(fact.verifiedAt)}</small>` : ""}
     </li>`).join("");
+  const commerce = [
+    entity.price !== undefined ? `<span>قیمت: ${escapeHtml(String(entity.price))}</span>` : "",
+    entity.currency ? `<span>ارز: ${escapeHtml(entity.currency)}</span>` : "",
+    entity.priceRange ? `<span>بازه قیمت: ${escapeHtml(entity.priceRange)}</span>` : "",
+    entity.availability ? `<span>دسترسی: ${escapeHtml(entity.availability)}</span>` : "",
+    entity.brandName ? `<span>برند: ${escapeHtml(entity.brandName)}</span>` : "",
+  ].filter(Boolean).join("");
   const breadcrumbs = payload.page.breadcrumbs.map((item) => `<a href="${escapeAttr(item.url)}" data-nav>${escapeHtml(item.name)}</a>`).join(`<span aria-hidden="true">/</span>`);
   const actions = payload.page.actions.map((action) => `<a class="button ${action.kind === "primary" ? "button-primary" : "button-ghost"}" href="${escapeAttr(action.href)}" data-nav>${escapeHtml(action.label)} →</a>`).join("");
   const related = payload.page.relatedLinks.map((link) => `<a class="seo-related-link" href="${escapeAttr(link.targetUrl ?? "/discover?q=" + encodeURIComponent(link.targetLabel ?? link.targetEntityId))}" data-nav><span>${escapeHtml(link.targetLabel ?? link.targetEntityId)}</span><small>${escapeHtml(link.relation)}</small></a>`).join("");
@@ -320,6 +338,7 @@ function renderSeoEntity(payload: PublicSeoHydration): string {
         <h2>اطلاعات قابل استناد</h2>
         ${facts ? `<ul class="seo-fact-list">${facts}</ul>` : `<p class="seo-public-muted">برای این موجودیت هنوز fact مستقلی ثبت نشده است.</p>`}
         ${geo ? `<div class="metadata-cloud">${geo}</div>` : ""}
+        ${commerce ? `<div class="metadata-cloud">${commerce}</div>` : ""}
       </article>
     </section>
     ${related ? `
