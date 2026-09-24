@@ -4,6 +4,7 @@ import type { CloudflareQueueBinding, CloudflareR2Binding } from "./infrastructu
 
 export interface ApiEnv {
   readonly APP_VERSION?: string;
+  readonly SEO_CANONICAL_BASE_URL?: string;
   readonly ENVIRONMENT?: string;
   readonly DB?: D1DatabaseLike;
   readonly AI?: CloudflareAIBinding;
