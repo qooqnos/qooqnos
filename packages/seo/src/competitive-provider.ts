@@ -221,7 +221,7 @@ export class DataForSeoGoogleCompetitiveProvider {
           ...(typeof meta.title === "string" ? { title: meta.title } : {}),
           ...(typeof meta.description === "string" ? { description: meta.description } : {}),
           ...(typeof meta.canonical === "string" ? { canonicalUrl: meta.canonical } : {}),
-          ...(Array.isArray(meta.htags) ? { h1Count: meta.htags.filter((value) => typeof value === "string" && value.toLowerCase() === "h1").length } : {}),
+          ...(isRecord(meta.htags) && Array.isArray(meta.htags.h1) ? { h1Count: meta.htags.h1.length } : {}),
           ...(finiteNumber(contentInfo.plain_text_word_count) !== undefined ? { wordCount: finiteNumber(contentInfo.plain_text_word_count) } : {}),
           ...(finiteInteger(meta.internal_links_count) !== undefined ? { internalLinksCount: finiteInteger(meta.internal_links_count) } : {}),
           ...(finiteInteger(meta.external_links_count) !== undefined ? { externalLinksCount: finiteInteger(meta.external_links_count) } : {}),
