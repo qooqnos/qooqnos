@@ -1467,3 +1467,5 @@ Implemented real external visibility measurement:
 - Control Plane exposes a real Visibility / Citation measurement action.
 
 Provider activation is configuration-gated: unconfigured providers are not treated as zero visibility. Missing credentials result in an unconfigured measurement run rather than fabricated data.
+
+Provider activation contract: `docs/SEO_MEASUREMENT_PROVIDER_ACTIVATION.md`.
