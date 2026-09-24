@@ -837,3 +837,12 @@ The root TypeScript project graph now includes `packages/documents`, and the Doc
 Added `packages/documents/src/export-document.test.ts` covering tenant-scoped composition, Query capability/resource-scope propagation, provenance, snapshot integrity, and fail-closed tenant validation. This closes the missing unit-test artifact for the canonical export composition boundary.
 
 Implementation commit: `e92b9fb4acd3c63d108691164eff714037630698`.
+
+
+### AI Memory implementation — 2026-09-24
+
+AI Memory is now physically and operationally implemented as a tenant/workspace-scoped, non-authoritative contextual store. Migration `0076_ai_memory.sql` adds scoped memory records, provenance, classification, optional consent reference, expiry/deletion timestamps and integrity triggers. `AIMemoryRepository` provides scoped create/read/delete plus bounded expiry processing; `AIMemoryService` enforces `ai.memory.read` / `ai.memory.manage` authorization. The AI manifest registers the permissions and the migration is catalog/lock registered.
+
+Canonical contract: `docs/AI_MEMORY_IMPLEMENTATION_CONTRACT.md`.
+
+Implementation commits: `2529874019b861aca0f3b6b0299024076d2d682e`, `81604001f47a00e2700bc68516411f51f01b8acb`, `8ecf459d83ac98e91b17bace042b1b8e1ad96627`, `6284f1d7af87062d61acbb385f4b43bb371f6c1d`, `1da25e144a96650e81fb477a13488289cdfe4faa`, `d738af41bd3049417de84f861ea87ce0a420c110`, `034ba57a36d08fda7ffc3ee31d6f719b8cab8b5d`, `05985f78a419788d781a231480b978f1746e34db`.
