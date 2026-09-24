@@ -114,7 +114,7 @@ These migrations add integrity triggers only.
 - attribute_values
 - attribute_value_options
 
-0017 is expand-only; `product_variants.attributes_json` remains the active authoritative path.
+0017 established the expand-only AttributeValue layer. Migration 0063 performs the fail-closed JSON validation/backfill and retires `product_variants.attributes_json` as a writable value path. `attribute_values` / `attribute_value_options` are now authoritative for variant attributes.
 
 ### Customer core — 0018
 
