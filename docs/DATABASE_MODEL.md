@@ -366,6 +366,7 @@ The canonical physical Billing model is module-prefixed:
 - `billing_usage_counters`
 - `billing_entitlement_snapshots`
 - `billing_provider_refs`
+- `match_learning_signals`: append-only post-match outcome evidence owned by Matching.
 - `billing_reconciliation_cases`
 
 Payment execution, invoices and the financial ledger remain separate Billing/Payment contracts until their physical ownership contracts close.
