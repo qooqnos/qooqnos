@@ -66,11 +66,15 @@ describe("verifyMigrationLock", () => {
     expect(() => verifyMigrationLock([definition()], manifest)).toThrow(MigrationLockError);
   });
 
-  it("rejects non-contiguous migration versions", () => {
+  it("allows reserved gaps while rejecting duplicate or descending versions", () => {
     const definitions = [definition(), definition({ id: "0003_gap", version: 3, checksum: "checksum-0003" })];
     const manifest = generateMigrationLock(definitions);
 
-    expect(() => verifyMigrationLock(definitions, manifest)).toThrow(MigrationLockError);
+    expect(() => verifyMigrationLock(definitions, manifest)).not.toThrow();
+    expect(() => verifyMigrationLock(
+      [definition(), definition({ id: "0001_duplicate-version", version: 1, checksum: "checksum-duplicate" })],
+      generateMigrationLock([definition(), definition({ id: "0001_duplicate-version", version: 1, checksum: "checksum-duplicate" })]),
+    )).toThrow(MigrationLockError);
   });
 
   it("rejects an identity mismatch (same id, different module/version) even if the checksum matches", () => {
