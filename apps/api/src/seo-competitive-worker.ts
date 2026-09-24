@@ -32,6 +32,10 @@ export interface SeoCompetitiveWorkerConfig {
   readonly entityId?: string;
   readonly queryText?: string;
   readonly pageSampleLimit?: number;
+  readonly keywordGapCompetitorLimit?: number;
+  readonly keywordGapLimit?: number;
+  readonly linkGapCompetitorLimit?: number;
+  readonly linkGapLimit?: number;
 }
 
 export interface SeoCompetitiveWorkerResult {
