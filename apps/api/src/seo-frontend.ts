@@ -6,10 +6,31 @@ export interface SeoAssetsBinding {
   fetch(request: Request): Promise<Response>;
 }
 
+export interface PublicAnswerRepresentation {
+  readonly id: string;
+  readonly entityId: string;
+  readonly locale: string;
+  readonly question: string;
+  readonly answer: string;
+  readonly canonicalUrl?: string;
+  readonly facts: readonly {
+    fact: string;
+    verifiedAt?: string;
+    provenanceUrl?: string;
+    validUntil?: string;
+  }[];
+  readonly freshnessAt: string;
+  readonly sourceUpdatedAt: string;
+  readonly confidence: AnswerRepresentation["confidence"];
+  readonly citationReady: boolean;
+  readonly geography?: AnswerRepresentation["geography"];
+  readonly limitations: readonly string[];
+}
+
 export interface SeoFrontendHydration {
   readonly metadata: SeoMetadata;
   readonly structuredData: StructuredData;
-  readonly answer: AnswerRepresentation;
+  readonly answer: PublicAnswerRepresentation;
   readonly entity: Pick<SeoEntity,
     "id" | "type" | "preferredName" | "summary" | "description" | "locale" |
     "country" | "geoScope" | "locationId" | "serviceArea" | "imageUrl" | "updatedAt"
@@ -69,7 +90,26 @@ export async function renderSeoAwareDocument(
   const hydration: SeoFrontendHydration = {
     metadata: parsed.metadata,
     structuredData: parsed.structuredData,
-    answer: parsed.answer,
+    answer: {
+      id: parsed.answer.id,
+      entityId: parsed.answer.entityId,
+      locale: parsed.answer.locale,
+      question: parsed.answer.question,
+      answer: parsed.answer.answer,
+      ...(parsed.answer.canonicalUrl ? { canonicalUrl: parsed.answer.canonicalUrl } : {}),
+      facts: parsed.answer.facts.map((fact) => ({
+        fact: fact.fact,
+        ...(fact.verifiedAt ? { verifiedAt: fact.verifiedAt } : {}),
+        ...(fact.provenanceUrl ? { provenanceUrl: fact.provenanceUrl } : {}),
+        ...(fact.validUntil ? { validUntil: fact.validUntil } : {}),
+      })),
+      freshnessAt: parsed.answer.freshnessAt,
+      sourceUpdatedAt: parsed.answer.sourceUpdatedAt,
+      confidence: parsed.answer.confidence,
+      citationReady: parsed.answer.citationReady,
+      ...(parsed.answer.geography ? { geography: parsed.answer.geography } : {}),
+      limitations: parsed.answer.limitations,
+    },
     entity: {
       id: parsed.entity.id,
       type: parsed.entity.type,
@@ -139,7 +179,7 @@ export function injectSeoRepresentation(html: string, hydration: SeoFrontendHydr
 
 function renderAnswerMarkup(
   entity: SeoFrontendHydration["entity"],
-  answer: AnswerRepresentation,
+  answer: PublicAnswerRepresentation,
 ): string {
   const facts = answer.facts.map((fact) => `<li>${escapeHtml(fact.fact)}</li>`).join("");
   const geography = answer.geography
