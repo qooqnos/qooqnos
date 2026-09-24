@@ -738,7 +738,7 @@ The remaining implementation work is operational/provider/projection work; Catal
 7. AI Runtime durable worker scheduling and Seller AI input/payload resolution are implemented; add resolvers only when a new AI operation type is introduced.
 8. Integration provider adapter runtime, credential resolver contract, configurable HTTP adapter and signed webhook verification are implemented; concrete vendor onboarding and any provider-specific retention/reconciliation semantics remain external operational work.
 9. Privacy export/delete/retention processors are implemented for the canonical Customer domain; future domains require their own domain-owned processor contract. Approved-request orchestration, subject-level identity validation and consent expiry are implemented.
-10. Complete Matching learning signals and broader Act projections; core retrieval/ranking/Connect execution is implemented.
+10. Matching learning signals and broader Act outcome integration are complete; core retrieval/ranking/Connect execution is implemented.
 11. Complete Fulfillment provider-specific adapters, callback reconciliation and durable polling only where an external provider contract exists; canonical tracking/service completion persistence is implemented.
 12. Business lifecycle vocabulary reconciliation is closed; do not introduce another Business status model.
 13. Complete Case queue dispatch/provider integrations where explicit contracts exist; CaseAction capability execution is already implemented.
@@ -784,3 +784,7 @@ Migration `0061_billing_settlement.sql` establishes the settlement aggregate and
 ### Reconciliation hardening — migration 0062
 
 The existing `billing_reconciliation_cases` contract is now operationally complete. Migration `0062_billing_reconciliation_hardening.sql` adds financial mismatch fields, scope, idempotency, resolution ownership and an immutable case-event history. Reconciliation is an exception-management boundary: it does not mutate payment, invoice, refund or settlement truth to conceal a mismatch.
+
+### Matching Act outcome integration — 2026-09-24
+
+Migration `0071_matching_act_outcome_links.sql` adds optional MatchRequest/Candidate references to Booking and Commerce authoritative records. `MatchingOutcomeProcessor` consumes existing outbox events for completed/cancelled bookings, completed orders, payment-completion events and fulfillment completion, resolves the linked MatchRequest/Candidate without guessing ambiguous candidates, and records the result through the existing append-only `match_learning_signals` boundary. No parallel Learning store was introduced.
