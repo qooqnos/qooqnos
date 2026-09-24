@@ -198,6 +198,7 @@ export async function processSeoPublicationJobs(
         plan,
         contentHash: await stableHash(plan),
         sourceUpdatedAt: payload.updatedAt,
+        sourceVersion: payload.sourceVersion,
         now,
       });
       await repository.replaceDependencies(context, representation.id, [
