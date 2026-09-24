@@ -1,5 +1,6 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
+import { CrmTimelineProjectionRepository } from "./crm-timeline-projection-repository";
 
 export interface CrmTimelineEventRecord {
   readonly id: EntityId;
