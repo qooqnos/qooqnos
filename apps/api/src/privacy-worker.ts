@@ -1,6 +1,6 @@
 import { brandId } from "@qooqnos/core";
 import { CustomerRepository } from "@qooqnos/database";
-import { createCustomerPrivacyProcessors } from "@qooqnos/customer";
+import { createCustomerPrivacyProcessors, createCustomerPrivacyRetentionProcessor } from "@qooqnos/customer";
 import { PrivacyRepository, createPrivacyProcessorRegistry, type PrivacyProcessorRegistry } from "@qooqnos/privacy";
 import { getDatabase } from "./database";
 import type { ApiEnv } from "./env";
@@ -125,4 +125,27 @@ export async function processApprovedPrivacyRequests(
   }
 
   return { claimed, processed, gated, skipped, failed };
+}
+
+export interface PrivacyRetentionWorkResult {
+  readonly processors: number;
+  readonly processed: number;
+}
+
+export async function processPrivacyRetention(
+  env: ApiEnv,
+  organizationId: string,
+  workspaceId: string | null = null,
+  now = new Date().toISOString(),
+): Promise<PrivacyRetentionWorkResult> {
+  const database = getDatabase(env);
+  if (!database) return { processors: 0, processed: 0 };
+  const processor = createCustomerPrivacyRetentionProcessor({ repository: new CustomerRepository(database) });
+  const result = await processor.process({
+    organizationId: brandId<"EntityId">(organizationId),
+    workspaceId: workspaceId ? brandId<"EntityId">(workspaceId) : null,
+    now,
+    correlationId: "privacy:retention:" + organizationId + ":" + now,
+  });
+  return { processors: 1, processed: result.processed };
 }
