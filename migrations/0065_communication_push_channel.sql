@@ -3,7 +3,6 @@
 DROP TRIGGER IF EXISTS trg_communication_notification_scope_insert;
 DROP TRIGGER IF EXISTS trg_communication_notification_policy_insert;
 
-ALTER TABLE communication_notifications RENAME TO communication_notifications_legacy;
 CREATE TABLE communication_notifications (
   id TEXT PRIMARY KEY,
   organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE RESTRICT,
@@ -34,6 +33,7 @@ CREATE INDEX idx_communication_notifications_scheduled
   ON communication_notifications(status, scheduled_at);
 
 ALTER TABLE communication_delivery_attempts RENAME TO communication_delivery_attempts_legacy;
+ALTER TABLE communication_notifications RENAME TO communication_notifications_legacy;
 CREATE TABLE communication_delivery_attempts (
   id TEXT PRIMARY KEY,
   notification_id TEXT NOT NULL REFERENCES communication_notifications(id) ON DELETE RESTRICT,
@@ -106,6 +106,96 @@ INSERT INTO communication_suppression_records SELECT * FROM communication_suppre
 DROP TABLE communication_suppression_records_legacy;
 CREATE INDEX idx_communication_suppressions_lookup
   ON communication_suppression_records(organization_id, workspace_id, recipient_reference, status, effective_from DESC);
+
+DROP TRIGGER IF EXISTS trg_communication_template_scope_insert;
+DROP TRIGGER IF EXISTS trg_communication_template_scope_update;
+DROP TRIGGER IF EXISTS trg_communication_template_version_update_immutable;
+DROP TRIGGER IF EXISTS trg_communication_template_version_delete_immutable;
+
+ALTER TABLE communication_template_versions RENAME TO communication_template_versions_legacy;
+ALTER TABLE communication_templates RENAME TO communication_templates_legacy;
+
+CREATE TABLE communication_templates (
+  id TEXT PRIMARY KEY,
+  organization_id TEXT,
+  workspace_id TEXT,
+  template_key TEXT NOT NULL,
+  intent TEXT NOT NULL,
+  channel TEXT NOT NULL CHECK (channel IN ('in_app','whatsapp','sms','email','push')),
+  owner_reference TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('draft','active','retired')),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(organization_id, workspace_id, template_key, channel)
+);
+INSERT INTO communication_templates SELECT * FROM communication_templates_legacy;
+DROP TABLE communication_templates_legacy;
+CREATE INDEX idx_communication_templates_scope_status
+  ON communication_templates(organization_id, workspace_id, status);
+
+CREATE TABLE communication_template_versions (
+  id TEXT PRIMARY KEY,
+  template_id TEXT NOT NULL REFERENCES communication_templates(id) ON DELETE RESTRICT,
+  version INTEGER NOT NULL CHECK (version >= 1),
+  locale TEXT NOT NULL,
+  variables_schema_json TEXT NOT NULL,
+  content_reference TEXT NOT NULL,
+  content_checksum TEXT NOT NULL,
+  approval_state TEXT NOT NULL CHECK (approval_state IN ('not_required','pending','approved','rejected','expired')),
+  effective_from TEXT,
+  effective_to TEXT,
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(template_id, version, locale),
+  CHECK (effective_to IS NULL OR effective_from IS NULL OR effective_to > effective_from)
+);
+INSERT INTO communication_template_versions SELECT * FROM communication_template_versions_legacy;
+DROP TABLE communication_template_versions_legacy;
+CREATE INDEX idx_communication_template_versions_lookup
+  ON communication_template_versions(template_id, locale, version DESC, approval_state);
+
+CREATE TRIGGER IF NOT EXISTS trg_communication_template_scope_insert
+BEFORE INSERT ON communication_templates
+FOR EACH ROW
+WHEN NEW.workspace_id IS NOT NULL
+ AND NOT EXISTS (
+   SELECT 1 FROM workspaces w
+   WHERE w.id = NEW.workspace_id
+     AND (NEW.organization_id IS NULL OR w.organization_id = NEW.organization_id)
+ )
+BEGIN
+  SELECT RAISE(ABORT, 'Communication template workspace crosses organization boundary');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_communication_template_scope_update
+BEFORE UPDATE OF organization_id, workspace_id ON communication_templates
+FOR EACH ROW
+WHEN NEW.workspace_id IS NOT NULL
+ AND NOT EXISTS (
+   SELECT 1 FROM workspaces w
+   WHERE w.id = NEW.workspace_id
+     AND (NEW.organization_id IS NULL OR w.organization_id = NEW.organization_id)
+ )
+BEGIN
+  SELECT RAISE(ABORT, 'Communication template workspace crosses organization boundary');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_communication_template_version_update_immutable
+BEFORE UPDATE OF template_id, version, locale, variables_schema_json, content_reference, content_checksum, approval_state, effective_from, effective_to, created_by ON communication_template_versions
+FOR EACH ROW
+WHEN OLD.approval_state = 'approved'
+BEGIN
+  SELECT RAISE(ABORT, 'Approved Communication template versions are immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_communication_template_version_delete_immutable
+BEFORE DELETE ON communication_template_versions
+FOR EACH ROW
+WHEN OLD.approval_state = 'approved'
+BEGIN
+  SELECT RAISE(ABORT, 'Approved Communication template versions are immutable');
+END;
 
 CREATE TRIGGER IF NOT EXISTS trg_communication_notification_scope_insert
 BEFORE INSERT ON communication_notifications
