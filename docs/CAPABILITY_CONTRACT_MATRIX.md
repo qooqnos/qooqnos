@@ -345,3 +345,51 @@ Before adding a Seller AI capability, verify:
 - Does Trust/Policy already own verification or moderation?
 
 If yes, Seller AI must orchestrate/reuse it rather than implement a second version.
+
+## 22. Promotion & Campaign capabilities
+
+| Capability | Type | Owner | Scope | Key dependencies | Events |
+|---|---|---|---|---|---|
+| `CAP.PROMOTION.CREATE` | COMMAND | Promotion | WORKSPACE/BUSINESS | Access, Business | promotion.created |
+| `CAP.PROMOTION.CREATE_VERSION` | COMMAND | Promotion | WORKSPACE/BUSINESS | policy | promotion.version.created |
+| `CAP.PROMOTION.ACTIVATE` | COMMAND | Promotion | WORKSPACE/BUSINESS | policy | promotion.activated |
+| `CAP.PROMOTION.EVALUATE_ELIGIBILITY` | DECISION | Promotion | CUSTOMER/WORKSPACE | Commerce/Booking facts | promotion.qualified/rejected |
+| `CAP.PROMOTION.QUALIFY` | COMMAND | Promotion | CUSTOMER/WORKSPACE | policy, idempotency | promotion.qualified |
+| `CAP.PROMOTION.REDEEM` | COMMAND | Promotion | TRANSACTION/WORKSPACE | qualification, authoritative transaction | promotion.redeemed |
+| `CAP.PROMOTION.GET` | QUERY | Promotion | WORKSPACE | Access | none |
+
+Promotion owns incentive policy. It does not own prices, orders, payments, bookings, loyalty value, or communication delivery.
+
+## 23. Loyalty & Retention capabilities
+
+| Capability | Type | Owner | Scope | Key dependencies | Events |
+|---|---|---|---|---|---|
+| `CAP.LOYALTY.CREATE_PROGRAM` | COMMAND | Loyalty | WORKSPACE/BUSINESS | Access | loyalty.program.created |
+| `CAP.LOYALTY.CREATE_PROGRAM_VERSION` | COMMAND | Loyalty | WORKSPACE/BUSINESS | policy | loyalty.program.versioned |
+| `CAP.LOYALTY.ACTIVATE_PROGRAM` | COMMAND | Loyalty | WORKSPACE/BUSINESS | policy | loyalty.program.activated |
+| `CAP.LOYALTY.ENROLL_MEMBER` | COMMAND | Loyalty | CUSTOMER/WORKSPACE | Customer, Access | loyalty.member.enrolled |
+| `CAP.LOYALTY.POST_LEDGER_ENTRY` | COMMAND | Loyalty | MEMBERSHIP | authoritative event/reference, idempotency | loyalty.ledger.posted |
+| `CAP.LOYALTY.GET_LEDGER` | QUERY | Loyalty | MEMBERSHIP | Access | none |
+| `CAP.LOYALTY.CREATE_REWARD` | COMMAND | Loyalty | PROGRAM | policy | loyalty.reward.created |
+| `CAP.LOYALTY.REDEEM_REWARD` | COMMAND | Loyalty | MEMBERSHIP | points ledger, idempotency | loyalty.reward.redeemed |
+| `CAP.LOYALTY.GET_MEMBERSHIP` | QUERY | Loyalty | CUSTOMER/MEMBERSHIP | Access | none |
+
+Loyalty points are not money. Financial truth remains in Commerce/Billing.
+
+## 24. Advertising & Sponsored Discovery capabilities
+
+| Capability | Type | Owner | Scope | Key dependencies | Events |
+|---|---|---|---|---|---|
+| `CAP.ADVERTISING.CREATE_ACCOUNT` | COMMAND | Advertising | BUSINESS | Business, Access | advertising.account.created |
+| `CAP.ADVERTISING.CREATE_CAMPAIGN` | COMMAND | Advertising | WORKSPACE/BUSINESS | account, Access | advertising.campaign.created |
+| `CAP.ADVERTISING.CREATE_VERSION` | COMMAND | Advertising | CAMPAIGN | targeting/placement policy | advertising.campaign.versioned |
+| `CAP.ADVERTISING.ACTIVATE_CAMPAIGN` | COMMAND | Advertising | CAMPAIGN | policy | advertising.campaign.activated |
+| `CAP.ADVERTISING.CREATE_AD` | COMMAND | Advertising | CAMPAIGN | Media, Moderation | advertising.ad.created |
+| `CAP.ADVERTISING.MANAGE_BUDGET` | COMMAND | Advertising | CAMPAIGN | Billing reference | advertising.budget.changed |
+| `CAP.ADVERTISING.DELIVER` | DECISION/COMMAND | Advertising | PUBLIC/TENANT | ad eligibility, moderation, Trust, pacing | advertising.delivery.served |
+| `CAP.ADVERTISING.RECORD_IMPRESSION` | COMMAND | Advertising | PUBLIC/TENANT | delivery decision | advertising.impression.recorded |
+| `CAP.ADVERTISING.RECORD_CLICK` | COMMAND | Advertising | PUBLIC/TENANT | impression | advertising.click.recorded |
+| `CAP.ADVERTISING.GET_REPORT` | QUERY | Advertising | WORKSPACE/BUSINESS | delivery measurements | none |
+
+Sponsored delivery is always distinguishable from organic Discovery and cannot mutate organic ranking.
+
