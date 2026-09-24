@@ -1,0 +1,1 @@
+import type {SeoEntity,StructuredData} from "./types"; export function generateStructuredData(e:SeoEntity):StructuredData{const x:StructuredData={"@context":"https://schema.org","@type":e.type,name:e.preferredName};if(e.description)x.description=e.description;if(e.sameAs?.length)x.sameAs=[...e.sameAs];if(e.canonicalId)x.identifier=e.canonicalId;return x}
