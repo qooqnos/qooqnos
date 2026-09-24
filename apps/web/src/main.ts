@@ -2629,24 +2629,6 @@ function openConnectionPanel(): void {
   });
 }
 
-function buildLocalDraft(text: string): { name: string; description: string; category: string } {
-  const compact = text.replace(/\s+/g, " ").trim();
-  const name = compact.length > 56 ? compact.slice(0, 56).replace(/[،,:؛.]+$/, "") : compact;
-  return {
-    name: name || "محصول جدید",
-    description: `${name || "این محصول"} بر اساس ورودی خام فروشنده به‌عنوان پیش‌نویس اولیه برای بررسی آماده شده است.`,
-    category: guessCategory(compact),
-  };
-}
-
-function guessCategory(value: string): string {
-  const lower = value.toLowerCase();
-  if (/کفش|کیف|لباس|پارچه/.test(lower)) return "پوشاک و اکسسوری";
-  if (/قهوه|نان|غذا|کیک|شیرینی/.test(lower)) return "خوراک و نوشیدنی";
-  if (/دستگاه|لپ|موبایل|الکترون/.test(lower)) return "کالای دیجیتال";
-  return "سایر محصولات";
-}
-
 function renderDraftSkeleton(): string {
   return '<div class="draft-loading"><div class="draft-loading-orb"></div><div class="skeleton line long"></div><div class="skeleton line medium"></div><div class="skeleton line short"></div><p>ققنوس در حال ساختن یک پیش‌نویس قابل بازبینی است…</p></div>';
 }
@@ -2726,9 +2708,6 @@ function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char] ?? char);
 }
 
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
 
 window.addEventListener("popstate", () => {
   const target = normalizePath(location.pathname);
