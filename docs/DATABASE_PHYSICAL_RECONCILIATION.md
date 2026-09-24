@@ -224,6 +224,15 @@ These migrations add integrity triggers only.
 
 0058 closes the append-only financial evidence boundary. It is tenant-scoped, idempotency-aware, hash-verifiable, and protected against UPDATE/DELETE. It records financial actions without becoming the future double-entry accounting ledger.
 
+### Refund financial accounting — 0059
+
+- billing_refunds
+- billing_ledger_accounts
+- billing_ledger_transactions
+- billing_ledger_entries
+
+0059 establishes Billing/Payment refund financial truth and an immutable double-entry ledger. Refund posting requires matching currency/scope and a balanced, non-zero journal; ledger corrections use reversal entries rather than UPDATE/DELETE. External provider execution remains an adapter/reconciliation concern.
+
 0033 establishes the Billing authority for plans, prices, subscriptions, entitlements, usage events, provider references and reconciliation cases. It does not create marketplace payment execution or financial ledger tables.
 
 ### Billing quota counters — 0034
