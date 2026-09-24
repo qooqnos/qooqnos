@@ -20,3 +20,4 @@ describe('production SEO crawler', () => {
     expect(result.h1Count).toBe(2);
   });
 });
+
