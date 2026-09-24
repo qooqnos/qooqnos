@@ -246,6 +246,8 @@ describe("SEO/GEO core", () => {
     expect(graph.edges).toHaveLength(1);
     expect(recommendInternalLinks(graph, "biz-1")[0]?.targetEntityId).toBe("service-1");
     expect(recommendInternalLinks(graph, "biz-1")[0]?.targetUrl).toContain("/service/creative-service-service-1");
+    expect(recommendInternalLinks(graph, "service-1")[0]?.targetEntityId).toBe("biz-1");
+    expect(recommendInternalLinks(graph, "service-1")[0]?.relation).toBe("relatedTo");
   });
 
   it("keeps geographic truth explicit", () => {
