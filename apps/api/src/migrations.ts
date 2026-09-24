@@ -64,7 +64,7 @@ import catalogAttributeCutover from "../../../migrations/0063_catalog_attribute_
 import trustSignalsAntiAbuse from "../../../migrations/0064_trust_signals_anti_abuse.sql";
 import automationCompensationContract from "../../../migrations/0067_automation_compensation_contract.sql";
 import automationCompensationPairing from "../../../migrations/0068_automation_compensation_pairing.sql";
-import communicationPushChannel from "../../../migrations/0065_communication_push_channel.sql";
+import communicationPushChannel from "../../../migrations/0067_communication_push_channel.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -134,5 +134,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0064_trust_signals_anti_abuse.sql", sql: trustSignalsAntiAbuse },
   { path: "migrations/0065_automation_compensation_contract.sql", sql: automationCompensationContract },
   { path: "migrations/0066_automation_compensation_pairing.sql", sql: automationCompensationPairing },
-  { path: "migrations/0065_communication_push_channel.sql", sql: communicationPushChannel },
+  { path: "migrations/0067_communication_push_channel.sql", sql: communicationPushChannel },
 ];
