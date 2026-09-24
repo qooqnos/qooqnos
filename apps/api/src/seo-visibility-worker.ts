@@ -49,9 +49,10 @@ export async function runSeoVisibilityMeasurements(
   if (!providers.length) return { queries: 0, providerRuns: 0, observations: 0, failures: 0 };
   const limit = Math.min(Math.max(Math.trunc(config.limit ?? 25), 1), 100);
   const filters: string[] = ["q.lifecycle_state='active'"];
-  const params: unknown[] = [limit];
-  if (config.entityId) { filters.push("q.entity_id=?"); params.unshift(config.entityId); }
-  if (config.queryText) { filters.push("q.query_text=?"); params.unshift(config.queryText); }
+  const params: unknown[] = [];
+  if (config.entityId) { filters.push("q.entity_id=?"); params.push(config.entityId); }
+  if (config.queryText) { filters.push("q.query_text=?"); params.push(config.queryText); }
+  params.push(limit);
   const rows = await database.all<MeasurementQueryRow>(
     `SELECT q.id AS id,
             q.organization_id AS organizationId,
