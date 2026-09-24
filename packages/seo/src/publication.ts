@@ -193,21 +193,28 @@ export async function processSeoPublicationJobs(
         correlationId: job.id,
       } as RequestContext;
       const plan = buildSeoProjectionPlan({ entity: payload, canonicalBaseUrl, now });
-      const representation = await repository.saveRepresentation(context, {
-        id: `seo-representation:${payload.id}:${payload.locale}`,
-        plan,
-        contentHash: await stableHash(plan),
-        sourceUpdatedAt: payload.updatedAt,
-        sourceVersion: payload.sourceVersion,
-        now,
-      });
-      await repository.replaceDependencies(context, representation.id, [
-        { entityId: payload.id, entityType: payload.type, version: payload.sourceVersion },
-        ...(payload.relatedEntityIds ?? []).map((entityId) => ({ entityId, entityType: "related", version: payload.sourceVersion })),
-      ]);
-      await repository.saveArtifact(context, { id: crypto.randomUUID(), representationId: representation.id, artifactType: "metadata", artifactVersion: 1, payload: plan.metadata, contentHash: await stableHash(plan.metadata), now });
-      await repository.saveArtifact(context, { id: crypto.randomUUID(), representationId: representation.id, artifactType: "structured-data", artifactVersion: 1, payload: plan.structuredData, contentHash: await stableHash(plan.structuredData), now });
-      await repository.saveArtifact(context, { id: crypto.randomUUID(), representationId: representation.id, artifactType: "answer", artifactVersion: 1, payload: plan.answer, contentHash: await stableHash(plan.answer), now });
+      const representationId = `seo-representation:${payload.id}:${payload.locale}`;
+      const contentHash = await stableHash(plan);
+      const representation = await repository.publishRepresentationBundle(
+        context,
+        {
+          id: representationId,
+          plan,
+          contentHash,
+          sourceUpdatedAt: payload.updatedAt,
+          sourceVersion: payload.sourceVersion,
+          now,
+        },
+        [
+          { id: crypto.randomUUID(), representationId, artifactType: "metadata", artifactVersion: 1, payload: plan.metadata, contentHash: await stableHash(plan.metadata), now },
+          { id: crypto.randomUUID(), representationId, artifactType: "structured-data", artifactVersion: 1, payload: plan.structuredData, contentHash: await stableHash(plan.structuredData), now },
+          { id: crypto.randomUUID(), representationId, artifactType: "answer", artifactVersion: 1, payload: plan.answer, contentHash: await stableHash(plan.answer), now },
+        ],
+        [
+          { entityId: payload.id, entityType: payload.type, version: payload.sourceVersion },
+          ...(payload.relatedEntityIds ?? []).map((entityId) => ({ entityId, entityType: "related", version: payload.sourceVersion })),
+        ],
+      );
       await database.run(`UPDATE seo_publication_jobs SET status='succeeded', updated_at=?, last_error=NULL WHERE id=?`, now, job.id);
       succeeded += 1;
     } catch (error) {
