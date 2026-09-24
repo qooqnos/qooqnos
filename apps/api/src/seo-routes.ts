@@ -3,6 +3,7 @@ import type { ApiRouter } from "./router";
 import { json } from "./http";
 import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, SITEMAP_URL_LIMIT } from "@qooqnos/seo";
 import { crawlStoredSeoRepresentation } from "./seo-production-crawler";
+import { evaluateSeoProductionReadiness } from "./seo-production-readiness";
 
 export function registerSeoRoutes(router: ApiRouter, database: D1Database | undefined, canonicalBaseUrl = "https://qooqnos.com"): void {
   router.register({
