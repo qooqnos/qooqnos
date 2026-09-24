@@ -22,7 +22,7 @@ The lock manifest is reviewed and committed together with a new migration.
 
 ## Verification rules
 
-1. Migration filenames and versions are contiguous.
+1. Migration filenames are immutable and versions are strictly increasing. Version gaps are allowed for reserved slots; a version may never be reused.
 2. Every migration in the source directory appears exactly once in the lock manifest.
 3. Every lock entry maps to exactly one migration definition.
 4. Runtime/source checksum must equal the lock checksum.
@@ -37,7 +37,7 @@ A fresh D1 must first ensure the migration metadata table exists, then execute m
 
 ## Concurrency
 
-Migration execution must not rely on application-level read/write races. Deployment orchestration should serialize migration execution per D1 database. The runner itself remains defensive by validating history and refusing gaps, identity mismatches, or checksum drift.
+Migration execution must not rely on application-level read/write races. Deployment orchestration should serialize migration execution per D1 database. The runner itself remains defensive by validating history and refusing duplicate/descending versions, identity mismatches, or checksum drift.
 
 ## CI gate
 
