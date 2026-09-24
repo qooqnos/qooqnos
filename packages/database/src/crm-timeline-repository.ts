@@ -98,6 +98,7 @@ export class CrmTimelineRepository extends Repository {
       if (!sameScope) {
         throw new DatabaseError("Timeline source event conflicts with an existing scoped event");
       }
+      await new CrmTimelineProjectionRepository(this.database).project(context, existing.id, input.receivedAt);
       return this.hydrate(existing);
     }
 
