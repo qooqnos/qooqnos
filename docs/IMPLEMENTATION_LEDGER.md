@@ -771,7 +771,7 @@ Invoice runtime/API note: `GET /api/v1/billing/invoices` is implemented through 
 | Integration credential contract/provisioning boundary | 🟢 Complete | `packages/integration/src/credential.ts` |
 | Configurable HTTP provider adapter | 🟢 Complete | `packages/integration/src/http-adapter.ts` |
 | Signed webhook verification | 🟢 Complete | `packages/integration/src/http-adapter.ts` |
-| Provider-specific vendor onboarding | 🟡 External operational work | `docs/INTEGRATION_PROVIDER_ADAPTERS.md` |
+| Provider-specific vendor onboarding | 🟡 External operational work; activation runbook complete | `docs/INTEGRATION_PROVIDER_ADAPTERS.md`; `docs/INTEGRATION_VENDOR_ONBOARDING_RUNBOOK.md` |
 
 Implementation commits: `a51897e`, `e6bad36`, `a00a183`, `3e39a95`, `224b884`, `1ad3881`, `be974cf`.
 
@@ -795,3 +795,12 @@ Migration `0075_analytics_platform.sql` closes the Analytics physical/operationa
 Implementation commits: `1386c1e0`, `6b9f1c14`, `8f8e9cef`, `18718d44`, `2278fda1`, `287c0d32`, `19e26e9a`, `df8e0fad`, `5330552c`, `954b2763`, `46eb8be9`, `eb828953`, `7a453d7b`, `188e39dc`, `021743fe`, `ecce4ca2`, `f1e767a3`, `e554ea31`, `42ed8a6f`.
 
 Status: 🟢 Complete
+
+
+### Verification and vendor activation hardening — 2026-09-24
+
+The repository now includes an explicit Integration vendor activation runbook covering provider identity, runtime-only credentials, adapter mapping, webhook security, synchronization, verification evidence and fail-closed activation rules. This does not invent a concrete vendor; actual vendor activation remains external until a real provider contract and credentials are supplied.
+
+Implementation commits: `5d3d97d357359ac6a277a297945891dcbfb8e3ee`, `5d3ce233d86868547124d5dc3d96b7721689f6ee`.
+
+The current main head remains subject to fresh CI/Phoenix verification; no green result is claimed until GitHub reports the runs.
