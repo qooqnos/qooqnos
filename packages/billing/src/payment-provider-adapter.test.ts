@@ -47,6 +47,7 @@ describe("payment provider adapters", () => {
       createPath: "/payments",
       capturePath: "/payments/capture",
       refundPath: "/refunds",
+      payoutPath: "/payouts",
       webhookSecret: "webhook-secret",
       fetchImpl: async () => new Response(JSON.stringify({ code: "rate_limited" }), { status: 429 }),
     });
