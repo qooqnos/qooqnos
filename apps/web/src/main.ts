@@ -1050,8 +1050,16 @@ async function runSeoVisibilityMeasurement(): Promise<void> {
       measurement: { queries: number; providerRuns: number; observations: number; failures: number };
     }>(`/api/v1/seo/visibility/measure/${encodeURIComponent(entityId)}?locale=${encodeURIComponent(locale || "fa-IR")}`, { method: "POST" });
     const result = response.measurement;
+    const latest = await apiJson<{
+      visibility: {
+        measurements: { metric: string; valueNumeric?: number | null; valueText?: string | null; provenance: Record<string, unknown> }[];
+        citations: { citationUrl: string; citationTitle?: string | null; citationPosition?: number | null; sourceType: string }[];
+      };
+    }>(`/api/v1/seo/visibility/${encodeURIComponent(entityId)}`);
     status.textContent = result.failures ? "Measurement Partial" : "Measurement Pass";
     status.className = result.failures ? "pill warning" : "pill success";
+    const metrics = latest.visibility.measurements.slice(0, 12);
+    const citations = latest.visibility.citations.slice(0, 8);
     host.innerHTML = `
       <div class="seo-audit-summary">
         <div class="seo-audit-score"><span>Queries</span><strong>${result.queries}</strong></div>
@@ -1059,7 +1067,8 @@ async function runSeoVisibilityMeasurement(): Promise<void> {
         <div><span>Observations</span><strong>${result.observations}</strong></div>
         <div><span>Failures</span><strong>${result.failures}</strong></div>
       </div>
-      <div class="seo-audit-list"><div><span>Measurement sources</span><strong>Google / Bing / AI Web Search</strong></div></div>`;
+      <div class="seo-audit-list">${metrics.map((item) => `<div><span>${escapeHtml(item.metric)}</span><strong>${escapeHtml(String(item.valueNumeric ?? item.valueText ?? "—"))}</strong></div>`).join("")}</div>
+      ${citations.length ? `<div class="seo-audit-issues">${citations.map((item) => `<article><div><strong>${escapeHtml(item.sourceType)}</strong><span class="pill success">citation</span></div><p>${escapeHtml(item.citationTitle ?? item.citationUrl)}</p><small>${escapeHtml(item.citationUrl)} · position ${escapeHtml(String(item.citationPosition ?? "—"))}</small></article>`).join("")}</div>` : ""}`;
   } catch (error) {
     status.textContent = "خطا";
     status.className = "pill warning";
