@@ -300,6 +300,12 @@ async function enrichSeoPayload(
       const record = await business.get(context, brandId<"EntityId">(businessId));
       if (record) {
         const locations = await business.listLocations(context, record.id);
+        const catalogRelationships = catalog ? await catalog.listBusinessEntityIds(context, record.id) : { productIds: [], serviceIds: [] };
+        const relatedEntityIds = [
+          ...catalogRelationships.productIds,
+          ...catalogRelationships.serviceIds,
+          ...locations.filter((item) => item.status === "active").map((item) => item.id),
+        ].filter((id) => id !== record.id);
         const location = locations.find((item) => item.status === "active" && item.locationType === "physical" && item.geoPoint);
         if (location) {
           const hours = await business.listHours(context, record.id, location.id);
@@ -322,6 +328,7 @@ async function enrichSeoPayload(
             visibility: "public",
             preferredName: record.displayName,
             locale: record.defaultLocale ?? "en",
+            ...(relatedEntityIds.length ? { relatedEntityIds } : {}),
             ...(location.id ? { locationId: location.id } : {}),
             geoScope: "exact",
             geoPoint: location.geoPoint ?? undefined,
