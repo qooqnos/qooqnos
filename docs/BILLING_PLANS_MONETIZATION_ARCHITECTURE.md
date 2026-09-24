@@ -435,8 +435,8 @@ Required tests:
 10. webhook/reconciliation
 11. invoice system
 12. AI usage/cost metering
-13. future marketplace transaction ledger
-14. future transaction fees/payouts
+13. marketplace transaction ledger
+14. transaction fees/payouts
 
 ## 31. Definition of Done
 
