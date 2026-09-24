@@ -1280,3 +1280,9 @@ These tables do not invent ranking, impression or citation values. Search-engine
 `seo_competitors` stores tenant-scoped competitor identities discovered or explicitly registered. `seo_competitive_runs` stores provider/query/location snapshots; `seo_competitive_observations` stores observed SERP URLs/ranks/features; `seo_competitive_changes` stores detected rank, URL and AI-citation changes.
 
 These projections are external-observation evidence. They do not establish market share, revenue, popularity, or a universal ranking beyond the provider/query/location/device snapshot that produced the observation.
+
+## 18.9 SEO competitive keyword-gap evidence
+
+`seo_competitive_keyword_gaps` stores provider-observed domain-intersection evidence: competitor domain, tracked Entity, keyword, search volume, CPC, competitor/Phoenix ranks when supplied, location/language, gap type, observation time and provenance.
+
+The record is evidence from an external provider dataset and never represents an invented market-share or universal ranking claim.
