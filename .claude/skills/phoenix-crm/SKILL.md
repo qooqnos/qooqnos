@@ -15,5 +15,6 @@ Native Claude Code entrypoint. Read `skills/phoenix-crm/SKILL.md` before CRM wor
 - CRM issues commands to Communications; it never sends directly.
 - AI may summarize/suggest/draft/classify but cannot send, mutate booking/billing, expose private notes, infer prohibited sensitive attributes, or cross tenants.
 - Respect retention, export, deletion, and consent policies.
+- Read `docs/CRM_TIMELINE_PROJECTION_CONTRACT.md` before changing timeline read/projection/rebuild behavior.
 ## Done
 Verify relationship transitions, notes visibility, event idempotency, consent/opt-out, export/delete, authorization, tenant isolation, AI boundaries, and projection rebuildability.
