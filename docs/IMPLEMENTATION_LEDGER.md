@@ -660,7 +660,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0056_communication_required_suppression.sql`. The migration lock/catalog is reconciled through 0056, and the current main head has passed both CI and Phoenix verification.
+The canonical physical inventory reaches migration `0059_billing_refund_financial_accounting.sql`. The migration lock/catalog is reconciled through 0056, and the current main head has passed both CI and Phoenix verification.
 
 Latest fully verified head: `3f24f07a0a04e58ac3dbb389c6491d59802ad82e` — deployment-strategy reconciliation head, verified by current CI and Phoenix verification.
 
