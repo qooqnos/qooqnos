@@ -505,5 +505,13 @@
       "checksum": "125e7e37ddea4f0ee791c34d5471534b69aa6e3eef2d899006fba88e60904139",
       "filename": "0075_analytics_platform.sql"
     }
+,
+    {
+      "id": "0076_ai_memory",
+      "version": 76,
+      "moduleId": "ai",
+      "filename": "0076_ai_memory.sql",
+      "checksum": "83fa7fe5ccf2d64bf42722ffaadf27bf36a55575305d8046d784fd7a68a54728"
+    }
   ]
 }
