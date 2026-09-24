@@ -32,6 +32,7 @@ import { processSeoPublicationJobs } from "@qooqnos/seo";
 import { registerSeoRoutes } from "./seo-routes";
 import { registerMediaRoutes } from "./media-routes";
 import { registerPromotionRoutes } from "./promotion-routes";
+import { renderSeoAwareDocument } from "./seo-frontend";
 
 const homePage = (version: string): string => `<!doctype html>
 <html lang="en">
@@ -543,7 +544,19 @@ export default {
     const url = new URL(request.url);
     const version = env.APP_VERSION ?? "development";
     const database = getDatabase(env);
-    if (request.method === "GET" && url.pathname === "/") return html(homePage(version));
+
+    if (request.method === "GET") {
+      const seoDocument = await renderSeoAwareDocument(request, env, database ?? undefined);
+      if (seoDocument) return seoDocument;
+
+      if (env.ASSETS) {
+        const assetResponse = await env.ASSETS.fetch(request);
+        if (assetResponse.status !== 404) return assetResponse;
+      }
+
+      if (url.pathname === "/") return html(homePage(version));
+    }
+
     return createRouter(version, database ?? undefined, env).handle(request);
   },
 
