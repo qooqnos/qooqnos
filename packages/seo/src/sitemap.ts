@@ -21,3 +21,23 @@ export function buildSitemapIndexXml(sitemapUrls: readonly string[]): string {
  const body=urls.map((url)=>"<sitemap><loc>"+escapeXml(url)+"</loc></sitemap>").join("");
  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"+body+"</sitemapindex>";
 }
+
+export interface ImageSitemapEntry { readonly url: string; readonly images: readonly string[]; readonly lastmod?: string; }
+
+export function buildImageSitemapXml(entries: readonly ImageSitemapEntry[]): string {
+  const normalized = entries.map((entry) => ({
+    ...entry,
+    url: entry.url.trim(),
+    images: Array.from(new Set(entry.images.map((image) => image.trim()).filter(Boolean))),
+  })).filter((entry) => {
+    if (!entry.url || entry.images.length === 0) return false;
+    try { const u = new URL(entry.url); return u.protocol === "https:" || u.protocol === "http:"; } catch { return false; }
+  }).sort((a, b) => a.url.localeCompare(b.url));
+  const body = normalized.map((entry) =>
+    "<url><loc>" + escapeXml(entry.url) + "</loc>" +
+    entry.images.map((image) => "<image:image><image:loc>" + escapeXml(image) + "</image:loc></image:image>").join("") +
+    (entry.lastmod ? "<lastmod>" + escapeXml(entry.lastmod) + "</lastmod>" : "") +
+    "</url>",
+  ).join("");
+  return "<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">" + body + "</urlset>";
+}
