@@ -7,6 +7,7 @@ export interface SeoEntity{id:string;type:SeoEntityType;sourceModule:string;sour
 export interface SeoContext{entity:SeoEntity;canonicalBaseUrl:string;alternates?:readonly {locale:string;url:string}[]}
 export interface SeoPolicy{indexability:Indexability;reason:string;canonicalUrl?:string;includeInSitemap:boolean}
 export interface SeoMetadata{title:string;description:string;canonicalUrl:string;robots:string;headings:string[];altTexts:string[];openGraph:{title:string;description:string;url:string;type:string;locale:string;siteName?:string;image?:string};twitter:{card:"summary"|"summary_large_image";title:string;description:string;image?:string};alternates:readonly {rel:"alternate";hreflang:string;href:string}[];language:string;locale:string}
+export interface BreadcrumbItem{name:string;url:string}
 export interface AnswerFact{fact:string;sourceEntityId:string;verifiedAt?:string;provenanceUrl?:string;sourceType?:string;validUntil?:string}
 export interface AnswerGeography{scope:GeoScope;country?:string;locationId?:string;serviceAreaIds:readonly string[];remoteAvailable:boolean}
 export interface AnswerRepresentation{id:string;entityId:string;locale:string;question:string;answer:string;canonicalUrl?:string;facts:readonly AnswerFact[];freshnessAt:string;sourceUpdatedAt:string;confidence:"verified"|"sourced"|"pending-review"|"restricted";citationReady:boolean;geography?:AnswerGeography;limitations:readonly string[]}
