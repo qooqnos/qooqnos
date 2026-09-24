@@ -44,6 +44,7 @@ export interface ApiRoute {
 export interface ApiRouterOptions {
   readonly database?: D1Database;
   readonly authorization?: AuthorizationRegistry;
+  readonly seoCanonicalBaseUrl?: string;
 }
 
 interface MatchedRoute {
@@ -68,7 +69,7 @@ export class ApiRouter {
     registerBillingRoutes(this, options.database, options.authorization);
     registerCaseSupportRoutes(this, options.database, options.authorization);
     registerCustomerRoutes(this, options.database, options.authorization);
-    registerSeoRoutes(this, options.database);
+    registerSeoRoutes(this, options.database, options.seoCanonicalBaseUrl ?? "https://qooqnos.com");
   }
 
   register(route: ApiRoute): void {
