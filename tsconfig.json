@@ -67,6 +67,9 @@
     },
     {
       "path": "./packages/onboarding"
+    },
+    {
+      "path": "./packages/documents"
     }
   ],
   "files": []
