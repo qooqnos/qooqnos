@@ -560,7 +560,7 @@ export default {
     await processPrivacyRetention(env, now);
     await processIntegration(env, now);
     await processAnalyticsAggregates(env, now);
-    if (database) await processSeoPublicationJobs(database, now);
+    if (database) await processSeoPublicationJobs(database, now, 25, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com");
 
     const database = getDatabase(env);
     if (database && env.AI && env.AI_SELLER_EXTRACT_MODEL_ID) {
