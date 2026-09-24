@@ -1,7 +1,7 @@
 import type { EntityId } from "@qooqnos/core";
 
 export interface PrivacyRetentionContext {
-  readonly organizationId: EntityId;
+  readonly organizationId: EntityId | null;
   readonly workspaceId: EntityId | null;
   readonly now: string;
   readonly correlationId: string;
