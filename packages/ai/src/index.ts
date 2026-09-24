@@ -10,3 +10,5 @@ export * from "./runtime-service";
 export * from "./worker";
 
 export * from "./runtime-input-resolver";
+export * from "./memory-repository";
+export * from "./memory-service";
