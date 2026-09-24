@@ -100,6 +100,7 @@ describe("CrmTimelineRepository", () => {
 
   it("atomically persists the event and its projection", async () => {
     const batches: Array<readonly D1PreparedStatementLike[]> = [];
+    let firstCall = 0;
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
       async first<T>() {
