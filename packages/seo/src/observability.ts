@@ -28,6 +28,73 @@ export class SeoObservabilityRepository extends Repository {
     );
   }
 
+
+  async createMeasurementRun(
+    context: RequestContext,
+    input: {
+      readonly id: string;
+      readonly providerId: string;
+      readonly surface: string;
+      readonly queryId?: string;
+      readonly queryText: string;
+      readonly locale: string;
+      readonly entityId?: string;
+      readonly entityType?: string;
+      readonly startedAt: string;
+      readonly provenance: Record<string, unknown>;
+    },
+  ): Promise<void> {
+    const scope = this.scope(context);
+    await this.database.run(
+      `INSERT INTO seo_measurement_runs
+       (id, organization_id, workspace_id, provider_id, surface, query_id, query_text, locale, entity_id, entity_type, started_at, status, observation_count, provenance_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'running', 0, ?)`,
+      input.id, scope.organizationId, scope.workspaceId, input.providerId, input.surface,
+      input.queryId ?? null, input.queryText, input.locale, input.entityId ?? null, input.entityType ?? null,
+      input.startedAt, JSON.stringify(input.provenance),
+    );
+  }
+
+  async completeMeasurementRun(
+    context: RequestContext,
+    input: { readonly id: string; readonly status: "succeeded" | "partial" | "failed"; readonly completedAt: string; readonly observationCount: number; readonly errorText?: string; },
+  ): Promise<void> {
+    const scope = this.scope(context);
+    await this.database.run(
+      `UPDATE seo_measurement_runs
+          SET completed_at=?, status=?, observation_count=?, error_text=?
+        WHERE id=? AND organization_id=? AND workspace_id IS ?`,
+      input.completedAt, input.status, input.observationCount, input.errorText ?? null,
+      input.id, scope.organizationId, scope.workspaceId,
+    );
+  }
+
+  async recordMeasurementCitation(
+    context: RequestContext,
+    input: {
+      readonly id: string;
+      readonly runId: string;
+      readonly entityId?: string;
+      readonly citationUrl: string;
+      readonly citationTitle?: string;
+      readonly citationPosition?: number;
+      readonly citationCount?: number;
+      readonly sourceType: string;
+      readonly observedAt: string;
+      readonly provenance: Record<string, unknown>;
+    },
+  ): Promise<void> {
+    const scope = this.scope(context);
+    await this.database.run(
+      `INSERT INTO seo_measurement_citations
+       (id, run_id, organization_id, workspace_id, entity_id, citation_url, citation_title, citation_position, citation_count, source_type, observed_at, provenance_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      input.id, input.runId, scope.organizationId, scope.workspaceId, input.entityId ?? null, input.citationUrl,
+      input.citationTitle ?? null, input.citationPosition ?? null, input.citationCount ?? 1, input.sourceType,
+      input.observedAt, JSON.stringify(input.provenance),
+    );
+  }
+
   private scope(context: RequestContext): { organizationId: string; workspaceId: string | null } {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = context.workspaceId ? this.requireWorkspace({ workspaceId: context.workspaceId }) : null;
