@@ -71,6 +71,12 @@ const demoBusinesses: DiscoveryResult[] = [
   },
 ];
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+  }, { once: true });
+}
+
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Phoenix web root is missing.");
 
