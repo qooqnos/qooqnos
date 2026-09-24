@@ -739,6 +739,28 @@ Counters are enforcement state for concurrency-safe hard quotas; usage events re
 
 Financial audit events are append-only, tenant-scoped evidence. UPDATE/DELETE are database-blocked, idempotency is scoped to the organization, and monetary values use integer minor units. The event hash provides independent integrity verification; the table is not the accounting ledger.
 
+### Refund financial accounting
+
+### `billing_refunds`
+
+`id`, organization_id, workspace_id?, business_id?, payment_reference, order_reference?, requested_amount_minor, refunded_amount_minor, currency, reason_code, status, provider?, provider_reference?, provider_status?, ledger_transaction_id?, requested_by?, approved_by?, requested_at, processed_at?, completed_at?, failure_code?, correlation_id, idempotency_key, created_at, updated_at.
+
+Refund records are Billing/Payment financial truth. Commerce may retain only orchestration/reference history.
+
+### `billing_ledger_accounts`
+
+`id`, organization_id, workspace_id?, business_id?, account_code, name, account_type, currency, normal_balance, status, parent_account_id?, created_at, updated_at.
+
+### `billing_ledger_transactions`
+
+`id`, organization_id, workspace_id?, business_id?, transaction_type, source_type, source_id, currency, idempotency_key, correlation_id, occurred_at, created_at.
+
+### `billing_ledger_entries`
+
+`id`, transaction_id, account_id, organization_id, workspace_id?, business_id?, direction, amount_minor, currency, source_reference, reversal_of_entry_id?, created_at.
+
+Ledger transactions and entries are immutable. A refund is posted only through a balanced, non-zero double-entry journal with matching currency and scope. Reversals are represented as new entries/transactions rather than mutation or deletion. Ledger balances are derived projections, never mutable balance authority.
+
 Billing owns commercial entitlement and usage authority. Refund execution and double-entry accounting now have a canonical provider-neutral financial boundary. External payment-provider execution remains behind the provider adapter/reconciliation gate; provider-specific credentials and adapters are not stored in Billing.
 
 ### Media
