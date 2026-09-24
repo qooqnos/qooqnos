@@ -1,4 +1,4 @@
-import type { EntityGraph, EntityGraphEdge } from "./entity-graph";
+import type { EntityGraph } from "./entity-graph";
 
 export interface InternalLinkRecommendation {
   readonly sourceEntityId: string;
