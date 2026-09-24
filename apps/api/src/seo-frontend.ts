@@ -86,14 +86,15 @@ export async function renderSeoAwareDocument(
   try {
     parsed = JSON.parse(row.representationJson) as typeof parsed;
   } catch {
-    return null;
+    return productionRenderFailure(env, "SEO representation JSON is invalid.");
   }
 
-  if (!parsed.entity || !parsed.metadata || !parsed.structuredData || !parsed.answer || !parsed.page) return null;
-  if (parsed.metadata.canonicalUrl !== row.canonicalUrl) return null;
+  if (!parsed.entity || !parsed.metadata || !parsed.structuredData || !parsed.answer || !parsed.page) return productionRenderFailure(env, "SEO representation is incomplete for SSR.");
+  if (parsed.metadata.canonicalUrl !== row.canonicalUrl) return productionRenderFailure(env, "SEO metadata canonical does not match the persisted representation URL.");
 
   const assetResponse = await getIndexDocument(request, env);
-  if (!assetResponse) return null;
+  if (!assetResponse) return productionRenderFailure(env, "SEO renderer assets are unavailable.");
+  if (!assetResponse.ok) return productionRenderFailure(env, `SEO renderer asset response was HTTP ${assetResponse.status}.`);
 
   const hydration: SeoFrontendHydration = {
     metadata: parsed.metadata,
@@ -153,11 +154,32 @@ export async function renderSeoAwareDocument(
   baseHeaders.set("cache-control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
   baseHeaders.set("etag", etag);
   baseHeaders.set("x-robots-tag", hydration.metadata.robots);
+  baseHeaders.set("x-phoenix-render-mode", "ssr");
+  baseHeaders.set("x-phoenix-seo", "1");
+  baseHeaders.set("content-language", hydration.metadata.language || hydration.metadata.locale);
+  baseHeaders.set("vary", "Accept-Encoding");
+  baseHeaders.set("x-content-type-options", "nosniff");
+  if (parsed.entity.updatedAt) baseHeaders.set("last-modified", parsed.entity.updatedAt);
 
   if (requestEtag === etag) return new Response(null, { status: 304, headers: baseHeaders });
 
   const html = injectSeoRepresentation(await assetResponse.text(), hydration);
   return new Response(html, { status: 200, headers: baseHeaders });
+}
+
+
+function productionRenderFailure(env: ApiEnv, message: string): Response | null {
+  if (env.ENVIRONMENT !== "production") return null;
+  return new Response(message, {
+    status: 503,
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+      "x-robots-tag": "noindex",
+      "x-phoenix-render-mode": "error",
+      "x-phoenix-seo": "1",
+    },
+  });
 }
 
 export function injectSeoRepresentation(html: string, hydration: SeoFrontendHydration): string {
