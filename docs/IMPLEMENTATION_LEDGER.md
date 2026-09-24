@@ -1212,3 +1212,18 @@ Canonical files:
 - `apps/web/src/main.ts`
 - `apps/web/styles.css`
 - `apps/web/public/styles.css`
+
+### Frontend Catalog Studio — 2026-09-25
+
+The frontend now exposes direct canonical Product creation in addition to Seller AI orchestration.
+
+Implemented:
+- dedicated `/catalog` route;
+- direct `POST /api/v1/catalog/products` command with idempotency;
+- clear separation between Seller AI draft generation and Catalog authoritative product creation;
+- no Catalog read model or product policy is invented because the current backend exposes creation as the canonical HTTP capability.
+
+Canonical files:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
