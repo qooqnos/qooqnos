@@ -1330,3 +1330,43 @@ Public canonical entity pages are now rendered at the edge from the persisted SE
 - Unit coverage was added for initial-HTML metadata/JSON-LD/answer injection and public payload sanitization.
 
 Deployment verification remains a runtime step: production HTML should still be checked with URL Inspection / fetched-source verification after the worker and migration are deployed.
+
+### Loyalty & Retention Engine — 2026-09-25
+Loyalty has moved from architecture-only to a canonical first implementation slice.
+
+Implemented:
+- new module `@qooqnos/loyalty`;
+- migration `0081_loyalty_core.sql`;
+- versioned loyalty programs;
+- customer memberships;
+- append-only points ledger with idempotency and provenance;
+- reward definitions and reward redemption;
+- atomic reward redemption with available-status enforcement and insufficient-balance protection;
+- runtime/API registration and focused service validation test.
+
+Ownership remains explicit:
+- Loyalty owns points/reward value;
+- Commerce/Billing own money and transaction truth;
+- Booking owns booking facts;
+- CRM/Customer own relationship and identity data;
+- Communications owns delivery.
+
+### Advertising & Sponsored Discovery Engine — 2026-09-25
+Advertising has moved from architecture-only to a canonical first implementation slice.
+
+Implemented:
+- new module `@qooqnos/advertising`;
+- migration `0082_advertising_core.sql`;
+- advertiser account, campaign/version, ad, budget, delivery decision, impression and click records;
+- tenant/workspace isolation triggers;
+- idempotent delivery/impression/click measurement;
+- moderated + active-state guard before a sponsored ad may be served;
+- campaign reporting surface;
+- runtime/API registration and focused delivery-boundary test.
+
+Ownership remains explicit:
+- Advertising owns sponsored delivery policy and measurement;
+- Discovery remains organic ranking/source of truth;
+- Billing owns financial truth;
+- Media owns creative binaries;
+- Trust/Moderation remain policy authorities.
