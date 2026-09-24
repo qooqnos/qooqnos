@@ -251,3 +251,10 @@ function parseJson(value: string | null): unknown {
     throw new DatabaseError("Analytics stored JSON is invalid");
   }
 }
+
+function classifyEvent(eventType: string): string {
+  const value = eventType.toLowerCase();
+  if (value.startsWith("security.") || value.startsWith("auth.") || value.startsWith("privacy.")) return "restricted";
+  if (value.startsWith("financial.") || value.startsWith("payment.") || value.startsWith("billing.")) return "financial";
+  return "operational";
+}
