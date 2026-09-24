@@ -37,7 +37,7 @@ describe("case dispatch provider adapters", () => {
       subjectType: "customer",
       subjectId: brandId<"EntityId">("customer-1"),
       requesterType: "customer",
-      requesterId: brandId("customer-1"),
+      requesterId: brandId<"EntityId">("customer-1"),
       correlationId: "dispatch-1",
     })).rejects.toMatchObject({ failureClass: "transient", failureCode: "rate_limited" });
   });
@@ -56,20 +56,20 @@ describe("case dispatch provider adapters", () => {
       },
     });
     const result = await adapter.dispatch({
-      dispatchId: brandId("dispatch-1"),
-      caseId: brandId("case-1"),
-      assignmentId: brandId("assignment-1"),
-      queueId: brandId("queue-1"),
+      dispatchId: brandId<"EntityId">("dispatch-1"),
+      caseId: brandId<"EntityId">("case-1"),
+      assignmentId: brandId<"EntityId">("assignment-1"),
+      queueId: brandId<"EntityId">("queue-1"),
       routeReference: "support-tier-2",
       idempotencyKey: "case-dispatch:assignment-1",
-      organizationId: brandId("org-1"),
-      workspaceId: brandId("ws-1"),
-      caseTypeId: brandId("type-1"),
+      organizationId: brandId<"EntityId">("org-1"),
+      workspaceId: brandId<"EntityId">("ws-1"),
+      caseTypeId: brandId<"EntityId">("type-1"),
       priority: "high",
       subjectType: "customer",
-      subjectId: brandId("customer-1"),
+      subjectId: brandId<"EntityId">("customer-1"),
       requesterType: "customer",
-      requesterId: brandId("customer-1"),
+      requesterId: brandId<"EntityId">("customer-1"),
       correlationId: "dispatch-1",
     });
     expect(result).toMatchObject({ status: "accepted", externalReference: "ext-1", providerId: "queue-a" });
