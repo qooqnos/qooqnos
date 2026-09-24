@@ -686,7 +686,7 @@ Migration 0020 implements \`crm_timeline_events\` as the canonical CRM timeline 
 
 The table stores normalized event references rather than duplicating source-domain facts. Idempotency is based on \`source_module + source_event_id\`. Scope is validated against the Customer relationship and Business workspace.
 
-\`crm_timeline_projections\` remains intentionally unimplemented. Its physical read-model fields, rebuild semantics and projection ownership are not sufficiently specified to justify another table.
+\`crm_timeline_projections\` is implemented by migration 0074. The canonical contract is \`docs/CRM_TIMELINE_PROJECTION_CONTRACT.md\`; projection writes are idempotent/monotonic, history reads use the derived read model, and rebuilds read only canonical timeline events plus authoritative relationship scope.
 
 ## 3.15 Trust VerificationCase / evidence — 0021
 
@@ -809,7 +809,7 @@ new migrations must follow ownership + no-duplication gates
 
 The remaining implementation work is operational/provider/projection work; Catalog AttributeValue cutover is closed by migration 0063.
 
-1. Keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit; CustomerProfile is a logical aggregate over existing Customer-owned records and requires no standalone table.
+1. CRM timeline projection is no longer gated: migration 0074 and \`docs/CRM_TIMELINE_PROJECTION_CONTRACT.md\` define the read model, consistency and rebuild contract; CustomerProfile remains a logical aggregate over existing Customer-owned records and requires no standalone table.
 2. Complete Booking availability calculation and slot-generation semantics; transactional finalization/capacity guards are implemented in 0046–0047.
 3. Complete remaining Billing provider adapters/reconciliation workers and ledger/provider operational gates; invoice, refund accounting, settlement and reconciliation are now implemented.
 4. Continue the remaining Automation, Integration, Privacy, Communication, AI, Matching, Localization, Documents and Analytics operational/contract gates without introducing duplicate sources of truth.
