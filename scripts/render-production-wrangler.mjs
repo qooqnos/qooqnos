@@ -54,8 +54,13 @@ name = "qooqnos-production"
 [env.production.vars]
 APP_VERSION = "production"
 ENVIRONMENT = "production"
+SEO_CANONICAL_BASE_URL = "https://qooqnos.com"
+SEO_CRAWLER_SAMPLE_LIMIT = "25"
 AI_SELLER_EXTRACT_MODEL_ID = "${modelId}"
 AI_SELLER_EXTRACT_MODEL_VERSION = "${modelVersion}"${gatewayId ? `\nAI_GATEWAY_ID = "${gatewayId}"` : ""}
+
+[env.production.triggers]
+crons = [ "17 * * * *" ]
 
 [env.production.ai]
 binding = "AI"
