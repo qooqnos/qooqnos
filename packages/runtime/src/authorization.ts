@@ -8,12 +8,32 @@ export interface RoleDefinition { readonly id: Role; readonly permissions: reado
 export interface AuthorizationSubject { readonly actorId?: EntityId | undefined; readonly tenantId?: EntityId | undefined; readonly workspaceId?: EntityId | undefined; readonly membershipStatus?: MembershipStatus | undefined; readonly roles: readonly Role[]; readonly permissions?: readonly Permission[] | undefined; readonly authenticated: boolean; }
 export interface AuthorizationResource { readonly tenantId?: string | undefined; readonly workspaceId?: string | undefined; readonly ownerId?: string | undefined; readonly sensitivity?: "normal" | "sensitive" | "restricted" | undefined; readonly attributes?: Readonly<Record<string, unknown>> | undefined; }
 export interface AuthorizationRequest { readonly context: RequestContext; readonly permission: Permission; readonly resource?: AuthorizationResource | undefined; readonly subject: AuthorizationSubject; readonly requiredEntitlement?: string | undefined; readonly requireAuthentication?: boolean | undefined; readonly requireWorkspace?: boolean | undefined; }
-export interface AuthorizationDecision { readonly allowed: boolean; readonly reason: "allowed" | "unauthenticated" | "missing_tenant" | "missing_workspace" | "membership_denied" | "permission_denied" | "entitlement_denied" | "tenant_denied" | "workspace_denied" | "resource_denied"; readonly permission: Permission; }
+export interface AuthorizationDecision {
+  readonly allowed: boolean;
+  readonly reason: "allowed" | "unauthenticated" | "missing_tenant" | "missing_workspace" | "membership_denied" | "permission_denied" | "entitlement_denied" | "tenant_denied" | "workspace_denied" | "resource_denied";
+  readonly reasonCode: string;
+  readonly policyVersion: string;
+  readonly permission: Permission;
+}
 export type ResourcePolicy = (input: AuthorizationRequest) => boolean;
 export type EntitlementEvaluator = (entitlement: string, input: AuthorizationRequest) => boolean;
 export interface AuthorizationPolicyRegistry { registerPermission(permission: Permission, policy?: ResourcePolicy): void; registerRole(role: RoleDefinition): void; hasPermission(permission: Permission): boolean; evaluate(input: AuthorizationRequest): AuthorizationDecision; assert(input: AuthorizationRequest): void; }
 const ACTIVE_MEMBERSHIP: ReadonlySet<MembershipStatus> = new Set(["active"]);
-export class AuthorizationDeniedError extends AppError { constructor(decision: AuthorizationDecision, requestId?: RequestContext["requestId"]) { super({ code: decision.reason === "unauthenticated" ? "UNAUTHORIZED" : "FORBIDDEN", message: `Authorization denied: ${decision.reason}`, requestId, details: { permission: decision.permission, reason: decision.reason } }); this.name = "AuthorizationDeniedError"; } }
+export class AuthorizationDeniedError extends AppError {
+  constructor(decision: AuthorizationDecision, requestId?: RequestContext["requestId"]) {
+    super({
+      code: decision.reason === "unauthenticated" ? "UNAUTHORIZED" : "FORBIDDEN",
+      message: "Authorization denied.",
+      requestId,
+      details: {
+        permission: decision.permission,
+        reasonCode: decision.reasonCode,
+        policyVersion: decision.policyVersion,
+      },
+    });
+    this.name = "AuthorizationDeniedError";
+  }
+}
 export class AuthorizationRegistry implements AuthorizationPolicyRegistry {
   private readonly policies = new Map<Permission, ResourcePolicy | undefined>();
   private readonly roles = new Map<Role, ReadonlySet<Permission>>();
@@ -21,7 +41,7 @@ export class AuthorizationRegistry implements AuthorizationPolicyRegistry {
   registerPermission(permission: Permission, policy?: ResourcePolicy): void { if (!permission.trim()) throw new Error("Permission cannot be empty"); if (this.policies.has(permission)) throw new Error(`Permission already registered: ${permission}`); this.policies.set(permission, policy); }
   registerRole(role: RoleDefinition): void { if (!role.id.trim()) throw new Error("Role cannot be empty"); if (this.roles.has(role.id)) throw new Error(`Role already registered: ${role.id}`); for (const permission of role.permissions) { if (!this.policies.has(permission)) throw new Error(`Role ${role.id} references unknown permission: ${permission}`); } this.roles.set(role.id, new Set(role.permissions)); }
   hasPermission(permission: Permission): boolean { return this.policies.has(permission); }
-  evaluate(input: AuthorizationRequest): AuthorizationDecision { const { context, permission, subject, resource } = input; const requireAuthentication = input.requireAuthentication ?? true; const requireWorkspace = input.requireWorkspace ?? Boolean(context.workspaceId || resource?.workspaceId); if (requireAuthentication && !subject.authenticated) return denied("unauthenticated", permission); if (requireWorkspace && !context.workspaceId) return denied("missing_workspace", permission); if (context.workspaceId && subject.workspaceId !== context.workspaceId) return denied("workspace_denied", permission); if (context.tenantId && subject.tenantId !== context.tenantId) return denied("tenant_denied", permission); if (requireWorkspace && !subject.tenantId) return denied("missing_tenant", permission); if (requireWorkspace && (!subject.membershipStatus || !ACTIVE_MEMBERSHIP.has(subject.membershipStatus))) return denied("membership_denied", permission); if (!this.hasEffectivePermission(subject, permission)) return denied("permission_denied", permission); if (input.requiredEntitlement && !this.entitlementEvaluator) return denied("entitlement_denied", permission); if (input.requiredEntitlement && !this.entitlementEvaluator?.(input.requiredEntitlement, input)) return denied("entitlement_denied", permission); if (resource?.tenantId && subject.tenantId !== resource.tenantId) return denied("tenant_denied", permission); if (resource?.workspaceId && subject.workspaceId !== resource.workspaceId) return denied("workspace_denied", permission); const policy = this.policies.get(permission); if (policy && !policy(input)) return denied("resource_denied", permission); return { allowed: true, reason: "allowed", permission }; }
+  evaluate(input: AuthorizationRequest): AuthorizationDecision { const { context, permission, subject, resource } = input; const requireAuthentication = input.requireAuthentication ?? true; const requireWorkspace = input.requireWorkspace ?? Boolean(context.workspaceId || resource?.workspaceId); if (requireAuthentication && !subject.authenticated) return denied("unauthenticated", permission); if (requireWorkspace && !context.workspaceId) return denied("missing_workspace", permission); if (context.workspaceId && subject.workspaceId !== context.workspaceId) return denied("workspace_denied", permission); if (context.tenantId && subject.tenantId !== context.tenantId) return denied("tenant_denied", permission); if (requireWorkspace && !subject.tenantId) return denied("missing_tenant", permission); if (requireWorkspace && (!subject.membershipStatus || !ACTIVE_MEMBERSHIP.has(subject.membershipStatus))) return denied("membership_denied", permission); if (!this.hasEffectivePermission(subject, permission)) return denied("permission_denied", permission); if (input.requiredEntitlement && !this.entitlementEvaluator) return denied("entitlement_denied", permission); if (input.requiredEntitlement && !this.entitlementEvaluator?.(input.requiredEntitlement, input)) return denied("entitlement_denied", permission); if (resource?.tenantId && subject.tenantId !== resource.tenantId) return denied("tenant_denied", permission); if (resource?.workspaceId && subject.workspaceId !== resource.workspaceId) return denied("workspace_denied", permission); const policy = this.policies.get(permission); if (policy && !policy(input)) return denied("resource_denied", permission); return { allowed: true, reason: "allowed", reasonCode: "allowed", policyVersion: AUTHORIZATION_POLICY_VERSION, permission }; }
   assert(input: AuthorizationRequest): void { const decision = this.evaluate(input); if (!decision.allowed) throw new AuthorizationDeniedError(decision, input.context.requestId); }
   private hasEffectivePermission(subject: AuthorizationSubject, permission: Permission): boolean { if (subject.permissions?.includes(permission)) return true; return subject.roles.some((role) => this.roles.get(role)?.has(permission) === true); }
 }
@@ -29,4 +49,8 @@ export function createAuthorizationRegistry(permissions: Readonly<Record<Permiss
 export function tenantResourcePolicy(): ResourcePolicy { return ({ context, resource }) => { if (!context.tenantId) return false; if (!resource?.tenantId) return true; return context.tenantId === resource.tenantId; }; }
 export function workspaceResourcePolicy(): ResourcePolicy { return ({ context, resource }) => { if (!context.workspaceId) return false; if (!resource?.workspaceId) return true; return context.workspaceId === resource.workspaceId; }; }
 export function ownerResourcePolicy(): ResourcePolicy { return ({ subject, resource }) => { if (!subject.actorId || !resource?.ownerId) return false; return subject.actorId === resource.ownerId; }; }
-function denied(reason: AuthorizationDecision["reason"], permission: Permission): AuthorizationDecision { return { allowed: false, reason, permission }; }
+const AUTHORIZATION_POLICY_VERSION = "authorization-v1";
+
+function denied(reason: AuthorizationDecision["reason"], permission: Permission): AuthorizationDecision {
+  return { allowed: false, reason, reasonCode: reason, policyVersion: AUTHORIZATION_POLICY_VERSION, permission };
+}
