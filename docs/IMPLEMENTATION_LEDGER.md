@@ -768,3 +768,12 @@ Implementation commits: `a51897e`, `e6bad36`, `a00a183`, `3e39a95`, `224b884`, `
 
 
 | Communication provider adapters + rate limiting | 🟢 Operational | migrations/0067_communication_push_channel.sql; packages/communication/src/adapter.ts; packages/communication/src/provider-config.ts; packages/communication/src/dispatch.ts; packages/communication/src/rate-limit.ts; apps/api/src/communication-worker.ts; packages/communication/src/provider-rate-limit.test.ts | Push channel + Email/SMS/WhatsApp/Push runtime HTTP adapters; optional secondary-provider failover; scoped rate limits; bounded burst-anomaly cooldowns; provider credentials remain runtime-only. | commits c576061d, 004d2b9, 392a36e, b8e6298, 97c8f52, 7680903, 6491760, d7a846f, aa86fc6, cae8fa5, c2511c1, 3926003, 9adf77c, b230c99, db20b88, c7a34e1, 925d4e8 | CI/Phoenix verification pending on the post-checkpoint head. |
+
+
+### Matching Act outcome integrations — 2026-09-24
+
+`0071_matching_act_outcome_links.sql` adds optional MatchRequest/Candidate references to authoritative Booking and Commerce Act records. `MatchingOutcomeProcessor` consumes the existing transactional outbox and maps `booking.completed`, `booking.no_show`, `booking.cancelled`, `commerce.order.completed`, `commerce.payment.completed`, `payment.captured`, and `fulfillment.completed` into the existing append-only Learning Signal repository. Event IDs are used as deterministic signal IDs for retry idempotency; ambiguous or unlinked outcomes are ignored rather than guessed. No second Learning system or duplicate outcome table was introduced.
+
+Implementation commits: migration `0071_matching_act_outcome_links.sql`; `packages/matching/src/outcome-processor.ts`; `apps/api/src/outbox-worker.ts`; Booking/Commerce reference propagation.
+
+Status: 🟢 Complete
