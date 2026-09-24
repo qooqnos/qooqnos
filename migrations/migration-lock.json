@@ -518,6 +518,13 @@
       "moduleId": "seo",
       "filename": "0077_seo_geo_engine.sql",
       "checksum": "b32e8e239a251fe5da20879a31957d724887a3c97ab6e209a7e926157136de6a"
+    },
+    {
+      "id": "0078_seo_geo_graph",
+      "version": 78,
+      "moduleId": "seo",
+      "filename": "0078_seo_geo_graph.sql",
+      "checksum": "c2d3e5d8d0782551f59e3d0b25c227a223381ceeb71b06c144b84cb76fc63a7b"
     }
   ]
 }
