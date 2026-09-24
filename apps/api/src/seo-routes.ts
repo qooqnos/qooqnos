@@ -241,14 +241,16 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
         context.tenantId, context.workspaceId ?? null,
         context.tenantId, context.workspaceId ?? null,
       );
+      const readiness = evaluateSeoProductionReadiness({ SEO_CANONICAL_BASE_URL: canonicalBaseUrl } as never);
       const degraded = (result?.failed ?? 0) > 0 || (crawl?.failures ?? 0) > 0 || (measurement?.failures ?? 0) > 0 || (competitive?.failures ?? 0) > 0;
       return json({
-        status: degraded ? "degraded" : "ok",
+        status: degraded ? "degraded" : readiness.state,
         publication: { pending: result?.pending ?? 0, failed: result?.failed ?? 0 },
         productionCrawler: { recentFailures: crawl?.failures ?? 0, lastObservedAt: crawl?.lastObservedAt ?? null },
         visibilityMeasurement: { recentFailures: measurement?.failures ?? 0, runs: measurement?.runs ?? 0, lastObservedAt: measurement?.lastObservedAt ?? null },
         competitiveIntelligence: { recentFailures: competitive?.failures ?? 0, runs: competitive?.runs ?? 0, activeCompetitors: competitive?.competitors ?? 0, lastObservedAt: competitive?.lastObservedAt ?? null },
-      }, degraded ? 503 : 200, context.requestId);
+        productionReadiness: readiness,
+      }, degraded || readiness.state === "invalid" ? 503 : 200, context.requestId);
     },
   });
 }
