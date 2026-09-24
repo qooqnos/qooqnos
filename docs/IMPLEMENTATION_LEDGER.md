@@ -1292,3 +1292,23 @@ The GEO answer layer is now a canonical, provenance-aware publication artifact:
 - Geographic truth fingerprints now include country to prevent cross-country collisions.
 - A dedicated answer validator enforces entity binding, timestamps, provenance URLs, publication visibility, citation readiness, and validity windows.
 - SEO publication validates both Structured Data and Answer Representation before persisting the publication bundle.
+
+### Promotion & Campaign Engine — 2026-09-25
+
+Promotion & Campaign has moved from architecture-only to a canonical first implementation slice.
+
+Implemented:
+- new module `@qooqnos/promotion`;
+- migration `0080_promotion_core.sql` with scoped promotion/version/qualification/redemption records and workspace guards;
+- migration lock entry for version 80;
+- runtime module registration and permission registry;
+- API routes for promotion creation, versioning, activation, eligibility evaluation and redemption;
+- deterministic eligibility checks for active window, minimum amount, channel, customer/business scope and per-customer redemption limit;
+- idempotent qualification and redemption records;
+- focused service test for the eligibility boundary.
+
+Ownership remains explicit:
+- Promotion owns incentive policy/eligibility;
+- Commerce/Billing remain authoritative for monetary truth and transactions;
+- Booking remains authoritative for booking facts;
+- frontend/AI cannot decide promotion winners outside this capability.
