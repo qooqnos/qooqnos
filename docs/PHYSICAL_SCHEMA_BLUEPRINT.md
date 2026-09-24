@@ -1157,7 +1157,6 @@ Evaluation records are immutable evidence for retrieval/ranking/matching quality
 
 The following remain controlled architecture/operational gates:
 
-1. CRM timeline projection read-model/rebuild contract.
 2. Tax/discount transaction snapshot semantics beyond the existing Commerce ownership decision.
 3. Payment provider reference/invoice/financial-ledger contract.
 4. AI Memory physical storage/retention contract.
