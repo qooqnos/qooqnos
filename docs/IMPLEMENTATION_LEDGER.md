@@ -28,7 +28,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Catalog guard/integrity migrations | 🟢 Implemented in migration sequence | migrations/0006–0008, 0014 |
 | Business category integrity hardening | 🟢 Implemented | migrations/0015_business_primary_category_integrity.sql |
 | Catalog Attribute vocabulary | 🟢 Foundation implemented | migrations/0016_catalog_attribute_vocabulary.sql |
-| Catalog AttributeValue storage | 🟡 Expand phase implemented | migrations/0017_catalog_attribute_values.sql; JSON backfill/cutover remains gated |
+| Catalog AttributeValue storage | 🟢 Cutover completed | migrations/0017_catalog_attribute_values.sql; migrations/0063_catalog_attribute_cutover.sql; packages/catalog/src/attribute-value-repository.ts; packages/catalog/src/repository.ts |
 | Customer core | 🟢 Schema/repository implemented | migrations/0018_customer_core.sql; packages/database/src/customer-repository.ts |
 | CRM Customer relationships | 🟢 Schema/repository implemented | migrations/0019_crm_customer_relationships.sql; packages/database/src/customer-relationship-repository.ts |
 | CRM timeline events | 🟢 Schema/repository implemented | migrations/0020_crm_timeline_events.sql; packages/database/src/crm-timeline-repository.ts; projections remain gated |
