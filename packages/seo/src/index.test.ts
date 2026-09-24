@@ -7,6 +7,8 @@ import {
   buildRobotsTxt,
   buildSearchQuery,
   buildSitemapXml,
+  buildSitemapIndexXml,
+  SITEMAP_URL_LIMIT,
   canonicalEntityUrl,
   evaluateAgenticReadiness,
   evaluateFreshness,
@@ -179,6 +181,8 @@ describe("SEO/GEO core", () => {
     expect(sitemap.indexOf("https://example.com/a")).toBeLessThan(sitemap.indexOf("https://example.com/b"));
     expect(sitemap.match(/<url>/g)).toHaveLength(2);
     expect(buildRobotsTxt("https://example.com/sitemap.xml")).toContain("Disallow: /api/");
+    expect(SITEMAP_URL_LIMIT).toBe(50000);
+    expect(buildSitemapIndexXml(["https://example.com/sitemap-2.xml", "https://example.com/sitemap-1.xml", "https://example.com/sitemap-1.xml"])).toContain("<sitemapindex");
   });
 
   it("audits crawl/indexability consistency and canonical identity", () => {
