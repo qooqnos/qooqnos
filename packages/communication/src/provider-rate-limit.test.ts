@@ -1,5 +1,6 @@
 /* @ts-nocheck */
 import { describe, expect, it } from "vitest";
+import { brandId } from "@qooqnos/core";
 import { createCommunicationProviderRegistry, createHttpCommunicationProviderAdapter } from "./adapter";
 import { CommunicationRateLimiter, detectCommunicationBurst } from "./rate-limit";
 
@@ -22,8 +23,8 @@ describe("Communication providers and rate limits", () => {
     const result = await adapter.deliver({
       now: "2026-09-24T10:00:00.000Z",
       notification: {
-        id: "notification-1",
-        organizationId: "org-1",
+        id: brandId<"EntityId">("notification-1"),
+        organizationId: brandId<"EntityId">("org-1"),
         workspaceId: null,
         recipientReference: "recipient-1",
         intent: "booking.confirmed",
@@ -60,7 +61,7 @@ describe("Communication providers and rate limits", () => {
     });
     const result = await adapter.deliver({
       now: "2026-09-24T10:00:00.000Z",
-      notification: { id: "n", organizationId: "o", workspaceId: null, recipientReference: "r", intent: "x", channel: "sms", templateReference: null, templateVersion: null, locale: "en", variables: null, priority: "normal", status: "queued", idempotencyKey: "i", scheduledAt: null, expiresAt: null, policyVersion: null, lastPolicyEvaluatedAt: null, createdAt: "2026-09-24T10:00:00.000Z", updatedAt: "2026-09-24T10:00:00.000Z" },
+      notification: { id: brandId<"EntityId">("n"), organizationId: brandId<"EntityId">("o"), workspaceId: null, recipientReference: "r", intent: "x", channel: "sms", templateReference: null, templateVersion: null, locale: "en", variables: null, priority: "normal", status: "queued", idempotencyKey: "i", scheduledAt: null, expiresAt: null, policyVersion: null, lastPolicyEvaluatedAt: null, createdAt: "2026-09-24T10:00:00.000Z", updatedAt: "2026-09-24T10:00:00.000Z" },
     });
     expect(result).toMatchObject({ failureClass: "transient", failureCode: "provider_rate_limited", retryAfterSeconds: 17 });
   });
@@ -81,7 +82,7 @@ describe("Communication providers and rate limits", () => {
     expect(detectCommunicationBurst([700, 950], 1000, 3, 200)).toBe(false);
   });
 
-  it("fails over to a secondary provider after repeated transient failures", () => {
+  it("fails over to a secondary provider after repeated transient failures", async () => {
     let now = 1000;
     const primary = { providerId: "email.primary", channels: ["email"] as const, async deliver() {
       return { status: "failed" as const, provider: "email.primary", failureClass: "transient" as const, failureCode: "provider_timeout" };
