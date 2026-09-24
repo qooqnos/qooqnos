@@ -8,3 +8,5 @@ export * from "./refund-accounting";
 export * from "./payment-provider-adapter";
 
 export * from "./payment-provider-service";
+
+export * from "./settlement-repository";
