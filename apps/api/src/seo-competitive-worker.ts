@@ -160,6 +160,21 @@ export async function runSeoCompetitiveIntelligence(
         }
       }
 
+      const previousAiCitations = await previousCitationRows(database, row, runId);
+      for (const previous of previousAiCitations) {
+        if (!citationUrls.has(normalizeUrl(previous.resultUrl))) {
+          await repository.recordChange(context, {
+            queryText: row.queryText,
+            competitorId: previous.competitorId ?? undefined,
+            changeType: "ai-citation-lost",
+            previousUrl: previous.resultUrl,
+            detectedAt: now,
+            provenance: { ...result.provenance, previousObservedAt: previous.observedAt },
+          });
+          changes += 1;
+        }
+      }
+
       for (const citation of result.aiCitations) {
         const domain = citation.domain ?? normalizeDomainSafe(citation.url);
         if (sameOrigin(citation.url, ownOrigin)) continue;
@@ -250,6 +265,21 @@ async function selectQueries(database: D1Database, config: SeoCompetitiveWorkerC
                q.updated_at DESC
       LIMIT ?`,
     ...params,
+  );
+}
+
+async function previousCitationRows(
+  database: D1Database,
+  row: CompetitiveQueryRow,
+  runId: string,
+): Promise<readonly { competitorId: string | null; resultUrl: string; observedAt: string }[]> {
+  return database.all(
+    `SELECT competitor_id AS competitorId, result_url AS resultUrl, observed_at AS observedAt
+       FROM seo_competitive_observations
+      WHERE organization_id=? AND workspace_id IS ? AND query_text=? AND run_id<>?
+        AND result_type='ai_citation'
+      ORDER BY observed_at DESC`,
+    row.organizationId, row.workspaceId, row.queryText, runId,
   );
 }
 
