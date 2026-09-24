@@ -88,10 +88,7 @@ export function createCustomerPrivacyRetentionProcessor(
     id: "customer.privacy.retention",
     moduleId: "customer",
     async process(input) {
-      const processed = await options.repository.privacyExpirePreferences(
-        { tenantId: input.organizationId, ...(input.workspaceId ? { workspaceId: input.workspaceId } : {}) } as RequestContext,
-        input.now,
-      );
+      const processed = await options.repository.privacyExpirePreferencesAllTenants(input.now);
       return {
         processed,
         resultReference: "privacy-retention:customer-preferences:" + input.now,
