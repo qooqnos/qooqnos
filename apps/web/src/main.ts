@@ -993,7 +993,7 @@ function renderSeo(): string {
         <div class="seo-form">
           <input id="seo-entity" class="studio-input-line" type="text" placeholder="Entity ID" />
           <input id="seo-locale" class="studio-input-line" type="text" value="fa-IR" placeholder="Locale" />
-          <button class="button button-primary" type="button" data-seo-audit>اجرای Audit</button><button class="button button-ghost" type="button" data-seo-crawl>Production Crawl</button>
+          <button class="button button-primary" type="button" data-seo-audit>اجرای Audit</button><button class="button button-ghost" type="button" data-seo-crawl>Production Crawl</button><button class="button button-ghost" type="button" data-seo-visibility>اندازه‌گیری Visibility / Citation</button>
         </div>
         <div id="seo-audit-result" class="seo-result"><div class="slot-empty"><span>◎</span><p>Entity ID را وارد کنید.</p></div></div>
       </article>
@@ -1030,6 +1030,38 @@ async function loadSeoHealth(): Promise<void> {
     status.textContent = "خطا";
     status.className = "pill warning";
     host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "SEO health ناموفق بود.")}</p></div>`;
+  }
+}
+
+async function runSeoVisibilityMeasurement(): Promise<void> {
+  const entityId = document.querySelector<HTMLInputElement>("#seo-entity")?.value.trim() ?? "";
+  const locale = document.querySelector<HTMLInputElement>("#seo-locale")?.value.trim() ?? "";
+  const status = document.querySelector<HTMLElement>("#seo-audit-status");
+  const host = document.querySelector<HTMLDivElement>("#seo-audit-result");
+  if (!entityId || !status || !host) { showToast("Entity ID لازم است."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  status.textContent = "در حال Measurement";
+  status.className = "pill warning";
+  host.innerHTML = '<div class="slot-loading">در حال دریافت داده واقعی Search / AI Citation…</div>';
+  try {
+    const response = await apiJson<{
+      measurement: { queries: number; providerRuns: number; observations: number; failures: number };
+    }>(`/api/v1/seo/visibility/measure/${encodeURIComponent(entityId)}?locale=${encodeURIComponent(locale || "fa-IR")}`, { method: "POST" });
+    const result = response.measurement;
+    status.textContent = result.failures ? "Measurement Partial" : "Measurement Pass";
+    status.className = result.failures ? "pill warning" : "pill success";
+    host.innerHTML = `
+      <div class="seo-audit-summary">
+        <div class="seo-audit-score"><span>Queries</span><strong>${result.queries}</strong></div>
+        <div><span>Provider runs</span><strong>${result.providerRuns}</strong></div>
+        <div><span>Observations</span><strong>${result.observations}</strong></div>
+        <div><span>Failures</span><strong>${result.failures}</strong></div>
+      </div>
+      <div class="seo-audit-list"><div><span>Measurement sources</span><strong>Google / Bing / AI Web Search</strong></div></div>`;
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "Visibility measurement ناموفق بود.")}</p></div>`;
   }
 }
 
@@ -2318,6 +2350,7 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-load-fulfillment]")?.addEventListener("click", () => { void loadFulfillment(); });
   document.querySelector<HTMLButtonElement>("[data-seo-audit]")?.addEventListener("click", () => { void runSeoAudit(); });
   document.querySelector<HTMLButtonElement>("[data-seo-crawl]")?.addEventListener("click", () => { void runSeoProductionCrawl(); });
+  document.querySelector<HTMLButtonElement>("[data-seo-visibility]")?.addEventListener("click", () => { void runSeoVisibilityMeasurement(); });
   document.querySelector<HTMLButtonElement>("[data-seo-health]")?.addEventListener("click", () => { void loadSeoHealth(); });
   document.querySelector<HTMLElement>("[data-control-connect]")?.addEventListener("click", openConnectionPanel);
   document.querySelector<HTMLButtonElement>("[data-approval-create]")?.addEventListener("click", () => { void createApprovalRequest(); });
