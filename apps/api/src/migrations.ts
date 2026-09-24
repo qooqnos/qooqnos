@@ -80,6 +80,7 @@ import advertisingCore from "../../../migrations/0082_advertising_core.sql";
 import authorizationApproval from "../../../migrations/0083_authorization_approval_workflow.sql";
 import seoPublicRenderIndex from "../../../migrations/0084_seo_public_render_index.sql";
 import seoAuditQualityGate from "../../../migrations/0085_seo_audit_quality_gate.sql";
+import seoVisibilityMeasurements from "../../../migrations/0086_seo_visibility_measurements.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -165,4 +166,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0083_authorization_approval_workflow.sql", sql: authorizationApproval },
   { path: "migrations/0084_seo_public_render_index.sql", sql: seoPublicRenderIndex },
   { path: "migrations/0085_seo_audit_quality_gate.sql", sql: seoAuditQualityGate },
+  { path: "migrations/0086_seo_visibility_measurements.sql", sql: seoVisibilityMeasurements },
   ];
