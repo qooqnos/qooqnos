@@ -35,14 +35,23 @@ export async function processAnalyticsAggregates(env: ApiEnv, now: string): Prom
   const current = new Date(now);
   const start = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate()));
   const previous = new Date(start.getTime() - 24 * 60 * 60 * 1000);
-  const updated = await repository.rebuildEventCountWindow({
+  const next = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+  const previousResult = await repository.rebuildEventCountWindow({
     metricKey: "event_count",
     metricVersion: 1,
     bucketStart: previous.toISOString(),
-    bucketEnd: new Date(start.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    bucketEnd: start.toISOString(),
+    bucketGranularity: "day",
+    now,
+  });
+  const currentResult = await repository.rebuildEventCountWindow({
+    metricKey: "event_count",
+    metricVersion: 1,
+    bucketStart: start.toISOString(),
+    bucketEnd: next.toISOString(),
     bucketGranularity: "day",
     now,
   });
 
-  return { updated };
+  return { updated: previousResult + currentResult };
 }
