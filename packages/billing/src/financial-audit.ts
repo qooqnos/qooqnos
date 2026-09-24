@@ -12,7 +12,6 @@ export interface FinancialAuditEventRecord {
   readonly eventType: string;
   readonly entityType: string;
   readonly entityId: EntityId;
-  readonly businessId?: EntityId | undefined;
   readonly outcome: FinancialAuditOutcome;
   readonly amountMinor: number | null;
   readonly currency: string | null;
