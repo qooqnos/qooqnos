@@ -34,6 +34,7 @@ export class AutomationExecutor {
 
     for (let actionIndex = 0; actionIndex < actions.length; actionIndex += 1) {
       const action = actions[actionIndex];
+      if (!action) continue;
       const existing = await this.options.repository.getStepExecution(
         context,
         executionId,
@@ -188,6 +189,7 @@ export class AutomationExecutor {
   ): Promise<void> {
     for (let index = failedIndex - 1; index >= 0; index -= 1) {
       const action = actions[index];
+      if (!action) continue;
       const step = await this.options.repository.getStepExecution(context, executionId, action.id);
       if (!step || step.status !== "completed") continue;
 
@@ -231,7 +233,7 @@ export class AutomationExecutor {
           executionId,
           failedActionId: action.id,
           failedStepExecutionId: failedStepExecutionId ?? step.id,
-          failedAttemptId,
+          ...(failedAttemptId ? { failedAttemptId } : {}),
           compensationCapability: policy.capability,
           inputReference: step.outputReference ?? step.id,
           idempotencyKey,
