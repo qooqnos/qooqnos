@@ -94,6 +94,7 @@ export function buildAnswerRepresentation(
   entity: SeoEntity,
   facts: readonly AnswerFact[],
   now: string,
+  canonicalUrl?: string,
 ): AnswerRepresentation {
   const suppliedFacts = uniqueFacts(facts.filter((fact) => fact.sourceEntityId === entity.id));
   const canonicalSummary = clean(entity.summary) || clean(entity.description);
