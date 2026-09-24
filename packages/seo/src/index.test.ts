@@ -186,8 +186,10 @@ describe("SEO/GEO core", () => {
   });
 
   it("audits crawl/indexability consistency and canonical identity", () => {
+    const draftEntity = { ...entity, publicationState: "draft" as const };
+    delete (draftEntity as { canonicalId?: string }).canonicalId;
     const result = auditEntity(
-      { ...entity, canonicalId: undefined, publicationState: "draft" },
+      draftEntity,
       "",
       "index",
       "2026-09-24T00:00:00Z",
@@ -203,6 +205,7 @@ describe("SEO/GEO core", () => {
     const result = auditEntity(
       { ...entity, relatedEntityIds: [] },
       "https://example.com",
+      "index",
       "2026-09-24T00:00:00Z",
     );
     expect(result.issues.some((item) => item.code === "NO_RELATIONSHIPS")).toBe(true);
