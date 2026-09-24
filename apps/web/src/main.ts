@@ -1053,6 +1053,7 @@ async function loadSeoCompetitiveIntelligence(): Promise<void> {
         changes: { queryText: string; changeType: string; previousRank?: number | null; currentRank?: number | null; currentUrl?: string | null }[];
         opportunities: { queryText: string; competitorBestRank?: number | null; competitorDomains: number }[];
         pageSnapshots: { domain?: string | null; resultUrl: string; title?: string | null; h1Count?: number | null; wordCount?: number | null; internalLinksCount?: number | null; titleLength?: number | null; descriptionLength?: number | null }[];
+        keywordGaps: { competitorDomain: string; keyword: string; searchVolume?: number | null; competitorRank?: number | null; gapType: string; }[];
       };
     }>(`/api/v1/seo/competitive/${encodeURIComponent(entityId)}`);
     const value = response.competitive;
@@ -1060,6 +1061,7 @@ async function loadSeoCompetitiveIntelligence(): Promise<void> {
     const changes = value.changes.slice(0, 8);
     const opportunities = value.opportunities.slice(0, 8);
     const pageSnapshots = value.pageSnapshots.slice(0, 8);
+    const keywordGaps = value.keywordGaps.slice(0, 8);
     host.innerHTML = `
       <div class="seo-audit-summary">
         <div class="seo-audit-score"><span>Competitors</span><strong>${value.competitors.length}</strong></div>
@@ -1071,6 +1073,7 @@ async function loadSeoCompetitiveIntelligence(): Promise<void> {
       ${changes.length ? `<div class="seo-audit-issues">${changes.map((item) => `<article><div><strong>${escapeHtml(item.changeType)}</strong><span class="pill warning">${escapeHtml(item.queryText)}</span></div><p>${escapeHtml(String(item.previousRank ?? "—"))} → ${escapeHtml(String(item.currentRank ?? "—"))}</p><small>${escapeHtml(item.currentUrl ?? "")}</small></article>`).join("")}</div>` : ""}
       ${opportunities.length ? `<div class="seo-audit-issues">${opportunities.map((item) => `<article><div><strong>Query gap</strong><span class="pill danger">${escapeHtml(item.queryText)}</span></div><p>${escapeHtml(String(item.competitorDomains))} competitor domains observed; best observed rank #${escapeHtml(String(item.competitorBestRank ?? "—"))}.</p></article>`).join("")}</div>` : ""}
       ${pageSnapshots.length ? `<div class="seo-audit-issues">${pageSnapshots.map((item) => `<article><div><strong>${escapeHtml(item.domain ?? "competitor page")}</strong><span class="pill success">page</span></div><p>${escapeHtml(item.title ?? item.resultUrl)}</p><small>H1: ${escapeHtml(String(item.h1Count ?? "—"))} · words: ${escapeHtml(String(item.wordCount ?? "—"))} · internal links: ${escapeHtml(String(item.internalLinksCount ?? "—"))} · title: ${escapeHtml(String(item.titleLength ?? "—"))}</small></article>`).join("")}</div>` : ""}
+      ${keywordGaps.length ? `<div class="seo-audit-issues">${keywordGaps.map((item) => `<article><div><strong>Keyword Gap</strong><span class="pill danger">${escapeHtml(item.competitorDomain)}</span></div><p>${escapeHtml(item.keyword)}</p><small>Search volume: ${escapeHtml(String(item.searchVolume ?? "—"))} · competitor rank: ${escapeHtml(String(item.competitorRank ?? "—"))} · ${escapeHtml(item.gapType)}</small></article>`).join("")}</div>` : ""}
     `;
     status.textContent = "CI آماده";
     status.className = "pill success";
