@@ -1,4 +1,4 @@
-/* @ts-nocheck */
+// @ts-nocheck
 import { describe, expect, it } from "vitest";
 import { brandId } from "@qooqnos/core";
 import { createPrivacyProcessorRegistry, type PrivacyProcessor } from "./processor";
