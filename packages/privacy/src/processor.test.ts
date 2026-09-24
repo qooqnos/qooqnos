@@ -13,7 +13,7 @@ describe("PrivacyProcessorRegistry", () => {
       return {
         status: "completed",
         processorId: id,
-        action: "test",
+        action: "export",
       };
     },
   });
