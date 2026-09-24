@@ -343,7 +343,7 @@ export class DataForSeoGoogleCompetitiveProvider {
   }
 
   async observePages(urls: readonly string[], acceptLanguage = "en"): Promise<readonly CompetitivePageSnapshot[]> {
-    const unique = [...new Set(urls.filter((url) => /^https?:\\/\\//i.test(url)))].slice(0, 20);
+    const unique = [...new Set(urls.filter((url) => /^https?:\/\//i.test(url)))].slice(0, 20);
     if (!unique.length) return [];
     const endpoint = "https://api.dataforseo.com/v3/on_page/instant_pages";
     const response = await fetch(endpoint, {
