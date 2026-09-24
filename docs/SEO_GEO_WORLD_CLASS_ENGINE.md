@@ -611,3 +611,16 @@ Implementation must preserve these boundaries and must not create a parallel SEO
 - sanitized SPA hydration;
 - deterministic removal of entity SEO state during client-side navigation;
 - canonical-URL lookup indexing for low-latency rendering.
+
+### 36. Public Entity Page Architecture implementation
+
+**Implemented.** Entity pages now combine:
+- canonical URL/IA;
+- breadcrumb navigation;
+- entity-specific Schema.org properties;
+- Answer Representation and verified facts;
+- geographic truth;
+- commerce facts where present;
+- semantic related-entity links;
+- contextual action surfaces;
+- initial-HTML rendering and SPA hydration from the same persisted SEO representation.
