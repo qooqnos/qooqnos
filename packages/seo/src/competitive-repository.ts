@@ -236,6 +236,7 @@ export class SeoCompetitiveRepository extends Repository {
     competitors: readonly Record<string, unknown>[];
     changes: readonly Record<string, unknown>[];
     opportunities: readonly Record<string, unknown>[];
+    pageSnapshots: readonly Record<string, unknown>[];
   }> {
     const scope = this.scope(context);
     const pageSnapshots = await this.database.all(
