@@ -58,7 +58,14 @@ export function buildSeoProjectionPlan(input: SeoProjectionInput): SeoProjection
     : [];
   const page = buildEntityPageModel(input.entity, metadata, answer, internalLinks, input.canonicalBaseUrl);
   const geoSignal = buildGeoTruthSignal(input.entity);
-  const audit = auditEntity(input.entity, canonicalUrl, policy.indexability, input.now);
+  const audit = auditEntity(input.entity, canonicalUrl, policy.indexability, input.now, {
+    metadata,
+    structuredData,
+    answer,
+    page,
+    policy,
+    now: input.now,
+  });
   const dependencyFingerprint = input.graph ? graphVersionFingerprint(input.graph) : "";
 
   return {
