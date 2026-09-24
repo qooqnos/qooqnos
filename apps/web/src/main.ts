@@ -41,6 +41,68 @@ type ApiOptions = {
 let activeDiscoveryItems: DiscoveryResult[] = [];
 let studioPreviewUrl: string | undefined;
 
+type PublicSeoHydration = {
+  metadata: {
+    title: string;
+    description: string;
+    canonicalUrl: string;
+    robots: string;
+    openGraph: { title: string; description: string; url: string; type: string; locale: string; siteName?: string; image?: string };
+    twitter: { card: "summary" | "summary_large_image"; title: string; description: string; image?: string };
+    alternates: readonly { rel: "alternate"; hreflang: string; href: string }[];
+    language: string;
+    locale: string;
+  };
+  structuredData: Record<string, unknown>;
+  answer: {
+    entityId: string;
+    locale: string;
+    question: string;
+    answer: string;
+    canonicalUrl?: string;
+    facts: readonly { fact: string; verifiedAt?: string; provenanceUrl?: string; validUntil?: string }[];
+    freshnessAt: string;
+    sourceUpdatedAt: string;
+    confidence: string;
+    citationReady: boolean;
+    geography?: {
+      scope: string;
+      country?: string;
+      locationId?: string;
+      serviceAreaIds: readonly string[];
+      remoteAvailable: boolean;
+    };
+    limitations: readonly string[];
+  };
+  entity: {
+    id: string;
+    type: string;
+    preferredName: string;
+    summary?: string;
+    description?: string;
+    locale: string;
+    country?: string;
+    geoScope?: string;
+    locationId?: string;
+    serviceArea?: readonly string[];
+    imageUrl?: string;
+    updatedAt: string;
+  };
+};
+
+function readInitialSeoHydration(): PublicSeoHydration | null {
+  const script = document.getElementById("phoenix-seo-data");
+  if (!script?.textContent?.trim()) return null;
+  try {
+    return JSON.parse(script.textContent) as PublicSeoHydration;
+  } catch {
+    return null;
+  }
+}
+
+const initialSeoHydration = readInitialSeoHydration();
+
+
 const demoBusinesses: DiscoveryResult[] = [
   {
     id: "demo-1",
@@ -141,7 +203,14 @@ function syncThemeButtons(): void {
 
 function currentRoute(): Route {
   const normalized = normalizePath(location.pathname);
-  return routes.find((route) => route.path === normalized) ?? routes[0]!;
+  const staticRoute = routes.find((route) => route.path === normalized);
+  if (staticRoute || !initialSeoHydration) return staticRoute ?? routes[0]!;
+  return {
+    path: normalized,
+    label: "صفحه عمومی",
+    icon: "◇",
+    render: () => renderSeoEntity(initialSeoHydration!),
+  };
 }
 
 function normalizePath(path: string): string {
@@ -183,6 +252,108 @@ function render(): void {
   if (route.path === "/trust") void loadTrustSignals();
   if (route.path === "/operations") void loadCases();
   if (route.path === "/seo") void loadSeoHealth();
+}
+
+
+function renderSeoEntity(payload: PublicSeoHydration): string {
+  const entity = payload.entity;
+  const answer = payload.answer;
+  const facts = answer.facts.map((fact) => \`
+    <li class="seo-fact-row">
+      <span>\${escapeHtml(fact.fact)}</span>
+      \${fact.verifiedAt ? \`<small>تأیید: \${escapeHtml(fact.verifiedAt)}</small>\` : ""}
+    </li>\`).join("");
+  const geo = answer.geography
+    ? [
+        answer.geography.country ? \`<span>کشور: \${escapeHtml(answer.geography.country)}</span>\` : "",
+        answer.geography.locationId ? \`<span>مکان: \${escapeHtml(answer.geography.locationId)}</span>\` : "",
+        ...answer.geography.serviceAreaIds.map((value) => \`<span>حوزه خدمت: \${escapeHtml(value)}</span>\`),
+      ].filter(Boolean).join("")
+    : "";
+
+  applyHydratedSeoHead(payload);
+
+  return \`
+    <section class="page-heading seo-public-heading">
+      <div>
+        <span class="eyebrow"><i></i> \${escapeHtml(entity.type)}</span>
+        <h1>\${escapeHtml(entity.preferredName)}</h1>
+        <p>\${escapeHtml(entity.summary ?? entity.description ?? answer.answer)}</p>
+      </div>
+      <div class="heading-actions">
+        <a class="button button-primary" href="/discover" data-nav>کشف در ققنوس ←</a>
+      </div>
+    </section>
+    <section class="section-block seo-public-grid">
+      <article class="glass-card seo-public-card">
+        <span class="section-kicker">Answer</span>
+        <h2>\${escapeHtml(answer.question)}</h2>
+        <p class="seo-public-answer">\${escapeHtml(answer.answer)}</p>
+        <div class="seo-public-meta">
+          <span>وضعیت: \${escapeHtml(answer.confidence)}</span>
+          <span>به‌روزرسانی: \${escapeHtml(answer.freshnessAt)}</span>
+          <span>\${answer.citationReady ? "Citation-ready" : "نیازمند بررسی"}</span>
+        </div>
+      </article>
+      <article class="glass-card seo-public-card">
+        <span class="section-kicker">Verified facts</span>
+        <h2>اطلاعات قابل استناد</h2>
+        \${facts ? \`<ul class="seo-fact-list">\${facts}</ul>\` : \`<p class="seo-public-muted">برای این موجودیت هنوز fact مستقلی ثبت نشده است.</p>\`}
+        \${geo ? \`<div class="metadata-cloud">\${geo}</div>\` : ""}
+      </article>
+    </section>\`;
+}
+
+function applyHydratedSeoHead(payload: PublicSeoHydration): void {
+  const { metadata } = payload;
+  document.title = metadata.title;
+  document.documentElement.lang = metadata.locale;
+  document.documentElement.dir = ["fa", "ar", "he", "ur"].includes(metadata.language) ? "rtl" : "ltr";
+
+  setMeta("description", metadata.description);
+  setMeta("robots", metadata.robots);
+  setLink("canonical", metadata.canonicalUrl);
+  setMetaProperty("og:title", metadata.openGraph.title);
+  setMetaProperty("og:description", metadata.openGraph.description);
+  setMetaProperty("og:type", metadata.openGraph.type);
+  setMetaProperty("og:url", metadata.openGraph.url);
+  setMetaProperty("og:locale", metadata.openGraph.locale);
+  if (metadata.openGraph.siteName) setMetaProperty("og:site_name", metadata.openGraph.siteName);
+  if (metadata.openGraph.image) setMetaProperty("og:image", metadata.openGraph.image);
+  setMeta("twitter:card", metadata.twitter.card);
+  setMeta("twitter:title", metadata.twitter.title);
+  setMeta("twitter:description", metadata.twitter.description);
+  if (metadata.twitter.image) setMeta("twitter:image", metadata.twitter.image);
+}
+
+function setMeta(name: string, content: string): void {
+  let tag = document.head.querySelector<HTMLMetaElement>(\`meta[name="\${CSS.escape(name)}"]\`);
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.name = name;
+    document.head.appendChild(tag);
+  }
+  tag.content = content;
+}
+
+function setMetaProperty(property: string, content: string): void {
+  let tag = document.head.querySelector<HTMLMetaElement>(\`meta[property="\${CSS.escape(property)}"]\`);
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute("property", property);
+    document.head.appendChild(tag);
+  }
+  tag.content = content;
+}
+
+function setLink(rel: string, href: string): void {
+  let tag = document.head.querySelector<HTMLLinkElement>(\`link[rel="\${CSS.escape(rel)}"]\`);
+  if (!tag) {
+    tag = document.createElement("link");
+    tag.rel = rel;
+    document.head.appendChild(tag);
+  }
+  tag.href = href;
 }
 
 function renderHeader(route: Route): string {
