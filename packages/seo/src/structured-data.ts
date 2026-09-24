@@ -100,7 +100,8 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
       if (canonicalUrl) offer.url = canonicalUrl;
       if (entity.price !== undefined && Number.isFinite(entity.price)) offer.price = entity.price;
       if (entity.currency) offer.priceCurrency = clean(entity.currency);
-      if (entity.availability) offer.availability = normalizeAvailability(entity.availability);
+      const availability = normalizeAvailability(entity.availability);
+      if (availability) offer.availability = availability;
       x.offers = offer;
     }
   }
@@ -108,7 +109,8 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
   if (entity.type === "Offer") {
     if (entity.price !== undefined && Number.isFinite(entity.price)) x.price = entity.price;
     if (entity.currency) x.priceCurrency = clean(entity.currency);
-    if (entity.availability) x.availability = normalizeAvailability(entity.availability);
+    const availability = normalizeAvailability(entity.availability);
+    if (availability) x.availability = availability;
     if (canonicalUrl) x.url = canonicalUrl;
   }
 
@@ -156,10 +158,11 @@ function limit(value: string, max: number): string {
   return value.length > max ? value.slice(0, max).trimEnd() : value;
 }
 
-function normalizeAvailability(value: string): string {
-  const normalized = value.trim();
+function normalizeAvailability(value: string | undefined): string | undefined {
+  const normalized = clean(value);
+  if (!normalized) return undefined;
   if (/^https?:\/\//.test(normalized)) return normalized;
-  const slug = normalized.toLowerCase().replace(/\s+/g, "");
+  const slug = normalized.toLowerCase().replace(/[^a-z]/g, "");
   const map: Record<string, string> = {
     instock: "https://schema.org/InStock",
     outofstock: "https://schema.org/OutOfStock",
@@ -168,5 +171,5 @@ function normalizeAvailability(value: string): string {
     onlineonly: "https://schema.org/OnlineOnly",
     limitedavailability: "https://schema.org/LimitedAvailability",
   };
-  return map[slug] ?? "https://schema.org/" + normalized.replace(/[^A-Za-z]/g, "");
+  return map[slug];
 }
