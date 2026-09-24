@@ -18,6 +18,7 @@ import { generateStructuredData } from "./structured-data";
 import { buildBreadcrumbs, buildEntityPageModel } from "./entity-page";
 
 export interface SeoProjectionPlan {
+  readonly entity: SeoEntity;
   readonly entityId: string;
   readonly entityType: string;
   readonly sourceModule: string;
@@ -69,6 +70,7 @@ export function buildSeoProjectionPlan(input: SeoProjectionInput): SeoProjection
   const dependencyFingerprint = input.graph ? graphVersionFingerprint(input.graph) : "";
 
   return {
+    entity: input.entity,
     entityId: input.entity.id,
     entityType: input.entity.type,
     sourceModule: input.entity.sourceModule,
