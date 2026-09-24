@@ -1255,3 +1255,17 @@ Structured Data is now a canonical, truth-bound publication contract:
 - the validator recognizes every generated Schema.org type;
 - publication now blocks on structured-data validation errors before persisting the SEO bundle;
 - projection metadata and audit generation now consume the same canonical SEO policy, eliminating policy drift.
+
+### Frontend PWA / Performance Shell — 2026-09-25
+
+Frontend performance shell was hardened with a lightweight PWA boundary.
+
+Implemented:
+- `apps/web/public/manifest.webmanifest`;
+- static-asset service worker at `/sw.js`;
+- cache-first treatment for static assets;
+- navigation fallback to cached application shell;
+- API/health/readiness/sitemap/robots requests intentionally bypass service-worker caching;
+- service worker registration is initiated after page load.
+
+No application state or authenticated API responses are cached.
