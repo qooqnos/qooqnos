@@ -123,10 +123,8 @@ export function evaluateQueryCoverage(
   const unique = [...new Set(geoMatched.map((entity) => entity.id))];
   return {
     query,
-    state: unique.length > 1 ? "fully-covered" : "partially-covered",
+    state: "fully-covered",
     supportingEntityIds: unique,
-    reason: unique.length > 1
-      ? "Multiple canonical public entities provide direct coverage."
-      : "A canonical public entity provides direct coverage.",
+    reason: "At least one canonical public entity provides direct coverage for the requested locale and geographic scope.",
   };
 }
