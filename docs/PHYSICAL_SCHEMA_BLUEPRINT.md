@@ -739,7 +739,7 @@ Counters are enforcement state for concurrency-safe hard quotas; usage events re
 
 Financial audit events are append-only, tenant-scoped evidence. UPDATE/DELETE are database-blocked, idempotency is scoped to the organization, and monetary values use integer minor units. The event hash provides independent integrity verification; the table is not the accounting ledger.
 
-Billing owns commercial entitlement and usage authority. Payment execution, invoices and financial ledger remain gated until their provider/legal contracts are explicit.
+Billing owns commercial entitlement and usage authority. Refund execution and double-entry accounting now have a canonical provider-neutral financial boundary. External payment-provider execution remains behind the provider adapter/reconciliation gate; provider-specific credentials and adapters are not stored in Billing.
 
 ### Media
 
