@@ -30,3 +30,5 @@ export * from "./entity-page";
 export * from "./crawler";
 export * from "./measurement";
 export * from "./measurement-providers";
+export * from "./competitive-provider";
+export * from "./competitive-repository";
