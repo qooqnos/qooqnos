@@ -45,8 +45,30 @@ const EVENT_REASON: Readonly<Record<string, SeoPublicationReason>> = {
 function payloadEntity(payloadJson: string): SeoEntity | null {
   const payload: unknown = JSON.parse(payloadJson);
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
-  const value = (payload as Record<string, unknown>).seoEntity ?? (payload as Record<string, unknown>).entity;
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const payloadObject = payload as Record<string, unknown>;
+  const value = payloadObject.seoEntity ?? payloadObject.entity;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    if (payloadObject.businessId && typeof payloadObject.name === "string") {
+      return {
+        id: String(payloadObject.businessId), type: "Business", sourceModule: "business", sourceVersion: "1",
+        publicationState: payloadObject.publicationStatus === "published" ? "published" : "unpublished",
+        visibility: "public", preferredName: String(payloadObject.displayName ?? payloadObject.name),
+        summary: String(payloadObject.name), locale: typeof payloadObject.locale === "string" ? payloadObject.locale : "en",
+        updatedAt: typeof payloadObject.updatedAt === "string" ? payloadObject.updatedAt : new Date().toISOString(),
+      } as SeoEntity;
+    }
+    if (payloadObject.productId && typeof payloadObject.name === "string") {
+      return {
+        id: String(payloadObject.productId), type: "Product", sourceModule: "catalog", sourceVersion: "1",
+        publicationState: "published", visibility: "public", preferredName: String(payloadObject.name),
+        description: typeof payloadObject.description === "string" ? payloadObject.description : undefined,
+        locale: typeof payloadObject.locale === "string" ? payloadObject.locale : "en",
+        relatedEntityIds: typeof payloadObject.businessId === "string" ? [String(payloadObject.businessId)] : [],
+        updatedAt: typeof payloadObject.updatedAt === "string" ? payloadObject.updatedAt : new Date().toISOString(),
+      } as SeoEntity;
+    }
+    return null;
+  }
   const e = value as Record<string, unknown>;
   if (typeof e.id !== "string" || typeof e.type !== "string" || typeof e.sourceModule !== "string" || typeof e.sourceVersion !== "string"
     || typeof e.publicationState !== "string" || typeof e.visibility !== "string" || typeof e.preferredName !== "string"
@@ -85,6 +107,7 @@ export async function processSeoPublicationJobs(
   database: D1Database,
   now: string,
   limit = 25,
+  canonicalBaseUrl = "https://qooqnos.com",
 ): Promise<{ processed: number; succeeded: number; failed: number }> {
   const jobs = await database.all<SeoPublicationJob>(
     `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
@@ -124,7 +147,7 @@ export async function processSeoPublicationJobs(
         requestId: job.id,
         correlationId: job.id,
       } as RequestContext;
-      const plan = buildSeoProjectionPlan({ entity: payload, canonicalBaseUrl: "https://qooqnos.com", now });
+      const plan = buildSeoProjectionPlan({ entity: payload, canonicalBaseUrl, now });
       const representation = await repository.saveRepresentation(context, {
         id: `seo-representation:${payload.id}:${payload.locale}`,
         plan,
