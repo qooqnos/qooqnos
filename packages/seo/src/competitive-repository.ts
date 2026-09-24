@@ -271,17 +271,35 @@ export class SeoCompetitiveRepository extends Repository {
          LEFT JOIN seo_competitive_observations o
            ON o.competitor_id=c.id AND o.organization_id=c.organization_id AND o.workspace_id IS c.workspace_id
         WHERE c.organization_id=? AND c.workspace_id IS ? AND c.lifecycle_state='active'
+          AND EXISTS (
+            SELECT 1
+              FROM seo_competitive_observations scoped_observation
+              JOIN seo_queries scoped_query
+                ON scoped_query.organization_id=scoped_observation.organization_id
+               AND scoped_query.workspace_id IS scoped_observation.workspace_id
+               AND scoped_query.query_text=scoped_observation.query_text
+             WHERE scoped_observation.competitor_id=c.id
+               AND scoped_query.organization_id=? AND scoped_query.workspace_id IS ? AND scoped_query.entity_id=?
+          )
         GROUP BY c.id
         ORDER BY observations DESC, bestObservedRank ASC LIMIT 50`,
-      scope.organizationId, scope.workspaceId,
+      scope.organizationId, scope.workspaceId, scope.organizationId, scope.workspaceId, entityId,
     );
     const changes = await this.database.all(
       `SELECT query_text AS queryText, change_type AS changeType, previous_rank AS previousRank, current_rank AS currentRank,
               previous_url AS previousUrl, current_url AS currentUrl, detected_at AS detectedAt
-         FROM seo_competitive_changes
-        WHERE organization_id=? AND workspace_id IS ?
-        ORDER BY detected_at DESC LIMIT 100`,
-      scope.organizationId, scope.workspaceId,
+         FROM seo_competitive_changes c
+        WHERE c.organization_id=? AND c.workspace_id IS ?
+          AND EXISTS (
+            SELECT 1
+              FROM seo_queries q
+             WHERE q.organization_id=c.organization_id
+               AND q.workspace_id IS c.workspace_id
+               AND q.entity_id=?
+               AND q.query_text=c.query_text
+          )
+        ORDER BY c.detected_at DESC LIMIT 100`,
+      scope.organizationId, scope.workspaceId, entityId,
     );
     const opportunities = await this.database.all(
       `SELECT o.query_text AS queryText,
