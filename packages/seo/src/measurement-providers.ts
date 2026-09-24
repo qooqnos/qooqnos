@@ -20,7 +20,9 @@ export interface SeoMeasurementProvider {
 
 export interface GoogleSearchConsoleConfig {
   readonly siteUrl: string;
-  readonly accessToken: string;
+  readonly accessToken?: string;
+  readonly serviceAccountEmail?: string;
+  readonly serviceAccountPrivateKey?: string;
   readonly lookbackDays?: number;
   readonly endLagDays?: number;
 }
@@ -38,11 +40,12 @@ export class GoogleSearchConsoleProvider implements SeoMeasurementProvider {
       { dimension: "query", operator: "equals", expression: query.queryText },
     ];
     if (query.canonicalUrl) filters.push({ dimension: "page", operator: "equals", expression: query.canonicalUrl });
+    const accessToken = await googleAccessToken(this.config);
     const response = await fetch(
       "https://www.googleapis.com/webmasters/v3/sites/" + encodeURIComponent(this.config.siteUrl) + "/searchAnalytics/query",
       {
         method: "POST",
-        headers: { "content-type": "application/json", authorization: "Bearer " + this.config.accessToken },
+        headers: { "content-type": "application/json", authorization: "Bearer " + accessToken },
         body: JSON.stringify({
           startDate: start,
           endDate: end,
@@ -208,4 +211,64 @@ function finiteNumber(value: unknown): number | undefined {
 function utcDateOffset(days: number): string {
   const date = new Date(Date.now() + days * 86400000);
   return date.toISOString().slice(0, 10);
+}
+
+let googleTokenCache: { token: string; expiresAt: number } | null = null;
+
+async function googleAccessToken(config: GoogleSearchConsoleConfig): Promise<string> {
+  if (config.accessToken?.trim()) return config.accessToken.trim();
+  if (!config.serviceAccountEmail?.trim() || !config.serviceAccountPrivateKey?.trim()) {
+    throw new Error("Google Search Console credentials are not configured.");
+  }
+  const now = Math.floor(Date.now() / 1000);
+  if (googleTokenCache && googleTokenCache.expiresAt - 60 > now) return googleTokenCache.token;
+  const header = base64UrlJson({ alg: "RS256", typ: "JWT" });
+  const payload = base64UrlJson({
+    iss: config.serviceAccountEmail,
+    scope: "https://www.googleapis.com/auth/webmasters.readonly",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600,
+  });
+  const signingInput = header + "." + payload;
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    pemToDer(config.serviceAccountPrivateKey),
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(signingInput));
+  const assertion = signingInput + "." + bytesToBase64Url(new Uint8Array(signature));
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+  if (!response.ok) throw new Error("Google OAuth token exchange returned HTTP " + response.status);
+  const body = await response.json() as { access_token?: string; expires_in?: number };
+  if (!body.access_token) throw new Error("Google OAuth token exchange returned no access token.");
+  googleTokenCache = { token: body.access_token, expiresAt: now + Math.max(300, body.expires_in ?? 3600) };
+  return body.access_token;
+}
+
+function base64UrlJson(value: Record<string, unknown>): string {
+  return bytesToBase64Url(new TextEncoder().encode(JSON.stringify(value)));
+}
+
+function bytesToBase64Url(value: Uint8Array): string {
+  let binary = "";
+  for (const byte of value) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/g, "");
+}
+
+function pemToDer(value: string): ArrayBuffer {
+  const base64 = value.replace(/-----BEGIN PRIVATE KEY-----/g, "").replace(/-----END PRIVATE KEY-----/g, "").replace(/\\s+/g, "");
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return bytes.buffer;
 }
