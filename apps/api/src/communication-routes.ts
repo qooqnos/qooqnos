@@ -309,7 +309,7 @@ function requiredObject(value: unknown, field: string, requestId: EntityId): Rea
 }
 
 function requiredChannel(value: unknown, requestId: EntityId): CommunicationChannel {
-  if (value === "in_app" || value === "whatsapp" || value === "sms" || value === "email") return value;
+  if (value === "in_app" || value === "whatsapp" || value === "sms" || value === "email" || value === "push") return value;
   throw new AppError({ code: "VALIDATION_ERROR", message: "channel is invalid.", requestId });
 }
 
