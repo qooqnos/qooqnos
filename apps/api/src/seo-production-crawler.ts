@@ -12,7 +12,11 @@ export async function crawlStoredSeoRepresentation(
   representation: { organizationId: string; workspaceId: string | null; entityId: string; canonicalUrl: string; representationJson: string },
   now: string,
   fetcher: typeof fetch = fetch,
+  canonicalBaseUrl = "https://qooqnos.com",
 ): Promise<SeoCrawlerResult> {
+  const requestedOrigin = new URL(representation.canonicalUrl).origin;
+  const allowedOrigin = new URL(canonicalBaseUrl).origin;
+  if (requestedOrigin !== allowedOrigin) throw new Error(`SEO crawler refused non-canonical origin: ${requestedOrigin}`);
   const parsed = JSON.parse(representation.representationJson) as { entity?: SeoEntity; metadata?: SeoMetadata; structuredData?: StructuredData; answer?: AnswerRepresentation; page?: EntityPageModel };
   if (!parsed.entity || !parsed.metadata || !parsed.structuredData || !parsed.answer || !parsed.page) throw new Error('Stored SEO representation is incomplete for production crawling.');
   const result = await crawlProductionSeoPage({ canonicalUrl: representation.canonicalUrl, metadata: parsed.metadata, structuredData: parsed.structuredData, answer: parsed.answer, page: parsed.page, entity: parsed.entity }, fetcher);
@@ -51,7 +55,7 @@ export async function crawlStoredSeoRepresentation(
   return result;
 }
 
-export async function runProductionSeoCrawler(database: D1Database, limit: number, now: string, fetcher: typeof fetch = fetch): Promise<ProductionCrawlerRunResult> {
+export async function runProductionSeoCrawler(database: D1Database, canonicalBaseUrl: string, limit: number, now: string, fetcher: typeof fetch = fetch): Promise<ProductionCrawlerRunResult> {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
   const rows = await database.all<StoredCrawlerRow>(
     `SELECT organization_id AS organizationId, workspace_id AS workspaceId, entity_id AS entityId, canonical_url AS canonicalUrl, representation_json AS representationJson
@@ -65,7 +69,7 @@ export async function runProductionSeoCrawler(database: D1Database, limit: numbe
     const url = new URL(row.canonicalUrl);
     if (url.protocol !== 'https:') continue;
     try {
-      const result = await crawlStoredSeoRepresentation(database, row, now, fetcher);
+      const result = await crawlStoredSeoRepresentation(database, row, now, fetcher, canonicalBaseUrl);
       if (result.errors.length === 0) passed += 1; else failed += 1;
       warnings += result.warnings.length;
     } catch { failed += 1; }
