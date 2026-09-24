@@ -69,6 +69,7 @@ describe("payment provider adapters", () => {
       createPath: "/payments",
       capturePath: "/payments/capture",
       refundPath: "/refunds",
+      payoutPath: "/payouts",
       webhookSecret: "webhook-secret",
       fetchImpl: async () => new Response("{}", { status: 200 }),
     });
