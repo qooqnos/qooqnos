@@ -35,6 +35,19 @@ export interface BusinessLocationRecord {
   readonly updatedAt: string;
 }
 
+export interface BusinessHoursRecord {
+  readonly id: EntityId;
+  readonly businessId: EntityId;
+  readonly locationId: EntityId | null;
+  readonly dayOfWeek: number;
+  readonly opens: string;
+  readonly closes: string;
+  readonly timezone: string | null;
+  readonly status: "active" | "inactive" | "archived";
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export interface BusinessStatusHistoryRecord {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -90,6 +103,25 @@ export class BusinessRepository extends Repository {
        LIMIT 1`,
       id, organizationId, workspaceId,
     );
+  }
+
+  async listHours(context: RequestContext, businessId: EntityId, locationId?: EntityId): Promise<readonly BusinessHoursRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const rows = await this.database.all<BusinessHoursRecord>(
+      `SELECT h.id, h.business_id AS businessId, h.location_id AS locationId,
+              h.day_of_week AS dayOfWeek, h.opens, h.closes, h.timezone,
+              h.status, h.created_at AS createdAt, h.updated_at AS updatedAt
+       FROM business_hours h
+       INNER JOIN businesses b ON b.id = h.business_id
+       LEFT JOIN locations l ON l.id = h.location_id
+       WHERE h.business_id = ? AND b.organization_id = ? AND b.workspace_id = ?
+         AND h.status = 'active'
+         AND (? IS NULL OR h.location_id = ?)
+       ORDER BY h.day_of_week ASC, h.opens ASC, h.id ASC`,
+      businessId, organizationId, workspaceId, locationId ?? null, locationId ?? null,
+    );
+    return rows;
   }
 
   async listLocations(context: RequestContext, businessId: EntityId): Promise<readonly BusinessLocationRecord[]> {
