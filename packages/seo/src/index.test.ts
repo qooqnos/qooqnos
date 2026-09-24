@@ -5,15 +5,17 @@ import {
   buildEntityGraph,
   buildGeoTruthSignal,
   buildRobotsTxt,
-  buildSitemapXml,
   buildSearchQuery,
+  buildSitemapXml,
   canonicalEntityUrl,
+  evaluateAgenticReadiness,
   evaluateFreshness,
   evaluateQueryCoverage,
   evaluateSeoPolicy,
   generateMetadata,
   generateStructuredData,
   recommendInternalLinks,
+  compareEntityRepresentations,
 } from "./index";
 
 const entity = {
@@ -96,5 +98,11 @@ describe("SEO/GEO core", () => {
     expect(evaluateQueryCoverage(query, [entity]).state).toBe("fully-covered");
     expect(evaluateFreshness(entity, "2026-09-24T12:00:00Z").stale).toBe(false);
     expect(evaluateSeoPolicy(entity, "https://example.com/en-US/business/biz-1", "2026-10-10T00:00:00Z").indexability).toBe("noindex");
+  });
+
+  it("detects consistency and agentic readiness gaps", () => {
+    const report = compareEntityRepresentations(entity, [{ ...entity, id: "biz-1", locale: "fa-IR", locationId: "other-location" }]);
+    expect(report.consistencyScore).toBeLessThan(100);
+    expect(evaluateAgenticReadiness(entity, "2026-09-24T12:00:00Z").actionReady).toBe(true);
   });
 });
