@@ -1042,15 +1042,36 @@ async function runSeoAudit(): Promise<void> {
   status.className = "pill warning";
   host.innerHTML = '<div class="slot-loading">در حال اجرای SEO audit…</div>';
   try {
-    const response = await apiJson<{ audit: Record<string, unknown> }>(
+    const response = await apiJson<{
+      audit: {
+        overallScore: number;
+        status: "pass" | "warning" | "blocked";
+        blockingIssueCodes: string[];
+        scores: Record<string, number>;
+        issues: { code: string; severity: string; evidence: string; recommendation: string }[];
+        generatedAt: string;
+      };
+    }>(
       `/api/v1/seo/audit/${encodeURIComponent(entityId)}?locale=${encodeURIComponent(locale || "fa-IR")}`,
       { method: "POST" },
     );
-    const audit = response.audit ?? {};
-    const entries = Object.entries(audit).filter(([key]) => !["payload","raw"].includes(key)).slice(0, 16);
-    host.innerHTML = `<div class="seo-audit-list">${entries.map(([key,value]) => `<div><span>${escapeHtml(key)}</span><strong>${escapeHtml(typeof value === "string" ? value : JSON.stringify(value) ?? "—")}</strong></div>`).join("")}</div>`;
-    status.textContent = "انجام شد";
-    status.className = "pill success";
+    const audit = response.audit;
+    const statusLabel = audit.status === "blocked" ? "Blocked" : audit.status === "warning" ? "Warning" : "Pass";
+    const statusClass = audit.status === "blocked" ? "pill danger" : audit.status === "warning" ? "pill warning" : "pill success";
+    const scoreEntries = Object.entries(audit.scores).slice(0, 12);
+    const issueEntries = audit.issues.slice(0, 8);
+    host.innerHTML = `
+      <div class="seo-audit-summary">
+        <div class="seo-audit-score"><span>Overall</span><strong>${audit.overallScore}</strong><small>/100</small></div>
+        <div><span>Status</span><strong>${escapeHtml(statusLabel)}</strong></div>
+        <div><span>Blockers</span><strong>${audit.blockingIssueCodes.length}</strong></div>
+        <div><span>Generated</span><strong>${escapeHtml(formatDate(audit.generatedAt))}</strong></div>
+      </div>
+      <div class="seo-audit-list">${scoreEntries.map(([key,value]) => `<div><span>${escapeHtml(key)}</span><strong>${escapeHtml(String(value))}</strong></div>`).join("")}</div>
+      ${issueEntries.length ? `<div class="seo-audit-issues">${issueEntries.map((item) => `<article><div><strong>${escapeHtml(item.code)}</strong><span class="pill ${item.severity === "error" ? "danger" : item.severity === "warning" ? "warning" : ""}">${escapeHtml(item.severity)}</span></div><p>${escapeHtml(item.evidence)}</p><small>${escapeHtml(item.recommendation)}</small></article>`).join("")}</div>` : ""}
+    `;
+    status.textContent = statusLabel;
+    status.className = statusClass;
   } catch (error) {
     status.textContent = "خطا";
     status.className = "pill warning";
