@@ -88,7 +88,7 @@ export async function processSeoPublicationJobs(
 ): Promise<{ processed: number; succeeded: number; failed: number }> {
   const jobs = await database.all<SeoPublicationJob>(
     `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
-      entity_id AS entityId, entity_type AS entityType, locale, reason, attempts, available_at AS availableAt
+      entity_id AS entityId, entity_type AS entityType, locale, reason, attempts, available_at AS availableAt, source_event_id AS sourceEventId
      FROM seo_publication_jobs
      WHERE status='pending' AND available_at <= ?
      ORDER BY available_at ASC, created_at ASC
