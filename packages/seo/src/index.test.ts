@@ -82,6 +82,8 @@ describe("SEO/GEO core", () => {
 
   it("keeps geographic truth explicit", () => {
     expect(buildGeoTruthSignal(entity)?.locationId).toBe("loc-1");
-    const withoutLocation = { ...entity };\n    delete (withoutLocation as { locationId?: string }).locationId;\n    expect(buildGeoTruthSignal({ ...withoutLocation, geoScope: "city" })).toBeNull();
+    const withoutLocation = { ...entity };
+    delete (withoutLocation as { locationId?: string }).locationId;
+    expect(buildGeoTruthSignal({ ...withoutLocation, geoScope: "city" })).toBeNull();
   });
 });
