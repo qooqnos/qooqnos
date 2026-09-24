@@ -101,6 +101,7 @@ export interface HttpPaymentProviderConfig {
   readonly capturePath: string;
   readonly refundPath: string;
   readonly webhookSecret: string;
+  readonly webhookMaxAgeSeconds?: number;
   readonly fetchImpl?: typeof fetch;
 }
 
@@ -164,7 +165,8 @@ export function createHttpPaymentProviderAdapter(config: HttpPaymentProviderConf
       const signatureBytes = hexOrBase64ToBytes(input.signature);
       const valid = await crypto.subtle.verify("HMAC", key, signatureBytes, new TextEncoder().encode(signedPayload));
       if (!valid) return null;
-      const event = JSON.parse(input.payload) as Record<string, unknown>;
+      let event: Record<string, unknown>;
+      try { event = JSON.parse(input.payload) as Record<string, unknown>; } catch { return null; }
       if (typeof event.id !== "string" || typeof event.type !== "string" || typeof event.providerReference !== "string" || typeof event.status !== "string" || typeof event.occurredAt !== "string") {
         return null;
       }
