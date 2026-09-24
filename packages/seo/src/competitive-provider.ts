@@ -213,7 +213,6 @@ export class DataForSeoGoogleCompetitiveProvider {
       body: JSON.stringify([{
         targets: {
           "1": normalizeDomain(competitorDomain),
-          "2": normalizeDomain(phoenixDomain),
         },
         exclude_targets: [normalizeDomain(phoenixDomain)],
         include_subdomains: false,
@@ -242,9 +241,8 @@ export class DataForSeoGoogleCompetitiveProvider {
     for (const item of items) {
       const intersection = isRecord(item.domain_intersection) ? item.domain_intersection : {};
       const first = isRecord(intersection["1"]) ? intersection["1"] : {};
-      const second = isRecord(intersection["2"]) ? intersection["2"] : {};
       const referringDomain = typeof first.target === "string" ? normalizeDomain(first.target) : undefined;
-      if (!referringDomain || Object.keys(second).length > 0) continue;
+      if (!referringDomain) continue;
       output.push({
         referringDomain,
         ...(finiteInteger(first.backlinks) !== undefined ? { competitorBacklinks: finiteInteger(first.backlinks) } : {}),
