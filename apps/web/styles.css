@@ -915,3 +915,16 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
 .seo-public-grid .metadata-cloud{margin-top:14px}
 .seo-public-page{min-height:70vh}
 @media(max-width:820px){.seo-public-grid{grid-template-columns:1fr}.seo-public-card{padding:19px}}
+
+.engine-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.engine-card{padding:22px}
+.engine-card:last-child:nth-child(odd){grid-column:1 / -1}
+.engine-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.engine-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.engine-card>.button,.engine-card>.engine-actions{margin-top:12px}
+.engine-card>.connection-state{margin-top:12px}
+@media(max-width:820px){
+  .engine-grid{grid-template-columns:1fr}
+  .engine-card:last-child:nth-child(odd){grid-column:auto}
+  .engine-form{grid-template-columns:1fr}
+}
