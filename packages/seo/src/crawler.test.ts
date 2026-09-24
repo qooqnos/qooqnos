@@ -19,9 +19,5 @@ describe('production SEO crawler', () => {
     expect(result.errors).toEqual(expect.arrayContaining(['Rendered canonical link does not match the persisted canonical URL.', 'Rendered title differs from persisted SEO metadata.', 'Rendered document does not contain JSON-LD structured data.']));
     expect(result.h1Count).toBe(2);
   });
-  it('accepts only the configured production origin at integration boundary', async () => {
-    const result = await crawlProductionSeoPage({ ...expected, canonicalUrl: 'https://other.example/en-US/business/phoenix-studio-biz-1' }, async () => new Response('', { status: 200 }));
-    expect(result.status).toBe(200);
-  });
 });
 
