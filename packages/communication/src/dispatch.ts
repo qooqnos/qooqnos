@@ -1,6 +1,7 @@
 import { brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import { CommunicationRepository, type NotificationRecord } from "./repository";
 import type { CommunicationProviderRegistry, CommunicationDeliveryResult } from "./adapter";
+import { CommunicationRateLimiter, type CommunicationRateLimitKey } from "./rate-limit";
 
 export interface CommunicationDispatchResult {
   readonly processed: number;
@@ -14,6 +15,7 @@ export async function dispatchQueuedNotifications(
   registry: CommunicationProviderRegistry,
   now: string,
   limit = 50,
+  rateLimiter?: CommunicationRateLimiter,
 ): Promise<CommunicationDispatchResult> {
   const notifications = await repository.listDispatchableNotifications(now, limit);
   let delivered = 0;
@@ -53,6 +55,34 @@ export async function dispatchQueuedNotifications(
       continue;
     }
 
+    if (rateLimiter) {
+      const rateKey: CommunicationRateLimitKey = {
+        tenantReference: notification.organizationId,
+        recipientReference: notification.recipientReference,
+        channel: notification.channel,
+        intent: notification.intent,
+        provider: adapter.providerId,
+      };
+      const decision = rateLimiter.checkAndConsume(rateKey);
+      if (!decision.allowed) {
+        await repository.appendDeliveryAttempt(systemContext(notification), {
+          id: ("delivery:" + notification.id + ":rate:" + now) as EntityId,
+          notificationId: notification.id,
+          provider: adapter.providerId,
+          channel: notification.channel,
+          status: "failed",
+          attemptedAt: now,
+          failureCode: "platform_rate_limited_" + decision.scope,
+          failureClass: "transient",
+          nextRetryAt: new Date(Date.parse(now) + decision.retryAfterSeconds * 1000).toISOString(),
+          now,
+        });
+        await repository.requeueNotification(notification.id, notification.organizationId, notification.workspaceId, new Date(Date.parse(now) + decision.retryAfterSeconds * 1000).toISOString(), now);
+        failed += 1;
+        continue;
+      }
+    }
+
     let result: CommunicationDeliveryResult;
     try {
       result = await adapter.deliver({ notification, now });
@@ -86,7 +116,7 @@ export async function dispatchQueuedNotifications(
         notification.id,
         notification.organizationId,
         notification.workspaceId,
-        retryAt(now, notification.priority),
+        result.retryAfterSeconds ? new Date(Date.parse(now) + result.retryAfterSeconds * 1000).toISOString() : retryAt(now, notification.priority),
         now,
       );
       failed += 1;
