@@ -61,7 +61,7 @@ function payloadEntity(payloadJson: string): SeoEntity | null {
       return {
         id: String(payloadObject.productId), type: "Product", sourceModule: "catalog", sourceVersion: "1",
         publicationState: "published", visibility: "public", preferredName: String(payloadObject.name),
-        description: typeof payloadObject.description === "string" ? payloadObject.description : undefined,
+        ...(typeof payloadObject.description === "string" ? { description: payloadObject.description } : {}),
         locale: typeof payloadObject.locale === "string" ? payloadObject.locale : "en",
         relatedEntityIds: typeof payloadObject.businessId === "string" ? [String(payloadObject.businessId)] : [],
         updatedAt: typeof payloadObject.updatedAt === "string" ? payloadObject.updatedAt : new Date().toISOString(),
