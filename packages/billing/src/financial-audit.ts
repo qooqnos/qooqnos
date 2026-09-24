@@ -194,7 +194,7 @@ function mapRecord(row: FinancialAuditEventRow): FinancialAuditEventRecord {
     before: parseJson(beforeJson),
     after: parseJson(afterJson),
     metadata: parseJson(metadataJson),
-  };
+  } as FinancialAuditEventRecord;
 }
 
 function serialize(value: unknown): string | null {
