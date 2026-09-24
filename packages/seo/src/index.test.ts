@@ -78,6 +78,13 @@ describe("SEO/GEO core", () => {
     expect(structured.url).toBe(url);
     expect(structured.telephone).toBe("+12025550123");
     expect(structured.priceRange).toBe("$");
+    const geoHoursStructured = generateStructuredData({
+      ...entity,
+      geoPoint: { latitude: 40.7128, longitude: -74.006 },
+      openingHours: [{ dayOfWeek: ["https://schema.org/Monday", "https://schema.org/Tuesday"], opens: "09:00", closes: "18:00" }],
+    }, { canonicalUrl: url });
+    expect(geoHoursStructured.geo).toEqual({ "@type": "GeoCoordinates", latitude: 40.7128, longitude: -74.006 });
+    expect(geoHoursStructured.openingHoursSpecification).toHaveLength(1);
     expect(((structured.mainEntityOfPage as Record<string, unknown>).breadcrumb as Record<string, unknown>)["@type"]).toBe("BreadcrumbList");
     expect(structured["@id"]).toBe("https://example.com/entities/biz-1");
     expect(structured.sameAs).toEqual(["https://example.com/about"]);
