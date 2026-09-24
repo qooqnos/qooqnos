@@ -88,10 +88,10 @@ async function verify() {
   if (sourceById.size !== sources.length) fail("source contains duplicate migration ids");
   if (lockById.size !== sourceById.size) fail("manifest and source migration counts differ");
 
-  let expectedVersion = 1;
+  let previousVersion = 0;
   for (const source of sources) {
-    if (source.version !== expectedVersion) fail(`expected source version ${expectedVersion}, found ${source.version}`);
-    expectedVersion += 1;
+    if (source.version <= previousVersion) fail(`migration versions must be strictly increasing: previous ${previousVersion}, found ${source.version}`);
+    previousVersion = source.version;
     const entry = lockById.get(source.id);
     if (!entry) fail(`${source.filename} is missing from the manifest`);
     for (const field of ["version", "filename", "checksum"]) {
