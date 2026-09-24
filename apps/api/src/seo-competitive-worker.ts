@@ -31,6 +31,7 @@ export interface SeoCompetitiveWorkerConfig {
   readonly workspaceId?: string | null;
   readonly entityId?: string;
   readonly queryText?: string;
+  readonly pageSampleLimit?: number;
 }
 
 export interface SeoCompetitiveWorkerResult {
@@ -40,6 +41,7 @@ export interface SeoCompetitiveWorkerResult {
   readonly discoveredCompetitors: number;
   readonly changes: number;
   readonly failures: number;
+  readonly pageSnapshots: number;
 }
 
 export async function runSeoCompetitiveIntelligence(
@@ -62,6 +64,7 @@ export async function runSeoCompetitiveIntelligence(
   let discoveredCompetitors = 0;
   let changes = 0;
   let failures = 0;
+  let pageSnapshots = 0;
 
   for (const row of rows) {
     const context = workerContext(row.organizationId, row.workspaceId);
@@ -160,6 +163,48 @@ export async function runSeoCompetitiveIntelligence(
         }
       }
 
+      const competitorPageUrls = selectCompetitorPageUrls(
+        result.results,
+        ownOrigin,
+        config.pageSampleLimit ?? 5,
+      );
+      if (competitorPageUrls.length) {
+        const snapshots = await provider.observePages(competitorPageUrls, row.locale);
+        for (const snapshot of snapshots) {
+          const domain = normalizeDomainSafe(snapshot.url);
+          const competitorId = await repository.upsertCompetitor(context, {
+            domain,
+            now,
+            provenance: snapshot.provenance,
+          });
+          await repository.recordPageSnapshot(context, {
+            id: runId + ":page:" + crypto.randomUUID(),
+            competitorId,
+            queryText: row.queryText,
+            resultUrl: snapshot.url,
+            observedAt: now,
+            ...(snapshot.statusCode !== undefined ? { statusCode: snapshot.statusCode } : {}),
+            ...(snapshot.title ? { title: snapshot.title } : {}),
+            ...(snapshot.description ? { description: snapshot.description } : {}),
+            ...(snapshot.canonicalUrl ? { canonicalUrl: snapshot.canonicalUrl } : {}),
+            ...(snapshot.h1Count !== undefined ? { h1Count: snapshot.h1Count } : {}),
+            ...(snapshot.wordCount !== undefined ? { wordCount: snapshot.wordCount } : {}),
+            ...(snapshot.internalLinksCount !== undefined ? { internalLinksCount: snapshot.internalLinksCount } : {}),
+            ...(snapshot.externalLinksCount !== undefined ? { externalLinksCount: snapshot.externalLinksCount } : {}),
+            ...(snapshot.imagesCount !== undefined ? { imagesCount: snapshot.imagesCount } : {}),
+            ...(snapshot.titleLength !== undefined ? { titleLength: snapshot.titleLength } : {}),
+            ...(snapshot.descriptionLength !== undefined ? { descriptionLength: snapshot.descriptionLength } : {}),
+            ...(snapshot.noH1Tag !== undefined ? { noH1Tag: snapshot.noH1Tag } : {}),
+            ...(snapshot.noTitle !== undefined ? { noTitle: snapshot.noTitle } : {}),
+            ...(snapshot.noDescription !== undefined ? { noDescription: snapshot.noDescription } : {}),
+            ...(snapshot.seoFriendlyUrl !== undefined ? { seoFriendlyUrl: snapshot.seoFriendlyUrl } : {}),
+            ...(snapshot.structuredDataErrors !== undefined ? { structuredDataErrors: snapshot.structuredDataErrors } : {}),
+            provenance: snapshot.provenance,
+          });
+          pageSnapshots += 1;
+        }
+      }
+
       const previousAiCitations = await previousCitationRows(database, row, runId);
       for (const previous of previousAiCitations) {
         if (!citationUrls.has(normalizeUrl(previous.resultUrl))) {
@@ -230,7 +275,7 @@ export async function runSeoCompetitiveIntelligence(
     }
   }
 
-  return { queries: rows.length, runs, observations, discoveredCompetitors, changes, failures };
+  return { queries: rows.length, runs, observations, discoveredCompetitors, changes, failures, pageSnapshots };
 }
 
 async function selectQueries(database: D1Database, config: SeoCompetitiveWorkerConfig): Promise<readonly CompetitiveQueryRow[]> {
@@ -297,6 +342,24 @@ async function previousDomainsForQuery(
       ORDER BY observed_at DESC`,
     row.organizationId, row.workspaceId, row.queryText, runId,
   );
+}
+
+function selectCompetitorPageUrls(
+  items: readonly { readonly domain?: string; readonly url?: string }[],
+  ownOrigin: string,
+  limit: number,
+): readonly string[] {
+  const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 10);
+  const seenDomains = new Set<string>();
+  const urls: string[] = [];
+  for (const item of items) {
+    if (!item.url || !item.domain || sameOrigin(item.url, ownOrigin)) continue;
+    if (seenDomains.has(item.domain)) continue;
+    seenDomains.add(item.domain);
+    urls.push(item.url);
+    if (urls.length >= safeLimit) break;
+  }
+  return urls;
 }
 
 function sameOrigin(value: string, origin: string): boolean {
