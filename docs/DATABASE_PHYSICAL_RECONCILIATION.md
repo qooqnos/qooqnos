@@ -780,3 +780,7 @@ The provider-execution boundary is implemented in `packages/billing/src/payment-
 ### Settlement reconciliation — 2026-09-24
 
 Migration `0061_billing_settlement.sql` establishes the settlement aggregate and immutable settlement-item ledger boundary. Provider payout execution is normalized through `PaymentProviderAdapter.payoutSettlement`, while accounting is posted through the existing immutable Billing ledger. No Commerce settlement table is permitted.
+
+### Reconciliation hardening — migration 0062
+
+The existing `billing_reconciliation_cases` contract is now operationally complete. Migration `0062_billing_reconciliation_hardening.sql` adds financial mismatch fields, scope, idempotency, resolution ownership and an immutable case-event history. Reconciliation is an exception-management boundary: it does not mutate payment, invoice, refund or settlement truth to conceal a mismatch.
