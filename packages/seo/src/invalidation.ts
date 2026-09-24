@@ -83,6 +83,6 @@ export function domainChangeFromOutboxEvent(event: {
     sourceVersion,
     reason,
     occurredAt: event.occurredAt,
-    relatedEntityIds: related,
+    ...(related ? { relatedEntityIds: related } : {}),
   };
 }
