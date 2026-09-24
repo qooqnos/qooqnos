@@ -23,6 +23,8 @@ export interface BookingRecord {
   readonly workspaceId: EntityId;
   readonly businessId: EntityId;
   readonly customerId: EntityId;
+  readonly matchRequestId: EntityId | null;
+  readonly matchCandidateId: EntityId | null;
   readonly status: BookingStatus;
   readonly currency: string;
   readonly totalAmountMinor: number | null;
@@ -101,6 +103,8 @@ export interface CreateBookingInput {
   readonly currency: string;
   readonly totalAmountMinor?: number | undefined;
   readonly policySnapshot?: string | undefined;
+  readonly matchRequestId?: EntityId | undefined;
+  readonly matchCandidateId?: EntityId | undefined;
   readonly idempotencyKey: string;
   readonly now: string;
 }
@@ -143,12 +147,14 @@ export class BookingRepository extends Repository {
     }
 
     await this.database.run(
-      "INSERT INTO bookings (id, organization_id, workspace_id, business_id, customer_id, status, currency, total_amount_minor, policy_snapshot, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'requested', ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO bookings (id, organization_id, workspace_id, business_id, customer_id, match_request_id, match_candidate_id, status, currency, total_amount_minor, policy_snapshot, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'requested', ?, ?, ?, ?, ?, ?)",
       input.id,
       organizationId,
       workspaceId,
       input.businessId,
       input.customerId,
+      input.matchRequestId ?? null,
+      input.matchCandidateId ?? null,
       input.currency.trim().toUpperCase(),
       input.totalAmountMinor ?? null,
       input.policySnapshot ?? null,
@@ -164,7 +170,7 @@ export class BookingRepository extends Repository {
 
   async get(context: RequestContext, id: EntityId): Promise<BookingRecord | null> {
     return this.database.first<BookingRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, customer_id AS customerId, status, currency, total_amount_minor AS totalAmountMinor, policy_snapshot AS policySnapshot, created_at AS createdAt, updated_at AS updatedAt FROM bookings WHERE id = ? AND organization_id = ? AND workspace_id = ? LIMIT 1",
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, customer_id AS customerId, match_request_id AS matchRequestId, match_candidate_id AS matchCandidateId, status, currency, total_amount_minor AS totalAmountMinor, policy_snapshot AS policySnapshot, created_at AS createdAt, updated_at AS updatedAt FROM bookings WHERE id = ? AND organization_id = ? AND workspace_id = ? LIMIT 1",
       id,
       this.requireOrganization({ organizationId: context.tenantId }),
       this.requireWorkspace({ workspaceId: context.workspaceId }),
@@ -204,6 +210,8 @@ export class BookingRepository extends Repository {
       readonly timezone?: string | undefined;
       readonly locationId?: EntityId | undefined;
       readonly resourceId?: EntityId | undefined;
+      readonly matchRequestId?: EntityId | undefined;
+      readonly matchCandidateId?: EntityId | undefined;
       readonly now: string;
     },
   ): Promise<BookingRecord> {
@@ -231,13 +239,15 @@ export class BookingRepository extends Repository {
         ],
       },
       {
-        sql: "INSERT INTO bookings (id, organization_id, workspace_id, business_id, customer_id, status, currency, total_amount_minor, policy_snapshot, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?, ?, ?)",
+        sql: "INSERT INTO bookings (id, organization_id, workspace_id, business_id, customer_id, match_request_id, match_candidate_id, status, currency, total_amount_minor, policy_snapshot, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?, ?, ?)",
         params: [
           input.bookingId,
           organizationId,
           workspaceId,
           input.businessId,
           input.customerId,
+          input.matchRequestId ?? null,
+          input.matchCandidateId ?? null,
           input.currency.trim().toUpperCase(),
           input.priceMinorSnapshot * input.quantity,
           input.policySnapshot ?? null,
@@ -321,6 +331,8 @@ export class BookingRepository extends Repository {
           bookingId: input.bookingId,
           businessId: input.businessId,
           customerId: input.customerId,
+          matchRequestId: input.matchRequestId ?? null,
+          matchCandidateId: input.matchCandidateId ?? null,
           startsAt: input.startsAt,
           endsAt: input.endsAt,
           resourceId: input.resourceId ?? null,
@@ -431,7 +443,7 @@ export class BookingRepository extends Repository {
           id,
           current.organizationId,
           current.workspaceId,
-          JSON.stringify({ bookingId: id, fromStatus: current.status, toStatus: status }),
+          JSON.stringify({ bookingId: id, fromStatus: current.status, toStatus: status, matchRequestId: current.matchRequestId, matchCandidateId: current.matchCandidateId, businessId: current.businessId }),
           now,
           now,
         ],
