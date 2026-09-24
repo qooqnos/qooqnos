@@ -1197,3 +1197,30 @@ Booking and Commerce may persist optional `match_request_id` / `match_candidate_
 Durable Act outcomes are emitted through the existing transactional outbox and consumed by `MatchingOutcomeProcessor`. Supported v1 outcomes are `booking.completed`, `booking.no_show`, `booking.cancelled`, `commerce.order.completed`, `commerce.payment.completed`, `payment.captured`, and `fulfillment.completed`. The processor resolves the authoritative MatchRequest/Candidate, records exactly one append-only Learning Signal using the outbox event ID as the signal identity, and ignores events with no unambiguous match linkage rather than guessing.
 
 This closes the integration boundary without creating a second Learning system.
+
+
+## 18.5 Analytics physical projections
+
+### `analytics_events`
+
+Immutable normalized analytics event envelope. It is derived from the transactional Outbox and never authoritative for domain state.
+
+Fields include event identity/version, occurrence/receipt timestamps, organization/workspace scope, source/resource references, privacy classification and payload hash.
+
+### `analytics_facts`
+
+Append-only measurement facts derived from accepted analytics events. The current canonical fact is `event.<event_type>` with a numeric value of 1. Facts are evidence for metrics and are rebuildable.
+
+### `analytics_metric_definitions`
+
+Versioned metric registry containing owner, formula, source events, filters, timezone policy, attribution window and privacy classification. Metric semantics are versioned rather than silently changed.
+
+### `analytics_metric_aggregates`
+
+Rebuildable hourly/daily metric projection. Aggregate replacement is idempotent; it is never used as operational truth.
+
+### `analytics_ingestion_quarantine`
+
+Durable invalid-event evidence containing source identity, scope, reason, payload hash, attempts and resolution state. Quarantine prevents malformed analytics data from silently contaminating aggregates.
+
+Analytics tables are projection-owned and may be dropped/rebuilt from durable source events. They do not authorize, price, book, settle, communicate, verify, or otherwise mutate domain state.
