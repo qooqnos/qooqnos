@@ -129,7 +129,6 @@ CREATE TABLE communication_templates (
   UNIQUE(organization_id, workspace_id, template_key, channel)
 );
 INSERT INTO communication_templates SELECT * FROM communication_templates_legacy;
-DROP TABLE communication_templates_legacy;
 CREATE INDEX idx_communication_templates_scope_status
   ON communication_templates(organization_id, workspace_id, status);
 
@@ -152,6 +151,7 @@ CREATE TABLE communication_template_versions (
 );
 INSERT INTO communication_template_versions SELECT * FROM communication_template_versions_legacy;
 DROP TABLE communication_template_versions_legacy;
+DROP TABLE communication_templates_legacy;
 CREATE INDEX idx_communication_template_versions_lookup
   ON communication_template_versions(template_id, locale, version DESC, approval_state);
 
