@@ -15,12 +15,20 @@ export interface ApiEnv {
   readonly AI_WORKER_ID?: string;
   readonly EMAIL_PROVIDER_ENDPOINT?: string;
   readonly EMAIL_PROVIDER_TOKEN?: string;
+  readonly EMAIL_PROVIDER_FALLBACK_ENDPOINT?: string;
+  readonly EMAIL_PROVIDER_FALLBACK_TOKEN?: string;
   readonly SMS_PROVIDER_ENDPOINT?: string;
   readonly SMS_PROVIDER_TOKEN?: string;
+  readonly SMS_PROVIDER_FALLBACK_ENDPOINT?: string;
+  readonly SMS_PROVIDER_FALLBACK_TOKEN?: string;
   readonly WHATSAPP_PROVIDER_ENDPOINT?: string;
   readonly WHATSAPP_PROVIDER_TOKEN?: string;
+  readonly WHATSAPP_PROVIDER_FALLBACK_ENDPOINT?: string;
+  readonly WHATSAPP_PROVIDER_FALLBACK_TOKEN?: string;
   readonly PUSH_PROVIDER_ENDPOINT?: string;
   readonly PUSH_PROVIDER_TOKEN?: string;
+  readonly PUSH_PROVIDER_FALLBACK_ENDPOINT?: string;
+  readonly PUSH_PROVIDER_FALLBACK_TOKEN?: string;
 }
 
 export function requireDatabase(env: ApiEnv): D1DatabaseLike {
