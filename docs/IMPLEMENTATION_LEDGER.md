@@ -744,3 +744,5 @@ Implementation commits:
 Invoice runtime/API note: `GET /api/v1/billing/invoices` is implemented through `BillingInvoiceRepository.list`, protected by `billing.invoice.read`, with tenant/workspace/business/customer scoping. Invoice creation/payment execution remain inside the Billing financial boundary rather than Commerce.
 
 | Payment Provider Adapters | 🟢 Provider-neutral adapter/registry/service + HTTP adapter + signed webhook verification + replay protection + failure classification + provider-reference persistence implemented | packages/billing/src/payment-provider-adapter.ts; packages/billing/src/payment-provider-service.ts; packages/billing/src/payment-provider-adapter.test.ts |
+
+| Settlement | 🟢 Settlement aggregate + immutable items + approval/processing/paid lifecycle + provider payout boundary + reconciled double-entry accounting + tests implemented | migrations/0061_billing_settlement.sql; packages/billing/src/settlement-repository.ts; packages/billing/src/settlement-repository.test.ts; packages/billing/src/payment-provider-adapter.ts |
