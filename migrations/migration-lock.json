@@ -460,7 +460,7 @@
       "id": "0065_communication_push_channel",
       "version": 65,
       "moduleId": "communication",
-      "checksum": "a0e628d66e85eee7623e9903c09ea94d055c4927aff8c62b0b53aebca430ea81",
+      "checksum": "e9d17348218f947092492c2fff300cd1f7d60235caa20cb9259618a68e7cf011",
       "filename": "0065_communication_push_channel.sql"
     },
     {
