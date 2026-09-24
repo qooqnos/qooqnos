@@ -406,6 +406,13 @@
       "moduleId": "billing",
       "checksum": "d9d52a507220321c99a790095e6835b76e1ba27fb1d4c1393e853e6938eaceaf",
       "filename": "0058_billing_financial_audit_trail.sql"
+    },
+    {
+      "id": "0059_billing_refund_financial_accounting",
+      "version": 59,
+      "moduleId": "billing",
+      "checksum": "b7c13af1542fa2287d9064a885faffa0d70b6ed101399d0279d8971b39d1d73c",
+      "filename": "0059_billing_refund_financial_accounting.sql"
     }
   ]
 }
