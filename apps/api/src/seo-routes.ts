@@ -1,7 +1,7 @@
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
-import { buildRobotsTxt, buildSitemapXml } from "@qooqnos/seo";
+import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, SITEMAP_URL_LIMIT } from "@qooqnos/seo";
 import { crawlStoredSeoRepresentation } from "./seo-production-crawler";
 
 export function registerSeoRoutes(router: ApiRouter, database: D1Database | undefined, canonicalBaseUrl = "https://qooqnos.com"): void {
@@ -10,21 +10,45 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     path: "/sitemap.xml",
     module: "seo",
     operation: "sitemap.read",
-    handler: async ({ context }) => {
+    handler: async () => {
       if (!database) return new Response("Database is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
       const canonicalPrefix = canonicalBaseUrl.replace(/\/$/, "") + "/";
-      const rows = await database.all<{ canonicalUrl: string; lastmod: string | null }>(
-        `SELECT canonical_url AS canonicalUrl, MAX(generated_at) AS lastmod
-         FROM seo_entity_representations
-         WHERE indexability='index' AND publication_state='published' AND visibility='public'
-           AND canonical_url LIKE ?
-         GROUP BY canonical_url
-         ORDER BY canonical_url ASC
-         LIMIT 50000`,
+      const countRow = await database.first<{ total: number }>(
+        `SELECT COUNT(DISTINCT canonical_url) AS total
+           FROM seo_entity_representations
+          WHERE indexability='index' AND publication_state='published' AND visibility='public' AND canonical_url LIKE ?`,
         canonicalPrefix + "%",
       );
-      const xml = buildSitemapXml(rows.map((row) => ({ url: row.canonicalUrl, ...(row.lastmod ? { lastmod: row.lastmod } : {}) })));
-      return new Response(xml, { status: 200, headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300" } });
+      const total = countRow?.total ?? 0;
+      const shardCount = Math.max(1, Math.ceil(total / SITEMAP_URL_LIMIT));
+      const xml = total > SITEMAP_URL_LIMIT
+        ? buildSitemapIndexXml(Array.from({ length: shardCount }, (_, index) => canonicalBaseUrl.replace(/\/$/, "") + "/sitemap-" + (index + 1) + ".xml"))
+        : buildSitemapXml(await readSitemapShardRows(database, canonicalPrefix, 0));
+      return new Response(xml, { status: 200, headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300, s-maxage=300" } });
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/sitemap-:shard.xml",
+    module: "seo",
+    operation: "sitemap.shard.read",
+    handler: async ({ params }) => {
+      if (!database) return new Response("Database is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
+      const shard = Number(params.shard);
+      if (!Number.isSafeInteger(shard) || shard < 1) return new Response("Sitemap shard not found.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": "noindex" } });
+      const canonicalPrefix = canonicalBaseUrl.replace(/\/$/, "") + "/";
+      const countRow = await database.first<{ total: number }>(
+        `SELECT COUNT(DISTINCT canonical_url) AS total
+           FROM seo_entity_representations
+          WHERE indexability='index' AND publication_state='published' AND visibility='public' AND canonical_url LIKE ?`,
+        canonicalPrefix + "%",
+      );
+      const total = countRow?.total ?? 0;
+      const shardCount = Math.max(1, Math.ceil(total / SITEMAP_URL_LIMIT));
+      if (shard > shardCount) return new Response("Sitemap shard not found.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": "noindex" } });
+      const xml = buildSitemapXml(await readSitemapShardRows(database, canonicalPrefix, (shard - 1) * SITEMAP_URL_LIMIT));
+      return new Response(xml, { status: 200, headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300, s-maxage=300" } });
     },
   });
 
@@ -153,4 +177,17 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       }, degraded ? 503 : 200, context.requestId);
     },
   });
+}
+
+async function readSitemapShardRows(database: D1Database, canonicalPrefix: string, offset: number): Promise<readonly { url: string; lastmod?: string }[]> {
+  const rows = await database.all<{ canonicalUrl: string; lastmod: string | null }>(
+    `SELECT canonical_url AS canonicalUrl, MAX(generated_at) AS lastmod
+       FROM seo_entity_representations
+      WHERE indexability='index' AND publication_state='published' AND visibility='public' AND canonical_url LIKE ?
+      GROUP BY canonical_url
+      ORDER BY canonical_url ASC
+      LIMIT ? OFFSET ?`,
+    canonicalPrefix + "%", SITEMAP_URL_LIMIT, offset,
+  );
+  return rows.map((row) => ({ url: row.canonicalUrl, ...(row.lastmod ? { lastmod: row.lastmod } : {}) }));
 }
