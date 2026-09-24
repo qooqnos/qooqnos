@@ -1,7 +1,7 @@
 import type { AnswerFact, AnswerGeography, AnswerRepresentation, SeoEntity } from "./types";
 
 function clean(value: string | undefined): string {
-  return (value ?? "").replace(/\\s+/g, " ").trim();
+  return (value ?? "").replace(/\s+/g, " ").trim();
 }
 
 function validTimestamp(value: string | undefined): boolean {
@@ -55,6 +55,25 @@ function buildGeography(entity: SeoEntity): AnswerGeography | undefined {
   };
 }
 
+function languageOf(locale: string): string { return locale.toLowerCase().split("-")[0] || "en"; }
+
+function questionFor(entity: SeoEntity): string {
+  const name = clean(entity.preferredName);
+  const language = languageOf(entity.locale);
+  const templates: Record<string, string> = {
+    en: `What is ${name}?`,
+    fa: `${name} چیست؟`,
+    ar: `ما هو ${name}؟`,
+    az: `${name} nədir?`,
+    tr: `${name} nedir?`,
+    ru: `Что такое ${name}?`,
+    de: `Was ist ${name}?`,
+    fr: `Qu'est-ce que ${name} ?`,
+    es: `¿Qué es ${name}?`,
+  };
+  return (templates[language] ?? templates.en).trim();
+}
+
 function answerText(entity: SeoEntity): string {
   const name = clean(entity.preferredName);
   const summary = clean(entity.summary) || clean(entity.description);
@@ -80,7 +99,7 @@ export function buildAnswerRepresentation(
   const normalizedFacts = suppliedFacts.length
     ? suppliedFacts
     : canonicalSummary
-      ? [{ fact: canonicalSummary, sourceEntityId: entity.id, verifiedAt: entity.updatedAt, sourceType: "canonical-entity" }]
+      ? [{ fact: canonicalSummary, sourceEntityId: entity.id, verifiedAt: entity.updatedAt, sourceType: "canonical-entity", ...(validHttpUrl(canonicalUrl) ? { provenanceUrl: canonicalUrl } : {}) }]
       : [];
   const answer = answerText(entity);
   const restricted = entity.visibility !== "public" || entity.publicationState !== "published";
@@ -101,8 +120,9 @@ export function buildAnswerRepresentation(
     id: `answer:${entity.id}:${entity.locale}`,
     entityId: entity.id,
     locale: clean(entity.locale) || "en",
-    question: `What is ${clean(entity.preferredName)}?`.trim(),
+    question: questionFor(entity),
     answer,
+    ...(validHttpUrl(canonicalUrl) ? { canonicalUrl } : {}),
     facts: normalizedFacts,
     freshnessAt: freshnessAt(entity, normalizedFacts),
     sourceUpdatedAt: entity.updatedAt,
