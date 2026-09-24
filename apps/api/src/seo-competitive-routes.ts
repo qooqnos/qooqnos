@@ -20,6 +20,7 @@ export function registerSeoCompetitiveRoutes(router: ApiRouter, database: D1Data
       const search = new URL(request.url).searchParams;
       const limitValue = Number(search.get("limit") ?? "5");
       const depthValue = Number(search.get("depth") ?? env.SEO_COMPETITIVE_DEPTH ?? "20");
+      const pageSampleLimit = Number(env.SEO_COMPETITIVE_PAGE_SAMPLE_LIMIT ?? "5");
       const locationCodeValue = Number(env.SEO_COMPETITIVE_LOCATION_CODE ?? "");
       const result = await runSeoCompetitiveIntelligence(
         database,
@@ -32,6 +33,7 @@ export function registerSeoCompetitiveRoutes(router: ApiRouter, database: D1Data
           languageCode: search.get("language") || env.SEO_COMPETITIVE_LANGUAGE_CODE || "en",
           device: env.SEO_COMPETITIVE_DEVICE || "desktop",
           depth: Number.isFinite(depthValue) ? depthValue : 20,
+          ...(Number.isFinite(pageSampleLimit) ? { pageSampleLimit: Math.min(Math.max(Math.trunc(pageSampleLimit), 1), 10) } : {}),
           limit: Number.isFinite(limitValue) ? Math.min(Math.max(Math.trunc(limitValue), 1), 10) : 5,
           organizationId: context.tenantId,
           workspaceId: context.workspaceId ?? null,
