@@ -393,3 +393,14 @@ Loyalty points are not money. Financial truth remains in Commerce/Billing.
 
 Sponsored delivery is always distinguishable from organic Discovery and cannot mutate organic ranking.
 
+
+## 25. Authorization Governance capabilities
+
+| Capability | Type | Owner | Scope | Key dependencies | Events |
+|---|---|---|---|---|---|
+| `CAP.AUTHORIZATION.APPROVAL_CREATE` | COMMAND | Runtime Authorization Governance | WORKSPACE | Access, actor context | approval.requested |
+| `CAP.AUTHORIZATION.APPROVAL_GET` | QUERY | Runtime Authorization Governance | WORKSPACE | Access | none |
+| `CAP.AUTHORIZATION.APPROVAL_APPROVE` | COMMAND | Runtime Authorization Governance | WORKSPACE | approver permission, separation of duties | approval.approved |
+| `CAP.AUTHORIZATION.APPROVAL_REJECT` | COMMAND | Runtime Authorization Governance | WORKSPACE | approver permission, separation of duties | approval.rejected |
+
+Approval governance does not perform the final domain mutation itself. Domain owners remain responsible for checking the approved request before high-risk state transitions.
