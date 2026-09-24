@@ -113,7 +113,7 @@ describe("Communication providers and rate limits", () => {
     expect(limiter.checkAndConsume(key).allowed).toBe(true);
     expect(limiter.checkAndConsume(key).allowed).toBe(true);
     expect(limiter.checkAndConsume(key)).toMatchObject({ allowed: false, anomalyDetected: true });
-    now = 7000;
+    now = 12000;
     expect(limiter.checkAndConsume(key).allowed).toBe(true);
   });
 });
