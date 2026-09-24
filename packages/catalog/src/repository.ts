@@ -1,5 +1,6 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
+import { CatalogAttributeValueRepository } from "./attribute-value-repository";
 
 export type CatalogStatus = "draft" | "active" | "inactive" | "archived";
 export type OfferingType = "service" | "product";
@@ -70,7 +71,6 @@ interface ProductVariantRow {
   readonly id: EntityId;
   readonly productId: EntityId;
   readonly sku: string | null;
-  readonly attributesJson: string | null;
   readonly status: CatalogStatus;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -136,20 +136,39 @@ export class CatalogRepository extends Repository {
     }
     await this.database.run(
       `INSERT INTO product_variants (id, product_id, sku, attributes_json, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, 'draft', ?, ?)`,
-      input.id, input.productId, sku, input.attributes ? JSON.stringify(input.attributes) : null, input.now, input.now,
+       VALUES (?, ?, ?, NULL, 'draft', ?, ?)`,
+      input.id, input.productId, sku, input.now, input.now,
     );
-    const record = await this.database.first<ProductVariantRow>(
-      `SELECT id, product_id AS productId, sku, attributes_json AS attributesJson, status,
-              created_at AS createdAt, updated_at AS updatedAt FROM product_variants WHERE id = ? LIMIT 1`,
-      input.id,
-    );
-    if (!record) throw new DatabaseError("Product variant not found after creation");
-    return {
-      id: record.id, productId: record.productId, sku: record.sku,
-      attributes: record.attributesJson ? JSON.parse(record.attributesJson) as Readonly<Record<string, unknown>> : null,
-      status: record.status, createdAt: record.createdAt, updatedAt: record.updatedAt,
-    };
+    try {
+      const attributeValues = new CatalogAttributeValueRepository(this.database);
+      const normalized: Record<string, unknown> = {};
+      for (const [canonicalKey, value] of Object.entries(input.attributes ?? {})) {
+        const record = await attributeValues.setByCanonicalKey(context, {
+          id: input.id + ":attribute:" + canonicalKey,
+          attributeDefinitionCanonicalKey: canonicalKey,
+          targetType: "product_variant",
+          targetId: input.id,
+          sourceType: "seller_input",
+          value,
+          now: input.now,
+        });
+        normalized[canonicalKey] = record.normalizedValue;
+      }
+      const record = await this.database.first<ProductVariantRow>(
+        `SELECT id, product_id AS productId, sku, status,
+                created_at AS createdAt, updated_at AS updatedAt FROM product_variants WHERE id = ? LIMIT 1`,
+        input.id,
+      );
+      if (!record) throw new DatabaseError("Product variant not found after creation");
+      return {
+        id: record.id, productId: record.productId, sku: record.sku,
+        attributes: Object.keys(normalized).length ? normalized : null,
+        status: record.status, createdAt: record.createdAt, updatedAt: record.updatedAt,
+      };
+    } catch (error) {
+      await this.database.run("DELETE FROM product_variants WHERE id = ?", input.id);
+      throw error;
+    }
   }
 
   async createOffering(context: RequestContext, input: CreateOfferingInput): Promise<OfferingRecord> {
