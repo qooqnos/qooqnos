@@ -811,3 +811,10 @@ The current main head remains subject to fresh CI/Phoenix verification; no green
 Core `Export Document` composition is now implemented as `@qooqnos/documents`: tenant-scoped request validation, public Query-capability boundary, immutable format-neutral snapshot, template/version provenance, attachments, and SHA-256 integrity evidence are covered by unit tests and registered in the runtime module registry. PDF/Print rendering and durable artifact persistence remain downstream adapter work and are not falsely marked complete.
 
 Implementation commits: `410127af9a52fd93718c6d4482ca410f1ef2a20d`, `ee2006853d1905e0611849af71ef346b7d4b14f8`.
+
+
+### Fulfillment provider callback reconciliation — 2026-09-24
+
+Provider callback reconciliation is now implemented as a reusable pre-persistence boundary. Incoming tracking events require a non-empty deduplication key; previously observed keys are classified as duplicates and cannot produce a second operational transition. Unit tests cover first delivery, replay, and fail-closed malformed callbacks.
+
+Implementation commits: `039fda222cbd184cfce03383c6da055bf6f38694`.
