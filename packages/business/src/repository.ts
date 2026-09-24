@@ -22,6 +22,19 @@ export interface BusinessRecord {
   readonly updatedAt: string;
 }
 
+export interface BusinessLocationRecord {
+  readonly id: EntityId;
+  readonly businessId: EntityId;
+  readonly name: string;
+  readonly locationType: "physical" | "virtual" | "service_area";
+  readonly timezone: string | null;
+  readonly address: Readonly<Record<string, unknown>> | null;
+  readonly geoPoint: { readonly latitude: number; readonly longitude: number } | null;
+  readonly status: "active" | "inactive" | "archived";
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export interface BusinessStatusHistoryRecord {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -77,6 +90,51 @@ export class BusinessRepository extends Repository {
        LIMIT 1`,
       id, organizationId, workspaceId,
     );
+  }
+
+  async listLocations(context: RequestContext, businessId: EntityId): Promise<readonly BusinessLocationRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const rows = await this.database.all<{
+      id: EntityId; businessId: EntityId; name: string; locationType: BusinessLocationRecord["locationType"];
+      timezone: string | null; addressJson: string | null; geoPointJson: string | null;
+      status: BusinessLocationRecord["status"]; createdAt: string; updatedAt: string;
+    }>(
+      `SELECT l.id, l.business_id AS businessId, l.name, l.location_type AS locationType,
+              l.timezone, l.address_json AS addressJson, l.geo_point_json AS geoPointJson,
+              l.status, l.created_at AS createdAt, l.updated_at AS updatedAt
+       FROM locations l
+       INNER JOIN businesses b ON b.id = l.business_id
+       WHERE l.business_id = ? AND b.organization_id = ? AND b.workspace_id = ?
+       ORDER BY l.id ASC`,
+      businessId, organizationId, workspaceId,
+    );
+    return rows.map((row) => {
+      let address: Readonly<Record<string, unknown>> | null = null;
+      let geoPoint: BusinessLocationRecord["geoPoint"] = null;
+      if (row.addressJson) {
+        try {
+          const parsed: unknown = JSON.parse(row.addressJson);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) address = parsed as Readonly<Record<string, unknown>>;
+        } catch { address = null; }
+      }
+      if (row.geoPointJson) {
+        try {
+          const parsed: unknown = JSON.parse(row.geoPointJson);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            const value = parsed as Record<string, unknown>;
+            if (typeof value.latitude === "number" && Number.isFinite(value.latitude) &&
+                typeof value.longitude === "number" && Number.isFinite(value.longitude) &&
+                value.latitude >= -90 && value.latitude <= 90 &&
+                value.longitude >= -180 && value.longitude <= 180) {
+              geoPoint = { latitude: value.latitude, longitude: value.longitude };
+            }
+          }
+        } catch { geoPoint = null; }
+      }
+      return { id: row.id, businessId: row.businessId, name: row.name, locationType: row.locationType,
+        timezone: row.timezone, address, geoPoint, status: row.status, createdAt: row.createdAt, updatedAt: row.updatedAt };
+    });
   }
 
   async create(input: CreateBusinessInput): Promise<BusinessRecord> {
