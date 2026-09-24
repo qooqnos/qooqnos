@@ -139,13 +139,12 @@ export class SeoCompetitiveRepository extends Repository {
       scope.organizationId, scope.workspaceId, input.queryText, input.domain, input.currentRunId,
     );
     if (!previous) {
-      await this.recordChange(context, { ...input, changeType: "new-entry", previousRank: undefined, previousUrl: undefined });
-      changes += 1;
-      if (input.currentAiCitation) {
+      if (input.observationType === "ai_citation") {
         await this.recordChange(context, { ...input, changeType: "ai-citation-gained", previousRank: undefined, previousUrl: undefined });
-        changes += 1;
+        return 1;
       }
-      return changes;
+      await this.recordChange(context, { ...input, changeType: "new-entry", previousRank: undefined, previousUrl: undefined });
+      return 1;
     }
     if (previous.resultUrl !== input.currentUrl) {
       await this.recordChange(context, { ...input, changeType: "url-changed", previousRank: previous.rankAbsolute ?? undefined, previousUrl: previous.resultUrl });
