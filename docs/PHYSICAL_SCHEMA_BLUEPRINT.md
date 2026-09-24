@@ -1027,6 +1027,14 @@ This is a rebuildable projection, never Review truth.
 
 One version is active at a time for a target; previous versions remain for rollback/audit.
 
+### `trust_signals`
+
+`id`, organization_id, workspace_id?, subject_type, subject_id, signal_type, severity, value_json?, confidence?, source_type, source_id, policy_version?, status, detected_at, expires_at?, created_at, updated_at.
+
+TrustSignal is derived evidence with immutable provenance. It is rebuildable from source risk/report evidence and cannot override VerificationDecision or become an independent authorization source. Source idempotency is enforced by organization/workspace + source + signal + policy scope. High/critical anti-abuse signals may create an idempotent generic ModerationCase; enforcement remains policy/authorization controlled.
+
+
+
 ## 18.3 Fulfillment / Service Delivery
 
 ### `fulfillment_orders`
