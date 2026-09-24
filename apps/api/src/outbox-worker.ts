@@ -292,7 +292,9 @@ async function enrichSeoPayload(
     }
   }
 
-  if (business && (event.eventType === "business.created.v1" || event.eventType === "business.publication.changed.v1")) {
+  if (business && (event.eventType === "business.created.v1" || event.eventType === "business.publication.changed.v1"
+    || event.eventType === "business.profile.updated.v1" || event.eventType === "business.profile.published.v1"
+    || event.eventType === "business.profile.suspended.v1")) {
     const businessId = typeof payload.businessId === "string" ? payload.businessId : undefined;
     if (businessId) {
       const record = await business.get(context, brandId<"EntityId">(businessId));
