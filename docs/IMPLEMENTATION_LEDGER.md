@@ -62,7 +62,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | CustomerRelationship concurrency hardening | 🟢 Verified in `90792c7` | `packages/database/src/customer-relationship-repository.ts`; `c2692c8`; `2b98364`; `48af422`; `7573f49` test harness |
 | Business lifecycle concurrency hardening | 🟢 Verified in `90792c7` | `packages/business/src/repository.ts`; `b935137`; `90792c7` test harness |
 | Demand / Matching core | 🟢 Schema/package/repository/service/API/retrieval/ranking/connect implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts; apps/api/src/matching-routes.ts |
-| Matching learning signals | 🟢 Append-only outcome evidence implemented | migrations/0057_matching_learning_signals.sql; packages/matching/src/learning-repository.ts; packages/matching/src/service.ts; packages/matching/src/service.test.ts |
+| Matching learning signals | 🟢 Append-only outcome evidence implemented | migrations/0057_matching_learning_signals.sql; packages/matching/src/learning-repository.ts; packages/matching/src/service.ts; packages/matching/src/service.test.ts; apps/api/src/matching-routes.ts |
 | Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts; Review lifecycle fields exposed from repository |
 | Generic ModerationCase | 🟢 Schema/repository/service/test implemented | migrations/0052_moderation_cases.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; packages/trust/src/repository.test.ts |
 | Billing counter scope integrity | 🟢 Integrity migration implemented | migrations/0044_billing_counter_scope.sql; packages/billing/src/repository.ts |
@@ -726,3 +726,7 @@ Implementation commits:
 - 8d697763 — lock migration 0057 checksum
 - 64b26449 — reconcile physical matching learning storage
 - 49fb12b7 — add matching learning signal model
+- baffd81d — expose learning signal API
+- 163a163d — type learning signal route input
+- 929390f3 — document matching learning signal data model
+- 7354ceee — document matching learning signal physical contract
