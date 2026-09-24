@@ -206,8 +206,8 @@ export class CrmTimelineProjectionRepository extends Repository {
           projection_version, projected_at, created_at, updated_at
         )
         SELECT
-          e.id, e.organization_id, e.workspace_id, cr.customer_id, cr.business_id,
-          e.id, e.id, e.source_module, e.source_event_id, e.event_type, e.event_version,
+          e.id, e.organization_id, e.workspace_id, e.relationship_id, cr.customer_id, cr.business_id,
+          e.id, e.source_module, e.source_event_id, e.event_type, e.event_version,
           e.occurred_at, e.received_at, e.actor_reference, e.visibility, e.redaction_class,
           e.projection_version, ?, ?, ?
         FROM crm_timeline_events e
