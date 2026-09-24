@@ -74,6 +74,7 @@ import aiMemory from "../../../migrations/0076_ai_memory.sql";
 import seoGeoEngine from "../../../migrations/0077_seo_geo_engine.sql";
 import seoGeoGraph from "../../../migrations/0078_seo_geo_graph.sql";
 import seoOperationalControlPlane from "../../../migrations/0079_seo_operational_control_plane.sql";
+import seoPublicRenderIndex from "../../../migrations/0080_seo_public_render_index.sql";
 import promotionCore from "../../../migrations/0080_promotion_core.sql";
 import loyaltyCore from "../../../migrations/0081_loyalty_core.sql";
 import type { MigrationSource } from "@qooqnos/database";
@@ -155,6 +156,7 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0077_seo_geo_engine.sql", sql: seoGeoEngine },
   { path: "migrations/0078_seo_geo_graph.sql", sql: seoGeoGraph },
   { path: "migrations/0079_seo_operational_control_plane.sql", sql: seoOperationalControlPlane },
+  { path: "migrations/0080_seo_public_render_index.sql", sql: seoPublicRenderIndex },
   { path: "migrations/0080_promotion_core.sql", sql: promotionCore },
   { path: "migrations/0081_loyalty_core.sql", sql: loyaltyCore },
 ];
