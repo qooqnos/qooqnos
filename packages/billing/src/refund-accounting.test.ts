@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { describe, expect, it } from "vitest";
 import { brandId, type RequestContext } from "@qooqnos/core";
