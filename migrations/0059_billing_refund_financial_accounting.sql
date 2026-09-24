@@ -177,6 +177,25 @@ BEGIN
   SELECT RAISE(ABORT, 'Ledger entries cannot be deleted');
 END;
 
+CREATE TRIGGER trg_billing_refund_requires_balanced_ledger
+BEFORE UPDATE OF ledger_transaction_id ON billing_refunds
+FOR EACH ROW
+WHEN NEW.ledger_transaction_id IS NOT NULL
+ AND (
+   (SELECT COALESCE(SUM(CASE WHEN direction = 'debit' THEN amount_minor ELSE 0 END), 0)
+    FROM billing_ledger_entries WHERE transaction_id = NEW.ledger_transaction_id)
+   <= 0
+   OR
+   (SELECT COALESCE(SUM(CASE WHEN direction = 'debit' THEN amount_minor ELSE 0 END), 0)
+    FROM billing_ledger_entries WHERE transaction_id = NEW.ledger_transaction_id)
+   <>
+   (SELECT COALESCE(SUM(CASE WHEN direction = 'credit' THEN amount_minor ELSE 0 END), 0)
+    FROM billing_ledger_entries WHERE transaction_id = NEW.ledger_transaction_id)
+ )
+BEGIN
+  SELECT RAISE(ABORT, 'Refund ledger transaction must be balanced and non-zero');
+END;
+
 CREATE TRIGGER trg_billing_refund_ledger_currency
 BEFORE UPDATE OF ledger_transaction_id, currency ON billing_refunds
 FOR EACH ROW
