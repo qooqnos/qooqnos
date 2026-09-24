@@ -736,7 +736,7 @@ The remaining implementation work is operational/provider/projection work; Catal
 5. Communication external provider-adapter contracts and scoped dispatch rate-limit/anomaly controls are implemented; intent/consent/suppression policy and required-message exception semantics are implemented. Provider credentials remain runtime-only.
 6. Scheduled Automation polling/misfire execution and CapabilityRegistry-backed scheduled action execution are implemented; capability compensation remains only where a concrete rollback contract exists.
 7. AI Runtime durable worker scheduling and Seller AI input/payload resolution are implemented; add resolvers only when a new AI operation type is introduced.
-8. Complete Integration provider-specific adapters and cross-provider retention/reconciliation semantics; durable claim/sync worker infrastructure is implemented.
+8. Integration provider adapter runtime, credential resolver contract, configurable HTTP adapter and signed webhook verification are implemented; concrete vendor onboarding and any provider-specific retention/reconciliation semantics remain external operational work.
 9. Privacy export/delete/retention processors are implemented for the canonical Customer domain; future domains require their own domain-owned processor contract. Approved-request orchestration, subject-level identity validation and consent expiry are implemented.
 10. Complete Matching learning signals and broader Act projections; core retrieval/ranking/Connect execution is implemented.
 11. Complete Fulfillment provider-specific adapters, callback reconciliation and durable polling only where an external provider contract exists; canonical tracking/service completion persistence is implemented.
