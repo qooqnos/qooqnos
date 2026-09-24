@@ -6,9 +6,7 @@
 
 ## Verification result
 
-The latest fully verified checkpoint remains:
-
-`3f3192819a9879fb453070e82e04785b3fea5e80`
+The latest fully verified checkpoint remains the pre-cleanup checkpoint; the current cleanup head is awaiting a fresh CI/Phoenix verification run.
 
 Current `main` contains subsequent implementation/documentation commits and has not yet produced a new successful CI/Phoenix verification run. The prior checkpoint remains the verification baseline.
 
@@ -78,7 +76,7 @@ Implemented core capability families include:
 ## Repository continuity guards
 
 - `npm run verify:migrations` validates the canonical SQL migrations and their lock manifest.
-- `npm run verify:source-boundary` fails if canonical application packages reintroduce legacy InMemory/PostgreSQL/database compatibility paths outside the explicit compatibility allowlist.
+- `npm run verify:source-boundary` fails if canonical application packages reintroduce legacy InMemory/PostgreSQL/database compatibility paths.
 - `npm run verify:runtime-registry` fails if a package manifest is missing from the canonical API runtime module registry.
 
 ## Remaining completion gates
