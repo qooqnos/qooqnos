@@ -390,6 +390,16 @@ function optionalSeoEntityFields(payload: Record<string, unknown>): Partial<SeoE
       (fields as Record<string, unknown>)[key] = String(payload[key]).trim();
     }
   }
+  if (Array.isArray(payload.relatedEntities)) {
+    const values = payload.relatedEntities
+      .filter((value): value is Record<string, unknown> => Boolean(value) && typeof value === "object" && !Array.isArray(value))
+      .map((value) => ({
+        entityId: typeof value.entityId === "string" ? value.entityId.trim() : "",
+        relation: typeof value.relation === "string" ? value.relation.trim() : "",
+      }))
+      .filter((value) => value.entityId && value.relation);
+    if (values.length) fields.relatedEntities = values;
+  }
   if (typeof payload.price === "number" && Number.isFinite(payload.price)) fields.price = payload.price;
   if (payload.geoScope === "exact" || payload.geoScope === "branch" || payload.geoScope === "city" ||
       payload.geoScope === "region" || payload.geoScope === "country" || payload.geoScope === "service-area") {
