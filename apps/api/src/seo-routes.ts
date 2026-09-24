@@ -61,7 +61,22 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       const locale = new URL(request.url).searchParams.get("locale") ?? undefined;
       const representation = await repository.getRepresentation(context, params.entityId, locale);
       if (!representation) return json({ error: { code: "NOT_FOUND", message: "SEO representation not found." } }, 404, context.requestId);
-      await repository.saveAudit(context, { id: `seo-audit:${params.entityId}:${crypto.randomUUID()}`, ...representation, now: new Date().toISOString() });
+      const now = new Date().toISOString();
+      await repository.saveAudit(context, {
+        id: `seo-audit:${params.entityId}:${crypto.randomUUID()}`,
+        entity: representation.entity,
+        canonicalUrl: representation.canonicalUrl,
+        indexability: representation.indexability,
+        now,
+        surface: {
+          ...(representation.metadata ? { metadata: representation.metadata } : {}),
+          ...(representation.structuredData ? { structuredData: representation.structuredData } : {}),
+          ...(representation.answer ? { answer: representation.answer } : {}),
+          ...(representation.page ? { page: representation.page } : {}),
+          ...(representation.policy ? { policy: representation.policy } : {}),
+          now,
+        },
+      });
       return json({ audit: await repository.getLatestAudit(context, params.entityId) }, 200, context.requestId);
     },
   });
