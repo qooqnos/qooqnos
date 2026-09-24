@@ -1110,3 +1110,19 @@ Canonical files:
 - `apps/web/src/main.ts`
 - `apps/web/styles.css`
 - `apps/web/public/styles.css`
+
+### Frontend Operations Center — 2026-09-25
+
+The frontend now exposes canonical Case Support and Fulfillment operations.
+
+Implemented:
+- dedicated `/operations` route;
+- live Case list via `GET /api/v1/cases`;
+- first-response recording and optimistic-free status transitions through canonical case commands with expected-version concurrency;
+- live Fulfillment lookup via `GET /api/v1/fulfillment/:fulfillmentId`;
+- no case state machine, SLA policy, fulfillment transition policy, or shipment logic is duplicated in frontend.
+
+Canonical files:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
