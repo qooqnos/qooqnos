@@ -28,6 +28,7 @@ export interface SeoPublicationJob {
   readonly reason: string;
   readonly attempts: number;
   readonly availableAt: string;
+  readonly sourceEventId: string | null;
 }
 
 const EVENT_REASON: Readonly<Record<string, SeoPublicationReason>> = {
@@ -106,9 +107,9 @@ export async function processSeoPublicationJobs(
     );
     if ((locked.meta?.changes ?? 0) !== 1) continue;
     try {
-      const row = await database.first<{ payloadJson: string }>(
-        `SELECT payload_json AS payloadJson FROM outbox_events WHERE id=? LIMIT 1`, job.id.startsWith("seo-job:") ? "" : job.id,
-      );
+      const row = job.sourceEventId ? await database.first<{ payloadJson: string }>(
+        `SELECT payload_json AS payloadJson FROM outbox_events WHERE id=? LIMIT 1`, job.sourceEventId,
+      ) : null;
       const payload = row ? payloadEntity(row.payloadJson) : null;
       if (!payload) {
         throw new Error("SEO publication job has no canonical entity payload; source adapter must provide one.");
