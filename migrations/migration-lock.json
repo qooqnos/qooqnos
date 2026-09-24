@@ -446,7 +446,7 @@
       "id": "0064_trust_signals_anti_abuse",
       "version": 64,
       "moduleId": "trust",
-      "checksum": "853079405408e86a149d884927f2e84e00cf0d463d14ba68a05dc62cfd94187e",
+      "checksum": "3bda1dac34b9cfe348d9da40b0be6474a8148aaf49ef71641d91f208edbe7191",
       "filename": "0064_trust_signals_anti_abuse.sql"
     }
   ]
