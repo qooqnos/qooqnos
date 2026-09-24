@@ -112,6 +112,7 @@ function buildSeoVisibilityWorkerConfig(env: ApiEnv, limit: number) {
 function buildSeoCompetitiveWorkerConfig(env: ApiEnv, limit: number) {
   const locationCode = env.SEO_COMPETITIVE_LOCATION_CODE ? Number(env.SEO_COMPETITIVE_LOCATION_CODE) : undefined;
   const depth = env.SEO_COMPETITIVE_DEPTH ? Number(env.SEO_COMPETITIVE_DEPTH) : undefined;
+  const pageSampleLimit = env.SEO_COMPETITIVE_PAGE_SAMPLE_LIMIT ? Number(env.SEO_COMPETITIVE_PAGE_SAMPLE_LIMIT) : undefined;
   return {
     login: env.SEO_COMPETITIVE_LOGIN ?? "",
     password: env.SEO_COMPETITIVE_PASSWORD ?? "",
@@ -121,6 +122,7 @@ function buildSeoCompetitiveWorkerConfig(env: ApiEnv, limit: number) {
     languageCode: env.SEO_COMPETITIVE_LANGUAGE_CODE ?? "en",
     device: env.SEO_COMPETITIVE_DEVICE ?? "desktop",
     ...(depth !== undefined && Number.isFinite(depth) ? { depth } : {}),
+    ...(pageSampleLimit !== undefined && Number.isFinite(pageSampleLimit) ? { pageSampleLimit } : {}),
     limit,
   };
 }
