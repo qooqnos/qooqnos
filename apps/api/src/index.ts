@@ -113,6 +113,8 @@ function buildSeoCompetitiveWorkerConfig(env: ApiEnv, limit: number) {
   const locationCode = env.SEO_COMPETITIVE_LOCATION_CODE ? Number(env.SEO_COMPETITIVE_LOCATION_CODE) : undefined;
   const depth = env.SEO_COMPETITIVE_DEPTH ? Number(env.SEO_COMPETITIVE_DEPTH) : undefined;
   const pageSampleLimit = env.SEO_COMPETITIVE_PAGE_SAMPLE_LIMIT ? Number(env.SEO_COMPETITIVE_PAGE_SAMPLE_LIMIT) : undefined;
+  const keywordGapCompetitorLimit = env.SEO_COMPETITIVE_KEYWORD_GAP_COMPETITOR_LIMIT ? Number(env.SEO_COMPETITIVE_KEYWORD_GAP_COMPETITOR_LIMIT) : undefined;
+  const keywordGapLimit = env.SEO_COMPETITIVE_KEYWORD_GAP_LIMIT ? Number(env.SEO_COMPETITIVE_KEYWORD_GAP_LIMIT) : undefined;
   return {
     login: env.SEO_COMPETITIVE_LOGIN ?? "",
     password: env.SEO_COMPETITIVE_PASSWORD ?? "",
@@ -123,6 +125,8 @@ function buildSeoCompetitiveWorkerConfig(env: ApiEnv, limit: number) {
     device: env.SEO_COMPETITIVE_DEVICE ?? "desktop",
     ...(depth !== undefined && Number.isFinite(depth) ? { depth } : {}),
     ...(pageSampleLimit !== undefined && Number.isFinite(pageSampleLimit) ? { pageSampleLimit } : {}),
+    ...(keywordGapCompetitorLimit !== undefined && Number.isFinite(keywordGapCompetitorLimit) ? { keywordGapCompetitorLimit } : {}),
+    ...(keywordGapLimit !== undefined && Number.isFinite(keywordGapLimit) ? { keywordGapLimit } : {}),
     limit,
   };
 }
