@@ -374,3 +374,43 @@ describe("Matching permissions", () => {
     expect(MATCHING_PERMISSIONS).toContain("matching.request.connect");
   });
 });
+
+
+describe("Matching learning signals", () => {
+  it("records outcome evidence through the canonical learning repository", async () => {
+    const recorded: Record<string, unknown>[] = [];
+    const service = new MatchingService({
+      repository: {} as never,
+      discovery: {} as never,
+      learning: {
+        async record(_context: RequestContext, input: Record<string, unknown>) {
+          recorded.push(input);
+          return { id: input.id, signalType: input.signalType };
+        },
+      } as never,
+      authorization: authorization(),
+      id: () => brandId<"EntityId">("signal-1"),
+      now: () => "2026-09-24T09:00:00.000Z",
+    });
+
+    const result = await service.recordLearningSignal(context(), {
+      matchRequestId: brandId<"EntityId">("match-1"),
+      candidateId: brandId<"EntityId">("candidate-1"),
+      signalType: "booked",
+      source: "booking",
+      metadata: { bookingId: "booking-1" },
+    });
+
+    expect(result.id).toBe("signal-1");
+    expect(recorded).toEqual([{
+      id: "signal-1",
+      matchRequestId: "match-1",
+      candidateId: "candidate-1",
+      signalType: "booked",
+      source: "booking",
+      metadata: { bookingId: "booking-1" },
+      occurredAt: "2026-09-24T09:00:00.000Z",
+      now: "2026-09-24T09:00:00.000Z",
+    }]);
+  });
+});
