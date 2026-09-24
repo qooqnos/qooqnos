@@ -368,6 +368,9 @@ The canonical physical Billing model is module-prefixed:
 - `billing_provider_refs`
 - `match_learning_signals`: append-only post-match outcome evidence owned by Matching.
 - `billing_reconciliation_cases`
+- `billing_financial_audit_events`
+
+`billing_financial_audit_events` is the append-only financial evidence trail for payment, invoice, refund, fee, settlement and reconciliation actions. It records actor/request/correlation context, immutable before/after evidence, monetary context where applicable, idempotency and an integrity hash. It does not replace the future financial ledger or payment source-of-truth tables.
 
 Payment execution, invoices and the financial ledger remain separate Billing/Payment contracts until their physical ownership contracts close.
 
