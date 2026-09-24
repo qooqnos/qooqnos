@@ -1448,3 +1448,8 @@ Implemented as the runtime closure between persisted SEO projections and the act
 - Control Plane exposes a manual Production Crawl action beside SEO Audit.
 
 Runtime verification remains separate from implementation: the deployed Worker must still be probed against a real public entity URL after deployment.
+
+Additional production hardening:
+- sitemap.xml now upgrades automatically to a sitemap index when public canonical URL volume exceeds the configured 50,000-entry shard size; deterministic /sitemap-N.xml shards are supported;
+- API/SEO infrastructure routes are handled before Cloudflare SPA asset fallback so robots.txt, sitemap.xml, sitemap shards, health and API routes cannot be replaced by index.html;
+- production Wrangler rendering now preserves SEO canonical base, crawler sample limit and the production Cron Trigger.
