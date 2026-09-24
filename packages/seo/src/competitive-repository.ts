@@ -195,6 +195,32 @@ export class SeoCompetitiveRepository extends Repository {
     );
   }
 
+  async recordLinkGap(
+    context: RequestContext,
+    input: {
+      readonly id: string;
+      readonly competitorId?: string;
+      readonly entityId?: string;
+      readonly competitorDomain: string;
+      readonly referringDomain: string;
+      readonly competitorBacklinks?: number;
+      readonly competitorDomainRank?: number;
+      readonly observedAt: string;
+      readonly provenance: Record<string, unknown>;
+    },
+  ): Promise<void> {
+    const scope = this.scope(context);
+    await this.database.run(
+      `INSERT INTO seo_competitive_link_gaps
+       (id, organization_id, workspace_id, competitor_id, entity_id, competitor_domain, referring_domain,
+        competitor_backlinks, competitor_domain_rank, observed_at, provenance_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      input.id, scope.organizationId, scope.workspaceId, input.competitorId ?? null, input.entityId ?? null,
+      input.competitorDomain, input.referringDomain, input.competitorBacklinks ?? null, input.competitorDomainRank ?? null,
+      input.observedAt, JSON.stringify(input.provenance),
+    );
+  }
+
   async recordKeywordGap(
     context: RequestContext,
     input: {
@@ -280,6 +306,7 @@ export class SeoCompetitiveRepository extends Repository {
     opportunities: readonly Record<string, unknown>[];
     pageSnapshots: readonly Record<string, unknown>[];
     keywordGaps: readonly Record<string, unknown>[];
+    linkGaps: readonly Record<string, unknown>[];
   }> {
     const scope = this.scope(context);
     const pageSnapshots = await this.database.all(
@@ -371,7 +398,17 @@ export class SeoCompetitiveRepository extends Repository {
         LIMIT 100`,
       scope.organizationId, scope.workspaceId, entityId,
     );
-    return { competitors, changes, opportunities, pageSnapshots, keywordGaps };
+    const linkGaps = await this.database.all(
+      `SELECT g.competitor_domain AS competitorDomain, g.referring_domain AS referringDomain,
+              g.competitor_backlinks AS competitorBacklinks, g.competitor_domain_rank AS competitorDomainRank,
+              g.observed_at AS observedAt
+         FROM seo_competitive_link_gaps g
+        WHERE g.organization_id=? AND g.workspace_id IS ? AND g.entity_id=?
+        ORDER BY COALESCE(g.competitor_backlinks, 0) DESC, g.observed_at DESC
+        LIMIT 100`,
+      scope.organizationId, scope.workspaceId, entityId,
+    );
+    return { competitors, changes, opportunities, pageSnapshots, keywordGaps, linkGaps };
   }
 
   private scope(context: RequestContext): { organizationId: string; workspaceId: string | null } {
