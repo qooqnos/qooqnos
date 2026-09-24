@@ -83,6 +83,7 @@ export function validateAnswerRepresentation(
   }
 
   const valid = issues.every((issue) => issue.severity !== "error");
-  const citationReady = valid && answer.citationReady && answer.confidence === "verified" && answer.facts.length > 0;
+  const hasFreshEvidence = !issues.some((issue) => issue.code === "STALE_SOURCE");
+  const citationReady = valid && hasFreshEvidence && answer.citationReady && answer.confidence === "verified" && answer.facts.length > 0;
   return { valid, citationReady, issues };
 }
