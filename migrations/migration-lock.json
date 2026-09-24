@@ -532,6 +532,13 @@
       "moduleId": "seo",
       "filename": "0079_seo_operational_control_plane.sql",
       "checksum": "2e19f47cbf6b2bc862c8fd8fb8d512d3264d1266dcc394b86c703e2889328762"
+    },
+    {
+      "id": "0080_promotion_core",
+      "version": 80,
+      "moduleId": "promotion",
+      "checksum": "a958069292f8a6121997cc28b73dd171d552faa0cc89c827d52b671a6346e496",
+      "filename": "0080_promotion_core.sql"
     }
   ]
 }
