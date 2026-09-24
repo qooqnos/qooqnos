@@ -39,6 +39,7 @@ type ApiOptions = {
 };
 
 let activeDiscoveryItems: DiscoveryResult[] = [];
+let studioPreviewUrl: string | undefined;
 
 const demoBusinesses: DiscoveryResult[] = [
   {
@@ -1780,12 +1781,15 @@ function bindGlobalEvents(): void {
     if (name) name.textContent = file ? `${file.name} · ${Math.round(file.size / 1024)}KB` : "بدون تصویر";
     const preview = document.querySelector<HTMLImageElement>("#studio-image-preview");
     if (preview) {
+      if (studioPreviewUrl) URL.revokeObjectURL(studioPreviewUrl);
       if (file) {
-        preview.src = URL.createObjectURL(file);
+        studioPreviewUrl = URL.createObjectURL(file);
+        preview.src = studioPreviewUrl;
         preview.hidden = false;
       } else {
         preview.removeAttribute("src");
         preview.hidden = true;
+        studioPreviewUrl = undefined;
       }
     }
   });
