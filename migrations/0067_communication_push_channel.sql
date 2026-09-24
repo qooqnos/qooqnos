@@ -2,6 +2,7 @@
 -- SQLite CHECK constraints are immutable, so the affected tables are rebuilt in-place.
 DROP TRIGGER IF EXISTS trg_communication_notification_scope_insert;
 DROP TRIGGER IF EXISTS trg_communication_notification_policy_insert;
+ALTER TABLE communication_notifications RENAME TO communication_notifications_legacy;
 
 CREATE TABLE communication_notifications (
   id TEXT PRIMARY KEY,
@@ -33,7 +34,6 @@ CREATE INDEX idx_communication_notifications_scheduled
   ON communication_notifications(status, scheduled_at);
 
 ALTER TABLE communication_delivery_attempts RENAME TO communication_delivery_attempts_legacy;
-ALTER TABLE communication_notifications RENAME TO communication_notifications_legacy;
 CREATE TABLE communication_delivery_attempts (
   id TEXT PRIMARY KEY,
   notification_id TEXT NOT NULL REFERENCES communication_notifications(id) ON DELETE RESTRICT,
