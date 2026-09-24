@@ -1172,3 +1172,11 @@ The physical data model is architecture-complete when every planned physical tab
 ### `billing_reconciliation_cases` — implemented
 
 The reconciliation case is the canonical exception record for Billing/provider mismatches. It carries tenant/workspace/business scope, provider and local/external references, expected/observed amounts, currency, category, resolution metadata, correlation and idempotency. `billing_reconciliation_case_events` is append-only and immutable for auditability.
+
+### Matching Act outcome integration — implemented
+
+Booking and Commerce may persist optional `match_request_id` / `match_candidate_id` references on authoritative Act records. These references do not transfer ownership of Booking or Commerce truth to Matching.
+
+Durable Act outcomes are emitted through the existing transactional outbox and consumed by `MatchingOutcomeProcessor`. Supported v1 outcomes are `booking.completed`, `booking.no_show`, `booking.cancelled`, `commerce.order.completed`, `commerce.payment.completed`, `payment.captured`, and `fulfillment.completed`. The processor resolves the authoritative MatchRequest/Candidate, records exactly one append-only Learning Signal using the outbox event ID as the signal identity, and ignores events with no unambiguous match linkage rather than guessing.
+
+This closes the integration boundary without creating a second Learning system.
