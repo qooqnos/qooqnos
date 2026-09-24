@@ -103,7 +103,7 @@ Cleanup commits: `3fe67d1`, `8f02cfc`, `aa75afe`, `81162b0`, `6f7fe40`, `ed39a42
 
 **Database engineering readiness: 91.7% on the explicit 12-gate rubric:** 11 repository/schema/runtime gates are closed; the remaining gate is credentialed remote application of the canonical migration history to the provisioned production D1. This percentage is a readiness metric, not a product-completion score.
 
-The current main head is 45 commits ahead of the last fully verified checkpoint. The compare shows no canonical migration SQL changes after that checkpoint; the current delta is documentation, CI/package configuration and database-audit/deployment scripts. The latest head is not claimed as CI-verified because the exposed workflow-run query does not return a successful run for it.
+The current main head contains post-checkpoint implementation and documentation changes, including CRM timeline projection, Analytics, Documents/Export composition, Case dispatch, Integration vendor onboarding documentation, and Fulfillment callback reconciliation. The latest head is not claimed as CI-verified because the exposed workflow-run query does not return a successful run for it.
 
 ## 2. Database history
 
