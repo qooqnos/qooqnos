@@ -169,11 +169,21 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
          WHERE organization_id=? AND workspace_id IS ? AND surface='production-crawler' AND observed_at>=?`,
         context.tenantId, context.workspaceId ?? null, recentSince,
       );
-      const degraded = (result?.failed ?? 0) > 0 || (crawl?.failures ?? 0) > 0;
+      const measurement = await database.first<{ failures: number; lastObservedAt: string | null; runs: number }>(
+        `SELECT
+           SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) AS failures,
+           MAX(completed_at) AS lastObservedAt,
+           COUNT(*) AS runs
+         FROM seo_measurement_runs
+         WHERE organization_id=? AND workspace_id IS ? AND started_at>=?`,
+        context.tenantId, context.workspaceId ?? null, recentSince,
+      );
+      const degraded = (result?.failed ?? 0) > 0 || (crawl?.failures ?? 0) > 0 || (measurement?.failures ?? 0) > 0;
       return json({
         status: degraded ? "degraded" : "ok",
         publication: { pending: result?.pending ?? 0, failed: result?.failed ?? 0 },
         productionCrawler: { recentFailures: crawl?.failures ?? 0, lastObservedAt: crawl?.lastObservedAt ?? null },
+        visibilityMeasurement: { recentFailures: measurement?.failures ?? 0, runs: measurement?.runs ?? 0, lastObservedAt: measurement?.lastObservedAt ?? null },
       }, degraded ? 503 : 200, context.requestId);
     },
   });
