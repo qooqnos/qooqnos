@@ -63,7 +63,9 @@ vars = { APP_VERSION = "staging", ENVIRONMENT = "staging" }
 
 [env.production]
 name = "qooqnos-production"
-vars = { APP_VERSION = "production", ENVIRONMENT = "production" }
+vars = { APP_VERSION = "production", ENVIRONMENT = "production", SEO_CANONICAL_BASE_URL = "https://qooqnos.com", SEO_CRAWLER_SAMPLE_LIMIT = "25" }
+[env.production.triggers]
+crons = [ "17 * * * *" ]
 
 # Queue and R2 resources are also environment-specific. Keep these examples commented
 # until the real Cloudflare resources exist.
