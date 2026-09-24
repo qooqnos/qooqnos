@@ -129,7 +129,7 @@ export function buildAnswerRepresentation(
     freshnessAt: freshnessAt(entity, normalizedFacts),
     sourceUpdatedAt: entity.updatedAt,
     confidence,
-    citationReady: Boolean(answer) && confidence === "verified" && normalizedFacts.length > 0 && !limitations.includes("Entity is not publicly published and must not be exposed as a public answer source."),
+    citationReady: validHttpUrl(canonicalUrl) && validTimestamp(now) && Boolean(answer) && confidence === "verified" && normalizedFacts.length > 0 && !limitations.includes("Entity is not publicly published and must not be exposed as a public answer source."),
     ...(geography ? { geography } : {}),
     limitations,
   };
