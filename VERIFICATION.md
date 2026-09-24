@@ -6,14 +6,12 @@
 
 ## Verification result
 
-The latest fully verified checkpoint remains the recorded pre-cleanup checkpoint; the current main head contains subsequent implementation changes and awaits a fresh CI/Phoenix verification run.
+The latest fully verified checkpoint is the current main head `30cf6fe4b1e95dda5ccd91af20b7001bb0e39192`.
 
-Current `main` contains subsequent implementation/documentation commits and has not yet produced a new successful CI/Phoenix verification run. The prior checkpoint remains the verification baseline.
+Current `main` has a fresh successful verification pair. Both required workflows passed for the current head:
 
-Both required workflows passed for the prior verified checkpoint; no newer green result is claimed for the current head:
-
-- **CI:** current head verification run `35918117117` — success
-- **Phoenix verification:** current head run `35918117178` — success
+- **CI:** run `36010494882` — success
+- **Phoenix verification:** run `36010494895` — success
 
 The prior verification run completed successfully. Validation on that checkpoint includes migration-lock integrity, canonical-source legacy boundary, runtime-module registry completeness, migration-history checks, lint, typecheck, build, Cloudflare Worker dry-run and unit tests.
 
@@ -90,8 +88,8 @@ The physical schema is intentionally broad but not every operational concern is 
 5. AI durable worker lease/claim/reclaim infrastructure and the Seller AI production scheduler/input resolver are implemented; new AI operation types require an explicit resolver contract.
 6. Matching learning signals and broader Act outcome integrations are implemented through the existing append-only Learning Signal boundary; additional provider-specific outcomes remain contract-driven.
 7. CustomerProfile is resolved as a logical aggregate over existing Customer-owned records; CRM timeline event storage and the rebuildable read-model projection are implemented; history reads are projection-backed and the projection contract/rebuild path is verified in the CRM package tests.
-8. Localization context plus canonical locale/country/region/market/legal registry structures are implemented by migration 0072; Documents/Export composition and canonical AI Memory storage are implemented and runtime-registered; PDF/Print rendering and durable artifact persistence remain downstream adapters. Analytics is implemented by migration 0075.
-9. Case queue/provider dispatch is implemented through the canonical CaseDispatch persistence/attempt boundary, transactional outbox trigger, scheduled worker, provider registry, runtime-configured HTTP adapter, idempotency and transient/permanent retry classification. Concrete vendor onboarding and credentials remain external operational configuration. Production D1 is externally provisioned; credentialed remote migration/application and final binding configuration remain the infrastructure gate.
+8. Localization context plus canonical locale/country/region/market/legal registry structures are implemented by migration 0072; Documents/Export composition and canonical AI Memory storage are implemented and runtime-registered; PDF/Print concrete rendering adapters and durable R2 artifact persistence are implemented; the PDF core intentionally does not claim bundled proprietary Unicode font assets. Analytics is implemented by migration 0075.
+9. Case queue/provider dispatch is implemented through the canonical CaseDispatch persistence/attempt boundary, transactional outbox trigger, scheduled worker, provider registry, runtime-configured HTTP adapter, idempotency and transient/permanent retry classification. Concrete vendor onboarding and credentials remain external operational configuration. Production D1 is externally provisioned; credentialed remote migration/application remains the infrastructure gate.
 
 ## Source-of-truth documents
 
@@ -106,7 +104,9 @@ Read these before making substantial changes:
 - `docs/IMPLEMENTATION_LEDGER.md`
 - `PHASE_STATUS.md`
 
-This document is a current verification snapshot. Historical implementation narratives remain in git history and must not override the canonical documents above.
+This document is the current verification snapshot for the repository head.
+
+Historical implementation narratives remain in git history and must not override the canonical documents above.
 
 
 ## Current verification state
