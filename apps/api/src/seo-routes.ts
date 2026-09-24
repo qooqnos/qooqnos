@@ -4,8 +4,9 @@ import { json } from "./http";
 import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, SITEMAP_URL_LIMIT } from "@qooqnos/seo";
 import { crawlStoredSeoRepresentation } from "./seo-production-crawler";
 import { evaluateSeoProductionReadiness } from "./seo-production-readiness";
+import type { ApiEnv } from "./env";
 
-export function registerSeoRoutes(router: ApiRouter, database: D1Database | undefined, canonicalBaseUrl = "https://qooqnos.com"): void {
+export function registerSeoRoutes(router: ApiRouter, database: D1Database | undefined, canonicalBaseUrl = "https://qooqnos.com", environment?: ApiEnv): void {
   router.register({
     method: "GET",
     path: "/sitemap.xml",
@@ -241,7 +242,7 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
         context.tenantId, context.workspaceId ?? null,
         context.tenantId, context.workspaceId ?? null,
       );
-      const readiness = evaluateSeoProductionReadiness({ SEO_CANONICAL_BASE_URL: canonicalBaseUrl } as never);
+      const readiness = evaluateSeoProductionReadiness(environment ?? { SEO_CANONICAL_BASE_URL: canonicalBaseUrl });
       const degraded = (result?.failed ?? 0) > 0 || (crawl?.failures ?? 0) > 0 || (measurement?.failures ?? 0) > 0 || (competitive?.failures ?? 0) > 0;
       return json({
         status: degraded ? "degraded" : readiness.state,
