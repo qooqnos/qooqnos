@@ -1274,3 +1274,9 @@ Migration `0085_seo_audit_quality_gate.sql` owns these additions. Audit state is
 `seo_measurement_runs` records provider/surface/query/entity context, execution status, observation count and provenance. `seo_measurement_citations` records the exact observed citation URL/title/position and source type.
 
 These tables do not invent ranking, impression or citation values. Search-engine metrics come from authenticated provider APIs; AI citation metrics come from provider responses that explicitly expose URL citations.
+
+## 18.8 SEO competitive intelligence state
+
+`seo_competitors` stores tenant-scoped competitor identities discovered or explicitly registered. `seo_competitive_runs` stores provider/query/location snapshots; `seo_competitive_observations` stores observed SERP URLs/ranks/features; `seo_competitive_changes` stores detected rank, URL and AI-citation changes.
+
+These projections are external-observation evidence. They do not establish market share, revenue, popularity, or a universal ranking beyond the provider/query/location/device snapshot that produced the observation.
