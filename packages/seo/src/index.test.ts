@@ -95,5 +95,6 @@ describe("SEO/GEO core", () => {
     expect(query.intent).toBe("local");
     expect(evaluateQueryCoverage(query, [entity]).state).toBe("fully-covered");
     expect(evaluateFreshness(entity, "2026-09-24T12:00:00Z").stale).toBe(false);
+    expect(evaluateSeoPolicy(entity, "https://example.com/en-US/business/biz-1", "2026-10-10T00:00:00Z").indexability).toBe("noindex");
   });
 });
