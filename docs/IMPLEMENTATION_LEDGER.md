@@ -659,7 +659,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 The canonical physical inventory reaches migration `0056_communication_required_suppression.sql`. The migration lock/catalog is reconciled through 0056, and the current main head has passed both CI and Phoenix verification.
 
-Last fully verified head: `dbf4eafceb350f2626828244aacec3724c0c4537` — latest Business lifecycle reconciliation head, verified by current CI and Phoenix verification runs.nt green CI and Phoenix verification runs.
+Latest fully verified head: `3f24f07a0a04e58ac3dbb389c6491d59802ad82e` — deployment-strategy reconciliation head, verified by current CI and Phoenix verification.
 
 The canonical source-boundary and runtime-module-registry guards are now themselves verified on the current head. Discovery's RuntimeModule was also registered in `apps/api/src/runtime.ts` so every canonical manifest is present in the runtime module list.
 
@@ -706,6 +706,6 @@ Production D1 handoff: the production D1 resource `qooqnos-production` is now pr
 
 ### Verification checkpoint — 2026-09-24
 
-- Main head `5f0c9b00189aef2c43acebcf6b9e4d74bcacc5b3` has successful **CI** and **Phoenix verification** workflow runs.
+- Main head `3f24f07a0a04e58ac3dbb389c6491d59802ad82e` has successful **CI** and **Phoenix verification** workflow runs.
 - Verified steps include format, lint, migration catalog/lock, database completion report, canonical-source boundary, runtime-module registry, migration-history checks, typecheck, build, Cloudflare Worker dry-run and unit tests.
-- Production deployment remains intentionally separate and is protected by the production environment plus Cloudflare credentials; the canonical deploy path runs the full predeploy verification, then `migrate:prod:canonical`, then Worker deploy.
+- Production deployment remains intentionally separate and is protected by the production environment plus Cloudflare credentials; the canonical deploy path runs the full predeploy verification, then `migrate:prod:canonical`, then Worker deploy. No repository code should embed production D1/resource identifiers or credentials.
