@@ -38,7 +38,7 @@ The product loop remains:
 
 ## Canonical implementation coverage
 
-Current canonical migrations reach `0063_catalog_attribute_cutover.sql`.
+Current canonical migrations reach `0065_communication_push_channel.sql`.
 
 Implemented core capability families include:
 
@@ -88,7 +88,7 @@ The physical schema is intentionally broad but not every operational concern is 
 1. Scheduled Automation polling, misfire handling, CapabilityRegistry-backed scheduled action execution, reverse-order compensation, durable compensation references and recovery evidence are implemented; compensation is explicit and domain-owned capabilities remain responsible for reversibility.
 2. Integration durable claim/sync workers and provider-neutral adapter boundary are implemented; the credential resolver contract, runtime-configured HTTP adapter and signed webhook verification are implemented. Concrete vendor onboarding remains external operational work.
 3. Privacy consent expiry, subject scope validation, approved-request orchestration and the domain PrivacyProcessor registry are live; Customer export/delete processors and the tenant-safe retention sweep are implemented.
-4. Communication intent/consent/suppression policy, template registry, provider-neutral dispatch, runtime-configured HTTP provider adapters, scoped dispatch rate limits and bounded burst-anomaly detection are implemented; provider credentials remain runtime configuration.
+4. Communication intent/consent/suppression policy, template registry, provider-neutral dispatch, runtime-configured Email/SMS/WhatsApp/Push HTTP adapters, optional secondary-provider health/cooldown failover, scoped dispatch rate limits and bounded burst-anomaly detection are implemented; provider credentials remain runtime configuration.
 5. AI durable worker lease/claim/reclaim infrastructure and the Seller AI production scheduler/input resolver are implemented; new AI operation types require an explicit resolver contract.
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile is resolved as a logical aggregate over existing Customer-owned records; CRM timeline is already physically implemented as events/projection input.
