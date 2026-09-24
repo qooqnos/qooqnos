@@ -272,7 +272,7 @@ export class CaseSupportRepository extends Repository {
       statements.push(
         {
           sql: "INSERT OR IGNORE INTO case_dispatches (id,case_id,assignment_id,queue_id,provider_id,route_reference,idempotency_key,status,attempts,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,'pending',0,?,?,?)",
-          params: [dispatchId, input.id, assignmentId, input.queueId, queue.providerId ?? null, queue.routeReference ?? null, "case-dispatch:" + assignmentId, input.now, input.now, input.now],
+          params: [dispatchId, input.id, assignmentId, input.queueId ?? null, queue.providerId ?? null, queue.routeReference ?? null, "case-dispatch:" + assignmentId, input.now, input.now, input.now],
         },
         {
           sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?,?,1,'case',?,?,?,?, 'pending',0,?,?,NULL)",
