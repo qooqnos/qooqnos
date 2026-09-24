@@ -1599,3 +1599,9 @@ Competitive intelligence evidence layers now include:
 - Graph loading now traverses both outgoing and incoming edges, enabling internal-link recommendations from either side without fabricating a reciprocal domain relationship.
 - Existing `seo_dependencies` remains the invalidation mechanism; no second relationship source of truth was introduced.
 - Self-links and cross-tenant/workspace links remain protected by existing database constraints.
+
+## SEO/GEO Public Entity Page Relationship Surfaces — September 2026
+- Public Entity Page SSR already consumes the persisted `EntityPageModel`; internal-link recommendations now traverse both outgoing canonical relationships and incoming canonical relationships.
+- A page therefore exposes reciprocal navigation without inventing a second canonical relationship: incoming edges are rendered as `relatedTo` surface links while the original edge retains its authoritative relation.
+- Only published/public target nodes are linkable, and canonical URLs are taken from persisted SEO representations.
+- Tests cover both directions of a Business ↔ Service graph relationship.
