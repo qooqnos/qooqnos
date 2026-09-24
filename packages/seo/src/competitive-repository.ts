@@ -177,7 +177,7 @@ export class SeoCompetitiveRepository extends Repository {
       readonly changeType: "new-entry" | "lost-entry" | "rank-up" | "rank-down" | "url-changed" | "ai-citation-gained" | "ai-citation-lost";
       readonly competitorId?: string;
       readonly previousRank?: number | undefined;
-      readonly currentRank?: number;
+      readonly currentRank?: number | undefined;
       readonly previousUrl?: string | undefined;
       readonly currentUrl?: string | undefined;
       readonly provenance: Record<string, unknown>;
