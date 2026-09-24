@@ -222,7 +222,7 @@ Explicit recovery action reference for saga-style compensation. A reference belo
 | Field | Meaning |
 |---|---|
 | `compensation_reference_id` | Opaque identifier |
-| `failed_action_id` | Original action |
+| `failed_action_id` | Completed prior action whose successful side effect is being compensated; the triggering failed action is captured in recovery evidence |
 | `compensation_capability` | Approved capability |
 | `execution_id` | Workflow execution being recovered |
 | `failed_step_execution_id` | Failed step/attempt lineage where known |
