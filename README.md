@@ -61,6 +61,6 @@ Do not add a parallel TypeScript migration source.
 
 ## Current database state
 
-The current canonical D1 sequence covers the core platform domains through migration `0060`. Remaining work is primarily other external-provider domains, derived projections, lifecycle processors, explicitly gated contracts, production verification, and real Cloudflare resource provisioning.
+The current canonical D1 sequence covers the core platform domains through migration `0075`. Remaining work is primarily provider-specific activation, downstream renderer/vendor adapters, production verification, and the credentialed remote D1 application gate.
 
 Do not treat historical phase documents as current architecture.
