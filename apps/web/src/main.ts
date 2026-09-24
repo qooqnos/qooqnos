@@ -159,6 +159,7 @@ const routes: Route[] = [
   { path: "/control", label: "کنترل", icon: "⌘", render: renderControlCenter },
   { path: "/catalog", label: "کاتالوگ", icon: "▤", render: renderCatalog },
   { path: "/promotion", label: "پروموشن", icon: "٪", render: renderPromotion },
+  { path: "/loyalty", label: "وفاداری", icon: "♢", render: renderLoyalty },
 ];
 
 const theme = getInitialTheme();
@@ -586,6 +587,40 @@ async function evaluatePromotion(): Promise<void>{
     }});
     state.textContent=response.data.decision+" · "+response.data.reasons.join(", ");state.className=response.data.decision==="qualified"?"connection-state success":"connection-state";
   }catch(error){state.textContent=error instanceof Error?error.message:"Evaluation ناموفق بود.";state.className="connection-state error";}
+}
+function renderLoyalty(): string {
+  return '<section class="page-heading"><div><span class="eyebrow"><i></i> Loyalty Center</span><h1>ارزش بازگشت مشتری را <em>ثبت کنید.</em></h1><p>امتیازها ledger دارند و تغییرات فقط از طریق Loyalty canonical انجام می‌شوند.</p></div></section>' +
+    '<section class="engine-grid">' +
+      '<article class="glass-card engine-card"><div class="card-section-heading"><span class="section-kicker">Program</span><h2>Loyalty Program</h2></div><div class="engine-form"><input id="loyalty-name" class="studio-input-line" placeholder="نام برنامه" /><input id="loyalty-business" class="studio-input-line" value="' + escapeAttr(localStorage.getItem(STORAGE.business) ?? "") + '" placeholder="Business ID" /></div><button class="button button-primary" data-loyalty-create>ساخت برنامه</button><div id="loyalty-program-state" class="connection-state">—</div></article>' +
+      '<article class="glass-card engine-card"><div class="card-section-heading"><span class="section-kicker">Membership</span><h2>عضویت مشتری</h2></div><div class="engine-form"><input id="loyalty-program-id" class="studio-input-line" placeholder="Program ID" /><input id="loyalty-customer-id" class="studio-input-line" value="' + escapeAttr(localStorage.getItem(STORAGE.customer) ?? "") + '" placeholder="Customer ID" /><input id="loyalty-membership-id" class="studio-input-line" placeholder="Membership ID" /></div><button class="button button-primary" data-loyalty-enroll>Enroll</button><div id="loyalty-membership-state" class="connection-state">—</div></article>' +
+      '<article class="glass-card engine-card"><div class="card-section-heading"><span class="section-kicker">Ledger</span><h2>ثبت امتیاز</h2></div><div class="engine-form"><input id="loyalty-ledger-membership" class="studio-input-line" placeholder="Membership ID" /><input id="loyalty-points" class="studio-input-line" type="number" value="100" /><select id="loyalty-entry-type" class="studio-input-line"><option value="earn">earn</option><option value="adjustment">adjustment</option><option value="expire">expire</option><option value="reverse">reverse</option></select></div><button class="button button-primary" data-loyalty-ledger>ثبت امتیاز</button><div id="loyalty-ledger-state" class="connection-state">—</div></article>' +
+    '</section>';
+}
+
+async function createLoyaltyProgram(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#loyalty-program-state"); if(!state)return;
+  try{
+    const response=await apiJson<{data:{id:string}}>("/api/v1/loyalty/programs",{method:"POST",body:{name:document.querySelector<HTMLInputElement>("#loyalty-name")?.value.trim(),businessId:document.querySelector<HTMLInputElement>("#loyalty-business")?.value.trim()||undefined}});
+    document.querySelector<HTMLInputElement>("#loyalty-program-id")!.value=response.data.id;
+    state.textContent="Program ساخته شد · "+response.data.id; state.className="connection-state success";
+  }catch(error){state.textContent=error instanceof Error?error.message:"ساخت برنامه ناموفق بود.";state.className="connection-state error";}
+}
+
+async function enrollLoyaltyMember(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#loyalty-membership-state");if(!state)return;
+  try{
+    const response=await apiJson<{data:{id:string}}>("/api/v1/loyalty/memberships",{method:"POST",body:{programId:document.querySelector<HTMLInputElement>("#loyalty-program-id")?.value.trim(),customerId:document.querySelector<HTMLInputElement>("#loyalty-customer-id")?.value.trim()}});
+    document.querySelector<HTMLInputElement>("#loyalty-membership-id")!.value=response.data.id;document.querySelector<HTMLInputElement>("#loyalty-ledger-membership")!.value=response.data.id;
+    state.textContent="Membership ساخته شد · "+response.data.id; state.className="connection-state success";
+  }catch(error){state.textContent=error instanceof Error?error.message:"Enroll ناموفق بود.";state.className="connection-state error";}
+}
+
+async function postLoyaltyLedger(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#loyalty-ledger-state");if(!state)return;
+  try{
+    const response=await apiJson<{data:{id:string}}>("/api/v1/loyalty/ledger",{method:"POST",body:{membershipId:document.querySelector<HTMLInputElement>("#loyalty-ledger-membership")?.value.trim(),entryType:document.querySelector<HTMLSelectElement>("#loyalty-entry-type")?.value,pointsDelta:Number(document.querySelector<HTMLInputElement>("#loyalty-points")?.value||"0"),idempotencyKey:crypto.randomUUID()}});
+    state.textContent="Ledger entry ثبت شد · "+response.data.id; state.className="connection-state success";
+  }catch(error){state.textContent=error instanceof Error?error.message:"ثبت ledger ناموفق بود.";state.className="connection-state error";}
 }
 function renderCatalog(): string {
   const business = localStorage.getItem(STORAGE.business) ?? "";
@@ -2063,6 +2098,9 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-promo-version]")?.addEventListener("click", () => { void createPromotionVersion(); });
   document.querySelector<HTMLButtonElement>("[data-promo-activate]")?.addEventListener("click", () => { void activatePromotion(); });
   document.querySelector<HTMLButtonElement>("[data-promo-evaluate]")?.addEventListener("click", () => { void evaluatePromotion(); });
+  document.querySelector<HTMLButtonElement>("[data-loyalty-create]")?.addEventListener("click", () => { void createLoyaltyProgram(); });
+  document.querySelector<HTMLButtonElement>("[data-loyalty-enroll]")?.addEventListener("click", () => { void enrollLoyaltyMember(); });
+  document.querySelector<HTMLButtonElement>("[data-loyalty-ledger]")?.addEventListener("click", () => { void postLoyaltyLedger(); });
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
