@@ -96,7 +96,7 @@ export class CaseDispatchRepository extends Repository {
         ],
       },
     ]);
-    if ((results[0]?.meta.changes ?? 0) !== 1) throw new DatabaseError("Case dispatch changed concurrently");
+    if ((results[0]?.meta?.changes ?? 0) !== 1) throw new DatabaseError("Case dispatch changed concurrently");
   }
 
   async recordFailure(input: {
