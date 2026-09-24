@@ -1002,3 +1002,20 @@ Canonical frontend files:
 - `apps/web/public/styles.css`
 
 The frontend does not implement booking policy or discovery ranking locally; those remain owned by backend/domain modules.
+
+### Frontend Commerce Checkout — 2026-09-25
+
+The frontend now exposes the canonical Commerce cart → line → checkout-start flow.
+
+Implemented:
+- dedicated `/checkout` route;
+- creates a canonical cart through `POST /api/v1/commerce/carts`;
+- adds a selected offering/product-variant/service line through `POST /api/v1/commerce/carts/:cartId/lines`;
+- starts checkout through `POST /api/v1/commerce/checkout` with idempotency;
+- UI displays the canonical checkout session state and identifiers;
+- no pricing, promotion, loyalty, payment or fulfillment rules are implemented in the frontend.
+
+Canonical files:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
