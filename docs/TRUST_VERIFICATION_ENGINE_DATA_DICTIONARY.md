@@ -364,7 +364,7 @@ Industry and jurisdiction differences belong in VerificationPolicy and Verificat
 
 ## 23. Physical implementation status
 
-The canonical physical D1 chain currently covers VerificationCase, Evidence metadata, Policy, Requirements, Checks, Decisions, Human Review records, and Expiry/Re-evaluation records. Reviewer authorization, expiry workers/events, and TrustSignal persistence remain operational follow-up capabilities.
+The canonical physical D1 chain covers VerificationCase, Evidence metadata, Policy, Requirements, Checks, Decisions, Human Review records, Expiry/Re-evaluation records, TrustSignal persistence, reviewer authorization enforcement, and scheduled Trust expiry/anti-abuse processing.
 
 ## 24. Definition of Done
 
