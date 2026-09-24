@@ -4,7 +4,9 @@ export * from "./service";
 export * from "./manifest";
 export * from "./financial-audit";
 export * from "./refund-accounting";
-\nexport * from "./invoice-repository";\n
+
+export * from "./invoice-repository";
+
 export * from "./payment-provider-adapter";
 
 export * from "./payment-provider-service";
