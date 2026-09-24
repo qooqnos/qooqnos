@@ -129,7 +129,8 @@ export class MigrationRunner {
     const versions = [...byVersion.keys()].sort((a, b) => a - b);
     for (let index = 0; index < versions.length; index += 1) {
       const version = versions[index];
-      const previous = index === 0 ? 0 : versions[index - 1];
+      if (version === undefined) continue;
+      const previous = index === 0 ? 0 : (versions[index - 1] ?? 0);
       if (version <= previous) {
         throw new MigrationError(
           `Applied migration history is not strictly increasing: previous version ${previous}, found ${version}`,
