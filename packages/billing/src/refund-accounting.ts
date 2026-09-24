@@ -99,6 +99,30 @@ export class RefundAccountingRepository extends Repository {
     if (!input.reasonCode.trim()) throw new DatabaseError("Refund reason code is required");
     if (!input.idempotencyKey.trim()) throw new DatabaseError("Refund idempotency key is required");
 
+    const existing = await this.database.first<RefundRecord>(
+      `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId,
+        payment_reference AS paymentReference, order_reference AS orderReference,
+        requested_amount_minor AS requestedAmountMinor, refunded_amount_minor AS refundedAmountMinor,
+        currency, reason_code AS reasonCode, status, provider, provider_reference AS providerReference,
+        provider_status AS providerStatus, ledger_transaction_id AS ledgerTransactionId,
+        requested_by AS requestedBy, approved_by AS approvedBy, requested_at AS requestedAt,
+        processed_at AS processedAt, completed_at AS completedAt, failure_code AS failureCode,
+        correlation_id AS correlationId, idempotency_key AS idempotencyKey,
+        created_at AS createdAt, updated_at AS updatedAt
+       FROM billing_refunds
+       WHERE organization_id = ? AND idempotency_key = ?
+       LIMIT 1`,
+      organizationId, input.idempotencyKey.trim(),
+    );
+    if (existing) {
+      if (
+        existing.paymentReference !== input.paymentReference.trim() ||
+        existing.requestedAmountMinor !== input.requestedAmountMinor ||
+        existing.currency !== currency
+      ) throw new DatabaseError("Refund idempotency key reused with different financial input");
+      return existing;
+    }
+
     await this.database.run(
       `INSERT INTO billing_refunds
        (id, organization_id, workspace_id, business_id, payment_reference, order_reference,
@@ -113,6 +137,40 @@ export class RefundAccountingRepository extends Repository {
     const record = await this.getRefund(context, input.id);
     if (!record) throw new DatabaseError("Refund not found after creation");
     return record;
+  }
+
+  async approveRefund(context: RequestContext, refundId: EntityId, approvedBy: EntityId, now: string): Promise<RefundRecord> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const refund = await this.getRefund(context, refundId);
+    if (!refund) throw new DatabaseError("Refund not found");
+    if (refund.status !== "requested") throw new DatabaseError("Only requested refunds can be approved");
+    if (refund.requestedBy && refund.requestedBy === approvedBy) {
+      throw new DatabaseError("Refund approval requires separation from the requester");
+    }
+    const result = await this.database.run(
+      `UPDATE billing_refunds
+       SET status = 'approved', approved_by = ?, updated_at = ?
+       WHERE id = ? AND organization_id = ? AND status = 'requested'`,
+      approvedBy, now, refundId, organizationId,
+    );
+    if ((result.meta?.changes ?? 0) !== 1) throw new DatabaseError("Refund approval lost its state transition");
+    const updated = await this.getRefund(context, refundId);
+    if (!updated) throw new DatabaseError("Refund not found after approval");
+    return updated;
+  }
+
+  async markRefundProcessing(context: RequestContext, refundId: EntityId, now: string): Promise<RefundRecord> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const result = await this.database.run(
+      `UPDATE billing_refunds
+       SET status = 'processing', processed_at = ?, updated_at = ?
+       WHERE id = ? AND organization_id = ? AND status = 'approved'`,
+      now, now, refundId, organizationId,
+    );
+    if ((result.meta?.changes ?? 0) !== 1) throw new DatabaseError("Refund must be approved before processing");
+    const updated = await this.getRefund(context, refundId);
+    if (!updated) throw new DatabaseError("Refund not found after processing transition");
+    return updated;
   }
 
   async postSuccessfulRefundAccounting(
