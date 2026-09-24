@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T14:50:00.000Z",
+  "generatedAt": "2026-09-24T15:00:00.000Z",
   "migrations": [
     {
       "id": "0001_foundation",
@@ -491,5 +491,12 @@
       "checksum": "9c7709d8e65435103359fb618ac08248587610bcd752f2f0bbe60e4243055e9f",
       "filename": "0073_case_queue_provider_dispatch.sql"
     },
+    {
+      "id": "0074_crm_timeline_projection",
+      "version": 74,
+      "moduleId": "crm",
+      "checksum": "6749629b79e0f4fda174d3adcb0da1419d41cdd735867d3f128391e0152fb9e4",
+      "filename": "0074_crm_timeline_projection.sql"
+    }
   ]
 }
