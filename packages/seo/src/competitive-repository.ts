@@ -215,7 +215,7 @@ export class SeoCompetitiveRepository {
          FROM seo_queries q
          JOIN seo_competitive_observations o
            ON o.organization_id=q.organization_id AND o.workspace_id IS q.workspace_id AND o.query_text=q.query_text
-        WHERE q.organization_id=? AND q.workspace_id IS q.workspace_id AND q.entity_id=?
+        WHERE q.organization_id=? AND q.workspace_id IS ? AND q.entity_id=?
           AND NOT EXISTS (
             SELECT 1 FROM seo_measurements m
              WHERE m.organization_id=q.organization_id AND m.workspace_id IS q.workspace_id
