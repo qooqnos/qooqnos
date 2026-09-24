@@ -474,3 +474,7 @@ The documented `GET /api/v1/billing/invoices` surface is now live for scoped inv
 Payment execution is now provider-neutral at the Billing boundary through `PaymentProviderAdapter`, `PaymentProviderRegistry` and `PaymentProviderService`. The adapter contract normalizes create/capture/refund results, classifies transient versus permanent provider failures, requires idempotency keys, and verifies signed webhooks with replay-age protection. `createHttpPaymentProviderAdapter` provides a credential-injected HTTP adapter; provider credentials and signing secrets are supplied at runtime and are never stored in Billing tables. Provider references are recorded through the existing `billing_provider_refs` authority.
 
 Provider-specific SDKs or credentials must remain behind this adapter boundary. No Commerce code may call a provider directly.
+
+### Settlement — implemented
+
+Provider payout/settlement is now a canonical Billing aggregate. `billing_settlements` represents a provider/business settlement period and `billing_settlement_items` preserves immutable source-level financial composition. Settlement lifecycle is `pending → approved → processing → paid` with failed/cancelled terminal states. Approval has separation-of-duties, idempotency is mandatory, gross/fee/refund/net reconciliation is enforced, and settlement posting creates immutable double-entry ledger entries. Provider payout execution remains behind `PaymentProviderAdapter.payoutSettlement`; provider credentials never enter the financial database.
