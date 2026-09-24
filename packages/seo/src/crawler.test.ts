@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { AnswerRepresentation, EntityPageModel, SeoEntity, SeoMetadata, StructuredData } from "./types";
+import type { AnswerRepresentation, SeoEntity, SeoMetadata, StructuredData } from "./types";
+import type { EntityPageModel } from "./entity-page";
 import { crawlProductionSeoPage } from "./crawler";
 
 const canonicalUrl = "https://qooqnos.com/en-US/business/phoenix-studio-biz-1";
