@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brandId, type RequestContext } from "@qooqnos/core";
+import { brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import { ApprovalService } from "./approval-service";
 
 const context: RequestContext = {
@@ -19,7 +19,7 @@ describe("ApprovalService", () => {
     let decidedBy: string | undefined;
     const service = new ApprovalService({
       repository: {
-        async decide(_context, input) {
+        async decide(_context: RequestContext, input: { id: EntityId; status: "approved" | "rejected"; decidedBy: EntityId }) {
           decidedBy = input.decidedBy;
           return { id: input.id, status: input.status };
         },
