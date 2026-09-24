@@ -407,8 +407,8 @@ Commits:
 - 996658e — Align logical Trust model with physical chain
 
 Migration safety:
-- canonical migrations 0001–0063 remain numbered and are extended only through new migrations;
-- migrations 0024–0063 are preserved in the canonical lock sequence;
+- canonical migrations 0001–0064 remain numbered and are extended only through new migrations;
+- migrations 0024–0064 are preserved in the canonical lock sequence;
 - the committed migration lock remains the integrity source for canonical SQL;
 - no second schema registry was introduced.
 - Verification note: GitHub Actions is the authoritative build/test verification path; the current `main` head passed both CI and Phoenix verification with format, lint, migration-lock verification, typecheck, build, Worker dry-run and unit tests green.
@@ -748,3 +748,5 @@ Invoice runtime/API note: `GET /api/v1/billing/invoices` is implemented through 
 | Settlement | 🟢 Settlement aggregate + immutable items + approval/processing/paid lifecycle + provider payout boundary + reconciled double-entry accounting + tests implemented | migrations/0061_billing_settlement.sql; packages/billing/src/settlement-repository.ts; packages/billing/src/settlement-service.ts; packages/billing/src/settlement-repository.test.ts; packages/billing/src/payment-provider-adapter.ts |
 
 | Billing Reconciliation | 🟢 Case lifecycle + mismatch financial evidence + idempotency + immutable event history + scoped resolution implemented | migrations/0062_billing_reconciliation_hardening.sql; packages/billing/src/reconciliation-repository.ts; packages/billing/src/reconciliation-repository.test.ts |
+
+| TrustSignal / anti-abuse | 🟢 Operational | migrations/0064_trust_signals_anti_abuse.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-worker.ts; apps/api/src/trust-routes.ts |
