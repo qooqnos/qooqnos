@@ -21,3 +21,4 @@ export * from "./migration-catalog";
 export * from "./migration-lock";
 export * from "./migrations";
 export * from "./localization-repository";
+export * from "./analytics-repository";
