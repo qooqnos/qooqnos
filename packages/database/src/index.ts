@@ -13,6 +13,7 @@ export * from "./customer-repository";
 export * from "./customer-address-repository";
 export * from "./customer-relationship-repository";
 export * from "./crm-timeline-repository";
+export * from "./crm-timeline-projection-repository";
 export * from "./verification-repository";
 export * from "./services";
 export * from "./hash";
