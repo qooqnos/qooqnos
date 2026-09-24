@@ -243,20 +243,53 @@ export class CaseSupportRepository extends Repository {
   }): Promise<CaseRecord> {
     const current = await this.getRequired(context, input.id);
     if (current.version !== input.expectedVersion) throw new DatabaseError("Case version conflict");
-    await this.database.transaction([
+    const assignmentId = input.id + ":assignment:" + input.now;
+    const queue = input.queueId
+      ? await this.database.first<{ providerId: string | null; routeReference: string | null; enabled: number }>(
+          "SELECT dispatch_provider_id AS providerId, dispatch_route_reference AS routeReference, dispatch_enabled AS enabled FROM case_queues WHERE id=? AND (organization_id IS NULL OR organization_id=?) AND (workspace_id IS NULL OR workspace_id=?) LIMIT 1",
+          input.queueId,
+          current.organizationId,
+          current.workspaceId ?? null,
+        )
+      : null;
+
+    const statements = [
       {
         sql: "UPDATE cases SET status=CASE WHEN status IN ('open','triaged','reopened') THEN 'assigned' ELSE status END,queue_id=?,assignee_id=?,version=version+1,updated_at=? WHERE id=? AND version=?",
         params: [input.queueId ?? null, input.assigneeId.trim(), input.now, input.id, input.expectedVersion],
       },
       {
         sql: "INSERT INTO case_assignments (id,case_id,queue_id,assignee_type,assignee_id,assigned_by,reason,assigned_at) VALUES (?,?,?,?,?,?,?,?)",
-        params: [input.id + ":assignment:" + input.now, input.id, input.queueId ?? null, input.assigneeType.trim(), input.assigneeId.trim(), input.assignedBy.trim(), input.reason ?? null, input.now],
+        params: [assignmentId, input.id, input.queueId ?? null, input.assigneeType.trim(), input.assigneeId.trim(), input.assignedBy.trim(), input.reason ?? null, input.now],
       },
       {
         sql: "INSERT INTO case_events (id,case_id,event_type,actor_type,actor_id,from_status,to_status,payload_reference,correlation_id,occurred_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
         params: [input.id + ":assigned:" + input.now, input.id, "case.assigned", "service", context.actorId ?? "system", current.status, "assigned", input.reason ?? null, context.correlationId, input.now, input.now],
       },
-    ]);
+    ];
+    if (queue?.enabled === 1 && queue.providerId) {
+      const dispatchId = input.id + ":dispatch:" + assignmentId;
+      statements.push(
+        {
+          sql: "INSERT OR IGNORE INTO case_dispatches (id,case_id,assignment_id,queue_id,provider_id,route_reference,idempotency_key,status,attempts,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,'pending',0,?,?,?)",
+          params: [dispatchId, input.id, assignmentId, input.queueId, queue.providerId, queue.routeReference ?? null, "case-dispatch:" + assignmentId, input.now, input.now, input.now],
+        },
+        {
+          sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?,?,1,'case',?,?,?,?, 'pending',0,?,?,NULL)",
+          params: [
+            dispatchId + ":outbox",
+            "case.dispatch.requested",
+            dispatchId,
+            current.organizationId,
+            current.workspaceId,
+            JSON.stringify({ caseId: input.id, dispatchId, assignmentId, queueId: input.queueId, providerId: queue.providerId }),
+            input.now,
+            input.now,
+          ],
+        },
+      );
+    }
+    await this.database.transaction(statements);
     return this.getRequired(context, input.id);
   }
 
