@@ -68,6 +68,7 @@ import communicationPushChannel from "../../../migrations/0067_communication_pus
 import matchingActOutcomeLinks from "../../../migrations/0071_matching_act_outcome_links.sql";
 import localizationRegistry from "../../../migrations/0072_localization_registry.sql";
 import caseQueueProviderDispatch from "../../../migrations/0073_case_queue_provider_dispatch.sql";
+import crmTimelineProjection from "../../../migrations/0074_crm_timeline_projection.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -141,4 +142,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0071_matching_act_outcome_links.sql", sql: matchingActOutcomeLinks },
   { path: "migrations/0072_localization_registry.sql", sql: localizationRegistry },
   { path: "migrations/0073_case_queue_provider_dispatch.sql", sql: caseQueueProviderDispatch },
+  { path: "migrations/0074_crm_timeline_projection.sql", sql: crmTimelineProjection },
 ];
