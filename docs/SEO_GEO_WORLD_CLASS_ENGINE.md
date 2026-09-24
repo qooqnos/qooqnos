@@ -653,3 +653,8 @@ The crawler verifies representation/render consistency; it does not generate or 
 - durable run/citation provenance and failure state;
 - scheduled and manual execution paths;
 - explicit distinction between observed evidence and unavailable/unconfigured providers.
+
+Measurement semantics are explicit:
+- Search engines report provider-observed performance metrics such as impressions, clicks, CTR and average position; Phoenix does not convert these into an invented universal rank.
+- AI citation measurement records a citation only when the provider response contains an explicit URL-citation annotation matching the canonical entity URL.
+- Provider unavailability is stored as an execution failure/unconfigured state, never as zero visibility.
