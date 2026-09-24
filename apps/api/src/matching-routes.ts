@@ -1,4 +1,4 @@
-import { MatchingRepository, MatchingService } from "@qooqnos/matching";
+import { MatchingLearningRepository, MatchingRepository, MatchingService } from "@qooqnos/matching";
 import { DiscoveryRepository } from "@qooqnos/discovery";
 import { AppError, brandId, type EntityId } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
@@ -134,6 +134,38 @@ export function registerMatchingRoutes(
   });
 
   router.register({
+    method: "POST",
+    path: "/api/v1/match-requests/:matchRequestId/learning-signals",
+    module: "matching",
+    operation: "matching.learning.record",
+    permission: "matching.learning.record",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      assertDependencies(database, authorization, context.requestId);
+      const body = await parseBody(request, context.requestId);
+      const service = createService(database, authorization);
+      const signalType = body.signalType;
+      const allowed = ["impression","viewed","clicked","contacted","connected","booked","purchased","accepted","rejected","ignored","complaint","cancelled"];
+      if (typeof signalType !== "string" || !allowed.includes(signalType)) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "signalType is invalid.", requestId: context.requestId });
+      }
+      const signalValue = body.signalValue === undefined ? undefined : requiredNonNegativeNumber(body.signalValue, "signalValue", context.requestId);
+      const result = await service.recordLearningSignal(context, {
+        matchRequestId: brandId<"EntityId">(requiredParam(params.matchRequestId, context.requestId)),
+        ...(body.candidateId !== undefined ? { candidateId: requiredEntityId(body.candidateId, "candidateId", context.requestId) } : {}),
+        signalType: signalType as never,
+        ...(signalValue !== undefined ? { signalValue } : {}),
+        source: requiredString(body.source, "source", context.requestId),
+        ...(typeof body.actorReference === "string" ? { actorReference: body.actorReference } : {}),
+        ...(body.metadata !== undefined ? { metadata: body.metadata } : {}),
+        ...(typeof body.occurredAt === "string" ? { occurredAt: body.occurredAt } : {}),
+      });
+      return json({ data: result }, 201, context.requestId);
+    },
+  });
+
+  router.register({
     method: "GET",
     path: "/api/v1/match-requests/:matchRequestId/candidates",
     module: "matching",
@@ -155,6 +187,7 @@ function createService(database: D1Database, authorization: AuthorizationRegistr
     repository: new MatchingRepository(database),
     discovery: new DiscoveryRepository(database),
     relationships: new CustomerRelationshipRepository(database),
+    learning: new MatchingLearningRepository(database),
     authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
     id: () => brandId<"EntityId">(crypto.randomUUID()),
     now: () => new Date().toISOString(),
@@ -196,6 +229,13 @@ function optionalEntityId(value: unknown, field: string, requestId: EntityId): E
 
 function requiredParam(value: string | undefined, requestId: EntityId): string {
   if (!value) throw new AppError({ code: "NOT_FOUND", message: "Route parameter is missing.", requestId });
+  return value;
+}
+
+function requiredNonNegativeNumber(value: unknown, field: string, requestId: EntityId): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new AppError({ code: "VALIDATION_ERROR", message: field + " must be a finite non-negative number.", requestId });
+  }
   return value;
 }
 
