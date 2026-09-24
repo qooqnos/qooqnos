@@ -57,6 +57,7 @@ import communicationRequiredSuppression from "../../../migrations/0056_communica
 import matchingLearningSignals from "../../../migrations/0057_matching_learning_signals.sql";
 import billingFinancialAuditTrail from "../../../migrations/0058_billing_financial_audit_trail.sql";
 import billingRefundFinancialAccounting from "../../../migrations/0059_billing_refund_financial_accounting.sql";
+import billingInvoiceSystem from "../../../migrations/0060_billing_invoice_system.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -119,4 +120,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0057_matching_learning_signals.sql", sql: matchingLearningSignals },
   { path: "migrations/0058_billing_financial_audit_trail.sql", sql: billingFinancialAuditTrail },
   { path: "migrations/0059_billing_refund_financial_accounting.sql", sql: billingRefundFinancialAccounting },
+  { path: "migrations/0060_billing_invoice_system.sql", sql: billingInvoiceSystem },
 ];
