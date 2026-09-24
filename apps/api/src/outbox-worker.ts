@@ -1,4 +1,5 @@
 import { CommunicationRepository } from "@qooqnos/communication";
+import { MatchingLearningRepository, MatchingOutcomeProcessor } from "@qooqnos/matching";
 import { DiscoveryOutboxProcessor, DiscoveryRepository } from "@qooqnos/discovery";
 import { brandId } from "@qooqnos/core";
 import { OutboxService, type OutboxEventRecord } from "@qooqnos/database";
@@ -62,10 +63,38 @@ export async function consumeOutbox(
   const database = getDatabase(env);
   const communication = database ? new CommunicationRepository(database) : null;
   const discovery = database ? new DiscoveryOutboxProcessor({ repository: new DiscoveryRepository(database) }) : null;
+  const matchingOutcomes = database ? new MatchingOutcomeProcessor({ learning: new MatchingLearningRepository(database), database }) : null;
 
   for (const message of batch.messages) {
     try {
       const event = message.body;
+
+      if (matchingOutcomes && isMatchingOutcomeEvent(event.eventType)) {
+        if (!event.organizationId || !event.workspaceId) {
+          throw new Error("Matching outcome event cannot be processed without tenant/workspace scope");
+        }
+        const context = createRequestContext({
+          module: "matching",
+          operation: "matching.learning.record",
+          actorId: "system",
+          tenantId: event.organizationId,
+          workspaceId: event.workspaceId,
+          correlationId: event.id,
+          requestId: event.id,
+          authenticated: true,
+        });
+        await matchingOutcomes.process(context, {
+          id: event.id,
+          eventType: event.eventType,
+          eventVersion: event.eventVersion,
+          aggregateType: event.aggregateType,
+          aggregateId: brandId<"EntityId">(event.aggregateId),
+          organizationId: brandId<"EntityId">(event.organizationId),
+          workspaceId: brandId<"EntityId">(event.workspaceId),
+          payloadJson: event.payloadJson,
+          occurredAt: event.occurredAt,
+        });
+      }
 
       if (event.eventType === "communication.notification.created") {
         if (!communication || !event.organizationId) {
@@ -123,6 +152,16 @@ export async function consumeOutbox(
   }
 
   return { processed: batch.messages.length };
+}
+
+function isMatchingOutcomeEvent(eventType: string): boolean {
+  return eventType === "booking.completed"
+    || eventType === "booking.no_show"
+    || eventType === "booking.cancelled"
+    || eventType === "commerce.order.completed"
+    || eventType === "commerce.payment.completed"
+    || eventType === "payment.captured"
+    || eventType === "fulfillment.completed";
 }
 
 function parsePayload(payloadJson: string): Record<string, unknown> {
