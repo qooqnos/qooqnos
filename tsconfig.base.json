@@ -27,14 +27,8 @@
       "@qooqnos/database": [
         "packages/database/src"
       ],
-      "@qooqnos/database/legacy": [
-        "packages/database/src/legacy.ts"
-      ],
       "@qooqnos/runtime": [
         "packages/runtime/src"
-      ],
-      "@qooqnos/api": [
-        "packages/api/src"
       ],
       "@qooqnos/i18n": [
         "packages/i18n/src"
