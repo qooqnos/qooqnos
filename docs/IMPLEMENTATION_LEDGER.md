@@ -969,3 +969,14 @@ Implementation commits:
 - current follow-up commits — workspace/session connectivity, Seller AI execution, Business creation and token-storage hardening.
 
 Authentication/login remains intentionally outside this slice because the current backend exposes session verification/revocation but does not expose a public credential-login endpoint; the frontend does not invent a second authentication authority.
+
+### Frontend session management — 2026-09-24
+
+The web app now exposes an Account screen that reads the canonical session/context endpoints and can revoke the current authenticated session. It intentionally does not implement credentials/login because no public credential-login endpoint exists in the current backend contract.
+
+Canonical source:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+
+Implementation commits:
+- current frontend account/session management commits after `1789560118be9b756975f2149505834ca5be20e4`.
