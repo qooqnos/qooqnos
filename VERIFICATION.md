@@ -38,7 +38,7 @@ The product loop remains:
 
 ## Canonical implementation coverage
 
-Current canonical migrations reach `0067_communication_push_channel.sql`.
+Current canonical migrations reach `0073_case_queue_provider_dispatch.sql`.
 
 Implemented core capability families include:
 
@@ -93,7 +93,7 @@ The physical schema is intentionally broad but not every operational concern is 
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile is resolved as a logical aggregate over existing Customer-owned records; CRM timeline is already physically implemented as events/projection input.
 8. Localization context interfaces are implemented; physical country/legal/profile registries, Documents and Analytics remain contract-gated.
-9. Case queue/provider dispatch remains external-provider gated; CaseAction approval/completion and CapabilityRegistry-backed execution are implemented. Production D1 is externally provisioned; credentialed remote migration/application and final binding configuration remain the infrastructure gate.
+9. Case queue/provider dispatch is implemented through the canonical CaseDispatch persistence/attempt boundary, transactional outbox trigger, scheduled worker, provider registry, runtime-configured HTTP adapter, idempotency and transient/permanent retry classification. Concrete vendor onboarding and credentials remain external operational configuration. Production D1 is externally provisioned; credentialed remote migration/application and final binding configuration remain the infrastructure gate.
 
 ## Source-of-truth documents
 
