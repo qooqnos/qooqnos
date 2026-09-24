@@ -581,6 +581,13 @@
       "moduleId": "seo",
       "checksum": "74f5f794383d116dc461d210d981087733d54e0f65d1a6d34717756ce6f12c42",
       "filename": "0086_seo_visibility_measurements.sql"
+    },
+    {
+      "id": "0087_seo_competitive_intelligence",
+      "version": 87,
+      "moduleId": "seo",
+      "checksum": "8351a7f737f02ef7b0a71283cb62ed9d0073e0efa0d3ca14a941c36191a6be9a",
+      "filename": "0087_seo_competitive_intelligence.sql"
     }
   ]
 }
