@@ -13,4 +13,4 @@ export interface AnswerGeography{scope:GeoScope;country?:string;locationId?:stri
 export interface AnswerRepresentation{id:string;entityId:string;locale:string;question:string;answer:string;canonicalUrl?:string;facts:readonly AnswerFact[];freshnessAt:string;sourceUpdatedAt:string;confidence:"verified"|"sourced"|"pending-review"|"restricted";citationReady:boolean;geography?:AnswerGeography;limitations:readonly string[]}
 export interface StructuredData{"@context":"https://schema.org";"@type":string;[key:string]:unknown}
 export interface SeoAuditIssue{code:string;severity:"info"|"warning"|"error";evidence:string;owner:string;recommendation:string}
-export interface SeoAudit{entityId:string;scores:Record<string,number>;issues:readonly SeoAuditIssue[];generatedAt:string}
+export interface SeoAudit{entityId:string;scores:Record<string,number>;overallScore:number;status:"pass"|"warning"|"blocked";blockingIssueCodes:readonly string[];issues:readonly SeoAuditIssue[];generatedAt:string}
