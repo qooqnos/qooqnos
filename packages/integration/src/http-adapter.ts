@@ -108,7 +108,7 @@ export function createHttpIntegrationProviderAdapter(
       if (!config.webhookPath) return { status: "ignored" };
 
       const payload = await requestToPayload(request);
-      const result = await request(config.webhookPath, payload, request.correlationId);
+      const result = await requestFn(config.webhookPath, payload, request.correlationId);
       return normalizeResult(result);
     },
 
