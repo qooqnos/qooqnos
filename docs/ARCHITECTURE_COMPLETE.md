@@ -991,8 +991,8 @@ mkdir -p tests/{unit,integration}
 
 ### Phase 6: Payment (Weeks 17-19)
 - [ ] Payment processing
-- [ ] Invoice generation
-- [ ] Refund handling
+- [x] Invoice generation
+- [x] Refund handling
 - [ ] Financial reports
 
 ---
