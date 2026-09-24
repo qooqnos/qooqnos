@@ -1453,3 +1453,17 @@ Additional production hardening:
 - sitemap.xml now upgrades automatically to a sitemap index when public canonical URL volume exceeds the configured 50,000-entry shard size; deterministic /sitemap-N.xml shards are supported;
 - API/SEO infrastructure routes are handled before Cloudflare SPA asset fallback so robots.txt, sitemap.xml, sitemap shards, health and API routes cannot be replaced by index.html;
 - production Wrangler rendering now preserves SEO canonical base, crawler sample limit and the production Cron Trigger.
+
+### Search-engine / AI citation measurement — completed — 2026-09-25
+
+Implemented real external visibility measurement:
+- Google Search Console Search Analytics connector using OAuth2/service-account JWT authentication; records actual query/page clicks, impressions, CTR and average position.
+- Bing Webmaster JSON/HTTP connector; records actual query+page traffic and position where a tracked canonical page is available.
+- Responses Web Search connector; executes a real web-search-enabled AI response and records only explicit `url_citation` annotations as AI citations.
+- durable `seo_measurement_runs` and `seo_measurement_citations` state;
+- existing `seo_measurements` receives normalized metric observations and provider errors;
+- daily production scheduled measurement plus authenticated entity-scoped manual measurement API;
+- SEO health reports measurement failures and last observation;
+- Control Plane exposes a real Visibility / Citation measurement action.
+
+Provider activation is configuration-gated: unconfigured providers are not treated as zero visibility. Missing credentials result in an unconfigured measurement run rather than fabricated data.
