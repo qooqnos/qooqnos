@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T11:35:00.000Z",
+  "generatedAt": "2026-09-24T14:50:00.000Z",
   "migrations": [
     {
       "id": "0001_foundation",
@@ -484,5 +484,12 @@
       "checksum": "4e8064d5373145ceeed66597b21b0a4ca0e4a04ae64832c092b025eb798840c4",
       "filename": "0072_localization_registry.sql"
     }
+    {
+      "id": "0073_case_queue_provider_dispatch",
+      "version": 73,
+      "moduleId": "case-support",
+      "checksum": "9c7709d8e65435103359fb618ac08248587610bcd752f2f0bbe60e4243055e9f",
+      "filename": "0073_case_queue_provider_dispatch.sql"
+    },
   ]
 }
