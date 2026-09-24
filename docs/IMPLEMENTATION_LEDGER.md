@@ -1508,3 +1508,10 @@ Competitive intelligence evidence layers now include:
 - **Completed:** production readiness evaluator; canonical HTTPS gate; provider readiness states; explicit non-zero-visibility semantics; SEO health/control-plane exposure; control-plane contract tests.
 - **Commits:** `877d7dd`, `2aa6b91`, `889e055`.
 - **Remaining:** end-to-end production verification and real external provider activation/evidence collection (Search Console, AI citation, competitive intelligence where configured).
+
+
+## Production SEO Hardening — Runtime Wiring & CI Verification
+- **Completed:** production provider environment is now passed from Worker runtime → `ApiRouter` → SEO routes → readiness evaluator; Control Plane no longer evaluates provider readiness from canonical URL alone.
+- **Commits:** `1a9cc81`, `c061ced`, `bf522ca`.
+- **Verification:** GitHub Actions CI and Phoenix Verification were triggered by the latest `main` push; both were observed running for commit `bf522ca`.
+- **Remaining:** await CI completion and perform deployed production evidence verification with real provider credentials/data.
