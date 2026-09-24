@@ -6,11 +6,11 @@
 
 ## Verification result
 
-The latest fully verified checkpoint remains the pre-cleanup checkpoint; the current cleanup head is awaiting a fresh CI/Phoenix verification run.
+The latest fully verified checkpoint remains the recorded pre-cleanup checkpoint; the current main head contains subsequent implementation changes and awaits a fresh CI/Phoenix verification run.
 
 Current `main` contains subsequent implementation/documentation commits and has not yet produced a new successful CI/Phoenix verification run. The prior checkpoint remains the verification baseline.
 
-Both required workflows passed for the prior verified checkpoint:
+Both required workflows passed for the prior verified checkpoint; no newer green result is claimed for the current head:
 
 - **CI:** current head verification run `35918117117` — success
 - **Phoenix verification:** current head run `35918117178` — success
@@ -36,7 +36,7 @@ The product loop remains:
 
 ## Canonical implementation coverage
 
-Current canonical migrations reach `0073_case_queue_provider_dispatch.sql`.
+Current canonical migrations reach `0075_analytics_platform.sql`.
 
 Implemented core capability families include:
 
