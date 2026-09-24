@@ -9,7 +9,7 @@ describe("payment provider adapters", () => {
       apiKey: "secret",
       createPath: "/payments",
       capturePath: "/payments/capture",
-      refundPath: "/refunds",
+      refundPath: "/refunds", payoutPath: "/payouts",
       webhookSecret: "webhook-secret",
       fetchImpl: async () => new Response(JSON.stringify({ status: "created", providerReference: "p-1" }), { status: 200 }),
     });
