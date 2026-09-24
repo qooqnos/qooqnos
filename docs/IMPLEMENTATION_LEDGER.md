@@ -746,3 +746,5 @@ Invoice runtime/API note: `GET /api/v1/billing/invoices` is implemented through 
 | Payment Provider Adapters | 🟢 Provider-neutral adapter/registry/service + HTTP adapter + signed webhook verification + replay protection + failure classification + provider-reference persistence implemented | packages/billing/src/payment-provider-adapter.ts; packages/billing/src/payment-provider-service.ts; packages/billing/src/payment-provider-adapter.test.ts |
 
 | Settlement | 🟢 Settlement aggregate + immutable items + approval/processing/paid lifecycle + provider payout boundary + reconciled double-entry accounting + tests implemented | migrations/0061_billing_settlement.sql; packages/billing/src/settlement-repository.ts; packages/billing/src/settlement-service.ts; packages/billing/src/settlement-repository.test.ts; packages/billing/src/payment-provider-adapter.ts |
+
+| Billing Reconciliation | 🟢 Case lifecycle + mismatch financial evidence + idempotency + immutable event history + scoped resolution implemented | migrations/0062_billing_reconciliation_hardening.sql; packages/billing/src/reconciliation-repository.ts; packages/billing/src/reconciliation-repository.test.ts |
