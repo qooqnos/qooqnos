@@ -35,6 +35,7 @@ export function geographicTruthKey(signal: GeoTruthSignal): string {
     signal.scope,
     signal.locationId ?? "",
     signal.serviceAreaIds.join(","),
+    signal.country ?? "",
     signal.remoteAvailable ? "remote" : "local",
   ].join("|");
 }
