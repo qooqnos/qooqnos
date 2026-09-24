@@ -65,6 +65,7 @@ import trustSignalsAntiAbuse from "../../../migrations/0064_trust_signals_anti_a
 import automationCompensationContract from "../../../migrations/0069_automation_compensation_contract.sql";
 import automationCompensationPairing from "../../../migrations/0070_automation_compensation_pairing.sql";
 import communicationPushChannel from "../../../migrations/0067_communication_push_channel.sql";
+import caseQueueProviderDispatch from "../../../migrations/0073_case_queue_provider_dispatch.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -135,4 +136,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0069_automation_compensation_contract.sql", sql: automationCompensationContract },
   { path: "migrations/0070_automation_compensation_pairing.sql", sql: automationCompensationPairing },
   { path: "migrations/0067_communication_push_channel.sql", sql: communicationPushChannel },
+  { path: "migrations/0073_case_queue_provider_dispatch.sql", sql: caseQueueProviderDispatch },
 ];
