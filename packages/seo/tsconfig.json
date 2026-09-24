@@ -10,5 +10,9 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
-  "references": [{ "path": "../runtime" }]
+  "references": [
+    { "path": "../core" },
+    { "path": "../database" },
+    { "path": "../runtime" }
+  ]
 }
