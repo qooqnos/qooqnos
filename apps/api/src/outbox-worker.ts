@@ -301,6 +301,11 @@ async function enrichSeoPayload(
         const location = locations.find((item) => item.status === "active" && item.locationType === "physical" && item.geoPoint);
         if (location) {
           const hours = await business.listHours(context, record.id, location.id);
+          const contacts = await business.listPublicContacts(context, record.id);
+          const socialLinks = await business.listPublicSocialLinks(context, record.id);
+          const phone = contacts.find((contact) => contact.contactType === "phone")?.value;
+          const email = contacts.find((contact) => contact.contactType === "email")?.value;
+          const sameAs = socialLinks.map((link) => link.url);
           const openingHours = hours.map((entry) => ({
             dayOfWeek: [schemaDayOfWeek(entry.dayOfWeek)],
             opens: entry.opens,
@@ -319,6 +324,9 @@ async function enrichSeoPayload(
             geoScope: "exact",
             geoPoint: location.geoPoint ?? undefined,
             ...(location.address ? { address: mapSeoAddress(location.address) } : {}),
+            ...(phone ? { telephone: phone } : {}),
+            ...(email ? { email } : {}),
+            ...(sameAs.length ? { sameAs } : {}),
             ...(openingHours.length ? { openingHours } : {}),
             updatedAt: record.updatedAt,
           };
