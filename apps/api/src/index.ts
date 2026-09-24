@@ -31,6 +31,7 @@ import { assertProductionInfrastructure, checkRuntimeInfrastructure } from "./in
 import { processSeoPublicationJobs } from "@qooqnos/seo";
 import { registerSeoRoutes } from "./seo-routes";
 import { registerMediaRoutes } from "./media-routes";
+import { registerPromotionRoutes } from "./promotion-routes";
 
 const homePage = (version: string): string => `<!doctype html>
 <html lang="en">
@@ -77,6 +78,7 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   const router = new ApiRouter({ authorization, ...(database ? { database } : {}) });
   registerSeoRoutes(router, database);
   registerMediaRoutes(router, database, env, authorization);
+  registerPromotionRoutes(router, database, authorization);
 
   router.register({
     method: "GET",
