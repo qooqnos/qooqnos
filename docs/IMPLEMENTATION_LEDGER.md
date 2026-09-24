@@ -1052,3 +1052,20 @@ Canonical files:
 - `apps/web/src/main.ts`
 - `apps/web/styles.css`
 - `apps/web/public/styles.css`
+
+### Frontend Communication Center — 2026-09-25
+
+The frontend now exposes the canonical Communication/Notification surface.
+
+Implemented:
+- dedicated `/communication` route;
+- live communication preference reads via `GET /api/v1/communications/preferences`;
+- preference writes via `PATCH /api/v1/communications/preferences`;
+- notification creation via `POST /api/v1/communications/notifications` with idempotency;
+- shared Phoenix bearer/session context is reused;
+- no delivery policy, suppression policy, or provider logic is duplicated in the frontend.
+
+Canonical files:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
