@@ -62,8 +62,8 @@ import billingSettlement from "../../../migrations/0061_billing_settlement.sql";
 import billingReconciliationHardening from "../../../migrations/0062_billing_reconciliation_hardening.sql";
 import catalogAttributeCutover from "../../../migrations/0063_catalog_attribute_cutover.sql";
 import trustSignalsAntiAbuse from "../../../migrations/0064_trust_signals_anti_abuse.sql";
-import automationCompensationContract from "../../../migrations/0067_automation_compensation_contract.sql";
-import automationCompensationPairing from "../../../migrations/0068_automation_compensation_pairing.sql";
+import automationCompensationContract from "../../../migrations/0069_automation_compensation_contract.sql";
+import automationCompensationPairing from "../../../migrations/0070_automation_compensation_pairing.sql";
 import communicationPushChannel from "../../../migrations/0067_communication_push_channel.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
