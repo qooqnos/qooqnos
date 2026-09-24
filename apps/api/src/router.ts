@@ -1,6 +1,7 @@
 import type { RequestId } from "@qooqnos/core";
 import type { AuthorizationRegistry, AuthorizationSubject } from "@qooqnos/runtime";
 import type { D1Database } from "@qooqnos/database";
+import type { ApiEnv } from "./env";
 import type { ApiRequestContext } from "./context";
 import { createRequestContext, getCorrelationId, getRequestId } from "./context";
 import { resolveRequestAuth } from "./auth-context";
@@ -45,6 +46,7 @@ export interface ApiRouterOptions {
   readonly database?: D1Database;
   readonly authorization?: AuthorizationRegistry;
   readonly seoCanonicalBaseUrl?: string;
+  readonly seoEnvironment?: ApiEnv;
 }
 
 interface MatchedRoute {
@@ -69,7 +71,7 @@ export class ApiRouter {
     registerBillingRoutes(this, options.database, options.authorization);
     registerCaseSupportRoutes(this, options.database, options.authorization);
     registerCustomerRoutes(this, options.database, options.authorization);
-    registerSeoRoutes(this, options.database, options.seoCanonicalBaseUrl ?? "https://qooqnos.com");
+    registerSeoRoutes(this, options.database, options.seoCanonicalBaseUrl ?? "https://qooqnos.com", options.seoEnvironment);
   }
 
   register(route: ApiRoute): void {
