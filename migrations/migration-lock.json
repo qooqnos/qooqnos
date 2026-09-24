@@ -399,7 +399,7 @@
       "moduleId": "matching",
       "checksum": "6676683a3123d671a1f1a4c4c09fac40658ab795651e7c7e81b23a76a4edad37",
       "filename": "0057_matching_learning_signals.sql"
-    }
+    },
     {
       "id": "0058_billing_financial_audit_trail",
       "version": 58,
