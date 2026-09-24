@@ -101,6 +101,23 @@ const routes: Route[] = [
 const theme = getInitialTheme();
 document.documentElement.dataset.theme = theme;
 
+async function hydrateSessionContext(): Promise<void> {
+  const token = sessionStorage.getItem(STORAGE.accessToken);
+  if (!token) return;
+  try {
+    const response = await apiJson<{ session: { authenticated: boolean; workspaceId?: string | null } }>("/api/v1/session");
+    if (!response.session.authenticated) {
+      sessionStorage.removeItem(STORAGE.accessToken);
+      return;
+    }
+    if (response.session.workspaceId && !localStorage.getItem(STORAGE.workspace)) {
+      localStorage.setItem(STORAGE.workspace, response.session.workspaceId);
+    }
+  } catch {
+    // Keep the shell available in degraded mode; domain calls surface the real API error.
+  }
+}
+
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem(STORAGE.theme);
   if (stored === "light" || stored === "dark") return stored;
@@ -2348,3 +2365,4 @@ function wait(ms: number): Promise<void> {
 window.addEventListener("popstate", render);
 window.addEventListener("keydown", handleGlobalShortcut);
 render();
+void hydrateSessionContext();
