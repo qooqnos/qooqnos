@@ -15,6 +15,7 @@ import { evaluateSeoPolicy } from "./policy";
 import { canonicalEntityUrl } from "./url";
 import { generateMetadata } from "./metadata";
 import { generateStructuredData } from "./structured-data";
+import { buildEntityPageModel } from "./entity-page";
 
 export interface SeoProjectionPlan {
   readonly entityId: string;
@@ -30,6 +31,7 @@ export interface SeoProjectionPlan {
   readonly structuredData: StructuredData;
   readonly answer: AnswerRepresentation;
   readonly internalLinks: readonly InternalLinkRecommendation[];
+  readonly page: import("./entity-page").EntityPageModel;
   readonly geoSignal: GeoTruthSignal | null;
   readonly audit: ReturnType<typeof auditEntity>;
   readonly dependencyFingerprint: string;
@@ -48,11 +50,19 @@ export function buildSeoProjectionPlan(input: SeoProjectionInput): SeoProjection
   const canonicalUrl = canonicalEntityUrl(input.canonicalBaseUrl, input.entity);
   const policy = evaluateSeoPolicy(input.entity, canonicalUrl, input.now);
   const metadata = generateMetadata({ entity: input.entity, canonicalBaseUrl: input.canonicalBaseUrl }, canonicalUrl, policy);
-  const structuredData = generateStructuredData(input.entity);
+  const breadcrumbs = buildEntityPageModel(
+    input.entity,
+    generateMetadata({ entity: input.entity, canonicalBaseUrl: input.canonicalBaseUrl }, canonicalUrl, policy),
+    buildAnswerRepresentation(input.entity, input.facts ?? [], input.now, canonicalUrl),
+    [],
+    input.canonicalBaseUrl,
+  ).breadcrumbs;
+  const structuredData = generateStructuredData(input.entity, { canonicalUrl, breadcrumbs });
   const answer = buildAnswerRepresentation(input.entity, input.facts ?? [], input.now, canonicalUrl);
   const internalLinks = input.graph
     ? recommendInternalLinks(input.graph, input.entity.id, input.linkLimit)
     : [];
+  const page = buildEntityPageModel(input.entity, metadata, answer, internalLinks, input.canonicalBaseUrl);
   const geoSignal = buildGeoTruthSignal(input.entity);
   const audit = auditEntity(input.entity, canonicalUrl, policy.indexability, input.now);
   const dependencyFingerprint = input.graph ? graphVersionFingerprint(input.graph) : "";
@@ -71,6 +81,7 @@ export function buildSeoProjectionPlan(input: SeoProjectionInput): SeoProjection
     structuredData,
     answer,
     internalLinks,
+    page,
     geoSignal,
     audit,
     dependencyFingerprint,
