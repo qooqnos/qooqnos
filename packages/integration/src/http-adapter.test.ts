@@ -24,7 +24,7 @@ describe("HTTP integration adapter", () => {
       syncPath: "/sync",
       credentialReference: "main",
       credentialResolver: {
-        resolve: async () => ({
+        resolve: async (_reference, _providerId) => ({
           reference: "main",
           providerId: "calendar.test",
           kind: "bearer_token",
@@ -76,7 +76,7 @@ describe("HTTP integration adapter", () => {
     expect(result.status).toBe("processed");
     expect(result.itemCount).toBe(3);
     expect(result.externalReferences?.[0].externalReference).toBe("event-1");
-    expect(requests[0].headers.get("authorization")).toBe("Bearer secret");
+    expect(requests[0]?.headers.get("authorization")).toBe("Bearer secret");
   });
 
   it("verifies signed webhook payloads and rejects stale timestamps", async () => {
