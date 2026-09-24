@@ -57,3 +57,9 @@ Page snapshot sampling is bounded by `SEO_COMPETITIVE_PAGE_SAMPLE_LIMIT` (defaul
 Competitive runs also query DataForSEO Labs Domain Intersection with `intersections=false`, using competitor as `target1` and Phoenix as `target2`. This returns keywords for which the competitor has a SERP result and Phoenix does not, with keyword metrics and the competitor SERP element.
 
 The production sample is bounded by `SEO_COMPETITIVE_KEYWORD_GAP_COMPETITOR_LIMIT` (default 3 competitors per tracked query) and `SEO_COMPETITIVE_KEYWORD_GAP_LIMIT` (default 15 keywords per competitor). DataForSEO Labs refreshes this underlying keyword dataset weekly, so these observations are provider-dated evidence rather than a minute-by-minute SERP snapshot.
+
+## Backlink-gap evidence
+
+Competitive runs also use DataForSEO Backlinks Domain Intersection with the competitor as the target and Phoenix as `exclude_targets`. This returns referring domains observed for the competitor that are excluded from Phoenix's backlink results.
+
+The production sample is bounded by `SEO_COMPETITIVE_LINK_GAP_COMPETITOR_LIMIT` (default 2 competitors per tracked query) and `SEO_COMPETITIVE_LINK_GAP_LIMIT` (default 15 referring domains per competitor).
