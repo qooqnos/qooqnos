@@ -11,7 +11,7 @@ describe("R2 document artifact store",()=>{
     const b=await store.put({organizationId:"org",workspaceId:"ws",actorId:"actor",artifact,idempotencyKey:"same"});
     expect(a.artifactReference).toBe(b.artifactReference);
     expect(calls).toHaveLength(2);
-    expect(calls[0].key).toContain("documents/org/ws/");
-    expect((calls[0].options as {customMetadata:{sourceSnapshotHash:string}}).customMetadata.sourceSnapshotHash).toBe("a".repeat(64));
+    expect(calls[0]?.key).toContain("documents/org/ws/");
+    expect((calls[0]?.options as {customMetadata:{sourceSnapshotHash:string}}).customMetadata.sourceSnapshotHash).toBe("a".repeat(64));
   });
 });
