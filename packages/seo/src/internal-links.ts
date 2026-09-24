@@ -19,26 +19,27 @@ export function recommendInternalLinks(
   if (!Number.isInteger(limit) || limit <= 0) return [];
 
   return graph.edges
-    .filter((edge) => edge.sourceEntityId === sourceEntityId)
-    .filter((edge) => {
-      const target = graph.nodes.get(edge.targetEntityId);
+    .filter((edge) => edge.sourceEntityId === sourceEntityId || edge.targetEntityId === sourceEntityId)
+    .map((edge) => ({
+      edge,
+      targetEntityId: edge.sourceEntityId === sourceEntityId ? edge.targetEntityId : edge.sourceEntityId,
+    }))
+    .filter(({ targetEntityId }) => {
+      const target = graph.nodes.get(targetEntityId);
       return target?.publicationState === "published" && target.visibility === "public";
     })
-    .sort((left, right) => {
-      const score = (edge: EntityGraphEdge) => edge.confidence;
-      return score(right) - score(left) || left.targetEntityId.localeCompare(right.targetEntityId);
-    })
+    .sort((left, right) => right.edge.confidence - left.edge.confidence || left.targetEntityId.localeCompare(right.targetEntityId))
     .slice(0, limit)
-    .map((edge) => {
-      const target = graph.nodes.get(edge.targetEntityId);
+    .map(({ edge, targetEntityId }) => {
+      const target = graph.nodes.get(targetEntityId);
       return {
-        sourceEntityId: edge.sourceEntityId,
-        targetEntityId: edge.targetEntityId,
+        sourceEntityId,
+        targetEntityId,
         ...(target?.entityType ? { targetType: target.entityType } : {}),
         ...(target?.preferredName ? { targetLabel: target.preferredName } : {}),
         ...(target?.canonicalUrl ? { targetUrl: target.canonicalUrl } : {}),
-        relation: edge.relation,
-      priority: Math.round(edge.confidence * 100),
+        relation: edge.sourceEntityId === sourceEntityId ? edge.relation : "relatedTo",
+        priority: Math.round(edge.confidence * 100),
         reason: "canonical-semantic-relationship",
       };
     });
