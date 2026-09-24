@@ -1,4 +1,6 @@
 import { brandId } from "@qooqnos/core";
+import { CustomerRepository } from "@qooqnos/database";
+import { createCustomerPrivacyProcessors } from "@qooqnos/customer";
 import { PrivacyRepository, createPrivacyProcessorRegistry, type PrivacyProcessorRegistry } from "@qooqnos/privacy";
 import { getDatabase } from "./database";
 import type { ApiEnv } from "./env";
@@ -29,7 +31,9 @@ export async function processApprovedPrivacyRequests(
   env: ApiEnv,
   now = new Date().toISOString(),
   limit = 50,
-  registry: PrivacyProcessorRegistry = createPrivacyProcessorRegistry(),
+  registry: PrivacyProcessorRegistry = createPrivacyProcessorRegistry(
+    createCustomerPrivacyProcessors({ repository: new CustomerRepository(database) }),
+  ),
 ): Promise<PrivacyRequestWorkResult> {
   const database = getDatabase(env);
   if (!database) return { claimed: 0, processed: 0, gated: 0, skipped: 0, failed: 0 };
