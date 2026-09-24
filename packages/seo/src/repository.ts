@@ -60,12 +60,12 @@ export class SeoRepository extends Repository {
       scope.organizationId,
       scope.workspaceId,
       input.plan.entityId,
-      input.plan.metadata.title ? input.plan.structuredData["@type"] : "Unknown",
+      input.plan.entityType,
       input.plan.locale,
-      input.plan.audit.issues.length ? input.plan.audit.issues[0]?.owner ?? "unknown" : "seo",
-      "1",
-      input.plan.policy.indexability === "index" ? "published" : "restricted",
-      input.plan.policy.indexability === "index" ? "public" : "restricted",
+      input.plan.sourceModule,
+      input.plan.sourceVersion,
+      input.plan.publicationState,
+      input.plan.visibility,
       input.plan.canonicalUrl,
       input.plan.policy.indexability,
       JSON.stringify({
@@ -90,7 +90,7 @@ export class SeoRepository extends Repository {
       scope.organizationId,
       scope.workspaceId,
       input.plan.entityId,
-      input.plan.structuredData["@type"],
+      input.plan.entityType,
       input.plan.locale,
     );
     if (!row) throw new DatabaseError("SEO representation not found after save");
