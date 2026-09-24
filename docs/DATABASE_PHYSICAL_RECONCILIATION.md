@@ -22,7 +22,7 @@ Logical model
 
 ## 1. Current physical migration inventory
 
-The current API migration catalog references versions **0001 through 0063**.
+The current API migration catalog references the canonical migration set through **0073** (70 ordered migration sources; unused sequence numbers remain intentionally absent).
 
 ### Foundation — 0001
 
@@ -454,7 +454,81 @@ These migrations add integrity triggers only.
 
 0056 distinguishes optional suppression from required transactional/security traffic.
 
-**Total currently defined physical tables: 190.**
+### Matching learning signals — 0057
+
+- match_learning_signals
+
+0057 establishes append-only post-match outcome evidence.
+
+### Financial audit trail — 0058
+
+- billing_financial_audit_events
+
+### Refund financial accounting — 0059
+
+- billing_refunds
+- billing_ledger_accounts
+- billing_ledger_transactions
+- billing_ledger_entries
+
+### Invoice system — 0060
+
+- billing_invoices
+- billing_invoice_lines
+- billing_invoice_payment_applications
+
+### Settlement — 0061
+
+- billing_settlements
+- billing_settlement_items
+
+### Reconciliation hardening — 0062
+
+- billing_reconciliation_case_events
+
+### Catalog Attribute cutover — 0063
+
+- catalog_attribute_change_events
+- catalog_attribute_validation_events
+
+### TrustSignal / anti-abuse — 0064
+
+- trust_signals
+
+### Communication Push channel — 0067
+
+- communication_push_devices
+- communication_push_tokens
+- communication_push_delivery_receipts
+- communication_push_preferences
+- communication_push_provider_events
+- communication_push_failures
+
+### Automation compensation — 0069–0070
+
+No new tables; these migrations extend the existing Automation compensation contract and pairing boundary.
+
+### Matching Act outcome links — 0071
+
+No new tables; adds authoritative Booking/Commerce references back to MatchRequest/Candidate.
+
+### Localization registry — 0072
+
+- localization_legal_profiles
+- localization_locales
+- localization_countries
+- localization_regions
+- localization_market_profiles
+- localization_domain_configs
+
+### Case queue/provider dispatch — 0073
+
+- case_dispatches
+- case_dispatch_attempts
+
+0073 extends case_queues with runtime provider/route configuration references and establishes durable external-dispatch state plus append-only attempt evidence. Provider credentials remain runtime-only.
+
+**Total currently defined physical tables: 219.**
 
 This count includes only canonical SQL migration sources. It does not include removed PostgreSQL compatibility schema or historical in-memory schema.
 
@@ -463,8 +537,8 @@ This count includes only canonical SQL migration sources. It does not include re
 The canonical schema audit is executable through the repository command "npm run report:database".
 
 Current main schema baseline:
-- **56** ordered SQL migrations.
-- **190** canonical physical tables defined by those migrations.
+- **70** ordered SQL migrations.
+- **219** canonical physical tables defined by those migrations.
 - API migration catalog and migration lock must contain the same ordered migration set.
 - This document's physical-table inventory must equal the tables parsed from canonical SQL migrations.
 - **Physical schema completion: 100%** when those integrity conditions hold.
