@@ -36,6 +36,7 @@ import { registerAdvertisingRoutes } from "./advertising-routes";
 import { registerAuthorizationGovernanceRoutes } from "./authorization-governance-routes";
 import { renderSeoAwareDocument } from "./seo-frontend";
 import { runProductionSeoCrawler } from "./seo-production-crawler";
+import { runSeoVisibilityMeasurements } from "./seo-visibility-worker";
 
 const homePage = (version: string): string => `<!doctype html>
 <html lang="en">
@@ -84,6 +85,26 @@ function isApiFirstPublicPath(pathname: string): boolean {
     || pathname === "/sitemap.xml"
     || /^\\/sitemap-\\d+\\.xml$/.test(pathname)
     || pathname.startsWith("/api/");
+}
+
+function buildSeoVisibilityWorkerConfig(env: ApiEnv, limit: number) {
+  return {
+    limit,
+    ...(env.SEO_GSC_SITE_URL && (env.SEO_GSC_ACCESS_TOKEN || (env.SEO_GSC_SERVICE_ACCOUNT_EMAIL && env.SEO_GSC_PRIVATE_KEY)) ? {
+      google: {
+        siteUrl: env.SEO_GSC_SITE_URL,
+        ...(env.SEO_GSC_ACCESS_TOKEN ? { accessToken: env.SEO_GSC_ACCESS_TOKEN } : {}),
+        ...(env.SEO_GSC_SERVICE_ACCOUNT_EMAIL ? { serviceAccountEmail: env.SEO_GSC_SERVICE_ACCOUNT_EMAIL } : {}),
+        ...(env.SEO_GSC_PRIVATE_KEY ? { serviceAccountPrivateKey: env.SEO_GSC_PRIVATE_KEY } : {}),
+        ...(env.SEO_GSC_LOOKBACK_DAYS ? { lookbackDays: Number(env.SEO_GSC_LOOKBACK_DAYS) } : {}),
+        ...(env.SEO_GSC_END_LAG_DAYS ? { endLagDays: Number(env.SEO_GSC_END_LAG_DAYS) } : {}),
+      },
+    } : {}),
+    ...(env.SEO_BING_SITE_URL && env.SEO_BING_API_KEY ? { bing: { siteUrl: env.SEO_BING_SITE_URL, apiKey: env.SEO_BING_API_KEY } } : {}),
+    ...(env.SEO_AI_CITATION_ENDPOINT && env.SEO_AI_CITATION_API_KEY && env.SEO_AI_CITATION_MODEL
+      ? { ai: { endpoint: env.SEO_AI_CITATION_ENDPOINT, apiKey: env.SEO_AI_CITATION_API_KEY, model: env.SEO_AI_CITATION_MODEL, ...(env.SEO_AI_CITATION_AUTH_MODE ? { authMode: env.SEO_AI_CITATION_AUTH_MODE } : {}) } }
+      : {}),
+  };
 }
 
 function createRouter(version: string, database: D1Database | undefined, env: ApiEnv): ApiRouter {
@@ -600,8 +621,13 @@ export default {
     if (database) {
       await processSeoPublicationJobs(database, now, 25, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com");
       if (env.ENVIRONMENT === "production") {
-        const sampleLimit = Number(env.SEO_CRAWLER_SAMPLE_LIMIT ?? "25");
-        await runProductionSeoCrawler(database, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com", Number.isFinite(sampleLimit) ? sampleLimit : 25, now);
+        const crawlerLimit = Number(env.SEO_CRAWLER_SAMPLE_LIMIT ?? "25");
+        await runProductionSeoCrawler(database, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com", Number.isFinite(crawlerLimit) ? crawlerLimit : 25, now);
+        const measurementAt = new Date(now);
+        if (measurementAt.getUTCHours() === 2 && measurementAt.getUTCMinutes() === 41) {
+          const measurementLimit = Number(env.SEO_MEASUREMENT_SAMPLE_LIMIT ?? "25");
+          await runSeoVisibilityMeasurements(database, buildSeoVisibilityWorkerConfig(env, Number.isFinite(measurementLimit) ? measurementLimit : 25), now);
+        }
       }
     }
 
