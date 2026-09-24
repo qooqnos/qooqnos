@@ -572,3 +572,94 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
   .studio-meta-fields { grid-template-columns: 1fr; }
   .connection-modal { padding: 21px; }
 }
+
+.account-grid {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 14px;
+}
+.account-card {
+  padding: 22px;
+}
+.account-card h2 {
+  margin: 7px 0 0;
+  font-size: 22px;
+  letter-spacing: -.035em;
+}
+.account-details {
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.account-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+.account-row span {
+  color: var(--faint);
+  font-size: 9px;
+}
+.account-row strong {
+  max-width: 68%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: ltr;
+  text-align: end;
+  color: var(--text);
+  font-size: 9px;
+}
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.button-danger {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 7%, var(--surface));
+  border-color: color-mix(in srgb, var(--danger) 16%, transparent);
+}
+.permission-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 20px;
+}
+.permission-chip {
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 8px;
+}
+.permission-empty {
+  color: var(--faint);
+  font-size: 9px;
+}
+.account-empty {
+  display: grid;
+  place-items: center;
+  padding: 36px 10px;
+  text-align: center;
+}
+.account-empty > span {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+}
+.account-empty p {
+  margin: 10px 0 0;
+  max-width: 380px;
+  color: var(--faint);
+  font-size: 9px;
+}
+@media (max-width: 820px) {
+  .account-grid { grid-template-columns: 1fr; }
+}
