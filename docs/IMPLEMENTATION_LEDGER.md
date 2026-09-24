@@ -551,9 +551,9 @@ Business lifecycle note: migration 0027 records immutable transitions for the ex
 
 CRM timeline note: normalized event storage and idempotent source-event handling are implemented. A separate timeline projection table remains gated pending a field-level read-model/rebuild contract.
 
-Trust note: migrations 0021–0025 implement the canonical VerificationCase → Policy/Requirement → Check/Evidence → append-only Decision → Review/Expiry chain. Reviewer authorization integration and TrustSignal projections remain gated.
+Trust note: migrations 0021–0025 implement the canonical VerificationCase → Policy/Requirement → Check/Evidence → append-only Decision → Review/Expiry chain. Migration 0064 adds the canonical TrustSignal evidence/projection store and anti-abuse moderation idempotency boundary. Reviewer completion now requires the assigned-reviewer authorization permission and owner policy.
 
-Trust expiry worker: scheduled Trust expiry processing is now idempotent; expired work creates an append-only system Policy Decision, marks the expiry/case state and emits `trust.verification.expired` through Outbox in one D1 batch.
+Trust expiry/anti-abuse workers: scheduled Trust expiry processing is idempotent; expired work creates an append-only system Policy Decision, marks the expiry/case state and emits `trust.verification.expired` through Outbox in one D1 batch. The anti-abuse worker normalizes review risk/report evidence into TrustSignals and opens idempotent generic ModerationCases for high/critical signals.
 
 Trust API routes: canonical VerificationCase creation, human-review assignment/completion, Review creation and Review moderation are now exposed through the main API router with centralized authorization.
 
