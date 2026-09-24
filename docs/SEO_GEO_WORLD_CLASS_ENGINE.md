@@ -643,3 +643,13 @@ Implementation must preserve these boundaries and must not create a parallel SEO
 - manual crawler execution is available through the authenticated SEO control surface.
 
 The crawler verifies representation/render consistency; it does not generate or mutate SEO content.
+
+### 39. Search-engine / AI citation measurement implementation
+
+**Implemented.** Visibility is now measured from real external provider evidence rather than synthetic scores:
+- Google Search Console actual query/page performance;
+- Bing Webmaster actual query/page traffic and position;
+- AI web-search URL citations from Responses-style web search output;
+- durable run/citation provenance and failure state;
+- scheduled and manual execution paths;
+- explicit distinction between observed evidence and unavailable/unconfigured providers.
