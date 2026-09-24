@@ -1,2 +1,24 @@
-import type {SeoEntity,SeoPolicy} from "./types";
-export function evaluateSeoPolicy(e:SeoEntity,url:string):SeoPolicy{if(e.visibility!=="public")return{indexability:"noindex",reason:"entity-not-public",canonicalUrl:url,includeInSitemap:false};if(e.publicationState==="deleted"||e.publicationState==="unpublished")return{indexability:"excluded",reason:"entity-not-published",canonicalUrl:url,includeInSitemap:false};if(e.publicationState!=="published")return{indexability:"noindex",reason:"publication-policy",canonicalUrl:url,includeInSitemap:false};if(!e.preferredName.trim()||(!e.summary?.trim()&&!e.description?.trim()))return{indexability:"noindex",reason:"insufficient-factual-content",canonicalUrl:url,includeInSitemap:false};return{indexability:"index",reason:"policy-eligible",canonicalUrl:url,includeInSitemap:true}}
+import type { SeoEntity, SeoPolicy } from "./types";
+import { evaluateFreshness } from "./freshness";
+
+export function evaluateSeoPolicy(entity: SeoEntity, canonicalUrl: string, now?: string): SeoPolicy {
+  if (entity.visibility !== "public") {
+    return { indexability: "noindex", reason: "entity-not-public", canonicalUrl, includeInSitemap: false };
+  }
+  if (entity.publicationState === "deleted" || entity.publicationState === "unpublished") {
+    return { indexability: "excluded", reason: "entity-not-published", canonicalUrl, includeInSitemap: false };
+  }
+  if (entity.publicationState !== "published") {
+    return { indexability: "noindex", reason: "publication-policy", canonicalUrl, includeInSitemap: false };
+  }
+  if (!entity.preferredName.trim() || (!entity.summary?.trim() && !entity.description?.trim())) {
+    return { indexability: "noindex", reason: "insufficient-factual-content", canonicalUrl, includeInSitemap: false };
+  }
+  if (now) {
+    const freshness = evaluateFreshness(entity, now);
+    if (freshness.stale) {
+      return { indexability: "noindex", reason: "stale-source-representation", canonicalUrl, includeInSitemap: false };
+    }
+  }
+  return { indexability: "index", reason: "policy-eligible", canonicalUrl, includeInSitemap: true };
+}
