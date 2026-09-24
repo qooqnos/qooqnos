@@ -689,3 +689,13 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
 .metadata-cloud span{padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--muted);font-size:8px}
 .metadata-cloud b{color:var(--text)}
 @media(max-width:820px){.booking-grid{grid-template-columns:1fr}.booking-fields{grid-template-columns:1fr}.discovery-detail-grid{grid-template-columns:1fr}}
+
+.checkout-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:14px}
+.checkout-panel,.checkout-result{padding:22px}
+.checkout-actions{display:flex;justify-content:flex-end;margin-top:16px}
+.checkout-result-body{margin-top:17px}
+.checkout-success{padding:5px 2px}
+.checkout-success .draft-orb{margin-bottom:12px}
+.checkout-success h3{margin:7px 0 18px;font-size:14px;direction:ltr;word-break:break-all}
+.checkout-success p{margin:14px 0 0;color:var(--muted);font-size:9px;line-height:1.85}
+@media(max-width:820px){.checkout-grid{grid-template-columns:1fr}}
