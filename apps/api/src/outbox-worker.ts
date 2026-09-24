@@ -2,7 +2,7 @@ import { CommunicationRepository } from "@qooqnos/communication";
 import { MatchingLearningRepository, MatchingOutcomeProcessor } from "@qooqnos/matching";
 import { DiscoveryOutboxProcessor, DiscoveryRepository } from "@qooqnos/discovery";
 import { brandId } from "@qooqnos/core";
-import { AnalyticsRepository, OutboxService, type OutboxEventRecord } from "@qooqnos/database";
+import { AnalyticsRepository, AnalyticsValidationError, OutboxService, type OutboxEventRecord } from "@qooqnos/database";
 import { getDatabase } from "./database";
 import { createRequestContext } from "./context";
 import type { ApiEnv } from "./env";
@@ -82,17 +82,36 @@ export async function consumeOutbox(
           requestId: event.id,
           authenticated: true,
         });
-        await analytics.ingestOutboxEvent(analyticsContext, {
-          id: event.id,
-          eventType: event.eventType,
-          eventVersion: event.eventVersion,
-          aggregateType: event.aggregateType,
-          aggregateId: event.aggregateId,
-          organizationId: event.organizationId,
-          workspaceId: event.workspaceId,
-          payloadJson: event.payloadJson,
-          occurredAt: event.occurredAt,
-        }, new Date().toISOString());
+        try {
+          await analytics.ingestOutboxEvent(analyticsContext, {
+            id: event.id,
+            eventType: event.eventType,
+            eventVersion: event.eventVersion,
+            aggregateType: event.aggregateType,
+            aggregateId: event.aggregateId,
+            organizationId: event.organizationId,
+            workspaceId: event.workspaceId,
+            payloadJson: event.payloadJson,
+            occurredAt: event.occurredAt,
+          }, new Date().toISOString());
+        } catch (error) {
+          if (!(error instanceof AnalyticsValidationError)) throw error;
+          await analytics.quarantineOutboxEvent(
+            {
+              id: event.id,
+              eventType: event.eventType,
+              eventVersion: event.eventVersion,
+              aggregateType: event.aggregateType,
+              aggregateId: event.aggregateId,
+              organizationId: event.organizationId,
+              workspaceId: event.workspaceId,
+              payloadJson: event.payloadJson,
+              occurredAt: event.occurredAt,
+            },
+            error.message,
+            new Date().toISOString(),
+          );
+        }
       }
 
       if (matchingOutcomes && isMatchingOutcomeEvent(event.eventType)) {
