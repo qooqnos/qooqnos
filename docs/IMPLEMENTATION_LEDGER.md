@@ -1370,3 +1370,12 @@ Ownership remains explicit:
 - Billing owns financial truth;
 - Media owns creative binaries;
 - Trust/Moderation remain policy authorities.
+
+
+Additional hardening completed after initial Dynamic Frontend SEO Surface implementation:
+- Cloudflare Assets now has an explicit `ASSETS` binding required by the Worker edge renderer.
+- Public representation responses use `content_hash` as an ETag for cache revalidation.
+- `X-Robots-Tag` is emitted consistently, including 304 responses.
+- SPA navigation to dynamic entity URLs forces a full navigation so the request reaches the edge renderer and cannot reuse stale entity hydration.
+- Unknown public entity-like paths return a real 404 from the edge renderer when no published/public representation exists.
+- Migration numbering was reconciled with the existing repository chain: the public-render index is migration `0083`, after existing `0082_advertising_core`.
