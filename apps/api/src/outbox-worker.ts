@@ -300,6 +300,12 @@ async function enrichSeoPayload(
         const locations = await business.listLocations(context, record.id);
         const location = locations.find((item) => item.status === "active" && item.locationType === "physical" && item.geoPoint);
         if (location) {
+          const hours = await business.listHours(context, record.id, location.id);
+          const openingHours = hours.map((entry) => ({
+            dayOfWeek: [schemaDayOfWeek(entry.dayOfWeek)],
+            opens: entry.opens,
+            closes: entry.closes,
+          }));
           payload.seoEntity = {
             id: record.id,
             type: "Business",
@@ -313,6 +319,7 @@ async function enrichSeoPayload(
             geoScope: "exact",
             geoPoint: location.geoPoint ?? undefined,
             ...(location.address ? { address: mapSeoAddress(location.address) } : {}),
+            ...(openingHours.length ? { openingHours } : {}),
             updatedAt: record.updatedAt,
           };
         }
@@ -331,4 +338,17 @@ function mapSeoAddress(value: Readonly<Record<string, unknown>>): Record<string,
     if (typeof item === "string" && item.trim()) result[field] = item.trim();
   }
   return result;
+}
+
+function schemaDayOfWeek(day: number): string {
+  const days = [
+    "https://schema.org/Monday",
+    "https://schema.org/Tuesday",
+    "https://schema.org/Wednesday",
+    "https://schema.org/Thursday",
+    "https://schema.org/Friday",
+    "https://schema.org/Saturday",
+    "https://schema.org/Sunday",
+  ];
+  return days[Math.min(Math.max(day, 1), 7) - 1];
 }
