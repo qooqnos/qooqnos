@@ -73,9 +73,9 @@ Before adding a table:
 
 ## 4. Migration sequence currently registered
 
-The API runtime currently references the ordered canonical migration sequence `0001` through `0064`.
+The API runtime references the ordered canonical migration set through `0073`; intentional unused version numbers remain unassigned.
 
-Do not renumber or replace these migrations.
+Do not renumber or replace existing migrations.
 
 ## 5. Legacy implementation reconciliation
 
