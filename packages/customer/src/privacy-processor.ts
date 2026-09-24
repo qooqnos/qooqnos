@@ -1,6 +1,7 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import type {
   PrivacyProcessor,
+  PrivacyRetentionProcessor,
   PrivacyProcessorRequest,
   PrivacyProcessorResult,
 } from "@qooqnos/privacy";
@@ -77,5 +78,24 @@ function toRequestContext(input: PrivacyProcessorRequest): RequestContext {
     ...(input.request.requestedBy ? { actorId: input.request.requestedBy as EntityId } : {}),
     requestId: input.context.requestId,
     correlationId: input.context.correlationId,
+  };
+}
+
+export function createCustomerPrivacyRetentionProcessor(
+  options: CustomerPrivacyProcessorOptions,
+): PrivacyRetentionProcessor {
+  return {
+    id: "customer.privacy.retention",
+    moduleId: "customer",
+    async process(input) {
+      const processed = await options.repository.privacyExpirePreferences(
+        { tenantId: input.organizationId, ...(input.workspaceId ? { workspaceId: input.workspaceId } : {}) } as RequestContext,
+        input.now,
+      );
+      return {
+        processed,
+        resultReference: "privacy-retention:customer-preferences:" + input.now,
+      };
+    },
   };
 }
