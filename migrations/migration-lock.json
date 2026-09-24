@@ -539,6 +539,13 @@
       "moduleId": "promotion",
       "checksum": "a958069292f8a6121997cc28b73dd171d552faa0cc89c827d52b671a6346e496",
       "filename": "0080_promotion_core.sql"
+    },
+    {
+      "id": "0081_loyalty_core",
+      "version": 81,
+      "moduleId": "loyalty",
+      "checksum": "cf5966e4e0ff9c3d52c348afa23f939c3456220f38c4b5cd5b18dc5493933f47",
+      "filename": "0081_loyalty_core.sql"
     }
   ]
 }
