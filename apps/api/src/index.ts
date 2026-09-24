@@ -29,7 +29,6 @@ import { processAnalyticsAggregates } from "./analytics-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 import { assertProductionInfrastructure, checkRuntimeInfrastructure } from "./infrastructure";
 import { processSeoPublicationJobs } from "@qooqnos/seo";
-import { registerSeoRoutes } from "./seo-routes";
 import { registerMediaRoutes } from "./media-routes";
 import { registerPromotionRoutes } from "./promotion-routes";
 import { registerLoyaltyRoutes } from "./loyalty-routes";
@@ -80,8 +79,7 @@ const homePage = (version: string): string => `<!doctype html>
 
 function createRouter(version: string, database: D1Database | undefined, env: ApiEnv): ApiRouter {
   const authorization = createApiAuthorizationRegistry();
-  const router = new ApiRouter({ authorization, ...(database ? { database } : {}) });
-  registerSeoRoutes(router, database, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com");
+  const router = new ApiRouter({ authorization, ...(database ? { database } : {}), seoCanonicalBaseUrl: env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com" });
   registerMediaRoutes(router, database, env, authorization);
   registerPromotionRoutes(router, database, authorization);
   registerLoyaltyRoutes(router, database, authorization);
