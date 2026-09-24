@@ -1515,3 +1515,9 @@ Competitive intelligence evidence layers now include:
 - **Commits:** `1a9cc81`, `c061ced`, `bf522ca`.
 - **Verification:** GitHub Actions CI and Phoenix Verification were triggered by the latest `main` push; both were observed running for commit `bf522ca`.
 - **Remaining:** await CI completion and perform deployed production evidence verification with real provider credentials/data.
+
+
+## Production SEO Hardening — Provider Test Contract
+- **Completed:** provider activation matrix tests are typed against the real ApiEnv contract; Search Console access-token/service-account activation and complete/partial competitive-intelligence activation are covered without lint-invalid any casts.
+- **Commits:** `00fb2607`, `6abb3ceb`, `f39932fd`.
+- **Verification:** the first provider-test CI run failed at lint because the initial test introduced explicit any casts; the tests were corrected to use the real environment type and the competitive provider field name. A fresh CI run is now required for final green verification.
