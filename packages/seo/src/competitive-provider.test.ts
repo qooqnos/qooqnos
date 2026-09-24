@@ -64,4 +64,46 @@ describe("competitive SERP provider", () => {
     expect(result.aiCitations.some((item) => item.url === "https://competitor.com/studio")).toBe(true);
     fetcher.mockRestore();
   });
+  it("parses page-level competitor SEO evidence from Instant Pages", async () => {
+    const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(
+      JSON.stringify({
+        status_code: 20000,
+        tasks: [{
+          status_code: 20000,
+          result: [{
+            items: [{
+              type: "html_page",
+              status_code: 200,
+              url: "https://competitor.com/studio",
+              meta: {
+                title: "Competitor Studio",
+                description: "Competitor description",
+                canonical: "https://competitor.com/studio",
+                htags: { h1: ["Competitor Studio"] },
+                internal_links_count: 18,
+                external_links_count: 4,
+                images_count: 12,
+                title_length: 19,
+                description_length: 23,
+                content: { plain_text_word_count: 640 },
+              },
+              checks: {
+                no_h1_tag: false,
+                no_title: false,
+                no_description: false,
+                seo_friendly_url: true,
+              },
+            }],
+          }],
+        }],
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    ));
+    const provider = new DataForSeoGoogleCompetitiveProvider({ login: "login", password: "password" });
+    const snapshots = await provider.observePages(["https://competitor.com/studio"], "en-US");
+    expect(snapshots[0]?.h1Count).toBe(1);
+    expect(snapshots[0]?.wordCount).toBe(640);
+    expect(snapshots[0]?.internalLinksCount).toBe(18);
+    fetcher.mockRestore();
+  });
 });
