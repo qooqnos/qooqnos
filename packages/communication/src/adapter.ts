@@ -85,7 +85,7 @@ export function createCommunicationProviderRegistry(
       : "degraded";
     return {
       providerId,
-      state,
+      state: health,
       consecutiveFailures: state.failures,
       nextProbeAt: state.nextProbeAtMs > now ? new Date(state.nextProbeAtMs).toISOString() : null,
     };
