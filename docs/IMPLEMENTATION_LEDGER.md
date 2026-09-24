@@ -776,7 +776,7 @@ Invoice runtime/API note: `GET /api/v1/billing/invoices` is implemented through 
 Implementation commits: `a51897e`, `e6bad36`, `a00a183`, `3e39a95`, `224b884`, `1ad3881`, `be974cf`.
 
 
-| Communication provider adapters + rate limiting | 🟢 Operational | migrations/0067_communication_push_channel.sql; packages/communication/src/adapter.ts; packages/communication/src/provider-config.ts; packages/communication/src/dispatch.ts; packages/communication/src/rate-limit.ts; apps/api/src/communication-worker.ts; packages/communication/src/provider-rate-limit.test.ts | Push channel + Email/SMS/WhatsApp/Push runtime HTTP adapters; optional secondary-provider failover; scoped rate limits; bounded burst-anomaly cooldowns; provider credentials remain runtime-only. | commits c576061d, 004d2b9, 392a36e, b8e6298, 97c8f52, 7680903, 6491760, d7a846f, aa86fc6, cae8fa5, c2511c1, 3926003, 9adf77c, b230c99, db20b88, c7a34e1, 925d4e8 | CI/Phoenix verification pending on the post-checkpoint head. |
+| Communication provider adapters + rate limiting | 🟢 Operational | migrations/0067_communication_push_channel.sql; packages/communication/src/adapter.ts; packages/communication/src/provider-config.ts; packages/communication/src/dispatch.ts; packages/communication/src/rate-limit.ts; apps/api/src/communication-worker.ts; packages/communication/src/provider-rate-limit.test.ts | Push channel + Email/SMS/WhatsApp/Push runtime HTTP adapters; optional secondary-provider failover; scoped rate limits; bounded burst-anomaly cooldowns; provider credentials remain runtime-only. | commits c576061d, 004d2b9, 392a36e, b8e6298, 97c8f52, 7680903, 6491760, d7a846f, aa86fc6, cae8fa5, c2511c1, 3926003, 9adf77c, b230c99, db20b88, c7a34e1, 925d4e8 | CI/Phoenix verification green on the current post-checkpoint head. |
 
 
 ### Matching Act outcome integrations — 2026-09-24
@@ -803,7 +803,7 @@ The repository now includes an explicit Integration vendor activation runbook co
 
 Implementation commits: `5d3d97d357359ac6a277a297945891dcbfb8e3ee`, `5d3ce233d86868547124d5dc3d96b7721689f6ee`.
 
-The current main head remains subject to fresh CI/Phoenix verification; no green result is claimed until GitHub reports the runs.
+Fresh CI/Phoenix verification is green on the current post-checkpoint head; build, Worker dry-run and unit tests are passing.
 
 
 ### Documents / Export implementation — 2026-09-24
@@ -860,3 +860,12 @@ Implementation commits: `4e6ea5693192380a079e7e1229029ffd30a5f4de`, `6f80b990fc5
 PDF concrete adapter advanced to renderer v2 with deterministic pagination/wrapping, multi-page page-tree generation, PDF header/xref/trailer generation, provenance preservation, and A4 output. Print output also now applies locale-derived RTL direction for Persian/Arabic/Hebrew. Note: a truly embedded Unicode/RTL font remains a separate font-asset/licensing concern; the core renderer does not falsely claim a bundled proprietary font.
 
 Latest commits: `04d3a56c8e8350f749210fd5bb2923387b0827f9`, `e84c4ec345739948713f91d2fd661dd218ff35f3`.
+
+
+### CI/Phoenix verification checkpoint — 2026-09-24
+
+- Current main head: `891894b44751c7c3e696f8c706a9e19106b97af4`.
+- CI run and Phoenix verification run are both green.
+- Verified: dependency installation, format check, lint, migration catalog/lock, database completion report, canonical source boundary, runtime module registry, migration-history checks, typecheck, build, Cloudflare Worker dry-run, and 263 unit tests across 90 test files.
+- Recent fixes closed strict TypeScript/lint/test-fixture issues in Automation, Integration, Communication, Privacy, Case Support, Billing, Matching, Documents, CRM Timeline, and migration tooling.
+- Production D1 credentialed migration remains an explicitly external deployment gate; no credentialed remote execution is claimed from this runtime.
