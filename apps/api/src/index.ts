@@ -85,7 +85,7 @@ function isApiFirstPublicPath(pathname: string): boolean {
     || pathname === "/ready"
     || pathname === "/robots.txt"
     || pathname === "/sitemap.xml"
-    || /^\\/sitemap-\\d+\\.xml$/.test(pathname)
+    || /^\/sitemap-\d+\.xml$/.test(pathname)
     || pathname.startsWith("/api/");
 }
 
