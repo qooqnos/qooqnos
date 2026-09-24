@@ -792,7 +792,7 @@ The database is broad but not yet production-complete.
 The accurate state is:
 
 ```
-190 physical tables defined across 56 ordered migrations
+229 physical tables defined across 78 ordered migrations
         ↓
 core foundation + identity + business + catalog + media + discovery
 + seller AI + customer/CRM + trust + booking + commerce + billing
@@ -822,7 +822,7 @@ The remaining implementation work is operational/provider/projection work; Catal
 11. Fulfillment provider callback reconciliation and canonical tracking/service completion persistence are implemented; concrete provider adapters and durable polling remain contract-driven and are added only when an external provider contract exists.
 12. Business lifecycle vocabulary reconciliation is closed; do not introduce another Business status model.
 13. Case queue/provider dispatch is implemented through migration `0073_case_queue_provider_dispatch.sql`, durable CaseDispatch state/attempt evidence, a provider-neutral adapter/registry, a runtime-configured HTTP adapter, and the scheduled dispatch worker. Concrete vendor onboarding remains external operational work.
-14. Add Documents and Analytics structures where their contracts are sufficiently explicit; Localization registry contract is now implemented by migration 0072.
+14. Documents, Analytics, AI Memory and SEO/GEO derived structures are implemented; Localization registry contract is implemented by migration 0072.
 
 Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables; 0048 completes the Review-owned moderation/reputation projection layer; 0054 adds Discovery index generations and observability evidence; 0064 completes the TrustSignal/anti-abuse physical boundary.
 
@@ -868,3 +868,8 @@ The existing `billing_reconciliation_cases` contract is now operationally comple
 ### Matching Act outcome integration — 2026-09-24
 
 Migration `0071_matching_act_outcome_links.sql` adds optional MatchRequest/Candidate references to Booking and Commerce authoritative records. `MatchingOutcomeProcessor` consumes existing outbox events for completed/cancelled bookings, completed orders, payment-completion events and fulfillment completion, resolves the linked MatchRequest/Candidate without guessing ambiguous candidates, and records the result through the existing append-only `match_learning_signals` boundary. No parallel Learning store was introduced.
+
+
+## 3.17 SEO/GEO derived engine — 0077–0078
+
+Migrations 0077–0078 establish the derived SEO/GEO persistence boundary: canonical entity representations and versioned artifacts, explicit source dependencies, explainable audits, observed measurements, semantic entity-graph nodes/edges, internal-link recommendations, and geographic truth signals. These records are rebuildable projections and never replace Business, Catalog, Location, Trust, or other domain authority.
