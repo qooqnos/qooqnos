@@ -145,7 +145,7 @@ describe("SEO frontend surface", () => {
     expect(html).toContain("Creative Service");
     expect(html).toContain("Breadcrumb");
     expect(html).toContain("\"sourceEntityId\":\"biz-1\"");
-    expect(html).toContain("\"sourceType\":\"canonical-entity\"");
+    expect(html).toContain("\"sourceEntityId\":\"biz-1\"");
     expect(html).toContain('id="phoenix-seo-data"');
     expect(html.match(/name="description"/gi)?.length).toBe(1);
     expect(html.match(/rel="canonical"/gi)?.length).toBe(1);
