@@ -73,7 +73,7 @@ describe("SEO/GEO core", () => {
       sameAs: ["https://example.com/about", "not-a-url"],
       serviceArea: ["Baku", "Azerbaijan"],
       type: "Business",
-    });
+    }, { canonicalUrl: url, breadcrumbs: [{ name: "Phoenix", url: "https://example.com/" }, { name: "Businesses", url: "/discover?type=business" }, { name: "Phoenix Studio", url } ] });
     expect(structured["@type"]).toBe("LocalBusiness");
     expect(structured.url).toBe(url);
     expect(structured.telephone).toBe("+12025550123");
@@ -142,7 +142,7 @@ describe("SEO/GEO core", () => {
   });
 
   it("derives first-party evidence without inventing external facts", () => {
-    const answer = buildAnswerRepresentation(entity, [], "2026-09-24T12:00:00Z");
+    const answer = buildAnswerRepresentation(entity, [], "2026-09-24T12:00:00Z", "https://example.com/en-US/business/biz-1");
     expect(answer.confidence).toBe("verified");
     expect(answer.citationReady).toBe(true);
     expect(answer.facts[0]?.sourceType).toBe("canonical-entity");
