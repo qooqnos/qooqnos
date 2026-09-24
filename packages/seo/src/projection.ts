@@ -15,7 +15,7 @@ import { evaluateSeoPolicy } from "./policy";
 import { canonicalEntityUrl } from "./url";
 import { generateMetadata } from "./metadata";
 import { generateStructuredData } from "./structured-data";
-import { buildEntityPageModel } from "./entity-page";
+import { buildBreadcrumbs, buildEntityPageModel } from "./entity-page";
 
 export interface SeoProjectionPlan {
   readonly entityId: string;
@@ -50,13 +50,7 @@ export function buildSeoProjectionPlan(input: SeoProjectionInput): SeoProjection
   const canonicalUrl = canonicalEntityUrl(input.canonicalBaseUrl, input.entity);
   const policy = evaluateSeoPolicy(input.entity, canonicalUrl, input.now);
   const metadata = generateMetadata({ entity: input.entity, canonicalBaseUrl: input.canonicalBaseUrl }, canonicalUrl, policy);
-  const breadcrumbs = buildEntityPageModel(
-    input.entity,
-    generateMetadata({ entity: input.entity, canonicalBaseUrl: input.canonicalBaseUrl }, canonicalUrl, policy),
-    buildAnswerRepresentation(input.entity, input.facts ?? [], input.now, canonicalUrl),
-    [],
-    input.canonicalBaseUrl,
-  ).breadcrumbs;
+  const breadcrumbs = buildBreadcrumbs(input.entity, input.canonicalBaseUrl, canonicalUrl);
   const structuredData = generateStructuredData(input.entity, { canonicalUrl, breadcrumbs });
   const answer = buildAnswerRepresentation(input.entity, input.facts ?? [], input.now, canonicalUrl);
   const internalLinks = input.graph
