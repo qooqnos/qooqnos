@@ -6,6 +6,7 @@ import { OutboxService, type OutboxEventRecord } from "@qooqnos/database";
 import { getDatabase } from "./database";
 import { createRequestContext } from "./context";
 import type { ApiEnv } from "./env";
+import { processCaseDispatch } from "./case-dispatch-worker";
 
 export interface ScheduledControllerLike {
   readonly scheduledTime: number;
@@ -94,6 +95,10 @@ export async function consumeOutbox(
           payloadJson: event.payloadJson,
           occurredAt: event.occurredAt,
         });
+      }
+
+      if (event.eventType === "case.dispatch.requested") {
+        await processCaseDispatch(env, new Date().toISOString());
       }
 
       if (event.eventType === "communication.notification.created") {
