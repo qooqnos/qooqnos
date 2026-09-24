@@ -81,7 +81,7 @@ const homePage = (version: string): string => `<!doctype html>
 function createRouter(version: string, database: D1Database | undefined, env: ApiEnv): ApiRouter {
   const authorization = createApiAuthorizationRegistry();
   const router = new ApiRouter({ authorization, ...(database ? { database } : {}) });
-  registerSeoRoutes(router, database);
+  registerSeoRoutes(router, database, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com");
   registerMediaRoutes(router, database, env, authorization);
   registerPromotionRoutes(router, database, authorization);
   registerLoyaltyRoutes(router, database, authorization);
@@ -588,7 +588,7 @@ export default {
       await processSeoPublicationJobs(database, now, 25, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com");
       if (env.ENVIRONMENT === "production") {
         const sampleLimit = Number(env.SEO_CRAWLER_SAMPLE_LIMIT ?? "25");
-        await runProductionSeoCrawler(database, Number.isFinite(sampleLimit) ? sampleLimit : 25, now);
+        await runProductionSeoCrawler(database, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com", Number.isFinite(sampleLimit) ? sampleLimit : 25, now);
       }
     }
 
