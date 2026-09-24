@@ -32,6 +32,9 @@ const queueName = required("PHOENIX_PROD_OUTBOX_QUEUE_NAME");
 const modelId = required("PHOENIX_PROD_AI_MODEL_ID");
 const modelVersion = process.env.PHOENIX_PROD_AI_MODEL_VERSION?.trim() || "1";
 const gatewayId = process.env.PHOENIX_PROD_AI_GATEWAY_ID?.trim() || "";
+const seoAiEndpoint = process.env.SEO_AI_CITATION_ENDPOINT?.trim() || "";
+const seoAiModel = process.env.SEO_AI_CITATION_MODEL?.trim() || "";
+const seoAiAuthMode = process.env.SEO_AI_CITATION_AUTH_MODE?.trim() || "";
 
 validateD1Id(databaseId);
 validateName(databaseName, "PHOENIX_PROD_D1_DATABASE_NAME");
@@ -56,6 +59,11 @@ APP_VERSION = "production"
 ENVIRONMENT = "production"
 SEO_CANONICAL_BASE_URL = "https://qooqnos.com"
 SEO_CRAWLER_SAMPLE_LIMIT = "25"
+SEO_MEASUREMENT_SAMPLE_LIMIT = "25"
+SEO_GSC_SITE_URL = "https://qooqnos.com/"
+SEO_GSC_LOOKBACK_DAYS = "7"
+SEO_GSC_END_LAG_DAYS = "3"
+SEO_BING_SITE_URL = "https://qooqnos.com/"${seoAiEndpoint ? `\nSEO_AI_CITATION_ENDPOINT = "${seoAiEndpoint}"` : ""}${seoAiModel ? `\nSEO_AI_CITATION_MODEL = "${seoAiModel}"` : ""}${seoAiAuthMode ? `\nSEO_AI_CITATION_AUTH_MODE = "${seoAiAuthMode}"` : ""}
 AI_SELLER_EXTRACT_MODEL_ID = "${modelId}"
 AI_SELLER_EXTRACT_MODEL_VERSION = "${modelVersion}"${gatewayId ? `\nAI_GATEWAY_ID = "${gatewayId}"` : ""}
 
