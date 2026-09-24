@@ -82,7 +82,8 @@ function answerText(entity: SeoEntity): string {
 }
 
 function freshnessAt(entity: SeoEntity, facts: readonly AnswerFact[]): string {
-  const timestamps = [entity.updatedAt, ...facts.map((fact) => fact.verifiedAt).filter(Boolean) as string[]]
+  const verifiedAt = facts.map((fact) => fact.verifiedAt).filter((value): value is string => Boolean(value));
+  const timestamps = [entity.updatedAt, ...verifiedAt]
     .filter(validTimestamp)
     .map((value) => Date.parse(value));
   if (!timestamps.length) return entity.updatedAt;
