@@ -1126,3 +1126,27 @@ Canonical files:
 - `apps/web/src/main.ts`
 - `apps/web/styles.css`
 - `apps/web/public/styles.css`
+
+### Frontend Media + Seller AI Image Input — 2026-09-25
+
+A previously missing HTTP boundary for the existing Media domain is now implemented and consumed by Seller AI Studio.
+
+Backend:
+- `POST /api/v1/media/assets` accepts multipart image uploads and stores objects in the configured R2 bucket before registering the canonical media asset;
+- `GET /api/v1/media/assets/:assetId` exposes scoped asset metadata;
+- `GET /api/v1/media/assets/:assetId/content` streams the scoped R2 object;
+- media permissions `media:upload`, `media:read`, `media:status` are registered by the Media runtime module.
+
+Frontend:
+- Seller AI Studio accepts image input (JPG/PNG/WebP/GIF/AVIF/HEIC, 10MB UI guard);
+- the image is uploaded through the canonical Media boundary;
+- the returned `mediaAssetId` is persisted into the Seller AI creation session input;
+- existing Seller AI run/review/confirm flow remains the authoritative orchestration path.
+
+Canonical files:
+- `apps/api/src/media-routes.ts`
+- `apps/api/src/index.ts`
+- `packages/media/src/manifest.ts`
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
