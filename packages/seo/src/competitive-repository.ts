@@ -81,8 +81,8 @@ export class SeoCompetitiveRepository extends Repository {
     input: {
       readonly id: string;
       readonly runId: string;
-      readonly competitorId?: string;
-      readonly entityId?: string;
+      readonly competitorId?: string | undefined;
+      readonly entityId?: string | undefined;
       readonly queryText: string;
       readonly resultType: string;
       readonly domain: string;
@@ -115,9 +115,9 @@ export class SeoCompetitiveRepository extends Repository {
       readonly competitorId?: string;
       readonly domain: string;
       readonly currentUrl: string;
-      readonly currentRank?: number;
-      readonly currentAiCitation?: boolean;
-      readonly observationType?: "serp" | "ai_citation";
+      readonly currentRank?: number | undefined;
+      readonly currentAiCitation?: boolean | undefined;
+      readonly observationType?: "serp" | "ai_citation" | undefined;
       readonly detectedAt: string;
       readonly provenance: Record<string, unknown>;
     },
@@ -176,10 +176,10 @@ export class SeoCompetitiveRepository extends Repository {
       readonly detectedAt: string;
       readonly changeType: "new-entry" | "lost-entry" | "rank-up" | "rank-down" | "url-changed" | "ai-citation-gained" | "ai-citation-lost";
       readonly competitorId?: string;
-      readonly previousRank?: number;
+      readonly previousRank?: number | undefined;
       readonly currentRank?: number;
-      readonly previousUrl?: string;
-      readonly currentUrl?: string;
+      readonly previousUrl?: string | undefined;
+      readonly currentUrl?: string | undefined;
       readonly provenance: Record<string, unknown>;
     },
   ): Promise<void> {
