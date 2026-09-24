@@ -86,9 +86,9 @@ export function verifyMigrationLock(
 
   let previousVersion = 0;
   for (const definition of sorted) {
-    if (definition.version !== previousVersion + 1) {
+    if (definition.version <= previousVersion) {
       throw new MigrationLockError(
-        `Migration definitions are not contiguous: expected version ${previousVersion + 1}, found ${definition.version} (${definition.id})`,
+        `Migration definitions are not strictly increasing: previous version ${previousVersion}, found ${definition.version} (${definition.id})`,
       );
     }
     previousVersion = definition.version;
