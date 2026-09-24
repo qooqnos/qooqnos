@@ -308,7 +308,7 @@ export class SeoCompetitiveRepository extends Repository {
     linkGaps: readonly Record<string, unknown>[];
   }> {
     const scope = this.scope(context);
-    const pageSnapshots = await this.database.all(
+    const pageSnapshots = await this.database.all<Record<string, unknown>>(
       `SELECT s.result_url AS resultUrl, s.observed_at AS observedAt, s.status_code AS statusCode, s.title, s.description,
               s.canonical_url AS canonicalUrl, s.h1_count AS h1Count, s.word_count AS wordCount,
               s.internal_links_count AS internalLinksCount, s.external_links_count AS externalLinksCount,
@@ -324,7 +324,7 @@ export class SeoCompetitiveRepository extends Repository {
         ORDER BY s.observed_at DESC LIMIT 50`,
       scope.organizationId, scope.workspaceId, scope.organizationId, scope.workspaceId, entityId,
     );
-    const competitors = await this.database.all(
+    const competitors = await this.database.all<Record<string, unknown>>(
       `SELECT c.id, c.domain, c.display_name AS displayName, c.competitor_type AS competitorType, c.last_observed_at AS lastObservedAt,
               COUNT(o.id) AS observations, MIN(o.rank_absolute) AS bestObservedRank
          FROM seo_competitors c
@@ -345,7 +345,7 @@ export class SeoCompetitiveRepository extends Repository {
         ORDER BY observations DESC, bestObservedRank ASC LIMIT 50`,
       scope.organizationId, scope.workspaceId, scope.organizationId, scope.workspaceId, entityId,
     );
-    const changes = await this.database.all(
+    const changes = await this.database.all<Record<string, unknown>>(
       `SELECT query_text AS queryText, change_type AS changeType, previous_rank AS previousRank, current_rank AS currentRank,
               previous_url AS previousUrl, current_url AS currentUrl, detected_at AS detectedAt
          FROM seo_competitive_changes c
@@ -361,7 +361,7 @@ export class SeoCompetitiveRepository extends Repository {
         ORDER BY c.detected_at DESC LIMIT 100`,
       scope.organizationId, scope.workspaceId, entityId,
     );
-    const opportunities = await this.database.all(
+    const opportunities = await this.database.all<Record<string, unknown>>(
       `SELECT o.query_text AS queryText,
               MIN(o.rank_absolute) AS competitorBestRank,
               COUNT(DISTINCT o.domain) AS competitorDomains
@@ -387,7 +387,7 @@ export class SeoCompetitiveRepository extends Repository {
         LIMIT 50`,
       scope.organizationId, scope.workspaceId, entityId,
     );
-    const keywordGaps = await this.database.all(
+    const keywordGaps = await this.database.all<Record<string, unknown>>(
       `SELECT g.competitor_domain AS competitorDomain, g.keyword, g.search_volume AS searchVolume, g.cpc,
               g.competitor_rank AS competitorRank, g.phoenix_rank AS phoenixRank, g.gap_type AS gapType,
               g.location_code AS locationCode, g.language_code AS languageCode, g.observed_at AS observedAt
@@ -397,7 +397,7 @@ export class SeoCompetitiveRepository extends Repository {
         LIMIT 100`,
       scope.organizationId, scope.workspaceId, entityId,
     );
-    const linkGaps = await this.database.all(
+    const linkGaps = await this.database.all<Record<string, unknown>>(
       `SELECT g.competitor_domain AS competitorDomain, g.referring_domain AS referringDomain,
               g.competitor_backlinks AS competitorBacklinks, g.competitor_domain_rank AS competitorDomainRank,
               g.observed_at AS observedAt
