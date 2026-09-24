@@ -199,7 +199,7 @@ export class AdvertisingRepository extends Repository {
     readonly moderationStatus: string;
     readonly now: string;
   }): Promise<AdvertisingAdRecord> {
-    const version = await this.getCampaignVersion(context, input.campaignVersionId);
+    await this.getCampaignVersion(context, input.campaignVersionId);
     await this.database.run(
       "INSERT INTO advertising_ads (id, campaign_version_id, subject_type, subject_id, creative_reference, moderation_status, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?)",
       input.id, input.campaignVersionId, input.subjectType.trim(), input.subjectId, input.creativeReference.trim(), input.moderationStatus.trim(), input.now, input.now,
