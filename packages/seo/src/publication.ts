@@ -1,4 +1,4 @@
-import type { RequestContext } from "@qooqnos/core";
+import { brandId, type RequestContext } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import { SeoRepository } from "./repository";
 import { validateStructuredData } from "./structured-validation";
@@ -199,7 +199,7 @@ export async function processSeoPublicationJobs(
       } as RequestContext;
       const graph = await loadSeoEntityGraph(database, job.organizationId, job.workspaceId, payload.id, payload.locale);
       const plan = buildSeoProjectionPlan({ entity: payload, canonicalBaseUrl, now, ...(graph ? { graph } : {}) });
-      const representationId = `seo-representation:${payload.id}:${payload.locale}`;
+      const representationId = brandId<"EntityId">(`seo-representation:${payload.id}:${payload.locale}`);
       if (plan.audit.status === "blocked") {
         const details = plan.audit.blockingIssueCodes.join(", ");
         throw new Error(`SEO audit blocked publication: ${details}`);
