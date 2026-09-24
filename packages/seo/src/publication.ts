@@ -2,6 +2,7 @@ import type { RequestContext } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import { SeoRepository } from "./repository";
 import { validateStructuredData } from "./structured-validation";
+import { validateAnswerRepresentation } from "./answer-validation";
 import { buildSeoProjectionPlan } from "./projection";
 import { planSeoInvalidation, type SeoDomainChange } from "./invalidation";
 import type { SeoEntity } from "./types";
@@ -199,6 +200,11 @@ export async function processSeoPublicationJobs(
       if (!structuredValidation.valid) {
         const details = structuredValidation.issues.filter((issue) => issue.severity === "error").map((issue) => `${issue.path}: ${issue.message}`).join("; ");
         throw new Error(`SEO structured-data validation failed: ${details}`);
+      }
+      const answerValidation = validateAnswerRepresentation(plan.answer, plan.entity, now);
+      if (!answerValidation.valid || !answerValidation.citationReady) {
+        const details = answerValidation.issues.filter((issue) => issue.severity === "error").map((issue) => `${issue.path}: ${issue.message}`).join("; ");
+        throw new Error(`SEO answer validation failed: ${details || "answer is not citation-ready"}`);
       }
       const contentHash = await stableHash(plan);
       const representation = await repository.publishRepresentationBundle(
