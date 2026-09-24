@@ -19,3 +19,9 @@ export * from "./agentic-readiness";
 
 export * from "./canonical";
 export * from "./invalidation";
+
+export * from "./publication";
+export * from "./structured-validation";
+export * from "./experiments";
+export * from "./observability";
+export * from "./query-repository";
