@@ -96,7 +96,7 @@ export function buildEntityPageModel(
     });
   }
 
-  const sections: EntityPageModel["sections"] = [
+  const sections: Array<EntityPageModel["sections"][number]> = [
     { id: "overview", title: "Overview", kind: "overview" },
     { id: "facts", title: "Verified facts", kind: "facts" },
   ];
