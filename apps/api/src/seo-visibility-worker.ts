@@ -126,7 +126,7 @@ export async function runSeoVisibilityMeasurements(
             surface: provider.surface,
             metric: item.metric,
             ...(item.entityId ? { entityId: item.entityId } : {}),
-            queryClass: row.queryText,
+            queryClass: "tracked-query",
             ...(item.numericValue !== undefined ? { numericValue: item.numericValue } : {}),
             ...(item.textValue !== undefined ? { textValue: item.textValue } : {}),
             provenance,
@@ -155,12 +155,21 @@ export async function runSeoVisibilityMeasurements(
         });
       } catch (error) {
         failures += 1;
+        const errorText = error instanceof Error ? error.message : "SEO visibility measurement failed.";
+        await observationRepository.record(context, {
+          id: runId + ":error",
+          surface: provider.surface,
+          metric: "measurement-provider-error",
+          textValue: errorText,
+          provenance: { provider: provider.id, queryId: row.id, queryText: row.queryText },
+          observedAt: now,
+        });
         await observationRepository.completeMeasurementRun(context, {
           id: runId,
           status: "failed",
           completedAt: now,
           observationCount: 0,
-          errorText: error instanceof Error ? error.message : "SEO visibility measurement failed.",
+          errorText,
         });
       }
     }
