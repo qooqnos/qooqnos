@@ -169,6 +169,8 @@ export class AutomationExecutor {
       this.options.now(),
     );
     return "completed";
+  }
+
   private async compensate(
     context: RequestContext,
     executionId: EntityId,
