@@ -2,8 +2,11 @@ import type { D1DatabaseLike } from "@qooqnos/database";
 import type { CloudflareAIBinding } from "@qooqnos/runtime";
 import type { CloudflareQueueBinding, CloudflareR2Binding } from "./infrastructure";
 
+export interface ApiAssetsBinding { fetch(request: Request): Promise<Response>; }
+
 export interface ApiEnv {
   readonly APP_VERSION?: string;
+  readonly ASSETS?: ApiAssetsBinding;
   readonly SEO_CANONICAL_BASE_URL?: string;
   readonly ENVIRONMENT?: string;
   readonly DB?: D1DatabaseLike;
