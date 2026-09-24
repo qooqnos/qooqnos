@@ -82,6 +82,7 @@ import seoPublicRenderIndex from "../../../migrations/0084_seo_public_render_ind
 import seoAuditQualityGate from "../../../migrations/0085_seo_audit_quality_gate.sql";
 import seoVisibilityMeasurements from "../../../migrations/0086_seo_visibility_measurements.sql";
 import seoCompetitiveIntelligence from "../../../migrations/0087_seo_competitive_intelligence.sql";
+import seoCompetitorPageSnapshots from "../../../migrations/0088_seo_competitor_page_snapshots.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -169,4 +170,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0085_seo_audit_quality_gate.sql", sql: seoAuditQualityGate },
   { path: "migrations/0086_seo_visibility_measurements.sql", sql: seoVisibilityMeasurements },
   { path: "migrations/0087_seo_competitive_intelligence.sql", sql: seoCompetitiveIntelligence },
+  { path: "migrations/0088_seo_competitor_page_snapshots.sql", sql: seoCompetitorPageSnapshots },
   ];
