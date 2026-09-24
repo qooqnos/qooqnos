@@ -26,6 +26,12 @@ const STORAGE = {
   business: "phoenix-business-id",
 };
 
+type ApiOptions = {
+  method?: "GET" | "POST" | "PATCH";
+  body?: unknown;
+  headers?: Record<string, string>;
+};
+
 const demoBusinesses: DiscoveryResult[] = [
   {
     id: "demo-1",
@@ -350,6 +356,16 @@ function renderProductStudio(): string {
     <section class="studio-grid">
       <article class="glass-card studio-input">
         <div class="studio-tabs"><button class="studio-tab active" type="button">ورودی</button><button class="studio-tab" type="button" data-toast="آپلود تصویر در slice بعدی فعال می‌شود.">تصویر</button></div>
+        <div class="studio-meta-fields">
+          <div>
+            <label class="field-label" for="studio-business">شناسه کسب‌وکار</label>
+            <input id="studio-business" class="studio-input-line" type="text" autocomplete="off" placeholder="Business ID" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
+          </div>
+          <div>
+            <label class="field-label" for="studio-workspace">Workspace ID</label>
+            <input id="studio-workspace" class="studio-input-line" type="text" autocomplete="off" placeholder="Workspace ID" value="${escapeAttr(localStorage.getItem(STORAGE.workspace) ?? "")}" />
+          </div>
+        </div>
         <label class="field-label" for="studio-text">توضیح محصول</label>
         <textarea id="studio-text" rows="9" placeholder="مثلاً: کفش چرمی دست‌دوز، رنگ قهوه‌ای، مناسب استفاده روزمره..."></textarea>
         <div class="studio-actions">
@@ -405,7 +421,7 @@ function bindGlobalEvents(): void {
     }
   });
 
-  document.querySelector<HTMLElement>("[data-profile-toggle]")?.addEventListener("click", () => showToast("ورود و فضای کاربری در slice احراز هویت متصل می‌شود."));
+  document.querySelector<HTMLElement>("[data-profile-toggle]")?.addEventListener("click", openConnectionPanel);
 
   document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
@@ -413,6 +429,7 @@ function bindGlobalEvents(): void {
   });
 
   document.querySelector<HTMLButtonElement>("[data-generate-draft]")?.addEventListener("click", generateDraft);
+  document.querySelectorAll<HTMLButtonElement>("[data-open-connection]").forEach((button) => button.addEventListener("click", openConnectionPanel));
 
   // Keyboard shortcut is registered once at module load.
 }
@@ -467,41 +484,222 @@ async function generateDraft(): Promise<void> {
   const input = document.querySelector<HTMLTextAreaElement>("#studio-text");
   const draft = document.querySelector<HTMLDivElement>("#studio-draft");
   const status = document.querySelector<HTMLElement>("#studio-status");
-  if (!input || !draft || !status) return;
+  const businessInput = document.querySelector<HTMLInputElement>("#studio-business");
+  const workspaceInput = document.querySelector<HTMLInputElement>("#studio-workspace");
+  if (!input || !draft || !status || !businessInput || !workspaceInput) return;
 
   const text = input.value.trim();
+  const businessId = businessInput.value.trim();
+  const workspaceId = workspaceInput.value.trim();
+
   if (!text) {
     showToast("یک توضیح کوتاه از محصول وارد کن.");
     input.focus();
     return;
   }
 
-  status.textContent = "در حال آماده‌سازی";
+  if (!businessId) {
+    showToast("شناسه کسب‌وکار را وارد کن.");
+    businessInput.focus();
+    return;
+  }
+
+  if (!workspaceId) {
+    showToast("برای اجرای Seller AI، Workspace ID لازم است.");
+    workspaceInput.focus();
+    return;
+  }
+
+  localStorage.setItem(STORAGE.business, businessId);
+  localStorage.setItem(STORAGE.workspace, workspaceId);
+
+  const token = localStorage.getItem(STORAGE.accessToken);
+  if (!token) {
+    openConnectionPanel();
+    showToast("ابتدا access token را در اتصال ققنوس ثبت کن.");
+    return;
+  }
+
+  status.textContent = "در حال اتصال";
   status.className = "pill warning";
   draft.innerHTML = renderDraftSkeleton();
 
-  const preview = buildLocalDraft(text);
-  await wait(420);
+  try {
+    const sessionResponse = await apiJson<{ session: { id: string } }>("/api/v1/ai/seller/product-creation-sessions", {
+      method: "POST",
+      body: { businessId },
+      headers: { "Idempotency-Key": crypto.randomUUID() },
+    });
 
-  draft.innerHTML = `
+    const sessionId = sessionResponse.session.id;
+
+    await apiJson<{ accepted: boolean }>(`/api/v1/ai/seller/product-creation-sessions/${encodeURIComponent(sessionId)}/inputs`, {
+      method: "POST",
+      body: { rawText: text },
+    });
+
+    const result = await apiJson<{ data: SellerRunResult }>(
+      `/api/v1/ai/seller/product-creation-sessions/${encodeURIComponent(sessionId)}/run`,
+      {
+        method: "POST",
+        body: {
+          input: { rawText: text },
+          dataClassification: "internal",
+          promptVersion: "seller-product-v1",
+          outputSchemaVersion: "seller-product-draft-v1",
+          policyVersion: "seller-product-policy-v1",
+        },
+        headers: { "Idempotency-Key": crypto.randomUUID() },
+      },
+    );
+
+    if (result.data.status === "succeeded") {
+      draft.innerHTML = renderRemoteDraft(result.data);
+      status.textContent = "پیش‌نویس آماده";
+      status.className = "pill success";
+    } else {
+      draft.innerHTML = renderRemotePending(result.data.status, result.data.error);
+      status.textContent = result.data.retryable ? "نیازمند تلاش مجدد" : "بررسی لازم";
+      status.className = "pill warning";
+    }
+    bindGlobalEvents();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "اجرای Seller AI ناموفق بود.";
+    draft.innerHTML = `
+      <div class="draft-empty">
+        <div class="draft-orb">!</div>
+        <strong>اجرای واقعی تکمیل نشد</strong>
+        <p>${escapeHtml(message)}</p>
+        <button class="button button-primary" type="button" data-open-connection>بررسی اتصال</button>
+      </div>`;
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    bindGlobalEvents();
+  }
+}
+
+type SellerRunResult = {
+  status: string;
+  retryable?: boolean;
+  error?: string | null;
+  output?: {
+    product?: Record<string, unknown>;
+  } | null;
+};
+
+function renderRemoteDraft(result: SellerRunResult): string {
+  const product = result.output?.product ?? {};
+  const name = stringField(product, "name") ?? stringField(product, "title") ?? "محصول پیشنهادی";
+  const description = stringField(product, "description") ?? "پیش‌نویس توسط Seller AI تولید شد.";
+  const category = stringField(product, "category") ?? "نیازمند بررسی";
+  return `
     <div class="draft-ready">
       <div class="draft-preview-art"><span>AI</span></div>
       <div class="draft-copy">
-        <span class="section-kicker">پیشنهاد اولیه</span>
-        <h2>${escapeHtml(preview.name)}</h2>
-        <p>${escapeHtml(preview.description)}</p>
+        <span class="section-kicker">پیش‌نویس واقعی</span>
+        <h2>${escapeHtml(name)}</h2>
+        <p>${escapeHtml(description)}</p>
         <div class="draft-fields">
-          <span><b>دسته</b> ${escapeHtml(preview.category)}</span>
-          <span><b>وضعیت</b> نیازمند بازبینی</span>
-          <span><b>منبع</b> ورودی فروشنده</span>
+          <span><b>دسته</b> ${escapeHtml(category)}</span>
+          <span><b>وضعیت</b> آماده بازبینی</span>
+          <span><b>منبع</b> Seller AI runtime</span>
         </div>
-        <div class="draft-actions"><button class="button button-primary" type="button" data-toast="بازبینی انسانی آماده است.">بازبینی و تأیید</button><button class="button button-ghost" type="button" data-toast="نسخه جایگزین به‌زودی اضافه می‌شود.">اصلاح با AI</button></div>
+        <div class="draft-actions">
+          <button class="button button-primary" type="button" data-toast="بازبینی و تأیید به مرحله بعدی متصل می‌شود.">بازبینی و تأیید</button>
+          <button class="button button-ghost" type="button" data-toast="نسخه جایگزین در slice بعدی اضافه می‌شود.">اصلاح با AI</button>
+        </div>
       </div>
-    </div>
-  `;
-  status.textContent = "پیش‌نویس آماده";
-  status.className = "pill success";
-  bindGlobalEvents();
+    </div>`;
+}
+
+function renderRemotePending(status: string, error?: string | null): string {
+  return `
+    <div class="draft-empty">
+      <div class="draft-orb">…</div>
+      <strong>Seller AI در وضعیت ${escapeHtml(status)} است</strong>
+      <p>${escapeHtml(error ?? "این عملیات هنوز خروجی نهایی ندارد.")}</p>
+    </div>`;
+}
+
+function stringField(value: Record<string, unknown>, key: string): string | undefined {
+  const candidate = value[key];
+  return typeof candidate === "string" && candidate.trim() ? candidate.trim() : undefined;
+}
+
+
+function openConnectionPanel(): void {
+  const existing = document.querySelector(".connection-overlay");
+  if (existing) return;
+
+  const token = localStorage.getItem(STORAGE.accessToken) ?? "";
+  const workspace = localStorage.getItem(STORAGE.workspace) ?? "";
+  const business = localStorage.getItem(STORAGE.business) ?? "";
+
+  const overlay = document.createElement("div");
+  overlay.className = "connection-overlay";
+  overlay.innerHTML = `
+    <div class="connection-backdrop" data-close-connection></div>
+    <section class="connection-modal glass-card" role="dialog" aria-modal="true" aria-labelledby="connection-title">
+      <button class="connection-close" type="button" data-close-connection aria-label="بستن">×</button>
+      <span class="eyebrow"><i></i> Phoenix Connection</span>
+      <h2 id="connection-title">اتصال به فضای کاری</h2>
+      <p>Frontend منطق احراز هویت جداگانه‌ای نمی‌سازد؛ اینجا فقط session/access context موجود Phoenix را به UI متصل می‌کنیم.</p>
+      <label class="field-label" for="connection-token">Access token</label>
+      <input id="connection-token" class="studio-input-line" type="password" autocomplete="off" value="${escapeAttr(token)}" placeholder="Bearer token" />
+      <label class="field-label" for="connection-workspace">Workspace ID</label>
+      <input id="connection-workspace" class="studio-input-line" type="text" autocomplete="off" value="${escapeAttr(workspace)}" placeholder="Workspace ID" />
+      <label class="field-label" for="connection-business">Business ID <span class="field-optional">اختیاری</span></label>
+      <input id="connection-business" class="studio-input-line" type="text" autocomplete="off" value="${escapeAttr(business)}" placeholder="Business ID" />
+      <div id="connection-state" class="connection-state">وضعیت: بررسی نشده</div>
+      <div class="connection-actions">
+        <button class="button button-ghost" type="button" data-close-connection>لغو</button>
+        <button class="button button-primary" type="button" data-test-connection>بررسی و ذخیره</button>
+      </div>
+    </section>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelectorAll<HTMLElement>("[data-close-connection]").forEach((node) =>
+    node.addEventListener("click", () => overlay.remove()),
+  );
+
+  overlay.querySelector<HTMLButtonElement>("[data-test-connection]")?.addEventListener("click", async () => {
+    const tokenInput = overlay.querySelector<HTMLInputElement>("#connection-token");
+    const workspaceInput = overlay.querySelector<HTMLInputElement>("#connection-workspace");
+    const businessInput = overlay.querySelector<HTMLInputElement>("#connection-business");
+    const state = overlay.querySelector<HTMLElement>("#connection-state");
+    if (!tokenInput || !workspaceInput || !businessInput || !state) return;
+
+    const accessToken = tokenInput.value.trim();
+    const workspaceId = workspaceInput.value.trim();
+    const businessId = businessInput.value.trim();
+
+    if (!accessToken || !workspaceId) {
+      state.textContent = "Access token و Workspace ID الزامی هستند.";
+      state.className = "connection-state error";
+      return;
+    }
+
+    localStorage.setItem(STORAGE.accessToken, accessToken);
+    localStorage.setItem(STORAGE.workspace, workspaceId);
+    if (businessId) localStorage.setItem(STORAGE.business, businessId);
+
+    state.textContent = "در حال بررسی session…";
+    state.className = "connection-state";
+
+    try {
+      const session = await apiJson<{ session: { authenticated: boolean; actorId?: string; workspaceId?: string } }>("/api/v1/session");
+      const context = await apiJson<{ authenticated: boolean; tenantId?: string; workspaceId?: string; permissions?: string[] }>("/api/v1/context");
+      state.textContent = context.authenticated
+        ? `متصل شد · workspace ${context.workspaceId ?? session.session.workspaceId ?? workspaceId}`
+        : "Session احراز نشد.";
+      state.className = context.authenticated ? "connection-state success" : "connection-state error";
+      if (context.authenticated) window.setTimeout(() => overlay.remove(), 900);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "اتصال برقرار نشد.";
+      state.textContent = message;
+      state.className = "connection-state error";
+    }
+  });
 }
 
 function buildLocalDraft(text: string): { name: string; description: string; category: string } {
@@ -526,14 +724,24 @@ function renderDraftSkeleton(): string {
   return '<div class="draft-loading"><div class="draft-loading-orb"></div><div class="skeleton line long"></div><div class="skeleton line medium"></div><div class="skeleton line short"></div><p>ققنوس در حال ساختن یک پیش‌نویس قابل بازبینی است…</p></div>';
 }
 
-async function apiJson<T>(url: string): Promise<T> {
+async function apiJson<T>(url: string, options: ApiOptions = {}): Promise<T> {
   const headers = new Headers({ Accept: "application/json" });
   const token = localStorage.getItem(STORAGE.accessToken);
   const workspace = localStorage.getItem(STORAGE.workspace);
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (workspace) headers.set("x-workspace-id", workspace);
+  for (const [key, value] of Object.entries(options.headers ?? {})) headers.set(key, value);
 
-  const response = await fetch(url, { headers });
+  const init: RequestInit = {
+    method: options.method ?? "GET",
+    headers,
+  };
+  if (options.body !== undefined) {
+    headers.set("Content-Type", "application/json");
+    init.body = JSON.stringify(options.body);
+  }
+
+  const response = await fetch(url, init);
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const message =
@@ -544,6 +752,7 @@ async function apiJson<T>(url: string): Promise<T> {
   }
   return body as T;
 }
+
 
 function showToast(message: string): void {
   let host = document.querySelector<HTMLDivElement>(".toast-host");
@@ -561,6 +770,10 @@ function showToast(message: string): void {
     toast.classList.remove("visible");
     window.setTimeout(() => toast.remove(), 240);
   }, 3400);
+}
+
+function escapeAttr(value: string): string {
+  return escapeHtml(value).replace(/`/g, "&#096;");
 }
 
 function escapeHtml(value: string): string {
