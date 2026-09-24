@@ -50,7 +50,14 @@ describe("SEO/GEO core", () => {
     expect(metadata.robots).toBe("index,follow");
     expect(metadata.openGraph.url).toBe(url);
     expect(metadata.twitter.card).toBe("summary_large_image");
+    expect(metadata.title).toBe("Phoenix Studio | Phoenix");
+    expect(metadata.description.length).toBeLessThanOrEqual(160);
+    expect(metadata.language).toBe("en");
+    expect(metadata.locale).toBe("en-US");
     expect(metadata.alternates.some((item) => item.hreflang === "en-US")).toBe(true);
+    expect(metadata.alternates.some((item) => item.hreflang === "x-default")).toBe(true);
+    expect(metadata.openGraph.type).toBe("website");
+    expect(metadata.openGraph.image).toContain("og/default.png");
     expect(generateStructuredData(entity)["@type"]).toBe("LocalBusiness");
   });
 
