@@ -121,7 +121,9 @@ export function registerCommerceRoutes(
       const order = await service.createOrder(context, {
         businessId: requiredId(body.businessId, "businessId", context.requestId),
         customerId: requiredId(body.customerId, "customerId", context.requestId),
-        ...(body.priceSnapshotId !== undefined ? { priceSnapshotId: requiredId(body.priceSnapshotId, "priceSnapshotId", context.requestId) } : {}),
+        ...(body.matchRequestId !== undefined ? { matchRequestId: requiredId(body.matchRequestId, "matchRequestId", context.requestId) } : {}),
+        ...(body.matchCandidateId !== undefined ? { matchCandidateId: requiredId(body.matchCandidateId, "matchCandidateId", context.requestId) } : {}),
+        ...(body.priceSnapshotId !== undefined ? { priceSnapshotId: requiredId(body.priceSnapshotId, "priceSnapshotId", context.requestId) } : {});
         currency: requiredString(body.currency, "currency", context.requestId),
         subtotalMinor: requiredNonNegativeInteger(body.subtotalMinor, "subtotalMinor", context.requestId),
         adjustmentTotalMinor: requiredInteger(body.adjustmentTotalMinor, "adjustmentTotalMinor", context.requestId),
