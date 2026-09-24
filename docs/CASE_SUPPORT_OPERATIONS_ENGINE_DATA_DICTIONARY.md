@@ -60,7 +60,10 @@ Fields:
 - language_scope;
 - jurisdiction_scope;
 - status;
-- routing_policy_version.
+- routing_policy_version;
+- dispatch_provider_id?;
+- dispatch_route_reference?;
+- dispatch_enabled.
 
 ## 4. CaseAssignment
 
@@ -241,7 +244,44 @@ Fields:
 - policy_version;
 - status.
 
-## 15. Priority and Severity
+## 15. CaseDispatch
+
+Durable external-provider dispatch record created from an authorized queue assignment.
+
+Fields:
+- id;
+- case_id;
+- assignment_id;
+- queue_id;
+- provider_id;
+- route_reference;
+- idempotency_key;
+- status;
+- external_reference;
+- failure_code;
+- failure_class;
+- attempts;
+- available_at;
+- accepted_at;
+- last_attempt_at;
+- created_at;
+- updated_at.
+
+## 16. CaseDispatchAttempt
+
+Append-only evidence for one provider dispatch attempt.
+
+Fields:
+- id;
+- dispatch_id;
+- attempt_number;
+- status;
+- provider_reference;
+- failure_code;
+- failure_class;
+- occurred_at.
+
+## 17. Priority and Severity
 
 Priority represents operational ordering:
 - LOW;
@@ -253,7 +293,7 @@ Severity describes impact and is distinct from priority.
 
 Policy may derive defaults; operator changes require an auditable reason.
 
-## 16. State Machine
+## 18. State Machine
 
 ```text
 OPEN → TRIAGED → ASSIGNED → IN_PROGRESS → WAITING → RESOLVED → CLOSED
@@ -265,7 +305,7 @@ RESOLVED → REOPENED → IN_PROGRESS
 
 State transitions are explicit commands.
 
-## 17. SLA State
+## 19. SLA State
 
 Derived operational state may include:
 - ON_TRACK;
@@ -276,7 +316,7 @@ Derived operational state may include:
 
 SLA state is derived from canonical case timestamps and policy.
 
-## 18. Ownership Matrix
+## 20. Ownership Matrix
 
 | Data | Owner |
 |---|---|
@@ -292,13 +332,13 @@ SLA state is derived from canonical case timestamps and policy.
 | AI inference | AI |
 | Metrics | Analytics |
 
-## 19. Tenancy
+## 21. Tenancy
 
 Case and queue records are tenant/workspace scoped unless explicitly platform-global.
 
 All reads, writes, searches, assignments, and escalations must enforce authorization and scope.
 
-## 20. Idempotency and Concurrency
+## 22. Idempotency and Concurrency
 
 Case creation from events uses an idempotency key derived from source event identity.
 
@@ -306,7 +346,7 @@ State-changing commands require expected version/concurrency validation.
 
 Duplicate automation or inbound events must not create duplicate cases or duplicate domain actions.
 
-## 21. AI Provenance
+## 23. AI Provenance
 
 AI-generated classification, summary, priority suggestion, routing suggestion, or draft response must retain:
 - model/policy version;
@@ -317,7 +357,7 @@ AI-generated classification, summary, priority suggestion, routing suggestion, o
 
 AI output is not authoritative case truth.
 
-## 22. Audit
+## 24. Audit
 
 Audit references include:
 - actor/service identity;
@@ -332,7 +372,7 @@ Audit references include:
 
 Sensitive evidence itself is never copied into audit logs.
 
-## 23. Canonical Capabilities
+## 25. Canonical Capabilities
 
 ```text
 CAP.CASE.CREATE
@@ -349,7 +389,7 @@ CAP.CASE.REOPEN
 CAP.CASE.LIST
 ```
 
-## 24. Canonical Events
+## 26. Canonical Events
 
 ```text
 case.created
@@ -365,7 +405,7 @@ case.sla_risk
 case.sla_breached
 ```
 
-## 25. Medical Boundary
+## 27. Medical Boundary
 
 Medical-related cases may coordinate support, verification, safety, booking, billing, or complaints.
 
@@ -379,7 +419,7 @@ It must not:
 
 Clinical facts remain outside Case ownership.
 
-## 26. Data Invariants
+## 28. Data Invariants
 
 1. Case is operational coordination, not domain truth.
 2. State transitions are explicit.
@@ -394,7 +434,7 @@ Clinical facts remain outside Case ownership.
 11. Closed cases remain historically reconstructable.
 12. Duplicate source events are idempotently handled.
 
-## 27. Anti-Duplication
+## 29. Anti-Duplication
 
 There is exactly one Phoenix Case & Support Operations data model.
 
@@ -407,6 +447,6 @@ Do not create vertical-specific support tables or engines such as:
 
 Differences are expressed through CaseType, policy, routing, and domain links.
 
-## 28. Definition of Done
+## 30. Definition of Done
 
 The canonical model is complete when case intake, type, queue, assignment, participants, lifecycle, evidence references, links, escalation, SLA, actions, resolution, AI provenance, authorization, tenancy, audit, capabilities, and events are explicit.
