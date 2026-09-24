@@ -206,7 +206,5 @@ function parseJson(value: string | null): unknown {
 }
 
 async function hashEvent(input: Record<string, unknown>): Promise<string> {
-  const payload = JSON.stringify(input);
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload));
-  return Array.from(new Uint8Array(digest), (value) => value.toString(16).padStart(2, "0")).join("");
+  return sha256Hex(JSON.stringify(input));
 }
