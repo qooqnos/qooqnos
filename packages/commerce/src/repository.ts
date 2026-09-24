@@ -389,7 +389,7 @@ export class CommerceRepository extends Repository {
     const orderId = input.id;
     await this.database.transaction([
       {
-        sql: "INSERT OR IGNORE INTO commerce_orders (id, organization_id, workspace_id, business_id, customer_id, match_request_id, match_candidate_id, price_snapshot_id, status, currency, subtotal_minor, adjustment_total_minor, tax_total_minor, fee_total_minor, grand_total_minor, source_channel, policy_version, idempotency_key, correlation_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        sql: "INSERT OR IGNORE INTO commerce_orders (id, organization_id, workspace_id, business_id, customer_id, match_request_id, match_candidate_id, price_snapshot_id, status, currency, subtotal_minor, adjustment_total_minor, tax_total_minor, fee_total_minor, grand_total_minor, source_channel, policy_version, idempotency_key, correlation_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params: [
           orderId,
           organizationId,
