@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { AnswerRepresentation, EntityPageModel, SeoEntity, SeoMetadata, StructuredData } from "./types";
 import { crawlProductionSeoPage } from "./crawler";
 
