@@ -567,6 +567,20 @@
       "moduleId": "authorization-governance",
       "checksum": "pending",
       "filename": "0083_authorization_approval_workflow.sql"
+    },
+    {
+      "id": "0084_seo_public_render_index",
+      "version": 84,
+      "moduleId": "seo",
+      "checksum": "93a04ce4fca516343a101f750ce7207fa154d7a0bdc46102a078676030274218",
+      "filename": "0084_seo_public_render_index.sql"
+    },
+    {
+      "id": "0085_seo_audit_quality_gate",
+      "version": 85,
+      "moduleId": "seo",
+      "checksum": "fa057f157eba1a76ee1156558f5c072915ba7bcc09b9c05f9efca0fa681eb48c",
+      "filename": "0085_seo_audit_quality_gate.sql"
     }
   ]
 }
