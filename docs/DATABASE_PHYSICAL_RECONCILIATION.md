@@ -732,7 +732,7 @@ The next implementation work should proceed in this order:
 1. Define AttributeValue backfill/conflict/cutover rules without duplicating current JSON-backed state.
 2. Keep CRM timeline projections gated until projection rebuild/read-model contracts are explicit; CustomerProfile is a logical aggregate over existing Customer-owned records and requires no standalone table.
 3. Complete Booking availability calculation and slot-generation semantics; transactional finalization/capacity guards are implemented in 0046–0047.
-4. Complete Billing provider adapters/reconciliation workers and invoice/financial-ledger foundation only where their contracts are explicit.
+4. Complete remaining Billing provider adapters/reconciliation workers and ledger/provider operational gates; the canonical invoice system is implemented in migration 0060.
 5. Complete Communication external provider-adapter contracts and platform rate-limit/anomaly controls; intent/consent/suppression policy and required-message exception semantics are implemented.
 6. Scheduled Automation polling/misfire execution and CapabilityRegistry-backed scheduled action execution are implemented; capability compensation remains only where a concrete rollback contract exists.
 7. AI Runtime durable worker scheduling and Seller AI input/payload resolution are implemented; add resolvers only when a new AI operation type is introduced.
