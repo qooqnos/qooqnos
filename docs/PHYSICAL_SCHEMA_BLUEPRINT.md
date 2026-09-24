@@ -1174,6 +1174,18 @@ Observed discovery/visibility measurements with surface, metric, entity/query co
 
 SEO/GEO publication must remain truth-first, tenant-safe, provenance-aware and policy-controlled. Search indexes, structured data, answer representations and measurements are rebuildable projections.
 
+### `seo_entity_graph_nodes`
+Derived semantic entity nodes with source module/version and publication/visibility state.
+
+### `seo_entity_graph_edges`
+Derived, provenance-aware semantic relationships with confidence and verification state. No self-edges are permitted.
+
+### `seo_internal_link_recommendations`
+Rebuildable internal-link planning output derived from canonical semantic relationships.
+
+### `seo_geo_signals`
+Canonical-data-derived geographic truth signals distinguishing location from service-area and remote availability semantics.
+
 ## 19. Explicit gates still open
 
 The following remain controlled architecture/operational gates:
