@@ -115,6 +115,8 @@ function buildSeoCompetitiveWorkerConfig(env: ApiEnv, limit: number) {
   const pageSampleLimit = env.SEO_COMPETITIVE_PAGE_SAMPLE_LIMIT ? Number(env.SEO_COMPETITIVE_PAGE_SAMPLE_LIMIT) : undefined;
   const keywordGapCompetitorLimit = env.SEO_COMPETITIVE_KEYWORD_GAP_COMPETITOR_LIMIT ? Number(env.SEO_COMPETITIVE_KEYWORD_GAP_COMPETITOR_LIMIT) : undefined;
   const keywordGapLimit = env.SEO_COMPETITIVE_KEYWORD_GAP_LIMIT ? Number(env.SEO_COMPETITIVE_KEYWORD_GAP_LIMIT) : undefined;
+  const linkGapCompetitorLimit = env.SEO_COMPETITIVE_LINK_GAP_COMPETITOR_LIMIT ? Number(env.SEO_COMPETITIVE_LINK_GAP_COMPETITOR_LIMIT) : undefined;
+  const linkGapLimit = env.SEO_COMPETITIVE_LINK_GAP_LIMIT ? Number(env.SEO_COMPETITIVE_LINK_GAP_LIMIT) : undefined;
   return {
     login: env.SEO_COMPETITIVE_LOGIN ?? "",
     password: env.SEO_COMPETITIVE_PASSWORD ?? "",
@@ -127,6 +129,8 @@ function buildSeoCompetitiveWorkerConfig(env: ApiEnv, limit: number) {
     ...(pageSampleLimit !== undefined && Number.isFinite(pageSampleLimit) ? { pageSampleLimit } : {}),
     ...(keywordGapCompetitorLimit !== undefined && Number.isFinite(keywordGapCompetitorLimit) ? { keywordGapCompetitorLimit } : {}),
     ...(keywordGapLimit !== undefined && Number.isFinite(keywordGapLimit) ? { keywordGapLimit } : {}),
+    ...(linkGapCompetitorLimit !== undefined && Number.isFinite(linkGapCompetitorLimit) ? { linkGapCompetitorLimit } : {}),
+    ...(linkGapLimit !== undefined && Number.isFinite(linkGapLimit) ? { linkGapLimit } : {}),
     limit,
   };
 }
