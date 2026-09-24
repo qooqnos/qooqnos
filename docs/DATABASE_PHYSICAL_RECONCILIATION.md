@@ -772,3 +772,7 @@ Until then, adding another generic database schema would create unnecessary dive
 Billing invoice financial truth is now physically implemented by migration `0060_billing_invoice_system.sql`: `billing_invoices`, `billing_invoice_lines`, and `billing_invoice_payment_applications`. No parallel Commerce invoice table is authorized. Commerce invoice commands remain orchestration/reference contracts against the Billing-owned aggregate.
 
 Billing invoice API surface: `GET /api/v1/billing/invoices` is now exposed through the canonical Billing invoice repository with `billing.invoice.read` authorization and tenant/workspace-scoped filtering.
+
+### Payment provider adapters — 2026-09-24
+
+The provider-execution boundary is implemented in `packages/billing/src/payment-provider-adapter.ts` and `payment-provider-service.ts`. It uses the existing `billing_provider_refs` table for normalized external references; no provider secrets are added to the database. Webhook signature validation, replay-age checks, normalized event parsing, idempotency propagation and transient/permanent failure classification are implemented.
