@@ -873,3 +873,12 @@ Latest commits: `04d3a56c8e8350f749210fd5bb2923387b0827f9`, `e84c4ec345739948713
 - Verified: dependency installation, format check, lint, migration catalog/lock, database completion report, canonical source boundary, runtime module registry, migration-history checks, typecheck, build, Cloudflare Worker dry-run, and 263 unit tests across 90 test files.
 - Recent fixes closed strict TypeScript/lint/test-fixture issues in Automation, Integration, Communication, Privacy, Case Support, Billing, Matching, Documents, CRM Timeline, and migration tooling.
 - Production D1 credentialed migration remains an explicitly external deployment gate; no credentialed remote execution is claimed from this runtime.
+
+
+### SEO/GEO Engine — canonical ingestion and dependency invalidation — 2026-09-24
+
+SEO/GEO now has explicit canonical-domain ingestion and incremental invalidation contracts in addition to the representation/projection foundation. `CanonicalEntitySource` makes source-module ownership and contract version explicit; canonical graph loading deduplicates entity IDs and rejects entities returned by the wrong source module. `SeoDomainChange` and `planSeoInvalidation` define deterministic invalidation for direct changes, relationship changes, and dependent representations, so SEO regeneration follows canonical domain events/dependencies instead of full-site rebuilds. Unit tests cover source ownership, deduplication, and dependency invalidation.
+
+Implementation commits: `de65967cf6e44ac7dac642baed50d37effb0b6f7`, `4e98517320097af7eeefe6a628ed869441d01397`, `091aa690358fe85dd2c9d44897548a3618199703`, `5f715ee9ed7f972bba8870ced2eeb2da22d7fc54`.
+
+Status: 🟢 Canonical ingestion + invalidation contract complete; external domain adapters/event wiring remain the next operational layer.
