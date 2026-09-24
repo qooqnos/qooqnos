@@ -58,10 +58,27 @@ export async function crawlStoredSeoRepresentation(
 export async function runProductionSeoCrawler(database: D1Database, canonicalBaseUrl: string, limit: number, now: string, fetcher: typeof fetch = fetch): Promise<ProductionCrawlerRunResult> {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
   const rows = await database.all<StoredCrawlerRow>(
-    `SELECT organization_id AS organizationId, workspace_id AS workspaceId, entity_id AS entityId, canonical_url AS canonicalUrl, representation_json AS representationJson
-       FROM seo_entity_representations
-      WHERE indexability='index' AND publication_state='published' AND visibility='public'
-      ORDER BY generated_at DESC, canonical_url ASC LIMIT ?`,
+    `SELECT r.organization_id AS organizationId,
+            r.workspace_id AS workspaceId,
+            r.entity_id AS entityId,
+            r.canonical_url AS canonicalUrl,
+            r.representation_json AS representationJson
+       FROM seo_entity_representations r
+       LEFT JOIN (
+         SELECT organization_id, workspace_id, entity_id, MAX(observed_at) AS lastObservedAt
+           FROM seo_measurements
+          WHERE surface='production-crawler' AND metric='render-status'
+          GROUP BY organization_id, workspace_id, entity_id
+       ) c
+         ON c.organization_id=r.organization_id
+        AND c.workspace_id IS r.workspace_id
+        AND c.entity_id=r.entity_id
+      WHERE r.indexability='index' AND r.publication_state='published' AND r.visibility='public'
+      ORDER BY CASE WHEN c.lastObservedAt IS NULL THEN 0 ELSE 1 END ASC,
+               c.lastObservedAt ASC,
+               r.generated_at DESC,
+               r.canonical_url ASC
+      LIMIT ?`,
     safeLimit,
   );
   let crawled = 0; let passed = 0; let failed = 0; let warnings = 0;
