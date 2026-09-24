@@ -73,6 +73,47 @@ describe("RefundAccountingRepository", () => {
     expect(result.status).toBe("requested");
   });
 
+  it("enforces separation of duties for refund approval", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        return {
+          id: "refund-approval",
+          organizationId: "tenant-1",
+          workspaceId: "workspace-1",
+          businessId: "business-1",
+          paymentReference: "payment-approval",
+          orderReference: null,
+          requestedAmountMinor: 1000,
+          refundedAmountMinor: 0,
+          currency: "USD",
+          reasonCode: "customer_request",
+          status: "requested" as const,
+          provider: null,
+          providerReference: null,
+          providerStatus: null,
+          ledgerTransactionId: null,
+          requestedBy: "user-1",
+          approvedBy: null,
+          requestedAt: "2026-09-24T10:00:00.000Z",
+          processedAt: null,
+          completedAt: null,
+          failureCode: null,
+          correlationId: "corr-refund",
+          idempotencyKey: "refund-approval",
+          createdAt: "2026-09-24T10:00:00.000Z",
+          updatedAt: "2026-09-24T10:00:00.000Z",
+        } as unknown as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true, meta: { changes: 1 } }; },
+    };
+    const raw: D1DatabaseLike = { prepare() { return statement; }, async batch() { return []; } };
+    const repo = new RefundAccountingRepository(new D1Database(raw));
+    await expect(repo.approveRefund(ctx, brandId<"EntityId">("refund-approval"), brandId<"EntityId">("user-1"), "2026-09-24T10:01:00.000Z"))
+      .rejects.toThrow("separation");
+  });
+
   it("rejects fractional refund amounts", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
