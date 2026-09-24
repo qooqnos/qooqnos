@@ -1605,3 +1605,10 @@ Competitive intelligence evidence layers now include:
 - A page therefore exposes reciprocal navigation without inventing a second canonical relationship: incoming edges are rendered as `relatedTo` surface links while the original edge retains its authoritative relation.
 - Only published/public target nodes are linkable, and canonical URLs are taken from persisted SEO representations.
 - Tests cover both directions of a Business ↔ Service graph relationship.
+
+## SEO/GEO Canonical Domain Relationship Hydration — September 2026
+- Catalog now exposes a tenant/workspace-scoped canonical projection of active Products and Services owned by a Business; no SEO-owned relationship table was introduced.
+- Business SEO enrichment consumes canonical Catalog products/services plus canonical Business locations and places their IDs into `relatedEntityIds`.
+- Product SEO continues to reference its canonical owning Business.
+- Graph publication turns only relationships whose public representations exist into linkable graph edges, while `seo_dependencies` records the same related entities for invalidation propagation.
+- This establishes the canonical Business ↔ Product/Service/Location relationship path without inventing undocumented service/location event contracts.
