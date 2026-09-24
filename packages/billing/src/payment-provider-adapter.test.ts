@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createHttpPaymentProviderAdapter, createPaymentProviderRegistry, PaymentProviderError } from "./payment-provider-adapter";
+import { createHttpPaymentProviderAdapter, createPaymentProviderRegistry } from "./payment-provider-adapter";
 
 describe("payment provider adapters", () => {
   it("rejects duplicate providers", () => {
