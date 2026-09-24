@@ -9,6 +9,8 @@ describe("document renderers",()=>{
     expect(artifact.mediaType).toBe("application/pdf");
     expect(new TextDecoder().decode(artifact.bytes).startsWith("%PDF-1.4")).toBe(true);
     expect(artifact.sourceSnapshotHash).toBe(document.integrity.snapshotHash);
+    expect(artifact.rendererVersion).toBe(2);
+    expect(new TextDecoder().decode(artifact.bytes)).toContain("/Count 1");
   });
   it("renders a Unicode-safe print HTML artifact",async()=>{
     const artifact=await renderDocument(document,{id:"default",version:1,locale:"fa-IR",timezone:"Asia/Tehran",format:"print"},createDefaultDocumentRendererRegistry());
