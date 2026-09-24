@@ -117,7 +117,7 @@ export class FinancialAuditRepository extends Repository {
   }
 
   async get(context: RequestContext, id: EntityId): Promise<FinancialAuditEventRecord | null> {
-    return this.database.first<FinancialAuditEventRecord>(
+    return this.database.first<FinancialAuditEventRow>(
       `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
               business_id AS businessId, actor_id AS actorId, event_type AS eventType,
               entity_type AS entityType, entity_id AS entityId, outcome,
@@ -188,11 +188,12 @@ interface FinancialAuditEventRow {
 }
 
 function mapRecord(row: FinancialAuditEventRow): FinancialAuditEventRecord {
+  const { beforeJson, afterJson, metadataJson, ...record } = row;
   return {
-    ...row,
-    before: parseJson(row.beforeJson),
-    after: parseJson(row.afterJson),
-    metadata: parseJson(row.metadataJson),
+    ...record,
+    before: parseJson(beforeJson),
+    after: parseJson(afterJson),
+    metadata: parseJson(metadataJson),
   };
 }
 
