@@ -250,6 +250,23 @@ export class CustomerRepository extends Repository {
     return { customer, preferences, addresses };
   }
 
+  async privacyExpirePreferences(context: RequestContext, now: string, limit = 500): Promise<number> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 1000);
+    const rows = await this.database.all<{ readonly id: EntityId }>(
+      "SELECT p.id FROM customer_preferences p INNER JOIN customers c ON c.id = p.customer_id WHERE c.organization_id = ? AND p.expires_at IS NOT NULL AND p.expires_at <= ? ORDER BY p.expires_at ASC, p.id ASC LIMIT ?",
+      organizationId,
+      now,
+      safeLimit,
+    );
+    let removed = 0;
+    for (const row of rows) {
+      const result = await this.database.run("DELETE FROM customer_preferences WHERE id = ? AND expires_at IS NOT NULL AND expires_at <= ?", row.id, now);
+      if ((result.meta?.changes ?? 0) === 1) removed += 1;
+    }
+    return removed;
+  }
+
   async privacyAnonymize(context: RequestContext, customerId: EntityId, now: string): Promise<void> {
     const customer = await this.requireCustomer(context, customerId);
     await this.database.transaction([
