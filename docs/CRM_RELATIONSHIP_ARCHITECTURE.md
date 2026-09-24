@@ -205,6 +205,8 @@ Recommended tables/read models:
 - `crm_relationship_tags`
 - `crm_timeline_events`
 - `crm_timeline_projections`
+
+Canonical projection contract: `docs/CRM_TIMELINE_PROJECTION_CONTRACT.md`. The projection is rebuildable derived state; history reads must use it rather than treating it as authoritative business state.
 - `crm_notes`
 - `crm_tasks`
 - `crm_segments`
