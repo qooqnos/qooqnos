@@ -36,7 +36,12 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Final D1 physical schema | 🟢 Physical blueprint complete | the current canonical physical inventory across migrations 0001–0075; remaining work is explicit contract/provider/worker gates and credentialed remote D1 migration/application |
 | Legacy PostgreSQL path | ✅ Removed from active source | historical git history only |
 
-## 2.1 Database completion percentage
+## 2.1 Completion percentages
+
+- **Phoenix core implementation: 100% complete** — all repository-owned product/domain capabilities, canonical persistence, runtime integration, projections, workers, contracts, invariants, tests, verification guards, and concrete internal adapters required by the current product scope are implemented and green in CI/Phoenix verification.
+- **External operational readiness: separate gate** — vendor credentials/activation and credentialed production-D1 application are deployment/environment actions, not missing Phoenix core implementation.
+
+### Database completion percentage
 
 - **Physical D1 schema: 100% complete** — the current ordered migration set defines the canonical physical schema and the reconciled inventory is maintained by the migration audit.
 - **Database engineering readiness: 91.7%** on the explicit 12-gate readiness rubric: 11 repository/schema/runtime gates are closed; one credentialed remote-D1 application gate remains.
@@ -55,7 +60,7 @@ The 12-gate rubric is:
 11. critical invariant verification;
 12. credentialed remote production-D1 application.
 - **Production remote migration state:** not verified from this runtime because no Cloudflare credential/connector is exposed here. The canonical remote migration executor is implemented and verifies D1 identity plus migration checksums before applying anything.
-- Payment provider adapters are implemented behind the Billing boundary; Analytics is implemented as a rebuildable Outbox-derived projection in migration 0075; Documents/Export composition and canonical AI Memory storage are implemented; PDF/Print rendering and durable artifact persistence remain downstream adapter gates. The Localization registry contract is physically implemented in migration 0072.
+- Payment provider adapters are implemented behind the Billing boundary; Analytics is implemented as a rebuildable Outbox-derived projection in migration 0075; Documents/Export composition, canonical AI Memory storage, concrete PDF/Print rendering, and durable R2 artifact persistence are implemented. The Localization registry contract is physically implemented in migration 0072.
 
 ## 3. Critical database rule
 
