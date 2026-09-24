@@ -103,7 +103,7 @@ Cleanup commits: `3fe67d1`, `8f02cfc`, `aa75afe`, `81162b0`, `6f7fe40`, `ed39a42
 
 **Database engineering readiness: 91.7% on the explicit 12-gate rubric:** 11 repository/schema/runtime gates are closed; the remaining gate is credentialed remote application of the canonical migration history to the provisioned production D1. This percentage is a readiness metric, not a product-completion score.
 
-The current main head contains post-checkpoint implementation and documentation changes, including CRM timeline projection, Analytics, Documents/Export composition, Case dispatch, Integration vendor onboarding documentation, and Fulfillment callback reconciliation. The latest head is not claimed as CI-verified because the exposed workflow-run query does not return a successful run for it.
+The current main head is `30cf6fe4b1e95dda5ccd91af20b7001bb0e39192` and is freshly CI/Phoenix-verified.
 
 ## 2. Database history
 
@@ -430,7 +430,7 @@ CI install reconciliation note: GitHub Actions run 35715908415 initially failed 
 
 Migration verifier note: scripts/verify-migration-lock.mjs verifies the complete SQL source set against the canonical lock independent of commit grouping.
 
-Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0059 are registered and locked in sequence from canonical SQL contents. Migration 0055 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint is `b4b0f86831c0c89186fd8361f436ea556aa0498d` (CI `35916185591`, Phoenix verification `35916185529`). Full external D1 application has not yet been executed because the current runtime environment does not expose Cloudflare API credentials.
+Migration lock note: migration 0021 was refreshed before provisioning after a pre-apply SQL cleanup; migrations 0022–0059 are registered and locked in sequence from canonical SQL contents. Migration 0055 checksum was independently reconciled from canonical SQL. The verification script also checks API migration import order and migrationSources order against the canonical SQL sequence. The latest verified checkpoint is `30cf6fe4b1e95dda5ccd91af20b7001bb0e39192` (CI `36010494882`, Phoenix verification `36010494895`). Full external D1 application has not yet been executed because the current runtime environment does not expose Cloudflare API credentials.
 
 Production D1 execution note: the repository now verifies the supplied production D1 identity and applies pending canonical migrations through Cloudflare D1 remote SQL execution while preserving Phoenix `schema_migrations`; the live Cloudflare call has not been executed from this ChatGPT runtime because Cloudflare credentials/connector are not exposed here.
 
@@ -680,7 +680,7 @@ The canonical physical inventory reaches migration `0075_analytics_platform.sql`
 
 Latest fully verified head: `3f24f07a0a04e58ac3dbb389c6491d59802ad82e` — deployment-strategy reconciliation head, verified by current CI and Phoenix verification.
 
-The canonical source-boundary and runtime-module-registry guards remain mandatory verification gates; the post-cleanup head is awaiting its fresh CI/Phoenix verification run. Discovery's RuntimeModule was also registered in `apps/api/src/runtime.ts` so every canonical manifest is present in the runtime module list.
+The canonical source-boundary and runtime-module-registry guards remain mandatory verification gates; the current head passes both. Discovery's RuntimeModule was also registered in `apps/api/src/runtime.ts` so every canonical manifest is present in the runtime module list.
 
 GitHub Actions on the current head completed successfully:
 - Phoenix verification run `35922471460`
@@ -808,7 +808,7 @@ Fresh CI/Phoenix verification is green on the current post-checkpoint head; buil
 
 ### Documents / Export implementation — 2026-09-24
 
-Core `Export Document` composition is now implemented as `@qooqnos/documents`: tenant-scoped request validation, public Query-capability boundary, immutable format-neutral snapshot, template/version provenance, attachments, and SHA-256 integrity evidence are covered by unit tests and registered in the runtime module registry. PDF/Print rendering and durable artifact persistence remain downstream adapter work and are not falsely marked complete.
+Core `Export Document` composition is now implemented as `@qooqnos/documents`: tenant-scoped request validation, public Query-capability boundary, immutable format-neutral snapshot, template/version provenance, attachments, and SHA-256 integrity evidence are covered by unit tests and registered in the runtime module registry. PDF/Print rendering and durable artifact persistence are implemented as downstream adapters; PDF Unicode/RTL font embedding remains an explicit font-asset concern.
 
 Implementation commits: `410127af9a52fd93718c6d4482ca410f1ef2a20d`, `ee2006853d1905e0611849af71ef346b7d4b14f8`.
 
