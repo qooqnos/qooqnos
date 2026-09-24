@@ -220,13 +220,46 @@ export class SeoRepository extends Repository {
   async saveAudit(context: RequestContext, input: { id: EntityId; entity: SeoEntity; canonicalUrl: string; indexability: string; now: string; surface?: SeoAuditSurface }): Promise<void> {
     const scope = this.scope(context);
     const audit = auditEntity(input.entity, input.canonicalUrl, input.indexability, input.now, input.surface);
-    await this.database.run(`INSERT INTO seo_audits (id, organization_id, workspace_id, entity_id, entity_type, generated_at, scores_json, issues_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, input.id, scope.organizationId, scope.workspaceId, input.entity.id, input.entity.type, input.now, JSON.stringify(audit.scores), JSON.stringify(audit.issues));
+    await this.database.run(`INSERT INTO seo_audits (id, organization_id, workspace_id, entity_id, entity_type, generated_at, scores_json, issues_json, overall_score, status, blocking_issue_codes_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, input.id, scope.organizationId, scope.workspaceId, input.entity.id, input.entity.type, input.now, JSON.stringify(audit.scores), JSON.stringify(audit.issues), audit.overallScore, audit.status, JSON.stringify(audit.blockingIssueCodes));
   }
 
-  async getLatestAudit(context: RequestContext, entityId: string): Promise<{ generatedAt: string; scores: Record<string, number>; issues: unknown[] } | null> {
+  async getLatestAudit(context: RequestContext, entityId: string): Promise<{
+    generatedAt: string;
+    scores: Record<string, number>;
+    overallScore: number;
+    status: "pass" | "warning" | "blocked";
+    blockingIssueCodes: string[];
+    issues: unknown[];
+  } | null> {
     const scope = this.scope(context);
-    const row = await this.database.first<{ generatedAt: string; scoresJson: string; issuesJson: string }>(`SELECT generated_at AS generatedAt, scores_json AS scoresJson, issues_json AS issuesJson FROM seo_audits WHERE organization_id=? AND workspace_id IS ? AND entity_id=? ORDER BY generated_at DESC LIMIT 1`, scope.organizationId, scope.workspaceId, entityId);
-    return row ? { generatedAt: row.generatedAt, scores: JSON.parse(row.scoresJson) as Record<string, number>, issues: JSON.parse(row.issuesJson) as unknown[] } : null;
+    const row = await this.database.first<{
+      generatedAt: string;
+      scoresJson: string;
+      issuesJson: string;
+      overallScore: number;
+      status: "pass" | "warning" | "blocked";
+      blockingIssueCodesJson: string;
+    }>(
+      `SELECT generated_at AS generatedAt,
+              scores_json AS scoresJson,
+              issues_json AS issuesJson,
+              overall_score AS overallScore,
+              status,
+              blocking_issue_codes_json AS blockingIssueCodesJson
+         FROM seo_audits
+        WHERE organization_id=? AND workspace_id IS ? AND entity_id=?
+        ORDER BY generated_at DESC LIMIT 1`,
+      scope.organizationId, scope.workspaceId, entityId,
+    );
+    if (!row) return null;
+    return {
+      generatedAt: row.generatedAt,
+      scores: JSON.parse(row.scoresJson) as Record<string, number>,
+      overallScore: Number(row.overallScore),
+      status: row.status,
+      blockingIssueCodes: JSON.parse(row.blockingIssueCodesJson) as string[],
+      issues: JSON.parse(row.issuesJson) as unknown[],
+    };
   }
 
   async getRepresentation(
