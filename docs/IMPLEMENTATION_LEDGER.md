@@ -786,6 +786,6 @@ Status: 🟢 Complete
 
 Migration `0075_analytics_platform.sql` closes the Analytics physical/operational contract. `AnalyticsRepository` ingests transactional Outbox events idempotently, stores only a normalized envelope plus payload hash, creates append-only measurement facts, owns versioned metric definitions and rebuildable aggregates. `apps/api/src/outbox-worker.ts` performs asynchronous ingestion and `analytics-worker.ts` rebuilds UTC daily event-count aggregates. Analytics remains derived and cannot become operational source of truth.
 
-Implementation commits: `1386c1e0`, `6b9f1c14`, `8f8e9cef`, `18718d44`, `2278fda1`, `287c0d32`, `19e26e9a`, `df8e0fad`, `5330552c`, `954b2763`, `46eb8be9`, `eb828953`, `7a453d7b`, `188e39dc`.
+Implementation commits: `1386c1e0`, `6b9f1c14`, `8f8e9cef`, `18718d44`, `2278fda1`, `287c0d32`, `19e26e9a`, `df8e0fad`, `5330552c`, `954b2763`, `46eb8be9`, `eb828953`, `7a453d7b`, `188e39dc`, `021743fe`, `ecce4ca2`, `f1e767a3`, `e554ea31`, `42ed8a6f`.
 
 Status: 🟢 Complete
