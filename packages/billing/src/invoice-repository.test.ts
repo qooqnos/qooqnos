@@ -20,7 +20,8 @@ function context(): RequestContext {
 function repositoryWithInvoice(status: "draft" | "issued" | "paid" | "overdue", totalMinor = 1500, amountPaidMinor = 0) {
   const statement: D1PreparedStatementLike = {
     bind() { return this; },
-    async first<T>() {
+    async first<T>(query?: string) {
+      if (query?.includes("billing_invoice_payment_applications")) return null;
       return {
         id: "invoice-1",
         organizationId: "tenant-1",
