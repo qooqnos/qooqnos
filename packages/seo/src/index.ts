@@ -10,3 +10,5 @@ export * from "./audit";
 export * from "./entity-graph";
 export * from "./internal-links";
 export * from "./geo";
+export * from "./projection";
+export * from "./repository";
