@@ -452,3 +452,17 @@ Billing is ready when:
 - money uses integer minor units;
 - tenant isolation and audit are enforced;
 - future transaction fees have a clean boundary without prematurely implementing marketplace payments.
+## 31.1 Invoice system implementation
+
+The canonical Billing invoice system is now implemented through migration `0060_billing_invoice_system.sql` and `packages/billing/src/invoice-repository.ts`.
+
+Implemented contract:
+- tenant/workspace-scoped invoices with unique invoice numbers and idempotency keys;
+- immutable snapshot invoice lines after issuance;
+- integer minor-unit subtotal, adjustment, tax, total, paid and due amounts;
+- draft → issued → partially_paid/paid/overdue and issued/overdue → void lifecycle;
+- payment applications with currency, scope and amount-due integrity checks;
+- order, customer, business and subscription references without moving their ownership into Billing;
+- payment-provider execution remains outside the invoice aggregate; invoice payment application records financial evidence after authoritative payment success.
+
+Invoice data is financial truth owned by Billing. Commerce may reference invoices but must not create a parallel invoice aggregate.
