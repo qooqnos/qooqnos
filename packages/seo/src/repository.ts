@@ -195,8 +195,8 @@ export class SeoRepository extends Repository {
       },
       ...((input.plan.entity.relatedEntityIds ?? []).filter((id) => id.trim() && id !== input.plan.entityId).map((targetId) => ({
         sql: `INSERT INTO seo_entity_graph_edges
-          (id, organization_id, workspace_id, source_entity_id, target_entity_id, relation, provenance, confidence, verified_at)
-         SELECT ?, ?, ?, ?, r.entity_id, ?, ?, 1.0, ?
+          (id, organization_id, workspace_id, source_entity_id, target_entity_id, relation, provenance, confidence, verified_at, created_at)
+         SELECT ?, ?, ?, ?, r.entity_id, ?, ?, 1.0, ?, ?
          FROM seo_entity_representations r
          WHERE r.organization_id = ? AND r.workspace_id IS ? AND r.entity_id = ?
          AND r.publication_state = 'published' AND r.visibility = 'public'
@@ -204,13 +204,13 @@ export class SeoRepository extends Repository {
         params: [
           `seo-edge:${input.plan.entityId}:${targetId}:related`, scope.organizationId, scope.workspaceId,
           input.plan.entityId, "relatedTo", "canonical-related-entity", input.now,
-          scope.organizationId, scope.workspaceId, targetId,
+          scope.organizationId, scope.workspaceId, targetId, input.now,
         ],
       }))),
       ...((input.plan.entity.relatedEntityIds ?? []).filter((id) => id.trim() && id !== input.plan.entityId).map((targetId) => ({
         sql: `INSERT INTO seo_entity_graph_edges
-          (id, organization_id, workspace_id, source_entity_id, target_entity_id, relation, provenance, confidence, verified_at)
-         SELECT ?, ?, ?, r.entity_id, ?, ?, ?, 1.0, ?
+          (id, organization_id, workspace_id, source_entity_id, target_entity_id, relation, provenance, confidence, verified_at, created_at)
+         SELECT ?, ?, ?, r.entity_id, ?, ?, ?, 1.0, ?, ?
          FROM seo_entity_representations r
          WHERE r.organization_id = ? AND r.workspace_id IS ? AND r.entity_id = ?
          AND r.publication_state = 'published' AND r.visibility = 'public'
@@ -218,7 +218,7 @@ export class SeoRepository extends Repository {
         params: [
           `seo-edge:${targetId}:${input.plan.entityId}:related`, scope.organizationId, scope.workspaceId,
           input.plan.entityId, "relatedTo", "canonical-related-entity", input.now,
-          scope.organizationId, scope.workspaceId, targetId,
+          scope.organizationId, scope.workspaceId, targetId, input.now,
         ],
       }))),
       ...dependencies
