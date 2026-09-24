@@ -14,7 +14,8 @@
   "dependencies": {
     "@qooqnos/core": "*",
     "@qooqnos/database": "*",
-    "@qooqnos/runtime": "*"
+    "@qooqnos/runtime": "*",
+    "@qooqnos/privacy": "*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"
