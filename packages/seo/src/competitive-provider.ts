@@ -38,6 +38,28 @@ export interface CompetitiveCitation {
   readonly position: number;
 }
 
+
+export interface CompetitivePageSnapshot {
+  readonly url: string;
+  readonly statusCode?: number;
+  readonly title?: string;
+  readonly description?: string;
+  readonly canonicalUrl?: string;
+  readonly h1Count?: number;
+  readonly wordCount?: number;
+  readonly internalLinksCount?: number;
+  readonly externalLinksCount?: number;
+  readonly imagesCount?: number;
+  readonly titleLength?: number;
+  readonly descriptionLength?: number;
+  readonly noH1Tag?: boolean;
+  readonly noTitle?: boolean;
+  readonly noDescription?: boolean;
+  readonly seoFriendlyUrl?: boolean;
+  readonly structuredDataErrors?: number;
+  readonly provenance: Record<string, unknown>;
+}
+
 export interface DataForSeoCompetitiveConfig {
   readonly login: string;
   readonly password: string;
@@ -152,6 +174,70 @@ export class DataForSeoGoogleCompetitiveProvider {
         observedAt: new Date().toISOString(),
       },
     };
+  }
+
+  async observePages(urls: readonly string[], acceptLanguage = "en"): Promise<readonly CompetitivePageSnapshot[]> {
+    const unique = [...new Set(urls.filter((url) => /^https?:\\/\\//i.test(url)))].slice(0, 20);
+    if (!unique.length) return [];
+    const endpoint = "https://api.dataforseo.com/v3/on_page/instant_pages";
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Basic " + bytesToBase64(new TextEncoder().encode(this.config.login + ":" + this.config.password)),
+      },
+      body: JSON.stringify(unique.map((url) => ({
+        url,
+        accept_language: acceptLanguage,
+        browser_preset: "desktop",
+        enable_browser_rendering: false,
+        check_spell: false,
+        validate_micromarkup: true,
+      }))),
+    });
+    if (!response.ok) throw new Error("DataForSEO OnPage provider returned HTTP " + response.status);
+    const payload = await response.json() as {
+      tasks?: readonly {
+        status_code?: number;
+        status_message?: string;
+        result?: readonly {
+          items?: readonly Record<string, unknown>[];
+        }[];
+      }[];
+    };
+    const output: CompetitivePageSnapshot[] = [];
+    for (const task of payload.tasks ?? []) {
+      if (task.status_code !== 20000 || !task.result?.[0]) continue;
+      for (const item of task.result[0].items ?? []) {
+        if (item.type && item.type !== "html_page") continue;
+        const url = typeof item.url === "string" ? item.url : undefined;
+        if (!url) continue;
+        const meta = isRecord(item.meta) ? item.meta : {};
+        const checks = isRecord(item.checks) ? item.checks : {};
+        const contentInfo = isRecord(meta.content) ? meta.content : {};
+        output.push({
+          url,
+          ...(finiteInteger(item.status_code) !== undefined ? { statusCode: finiteInteger(item.status_code) } : {}),
+          ...(typeof meta.title === "string" ? { title: meta.title } : {}),
+          ...(typeof meta.description === "string" ? { description: meta.description } : {}),
+          ...(typeof meta.canonical === "string" ? { canonicalUrl: meta.canonical } : {}),
+          ...(Array.isArray(meta.htags) ? { h1Count: meta.htags.filter((value) => typeof value === "string" && value.toLowerCase() === "h1").length } : {}),
+          ...(finiteNumber(contentInfo.plain_text_word_count) !== undefined ? { wordCount: finiteNumber(contentInfo.plain_text_word_count) } : {}),
+          ...(finiteInteger(meta.internal_links_count) !== undefined ? { internalLinksCount: finiteInteger(meta.internal_links_count) } : {}),
+          ...(finiteInteger(meta.external_links_count) !== undefined ? { externalLinksCount: finiteInteger(meta.external_links_count) } : {}),
+          ...(finiteInteger(meta.images_count) !== undefined ? { imagesCount: finiteInteger(meta.images_count) } : {}),
+          ...(finiteInteger(meta.title_length) !== undefined ? { titleLength: finiteInteger(meta.title_length) } : {}),
+          ...(finiteInteger(meta.description_length) !== undefined ? { descriptionLength: finiteInteger(meta.description_length) } : {}),
+          ...(typeof checks.no_h1_tag === "boolean" ? { noH1Tag: checks.no_h1_tag } : {}),
+          ...(typeof checks.no_title === "boolean" ? { noTitle: checks.no_title } : {}),
+          ...(typeof checks.no_description === "boolean" ? { noDescription: checks.no_description } : {}),
+          ...(typeof checks.seo_friendly_url === "boolean" ? { seoFriendlyUrl: checks.seo_friendly_url } : {}),
+          ...(Array.isArray(item.microdata) ? { structuredDataErrors: item.microdata.filter(isRecord).filter((value) => value.errors).length } : {}),
+          provenance: { provider: this.id, endpoint, observedAt: new Date().toISOString(), acceptanceLanguage: acceptLanguage },
+        });
+      }
+    }
+    return output;
   }
 }
 
