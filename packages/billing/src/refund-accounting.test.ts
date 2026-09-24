@@ -117,7 +117,7 @@ describe("RefundAccountingRepository", () => {
   it("rejects fractional refund amounts", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
-      async first<T>() { return null; },
+      async first() { return null; },
       async all<T>() { return { results: [] as T[] }; },
       async run() { return { success: true }; },
     };
