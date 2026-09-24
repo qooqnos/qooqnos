@@ -49,7 +49,7 @@ export function buildSeoProjectionPlan(input: SeoProjectionInput): SeoProjection
   const policy = evaluateSeoPolicy(input.entity, canonicalUrl, input.now);
   const metadata = generateMetadata({ entity: input.entity, canonicalBaseUrl: input.canonicalBaseUrl }, canonicalUrl, policy);
   const structuredData = generateStructuredData(input.entity);
-  const answer = buildAnswerRepresentation(input.entity, input.facts ?? [], input.now);
+  const answer = buildAnswerRepresentation(input.entity, input.facts ?? [], input.now, canonicalUrl);
   const internalLinks = input.graph
     ? recommendInternalLinks(input.graph, input.entity.id, input.linkLimit)
     : [];
