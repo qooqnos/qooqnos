@@ -129,10 +129,10 @@ export class MigrationRunner {
     const versions = [...byVersion.keys()].sort((a, b) => a - b);
     for (let index = 0; index < versions.length; index += 1) {
       const version = versions[index];
-      const expected = index + 1;
-      if (version !== expected) {
+      const previous = index === 0 ? 0 : versions[index - 1];
+      if (version <= previous) {
         throw new MigrationError(
-          `Applied migration history is not contiguous: expected version ${expected}, found ${version}`,
+          `Applied migration history is not strictly increasing: previous version ${previous}, found ${version}`,
         );
       }
     }
@@ -175,7 +175,7 @@ function validateDefinitions(definitions: readonly MigrationDefinition[]): reado
   const ids = new Set<string>();
   const versions = new Set<number>();
 
-  let expectedVersion = 1;
+  let previousVersion = 0;
   for (const definition of sorted) {
     if (ids.has(definition.id)) {
       throw new MigrationError(`Duplicate migration id: ${definition.id}`, definition.id);
@@ -186,9 +186,9 @@ function validateDefinitions(definitions: readonly MigrationDefinition[]): reado
         definition.id,
       );
     }
-    if (definition.version !== expectedVersion) {
+    if (definition.version <= previousVersion) {
       throw new MigrationError(
-        `Migration versions must be contiguous: expected ${expectedVersion}, found ${definition.version}`,
+        `Migration versions must be strictly increasing: previous ${previousVersion}, found ${definition.version}`,
         definition.id,
       );
     }
@@ -198,7 +198,7 @@ function validateDefinitions(definitions: readonly MigrationDefinition[]): reado
 
     ids.add(definition.id);
     versions.add(definition.version);
-    expectedVersion += 1;
+    previousVersion = definition.version;
   }
 
   return sorted;
