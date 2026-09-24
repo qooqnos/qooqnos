@@ -118,6 +118,7 @@ export class SeoCompetitiveRepository extends Repository {
       readonly currentUrl: string;
       readonly currentRank?: number;
       readonly currentAiCitation?: boolean;
+      readonly observationType?: "serp" | "ai_citation";
       readonly detectedAt: string;
       readonly provenance: Record<string, unknown>;
     },
@@ -132,6 +133,7 @@ export class SeoCompetitiveRepository extends Repository {
       `SELECT result_url AS resultUrl, rank_absolute AS rankAbsolute, ai_citation AS aiCitation, observed_at AS observedAt
          FROM seo_competitive_observations
         WHERE organization_id=? AND workspace_id IS ? AND query_text=? AND domain=? AND run_id<>?
+          AND result_type != 'ai_citation'
         ORDER BY observed_at DESC LIMIT 1`,
       scope.organizationId, scope.workspaceId, input.queryText, input.domain, input.currentRunId,
     );
