@@ -629,3 +629,17 @@ Implementation must preserve these boundaries and must not create a parallel SEO
 ### 37. SEO Audit quality gate implementation
 
 **Implemented.** Audit now evaluates the entire published SEO/GEO projection instead of only checking Entity completeness. It is deterministic, explainable, decomposable by dimension, and enforceable during publication. Hard errors block indexable publication; advisory warnings remain visible for remediation.
+
+### 38. Production crawler / rendering integration implementation
+
+**Implemented.** Production crawl/render is now closed-loop:
+- persisted SEO projections are rendered into initial HTML at the edge;
+- a production crawler fetches the real public canonical URL with a dedicated crawler identity;
+- live HTML is compared with canonical SEO metadata and Entity Page expectations;
+- failures are written to existing SEO observability measurements;
+- the scheduler rotates through least-recently-crawled indexable pages;
+- renderer failures are explicit 503/noindex failures in production rather than silent SPA fallbacks;
+- sitemap and robots are bound to the configured canonical origin;
+- manual crawler execution is available through the authenticated SEO control surface.
+
+The crawler verifies representation/render consistency; it does not generate or mutate SEO content.
