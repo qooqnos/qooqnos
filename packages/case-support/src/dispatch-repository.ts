@@ -33,16 +33,28 @@ export interface CaseDispatchPayload {
   readonly requesterId: EntityId;
 }
 
+type CaseDispatchRow = CaseDispatchRecord & {
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId | null;
+  readonly caseTypeId: EntityId;
+  readonly priority: string;
+  readonly subjectType: string;
+  readonly subjectId: EntityId;
+  readonly requesterType: string;
+  readonly requesterId: EntityId;
+};
+
 export class CaseDispatchRepository extends Repository {
   constructor(database: D1Database) { super(database); }
 
   async getDue(limit = 50, now = new Date().toISOString()): Promise<readonly CaseDispatchPayload[]> {
     const safe = Math.min(Math.max(Math.trunc(limit), 1), 500);
-    return this.database.all<CaseDispatchPayload>(
+    const rows = await this.database.all<CaseDispatchRow>(
       "SELECT d.id,d.case_id AS caseId,d.assignment_id AS assignmentId,d.queue_id AS queueId,d.provider_id AS providerId,d.route_reference AS routeReference,d.idempotency_key AS idempotencyKey,d.status,d.external_reference AS externalReference,d.failure_code AS failureCode,d.failure_class AS failureClass,d.attempts,d.available_at AS availableAt,d.accepted_at AS acceptedAt,d.last_attempt_at AS lastAttemptAt,d.created_at AS createdAt,d.updated_at AS updatedAt,c.organization_id AS organizationId,c.workspace_id AS workspaceId,c.case_type_id AS caseTypeId,c.priority,c.subject_type AS subjectType,c.subject_id AS subjectId,c.requester_type AS requesterType,c.requester_id AS requesterId FROM case_dispatches d INNER JOIN cases c ON c.id=d.case_id WHERE (d.status='pending' OR (d.status='failed' AND d.failure_class='transient')) AND d.available_at<=? ORDER BY d.available_at ASC,d.created_at ASC,d.id ASC LIMIT ?",
       now,
       safe,
     );
+    return rows.map(toPayload);
   }
 
   async claim(id: EntityId, now: string): Promise<boolean> {
@@ -111,10 +123,11 @@ export class CaseDispatchRepository extends Repository {
   }
 
   async get(id: EntityId): Promise<CaseDispatchPayload | null> {
-    return this.database.first<CaseDispatchPayload>(
+    const row = await this.database.first<CaseDispatchRow>(
       "SELECT d.id,d.case_id AS caseId,d.assignment_id AS assignmentId,d.queue_id AS queueId,d.provider_id AS providerId,d.route_reference AS routeReference,d.idempotency_key AS idempotencyKey,d.status,d.external_reference AS externalReference,d.failure_code AS failureCode,d.failure_class AS failureClass,d.attempts,d.available_at AS availableAt,d.accepted_at AS acceptedAt,d.last_attempt_at AS lastAttemptAt,d.created_at AS createdAt,d.updated_at AS updatedAt,c.organization_id AS organizationId,c.workspace_id AS workspaceId,c.case_type_id AS caseTypeId,c.priority,c.subject_type AS subjectType,c.subject_id AS subjectId,c.requester_type AS requesterType,c.requester_id AS requesterId FROM case_dispatches d INNER JOIN cases c ON c.id=d.case_id WHERE d.id=? LIMIT 1",
       id,
     );
+    return row ? toPayload(row) : null;
   }
 
   async createForAssignment(input: {
@@ -142,4 +155,29 @@ export class CaseDispatchRepository extends Repository {
       input.now,
     );
   }
+}
+
+function toPayload(row: CaseDispatchRow): CaseDispatchPayload {
+  const {
+    organizationId,
+    workspaceId,
+    caseTypeId,
+    priority,
+    subjectType,
+    subjectId,
+    requesterType,
+    requesterId,
+    ...dispatch
+  } = row;
+  return {
+    dispatch,
+    organizationId,
+    workspaceId,
+    caseTypeId,
+    priority,
+    subjectType,
+    subjectId,
+    requesterType,
+    requesterId,
+  };
 }
