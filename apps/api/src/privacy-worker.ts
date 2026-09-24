@@ -134,18 +134,18 @@ export interface PrivacyRetentionWorkResult {
 
 export async function processPrivacyRetention(
   env: ApiEnv,
-  organizationId: string,
-  workspaceId: string | null = null,
   now = new Date().toISOString(),
 ): Promise<PrivacyRetentionWorkResult> {
   const database = getDatabase(env);
   if (!database) return { processors: 0, processed: 0 };
-  const processor = createCustomerPrivacyRetentionProcessor({ repository: new CustomerRepository(database) });
+  const processor = createCustomerPrivacyRetentionProcessor({
+    repository: new CustomerRepository(database),
+  });
   const result = await processor.process({
-    organizationId: brandId<"EntityId">(organizationId),
-    workspaceId: workspaceId ? brandId<"EntityId">(workspaceId) : null,
+    organizationId: null,
+    workspaceId: null,
     now,
-    correlationId: "privacy:retention:" + organizationId + ":" + now,
+    correlationId: "privacy:retention:" + now,
   });
   return { processors: 1, processed: result.processed };
 }
