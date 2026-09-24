@@ -61,6 +61,7 @@ import billingInvoiceSystem from "../../../migrations/0060_billing_invoice_syste
 import billingSettlement from "../../../migrations/0061_billing_settlement.sql";
 import billingReconciliationHardening from "../../../migrations/0062_billing_reconciliation_hardening.sql";
 import catalogAttributeCutover from "../../../migrations/0063_catalog_attribute_cutover.sql";
+import trustSignalsAntiAbuse from "../../../migrations/0064_trust_signals_anti_abuse.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -127,4 +128,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0061_billing_settlement.sql", sql: billingSettlement },
   { path: "migrations/0062_billing_reconciliation_hardening.sql", sql: billingReconciliationHardening },
   { path: "migrations/0063_catalog_attribute_cutover.sql", sql: catalogAttributeCutover },
+  { path: "migrations/0064_trust_signals_anti_abuse.sql", sql: trustSignalsAntiAbuse },
 ];
