@@ -202,9 +202,9 @@ export async function processSeoPublicationJobs(
         throw new Error(`SEO structured-data validation failed: ${details}`);
       }
       const answerValidation = validateAnswerRepresentation(plan.answer, plan.entity, now);
-      if (!answerValidation.valid || !answerValidation.citationReady) {
+      if (!answerValidation.valid) {
         const details = answerValidation.issues.filter((issue) => issue.severity === "error").map((issue) => `${issue.path}: ${issue.message}`).join("; ");
-        throw new Error(`SEO answer validation failed: ${details || "answer is not citation-ready"}`);
+        throw new Error(`SEO answer validation failed: ${details}`);
       }
       const contentHash = await stableHash(plan);
       const representation = await repository.publishRepresentationBundle(
