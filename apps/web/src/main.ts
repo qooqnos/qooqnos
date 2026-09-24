@@ -96,7 +96,7 @@ function currentRoute(): Route {
 }
 
 function normalizePath(path: string): string {
-  const value = path.replace(/\\/+$/, "");
+  const value = path.replace(/\/+$/, "");
   return value || "/";
 }
 
@@ -414,15 +414,14 @@ function bindGlobalEvents(): void {
 
   document.querySelector<HTMLButtonElement>("[data-generate-draft]")?.addEventListener("click", generateDraft);
 
-  document.addEventListener("keydown", handleShortcut, { once: true });
+  // Keyboard shortcut is registered once at module load.
 }
 
-function handleShortcut(event: KeyboardEvent): void {
+function handleGlobalShortcut(event: KeyboardEvent): void {
   if (event.key === "/" && !["INPUT", "TEXTAREA"].includes((event.target as HTMLElement | null)?.tagName ?? "")) {
     event.preventDefault();
     document.querySelector<HTMLElement>("[data-focus-search]")?.click();
   }
-  window.setTimeout(() => document.addEventListener("keydown", handleShortcut, { once: true }), 0);
 }
 
 async function runDiscovery(): Promise<void> {
@@ -573,4 +572,5 @@ function wait(ms: number): Promise<void> {
 }
 
 window.addEventListener("popstate", render);
+window.addEventListener("keydown", handleGlobalShortcut);
 render();
