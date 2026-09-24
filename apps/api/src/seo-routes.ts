@@ -1,7 +1,7 @@
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
-import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, SITEMAP_URL_LIMIT } from "@qooqnos/seo";
+import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, buildImageSitemapXml, SITEMAP_URL_LIMIT } from "@qooqnos/seo";
 import { crawlStoredSeoRepresentation } from "./seo-production-crawler";
 import { evaluateSeoProductionReadiness } from "./seo-production-readiness";
 import type { ApiEnv } from "./env";
@@ -54,6 +54,30 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     },
   });
 
+  router.register({
+    method: "GET",
+    path: "/image-sitemap.xml",
+    module: "seo",
+    operation: "image-sitemap.read",
+    handler: async () => {
+      if (!database) return new Response("Database is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
+      const canonicalPrefix = canonicalBaseUrl.replace(/\/$/, "") + "/";
+      const rows = await database.all<{ canonicalUrl: string; representationJson: string; generatedAt: string }>(
+        "SELECT canonical_url AS canonicalUrl, representation_json AS representationJson, generated_at AS generatedAt FROM seo_entity_representations WHERE indexability='index' AND publication_state='published' AND visibility='public' AND canonical_url LIKE ? ORDER BY canonical_url ASC LIMIT ?",
+        canonicalPrefix + "%", SITEMAP_URL_LIMIT,
+      );
+      const entries: { url: string; images: string[]; lastmod: string }[] = [];
+      for (const row of rows) {
+        try {
+          const parsed = JSON.parse(row.representationJson) as { entity?: { imageUrl?: string } };
+          const image = parsed.entity?.imageUrl;
+          if (typeof image === "string" && image.trim()) entries.push({ url: row.canonicalUrl, images: [image], lastmod: row.generatedAt });
+        } catch {}
+      }
+      const xml = buildImageSitemapXml(entries);
+      return new Response(xml, { status: 200, headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300, s-maxage=300" } });
+    },
+  });
   router.register({
     method: "GET",
     path: "/robots.txt",
