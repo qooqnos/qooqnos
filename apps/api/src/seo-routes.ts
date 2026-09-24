@@ -221,12 +221,32 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
          WHERE organization_id=? AND workspace_id IS ? AND started_at>=?`,
         context.tenantId, context.workspaceId ?? null, recentSince,
       );
-      const degraded = (result?.failed ?? 0) > 0 || (crawl?.failures ?? 0) > 0 || (measurement?.failures ?? 0) > 0;
+      const competitive = await database.first<{ failures: number; runs: number; lastObservedAt: string | null; competitors: number }>(
+        `SELECT
+           (SELECT SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END)
+              FROM seo_competitive_runs
+             WHERE organization_id=? AND workspace_id IS ? AND started_at>=?) AS failures,
+           (SELECT COUNT(*)
+              FROM seo_competitive_runs
+             WHERE organization_id=? AND workspace_id IS ? AND started_at>=?) AS runs,
+           (SELECT MAX(completed_at)
+              FROM seo_competitive_runs
+             WHERE organization_id=? AND workspace_id IS ?) AS lastObservedAt,
+           (SELECT COUNT(*)
+              FROM seo_competitors
+             WHERE organization_id=? AND workspace_id IS ? AND lifecycle_state='active') AS competitors`,
+        context.tenantId, context.workspaceId ?? null, recentSince,
+        context.tenantId, context.workspaceId ?? null, recentSince,
+        context.tenantId, context.workspaceId ?? null,
+        context.tenantId, context.workspaceId ?? null,
+      );
+      const degraded = (result?.failed ?? 0) > 0 || (crawl?.failures ?? 0) > 0 || (measurement?.failures ?? 0) > 0 || (competitive?.failures ?? 0) > 0;
       return json({
         status: degraded ? "degraded" : "ok",
         publication: { pending: result?.pending ?? 0, failed: result?.failed ?? 0 },
         productionCrawler: { recentFailures: crawl?.failures ?? 0, lastObservedAt: crawl?.lastObservedAt ?? null },
         visibilityMeasurement: { recentFailures: measurement?.failures ?? 0, runs: measurement?.runs ?? 0, lastObservedAt: measurement?.lastObservedAt ?? null },
+        competitiveIntelligence: { recentFailures: competitive?.failures ?? 0, runs: competitive?.runs ?? 0, activeCompetitors: competitive?.competitors ?? 0, lastObservedAt: competitive?.lastObservedAt ?? null },
       }, degraded ? 503 : 200, context.requestId);
     },
   });
