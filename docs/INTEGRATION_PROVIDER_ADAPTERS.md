@@ -87,6 +87,8 @@ Invalid or stale signatures fail closed.
 
 ## Provider onboarding
 
+Operational activation checklist: `docs/INTEGRATION_VENDOR_ONBOARDING_RUNBOOK.md`.
+
 A concrete provider is complete only when all of the following exist:
 
 - registered `integration_providers` record;
