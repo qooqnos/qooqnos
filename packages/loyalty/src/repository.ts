@@ -277,31 +277,89 @@ export class LoyaltyRepository extends Repository {
     const reward = await this.getReward(context, input.rewardId);
     const membership = await this.getMembership(context, input.membershipId);
     if (reward.programId !== membership.programId) throw new DatabaseError("Reward does not belong to membership program");
+    if (reward.status !== "available") throw new DatabaseError("Only available loyalty rewards can be redeemed");
+
     const existing = await this.database.first<LoyaltyRedemptionRecord>(
       "SELECT id, reward_id AS rewardId, membership_id AS membershipId, ledger_entry_id AS ledgerEntryId, points_cost AS pointsCost, benefit_reference AS benefitReference, idempotency_key AS idempotencyKey, created_at AS createdAt FROM loyalty_reward_redemptions WHERE organization_id=? AND workspace_id=? AND idempotency_key=? LIMIT 1",
-      membership.organizationId, membership.workspaceId, input.idempotencyKey.trim(),
+      membership.organizationId,
+      membership.workspaceId,
+      input.idempotencyKey.trim(),
     );
     if (existing) return existing;
-    const ledger = await this.postLedger(context, {
-      id: brandId<EntityId>(input.id + ":ledger"),
-      membershipId: membership.id,
-      entryType: "redeem",
-      pointsDelta: -reward.pointsCost,
-      referenceType: "loyalty_reward",
-      referenceId: reward.id,
-      idempotencyKey: input.idempotencyKey + ":ledger",
-      provenance: { benefitReference: input.benefitReference, rewardId: reward.id },
-      now: input.now,
-    });
-    await this.database.run(
-      "INSERT INTO loyalty_reward_redemptions (id, organization_id, workspace_id, reward_id, membership_id, ledger_entry_id, points_cost, benefit_reference, idempotency_key, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      input.id, membership.organizationId, membership.workspaceId, reward.id, membership.id, ledger.id, reward.pointsCost, input.benefitReference.trim(), input.idempotencyKey.trim(), input.now,
-    );
+
+    const ledgerId = brandId<EntityId>(input.id + ":ledger");
+    const ledgerIdempotencyKey = input.idempotencyKey.trim() + ":ledger";
+    const results = await this.database.transaction([
+      {
+        sql: `INSERT INTO loyalty_ledger_entries
+          (id, organization_id, workspace_id, membership_id, entry_type, points_delta, reference_type, reference_id, idempotency_key, provenance_json, created_at)
+          SELECT ?, ?, ?, ?, 'redeem', ?, 'loyalty_reward', ?, ?, ?, ?
+          WHERE EXISTS (
+            SELECT 1 FROM loyalty_memberships
+            WHERE id=? AND organization_id=? AND workspace_id=?
+          )
+          AND (
+            SELECT COALESCE(SUM(points_delta), 0)
+            FROM loyalty_ledger_entries
+            WHERE membership_id=? AND organization_id=? AND workspace_id=?
+          ) >= ?`,
+        params: [
+          ledgerId,
+          membership.organizationId,
+          membership.workspaceId,
+          membership.id,
+          -reward.pointsCost,
+          reward.id,
+          ledgerIdempotencyKey,
+          JSON.stringify({ benefitReference: input.benefitReference, rewardId: reward.id }),
+          input.now,
+          membership.id,
+          membership.organizationId,
+          membership.workspaceId,
+          membership.id,
+          membership.organizationId,
+          membership.workspaceId,
+          reward.pointsCost,
+        ],
+      },
+      {
+        sql: `INSERT INTO loyalty_reward_redemptions
+          (id, organization_id, workspace_id, reward_id, membership_id, ledger_entry_id, points_cost, benefit_reference, idempotency_key, created_at)
+          SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+          WHERE EXISTS (
+            SELECT 1 FROM loyalty_ledger_entries
+            WHERE id=? AND organization_id=? AND workspace_id=? AND idempotency_key=?
+          )`,
+        params: [
+          input.id,
+          membership.organizationId,
+          membership.workspaceId,
+          reward.id,
+          membership.id,
+          ledgerId,
+          reward.pointsCost,
+          input.benefitReference.trim(),
+          input.idempotencyKey.trim(),
+          input.now,
+          ledgerId,
+          membership.organizationId,
+          membership.workspaceId,
+          ledgerIdempotencyKey,
+        ],
+      },
+    ]);
+
+    const ledgerInserted = (results[0]?.meta?.changes ?? 0) === 1;
+    const redemptionInserted = (results[1]?.meta?.changes ?? 0) === 1;
+    if (!ledgerInserted || !redemptionInserted) {
+      throw new DatabaseError("Insufficient loyalty points or redemption concurrency rejected");
+    }
+
     return {
       id: input.id,
       rewardId: reward.id,
       membershipId: membership.id,
-      ledgerEntryId: ledger.id,
+      ledgerEntryId: ledgerId,
       pointsCost: reward.pointsCost,
       benefitReference: input.benefitReference.trim(),
       idempotencyKey: input.idempotencyKey.trim(),
