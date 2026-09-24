@@ -563,8 +563,9 @@ export default {
       const seoDocument = await renderSeoAwareDocument(request, env, database ?? undefined);
       if (seoDocument) return seoDocument;
 
-      const router = createRouter(version, database ?? undefined, env);
-      if (isApiFirstPublicPath(url.pathname)) return router.handle(request);
+      if (isApiFirstPublicPath(url.pathname)) {
+        return createRouter(version, database ?? undefined, env).handle(request);
+      }
 
       if (env.ASSETS) {
         const assetResponse = await env.ASSETS.fetch(request);
@@ -572,7 +573,7 @@ export default {
       }
 
       if (url.pathname === "/") return html(homePage(version));
-      return router.handle(request);
+      return createRouter(version, database ?? undefined, env).handle(request);
     }
 
     return createRouter(version, database ?? undefined, env).handle(request);
