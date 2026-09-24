@@ -1521,3 +1521,10 @@ Competitive intelligence evidence layers now include:
 - **Completed:** provider activation matrix tests are typed against the real ApiEnv contract; Search Console access-token/service-account activation and complete/partial competitive-intelligence activation are covered without lint-invalid any casts.
 - **Commits:** `00fb2607`, `6abb3ceb`, `f39932fd`.
 - **Verification:** the first provider-test CI run failed at lint because the initial test introduced explicit any casts; the tests were corrected to use the real environment type and the competitive provider field name. A fresh CI run is now required for final green verification.
+
+
+## Production SEO Hardening — Contract Alignment After Full CI Test Run
+- **Completed:** corrected production readiness state precedence so partially configured providers are reported as `partial` rather than `unconfigured`; aligned geographic audit/truth semantics so city/region/exact scopes require canonical location evidence while country-backed country scope remains valid; aligned SEO tests with the canonical structured-data and attributable-answer contracts; frontend hydration tests now explicitly verify provenance fields used for citation-ready evidence.
+- **Commits:** `48afc1e`, `5f45365`, `b174cf8`, `37f35a0`, `0c3efc0`.
+- **Verification:** the preceding CI run exposed 9 failures across 6 test files; the failures were traced to these contract mismatches rather than build, typecheck, lint, migration, or Worker-dry-run failures. Fresh CI and Phoenix Verification runs are active on `0c3efc0`.
+- **Remaining:** final green CI/Phoenix verification, then deployed production evidence verification.
