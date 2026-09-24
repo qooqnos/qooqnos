@@ -99,7 +99,7 @@ Cleanup commits: `3fe67d1`, `8f02cfc`, `aa75afe`, `81162b0`, `6f7fe40`, `ed39a42
 
 ## Database completion status — 2026-09-24
 
-**Physical D1 schema: 100%.** The canonical migration set reaches 0073 and the reconciled inventory contains the physical tables from the current migration catalog. The repository now has an executable audit that cross-checks SQL migration count, API catalog count, migration-lock count, sequence continuity and the documented physical-table total; invoice and refund financial migrations are included in the current canonical sequence.
+**Physical D1 schema: 100%.** The canonical migration set reaches 0075 and the reconciled inventory contains the physical tables from the current migration catalog. The repository now has an executable audit that cross-checks SQL migration count, API catalog count, migration-lock count, sequence continuity and the documented physical-table total; invoice and refund financial migrations are included in the current canonical sequence.
 
 **Database engineering readiness: 91.7% on the explicit 12-gate rubric:** 11 repository/schema/runtime gates are closed; the remaining gate is credentialed remote application of the canonical migration history to the provisioned production D1. This percentage is a readiness metric, not a product-completion score.
 
@@ -818,3 +818,10 @@ Implementation commits: `410127af9a52fd93718c6d4482ca410f1ef2a20d`, `ee2006853d1
 Provider callback reconciliation is now implemented as a reusable pre-persistence boundary. Incoming tracking events require a non-empty deduplication key; previously observed keys are classified as duplicates and cannot produce a second operational transition. Unit tests cover first delivery, replay, and fail-closed malformed callbacks.
 
 Implementation commits: `039fda222cbd184cfce03383c6da055bf6f38694`.
+
+
+### Document renderer boundary — 2026-09-24
+
+The Documents module now also defines the downstream renderer/artifact contracts: versioned PDF/Print renderer profiles, renderer registry, immutable `DocumentArtifact` output tied to the source snapshot hash, and an idempotent `DocumentArtifactStore` boundary. Renderer implementations remain intentionally adapter-specific; the canonical composition engine does not query domain storage or render output formats itself.
+
+Implementation commits: `73b060bef3710a384dd40618ed43b17a7ab7945b`, `0afa9282c445a48db5bc0c0180c7d4b0ce0e378f`, `2a3dfa54f09c386b4c02e5193628a9862375ddab`, `4ca264c0d4cda854453ccbcf635e18702c899e84`, plus the document composition/renderer files now present on `main`.
