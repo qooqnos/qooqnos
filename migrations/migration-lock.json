@@ -531,7 +531,7 @@
       "version": 79,
       "moduleId": "seo",
       "filename": "0079_seo_operational_control_plane.sql",
-      "checksum": "2e19f47cbf6b2bc862c8fd8fb8d512d3264d1266dcc394b86c703e2889328762"
+      "checksum": "0c46ff73bc9b89fca582a1bf0b188638f6bef21f0897203867672bf2e19ad99a"
     },
     {
       "id": "0080_promotion_core",
