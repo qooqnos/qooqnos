@@ -453,7 +453,7 @@
       "id": "0067_communication_push_channel",
       "version": 67,
       "moduleId": "communication",
-      "checksum": "9f3516065500749590f30d0bccf48fcdf13c3de7bb8fd97753404ba2119765e5",
+      "checksum": "e9d17348218f947092492c2fff300cd1f7d60235caa20cb9259618a68e7cf011",
       "filename": "0067_communication_push_channel.sql"
     },
     {
@@ -504,8 +504,7 @@
       "moduleId": "analytics",
       "checksum": "125e7e37ddea4f0ee791c34d5471534b69aa6e3eef2d899006fba88e60904139",
       "filename": "0075_analytics_platform.sql"
-    }
-,
+    },
     {
       "id": "0076_ai_memory",
       "version": 76,
