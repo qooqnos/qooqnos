@@ -1019,3 +1019,18 @@ Canonical files:
 - `apps/web/src/main.ts`
 - `apps/web/styles.css`
 - `apps/web/public/styles.css`
+
+### Frontend Seller AI → Catalog — 2026-09-25
+
+Seller AI Product Studio now completes the canonical draft lifecycle instead of stopping at preview.
+
+Implemented:
+- after a successful Seller AI run, frontend reads the canonical session to obtain `currentDraftVersion`;
+- `review` is sent to `POST /api/v1/ai/seller/product-creation-sessions/:sessionId/review`;
+- `confirm` is sent to `POST /api/v1/ai/seller/product-creation-sessions/:sessionId/confirm`;
+- backend-confirmed Catalog linkage and `catalogProductId` are displayed;
+- Seller AI session cancellation is exposed through the canonical `cancel` endpoint;
+- no product creation logic is duplicated in the frontend.
+
+Canonical file:
+- `apps/web/src/main.ts`
