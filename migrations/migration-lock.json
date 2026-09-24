@@ -417,8 +417,7 @@
       "id": "0060_billing_invoice_system",
       "version": 60,
       "moduleId": "billing",
-      "checksum": "427d9eed554ab6aa5fb1949a30474daf381970b84a484024740ba3d92841bcd8",
-      "filename": "0060_billing_invoice_system.sql"
+      "checksum": "9b827d7597903fa3e258bd21b52de7c4b570e1b7684b05a333241b44e5f5130e",      "filename": "0060_billing_invoice_system.sql"
     },
     {
       "id": "0061_billing_settlement",
