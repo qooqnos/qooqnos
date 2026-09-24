@@ -22,7 +22,7 @@ import { processAutomationSchedules } from "./automation-worker";
 import { processAutomationExecutions } from "./automation-execution-worker";
 import { processCaseSla } from "./case-sla-worker";
 import { processCaseActions } from "./case-action-worker";
-import { processPrivacyConsentExpiry, processApprovedPrivacyRequests } from "./privacy-worker";
+import { processPrivacyConsentExpiry, processApprovedPrivacyRequests, processPrivacyRetention } from "./privacy-worker";
 import { processIntegration } from "./integration-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 import { assertProductionInfrastructure, checkRuntimeInfrastructure } from "./infrastructure";
@@ -550,6 +550,9 @@ export default {
     await processCaseActions(env, now);
     await processPrivacyConsentExpiry(env, now);
     await processApprovedPrivacyRequests(env, now);
+    if (env.PHOENIX_DEFAULT_ORGANIZATION_ID) {
+      await processPrivacyRetention(env, env.PHOENIX_DEFAULT_ORGANIZATION_ID, null, now);
+    }
     await processIntegration(env, now);
 
     const database = getDatabase(env);
