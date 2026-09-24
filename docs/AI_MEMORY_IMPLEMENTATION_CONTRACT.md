@@ -13,7 +13,7 @@ Memory never becomes Business, Customer, Booking, Order, Payment or User source 
 
 ## Scope
 
-Organization scope is mandatory. Workspace-scoped memory requires a workspace context. Database triggers reject cross-organization workspace references. Repository reads and writes apply organization/workspace boundaries server-side.
+Organization scope is mandatory. Workspace-scoped memory requires a workspace context. Database triggers reject cross-organization workspace references. Repository reads and writes apply organization/workspace boundaries server-side. User-owned memory must match the authenticated actor; workspace-owned memory must match the active workspace.
 
 ## Privacy and consent
 
