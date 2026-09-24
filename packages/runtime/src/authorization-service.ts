@@ -41,7 +41,7 @@ export function createAuthorizationService(
       }
 
       const requireWorkspace = input.requireWorkspace ?? Boolean(input.context.workspaceId || input.resource?.workspaceId);
-      const subject = requireWorkspace && input.context.workspaceId
+      const subject = input.context.workspaceId
         ? await repository.getSubject({ organizationId: input.context.tenantId, workspaceId: input.context.workspaceId }, actorId)
         : null;
 
