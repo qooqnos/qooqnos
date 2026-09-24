@@ -12,6 +12,7 @@ export interface FinancialAuditEventRecord {
   readonly eventType: string;
   readonly entityType: string;
   readonly entityId: EntityId;
+  readonly businessId?: EntityId | undefined;
   readonly outcome: FinancialAuditOutcome;
   readonly amountMinor: number | null;
   readonly currency: string | null;
@@ -34,6 +35,7 @@ export interface FinancialAuditAppendInput {
   readonly eventType: string;
   readonly entityType: string;
   readonly entityId: EntityId;
+  readonly businessId?: EntityId | undefined;
   readonly outcome: FinancialAuditOutcome;
   readonly amountMinor?: number | undefined;
   readonly currency?: string | undefined;
@@ -77,7 +79,7 @@ export class FinancialAuditRepository extends Repository {
     const integrityHash = await hashEvent({
       organizationId,
       workspaceId: context.workspaceId ?? null,
-      businessId: null,
+      businessId: input.businessId ?? null,
       actorId: context.actorId ?? null,
       eventType: input.eventType.trim(),
       entityType: input.entityType.trim(),
@@ -103,7 +105,7 @@ export class FinancialAuditRepository extends Repository {
         outcome, amount_minor, currency, reason_code, reason, source, request_id, correlation_id,
         idempotency_key, before_json, after_json, metadata_json, integrity_hash, occurred_at, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      input.id, organizationId, context.workspaceId ?? null, null, context.actorId ?? null,
+      input.id, organizationId, context.workspaceId ?? null, input.businessId ?? null, context.actorId ?? null,
       input.eventType.trim(), input.entityType.trim(), input.entityId, input.outcome,
       input.amountMinor ?? null, currency ?? null, input.reasonCode ?? null, input.reason ?? null,
       input.source.trim(), input.requestId ?? context.requestId ?? null, input.correlationId,
@@ -189,6 +191,7 @@ interface FinancialAuditEventRow {
 function mapRecord(row: FinancialAuditEventRow): FinancialAuditEventRecord {
   return {
     ...row,
+    businessId: row.businessId ?? undefined,
     before: parseJson(row.beforeJson),
     after: parseJson(row.afterJson),
     metadata: parseJson(row.metadataJson),
