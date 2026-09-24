@@ -88,5 +88,5 @@ export class ApprovalRepository extends Repository {
   }
 }
 
-interface ApprovalRow extends ApprovalRequestRecord {}
+type ApprovalRow = ApprovalRequestRecord;
 
