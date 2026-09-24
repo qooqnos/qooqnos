@@ -38,7 +38,7 @@ The product loop remains:
 
 ## Canonical implementation coverage
 
-Current canonical migrations reach `0056_communication_required_suppression.sql`.
+Current canonical migrations reach `0063_catalog_attribute_cutover.sql`.
 
 Implemented core capability families include:
 
