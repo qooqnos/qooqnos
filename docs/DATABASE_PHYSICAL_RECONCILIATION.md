@@ -575,7 +575,7 @@ Migration 0016 establishes three canonical Catalog Attribute tables: attribute_d
 
 The physical contract is deliberately platform-level for the reusable attribute vocabulary. It does not invent tenant-specific ownership semantics while the existing Category model lacks physical organization/workspace owner columns.
 
-The migration also deliberately does not create value tables for Products or Services. The existing product_variants.attributes_json remains the current value representation. A later value migration must define authoritative storage, JSON backfill, conflict handling and repository cutover before introducing any structured value table.
+Migration 0017 deliberately established the reusable AttributeValue tables without immediately replacing legacy variant JSON. Migration 0063 now performs the fail-closed JSON validation/backfill and repository cutover. `attribute_values` and `attribute_value_options` are authoritative for variant attributes; `product_variants.attributes_json` is retained only as a retired, non-writable compatibility column and is cleared during cutover.
 
 ## 3.11 Catalog Attribute values — 0017
 
