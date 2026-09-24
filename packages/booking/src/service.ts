@@ -22,6 +22,8 @@ export interface CreateBookingCommand {
   readonly currency: string;
   readonly totalAmountMinor?: number | undefined;
   readonly policySnapshot?: string | undefined;
+  readonly matchRequestId?: EntityId | undefined;
+  readonly matchCandidateId?: EntityId | undefined;
   readonly idempotencyKey: string;
 }
 
@@ -42,6 +44,8 @@ export class BookingService {
       currency: command.currency.trim().toUpperCase(),
       totalAmountMinor: command.totalAmountMinor,
       policySnapshot: command.policySnapshot,
+      matchRequestId: command.matchRequestId,
+      matchCandidateId: command.matchCandidateId,
       idempotencyKey: command.idempotencyKey,
       now: this.options.now(),
     };
@@ -102,6 +106,8 @@ export class BookingService {
       readonly timezone?: string | undefined;
       readonly locationId?: EntityId | undefined;
       readonly resourceId?: EntityId | undefined;
+      readonly matchRequestId?: EntityId | undefined;
+      readonly matchCandidateId?: EntityId | undefined;
     },
   ): Promise<BookingRecord> {
     await this.options.authorization.assert({
