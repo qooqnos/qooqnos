@@ -29,6 +29,10 @@ export interface ApiEnv {
   readonly PUSH_PROVIDER_TOKEN?: string;
   readonly PUSH_PROVIDER_FALLBACK_ENDPOINT?: string;
   readonly PUSH_PROVIDER_FALLBACK_TOKEN?: string;
+  readonly CASE_DISPATCH_PROVIDER_ID?: string;
+  readonly CASE_DISPATCH_PROVIDER_ENDPOINT?: string;
+  readonly CASE_DISPATCH_PROVIDER_PATH?: string;
+  readonly CASE_DISPATCH_PROVIDER_TOKEN?: string;
 }
 
 export function requireDatabase(env: ApiEnv): D1DatabaseLike {
