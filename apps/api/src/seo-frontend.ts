@@ -226,7 +226,7 @@ function renderAnswerMarkup(
   const summary = entity.summary ?? entity.description ?? answer.answer;
   const breadcrumbs = page.breadcrumbs.map((item) => `<a href="${escapeAttribute(item.url)}">${escapeHtml(item.name)}</a>`).join(`<span aria-hidden="true">/</span>`);
   const actions = page.actions.map((action) => `<a class="button ${action.kind === "primary" ? "button-primary" : "button-ghost"}" href="${escapeAttribute(action.href)}">${escapeHtml(action.label)} →</a>`).join("");
-  const related = page.relatedLinks.map((link) => `<a class="seo-related-link" href="${escapeAttribute(link.targetUrl ?? "/discover?q=" + encodeURIComponent(link.targetLabel ?? link.targetEntityId))}" data-seo-related><span>${escapeHtml(link.targetLabel ?? link.targetEntityId)}</span><small>${escapeHtml(link.relation)}</small></a>`).join("");
+  const related = page.relatedLinks.map((link) => `<a class="seo-related-link" href="${escapeAttribute(link.url)}" data-seo-related><span>${escapeHtml(link.label)}</span><small>${escapeHtml(link.relation)}</small></a>`).join("");
 
   return `
     <main id="main" class="page-content seo-public-page" data-seo-entity-id="${escapeAttribute(entity.id)}">
