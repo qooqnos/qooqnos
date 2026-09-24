@@ -600,3 +600,14 @@ Implementation must preserve these boundaries and must not create a parallel SEO
 - geographic truth attached to the answer artifact;
 - pending-review representation without fabricating confidence;
 - deterministic validation during SEO publication.
+
+### 35. Dynamic Frontend SEO Surface implementation
+
+**Implemented.** The published SEO/GEO projection is now connected to the actual public web document lifecycle:
+- edge rendering from persisted canonical SEO representations;
+- initial HTML metadata and canonical links;
+- initial HTML JSON-LD structured data;
+- visible answer-ready content and facts;
+- sanitized SPA hydration;
+- deterministic removal of entity SEO state during client-side navigation;
+- canonical-URL lookup indexing for low-latency rendering.
