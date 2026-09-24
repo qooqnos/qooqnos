@@ -114,7 +114,7 @@ export function injectSeoRepresentation(html: string, hydration: SeoFrontendHydr
     `<meta name="twitter:description" content="${escapeAttribute(metadata.twitter.description)}">`,
     ...(metadata.twitter.image ? [`<meta name="twitter:image" content="${escapeAttribute(metadata.twitter.image)}">`] : []),
     ...metadata.alternates.map((item) => `<link rel="alternate" hreflang="${escapeAttribute(item.hreflang)}" href="${escapeAttribute(item.href)}">`),
-    `<script type="application/ld+json">${safeJson(structuredData)}</script>`,
+    `<script id="phoenix-seo-jsonld" type="application/ld+json">${safeJson(structuredData)}</script>`,
     `<script id="phoenix-seo-data" type="application/json">${safeJson(hydration)}</script>`,
   ].join("");
   const bodyMarkup = renderAnswerMarkup(entity, answer);
