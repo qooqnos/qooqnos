@@ -3,6 +3,7 @@ import type { D1Database } from "@qooqnos/database";
 import { SeoRepository } from "./repository";
 import { validateStructuredData } from "./structured-validation";
 import { validateAnswerRepresentation } from "./answer-validation";
+import { buildEntityGraph } from "./entity-graph";
 import { buildSeoProjectionPlan } from "./projection";
 import { planSeoInvalidation, type SeoDomainChange } from "./invalidation";
 import type { SeoEntity } from "./types";
@@ -194,7 +195,8 @@ export async function processSeoPublicationJobs(
         requestId: job.id,
         correlationId: job.id,
       } as RequestContext;
-      const plan = buildSeoProjectionPlan({ entity: payload, canonicalBaseUrl, now });
+      const graph = await loadSeoEntityGraph(database, job.organizationId, job.workspaceId, payload.id, payload.locale);
+      const plan = buildSeoProjectionPlan({ entity: payload, canonicalBaseUrl, now, ...(graph ? { graph } : {}) });
       const representationId = `seo-representation:${payload.id}:${payload.locale}`;
       const structuredValidation = validateStructuredData(plan.structuredData);
       if (!structuredValidation.valid) {
@@ -263,3 +265,104 @@ function retryAt(attempt: number, now: string): string {
 }
 
 export { planSeoInvalidation };
+
+
+async function loadSeoEntityGraph(
+  database: D1Database,
+  organizationId: string,
+  workspaceId: string | null,
+  entityId: string,
+  locale: string,
+) {
+  const edgeRows = await database.all<{
+    sourceEntityId: string;
+    targetEntityId: string;
+    relation: string;
+    provenance: string;
+    confidence: number;
+    verifiedAt: string | null;
+  }>(
+    `SELECT source_entity_id AS sourceEntityId,
+            target_entity_id AS targetEntityId,
+            relation,
+            provenance,
+            confidence,
+            verified_at AS verifiedAt
+       FROM seo_entity_graph_edges
+      WHERE organization_id=? AND workspace_id IS ? AND source_entity_id=?
+      ORDER BY confidence DESC, target_entity_id ASC`,
+    organizationId, workspaceId, entityId,
+  );
+  if (!edgeRows.length) return null;
+
+  const entityIds = [...new Set([entityId, ...edgeRows.map((row) => row.targetEntityId)])];
+  const placeholders = entityIds.map(() => "?").join(", ");
+  const nodeRows = await database.all<{
+    entityId: string;
+    entityType: string;
+    sourceModule: string;
+    sourceVersion: string;
+    publicationState: string;
+    visibility: string;
+    locale: string | null;
+    representationJson: string | null;
+  }>(
+    `SELECT n.entity_id AS entityId,
+            n.entity_type AS entityType,
+            n.source_module AS sourceModule,
+            n.source_version AS sourceVersion,
+            n.publication_state AS publicationState,
+            n.visibility,
+            n.locale,
+            r.representation_json AS representationJson
+       FROM seo_entity_graph_nodes n
+       LEFT JOIN seo_entity_representations r
+         ON r.organization_id=n.organization_id
+        AND r.workspace_id IS n.workspace_id
+        AND r.entity_id=n.entity_id
+        AND r.locale=?
+      WHERE n.organization_id=? AND n.workspace_id IS ?
+        AND n.entity_id IN (${placeholders})`,
+    locale, organizationId, workspaceId, ...entityIds,
+  );
+
+  const nodes = nodeRows.map((row) => {
+    let preferredName: string | undefined;
+    let canonicalUrl: string | undefined;
+    if (row.representationJson) {
+      try {
+        const parsed = JSON.parse(row.representationJson) as {
+          entity?: { preferredName?: string };
+          metadata?: { canonicalUrl?: string };
+        };
+        preferredName = typeof parsed.entity?.preferredName === "string" ? parsed.entity.preferredName : undefined;
+        canonicalUrl = typeof parsed.metadata?.canonicalUrl === "string" ? parsed.metadata.canonicalUrl : undefined;
+      } catch {
+        // Historical malformed projections are ignored; graph nodes remain valid for dependency planning.
+      }
+    }
+    return {
+      entityId: row.entityId,
+      entityType: row.entityType as import("./types").SeoEntityType,
+      sourceModule: row.sourceModule,
+      sourceVersion: row.sourceVersion,
+      publicationState: row.publicationState,
+      visibility: row.visibility,
+      ...(row.locale ? { locale: row.locale } : {}),
+      ...(preferredName ? { preferredName } : {}),
+      ...(canonicalUrl ? { canonicalUrl } : {}),
+    };
+  });
+
+  const sourceNode = nodes.find((node) => node.entityId === entityId);
+  if (!sourceNode) return null;
+
+  return buildEntityGraph(nodes, edgeRows.map((row) => ({
+    sourceEntityId: row.sourceEntityId,
+    targetEntityId: row.targetEntityId,
+    relation: row.relation,
+    provenance: row.provenance,
+    confidence: row.confidence,
+    ...(row.verifiedAt ? { verifiedAt: row.verifiedAt } : {}),
+  })));
+}
