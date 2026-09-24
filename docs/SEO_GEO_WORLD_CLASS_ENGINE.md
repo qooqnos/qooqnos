@@ -658,3 +658,17 @@ Measurement semantics are explicit:
 - Search engines report provider-observed performance metrics such as impressions, clicks, CTR and average position; Phoenix does not convert these into an invented universal rank.
 - AI citation measurement records a citation only when the provider response contains an explicit URL-citation annotation matching the canonical entity URL.
 - Provider unavailability is stored as an execution failure/unconfigured state, never as zero visibility.
+
+### 40. Competitive intelligence implementation
+
+**Implemented.** Competitive Intelligence now uses real external SERP snapshots:
+- Google Organic Live Advanced via DataForSEO;
+- explicit location/language/device/depth configuration;
+- competitor discovery and durable identity;
+- SERP rank/URL/title/snippet snapshots;
+- AI Overview/reference URL evidence when the provider exposes it;
+- historical rank/URL/citation change detection;
+- query-level gaps derived from the same observed SERP run;
+- scheduled and manual execution with tenant scoping.
+
+Competitive Intelligence is an observation system, not an invented market-share model. All observations retain provider/query/location/time provenance.
