@@ -993,7 +993,7 @@ function renderSeo(): string {
         <div class="seo-form">
           <input id="seo-entity" class="studio-input-line" type="text" placeholder="Entity ID" />
           <input id="seo-locale" class="studio-input-line" type="text" value="fa-IR" placeholder="Locale" />
-          <button class="button button-primary" type="button" data-seo-audit>اجرای Audit</button><button class="button button-ghost" type="button" data-seo-crawl>Production Crawl</button><button class="button button-ghost" type="button" data-seo-visibility>اندازه‌گیری Visibility / Citation</button>
+          <button class="button button-primary" type="button" data-seo-audit>اجرای Audit</button><button class="button button-ghost" type="button" data-seo-crawl>Production Crawl</button><button class="button button-ghost" type="button" data-seo-visibility>اندازه‌گیری Visibility / Citation</button><button class="button button-ghost" type="button" data-seo-competitive>Competitive Intelligence</button>
         </div>
         <div id="seo-audit-result" class="seo-result"><div class="slot-empty"><span>◎</span><p>Entity ID را وارد کنید.</p></div></div>
       </article>
@@ -1032,6 +1032,47 @@ async function loadSeoHealth(): Promise<void> {
     status.textContent = "خطا";
     status.className = "pill warning";
     host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "SEO health ناموفق بود.")}</p></div>`;
+  }
+}
+
+async function loadSeoCompetitiveIntelligence(): Promise<void> {
+  const entityId = document.querySelector<HTMLInputElement>("#seo-entity")?.value.trim() ?? "";
+  const status = document.querySelector<HTMLElement>("#seo-audit-status");
+  const host = document.querySelector<HTMLDivElement>("#seo-audit-result");
+  if (!entityId || !status || !host) { showToast("Entity ID لازم است."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  status.textContent = "در حال CI";
+  status.className = "pill warning";
+  host.innerHTML = '<div class="slot-loading">در حال تحلیل واقعی SERP و رقبا…</div>';
+  try {
+    const response = await apiJson<{
+      competitive: {
+        competitors: { domain: string; displayName?: string | null; competitorType: string; observations: number; bestObservedRank?: number | null }[];
+        changes: { queryText: string; changeType: string; previousRank?: number | null; currentRank?: number | null; currentUrl?: string | null }[];
+        opportunities: { queryText: string; competitorBestRank?: number | null; competitorDomains: number }[];
+      };
+    }>(`/api/v1/seo/competitive/${encodeURIComponent(entityId)}`);
+    const value = response.competitive;
+    const competitors = value.competitors.slice(0, 8);
+    const changes = value.changes.slice(0, 8);
+    const opportunities = value.opportunities.slice(0, 8);
+    host.innerHTML = `
+      <div class="seo-audit-summary">
+        <div class="seo-audit-score"><span>Competitors</span><strong>${value.competitors.length}</strong></div>
+        <div><span>Changes</span><strong>${value.changes.length}</strong></div>
+        <div><span>Gaps</span><strong>${value.opportunities.length}</strong></div>
+        <div><span>Mode</span><strong>Observed SERP</strong></div>
+      </div>
+      <div class="seo-audit-list">${competitors.map((item) => `<div><span>${escapeHtml(item.domain)}</span><strong>#${escapeHtml(String(item.bestObservedRank ?? "—"))} · ${escapeHtml(String(item.observations))} obs</strong></div>`).join("")}</div>
+      ${changes.length ? `<div class="seo-audit-issues">${changes.map((item) => `<article><div><strong>${escapeHtml(item.changeType)}</strong><span class="pill warning">${escapeHtml(item.queryText)}</span></div><p>${escapeHtml(String(item.previousRank ?? "—"))} → ${escapeHtml(String(item.currentRank ?? "—"))}</p><small>${escapeHtml(item.currentUrl ?? "")}</small></article>`).join("")}</div>` : ""}
+      ${opportunities.length ? `<div class="seo-audit-issues">${opportunities.map((item) => `<article><div><strong>Query gap</strong><span class="pill danger">${escapeHtml(item.queryText)}</span></div><p>${escapeHtml(String(item.competitorDomains))} competitor domains observed; best observed rank #${escapeHtml(String(item.competitorBestRank ?? "—"))}.</p></article>`).join("")}</div>` : ""}
+    `;
+    status.textContent = "CI آماده";
+    status.className = "pill success";
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "Competitive intelligence ناموفق بود.")}</p></div>`;
   }
 }
 
@@ -2362,6 +2403,7 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-seo-audit]")?.addEventListener("click", () => { void runSeoAudit(); });
   document.querySelector<HTMLButtonElement>("[data-seo-crawl]")?.addEventListener("click", () => { void runSeoProductionCrawl(); });
   document.querySelector<HTMLButtonElement>("[data-seo-visibility]")?.addEventListener("click", () => { void runSeoVisibilityMeasurement(); });
+  document.querySelector<HTMLButtonElement>("[data-seo-competitive]")?.addEventListener("click", () => { void loadSeoCompetitiveIntelligence(); });
   document.querySelector<HTMLButtonElement>("[data-seo-health]")?.addEventListener("click", () => { void loadSeoHealth(); });
   document.querySelector<HTMLElement>("[data-control-connect]")?.addEventListener("click", openConnectionPanel);
   document.querySelector<HTMLButtonElement>("[data-approval-create]")?.addEventListener("click", () => { void createApprovalRequest(); });
