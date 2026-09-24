@@ -9,6 +9,7 @@ export interface AutomationCompensationReferenceRecord {
   readonly id: EntityId;
   readonly executionId: EntityId | null;
   readonly failedActionId: EntityId;
+  readonly compensatedActionId: EntityId | null;
   readonly failedStepExecutionId: EntityId | null;
   readonly failedAttemptId: EntityId | null;
   readonly compensationCapability: string;
@@ -552,6 +553,7 @@ export class AutomationRepository extends Repository {
     context: RequestContext,
     executionId: EntityId,
     failedActionId: EntityId,
+    compensatedActionId: EntityId,
   ): Promise<AutomationCompensationReferenceRecord | null> {
     await this.getExecution(context, executionId);
     return this.database.first<AutomationCompensationReferenceRecord>(
