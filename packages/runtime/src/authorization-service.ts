@@ -36,7 +36,7 @@ export function createAuthorizationService(
           subject: { roles: [], authenticated: false },
           requiredEntitlement: input.requiredEntitlement,
           requireAuthentication: input.requireAuthentication,
-          requireWorkspace: input.requireWorkspace,
+          requireWorkspace,
         });
       }
 
