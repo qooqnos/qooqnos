@@ -121,8 +121,9 @@ export class SeoCompetitiveRepository extends Repository {
       readonly detectedAt: string;
       readonly provenance: Record<string, unknown>;
     },
-  ): Promise<void> {
+  ): Promise<number> {
     const scope = this.scope(context);
+    let changes = 0;
     const resultTypeFilter = input.observationType === "ai_citation" ? "result_type='ai_citation'" : "result_type<>'ai_citation'";
     const previous = await this.database.first<{
       resultUrl: string;
@@ -139,11 +140,16 @@ export class SeoCompetitiveRepository extends Repository {
     );
     if (!previous) {
       await this.recordChange(context, { ...input, changeType: "new-entry", previousRank: undefined, previousUrl: undefined });
-      if (input.currentAiCitation) await this.recordChange(context, { ...input, changeType: "ai-citation-gained", previousRank: undefined, previousUrl: undefined });
-      return;
+      changes += 1;
+      if (input.currentAiCitation) {
+        await this.recordChange(context, { ...input, changeType: "ai-citation-gained", previousRank: undefined, previousUrl: undefined });
+        changes += 1;
+      }
+      return changes;
     }
     if (previous.resultUrl !== input.currentUrl) {
       await this.recordChange(context, { ...input, changeType: "url-changed", previousRank: previous.rankAbsolute ?? undefined, previousUrl: previous.resultUrl });
+      changes += 1;
     }
     if (previous.rankAbsolute !== null && input.currentRank !== undefined && previous.rankAbsolute !== input.currentRank) {
       await this.recordChange(context, {
@@ -152,12 +158,16 @@ export class SeoCompetitiveRepository extends Repository {
         previousRank: previous.rankAbsolute,
         previousUrl: previous.resultUrl,
       });
+      changes += 1;
     }
     if (!previous.aiCitation && input.currentAiCitation) {
       await this.recordChange(context, { ...input, changeType: "ai-citation-gained", previousRank: previous.rankAbsolute ?? undefined, previousUrl: previous.resultUrl });
+      changes += 1;
     } else if (previous.aiCitation && !input.currentAiCitation) {
       await this.recordChange(context, { ...input, changeType: "ai-citation-lost", previousRank: previous.rankAbsolute ?? undefined, previousUrl: previous.resultUrl });
+      changes += 1;
     }
+    return changes;
   }
 
   async recordChange(
