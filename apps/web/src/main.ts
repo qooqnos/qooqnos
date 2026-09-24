@@ -227,9 +227,13 @@ function renderSidebar(route: Route): string {
 }
 
 function renderMobileNav(route: Route): string {
+  const mobilePaths = ["/", "/discover", "/business", "/product-studio", "/account"];
+  const items = mobilePaths
+    .map((path) => routes.find((item) => item.path === path))
+    .filter((item): item is Route => Boolean(item));
   return `
     <nav class="mobile-nav" aria-label="ناوبری موبایل">
-      ${routes.map((item) => `<a href="${item.path}" data-nav class="${item.path === route.path ? "active" : ""}"><span>${item.icon}</span><small>${item.label}</small></a>`).join("")}
+      ${items.map((item) => `<a href="${item.path}" data-nav class="${item.path === route.path ? "active" : ""}"><span>${item.icon}</span><small>${item.label}</small></a>`).join("")}
     </nav>
   `;
 }
