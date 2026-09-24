@@ -2197,7 +2197,7 @@ function renderCheckout(): string {
   const product = params.get("product") ?? "";
   const entity = params.get("entity") ?? "";
   const resource = product || entity;
-  const resourceType: "product_variant" | "offering" | "service" = product ? "product_variant" : entity ? "offering" : "product_variant";
+  const resourceType: "product_variant" | "offering" | "service" = product ? "product_variant" : entity ? "offering" : params.get("type") === "service" ? "service" : "product_variant";
   return `
     <section class="page-heading">
       <div><span class="eyebrow"><i></i> Commerce</span><h1>از انتخاب تا <em>Checkout</em> بدون پرش.</h1><p>این سطح فقط orchestration می‌کند؛ cart و checkout state از Commerce canonical می‌آیند.</p></div>
