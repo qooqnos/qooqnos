@@ -980,3 +980,25 @@ Canonical source:
 
 Implementation commits:
 - current frontend account/session management commits after `1789560118be9b756975f2149505834ca5be20e4`.
+
+### Frontend Discovery and Booking — 2026-09-25
+
+The frontend now extends the canonical marketplace loop into two operational customer-facing surfaces.
+
+Discovery:
+- consumes the canonical `GET /api/v1/discovery/search` projection shape (`sourceType`, `sourceId`, document version, body, metadata, eligibility/ranking fields);
+- renders live projection cards and an inspectable detail sheet without creating a second discovery state model;
+- retains demo data only as an explicit degraded fallback when the live endpoint is unavailable or empty.
+
+Booking:
+- adds a dedicated Booking workspace route;
+- reads live availability through `GET /api/v1/availability/schedules/:scheduleId/slots`;
+- lets a user select a returned slot and create a canonical booking hold through `POST /api/v1/booking/holds`;
+- forwards the existing Phoenix bearer token and workspace context through the shared API client.
+
+Canonical frontend files:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
+
+The frontend does not implement booking policy or discovery ranking locally; those remain owned by backend/domain modules.
