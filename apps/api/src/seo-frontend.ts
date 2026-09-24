@@ -1,5 +1,5 @@
 import type { D1Database } from "@qooqnos/database";
-import type { AnswerRepresentation, SeoEntity, SeoMetadata, StructuredData } from "@qooqnos/seo";
+import type { AnswerRepresentation, EntityPageModel, SeoEntity, SeoMetadata, StructuredData } from "@qooqnos/seo";
 import type { ApiEnv } from "./env";
 
 export interface SeoAssetsBinding {
@@ -31,6 +31,7 @@ export interface SeoFrontendHydration {
   readonly metadata: SeoMetadata;
   readonly structuredData: StructuredData;
   readonly answer: PublicAnswerRepresentation;
+  readonly page: EntityPageModel;
   readonly entity: Pick<SeoEntity,
     "id" | "type" | "preferredName" | "summary" | "description" | "locale" |
     "country" | "geoScope" | "locationId" | "serviceArea" | "imageUrl" | "updatedAt"
@@ -80,6 +81,7 @@ export async function renderSeoAwareDocument(
     metadata?: SeoMetadata;
     structuredData?: StructuredData;
     answer?: AnswerRepresentation;
+    page?: EntityPageModel;
   };
   try {
     parsed = JSON.parse(row.representationJson) as typeof parsed;
@@ -87,7 +89,7 @@ export async function renderSeoAwareDocument(
     return null;
   }
 
-  if (!parsed.entity || !parsed.metadata || !parsed.structuredData || !parsed.answer) return null;
+  if (!parsed.entity || !parsed.metadata || !parsed.structuredData || !parsed.answer || !parsed.page) return null;
   if (parsed.metadata.canonicalUrl !== row.canonicalUrl) return null;
 
   const assetResponse = await getIndexDocument(request, env);
@@ -116,6 +118,7 @@ export async function renderSeoAwareDocument(
       ...(parsed.answer.geography ? { geography: parsed.answer.geography } : {}),
       limitations: parsed.answer.limitations,
     },
+    page: parsed.page,
     entity: {
       id: parsed.entity.id,
       type: parsed.entity.type,
@@ -169,7 +172,7 @@ export function injectSeoRepresentation(html: string, hydration: SeoFrontendHydr
     `<script id="phoenix-seo-jsonld" type="application/ld+json">${safeJson(structuredData)}</script>`,
     `<script id="phoenix-seo-data" type="application/json">${safeJson(hydration)}</script>`,
   ].join("");
-  const bodyMarkup = renderAnswerMarkup(entity, answer);
+  const bodyMarkup = renderAnswerMarkup(entity, answer, hydration.page);
 
   const cleanedHtml = html
     .replace(/<meta[^>]+name=["']description["'][^>]*>/gi, "")
@@ -192,6 +195,7 @@ export function injectSeoRepresentation(html: string, hydration: SeoFrontendHydr
 function renderAnswerMarkup(
   entity: SeoFrontendHydration["entity"],
   answer: PublicAnswerRepresentation,
+  page: EntityPageModel,
 ): string {
   const facts = answer.facts.map((fact) => `<li>${escapeHtml(fact.fact)}</li>`).join("");
   const geography = answer.geography
@@ -202,10 +206,14 @@ function renderAnswerMarkup(
       ].filter(Boolean).join("")
     : "";
   const summary = entity.summary ?? entity.description ?? answer.answer;
+  const breadcrumbs = page.breadcrumbs.map((item) => `<a href="${escapeAttribute(item.url)}">${escapeHtml(item.name)}</a>`).join(`<span aria-hidden="true">/</span>`);
+  const actions = page.actions.map((action) => `<a class="button ${action.kind === "primary" ? "button-primary" : "button-ghost"}" href="${escapeAttribute(action.href)}">${escapeHtml(action.label)} →</a>`).join("");
+  const related = page.relatedLinks.map((link) => `<a class="seo-related-link" href="${escapeAttribute(link.targetUrl ?? "/discover?q=" + encodeURIComponent(link.targetLabel ?? link.targetEntityId))}" data-seo-related><span>${escapeHtml(link.targetLabel ?? link.targetEntityId)}</span><small>${escapeHtml(link.relation)}</small></a>`).join("");
 
   return `
     <main id="main" class="page-content seo-public-page" data-seo-entity-id="${escapeAttribute(entity.id)}">
       <article class="seo-entity-document" dir="auto">
+        <nav class="seo-breadcrumbs" aria-label="Breadcrumb">${breadcrumbs}</nav>
         <header class="seo-entity-header">
           <span class="eyebrow"><i></i> Phoenix Entity</span>
           <h1>${escapeHtml(entity.preferredName)}</h1>
@@ -222,9 +230,8 @@ function renderAnswerMarkup(
         </section>
         ${facts ? `<section class="seo-facts"><h2>Verified facts</h2><ul>${facts}</ul></section>` : ""}
         ${geography ? `<section class="seo-geo"><h2>Geographic scope</h2><div class="metadata-cloud">${geography}</div></section>` : ""}
-        <footer class="seo-public-footer">
-          <a class="button button-primary" href="/discover">Discover in Phoenix →</a>
-        </footer>
+        ${related ? `<section class="seo-related"><h2>Related entities</h2><div class="seo-related-list">${related}</div></section>` : ""}
+        <footer class="seo-public-footer"><div class="seo-action-row">${actions}</div></footer>
       </article>
     </main>`;
 }
