@@ -24,6 +24,7 @@ describe("payment provider adapters", () => {
       createPath: "/payments",
       capturePath: "/payments/capture",
       refundPath: "/refunds",
+      payoutPath: "/payouts",
       webhookSecret: "webhook-secret",
       fetchImpl: async (_url, init) => {
         expect(new Headers(init?.headers).get("idempotency-key")).toBe("payment-1");
@@ -54,7 +55,7 @@ describe("payment provider adapters", () => {
       amountMinor: 1000,
       currency: "USD",
       idempotencyKey: "payment-1",
-    })).rejects.toMatchObject<Partial<PaymentProviderError>>({ failureClass: "transient", failureCode: "rate_limited" });
+    })).rejects.toMatchObject({ failureClass: "transient", failureCode: "rate_limited" });
   });
 
   it("returns null for invalid webhook signatures", async () => {
