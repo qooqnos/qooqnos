@@ -82,7 +82,6 @@ export class SeoRepository extends Repository {
         audit: input.plan.audit,
         internalLinks: input.plan.internalLinks,
         page: input.plan.page,
-        page: input.plan.page,
       }),
       input.sourceUpdatedAt,
       input.now,
@@ -127,6 +126,7 @@ export class SeoRepository extends Repository {
       geoSignal: input.plan.geoSignal,
       audit: input.plan.audit,
       internalLinks: input.plan.internalLinks,
+      page: input.plan.page,
     });
     const statements = [
       {
