@@ -114,7 +114,7 @@ export async function processIntegrationWork(
   for (const sync of syncJobs) {
     const account = await repository.getAccountForWorker(sync.integrationAccountId);
     const adapter = registry.resolve(account.providerId);
-    if (!adapter || !adapter.supportedSyncTypes.includes(sync.syncType)) continue;
+    if (!adapter || !supportsType(adapter.supportedSyncTypes, sync.syncType)) continue;
 
     const claimed = await repository.claimSyncJob(sync.id, now);
     if (!claimed) continue;
@@ -207,4 +207,8 @@ async function buildContextForAccount(
 
 function retryDelayMs(job: IntegrationSyncJobRecord): number {
   return Math.min(60 * 60_000, 5 * 60_000 * 2 ** Math.min(job.errorCount, 6));
+}
+
+function supportsType(supportedTypes: readonly string[], value: string): boolean {
+  return supportedTypes.includes("*") || supportedTypes.includes(value);
 }
