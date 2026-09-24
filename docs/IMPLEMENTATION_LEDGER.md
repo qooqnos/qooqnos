@@ -1179,3 +1179,19 @@ Implementation commits:
 - `298da8905d2ab5853e1ec21f933feda12b96eee3`
 - `2a2720703eea1ecbcc6d540114830cb95f78380e`
 - `ac5cdd8710ba7f046f7c9d60d2cb7137f84471e9`
+
+### Frontend SEO / GEO Workspace — 2026-09-25
+
+The frontend now exposes the canonical SEO/GEO operational surface.
+
+Implemented:
+- dedicated `/seo` route;
+- SEO audit execution through `POST /api/v1/seo/audit/:entityId`;
+- publication health through `GET /api/v1/seo/health`;
+- direct public sitemap/robots navigation;
+- no indexing, publication or SEO scoring logic is duplicated in frontend.
+
+Canonical files:
+- `apps/web/src/main.ts`
+- `apps/web/styles.css`
+- `apps/web/public/styles.css`
