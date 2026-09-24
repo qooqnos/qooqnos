@@ -247,8 +247,12 @@ export class SeoCompetitiveRepository extends Repository {
          FROM seo_competitor_page_snapshots s
          LEFT JOIN seo_competitors c ON c.id=s.competitor_id
         WHERE s.organization_id=? AND s.workspace_id IS ?
+          AND s.query_text IN (
+            SELECT query_text FROM seo_queries
+             WHERE organization_id=? AND workspace_id IS ? AND entity_id=? AND lifecycle_state='active'
+          )
         ORDER BY s.observed_at DESC LIMIT 50`,
-      scope.organizationId, scope.workspaceId,
+      scope.organizationId, scope.workspaceId, scope.organizationId, scope.workspaceId, entityId,
     );
     const competitors = await this.database.all(
       `SELECT c.id, c.domain, c.display_name AS displayName, c.competitor_type AS competitorType, c.last_observed_at AS lastObservedAt,
