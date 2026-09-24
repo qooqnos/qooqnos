@@ -902,3 +902,11 @@ Latest implementation commits: `3afc5760f0c4ca15e8e40b297b539e131abc9361`, `a4c8
 ### SEO/GEO stale-write protection — 2026-09-24
 
 Concurrent publication is now guarded at persistence level: representation upserts compare source update time and source version, so a delayed worker cannot overwrite a newer canonical SEO representation with stale derived state. Publication passes the canonical source version explicitly into persistence. Commits: `c772319cbad9b5839e683c649e195a2ff81d92a8`, `d63591f763a6a94aefe06bc7711df5127a3d7ba7`, `0ee1cfb10bdf93579d46a378ac1f72e2edaf3518`.
+
+
+## SEO/GEO atomic publication and artifact consistency — 2026-09-24
+- SEO representation, artifacts, and dependency rows now publish through one database transaction/batch.
+- A publication bundle is guarded by sourceUpdatedAt + sourceVersion + contentHash, so stale workers cannot delete or recreate artifacts belonging to a newer representation.
+- Artifact replacement is complete-set based: prior artifacts for the active representation are removed and the current metadata/structured-data/answer artifacts are inserted in the same atomic operation.
+- Dependency replacement is included in the same publication boundary; a worker is marked succeeded only after the atomic bundle completes.
+- Existing single-artifact repository APIs remain available for non-publication use, while the publication worker uses the atomic bundle boundary.
