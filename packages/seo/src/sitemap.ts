@@ -4,7 +4,7 @@ export interface SitemapEntry{url:string;lastmod?:string}
 function escapeXml(v:string):string{return v.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");}
 function normalizeEntries(entries:readonly(string|SitemapEntry)[]):SitemapEntry[]{
  const seen=new Set<string>();const result:SitemapEntry[]=[];
- for(const entry of entries){const item=typeof entry==="string"?{url:entry}:{url:entry.url,lastmod:entry.lastmod};const url=item.url.trim();if(!url||seen.has(url))continue;try{const parsed=new URL(url);if(parsed.protocol!=="https:"&&parsed.protocol!=="http:")continue;}catch{continue;}seen.add(url);result.push({url,lastmod:item.lastmod});}
+ for(const entry of entries){const item=typeof entry==="string"?{url:entry}:{url:entry.url,lastmod:entry.lastmod};const url=item.url.trim();if(!url||seen.has(url))continue;try{const parsed=new URL(url);if(parsed.protocol!=="https:"&&parsed.protocol!=="http:")continue;}catch{continue;}seen.add(url);result.push(item.lastmod ? {url,lastmod:item.lastmod} : {url});}
  return result.sort((a,b)=>a.url.localeCompare(b.url));
 }
 export const SITEMAP_URL_LIMIT = 50000;
