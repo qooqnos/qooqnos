@@ -57,7 +57,7 @@ export async function runSeoCompetitiveIntelligence(
   } satisfies DataForSeoCompetitiveConfig);
 
   const rows = await selectQueries(database, config);
-  const ownOrigin = new URL(canonicalBaseUrl).origin;
+  const ownDomain = normalizeDomainSafe(canonicalBaseUrl);
   const repository = new SeoCompetitiveRepository(database);
   let runs = 0;
   let observations = 0;
@@ -100,7 +100,7 @@ export async function runSeoCompetitiveIntelligence(
 
       for (const item of result.results) {
         if (!item.url || !item.domain) continue;
-        const isOwn = sameOrigin(item.url, ownOrigin);
+        const isOwn = sameDomain(item.domain, ownDomain);
         let competitorId: string | undefined;
         if (!isOwn) {
           competitorId = await repository.upsertCompetitor(context, {
@@ -165,7 +165,7 @@ export async function runSeoCompetitiveIntelligence(
 
       const competitorPageUrls = selectCompetitorPageUrls(
         result.results,
-        ownOrigin,
+        ownDomain,
         config.pageSampleLimit ?? 5,
       );
       if (competitorPageUrls.length) {
@@ -346,14 +346,14 @@ async function previousDomainsForQuery(
 
 function selectCompetitorPageUrls(
   items: readonly { readonly domain?: string; readonly url?: string }[],
-  ownOrigin: string,
+  ownDomain: string,
   limit: number,
 ): readonly string[] {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 10);
   const seenDomains = new Set<string>();
   const urls: string[] = [];
   for (const item of items) {
-    if (!item.url || !item.domain || sameOrigin(item.url, ownOrigin)) continue;
+    if (!item.url || !item.domain || sameDomain(item.domain, ownDomain)) continue;
     if (seenDomains.has(item.domain)) continue;
     seenDomains.add(item.domain);
     urls.push(item.url);
@@ -362,8 +362,8 @@ function selectCompetitorPageUrls(
   return urls;
 }
 
-function sameOrigin(value: string, origin: string): boolean {
-  try { return new URL(value).origin === origin; } catch { return false; }
+function sameDomain(domain: string, ownDomain: string): boolean {
+  return domain.trim().toLowerCase().replace(/^www\./, "") === ownDomain;
 }
 
 function normalizeDomainSafe(value: string): string {
