@@ -1241,3 +1241,17 @@ Metadata generation is now treated as a production SEO contract:
 - selects article Open Graph type for Article entities;
 - provides a deterministic default social image;
 - covers the above behavior with unit tests.
+
+
+### Structured Data generation & publication validation — completed — 2026-09-25
+
+Structured Data is now a canonical, truth-bound publication contract:
+- all Phoenix SEO entity types map to explicit Schema.org types;
+- canonical IDs become `@id` only when they are valid HTTP(S) URLs;
+- non-URL canonical identifiers remain identifiers rather than being fabricated into URLs;
+- alternate names and `sameAs` are normalized and deduplicated, with invalid external URLs rejected;
+- geographic truth is represented through country/service-area signals already present on the canonical entity;
+- Article and Event entities receive only facts supported by the canonical entity model;
+- the validator recognizes every generated Schema.org type;
+- publication now blocks on structured-data validation errors before persisting the SEO bundle;
+- projection metadata and audit generation now consume the same canonical SEO policy, eliminating policy drift.
