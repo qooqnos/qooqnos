@@ -2,7 +2,7 @@ import {
   CustomerAddressRepository,
   CustomerRelationshipRepository,
   CustomerRepository,
-  CrmTimelineRepository,
+  CrmTimelineProjectionRepository,
   AuthorizationRepository,
 } from "@qooqnos/database";
 import { CustomerService } from "@qooqnos/customer";
@@ -304,7 +304,7 @@ function createService(
     repository: new CustomerRepository(database),
     addressRepository: new CustomerAddressRepository(database),
     relationshipRepository: new CustomerRelationshipRepository(database),
-    timelineRepository: new CrmTimelineRepository(database),
+    timelineProjectionRepository: new CrmTimelineProjectionRepository(database),
     authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
     id: () => brandId<"EntityId">(crypto.randomUUID()),
     now: () => new Date().toISOString(),
