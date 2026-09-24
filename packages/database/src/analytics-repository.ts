@@ -185,3 +185,31 @@ export class AnalyticsRepository extends Repository {
     return aggregate;
   }
 
+  async rebuildEventCountWindow(
+    input: {
+      readonly metricKey: string;
+      readonly metricVersion: number;
+      readonly bucketStart: string;
+      readonly bucketEnd: string;
+      readonly bucketGranularity: "hour" | "day";
+      readonly now: string;
+    },
+  ): Promise<number> {
+    if (input.bucketEnd <= input.bucketStart) throw new DatabaseError("Analytics aggregate bucket range is invalid");
+    const rows = await this.database.all<{ organizationId: string | null; workspaceId: string | null; value: number }>(
+      "SELECT organization_id AS organizationId, workspace_id AS workspaceId, COUNT(*) AS value FROM analytics_facts WHERE occurred_at >= ? AND occurred_at < ? GROUP BY organization_id, workspace_id",
+      input.bucketStart, input.bucketEnd,
+    );
+    let updated = 0;
+    for (const row of rows) {
+      const id = "analytics:" + input.metricKey + ":" + input.metricVersion + ":" + (row.organizationId ?? "global") + ":" + (row.workspaceId ?? "global") + ":" + input.bucketStart + ":" + input.bucketGranularity;
+      await this.database.run(
+        "INSERT INTO analytics_metric_aggregates (id,organization_id,workspace_id,metric_key,metric_version,bucket_start,bucket_granularity,value,source_cursor,calculated_at) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(organization_id,workspace_id,metric_key,metric_version,bucket_start,bucket_granularity) DO UPDATE SET value=excluded.value, calculated_at=excluded.calculated_at, projection_version=analytics_metric_aggregates.projection_version+1",
+        id, row.organizationId, row.workspaceId, input.metricKey, input.metricVersion, input.bucketStart,
+        input.bucketGranularity, Number(row.value), null, input.now,
+      );
+      updated += 1;
+    }
+    return updated;
+  }
+
