@@ -334,12 +334,22 @@ async function previousCitationRows(
   runId: string,
 ): Promise<readonly { competitorId: string | null; resultUrl: string; observedAt: string }[]> {
   return database.all(
-    `SELECT competitor_id AS competitorId, result_url AS resultUrl, observed_at AS observedAt
-       FROM seo_competitive_observations
-      WHERE organization_id=? AND workspace_id IS ? AND query_text=? AND run_id<>?
-        AND result_type='ai_citation'
-      ORDER BY observed_at DESC`,
-    row.organizationId, row.workspaceId, row.queryText, runId,
+    `SELECT o.competitor_id AS competitorId, o.result_url AS resultUrl, o.observed_at AS observedAt
+       FROM seo_competitive_observations o
+      WHERE o.organization_id=? AND o.workspace_id IS ? AND o.query_text=? AND o.run_id<>?
+        AND o.result_type='ai_citation'
+        AND o.observed_at = (
+          SELECT MAX(p.observed_at)
+            FROM seo_competitive_observations p
+           WHERE p.organization_id=o.organization_id
+             AND p.workspace_id IS o.workspace_id
+             AND p.query_text=o.query_text
+             AND p.result_url=o.result_url
+             AND p.run_id<>?
+             AND p.result_type='ai_citation'
+        )
+      ORDER BY o.observed_at DESC`,
+    row.organizationId, row.workspaceId, row.queryText, runId, runId,
   );
 }
 
@@ -349,13 +359,27 @@ async function previousDomainsForQuery(
   runId: string,
 ): Promise<readonly { domain: string; competitorId: string | null; rankAbsolute: number | null; resultUrl: string; observedAt: string }[]> {
   return database.all(
-    `SELECT domain, competitor_id AS competitorId, rank_absolute AS rankAbsolute, result_url AS resultUrl, observed_at AS observedAt
-       FROM seo_competitive_observations
-      WHERE organization_id=? AND workspace_id IS ? AND query_text=? AND run_id<>?
-        AND result_type<>'ai_citation'
-        AND competitor_id IS NOT NULL
-      ORDER BY observed_at DESC`,
-    row.organizationId, row.workspaceId, row.queryText, runId,
+    `SELECT o.domain, o.competitor_id AS competitorId, o.rank_absolute AS rankAbsolute, o.result_url AS resultUrl, o.observed_at AS observedAt
+       FROM seo_competitive_observations o
+      WHERE o.organization_id=? AND o.workspace_id IS ? AND o.query_text=? AND o.run_id<>?
+        AND o.result_type<>'ai_citation'
+        AND o.rank_absolute IS NOT NULL
+        AND o.result_type NOT LIKE 'ai_%'
+        AND o.competitor_id IS NOT NULL
+        AND o.observed_at = (
+          SELECT MAX(p.observed_at)
+            FROM seo_competitive_observations p
+           WHERE p.organization_id=o.organization_id
+             AND p.workspace_id IS o.workspace_id
+             AND p.query_text=o.query_text
+             AND p.domain=o.domain
+             AND p.run_id<>?
+             AND p.result_type<>'ai_citation'
+             AND p.rank_absolute IS NOT NULL
+             AND p.result_type NOT LIKE 'ai_%'
+        )
+      ORDER BY o.observed_at DESC`,
+    row.organizationId, row.workspaceId, row.queryText, runId, runId,
   );
 }
 
