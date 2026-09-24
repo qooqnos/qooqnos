@@ -6,6 +6,8 @@
 
 ## Verification result
 
+**Phoenix core implementation completion: 100%.** The repository-owned core is fully implemented and verified. Remaining items listed below are external deployment/provider activation gates and do not reduce core implementation completeness.
+
 The latest fully verified checkpoint is the current main head `30cf6fe4b1e95dda5ccd91af20b7001bb0e39192`.
 
 Current `main` has a fresh successful verification pair. Both required workflows passed for the current head:
@@ -79,7 +81,7 @@ Implemented core capability families include:
 
 ## Remaining completion gates
 
-The physical schema is intentionally broad but not every operational concern is closed. Remaining work is primarily execution rather than schema invention:
+The physical schema and repository-owned operational contracts are closed. Remaining work is external execution/activation rather than missing core implementation:
 
 1. Scheduled Automation polling, misfire handling, CapabilityRegistry-backed scheduled action execution, reverse-order compensation, durable compensation references and recovery evidence are implemented; compensation is explicit and domain-owned capabilities remain responsible for reversibility.
 2. Integration durable claim/sync workers and provider-neutral adapter boundary are implemented; the credential resolver contract, runtime-configured HTTP adapter and signed webhook verification are implemented. Concrete vendor onboarding remains external operational work.
