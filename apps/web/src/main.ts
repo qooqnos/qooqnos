@@ -88,6 +88,7 @@ const routes: Route[] = [
   { path: "/operations", label: "عملیات", icon: "⚙", render: renderOperations },
   { path: "/seo", label: "SEO", icon: "◎", render: renderSeo },
   { path: "/control", label: "کنترل", icon: "⌘", render: renderControlCenter },
+  { path: "/catalog", label: "کاتالوگ", icon: "▤", render: renderCatalog },
 ];
 
 const theme = getInitialTheme();
@@ -286,6 +287,72 @@ function renderHome(): string {
       </div>
     </section>
   `;
+}
+
+function renderCatalog(): string {
+  const business = localStorage.getItem(STORAGE.business) ?? "";
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Catalog Studio</span><h1>عرضه را بسازید؛ <em>بدون لایه اضافه.</em></h1><p>Product creation مستقیماً به Catalog canonical می‌رود. برای enrich کردن محصول، Seller AI Studio مسیر اصلی است.</p></div>
+      <div class="heading-actions"><a class="button button-ghost" href="/product-studio" data-nav>Seller AI Studio ✦</a></div>
+    </section>
+    <section class="catalog-grid">
+      <article class="glass-card catalog-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Product Command</span><h2>ایجاد محصول</h2></div><span id="catalog-status" class="pill">آماده</span></div>
+        <div class="catalog-form">
+          <div class="field-span-2"><label class="field-label" for="catalog-business">Business ID</label><input id="catalog-business" class="studio-input-line" type="text" value="${escapeAttr(business)}" placeholder="Business ID" /></div>
+          <div><label class="field-label" for="catalog-name">نام محصول</label><input id="catalog-name" class="studio-input-line" type="text" placeholder="نام محصول" /></div>
+          <div><label class="field-label" for="catalog-idem">Idempotency Key <span class="field-optional">خودکار</span></label><input id="catalog-idem" class="studio-input-line" type="text" value="${crypto.randomUUID()}" /></div>
+          <div class="field-span-2"><label class="field-label" for="catalog-description">توضیحات</label><textarea id="catalog-description" class="studio-input-line catalog-textarea" rows="6" placeholder="توضیحات canonical محصول…"></textarea></div>
+        </div>
+        <div class="checkout-actions"><button class="button button-primary button-lg" type="button" data-catalog-create>ساخت محصول <span>→</span></button></div>
+        <div id="catalog-result" class="connection-state">هنوز command اجرا نشده است.</div>
+      </article>
+      <article class="glass-card catalog-card">
+        <span class="section-kicker">Product Direction</span>
+        <h2>دو مسیر، یک مالکیت</h2>
+        <div class="catalog-path"><span>01</span><div><strong>خام → Seller AI</strong><small>عکس/متن، غنی‌سازی، بازبینی</small></div></div>
+        <div class="catalog-path"><span>02</span><div><strong>داده آماده → Catalog</strong><small>ایجاد مستقیم موجودیت canonical</small></div></div>
+        <div class="connection-state">Catalog منبع حقیقت محصول است؛ Seller AI فقط orchestration و تولید پیش‌نویس را انجام می‌دهد.</div>
+      </article>
+    </section>
+  `;
+}
+
+async function createCatalogProduct(): Promise<void> {
+  const businessId = document.querySelector<HTMLInputElement>("#catalog-business")?.value.trim() ?? "";
+  const name = document.querySelector<HTMLInputElement>("#catalog-name")?.value.trim() ?? "";
+  const description = document.querySelector<HTMLTextAreaElement>("#catalog-description")?.value.trim() ?? "";
+  const idempotencyKey = document.querySelector<HTMLInputElement>("#catalog-idem")?.value.trim() || crypto.randomUUID();
+  const status = document.querySelector<HTMLElement>("#catalog-status");
+  const result = document.querySelector<HTMLElement>("#catalog-result");
+  if (!status || !result) return;
+  if (!businessId || !name) { showToast("Business ID و نام محصول لازم هستند."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  localStorage.setItem(STORAGE.business, businessId);
+  status.textContent = "در حال ایجاد";
+  status.className = "pill warning";
+  result.textContent = "در حال ارسال Catalog command…";
+  try {
+    const response = await apiJson<{ data: { id: string; name?: string; description?: string | null } }>(
+      "/api/v1/catalog/products",
+      {
+        method: "POST",
+        body: { businessId, name, ...(description ? { description } : {}) },
+        headers: { "Idempotency-Key": idempotencyKey },
+      },
+    );
+    status.textContent = "ساخته شد";
+    status.className = "pill success";
+    result.textContent = `محصول canonical ساخته شد · ${response.data.id}`;
+    result.className = "connection-state success";
+    showToast("محصول Catalog ساخته شد.");
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    result.textContent = error instanceof Error ? error.message : "ساخت محصول ناموفق بود.";
+    result.className = "connection-state error";
+  }
 }
 
 function renderControlCenter(): string {
@@ -1510,7 +1577,10 @@ function renderBusiness(): string {
       <div><span class="eyebrow"><i></i> Business Workspace</span><h1>کسب‌وکارتان را <em>قابل کشف</em> کنید.</h1><p>یک فضای کاری تمیز برای ساخت عرضه، رشد و کنترل عملیات.</p></div>
       <div class="heading-actions">
         <button class="button button-ghost" type="button" data-business-create>ساخت کسب‌وکار</button>
-        <a class="button button-primary" href="/product-studio" data-nav>ساخت محصول با AI <span>✦</span></a>
+        <div class="heading-actions">
+          <a class="button button-ghost" href="/catalog" data-nav>مدیریت Catalog</a>
+          <a class="button button-primary" href="/product-studio" data-nav>ساخت محصول با AI <span>✦</span></a>
+        </div>
       </div>
     </section>
 
@@ -1690,6 +1760,7 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-integration-connect]")?.addEventListener("click", () => { void connectIntegrationAccount(); });
   document.querySelector<HTMLButtonElement>("[data-privacy-consent]")?.addEventListener("click", () => { void grantPrivacyConsent(); });
   document.querySelector<HTMLButtonElement>("[data-privacy-request]")?.addEventListener("click", () => { void createPrivacyRequest(); });
+  document.querySelector<HTMLButtonElement>("[data-catalog-create]")?.addEventListener("click", () => { void createCatalogProduct(); });
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
