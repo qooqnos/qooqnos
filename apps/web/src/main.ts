@@ -1830,13 +1830,15 @@ async function revokeCurrentSession(): Promise<void> {
 }
 
 function renderDiscover(): string {
+  const params = new URLSearchParams(location.search);
+  const initialQuery = params.get("q") ?? "";
   return `
     <section class="page-heading">
       <div><span class="eyebrow"><i></i> Discovery</span><h1>چیزی را که می‌خواهید، <em>پیدا کنید.</em></h1><p>جست‌وجو بر اساس نیاز، زمینه و عرضه واقعی ققنوس.</p></div>
       <div class="heading-actions"><button class="button button-ghost" type="button" data-toast="فیلترها به‌زودی به Discovery اضافه می‌شوند.">فیلترها</button></div>
     </section>
     <section class="discover-search glass-card">
-      <div class="search-main"><span>⌕</span><input id="discover-query" type="search" autocomplete="off" placeholder="مثلاً یک کافه آرام برای جلسه عصر..." /></div>
+      <div class="search-main"><span>⌕</span><input id="discover-query" type="search" autocomplete="off" value="${escapeAttr(initialQuery)}" placeholder="مثلاً یک کافه آرام برای جلسه عصر..." /></div>
       <button class="button button-primary" type="button" data-run-discovery>کشف کن <span>→</span></button>
     </section>
     <div class="discover-layout">
