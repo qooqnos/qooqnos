@@ -26,3 +26,4 @@ export * from "./structured-validation";
 export * from "./experiments";
 export * from "./observability";
 export * from "./query-repository";
+export * from "./entity-page";
