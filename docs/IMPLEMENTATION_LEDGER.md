@@ -1528,3 +1528,10 @@ Competitive intelligence evidence layers now include:
 - **Commits:** `48afc1e`, `5f45365`, `b174cf8`, `37f35a0`, `0c3efc0`.
 - **Verification:** the preceding CI run exposed 9 failures across 6 test files; the failures were traced to these contract mismatches rather than build, typecheck, lint, migration, or Worker-dry-run failures. Fresh CI and Phoenix Verification runs are active on `0c3efc0`.
 - **Remaining:** final green CI/Phoenix verification, then deployed production evidence verification.
+
+
+## Production SEO Hardening — Final CI Contract Fixes
+- **Completed:** latest Phoenix verification reduced failures to two contract assertions. The frontend test was aligned to the actual server-rendered hydration payload, and stale public entity sources are now always a blocking SEO audit error rather than becoming a warning when another surface policy has already downgraded indexability.
+- **Commits:** `0db1d503`, `0559eb7`.
+- **Verification:** Phoenix verification `#2281` reached **102 passing test files / 308 passing tests**, with only 2 failing assertions; build and all structural verification gates passed. A fresh verification chain is now expected on `0559eb7`.
+- **Remaining:** green CI/Phoenix verification and deployed production evidence verification.
