@@ -9,7 +9,7 @@ describe("PrivacyProcessorRegistry", () => {
     moduleId: "customer",
     requestTypes: ["export", "delete"],
     subjectTypes: ["customer"],
-    async process() {
+    async process(_input) {
       return {
         status: "completed",
         processorId: id,
