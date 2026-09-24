@@ -550,9 +550,7 @@ export default {
     await processCaseActions(env, now);
     await processPrivacyConsentExpiry(env, now);
     await processApprovedPrivacyRequests(env, now);
-    if (env.PHOENIX_DEFAULT_ORGANIZATION_ID) {
-      await processPrivacyRetention(env, env.PHOENIX_DEFAULT_ORGANIZATION_ID, null, now);
-    }
+    await processPrivacyRetention(env, now);
     await processIntegration(env, now);
 
     const database = getDatabase(env);
