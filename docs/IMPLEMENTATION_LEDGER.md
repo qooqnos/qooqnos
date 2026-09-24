@@ -44,6 +44,8 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | Billing core / entitlements / usage | 🟢 Schema/package/service implemented | migrations/0033_billing_core.sql; migrations/0034_billing_usage_counters.sql; packages/billing/src/repository.ts; packages/billing/src/service.ts |
 | Financial audit trail | 🟢 Append-only schema/repository/integrity tests implemented | migrations/0058_billing_financial_audit_trail.sql; packages/billing/src/financial-audit.ts; packages/billing/src/financial-audit.test.ts |
 | Refund financial accounting | 🟢 Refund lifecycle + immutable double-entry ledger + balanced posting + tests implemented | migrations/0059_billing_refund_financial_accounting.sql; packages/billing/src/refund-accounting.ts; packages/billing/src/refund-accounting.test.ts |
+
+Refund financial accounting commits: `594fef3` (migration), `59c1198` (repository), `66019fc` (balanced-posting guard), `f640509` (approval/processing lifecycle), `b5832e6` + `35c3c91` (tests), `f38e813` (migration registration/lock), `6cb3fc9` (package export), and the related reconciliation/documentation commits.
 | Communication core | 🟢 Schema/package/repository/service/API/outbox-consumer implemented | migrations/0035_communication_core.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts; apps/api/src/outbox-worker.ts |
 | Communication template registry | 🟢 Schema/package/repository/service/API implemented | migrations/0051_communication_templates.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts |
 | Communication policy / consent enforcement | 🟢 Schema/package/repository/service/API/test implemented | migrations/0055_communication_policy_consent.sql; migrations/0056_communication_required_suppression.sql; packages/communication/src/repository.ts; packages/communication/src/service.ts; apps/api/src/communication-routes.ts |
@@ -618,6 +620,9 @@ The API runtime references these migration sources:
 0054_discovery_index_observability.sql
 0055_communication_policy_consent.sql
 0056_communication_required_suppression.sql
+0057_matching_learning_signals.sql
+0058_billing_financial_audit_trail.sql
+0059_billing_refund_financial_accounting.sql
 ```
 
 Their exact SQL is the source of truth. Never duplicate their contents in another TypeScript migration list.
@@ -660,7 +665,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0059_billing_refund_financial_accounting.sql`. The migration lock/catalog is reconciled through 0056, and the current main head has passed both CI and Phoenix verification.
+The canonical physical inventory reaches migration `0059_billing_refund_financial_accounting.sql`. Migrations 0057–0059 are registered and checksum-locked. The latest pre-refund verified head remains the deployment-strategy checkpoint; the new refund-accounting commits require the normal CI/Phoenix verification pass before being treated as a verified checkpoint.
 
 Latest fully verified head: `3f24f07a0a04e58ac3dbb389c6491d59802ad82e` — deployment-strategy reconciliation head, verified by current CI and Phoenix verification.
 
