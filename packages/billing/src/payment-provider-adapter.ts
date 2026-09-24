@@ -19,6 +19,15 @@ export interface PaymentCaptureRequest {
   readonly idempotencyKey: string;
 }
 
+export interface PaymentPayoutRequest {
+  readonly settlementId: EntityId;
+  readonly businessReference: string;
+  readonly amountMinor: number;
+  readonly currency: string;
+  readonly idempotencyKey: string;
+  readonly destinationReference?: string;
+}
+
 export interface PaymentRefundRequest {
   readonly paymentId: EntityId;
   readonly providerReference: string;
@@ -57,6 +66,7 @@ export interface PaymentProviderAdapter {
   createPayment(request: PaymentCreateRequest): Promise<PaymentProviderResult>;
   capturePayment(request: PaymentCaptureRequest): Promise<PaymentProviderResult>;
   refundPayment(request: PaymentRefundRequest): Promise<PaymentProviderResult>;
+  payoutSettlement(request: PaymentPayoutRequest): Promise<PaymentProviderResult>;
   verifyWebhook(request: PaymentWebhookVerificationRequest): Promise<PaymentWebhookEvent | null>;
 }
 
@@ -100,6 +110,7 @@ export interface HttpPaymentProviderConfig {
   readonly createPath: string;
   readonly capturePath: string;
   readonly refundPath: string;
+  readonly payoutPath: string;
   readonly webhookSecret: string;
   readonly webhookMaxAgeSeconds?: number;
   readonly fetchImpl?: typeof fetch;
@@ -150,6 +161,7 @@ export function createHttpPaymentProviderAdapter(config: HttpPaymentProviderConf
     createPayment: (input) => request(config.createPath, input, input.idempotencyKey),
     capturePayment: (input) => request(config.capturePath, input, input.idempotencyKey),
     refundPayment: (input) => request(config.refundPath, input, input.idempotencyKey),
+    payoutSettlement: (input) => request(config.payoutPath, input, input.idempotencyKey),
     async verifyWebhook(input) {
       if (!input.signature) return null;
       const timestamp = input.timestamp?.trim();
