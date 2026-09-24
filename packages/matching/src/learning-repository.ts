@@ -44,7 +44,7 @@ export class MatchingLearningRepository extends Repository {
     const source = input.source.trim();
     if (!source) throw new DatabaseError("Match learning signal source is required");
     await this.database.run(
-      "INSERT INTO match_learning_signals (id,match_request_id,candidate_id,organization_id,workspace_id,signal_type,signal_value,source,actor_reference,metadata_json,occurred_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+      "INSERT OR IGNORE INTO match_learning_signals (id,match_request_id,candidate_id,organization_id,workspace_id,signal_type,signal_value,source,actor_reference,metadata_json,occurred_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
       input.id, input.matchRequestId, input.candidateId ?? null, organizationId, request.workspaceId,
       input.signalType, input.signalValue ?? null, source, input.actorReference ?? null,
       input.metadata === undefined ? null : JSON.stringify(input.metadata), input.occurredAt, input.now,
