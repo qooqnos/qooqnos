@@ -20,6 +20,8 @@ interface MeasurementQueryRow {
 }
 
 export interface SeoVisibilityWorkerConfig {
+  readonly entityId?: string;
+  readonly queryText?: string;
   readonly google?: {
     readonly siteUrl: string;
     readonly accessToken?: string;
@@ -46,6 +48,10 @@ export async function runSeoVisibilityMeasurements(
   const providers = buildProviders(config);
   if (!providers.length) return { queries: 0, providerRuns: 0, observations: 0, failures: 0 };
   const limit = Math.min(Math.max(Math.trunc(config.limit ?? 25), 1), 100);
+  const filters: string[] = ["q.lifecycle_state='active'"];
+  const params: unknown[] = [limit];
+  if (config.entityId) { filters.push("q.entity_id=?"); params.unshift(config.entityId); }
+  if (config.queryText) { filters.push("q.query_text=?"); params.unshift(config.queryText); }
   const rows = await database.all<MeasurementQueryRow>(
     `SELECT q.id AS id,
             q.organization_id AS organizationId,
@@ -64,10 +70,10 @@ export async function runSeoVisibilityMeasurements(
         AND r.indexability='index'
         AND r.publication_state='published'
         AND r.visibility='public'
-      WHERE q.lifecycle_state='active'
+      WHERE ${filters.join(" AND ")}
       ORDER BY q.updated_at DESC
       LIMIT ?`,
-    limit,
+    ...params,
   );
 
   const observationRepository = new SeoObservabilityRepository(database);
