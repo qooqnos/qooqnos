@@ -98,10 +98,17 @@ export function buildAnswerRepresentation(
 ): AnswerRepresentation {
   const suppliedFacts = uniqueFacts(facts.filter((fact) => fact.sourceEntityId === entity.id));
   const canonicalSummary = clean(entity.summary) || clean(entity.description);
-  const normalizedFacts = suppliedFacts.length
+  const canonicalFact: AnswerFact = {
+    fact: canonicalSummary,
+    sourceEntityId: entity.id,
+    verifiedAt: entity.updatedAt,
+    sourceType: "canonical-entity",
+  };
+  if (validHttpUrl(canonicalUrl)) canonicalFact.provenanceUrl = canonicalUrl;
+  const normalizedFacts: readonly AnswerFact[] = suppliedFacts.length
     ? suppliedFacts
     : canonicalSummary
-      ? [{ fact: canonicalSummary, sourceEntityId: entity.id, verifiedAt: entity.updatedAt, sourceType: "canonical-entity", ...(validHttpUrl(canonicalUrl) ? { provenanceUrl: canonicalUrl } : {}) }]
+      ? [canonicalFact]
       : [];
   const answer = answerText(entity);
   const restricted = entity.visibility !== "public" || entity.publicationState !== "published";
