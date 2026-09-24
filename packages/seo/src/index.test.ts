@@ -16,6 +16,7 @@ import {
   generateStructuredData,
   validateStructuredData,
   validateAnswerRepresentation,
+  buildEntityPageModel,
   recommendInternalLinks,
   compareEntityRepresentations,
 } from "./index";
@@ -35,6 +36,9 @@ const entity = {
   geoScope: "city" as const,
   locationId: "loc-1",
   relatedEntityIds: ["service-1"],
+  priceRange: "$",
+  telephone: "+12025550123",
+  address: { addressLocality: "New York", addressCountry: "US" },
   updatedAt: "2026-09-24T00:00:00Z",
 };
 
@@ -69,10 +73,51 @@ describe("SEO/GEO core", () => {
       type: "Business",
     });
     expect(structured["@type"]).toBe("LocalBusiness");
+    expect(structured.url).toBe(url);
+    expect(structured.telephone).toBe("+12025550123");
+    expect(structured.priceRange).toBe("$");
+    expect((structured.breadcrumb as Record<string, unknown>)["@type"]).toBe("BreadcrumbList");
     expect(structured["@id"]).toBe("https://example.com/entities/biz-1");
     expect(structured.sameAs).toEqual(["https://example.com/about"]);
     expect(Array.isArray(structured.areaServed)).toBe(true);
     expect(validateStructuredData(structured).valid).toBe(true);
+  });
+
+  it("builds specialized Product schema and a public Entity Page model", () => {
+    const product = {
+      ...entity,
+      type: "Product" as const,
+      preferredName: "Phoenix Chair",
+      description: "A factual product description.",
+      brandName: "Phoenix",
+      categoryName: "Furniture",
+      price: 199,
+      currency: "USD",
+      availability: "in_stock",
+    };
+    const url = canonicalEntityUrl("https://example.com", product);
+    const metadata = generateMetadata({ entity: product, canonicalBaseUrl: "https://example.com" }, url);
+    const structured = generateStructuredData(product, {
+      canonicalUrl: url,
+      breadcrumbs: [
+        { name: "Phoenix", url: "https://example.com/" },
+        { name: "Products", url: "/discover?type=product" },
+        { name: "Phoenix Chair", url },
+      ],
+    });
+    expect(structured["@type"]).toBe("Product");
+    expect(structured.brand).toEqual({ "@type": "Brand", name: "Phoenix" });
+    expect(structured.offers).toMatchObject({ "@type": "Offer", price: 199, priceCurrency: "USD", availability: "https://schema.org/InStock" });
+    const page = buildEntityPageModel(
+      product,
+      metadata,
+      buildAnswerRepresentation(product, [], "2026-09-24T00:00:00Z", url),
+      [],
+      "https://example.com",
+    );
+    expect(page.breadcrumbs).toHaveLength(3);
+    expect(page.actions.some((action) => action.href.includes("/checkout?product="))).toBe(true);
+    expect(page.sections.some((section) => section.kind === "commerce")).toBe(true);
   });
 
   it("builds citation-ready, attributable answer representations", () => {
