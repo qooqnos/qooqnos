@@ -1,6 +1,6 @@
 import type { AnswerRepresentation, SeoEntity, SeoMetadata, StructuredData } from "./types";
 import type { EntityPageModel } from "./entity-page";
-export interface ProductionCrawlerFetch { (input: Request | URL, init?: RequestInit): Promise<Response>; }
+export interface ProductionCrawlerFetch { (input: string | Request | URL, init?: RequestInit): Promise<Response>; }
 export interface SeoCrawlerExpected { readonly canonicalUrl: string; readonly metadata: SeoMetadata; readonly structuredData: StructuredData; readonly answer: AnswerRepresentation; readonly page: EntityPageModel; readonly entity: SeoEntity; }
 export interface SeoCrawlerResult { readonly url: string; readonly status: number; readonly finalUrl: string; readonly contentType: string; readonly indexable: boolean; readonly canonicalUrl?: string; readonly title?: string; readonly description?: string; readonly robots?: string; readonly h1Count: number; readonly jsonLdCount: number; readonly hasAnswer: boolean; readonly hasHydration: boolean; readonly renderMode: 'ssr' | 'unknown'; readonly errors: readonly string[]; readonly warnings: readonly string[]; }
 const BOT_USER_AGENT = 'PhoenixSEOProductionCrawler/1.0 (+https://qooqnos.com/robots.txt)';
