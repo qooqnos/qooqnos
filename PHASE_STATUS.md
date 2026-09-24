@@ -31,9 +31,9 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Migration lock | ✅ Implemented | reviewed SQL identity/checksum is enforced |
 | D1 database boundary | ✅ Implemented | packages/database exposes D1-compatible access |
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
-| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0063 |
+| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0064 |
 | Full logical model | 🟢 Core logical model resolved | remaining work is operational/provider/projection gates, not an unimplemented CustomerProfile table |
-| Final D1 physical schema | 🟢 Physical blueprint complete | 191 physical tables across migrations 0001–0063; remaining work is explicit contract/provider/worker gates and credentialed remote D1 migration/application |
+| Final D1 physical schema | 🟢 Physical blueprint complete | 192 physical tables across migrations 0001–0064; remaining work is explicit contract/provider/worker gates and credentialed remote D1 migration/application |
 | Legacy PostgreSQL path | ✅ Removed from active source | historical git history only |
 
 ## 2.1 Database completion percentage
@@ -108,7 +108,7 @@ Completion requires:
 ## 7. Latest runtime verification
 
 - Last fully verified code checkpoint is commit `3f3192819a9879fb453070e82e04785b3fea5e80`.
-- Current main is now 45 commits ahead of that checkpoint; the compare contains no canonical migration SQL changes, but the latest head has not been independently CI-verified through the currently exposed connector.
+- Current main is now of that checkpoint; the compare contains no canonical migration SQL changes, but the latest head has not been independently CI-verified through the currently exposed connector.
 - Migration lock verification is registered through migration `0056` and passed in the latest CI/Phoenix verification workflows.
 - The current checkpoint is covered by successful CI/Phoenix verification, including migration lock, legacy-source boundary, runtime-module registry, lint, typecheck, build, Worker dry-run and tests; historical run details remain available in GitHub Actions.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
@@ -144,3 +144,8 @@ The remaining infrastructure action is credentialed execution of `npm run migrat
 ## 10. Historical documents
 
 docs/PHASE4_SUMMARY.md and older phase snapshots are historical records. They must not be used as current database design instructions.
+
+
+## 10.1 Trust completion — 2026-09-24
+
+Trust reviewer completion is protected by the dedicated `trust.verification.review` permission bound to the assigned reviewer identity. Migration 0064 adds tenant/workspace-scoped TrustSignal persistence and source idempotency; the scheduled anti-abuse worker normalizes review risk/report evidence and opens idempotent generic ModerationCases for high/critical signals. Trust projections are exposed through the canonical `GET /api/v1/trust/signals` read surface.
