@@ -30,7 +30,7 @@ export function auditEntity(
   if (e.visibility !== "public" && indexability === "index") issues.push(issue("INDEXABILITY_VISIBILITY_CONFLICT", "error", "A non-public entity is marked indexable", owner, "Exclude non-public representations from search indexing"));
   if (!["index", "noindex", "restricted", "excluded"].includes(indexability)) issues.push(issue("INVALID_INDEXABILITY", "error", `Unknown indexability policy: ${indexability}`, owner, "Use the canonical indexability policy"));
   if (!e.canonicalId?.trim()) issues.push(issue("MISSING_CANONICAL_ID", "warning", "Entity has no explicit canonical identity reference", owner, "Bind the representation to the canonical entity identity"));
-  if (e.sameAs?.some((url) => !/^https?:\\/\\//i.test(url))) issues.push(issue("INVALID_SAME_AS_REFERENCE", "warning", "One or more sameAs references are not absolute HTTP(S) URLs", owner, "Use authoritative absolute references only"));
+  if (e.sameAs?.some((url) => !/^https?:\/\//i.test(url))) issues.push(issue("INVALID_SAME_AS_REFERENCE", "warning", "One or more sameAs references are not absolute HTTP(S) URLs", owner, "Use authoritative absolute references only"));
 
   const errors = issues.filter((item) => item.severity === "error").length;
   const warnings = issues.filter((item) => item.severity === "warning").length;
