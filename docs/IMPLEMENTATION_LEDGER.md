@@ -433,7 +433,7 @@ Deployment readiness note: `wrangler.toml` remains free of fabricated Cloudflare
 
 Customer address note: migration 0026 stores the structured Address value object in Customer ownership; CustomerProfile is a logical aggregate over Customer core/preferences/addresses and is not a standalone table.
 
-Automation note: migration 0036 establishes versioned workflows, triggers, actions and execution state. Workflow activation/pause/retire lifecycle, transactional Outbox events, scheduled execution, CapabilityRegistry-backed invocation and idempotent AutomationExecutor are implemented; only concrete rollback/compensation contracts remain gated.
+Automation note: migrations 0036 and 0065 establish versioned workflows, triggers, actions, execution state and the concrete compensation contract. Workflow activation/pause/retire lifecycle, transactional Outbox events, scheduled execution, CapabilityRegistry-backed invocation, idempotent AutomationExecutor, reverse-order compensation of prior completed actions, durable compensation references, idempotency keys and compensation evidence are implemented. Non-compensatable and manual recovery remain explicit policy modes rather than implicit rollback.
 
 Booking finalization note: migrations 0046–0047 establish idempotent Booking creation, transactional hold consumption, appointment/resource commitment and capacity mutation guards. `c2943bd` additionally records BookingStatusHistory and AppointmentEvent evidence atomically during finalization; `ed05f89` updates the finalization invariant test to cover the seven-statement atomic batch. Availability calculation and schedule-derived slot generation remain separate.
 
