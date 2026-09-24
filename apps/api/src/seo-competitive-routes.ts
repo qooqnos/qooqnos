@@ -81,6 +81,10 @@ export function registerSeoCompetitiveRoutes(router: ApiRouter, database: D1Data
       if (!domain || !/^[a-z0-9.-]+$/.test(domain) || domain.includes("..")) {
         return json({ error: { code: "INVALID_DOMAIN", message: "A valid competitor domain is required." } }, 400, context.requestId);
       }
+      const ownDomain = new URL(env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com").hostname.toLowerCase().replace(/^www\./, "");
+      if (domain === ownDomain || domain.endsWith("." + ownDomain)) {
+        return json({ error: { code: "OWN_DOMAIN", message: "The Phoenix canonical domain cannot be registered as a competitor." } }, 400, context.requestId);
+      }
       const competitorType = body.competitorType === "direct" || body.competitorType === "alternative" || body.competitorType === "publisher" || body.competitorType === "directory" ? body.competitorType : "direct";
       const { SeoCompetitiveRepository } = await import("@qooqnos/seo");
       const id = await new SeoCompetitiveRepository(database).upsertCompetitor(context, {
