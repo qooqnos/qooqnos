@@ -776,3 +776,7 @@ Billing invoice API surface: `GET /api/v1/billing/invoices` is now exposed throu
 ### Payment provider adapters — 2026-09-24
 
 The provider-execution boundary is implemented in `packages/billing/src/payment-provider-adapter.ts` and `payment-provider-service.ts`. It uses the existing `billing_provider_refs` table for normalized external references; no provider secrets are added to the database. Webhook signature validation, replay-age checks, normalized event parsing, idempotency propagation and transient/permanent failure classification are implemented.
+
+### Settlement reconciliation — 2026-09-24
+
+Migration `0061_billing_settlement.sql` establishes the settlement aggregate and immutable settlement-item ledger boundary. Provider payout execution is normalized through `PaymentProviderAdapter.payoutSettlement`, while accounting is posted through the existing immutable Billing ledger. No Commerce settlement table is permitted.
