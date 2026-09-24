@@ -163,14 +163,16 @@ export async function runSeoCompetitiveIntelligence(
         }
       }
 
+      let partialError: string | undefined;
       const competitorPageUrls = selectCompetitorPageUrls(
         result.results,
         ownDomain,
         config.pageSampleLimit ?? 5,
       );
       if (competitorPageUrls.length) {
-        const snapshots = await provider.observePages(competitorPageUrls, row.locale);
-        for (const snapshot of snapshots) {
+        try {
+          const snapshots = await provider.observePages(competitorPageUrls, row.locale);
+          for (const snapshot of snapshots) {
           const domain = normalizeDomainSafe(snapshot.url);
           const competitorId = await repository.upsertCompetitor(context, {
             domain,
@@ -201,7 +203,11 @@ export async function runSeoCompetitiveIntelligence(
             ...(snapshot.structuredDataErrors !== undefined ? { structuredDataErrors: snapshot.structuredDataErrors } : {}),
             provenance: snapshot.provenance,
           });
-          pageSnapshots += 1;
+            pageSnapshots += 1;
+          }
+        } catch (error) {
+          failures += 1;
+          partialError = error instanceof Error ? error.message : "Competitor page snapshot measurement failed.";
         }
       }
 
@@ -259,9 +265,10 @@ export async function runSeoCompetitiveIntelligence(
 
       await repository.completeRun(context, {
         id: runId,
-        status: "succeeded",
+        status: partialError ? "partial" : "succeeded",
         completedAt: now,
         resultCount: runObservationCount,
+        ...(partialError ? { errorText: partialError } : {}),
       });
     } catch (error) {
       failures += 1;
