@@ -60,7 +60,7 @@ export function generateMigrationLock(
  * Verifies migration definitions against a committed lock manifest.
  *
  * Covers verification rules 1-4 from docs/MIGRATION_LOCK_STRATEGY.md:
- *   1. filenames/versions are contiguous;
+ *   1. filenames/versions are strictly increasing (gaps are allowed for reserved version slots);
  *   2. every source migration appears exactly once in the lock manifest;
  *   3. every lock entry maps to exactly one migration definition;
  *   4. the runtime/source checksum equals the lock checksum.
