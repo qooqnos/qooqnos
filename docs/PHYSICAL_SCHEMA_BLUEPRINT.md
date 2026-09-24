@@ -1156,3 +1156,7 @@ The physical data model is architecture-complete when every planned physical tab
 ### Payment provider reference contract — implemented
 
 `billing_provider_refs` is now actively used by the Billing payment-provider service. Provider execution state is normalized at the adapter boundary and external references are persisted without provider credentials or signing secrets.
+
+### Settlement physical model — implemented
+
+`billing_settlements` and `billing_settlement_items` are the authoritative settlement/payout records. Settlement items are immutable, tenant/business/workspace/currency scoped, and reconcile exactly to settlement net amount before ledger posting. Provider references are external execution evidence, not financial truth.
