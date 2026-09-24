@@ -3,7 +3,7 @@ import {
   CustomerAddressRepository,
   CustomerRelationshipRepository,
   CustomerRepository,
-  CrmTimelineRepository,
+  CrmTimelineProjectionRepository,
   type CustomerAddressRecord,
   type CustomerPreferenceRecord,
   type CustomerRecord,
@@ -17,7 +17,7 @@ export interface CustomerServiceOptions {
   readonly repository: CustomerRepository;
   readonly addressRepository: CustomerAddressRepository;
   readonly relationshipRepository: CustomerRelationshipRepository;
-  readonly timelineRepository: CrmTimelineRepository;
+  readonly timelineProjectionRepository: CrmTimelineProjectionRepository;
   readonly authorization: AuthorizationService;
   readonly id: () => EntityId;
   readonly now: () => string;
@@ -256,7 +256,7 @@ export class CustomerService {
     });
     const customer = await this.options.repository.get(context, customerId);
     if (!customer) throw new Error("Customer not found");
-    return this.options.timelineRepository.listCustomerTimeline(context, customerId, limit);
+    return this.options.timelineProjectionRepository.listCustomerTimeline(context, customerId, limit);
   }
 
   async getRelationshipHistory(
@@ -272,7 +272,7 @@ export class CustomerService {
     });
     const relationship = await this.options.relationshipRepository.get(context, relationshipId);
     if (!relationship) throw new Error("Customer relationship not found");
-    return this.options.timelineRepository.listRelationshipTimeline(context, relationshipId, limit);
+    return this.options.timelineProjectionRepository.listRelationshipTimeline(context, relationshipId, limit);
   }
 }
 
