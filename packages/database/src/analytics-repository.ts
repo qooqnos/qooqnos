@@ -2,6 +2,8 @@ import type { EntityId, RequestContext } from "@qooqnos/core";
 import { DatabaseError, D1Database, Repository } from "./client";
 import { sha256Hex } from "./hash";
 
+export class AnalyticsValidationError extends DatabaseError {}
+
 export interface AnalyticsEventRecord {
   readonly id: string;
   readonly eventName: string;
@@ -71,14 +73,14 @@ export class AnalyticsRepository extends Repository {
     receivedAt: string,
   ): Promise<AnalyticsEventRecord> {
     if (context.tenantId && event.organizationId !== context.tenantId) {
-      throw new DatabaseError("Analytics event tenant scope does not match context");
+      throw new AnalyticsValidationError("Analytics event tenant scope does not match context");
     }
     if (context.workspaceId && event.workspaceId !== context.workspaceId) {
-      throw new DatabaseError("Analytics event workspace scope does not match context");
+      throw new AnalyticsValidationError("Analytics event workspace scope does not match context");
     }
-    if (!event.eventType.trim()) throw new DatabaseError("Analytics event type is required");
+    if (!event.eventType.trim()) throw new AnalyticsValidationError("Analytics event type is required");
     if (!Number.isInteger(event.eventVersion) || event.eventVersion < 1) {
-      throw new DatabaseError("Analytics event version must be a positive integer");
+      throw new AnalyticsValidationError("Analytics event version must be a positive integer");
     }
 
     const payloadHash = await sha256Hex(event.payloadJson);
@@ -125,6 +127,19 @@ export class AnalyticsRepository extends Repository {
     ]);
 
     return this.getEvent(context, event.id);
+  }
+
+  async quarantineOutboxEvent(
+    event: AnalyticsOutboxEventInput,
+    reasonCode: string,
+    now: string,
+  ): Promise<void> {
+    const payloadHash = await sha256Hex(event.payloadJson);
+    await this.database.run(
+      "INSERT INTO analytics_ingestion_quarantine (id,source_event_id,source_module,organization_id,workspace_id,reason_code,error_reference,payload_hash,first_seen_at,last_seen_at,attempts,resolved_at) VALUES (?,?,?,?,?,?,?,?,?,?,1,NULL) ON CONFLICT(source_module,source_event_id) DO UPDATE SET reason_code=excluded.reason_code,error_reference=excluded.error_reference,payload_hash=excluded.payload_hash,last_seen_at=excluded.last_seen_at,attempts=analytics_ingestion_quarantine.attempts+1,resolved_at=NULL",
+      event.id + ":quarantine", event.id, event.eventType.split(".")[0]?.trim() || "platform",
+      event.organizationId, event.workspaceId, reasonCode, reasonCode, payloadHash, now, now,
+    );
   }
 
   async getEvent(context: RequestContext, id: string): Promise<AnalyticsEventRecord> {
