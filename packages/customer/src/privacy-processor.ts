@@ -1,4 +1,4 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
+import { brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import type {
   PrivacyProcessor,
   PrivacyRetentionProcessor,
@@ -76,8 +76,8 @@ function toRequestContext(input: PrivacyProcessorRequest): RequestContext {
     tenantId: input.context.organizationId,
     ...(input.context.workspaceId ? { workspaceId: input.context.workspaceId } : {}),
     ...(input.request.requestedBy ? { actorId: input.request.requestedBy as EntityId } : {}),
-    requestId: input.context.requestId,
-    correlationId: input.context.correlationId,
+    requestId: brandId<"RequestId">(input.context.requestId),
+    correlationId: brandId<"CorrelationId">(input.context.correlationId),
     module: "privacy",
     operation: "privacy.processor",
     locale: "en",
