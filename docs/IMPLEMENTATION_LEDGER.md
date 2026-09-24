@@ -13,7 +13,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 
 | Capability | Status | Canonical source |
 |---|---|---|
-| SEO/GEO Engine core | 🟡 Foundation implemented | packages/seo; migrations/0077_seo_geo_engine.sql; docs/SEO_GEO_ENGINE_ARCHITECTURE.md; docs/SEO_GEO_WORLD_CLASS_ENGINE.md | Canonical entity representation, indexability policy, canonical URLs, metadata, structured data, GEO answer representation, sitemap/robots generation, explainable audit, tenant-scoped persistence, dependency/invalidation foundation and measurement storage. Full ingestion/publication workers, domain adapters, internal-link graph, observability integrations and external search-provider connectors remain next implementation layers. |
+| SEO/GEO Engine core | 🟡 Active implementation | packages/seo; migrations/0077–0078; docs/SEO_GEO_ENGINE_ARCHITECTURE.md; docs/SEO_GEO_WORLD_CLASS_ENGINE.md | Core entity model, centralized canonical URLs, publication/indexability policy, freshness gates, metadata/structured data, GEO answers, sitemap/robots, entity graph, internal-link planning, geographic truth, query/intent coverage, consistency diagnostics, agentic readiness, tenant-scoped derived persistence, dependency/invalidation foundation, audits and measurement storage are implemented and verified. Remaining SEO/GEO work is publication/event workers, broader domain adapters, external search/AI observability connectors, richer structured-data validation, query persistence/experimentation and production route integration. |
 | Product North Star | ✅ Complete | docs/PHOENIX_PRODUCT_NORTH_STAR.md |
 | AI product direction | ✅ Complete | docs/AI_PRODUCT_DIRECTION.md |
 | Capability decision rules | ✅ Complete | docs/CAPABILITY_DECISION_RULES.md |
