@@ -82,6 +82,7 @@ CREATE TABLE billing_invoice_payment_applications (
   currency TEXT NOT NULL,
   applied_at TEXT NOT NULL,
   correlation_id TEXT NOT NULL,
+  organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE RESTRICT,
   idempotency_key TEXT NOT NULL,
   created_at TEXT NOT NULL,
   UNIQUE(organization_id, idempotency_key)
