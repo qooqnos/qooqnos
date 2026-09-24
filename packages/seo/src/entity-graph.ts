@@ -8,6 +8,8 @@ export interface EntityGraphNode {
   readonly publicationState: string;
   readonly visibility: string;
   readonly locale?: string;
+  readonly preferredName?: string;
+  readonly canonicalUrl?: string;
 }
 
 export interface EntityGraphEdge {
