@@ -737,7 +737,7 @@ The remaining implementation work is operational/provider/projection work; Catal
 6. Scheduled Automation polling/misfire execution and CapabilityRegistry-backed scheduled action execution are implemented; capability compensation remains only where a concrete rollback contract exists.
 7. AI Runtime durable worker scheduling and Seller AI input/payload resolution are implemented; add resolvers only when a new AI operation type is introduced.
 8. Complete Integration provider-specific adapters and cross-provider retention/reconciliation semantics; durable claim/sync worker infrastructure is implemented.
-9. Complete Privacy export/delete/retention processors; approved-request orchestration, subject-level identity validation and consent expiry are implemented.
+9. Privacy export/delete/retention processors are implemented for the canonical Customer domain; future domains require their own domain-owned processor contract. Approved-request orchestration, subject-level identity validation and consent expiry are implemented.
 10. Complete Matching learning signals and broader Act projections; core retrieval/ranking/Connect execution is implemented.
 11. Complete Fulfillment provider-specific adapters, callback reconciliation and durable polling only where an external provider contract exists; canonical tracking/service completion persistence is implemented.
 12. Business lifecycle vocabulary reconciliation is closed; do not introduce another Business status model.
