@@ -200,6 +200,10 @@ export async function processSeoPublicationJobs(
       const graph = await loadSeoEntityGraph(database, job.organizationId, job.workspaceId, payload.id, payload.locale);
       const plan = buildSeoProjectionPlan({ entity: payload, canonicalBaseUrl, now, ...(graph ? { graph } : {}) });
       const representationId = `seo-representation:${payload.id}:${payload.locale}`;
+      if (plan.audit.status === "blocked") {
+        const details = plan.audit.blockingIssueCodes.join(", ");
+        throw new Error(`SEO audit blocked publication: ${details}`);
+      }
       const structuredValidation = validateStructuredData(plan.structuredData);
       if (!structuredValidation.valid) {
         const details = structuredValidation.issues.filter((issue) => issue.severity === "error").map((issue) => `${issue.path}: ${issue.message}`).join("; ");
