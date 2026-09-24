@@ -2,7 +2,7 @@ import type { EntityId, RequestContext } from "@qooqnos/core";
 import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
 import type { SeoProjectionPlan } from "./projection";
 import type { SeoEntity } from "./types";
-import { auditEntity } from "./audit";
+import { auditEntity, type SeoAuditSurface } from "./audit";
 
 export interface SeoRepresentationRecord {
   readonly id: EntityId;
@@ -215,9 +215,9 @@ export class SeoRepository extends Repository {
     return row;
   }
 
-  async saveAudit(context: RequestContext, input: { id: EntityId; entity: SeoEntity; canonicalUrl: string; indexability: string; now: string }): Promise<void> {
+  async saveAudit(context: RequestContext, input: { id: EntityId; entity: SeoEntity; canonicalUrl: string; indexability: string; now: string; surface?: SeoAuditSurface }): Promise<void> {
     const scope = this.scope(context);
-    const audit = auditEntity(input.entity, input.canonicalUrl, input.indexability, input.now);
+    const audit = auditEntity(input.entity, input.canonicalUrl, input.indexability, input.now, input.surface);
     await this.database.run(`INSERT INTO seo_audits (id, organization_id, workspace_id, entity_id, entity_type, generated_at, scores_json, issues_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, input.id, scope.organizationId, scope.workspaceId, input.entity.id, input.entity.type, input.now, JSON.stringify(audit.scores), JSON.stringify(audit.issues));
   }
 
@@ -227,12 +227,48 @@ export class SeoRepository extends Repository {
     return row ? { generatedAt: row.generatedAt, scores: JSON.parse(row.scoresJson) as Record<string, number>, issues: JSON.parse(row.issuesJson) as unknown[] } : null;
   }
 
-  async getRepresentation(context: RequestContext, entityId: string, locale?: string): Promise<{ entity: SeoEntity; canonicalUrl: string; indexability: string } | null> {
+  async getRepresentation(
+    context: RequestContext,
+    entityId: string,
+    locale?: string,
+  ): Promise<{
+    entity: SeoEntity;
+    canonicalUrl: string;
+    indexability: string;
+    metadata?: import("./types").SeoMetadata;
+    structuredData?: import("./types").StructuredData;
+    answer?: import("./types").AnswerRepresentation;
+    page?: import("./entity-page").EntityPageModel;
+    policy?: import("./types").SeoPolicy;
+  } | null> {
     const scope = this.scope(context);
-    const row = await this.database.first<{ representationJson: string; canonicalUrl: string; indexability: string }>(`SELECT representation_json AS representationJson, canonical_url AS canonicalUrl, indexability FROM seo_entity_representations WHERE organization_id=? AND workspace_id IS ? AND entity_id=?${locale ? " AND locale=?" : ""} ORDER BY generated_at DESC LIMIT 1`, ...(locale ? [scope.organizationId, scope.workspaceId, entityId, locale] : [scope.organizationId, scope.workspaceId, entityId]));
+    const row = await this.database.first<{ representationJson: string; canonicalUrl: string; indexability: string }>(
+      `SELECT representation_json AS representationJson, canonical_url AS canonicalUrl, indexability
+         FROM seo_entity_representations
+        WHERE organization_id=? AND workspace_id IS ? AND entity_id=?${locale ? " AND locale=?" : ""}
+        ORDER BY generated_at DESC LIMIT 1`,
+      ...(locale ? [scope.organizationId, scope.workspaceId, entityId, locale] : [scope.organizationId, scope.workspaceId, entityId]),
+    );
     if (!row) return null;
-    const entity = (JSON.parse(row.representationJson) as { entity?: SeoEntity }).entity;
-    return entity ? { entity, canonicalUrl: row.canonicalUrl, indexability: row.indexability } : null;
+    const representation = JSON.parse(row.representationJson) as {
+      entity?: SeoEntity;
+      metadata?: import("./types").SeoMetadata;
+      structuredData?: import("./types").StructuredData;
+      answer?: import("./types").AnswerRepresentation;
+      page?: import("./entity-page").EntityPageModel;
+      policy?: import("./types").SeoPolicy;
+    };
+    if (!representation.entity) return null;
+    return {
+      entity: representation.entity,
+      canonicalUrl: row.canonicalUrl,
+      indexability: row.indexability,
+      ...(representation.metadata ? { metadata: representation.metadata } : {}),
+      ...(representation.structuredData ? { structuredData: representation.structuredData } : {}),
+      ...(representation.answer ? { answer: representation.answer } : {}),
+      ...(representation.page ? { page: representation.page } : {}),
+      ...(representation.policy ? { policy: representation.policy } : {}),
+    };
   }
 
   async saveArtifact(context: RequestContext, input: SaveSeoArtifactInput): Promise<void> {
