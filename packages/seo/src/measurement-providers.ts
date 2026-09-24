@@ -173,16 +173,29 @@ export class ResponsesWebSearchCitationProvider implements SeoMeasurementProvide
       { metric: "ai-citation-present", numericValue: query.canonicalUrl && citations.some((item) => sameCanonicalUrl(item.url, query.canonicalUrl!)) ? 1 : 0, ...(query.entityId ? { entityId: query.entityId } : {}), sourceType: "ai-answer", provenance: { provider: this.id, model: payload.model ?? this.config.model, query: query.queryText } },
     ];
     for (const citation of citations) {
+      const matchesTarget = Boolean(query.entityId && sameCanonicalUrl(citation.url, query.canonicalUrl ?? ""));
       measurements.push({
         metric: "ai-citation-observed",
         numericValue: 1,
-        ...(query.entityId && sameCanonicalUrl(citation.url, query.canonicalUrl ?? "") ? { entityId: query.entityId } : {}),
+        ...(matchesTarget && query.entityId ? { entityId: query.entityId } : {}),
         citationUrl: citation.url,
         ...(citation.title ? { citationTitle: citation.title } : {}),
         citationPosition: citation.position,
         sourceType: "ai-answer",
         provenance: { provider: this.id, model: payload.model ?? this.config.model, query: query.queryText },
       });
+      if (matchesTarget && query.entityId) {
+        measurements.push({
+          metric: "ai-citation-position",
+          numericValue: citation.position,
+          entityId: query.entityId,
+          citationUrl: citation.url,
+          ...(citation.title ? { citationTitle: citation.title } : {}),
+          citationPosition: citation.position,
+          sourceType: "ai-answer",
+          provenance: { provider: this.id, model: payload.model ?? this.config.model, query: query.queryText },
+        });
+      }
     }
     return measurements;
   }
