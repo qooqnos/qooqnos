@@ -82,6 +82,7 @@ const routes: Route[] = [
   { path: "/booking", label: "رزرو", icon: "◷", render: renderBooking },
   { path: "/checkout", label: "خرید", icon: "◫", render: renderCheckout },
   { path: "/customer", label: "مشتری", icon: "♙", render: renderCustomer },
+  { path: "/communication", label: "ارتباطات", icon: "◌", render: renderCommunication },
 ];
 
 const theme = getInitialTheme();
@@ -146,6 +147,7 @@ function render(): void {
   syncThemeButtons();
   if (route.path === "/account") void loadAccountState();
   if (route.path === "/customer") void loadCustomerState();
+  if (route.path === "/communication") void loadCommunicationState();
 }
 
 function renderHeader(route: Route): string {
@@ -274,6 +276,152 @@ function renderHome(): string {
       </div>
     </section>
   `;
+}
+
+function renderCommunication(): string {
+  const recipient = localStorage.getItem(STORAGE.customer) ?? "";
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Communication Center</span><h1>پیام درست، <em>در زمان درست.</em></h1><p>ارسال notification و مدیریت preference از قرارداد canonical Communication انجام می‌شود.</p></div>
+      <div class="heading-actions"><button class="button button-ghost" type="button" data-comm-load>بارگذاری وضعیت</button></div>
+    </section>
+    <section class="communication-grid">
+      <article class="glass-card communication-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Notification</span><h2>ارسال پیام</h2></div><span id="comm-status" class="pill">آماده</span></div>
+        <div class="booking-fields">
+          <div><label class="field-label" for="comm-recipient">Recipient Reference</label><input class="studio-input-line" id="comm-recipient" type="text" value="${escapeAttr(recipient)}" placeholder="Customer ID" /></div>
+          <div><label class="field-label" for="comm-intent">Intent</label><input class="studio-input-line" id="comm-intent" type="text" value="transaction_update" placeholder="booking.confirmed" /></div>
+          <div><label class="field-label" for="comm-channel">Channel</label><select class="studio-input-line" id="comm-channel"><option value="in_app">in_app</option><option value="email">email</option><option value="sms">sms</option><option value="push">push</option><option value="whatsapp">whatsapp</option></select></div>
+          <div><label class="field-label" for="comm-priority">Priority</label><select class="studio-input-line" id="comm-priority"><option value="normal">normal</option><option value="low">low</option><option value="high">high</option><option value="urgent">urgent</option></select></div>
+          <div class="field-span-2"><label class="field-label" for="comm-locale">Locale <span class="field-optional">اختیاری</span></label><input class="studio-input-line" id="comm-locale" type="text" value="fa-IR" /></div>
+        </div>
+        <div class="checkout-actions"><button class="button button-primary button-lg" type="button" data-send-notification>ارسال notification <span>→</span></button></div>
+        <div id="comm-result" class="connection-state">هنوز ارسالی انجام نشده است.</div>
+      </article>
+      <article class="glass-card communication-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Preferences</span><h2>قواعد ارتباطی</h2></div><span id="comm-pref-meta">—</span></div>
+        <div id="comm-preferences" class="preference-list"><div class="slot-empty"><span>◌</span><p>Recipient را وارد کنید.</p></div></div>
+        <div class="preference-editor">
+          <select class="studio-input-line" id="comm-pref-category"><option value="transactional">transactional</option><option value="security">security</option><option value="marketing">marketing</option><option value="reminders">reminders</option><option value="product_updates">product_updates</option></select>
+          <select class="studio-input-line" id="comm-pref-status"><option value="allowed">allowed</option><option value="denied">denied</option></select>
+          <select class="studio-input-line" id="comm-pref-channel"><option value="in_app">in_app</option><option value="email">email</option><option value="sms">sms</option><option value="push">push</option><option value="whatsapp">whatsapp</option></select>
+          <button class="button button-primary" type="button" data-save-comm-pref>ذخیره</button>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+type CommunicationPreferenceView = {
+  id?: string;
+  recipientReference?: string;
+  category?: string;
+  channel?: string | null;
+  status?: string;
+  source?: string;
+};
+
+async function loadCommunicationState(): Promise<void> {
+  const recipientInput = document.querySelector<HTMLInputElement>("#comm-recipient");
+  const host = document.querySelector<HTMLDivElement>("#comm-preferences");
+  const meta = document.querySelector<HTMLElement>("#comm-pref-meta");
+  const status = document.querySelector<HTMLElement>("#comm-status");
+  if (!recipientInput || !host || !meta || !status) return;
+
+  const recipient = recipientInput.value.trim();
+  if (!recipient) {
+    host.innerHTML = '<div class="slot-empty"><span>◌</span><p>Recipient Reference لازم است.</p></div>';
+    meta.textContent = "—";
+    return;
+  }
+  localStorage.setItem(STORAGE.customer, recipient);
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
+
+  host.innerHTML = '<div class="slot-loading">در حال خواندن preferenceها…</div>';
+  try {
+    const response = await apiJson<{ data: CommunicationPreferenceView[] }>(
+      `/api/v1/communications/preferences?recipientReference=${encodeURIComponent(recipient)}`,
+    );
+    const items = Array.isArray(response.data) ? response.data : [];
+    host.innerHTML = items.length
+      ? items.map((item) => `<div class="preference-item"><span>${escapeHtml(item.category ?? "—")}</span><strong>${escapeHtml(item.status ?? "—")} ${item.channel ? "· " + escapeHtml(item.channel) : ""}</strong><small>${escapeHtml(item.source ?? "—")}</small></div>`).join("")
+      : '<div class="slot-empty"><span>◌</span><p>Preference ثبت نشده است.</p></div>';
+    meta.textContent = `${items.length} preference`;
+    status.textContent = "متصل";
+    status.className = "pill success";
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن preference ناموفق بود.")}</p></div>`;
+  }
+}
+
+async function sendCommunicationNotification(): Promise<void> {
+  const recipient = document.querySelector<HTMLInputElement>("#comm-recipient")?.value.trim() ?? "";
+  const intent = document.querySelector<HTMLInputElement>("#comm-intent")?.value.trim() ?? "";
+  const channel = document.querySelector<HTMLSelectElement>("#comm-channel")?.value ?? "";
+  const priority = document.querySelector<HTMLSelectElement>("#comm-priority")?.value ?? "";
+  const locale = document.querySelector<HTMLInputElement>("#comm-locale")?.value.trim() ?? "";
+  const state = document.querySelector<HTMLElement>("#comm-result");
+  if (!state) return;
+  if (!recipient || !intent || !channel) {
+    showToast("Recipient، Intent و Channel الزامی هستند.");
+    return;
+  }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
+  state.textContent = "در حال ایجاد notification…";
+  state.className = "connection-state";
+  try {
+    const response = await apiJson<{ data: { id: string; status?: string } }>("/api/v1/communications/notifications", {
+      method: "POST",
+      body: {
+        recipientReference: recipient,
+        intent,
+        channel,
+        priority,
+        ...(locale ? { locale } : {}),
+      },
+      headers: { "Idempotency-Key": crypto.randomUUID() },
+    });
+    state.textContent = `Notification ساخته شد · ${response.data.id}`;
+    state.className = "connection-state success";
+    showToast("Notification در Communication قرار گرفت.");
+  } catch (error) {
+    state.textContent = error instanceof Error ? error.message : "ارسال notification ناموفق بود.";
+    state.className = "connection-state error";
+  }
+}
+
+async function saveCommunicationPreference(): Promise<void> {
+  const recipient = document.querySelector<HTMLInputElement>("#comm-recipient")?.value.trim() ?? "";
+  const category = document.querySelector<HTMLSelectElement>("#comm-pref-category")?.value ?? "";
+  const status = document.querySelector<HTMLSelectElement>("#comm-pref-status")?.value ?? "";
+  const channel = document.querySelector<HTMLSelectElement>("#comm-pref-channel")?.value ?? "";
+  if (!recipient) { showToast("Recipient Reference لازم است."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  try {
+    await apiJson("/api/v1/communications/preferences", {
+      method: "PATCH",
+      body: {
+        recipientReference: recipient,
+        category,
+        status,
+        channel,
+        source: "web",
+        effectiveFrom: new Date().toISOString(),
+      },
+    });
+    showToast("Communication preference ذخیره شد.");
+    void loadCommunicationState();
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "ذخیره preference ناموفق بود.");
+  }
 }
 
 function renderCustomer(): string {
@@ -884,6 +1032,9 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-customer-refresh]")?.addEventListener("click", loadCustomerState);
   document.querySelector<HTMLButtonElement>("[data-customer-create]")?.addEventListener("click", openCustomerCreatePanel);
   document.querySelector<HTMLButtonElement>("[data-customer-add-pref]")?.addEventListener("click", addCustomerPreference);
+  document.querySelector<HTMLButtonElement>("[data-comm-load]")?.addEventListener("click", loadCommunicationState);
+  document.querySelector<HTMLButtonElement>("[data-send-notification]")?.addEventListener("click", sendCommunicationNotification);
+  document.querySelector<HTMLButtonElement>("[data-save-comm-pref]")?.addEventListener("click", saveCommunicationPreference);
 
   document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
