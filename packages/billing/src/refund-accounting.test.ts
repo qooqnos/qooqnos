@@ -20,7 +20,7 @@ const ctx: RequestContext = {
 describe("RefundAccountingRepository", () => {
   it("creates an idempotent refund request with integer minor-unit money", async () => {
     let inserted = false;
-    let lastSql = "";
+    let firstRead = true;
     const row = {
       id: "refund-1",
       organizationId: "tenant-1",
@@ -50,12 +50,12 @@ describe("RefundAccountingRepository", () => {
     };
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
-      async first<T>() { return lastSql.includes("idempotency_key") ? null : row as unknown as T; },
+      async first<T>() { if (firstRead) { firstRead = false; return null; } return row as unknown as T; },
       async all<T>() { return { results: [] as T[] }; },
       async run() { inserted = true; return { success: true, meta: { changes: 1 } }; },
     };
     const raw: D1DatabaseLike = {
-      prepare(sql) { lastSql = sql; return statement; },
+      prepare() { return statement; },
       async batch() { return []; },
     };
     const repo = new RefundAccountingRepository(new D1Database(raw));
