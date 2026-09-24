@@ -1,6 +1,5 @@
 import type { RequestContext } from "@qooqnos/core";
 import { D1Database, Repository } from "@qooqnos/database";
-import type { CompetitiveResult } from "./competitive-provider";
 
 export class SeoCompetitiveRepository extends Repository {
   constructor(database: D1Database) { super(database); }
