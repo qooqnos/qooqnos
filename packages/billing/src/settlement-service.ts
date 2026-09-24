@@ -1,4 +1,4 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
+import type { RequestContext } from "@qooqnos/core";
 import type { PaymentProviderRegistry, PaymentProviderResult } from "./payment-provider-adapter";
 import type { SettlementRepository, SettlementRecord } from "./settlement-repository";
 
