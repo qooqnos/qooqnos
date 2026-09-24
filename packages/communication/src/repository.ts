@@ -1,7 +1,7 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
 
-export type CommunicationChannel = "in_app" | "whatsapp" | "sms" | "email";
+export type CommunicationChannel = "in_app" | "whatsapp" | "sms" | "email" | "push";
 export type CommunicationPriority = "low" | "normal" | "high" | "urgent";
 export type CommunicationMessageStatus =
   | "created" | "policy_checked" | "queued" | "provider_accepted" | "sent"
