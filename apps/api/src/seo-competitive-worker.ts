@@ -146,7 +146,7 @@ export async function runSeoCompetitiveIntelligence(
 
       const previousDomains = await previousDomainsForQuery(database, row, runId);
       const currentDomains = new Set(
-        result.results.filter((item) => item.domain && !sameOrigin(item.url ?? "", ownOrigin)).map((item) => item.domain!),
+        result.results.filter((item) => item.domain && !sameDomain(item.domain, ownDomain)).map((item) => item.domain!),
       );
       for (const previous of previousDomains) {
         if (!currentDomains.has(previous.domain)) {
@@ -222,7 +222,7 @@ export async function runSeoCompetitiveIntelligence(
 
       for (const citation of result.aiCitations) {
         const domain = citation.domain ?? normalizeDomainSafe(citation.url);
-        if (sameOrigin(citation.url, ownOrigin)) continue;
+        if (sameDomain(domain, ownDomain)) continue;
         const competitorId = await repository.upsertCompetitor(context, {
           domain,
           ...(citation.title ? { displayName: citation.title } : {}),
