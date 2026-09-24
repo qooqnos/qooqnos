@@ -159,6 +159,7 @@ if ("serviceWorker" in navigator) {
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Phoenix web root is missing.");
+const appRoot = app;
 
 const routes: Route[] = [
   { path: "/", label: "خانه", icon: "⌂", render: renderHome },
@@ -258,7 +259,7 @@ function render(): void {
   const route = currentRoute();
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
-  app.innerHTML = `
+  appRoot.innerHTML = `
     <div class="app-shell">
       ${renderHeader(route)}
       <div class="app-body">
@@ -563,6 +564,55 @@ function renderHome(): string {
   `;
 }
 
+
+function toDateTimeLocal(value: Date): string {
+  const pad = (number: number): string => String(number).padStart(2, "0");
+  return value.getFullYear() + "-" + pad(value.getMonth() + 1) + "-" + pad(value.getDate()) + "T" + pad(value.getHours()) + ":" + pad(value.getMinutes());
+}
+
+function renderBooking(): string {
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Booking / Availability</span><h1>زمان مناسب را پیدا کنید.</h1><p>Availability از سرویس canonical رزرو خوانده می‌شود.</p></div>
+    </section>
+    <section class="section-block">
+      <article class="glass-card booking-panel">
+        <div class="booking-fields">
+          <label class="field-label">Schedule ID<input id="booking-schedule" class="studio-input-line" placeholder="Schedule ID" /></label>
+          <label class="field-label">From<input id="booking-from" class="studio-input-line" type="datetime-local" value="${toDateTimeLocal(new Date())}" /></label>
+          <label class="field-label">To<input id="booking-to" class="studio-input-line" type="datetime-local" value="${toDateTimeLocal(new Date(Date.now() + 86400000))}" /></label>
+          <label class="field-label">Duration (minutes)<input id="booking-duration" class="studio-input-line" type="number" min="1" value="60" /></label>
+        </div>
+        <button class="button button-primary" type="button" data-load-slots>خواندن Availability</button>
+        <div id="booking-slots-result" class="slot-empty"><span>◷</span><p>Schedule را وارد کنید.</p></div>
+      </article>
+    </section>
+  `;
+}
+
+async function loadBookingSlots(): Promise<void> {
+  const scheduleId = document.querySelector<HTMLInputElement>("#booking-schedule")?.value.trim() ?? "";
+  const from = document.querySelector<HTMLInputElement>("#booking-from")?.value ?? "";
+  const to = document.querySelector<HTMLInputElement>("#booking-to")?.value ?? "";
+  const durationSeconds = Number(document.querySelector<HTMLInputElement>("#booking-duration")?.value ?? "60") * 60;
+  const host = document.querySelector<HTMLDivElement>("#booking-slots-result");
+  if (!host) return;
+  if (!scheduleId || !from || !to || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+    host.innerHTML = '<div class="slot-empty"><span>!</span><p>Schedule و بازه زمانی معتبر لازم است.</p></div>';
+    return;
+  }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  try {
+    const response = await apiJson<{ data: { startsAt?: string; endsAt?: string; available?: boolean }[] }>(
+      "/api/v1/availability/schedules/" + encodeURIComponent(scheduleId) + "/slots?from=" + encodeURIComponent(new Date(from).toISOString()) + "&to=" + encodeURIComponent(new Date(to).toISOString()) + "&durationSeconds=" + String(Math.trunc(durationSeconds)),
+    );
+    host.innerHTML = response.data.length
+      ? response.data.map((slot) => `<div class="metadata-cloud"><span>${escapeHtml(slot.startsAt ?? "—")}</span><span>${escapeHtml(slot.endsAt ?? "—")}</span><span>${slot.available === false ? "پر" : "قابل رزرو"}</span></div>`).join("")
+      : '<div class="slot-empty"><span>◌</span><p>در این بازه slot قابل‌نمایشی پیدا نشد.</p></div>';
+  } catch (error) {
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن Availability ناموفق بود.")}</p></div>`;
+  }
+}
 
 function renderPromotion(): string {
   return "<section class='page-heading'><div><span class='eyebrow'><i></i> Promotion Studio</span><h1>مشوق را تعریف کنید؛ <em>قانون را قفل کنید.</em></h1><p>Promotion فقط policy و eligibility را مالک است.</p></div></section>" +
@@ -2147,7 +2197,7 @@ function renderCheckout(): string {
   const product = params.get("product") ?? "";
   const entity = params.get("entity") ?? "";
   const resource = product || entity;
-  const resourceType = product ? "product_variant" : entity ? "offering" : "product_variant";
+  const resourceType: "product_variant" | "offering" | "service" = product ? "product_variant" : entity ? "offering" : "product_variant";
   return `
     <section class="page-heading">
       <div><span class="eyebrow"><i></i> Commerce</span><h1>از انتخاب تا <em>Checkout</em> بدون پرش.</h1><p>این سطح فقط orchestration می‌کند؛ cart و checkout state از Commerce canonical می‌آیند.</p></div>
