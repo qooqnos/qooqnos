@@ -1494,3 +1494,10 @@ Competitive intelligence hardening completed after initial implementation:
 - added DataForSEO Labs Domain Intersection keyword-gap evidence with bounded competitor/keyword sampling;
 - added durable `seo_competitive_keyword_gaps` state and Control Plane display;
 - page snapshot failures mark a CI run partial instead of discarding the underlying SERP evidence.
+
+Competitive intelligence evidence layers now include:
+- live SERP/rank observations;
+- competitor on-page SEO snapshots;
+- provider-observed keyword gaps;
+- provider-observed referring-domain/backlink gaps;
+- AI Overview/reference URL changes.
