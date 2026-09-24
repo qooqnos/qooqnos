@@ -64,6 +64,18 @@ describe("SEO/GEO core", () => {
     expect(buildRobotsTxt("https://example.com/sitemap.xml")).toContain("Sitemap:");
   });
 
+  it("audits crawl/indexability consistency and canonical identity", () => {
+    const result = auditEntity(
+      { ...entity, canonicalId: undefined, publicationState: "draft" },
+      "",
+      "index",
+      "2026-09-24T00:00:00Z",
+    );
+    expect(result.issues.some((item) => item.code === "INDEXABILITY_PUBLICATION_CONFLICT")).toBe(true);
+    expect(result.issues.some((item) => item.code === "MISSING_CANONICAL_ID")).toBe(true);
+    expect(result.issues.some((item) => item.code === "MISSING_CANONICAL_URL")).toBe(false);
+  });
+
   it("audits missing semantic relationships", () => {
     const result = auditEntity(
       { ...entity, relatedEntityIds: [] },
