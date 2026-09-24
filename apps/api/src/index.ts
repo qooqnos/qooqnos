@@ -119,7 +119,7 @@ function buildSeoCompetitiveWorkerConfig(env: ApiEnv, limit: number) {
     ...(env.SEO_COMPETITIVE_ENDPOINT ? { endpoint: env.SEO_COMPETITIVE_ENDPOINT } : {}),
     ...(locationCode !== undefined && Number.isFinite(locationCode) ? { locationCode } : {}),
     ...(env.SEO_COMPETITIVE_LOCATION_NAME ? { locationName: env.SEO_COMPETITIVE_LOCATION_NAME } : {}),
-    languageCode: env.SEO_COMPETITIVE_LANGUAGE_CODE ?? "en",
+    languageCode: env.SEO_COMPETITIVE_LANGUAGE_CODE ?? "",
     device: env.SEO_COMPETITIVE_DEVICE ?? "desktop",
     ...(depth !== undefined && Number.isFinite(depth) ? { depth } : {}),
     ...(pageSampleLimit !== undefined && Number.isFinite(pageSampleLimit) ? { pageSampleLimit } : {}),
@@ -675,7 +675,7 @@ export default {
           const measurementLimit = Number(env.SEO_MEASUREMENT_SAMPLE_LIMIT ?? "25");
           await runSeoVisibilityMeasurements(database, buildSeoVisibilityWorkerConfig(env, Number.isFinite(measurementLimit) ? measurementLimit : 25), now);
         }
-        if (measurementAt.getUTCHours() === 3 && measurementAt.getUTCMinutes() === 17 && env.SEO_COMPETITIVE_LOGIN && env.SEO_COMPETITIVE_PASSWORD) {
+        if (measurementAt.getUTCHours() === 3 && measurementAt.getUTCMinutes() === 17 && env.SEO_COMPETITIVE_LOGIN && env.SEO_COMPETITIVE_PASSWORD && (env.SEO_COMPETITIVE_LOCATION_CODE || env.SEO_COMPETITIVE_LOCATION_NAME) && env.SEO_COMPETITIVE_LANGUAGE_CODE) {
           const competitiveLimit = Number(env.SEO_COMPETITIVE_SAMPLE_LIMIT ?? "10");
           await runSeoCompetitiveIntelligence(
             database,
