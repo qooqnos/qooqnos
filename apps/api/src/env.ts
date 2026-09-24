@@ -8,6 +8,7 @@ export interface ApiEnv {
   readonly APP_VERSION?: string;
   readonly ASSETS?: ApiAssetsBinding;
   readonly SEO_CANONICAL_BASE_URL?: string;
+  readonly SEO_CRAWLER_SAMPLE_LIMIT?: string;
   readonly ENVIRONMENT?: string;
   readonly DB?: D1DatabaseLike;
   readonly AI?: CloudflareAIBinding;
