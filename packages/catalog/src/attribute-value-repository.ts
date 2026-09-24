@@ -105,6 +105,77 @@ export class CatalogAttributeValueRepository extends Repository {
     return row ? this.hydrate(row, await this.listMultiEnumOptionIds(row.id)) : null;
   }
 
+  async setByCanonicalKey(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly attributeDefinitionCanonicalKey: string;
+      readonly targetType: AttributeValueTargetType;
+      readonly targetId: EntityId;
+      readonly sourceType: AttributeValueSource;
+      readonly value: unknown;
+      readonly now: string;
+    },
+  ): Promise<AttributeValueRecord & { readonly normalizedValue: unknown }> {
+    const definition = await this.database.first<AttributeDefinitionRow>(
+      "SELECT id, canonical_key AS canonicalKey, name, description, data_type AS dataType, status, metadata_json AS metadataJson, created_at AS createdAt, updated_at AS updatedAt FROM attribute_definitions WHERE canonical_key = ? LIMIT 1",
+      input.attributeDefinitionCanonicalKey,
+    );
+    if (!definition) throw new DatabaseError("Attribute definition not found for canonical key");
+    if (definition.status === "archived") throw new DatabaseError("Archived AttributeDefinitions cannot receive new values");
+
+    let setInput: SetAttributeValueInput;
+    if (definition.dataType === "enum") {
+      if (typeof input.value !== "string") throw new DatabaseError("Enum attribute values must be strings");
+      const option = await this.database.first<{ id: EntityId }>(
+        "SELECT id FROM attribute_options WHERE attribute_definition_id = ? AND canonical_value = ? AND status = 'active' LIMIT 1",
+        definition.id,
+        input.value,
+      );
+      if (!option) throw new DatabaseError("Enum attribute value does not match an active option");
+      setInput = {
+        id: input.id, attributeDefinitionId: definition.id, targetType: input.targetType,
+        targetId: input.targetId, sourceType: input.sourceType, enumOptionId: option.id, now: input.now,
+      };
+    } else if (definition.dataType === "multi_enum") {
+      if (!Array.isArray(input.value) || input.value.some((value) => typeof value !== "string") || input.value.length === 0) {
+        throw new DatabaseError("Multi-enum attribute values must be non-empty string arrays");
+      }
+      const values = input.value as string[];
+      const options = await this.database.all<{ id: EntityId; canonicalValue: string }>(
+        "SELECT id, canonical_value AS canonicalValue FROM attribute_options WHERE attribute_definition_id = ? AND status = 'active'",
+        definition.id,
+      );
+      const optionByValue = new Map(options.map((option) => [option.canonicalValue, option.id]));
+      const optionIds = values.map((value) => optionByValue.get(value));
+      if (optionIds.some((value) => !value) || new Set(values).size !== values.length) {
+        throw new DatabaseError("Multi-enum attribute values do not match active options");
+      }
+      setInput = {
+        id: input.id, attributeDefinitionId: definition.id, targetType: input.targetType,
+        targetId: input.targetId, sourceType: input.sourceType,
+        multiEnumOptionIds: optionIds as EntityId[], now: input.now,
+      };
+    } else {
+      const scalarType = definition.dataType;
+      const valid = scalarType === "text" || scalarType === "date" || scalarType === "datetime"
+        ? typeof input.value === "string"
+        : scalarType === "integer" ? Number.isInteger(input.value)
+        : scalarType === "number" ? typeof input.value === "number" && Number.isFinite(input.value)
+        : scalarType === "boolean" ? typeof input.value === "boolean"
+        : false;
+      if (!valid) throw new DatabaseError("Catalog Attribute value does not match its definition");
+      setInput = {
+        id: input.id, attributeDefinitionId: definition.id, targetType: input.targetType,
+        targetId: input.targetId, sourceType: input.sourceType,
+        scalar: { dataType: scalarType, value: input.value } as AttributeScalar, now: input.now,
+      };
+    }
+
+    const record = await this.set(context, setInput);
+    return { ...record, normalizedValue: input.value };
+  }
+
   async set(
     context: RequestContext,
     input: SetAttributeValueInput,
