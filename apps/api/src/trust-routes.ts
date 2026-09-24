@@ -57,8 +57,8 @@ export function registerTrustRoutes(
     method: "POST",
     path: "/api/v1/trust/verification-reviews/:reviewId/complete",
     module: "trust",
-    operation: "trust.verification.manage",
-    permission: "trust.verification.manage",
+    operation: "trust.verification.review",
+    permission: "trust.verification.review",
     requireAuthentication: true,
     requireWorkspace: false,
     handler: async ({ context, request, params }) => {
@@ -209,6 +209,39 @@ export function registerTrustRoutes(
         ...(body.policyVersion !== undefined ? { policyVersion: requiredString(body.policyVersion, "policyVersion", context.requestId) } : {}),
       });
       return json({ data: { recorded: true } }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/trust/signals",
+    module: "trust",
+    operation: "trust.reputation.read",
+    permission: "trust.reputation.read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const url = new URL(request.url);
+      const subjectType = url.searchParams.get("subjectType") ?? undefined;
+      const subjectId = url.searchParams.get("subjectId");
+      const status = url.searchParams.get("status");
+      const limitValue = url.searchParams.get("limit");
+      const allowedStatuses = ["active", "expired", "superseded", "dismissed"] as const;
+      if (status && !allowedStatuses.includes(status as typeof allowedStatuses[number])) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "status is invalid.", requestId: context.requestId });
+      }
+      const limit = limitValue === null ? undefined : Number(limitValue);
+      if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 1 || limit > 200)) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "limit must be an integer between 1 and 200.", requestId: context.requestId });
+      }
+      const signals = await service.listTrustSignals(context, {
+        ...(subjectType ? { subjectType } : {}),
+        ...(subjectId ? { subjectId: brandId<"EntityId">(subjectId) } : {}),
+        ...(status ? { status: status as typeof allowedStatuses[number] } : {}),
+        ...(limit !== undefined ? { limit } : {}),
+      });
+      return json({ data: signals }, 200, context.requestId);
     },
   });
 
