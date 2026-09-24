@@ -25,6 +25,7 @@ import { processCaseActions } from "./case-action-worker";
 import { processCaseDispatch } from "./case-dispatch-worker";
 import { processPrivacyConsentExpiry, processApprovedPrivacyRequests, processPrivacyRetention } from "./privacy-worker";
 import { processIntegration } from "./integration-worker";
+import { processAnalyticsAggregates } from "./analytics-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 import { assertProductionInfrastructure, checkRuntimeInfrastructure } from "./infrastructure";
 
@@ -555,6 +556,7 @@ export default {
     await processApprovedPrivacyRequests(env, now);
     await processPrivacyRetention(env, now);
     await processIntegration(env, now);
+    await processAnalyticsAggregates(env, now);
 
     const database = getDatabase(env);
     if (database && env.AI && env.AI_SELLER_EXTRACT_MODEL_ID) {
