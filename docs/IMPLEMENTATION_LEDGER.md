@@ -62,6 +62,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 | CustomerRelationship concurrency hardening | 🟢 Verified in `90792c7` | `packages/database/src/customer-relationship-repository.ts`; `c2692c8`; `2b98364`; `48af422`; `7573f49` test harness |
 | Business lifecycle concurrency hardening | 🟢 Verified in `90792c7` | `packages/business/src/repository.ts`; `b935137`; `90792c7` test harness |
 | Demand / Matching core | 🟢 Schema/package/repository/service/API/retrieval/ranking/connect implemented | migrations/0040_demand_matching_core.sql; migrations/0041_demand_matching_integrity.sql; packages/matching/src/repository.ts; packages/matching/src/service.ts; apps/api/src/matching-routes.ts |
+| Matching learning signals | 🟢 Append-only outcome evidence implemented | migrations/0057_matching_learning_signals.sql; packages/matching/src/learning-repository.ts; packages/matching/src/service.ts; packages/matching/src/service.test.ts |
 | Review moderation / reputation | 🟢 Schema/repository/service/API implemented | migrations/0048_reviews_moderation_reputation.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-routes.ts; Review lifecycle fields exposed from repository |
 | Generic ModerationCase | 🟢 Schema/repository/service/test implemented | migrations/0052_moderation_cases.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; packages/trust/src/repository.test.ts |
 | Billing counter scope integrity | 🟢 Integrity migration implemented | migrations/0044_billing_counter_scope.sql; packages/billing/src/repository.ts |
@@ -709,3 +710,19 @@ Production D1 handoff: the production D1 resource `qooqnos-production` is now pr
 - Main head `3f24f07a0a04e58ac3dbb389c6491d59802ad82e` has successful **CI** and **Phoenix verification** workflow runs.
 - Verified steps include format, lint, migration catalog/lock, database completion report, canonical-source boundary, runtime-module registry, migration-history checks, typecheck, build, Cloudflare Worker dry-run and unit tests.
 - Production deployment remains intentionally separate and is protected by the production environment plus Cloudflare credentials; the canonical deploy path runs the full predeploy verification, then `migrate:prod:canonical`, then Worker deploy. No repository code should embed production D1/resource identifiers or credentials.
+
+
+### Matching learning signals — 2026-09-24
+
+Migration `0057_matching_learning_signals.sql` establishes append-only, tenant/workspace-scoped outcome evidence for MatchRequest/Candidate results. `MatchingLearningRepository` validates request scope and records typed signal categories without mutating historical evidence. `MatchingService.recordLearningSignal` exposes the canonical capability and requires the dedicated `matching.learning.record` permission. Broader Act integrations (booking/order/payment/provider outcomes) remain separate integrations and must publish into this canonical signal boundary rather than creating duplicate learning tables.
+
+Implementation commits:
+- 5dfd32e2 — add append-only matching learning signals
+- 30d6697f — persist learning signal evidence
+- 58bf06d2 — export learning signal repository
+- 05f251ad — expose learning signal recording
+- b57412ee — cover learning signal recording
+- 86e9908b — register matching learning migration
+- 8d697763 — lock migration 0057 checksum
+- 64b26449 — reconcile physical matching learning storage
+- 49fb12b7 — add matching learning signal model
