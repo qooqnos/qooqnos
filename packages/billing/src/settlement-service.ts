@@ -6,7 +6,6 @@ export class SettlementService {
   constructor(
     private readonly repository: SettlementRepository,
     private readonly providers: PaymentProviderRegistry,
-    private readonly id: () => EntityId,
     private readonly now: () => string,
   ) {}
 
