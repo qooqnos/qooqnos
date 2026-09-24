@@ -207,7 +207,7 @@ export async function processSeoPublicationJobs(
         throw new Error(`SEO answer validation failed: ${details}`);
       }
       const contentHash = await stableHash(plan);
-      const representation = await repository.publishRepresentationBundle(
+      await repository.publishRepresentationBundle(
         context,
         {
           id: representationId,
