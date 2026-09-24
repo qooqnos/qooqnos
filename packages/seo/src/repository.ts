@@ -69,6 +69,7 @@ export class SeoRepository extends Repository {
       input.plan.canonicalUrl,
       input.plan.policy.indexability,
       JSON.stringify({
+        entity: input.plan.entity,
         metadata: input.plan.metadata,
         structuredData: input.plan.structuredData,
         answer: input.plan.answer,
