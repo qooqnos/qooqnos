@@ -195,6 +195,39 @@ export class SeoCompetitiveRepository extends Repository {
     );
   }
 
+  async recordKeywordGap(
+    context: RequestContext,
+    input: {
+      readonly id: string;
+      readonly competitorId?: string;
+      readonly entityId?: string;
+      readonly competitorDomain: string;
+      readonly queryText: string;
+      readonly keyword: string;
+      readonly searchVolume?: number;
+      readonly cpc?: number;
+      readonly competitorRank?: number;
+      readonly phoenixRank?: number;
+      readonly locationCode?: number;
+      readonly languageCode: string;
+      readonly gapType: "competitor-only" | "shared";
+      readonly observedAt: string;
+      readonly provenance: Record<string, unknown>;
+    },
+  ): Promise<void> {
+    const scope = this.scope(context);
+    await this.database.run(
+      `INSERT INTO seo_competitive_keyword_gaps
+       (id, organization_id, workspace_id, competitor_id, entity_id, competitor_domain, query_text, keyword,
+        search_volume, cpc, competitor_rank, phoenix_rank, location_code, language_code, gap_type, observed_at, provenance_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      input.id, scope.organizationId, scope.workspaceId, input.competitorId ?? null, input.entityId ?? null,
+      input.competitorDomain, input.queryText, input.keyword, input.searchVolume ?? null, input.cpc ?? null,
+      input.competitorRank ?? null, input.phoenixRank ?? null, input.locationCode ?? null, input.languageCode,
+      input.gapType, input.observedAt, JSON.stringify(input.provenance),
+    );
+  }
+
   async recordPageSnapshot(
     context: RequestContext,
     input: {
@@ -246,6 +279,7 @@ export class SeoCompetitiveRepository extends Repository {
     changes: readonly Record<string, unknown>[];
     opportunities: readonly Record<string, unknown>[];
     pageSnapshots: readonly Record<string, unknown>[];
+    keywordGaps: readonly Record<string, unknown>[];
   }> {
     const scope = this.scope(context);
     const pageSnapshots = await this.database.all(
@@ -327,7 +361,17 @@ export class SeoCompetitiveRepository extends Repository {
         LIMIT 50`,
       scope.organizationId, scope.workspaceId, entityId,
     );
-    return { competitors, changes, opportunities, pageSnapshots };
+    const keywordGaps = await this.database.all(
+      `SELECT g.competitor_domain AS competitorDomain, g.keyword, g.search_volume AS searchVolume, g.cpc,
+              g.competitor_rank AS competitorRank, g.phoenix_rank AS phoenixRank, g.gap_type AS gapType,
+              g.location_code AS locationCode, g.language_code AS languageCode, g.observed_at AS observedAt
+         FROM seo_competitive_keyword_gaps g
+        WHERE g.organization_id=? AND g.workspace_id IS ? AND g.entity_id=?
+        ORDER BY COALESCE(g.search_volume, 0) DESC, g.observed_at DESC
+        LIMIT 100`,
+      scope.organizationId, scope.workspaceId, entityId,
+    );
+    return { competitors, changes, opportunities, pageSnapshots, keywordGaps };
   }
 
   private scope(context: RequestContext): { organizationId: string; workspaceId: string | null } {
