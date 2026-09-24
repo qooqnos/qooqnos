@@ -916,3 +916,12 @@ Concurrent publication is now guarded at persistence level: representation upser
 - Persisted entity audits are now executable operationally, not only computed in memory.
 - Audit rules include entity completeness, semantic relationships, geographic consistency, publication/visibility consistency, and canonical identity presence.
 - Authenticated workspace-scoped API endpoints expose latest audit results and allow explicit audit execution against the current canonical SEO representation.
+
+
+## SEO/GEO crawl and indexability audit hardening — 2026-09-24
+- SEO audits now validate canonical URL presence for public published entities, publication/indexability consistency, visibility/indexability consistency, valid indexability policy values, service-area evidence, canonical identity references, and absolute sameAs references.
+- Audit scores now expose technical indexability alongside entity completeness, content quality, geographic answerability, local relevance, and provenance.
+- Audit persistence passes the canonical indexability policy explicitly, preventing the audit timestamp from being misinterpreted as policy input.
+- Unit coverage verifies publication/indexability conflicts and canonical identity diagnostics.
+
+Implementation commits: cb1fe23d24279264e5e8ba85a79bd9368c7b5acc, 684804634150c5afb0f49e5ee506a591c8bdb781, 58fb3fb7a23d013f71562d444bac1989afb538bd.
