@@ -765,3 +765,8 @@ The database is ready for production provisioning only when:
 
 Until then, adding another generic database schema would create unnecessary divergence.
 
+
+
+### Billing invoice reconciliation — 2026-09-24
+
+Billing invoice financial truth is now physically implemented by migration `0060_billing_invoice_system.sql`: `billing_invoices`, `billing_invoice_lines`, and `billing_invoice_payment_applications`. No parallel Commerce invoice table is authorized. Commerce invoice commands remain orchestration/reference contracts against the Billing-owned aggregate.
