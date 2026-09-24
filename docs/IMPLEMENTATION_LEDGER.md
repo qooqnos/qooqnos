@@ -1397,3 +1397,19 @@ Canonical public entity pages are now a first-class SEO projection surface:
 - internal-link public payload is sanitized so private source entity IDs are not exposed as UI-only fallback data;
 - Discovery breadcrumb links carry query context into the real Discovery page;
 - Checkout actions hydrate Product/Offering context from URL parameters.
+
+### Authorization Governance / Approval Workflow — 2026-09-25
+A first canonical approval workflow is now implemented.
+
+Implemented:
+- D1 `0083_authorization_approval_workflow.sql` with scoped approval requests and separation-of-duties trigger;
+- `ApprovalRepository` in Database;
+- `ApprovalService` in Runtime with explicit create/read/approve/reject permissions;
+- self-approval is rejected both in service/repository flow and at the database trigger boundary;
+- HTTP routes under `/api/v1/authorization/approval-requests`;
+- frontend Control Plane approval request/create/approve/reject controls;
+- authorization decisions now expose stable `reasonCode` and `policyVersion` metadata;
+- focused runtime test for approver actor propagation.
+
+Important ownership boundary:
+approval governance records and decides approval state; the protected domain module must still enforce the approved state before performing its own high-risk mutation.
