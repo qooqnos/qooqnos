@@ -160,6 +160,7 @@ const routes: Route[] = [
   { path: "/catalog", label: "کاتالوگ", icon: "▤", render: renderCatalog },
   { path: "/promotion", label: "پروموشن", icon: "٪", render: renderPromotion },
   { path: "/loyalty", label: "وفاداری", icon: "♢", render: renderLoyalty },
+  { path: "/advertising", label: "تبلیغات", icon: "◒", render: renderAdvertising },
 ];
 
 const theme = getInitialTheme();
@@ -622,7 +623,53 @@ async function postLoyaltyLedger(): Promise<void> {
     state.textContent="Ledger entry ثبت شد · "+response.data.id; state.className="connection-state success";
   }catch(error){state.textContent=error instanceof Error?error.message:"ثبت ledger ناموفق بود.";state.className="connection-state error";}
 }
-function renderCatalog(): string {
+function renderAdvertising(): string {
+  return '<section class="page-heading"><div><span class="eyebrow"><i></i> Sponsored Discovery</span><h1>تبلیغ را از کشف ارگانیک <em>جدا نگه دارید.</em></h1><p>Ads با policy، moderation، placement و measurement اختصاصی خودشان اجرا می‌شوند.</p></div></section>' +
+    '<section class="engine-grid">' +
+    '<article class="glass-card engine-card"><div class="card-section-heading"><span class="section-kicker">Account</span><h2>Advertiser</h2></div><div class="engine-form"><input id="ad-business" class="studio-input-line" value="' + escapeAttr(localStorage.getItem(STORAGE.business) ?? "") + '" placeholder="Business ID" /><input id="ad-currency" class="studio-input-line" value="USD" /></div><button class="button button-primary" data-ad-account>ساخت Account</button><div id="ad-account-state" class="connection-state">—</div></article>' +
+    '<article class="glass-card engine-card"><div class="card-section-heading"><span class="section-kicker">Campaign</span><h2>Campaign</h2></div><div class="engine-form"><input id="ad-account-id" class="studio-input-line" placeholder="Account ID" /><input id="ad-campaign-name" class="studio-input-line" placeholder="Campaign name" /><input id="ad-objective" class="studio-input-line" value="discovery" /><input id="ad-campaign-id" class="studio-input-line" placeholder="Campaign ID" /><input id="ad-version-id" class="studio-input-line" placeholder="Version ID" /></div><div class="engine-actions"><button class="button button-primary" data-ad-campaign>Campaign</button><button class="button button-ghost" data-ad-version>Version</button><button class="button button-ghost" data-ad-activate>Activate</button></div><div id="ad-campaign-state" class="connection-state">—</div></article>' +
+    '<article class="glass-card engine-card"><div class="card-section-heading"><span class="section-kicker">Delivery</span><h2>Sponsored Ad</h2></div><div class="engine-form"><input id="ad-subject-id" class="studio-input-line" placeholder="Product/Offering ID" /><input id="ad-creative" class="studio-input-line" placeholder="Creative reference" /><input id="ad-placement" class="studio-input-line" placeholder="Placement ID" /><input id="ad-id" class="studio-input-line" placeholder="Ad ID" /><select id="ad-decision" class="studio-input-line"><option value="served">served</option><option value="rejected">rejected</option></select></div><div class="engine-actions"><button class="button button-primary" data-ad-create>Ad</button><button class="button button-ghost" data-ad-delivery>Delivery</button></div><div id="ad-delivery-state" class="connection-state">—</div></article>' +
+    '<article class="glass-card engine-card"><div class="card-section-heading"><span class="section-kicker">Measurement</span><h2>Campaign Report</h2></div><div class="engine-form"><input id="ad-report-campaign" class="studio-input-line" placeholder="Campaign ID" /><input id="ad-impression-decision" class="studio-input-line" placeholder="Delivery Decision ID" /><input id="ad-impression-id" class="studio-input-line" placeholder="Impression ID" /></div><div class="engine-actions"><button class="button button-primary" data-ad-report>Report</button><button class="button button-ghost" data-ad-impression>Impression</button><button class="button button-ghost" data-ad-click>Click</button></div><div id="ad-report-state" class="connection-state">—</div></article>' +
+    '</section>';
+}
+
+async function createAdvertisingAccount(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#ad-account-state");if(!state)return;
+  try{const response=await apiJson<{data:{id:string}}>("/api/v1/advertising/accounts",{method:"POST",body:{businessId:document.querySelector<HTMLInputElement>("#ad-business")?.value.trim(),currency:document.querySelector<HTMLInputElement>("#ad-currency")?.value.trim()}});document.querySelector<HTMLInputElement>("#ad-account-id")!.value=response.data.id;state.textContent="Account ساخته شد · "+response.data.id;state.className="connection-state success";}catch(error){state.textContent=error instanceof Error?error.message:"ساخت account ناموفق بود.";state.className="connection-state error";}
+}
+async function createAdvertisingCampaign(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#ad-campaign-state");if(!state)return;
+  try{const response=await apiJson<{data:{id:string}}>("/api/v1/advertising/campaigns",{method:"POST",body:{advertisingAccountId:document.querySelector<HTMLInputElement>("#ad-account-id")?.value.trim(),name:document.querySelector<HTMLInputElement>("#ad-campaign-name")?.value.trim(),objective:document.querySelector<HTMLInputElement>("#ad-objective")?.value.trim()}});document.querySelector<HTMLInputElement>("#ad-campaign-id")!.value=response.data.id;document.querySelector<HTMLInputElement>("#ad-report-campaign")!.value=response.data.id;state.textContent="Campaign ساخته شد · "+response.data.id;state.className="connection-state success";}catch(error){state.textContent=error instanceof Error?error.message:"ساخت campaign ناموفق بود.";state.className="connection-state error";}
+}
+async function createAdvertisingVersion(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#ad-campaign-state");if(!state)return;
+  const campaignId=document.querySelector<HTMLInputElement>("#ad-campaign-id")?.value.trim()||"";
+  try{const response=await apiJson<{data:{id:string}}>("/api/v1/advertising/campaigns/"+encodeURIComponent(campaignId)+"/versions",{method:"POST",body:{version:1,targetingRules:{},placementRules:{},pacingPolicy:{},effectiveFrom:new Date().toISOString()}});document.querySelector<HTMLInputElement>("#ad-version-id")!.value=response.data.id;state.textContent="Version ساخته شد · "+response.data.id;state.className="connection-state success";}catch(error){state.textContent=error instanceof Error?error.message:"ساخت version ناموفق بود.";state.className="connection-state error";}
+}
+async function activateAdvertisingCampaign(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#ad-campaign-state");if(!state)return;
+  try{const response=await apiJson<{data:{status:string}}>("/api/v1/advertising/campaigns/"+encodeURIComponent(document.querySelector<HTMLInputElement>("#ad-campaign-id")?.value.trim()||"")+"/activate",{method:"POST",body:{versionId:document.querySelector<HTMLInputElement>("#ad-version-id")?.value.trim()}});state.textContent="Campaign فعال شد · "+response.data.status;state.className="connection-state success";}catch(error){state.textContent=error instanceof Error?error.message:"Activation ناموفق بود.";state.className="connection-state error";}
+}
+async function createAdvertisingAd(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#ad-delivery-state");if(!state)return;
+  try{const response=await apiJson<{data:{id:string}}>("/api/v1/advertising/ads",{method:"POST",body:{campaignVersionId:document.querySelector<HTMLInputElement>("#ad-version-id")?.value.trim(),subjectType:"product",subjectId:document.querySelector<HTMLInputElement>("#ad-subject-id")?.value.trim(),creativeReference:document.querySelector<HTMLInputElement>("#ad-creative")?.value.trim(),moderationStatus:"approved"}});document.querySelector<HTMLInputElement>("#ad-id")!.value=response.data.id;state.textContent="Ad ساخته شد · "+response.data.id;state.className="connection-state success";}catch(error){state.textContent=error instanceof Error?error.message:"ساخت Ad ناموفق بود.";state.className="connection-state error";}
+}
+async function recordAdvertisingDelivery(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#ad-delivery-state");if(!state)return;
+  try{const response=await apiJson<{data:{id:string}}>("/api/v1/advertising/delivery",{method:"POST",body:{adId:document.querySelector<HTMLInputElement>("#ad-id")?.value.trim(),placementId:document.querySelector<HTMLInputElement>("#ad-placement")?.value.trim(),decision:document.querySelector<HTMLSelectElement>("#ad-decision")?.value,policyVersion:"advertising-v1",deduplicationKey:crypto.randomUUID()}});document.querySelector<HTMLInputElement>("#ad-impression-decision")!.value=response.data.id;state.textContent="Delivery ثبت شد · "+response.data.id;state.className="connection-state success";}catch(error){state.textContent=error instanceof Error?error.message:"Delivery ناموفق بود.";state.className="connection-state error";}
+}
+async function loadAdvertisingReport(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#ad-report-state");if(!state)return;
+  try{const response=await apiJson<{data:{impressions:number;clicks:number;delivered:number;rejected:number}}>("/api/v1/advertising/campaigns/"+encodeURIComponent(document.querySelector<HTMLInputElement>("#ad-report-campaign")?.value.trim()||"")+"/report");state.textContent="served "+response.data.delivered+" · rejected "+response.data.rejected+" · impressions "+response.data.impressions+" · clicks "+response.data.clicks;state.className="connection-state success";}catch(error){state.textContent=error instanceof Error?error.message:"Report ناموفق بود.";state.className="connection-state error";}
+}
+async function recordAdvertisingImpression(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#ad-report-state");if(!state)return;
+  try{const response=await apiJson<{data:{id:string}}>("/api/v1/advertising/impressions",{method:"POST",body:{deliveryDecisionId:document.querySelector<HTMLInputElement>("#ad-impression-decision")?.value.trim(),deduplicationKey:crypto.randomUUID()}});document.querySelector<HTMLInputElement>("#ad-impression-id")!.value=response.data.id;state.textContent="Impression ثبت شد · "+response.data.id;state.className="connection-state success";}catch(error){state.textContent=error instanceof Error?error.message:"ثبت impression ناموفق بود.";state.className="connection-state error";}
+}
+async function recordAdvertisingClick(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#ad-report-state");if(!state)return;
+  try{const response=await apiJson<{data:{id:string}}>("/api/v1/advertising/clicks",{method:"POST",body:{impressionId:document.querySelector<HTMLInputElement>("#ad-impression-id")?.value.trim(),deduplicationKey:crypto.randomUUID()}});state.textContent="Click ثبت شد · "+response.data.id;state.className="connection-state success";}catch(error){state.textContent=error instanceof Error?error.message:"ثبت click ناموفق بود.";state.className="connection-state error";}
+}function renderCatalog(): string {
   const business = localStorage.getItem(STORAGE.business) ?? "";
   return `
     <section class="page-heading">
@@ -2101,6 +2148,15 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-loyalty-create]")?.addEventListener("click", () => { void createLoyaltyProgram(); });
   document.querySelector<HTMLButtonElement>("[data-loyalty-enroll]")?.addEventListener("click", () => { void enrollLoyaltyMember(); });
   document.querySelector<HTMLButtonElement>("[data-loyalty-ledger]")?.addEventListener("click", () => { void postLoyaltyLedger(); });
+  document.querySelector<HTMLButtonElement>("[data-ad-account]")?.addEventListener("click", () => { void createAdvertisingAccount(); });
+  document.querySelector<HTMLButtonElement>("[data-ad-campaign]")?.addEventListener("click", () => { void createAdvertisingCampaign(); });
+  document.querySelector<HTMLButtonElement>("[data-ad-version]")?.addEventListener("click", () => { void createAdvertisingVersion(); });
+  document.querySelector<HTMLButtonElement>("[data-ad-activate]")?.addEventListener("click", () => { void activateAdvertisingCampaign(); });
+  document.querySelector<HTMLButtonElement>("[data-ad-create]")?.addEventListener("click", () => { void createAdvertisingAd(); });
+  document.querySelector<HTMLButtonElement>("[data-ad-delivery]")?.addEventListener("click", () => { void recordAdvertisingDelivery(); });
+  document.querySelector<HTMLButtonElement>("[data-ad-report]")?.addEventListener("click", () => { void loadAdvertisingReport(); });
+  document.querySelector<HTMLButtonElement>("[data-ad-impression]")?.addEventListener("click", () => { void recordAdvertisingImpression(); });
+  document.querySelector<HTMLButtonElement>("[data-ad-click]")?.addEventListener("click", () => { void recordAdvertisingClick(); });
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
