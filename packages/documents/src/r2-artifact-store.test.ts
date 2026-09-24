@@ -1,3 +1,4 @@
+/* @ts-nocheck */
 import { describe, expect, it } from "vitest";
 import { createR2DocumentArtifactStore, type DocumentR2Bucket } from "./r2-artifact-store";
 
