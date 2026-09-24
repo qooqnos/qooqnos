@@ -125,6 +125,7 @@ function pdfEscape(value: string): string {
 }
 
 function createPdf(document: ExportDocument, profile: DocumentRenderProfile): Uint8Array {
+  void profile;
   const lines = documentLines(document).flatMap((line) => wrapLine(line, 92));
   const pages: string[][] = [];
   for (let i = 0; i < lines.length; i += 46) pages.push(lines.slice(i, i + 46));
