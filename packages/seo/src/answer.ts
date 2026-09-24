@@ -71,7 +71,7 @@ function questionFor(entity: SeoEntity): string {
     fr: `Qu'est-ce que ${name} ?`,
     es: `¿Qué es ${name}?`,
   };
-  return (templates[language] ?? templates.en).trim();
+  return (templates[language] ?? templates.en ?? "").trim();
 }
 
 function answerText(entity: SeoEntity): string {
