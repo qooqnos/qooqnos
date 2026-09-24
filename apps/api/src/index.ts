@@ -77,6 +77,15 @@ const homePage = (version: string): string => `<!doctype html>
   </body>
 </html>`;
 
+function isApiFirstPublicPath(pathname: string): boolean {
+  return pathname === "/health"
+    || pathname === "/ready"
+    || pathname === "/robots.txt"
+    || pathname === "/sitemap.xml"
+    || /^\\/sitemap-\\d+\\.xml$/.test(pathname)
+    || pathname.startsWith("/api/");
+}
+
 function createRouter(version: string, database: D1Database | undefined, env: ApiEnv): ApiRouter {
   const authorization = createApiAuthorizationRegistry();
   const router = new ApiRouter({ authorization, ...(database ? { database } : {}), seoCanonicalBaseUrl: env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com" });
@@ -554,12 +563,16 @@ export default {
       const seoDocument = await renderSeoAwareDocument(request, env, database ?? undefined);
       if (seoDocument) return seoDocument;
 
+      const router = createRouter(version, database ?? undefined, env);
+      if (isApiFirstPublicPath(url.pathname)) return router.handle(request);
+
       if (env.ASSETS) {
         const assetResponse = await env.ASSETS.fetch(request);
         if (assetResponse.status !== 404) return assetResponse;
       }
 
       if (url.pathname === "/") return html(homePage(version));
+      return router.handle(request);
     }
 
     return createRouter(version, database ?? undefined, env).handle(request);
