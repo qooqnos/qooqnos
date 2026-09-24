@@ -258,27 +258,27 @@ function render(): void {
 function renderSeoEntity(payload: PublicSeoHydration): string {
   const entity = payload.entity;
   const answer = payload.answer;
-  const facts = answer.facts.map((fact) => \`
+  const facts = answer.facts.map((fact) => `
     <li class="seo-fact-row">
-      <span>\${escapeHtml(fact.fact)}</span>
-      \${fact.verifiedAt ? \`<small>تأیید: \${escapeHtml(fact.verifiedAt)}</small>\` : ""}
-    </li>\`).join("");
+      <span>${escapeHtml(fact.fact)}</span>
+      ${fact.verifiedAt ? `<small>تأیید: ${escapeHtml(fact.verifiedAt)}</small>` : ""}
+    </li>`).join("");
   const geo = answer.geography
     ? [
-        answer.geography.country ? \`<span>کشور: \${escapeHtml(answer.geography.country)}</span>\` : "",
-        answer.geography.locationId ? \`<span>مکان: \${escapeHtml(answer.geography.locationId)}</span>\` : "",
-        ...answer.geography.serviceAreaIds.map((value) => \`<span>حوزه خدمت: \${escapeHtml(value)}</span>\`),
+        answer.geography.country ? `<span>کشور: ${escapeHtml(answer.geography.country)}</span>` : "",
+        answer.geography.locationId ? `<span>مکان: ${escapeHtml(answer.geography.locationId)}</span>` : "",
+        ...answer.geography.serviceAreaIds.map((value) => `<span>حوزه خدمت: ${escapeHtml(value)}</span>`),
       ].filter(Boolean).join("")
     : "";
 
   applyHydratedSeoHead(payload);
 
-  return \`
+  return `
     <section class="page-heading seo-public-heading">
       <div>
-        <span class="eyebrow"><i></i> \${escapeHtml(entity.type)}</span>
-        <h1>\${escapeHtml(entity.preferredName)}</h1>
-        <p>\${escapeHtml(entity.summary ?? entity.description ?? answer.answer)}</p>
+        <span class="eyebrow"><i></i> ${escapeHtml(entity.type)}</span>
+        <h1>${escapeHtml(entity.preferredName)}</h1>
+        <p>${escapeHtml(entity.summary ?? entity.description ?? answer.answer)}</p>
       </div>
       <div class="heading-actions">
         <a class="button button-primary" href="/discover" data-nav>کشف در ققنوس ←</a>
@@ -287,21 +287,21 @@ function renderSeoEntity(payload: PublicSeoHydration): string {
     <section class="section-block seo-public-grid">
       <article class="glass-card seo-public-card">
         <span class="section-kicker">Answer</span>
-        <h2>\${escapeHtml(answer.question)}</h2>
-        <p class="seo-public-answer">\${escapeHtml(answer.answer)}</p>
+        <h2>${escapeHtml(answer.question)}</h2>
+        <p class="seo-public-answer">${escapeHtml(answer.answer)}</p>
         <div class="seo-public-meta">
-          <span>وضعیت: \${escapeHtml(answer.confidence)}</span>
-          <span>به‌روزرسانی: \${escapeHtml(answer.freshnessAt)}</span>
-          <span>\${answer.citationReady ? "Citation-ready" : "نیازمند بررسی"}</span>
+          <span>وضعیت: ${escapeHtml(answer.confidence)}</span>
+          <span>به‌روزرسانی: ${escapeHtml(answer.freshnessAt)}</span>
+          <span>${answer.citationReady ? "Citation-ready" : "نیازمند بررسی"}</span>
         </div>
       </article>
       <article class="glass-card seo-public-card">
         <span class="section-kicker">Verified facts</span>
         <h2>اطلاعات قابل استناد</h2>
-        \${facts ? \`<ul class="seo-fact-list">\${facts}</ul>\` : \`<p class="seo-public-muted">برای این موجودیت هنوز fact مستقلی ثبت نشده است.</p>\`}
-        \${geo ? \`<div class="metadata-cloud">\${geo}</div>\` : ""}
+        ${facts ? `<ul class="seo-fact-list">${facts}</ul>` : `<p class="seo-public-muted">برای این موجودیت هنوز fact مستقلی ثبت نشده است.</p>`}
+        ${geo ? `<div class="metadata-cloud">${geo}</div>` : ""}
       </article>
-    </section>\`;
+    </section>`;
 }
 
 function applyHydratedSeoHead(payload: PublicSeoHydration): void {
@@ -327,7 +327,7 @@ function applyHydratedSeoHead(payload: PublicSeoHydration): void {
 }
 
 function setMeta(name: string, content: string): void {
-  let tag = document.head.querySelector<HTMLMetaElement>(\`meta[name="\${CSS.escape(name)}"]\`);
+  let tag = document.head.querySelector<HTMLMetaElement>(`meta[name="${CSS.escape(name)}"]`);
   if (!tag) {
     tag = document.createElement("meta");
     tag.name = name;
@@ -337,7 +337,7 @@ function setMeta(name: string, content: string): void {
 }
 
 function setMetaProperty(property: string, content: string): void {
-  let tag = document.head.querySelector<HTMLMetaElement>(\`meta[property="\${CSS.escape(property)}"]\`);
+  let tag = document.head.querySelector<HTMLMetaElement>(`meta[property="${CSS.escape(property)}"]`);
   if (!tag) {
     tag = document.createElement("meta");
     tag.setAttribute("property", property);
@@ -347,7 +347,7 @@ function setMetaProperty(property: string, content: string): void {
 }
 
 function setLink(rel: string, href: string): void {
-  let tag = document.head.querySelector<HTMLLinkElement>(\`link[rel="\${CSS.escape(rel)}"]\`);
+  let tag = document.head.querySelector<HTMLLinkElement>(`link[rel="${CSS.escape(rel)}"]`);
   if (!tag) {
     tag = document.createElement("link");
     tag.rel = rel;
