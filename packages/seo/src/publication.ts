@@ -226,9 +226,9 @@ export async function processSeoPublicationJobs(
           now,
         },
         [
-          { id: crypto.randomUUID(), representationId, artifactType: "metadata", artifactVersion: 1, payload: plan.metadata, contentHash: await stableHash(plan.metadata), now },
-          { id: crypto.randomUUID(), representationId, artifactType: "structured-data", artifactVersion: 1, payload: plan.structuredData, contentHash: await stableHash(plan.structuredData), now },
-          { id: crypto.randomUUID(), representationId, artifactType: "answer", artifactVersion: 1, payload: plan.answer, contentHash: await stableHash(plan.answer), now },
+          { id: brandId<"EntityId">(crypto.randomUUID()), representationId, artifactType: "metadata", artifactVersion: 1, payload: plan.metadata, contentHash: await stableHash(plan.metadata), now },
+          { id: brandId<"EntityId">(crypto.randomUUID()), representationId, artifactType: "structured-data", artifactVersion: 1, payload: plan.structuredData, contentHash: await stableHash(plan.structuredData), now },
+          { id: brandId<"EntityId">(crypto.randomUUID()), representationId, artifactType: "answer", artifactVersion: 1, payload: plan.answer, contentHash: await stableHash(plan.answer), now },
         ],
         [
           { entityId: payload.id, entityType: payload.type, version: payload.sourceVersion },
