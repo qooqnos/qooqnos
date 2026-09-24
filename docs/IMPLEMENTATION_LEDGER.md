@@ -537,7 +537,7 @@ Communication policy note: migration 0055 establishes intent/channel policy, rec
 
 Communication template note: migration 0051 establishes the scoped versioned template registry. Notification sends referencing templates now require an approved active version matching intent/channel/locale; approved versions are immutable.
 
-Communication note: migration 0035 establishes provider-neutral Conversation/Message/Notification/Delivery storage with tenant scope and Notification idempotency. Notification creation is transactional with Outbox; the scheduled dispatch worker now claims queued notifications, records DeliveryAttempt evidence, provides a built-in in-app adapter, and requeues transient adapter failures. Runtime-configured external HTTP provider adapters and scoped rate-limit/anomaly controls are implemented; provider credentials remain runtime-only, while intent/consent/suppression policy and the scoped versioned template registry remain canonical policy controls.
+Communication note: migrations 0035/0051/0055/0056 establish provider-neutral Conversation/Message/Notification/Delivery storage, versioned templates, intent/consent/suppression policy and required-message semantics. Migration 0065 adds canonical Push channel support and preserves existing data through table rebuilds. Runtime-configured HTTP adapters now cover Email/SMS/WhatsApp/Push, with optional secondary providers, idempotency propagation, timeout/network normalization, Retry-After handling and health/cooldown failover. Dispatch enforces tenant/recipient/channel/provider/platform rate limits plus bounded burst-anomaly cooldowns; provider credentials remain runtime-only.
 
 Billing runtime note: the API Seller AI composition uses the real D1-backed BillingService. Missing plan/subscription/entitlement state fails the operation closed.
 
@@ -765,3 +765,6 @@ Invoice runtime/API note: `GET /api/v1/billing/invoices` is implemented through 
 | Provider-specific vendor onboarding | 🟡 External operational work | `docs/INTEGRATION_PROVIDER_ADAPTERS.md` |
 
 Implementation commits: `a51897e`, `e6bad36`, `a00a183`, `3e39a95`, `224b884`, `1ad3881`, `be974cf`.
+
+
+| Communication provider adapters + rate limiting | 🟢 Operational | migrations/0065_communication_push_channel.sql; packages/communication/src/adapter.ts; packages/communication/src/provider-config.ts; packages/communication/src/dispatch.ts; packages/communication/src/rate-limit.ts; apps/api/src/communication-worker.ts; packages/communication/src/provider-rate-limit.test.ts | Push channel + Email/SMS/WhatsApp/Push runtime HTTP adapters; optional secondary-provider failover; scoped rate limits; bounded burst-anomaly cooldowns; provider credentials remain runtime-only. | commits c576061d, 004d2b9, 392a36e, b8e6298, 97c8f52, 7680903, 6491760, d7a846f, aa86fc6, cae8fa5, c2511c1, 3926003, 9adf77c, b230c99, db20b88, c7a34e1, 925d4e8 | CI/Phoenix verification pending on the post-checkpoint head. |
