@@ -60,21 +60,30 @@ export function buildEntityPageModel(
     },
   ];
 
-  if (entity.type === "Service" || entity.type === "Offer" || entity.type === "Business" || entity.type === "Branch") {
+  if (entity.type === "Service") {
     actions.push({
       kind: "secondary",
-      label: "شروع اقدام",
+      label: "شروع رزرو",
       href: "/booking?entity=" + encodeURIComponent(entity.id),
-      reason: "action-surface",
+      reason: "booking-surface",
+    });
+  }
+
+  if (entity.type === "Offer") {
+    actions.push({
+      kind: "secondary",
+      label: "ادامه فرایند",
+      href: "/checkout?offering=" + encodeURIComponent(entity.id),
+      reason: "commerce-surface",
     });
   }
 
   if (entity.type === "Product") {
     actions.push({
       kind: "secondary",
-      label: "مشاهده برای خرید",
-      href: "/checkout?product=" + encodeURIComponent(entity.id),
-      reason: "commerce-surface",
+      label: "مشاهده گزینه‌های مرتبط",
+      href: "/discover?q=" + encodeURIComponent(entity.preferredName),
+      reason: "commerce-discovery-surface",
     });
   }
 
