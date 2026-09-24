@@ -38,7 +38,7 @@ The product loop remains:
 
 ## Canonical implementation coverage
 
-Current canonical migrations reach `0065_communication_push_channel.sql`.
+Current canonical migrations reach `0067_communication_push_channel.sql`.
 
 Implemented core capability families include:
 
