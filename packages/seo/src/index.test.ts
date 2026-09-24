@@ -45,8 +45,13 @@ describe("SEO/GEO core", () => {
 
   it("generates metadata and structured data from canonical facts", () => {
     const url = canonicalEntityUrl("https://example.com", entity);
-    expect(generateMetadata({ entity, canonicalBaseUrl: "https://example.com" }, url).canonicalUrl).toBe(url);
-    expect(generateStructuredData(entity)["@type"]).toBe("Business");
+    const metadata = generateMetadata({ entity, canonicalBaseUrl: "https://example.com" }, url);
+    expect(metadata.canonicalUrl).toBe(url);
+    expect(metadata.robots).toBe("index,follow");
+    expect(metadata.openGraph.url).toBe(url);
+    expect(metadata.twitter.card).toBe("summary_large_image");
+    expect(metadata.alternates.some((item) => item.hreflang === "en-US")).toBe(true);
+    expect(generateStructuredData(entity)["@type"]).toBe("LocalBusiness");
   });
 
   it("builds attributable answer representations", () => {
@@ -60,8 +65,15 @@ describe("SEO/GEO core", () => {
   });
 
   it("emits deterministic crawl artifacts", () => {
-    expect(buildSitemapXml(["https://example.com/a"])).toContain("<loc>https://example.com/a</loc>");
-    expect(buildRobotsTxt("https://example.com/sitemap.xml")).toContain("Sitemap:");
+    const sitemap = buildSitemapXml([
+      "https://example.com/b",
+      "https://example.com/a",
+      "https://example.com/a",
+      "not-a-url",
+    ]);
+    expect(sitemap.indexOf("https://example.com/a")).toBeLessThan(sitemap.indexOf("https://example.com/b"));
+    expect(sitemap.match(/<url>/g)).toHaveLength(2);
+    expect(buildRobotsTxt("https://example.com/sitemap.xml")).toContain("Disallow: /api/");
   });
 
   it("audits crawl/indexability consistency and canonical identity", () => {
