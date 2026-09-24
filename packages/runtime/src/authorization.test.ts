@@ -44,7 +44,7 @@ function registry() {
 describe("AuthorizationRegistry", () => {
   it("allows an active member with the registered permission", () => {
     const decision = registry().evaluate({ context, permission: "catalog.read", subject });
-    expect(decision).toEqual({ allowed: true, reason: "allowed", permission: "catalog.read" });
+    expect(decision).toEqual({ allowed: true, reason: "allowed", reasonCode: "allowed", policyVersion: "authorization-v1", permission: "catalog.read" });
   });
 
   it("denies an unauthenticated subject before permission evaluation", () => {
@@ -134,5 +134,17 @@ describe("AuthorizationRegistry", () => {
     const policy = workspaceResourcePolicy();
     expect(policy({ context: { ...context, workspaceId: undefined }, permission: "x", subject })).toBe(false);
     expect(policy({ context, permission: "x", subject, resource: { workspaceId: "workspace-1" } })).toBe(true);
+  });
+});
+
+describe("Authorization decision contract metadata", () => {
+  it("exposes stable reasonCode and policyVersion for denial", () => {
+    const decision = registry().evaluate({
+      context,
+      permission: "catalog.read",
+      subject: { ...subject, authenticated: false },
+    });
+    expect(decision.reasonCode).toBe("unauthenticated");
+    expect(decision.policyVersion).toBe("authorization-v1");
   });
 });
