@@ -4,6 +4,7 @@ const TITLE_LIMIT=60;
 const DESCRIPTION_LIMIT=160;
 const DEFAULT_SITE_NAME="Phoenix";
 const DEFAULT_IMAGE="/og/default.png";
+const DESCRIPTION_FALLBACK="Discover verified information about this Phoenix entity.";
 
 function clean(value:string|undefined):string{return(value??"").replace(/\s+/g," ").trim();}
 function limit(value:string,max:number):string{return value.length>max?value.slice(0,max-1).trimEnd()+"…":value;}
@@ -21,7 +22,7 @@ export function generateMetadata(c:SeoContext,url:string,policy?:SeoPolicy):SeoM
  const locale=normalizeLocale(entity.locale);
  const siteName=DEFAULT_SITE_NAME;
  const title=inferTitle(entity.preferredName,siteName);
- const description=limit(clean(entity.summary)||clean(entity.description)||clean(entity.preferredName)||siteName,DESCRIPTION_LIMIT);
+ const description=limit(clean(entity.summary)||clean(entity.description)||clean(entity.preferredName)||DESCRIPTION_FALLBACK,DESCRIPTION_LIMIT);
  const indexability=policy?.indexability??(entity.visibility==="public"&&entity.publicationState==="published"?"index":"noindex");
  const robots=indexability==="index"?"index,follow":"noindex,nofollow";
  const image=resolveUrl(c.canonicalBaseUrl,(entity as SeoContext["entity"] & {imageUrl?:string}).imageUrl)||resolveUrl(c.canonicalBaseUrl,DEFAULT_IMAGE);
