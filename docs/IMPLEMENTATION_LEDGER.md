@@ -422,7 +422,7 @@ Migration safety:
 
 Catalog offering integrity hardening remains in 0014_catalog_offering_integrity.sql; 0015_business_primary_category_integrity.sql adds three integrity triggers and no tables; 0016_catalog_attribute_vocabulary.sql adds three Catalog Attribute tables; 0017_catalog_attribute_values.sql adds two AttributeValue tables and preserves all prior migration identities/checksums.
 
-The old in-memory database implementation is retained only as an explicit legacy compatibility module and is no longer part of the canonical @qooqnos/database root API.
+The old in-memory database implementation has been removed from the active source tree and is no longer available through any package export.
 
 Customer/CRM verification note: repository and scope-focused tests are covered by the repository test suite and current GitHub Actions verification.
 
@@ -436,7 +436,7 @@ Production D1 execution note: the repository now verifies the supplied productio
 
 Case external dispatch note: queue assignment can create a durable CaseDispatch with deterministic assignment idempotency; the transactional outbox publishes the request; the scheduled worker resolves a provider-neutral adapter, records append-only attempts, classifies failures and retries transient failures. Provider endpoint/credentials remain runtime-only.
 
-Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events and Act outcome links, Automation scheduled execution, AI durable Seller AI worker resolution, privacy consent expiry and approved-request orchestration, Communication intent/consent/suppression policy, Localization registry, Case external dispatch, canonical-source legacy boundary enforcement, and runtime-module registry enforcement are implemented. Remaining controlled gates are provider-specific vendor onboarding/credentials, any provider-specific Fulfillment/Integration reconciliation semantics, Documents/Analytics contracts, and credentialed remote D1 migration/application. Production D1 itself is now provisioned externally.
+Current operational boundary note: Integration durable claim/sync workers, Fulfillment provider-adapter contracts, Matching retrieval/ranking/Connect execution plus canonical Matching Outbox events and Act outcome links, Automation scheduled execution, AI durable Seller AI worker resolution, privacy consent expiry and approved-request orchestration, Communication intent/consent/suppression policy, Localization registry, Case external dispatch, Analytics, CRM timeline projection, canonical-source legacy boundary enforcement, and runtime-module registry enforcement are implemented. Remaining controlled gates are provider-specific vendor onboarding/credentials, any provider-specific Fulfillment/Integration reconciliation semantics, and credentialed remote D1 migration/application. Production D1 itself is now provisioned externally.
 
 Deployment readiness note: `wrangler.toml` remains free of fabricated Cloudflare resource IDs. Production deployment renders `.wrangler/production.wrangler.toml` from real deployment variables, verifies D1/R2/Queue/Workers AI/model bindings, runs the pinned Worker dry-run and tests, then deploys. `/ready` exposes infrastructure binding state in production and scheduled execution fails closed when mandatory bindings are absent.
 
@@ -688,7 +688,7 @@ GitHub Actions on the current head completed successfully:
 
 Verification coverage on this checkpoint includes migration-lock integrity, canonical-source legacy boundary, runtime-module registry completeness, migration-history rules, lint, typecheck, workspace build, Cloudflare Worker dry-run, and unit tests.
 
-The current verification workflows check migration-lock integrity, workspace build and tests; CI additionally runs lint/typecheck/Worker dry-run. The legacy compatibility cleanup must receive a fresh CI/Phoenix verification run before its head is considered a verified checkpoint.
+The current verification workflows check migration-lock integrity, workspace build and tests; CI additionally runs lint/typecheck/Worker dry-run. The current cleanup head still requires a fresh CI/Phoenix verification run before it is treated as a verified checkpoint.
 
 The Billing route dependency wiring was corrected in commit `fc7f53e1f848094a32aa697d3bafab90197ab9e6`; the corrected commit is covered by the green verification checkpoint above. Privacy subject scope validation was added in commits `afcff1bb0023187024b12508f7eb7cf175d8bec6` and `c121e50055d3a2e3ca1023c88c13a2f5bb403fa0`, then reconciled into the verified checkpoint `d122981098cc1d517664afdce3d33d3333e82afa`.
 
