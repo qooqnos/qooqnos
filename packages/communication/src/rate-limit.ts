@@ -27,6 +27,8 @@ export interface CommunicationRateLimitDecision {
   readonly retryAfterSeconds: number;
   readonly scope?: CommunicationRateLimitScope;
   readonly key?: string;
+  readonly anomalyDetected?: boolean;
+  readonly anomalyRetryAfterSeconds?: number;
 }
 
 interface Bucket {
@@ -40,21 +42,54 @@ interface Bucket {
  * this guard in production. Provider 429/Retry-After remains authoritative for
  * the provider-specific window.
  */
+export interface CommunicationBurstRule {
+  readonly scope: "tenant" | "recipient" | "provider" | "platform";
+  readonly threshold: number;
+  readonly windowMs: number;
+  readonly cooldownMs: number;
+}
+
 export class CommunicationRateLimiter {
   private readonly buckets = new Map<string, Bucket>();
+  private readonly bursts = new Map<string, number[]>();
+  private readonly anomalyCooldowns = new Map<string, number>();
 
   constructor(
     private readonly rules: readonly CommunicationRateLimitRule[],
     private readonly clock: () => number = Date.now,
+    private readonly burstRules: readonly CommunicationBurstRule[] = [],
   ) {
+
     for (const rule of rules) {
       if (!Number.isSafeInteger(rule.max) || rule.max < 1) throw new Error("Rate-limit max must be positive");
       if (!Number.isSafeInteger(rule.windowMs) || rule.windowMs < 1000) throw new Error("Rate-limit window must be at least one second");
+    }
+    for (const rule of burstRules) {
+      if (!Number.isSafeInteger(rule.threshold) || rule.threshold < 1) throw new Error("Burst threshold must be positive");
+      if (!Number.isSafeInteger(rule.windowMs) || rule.windowMs < 1000) throw new Error("Burst window must be at least one second");
+      if (!Number.isSafeInteger(rule.cooldownMs) || rule.cooldownMs < 1000) throw new Error("Burst cooldown must be at least one second");
     }
   }
 
   checkAndConsume(key: CommunicationRateLimitKey): CommunicationRateLimitDecision {
     const now = this.clock();
+    for (const rule of this.burstRules) {
+      const bucketKey = this.bucketKey(rule.scope, key);
+      if (!bucketKey) continue;
+      const existing = this.bursts.get(bucketKey) ?? [];
+      const recent = existing.filter((timestamp) => now - timestamp >= 0 && now - timestamp <= rule.windowMs);
+      const cooldownUntil = this.anomalyCooldowns.get(bucketKey) ?? 0;
+      if (cooldownUntil > now) {
+        return { allowed: false, retryAfterSeconds: Math.max(1, Math.ceil((cooldownUntil - now) / 1000)), scope: rule.scope, key: bucketKey, anomalyDetected: true, anomalyRetryAfterSeconds: Math.max(1, Math.ceil((cooldownUntil - now) / 1000)) };
+      }
+      recent.push(now);
+      this.bursts.set(bucketKey, recent);
+      if (recent.length >= rule.threshold) {
+        const retryAfterSeconds = Math.max(1, Math.ceil(rule.cooldownMs / 1000));
+        this.anomalyCooldowns.set(bucketKey, now + rule.cooldownMs);
+        return { allowed: false, retryAfterSeconds, scope: rule.scope, key: bucketKey, anomalyDetected: true, anomalyRetryAfterSeconds: retryAfterSeconds };
+      }
+    }
     for (const rule of this.rules) {
       const bucketKey = this.bucketKey(rule.scope, key);
       if (!bucketKey) continue;
@@ -79,6 +114,8 @@ export class CommunicationRateLimiter {
 
   reset(): void {
     this.buckets.clear();
+    this.bursts.clear();
+    this.anomalyCooldowns.clear();
   }
 
   private bucketKey(scope: CommunicationRateLimitScope, key: CommunicationRateLimitKey): string | null {
