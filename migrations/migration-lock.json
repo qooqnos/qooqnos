@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T09:00:00.000Z",
+  "generatedAt": "2026-09-24T10:30:00.000Z",
   "migrations": [
     {
       "id": "0001_foundation",
@@ -411,19 +411,22 @@
       "id": "0059_billing_refund_financial_accounting",
       "version": 59,
       "moduleId": "billing",
-      "checksum": "dec1c904db7837d5579175cb4f426cca6e439a325f0069a427df5c4e2c887383",      "filename": "0059_billing_refund_financial_accounting.sql"
+      "checksum": "dec1c904db7837d5579175cb4f426cca6e439a325f0069a427df5c4e2c887383",
+      "filename": "0059_billing_refund_financial_accounting.sql"
     },
     {
       "id": "0060_billing_invoice_system",
       "version": 60,
       "moduleId": "billing",
-      "checksum": "9b827d7597903fa3e258bd21b52de7c4b570e1b7684b05a333241b44e5f5130e",      "filename": "0060_billing_invoice_system.sql"
+      "checksum": "9b827d7597903fa3e258bd21b52de7c4b570e1b7684b05a333241b44e5f5130e",
+      "filename": "0060_billing_invoice_system.sql"
     },
     {
       "id": "0061_billing_settlement",
       "version": 61,
       "moduleId": "billing",
-      "checksum": "e5d48022741486b98c4b51a2b6053aa367932d1af39fbe6e625a7819031b4217",      "filename": "0061_billing_settlement.sql"
+      "checksum": "e5d48022741486b98c4b51a2b6053aa367932d1af39fbe6e625a7819031b4217",
+      "filename": "0061_billing_settlement.sql"
     },
     {
       "id": "0062_billing_reconciliation_hardening",
@@ -438,6 +441,13 @@
       "moduleId": "catalog",
       "checksum": "7ada3b3d1c43385f644938bfd55d2368ee0e43e5ca96a2a1425b44bd6245ab1a",
       "filename": "0063_catalog_attribute_cutover.sql"
+    },
+    {
+      "id": "0064_trust_signals_anti_abuse",
+      "version": 64,
+      "moduleId": "trust",
+      "checksum": "853079405408e86a149d884927f2e84e00cf0d463d14ba68a05dc62cfd94187e",
+      "filename": "0064_trust_signals_anti_abuse.sql"
     }
   ]
 }
