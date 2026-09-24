@@ -15,6 +15,7 @@ import {
   generateMetadata,
   generateStructuredData,
   validateStructuredData,
+  validateAnswerRepresentation,
   recommendInternalLinks,
   compareEntityRepresentations,
 } from "./index";
@@ -74,14 +75,40 @@ describe("SEO/GEO core", () => {
     expect(validateStructuredData(structured).valid).toBe(true);
   });
 
-  it("builds attributable answer representations", () => {
+  it("builds citation-ready, attributable answer representations", () => {
     const answer = buildAnswerRepresentation(
       entity,
-      [{ fact: "Open daily", sourceEntityId: "biz-1", verifiedAt: "2026-09-24T00:00:00Z" }],
+      [{ fact: "Open daily", sourceEntityId: "biz-1", verifiedAt: "2026-09-24T00:00:00Z", sourceType: "business-record" }],
       "2026-09-24T00:00:00Z",
     );
+    expect(answer.entityId).toBe("biz-1");
+    expect(answer.locale).toBe("en-US");
     expect(answer.confidence).toBe("verified");
+    expect(answer.citationReady).toBe(true);
     expect(answer.facts).toHaveLength(1);
+    expect(answer.facts[0]?.sourceType).toBe("business-record");
+    expect(answer.geography?.locationId).toBe("loc-1");
+    expect(answer.geography?.scope).toBe("city");
+    expect(validateAnswerRepresentation(answer, entity, "2026-09-24T12:00:00Z").citationReady).toBe(true);
+  });
+
+  it("derives first-party evidence without inventing external facts", () => {
+    const answer = buildAnswerRepresentation(entity, [], "2026-09-24T12:00:00Z");
+    expect(answer.confidence).toBe("verified");
+    expect(answer.citationReady).toBe(true);
+    expect(answer.facts[0]?.sourceType).toBe("canonical-entity");
+    expect(answer.facts[0]?.fact).toBe(entity.summary);
+  });
+
+  it("rejects stale answer evidence", () => {
+    const answer = buildAnswerRepresentation(
+      entity,
+      [{ fact: "Open daily", sourceEntityId: "biz-1", verifiedAt: "2026-09-24T00:00:00Z", validUntil: "2026-09-24T01:00:00Z" }],
+      "2026-09-25T00:00:00Z",
+    );
+    const validation = validateAnswerRepresentation(answer, entity, "2026-09-25T00:00:00Z");
+    expect(validation.citationReady).toBe(false);
+    expect(validation.issues.some((issue) => issue.code === "STALE_SOURCE")).toBe(true);
   });
 
   it("emits deterministic crawl artifacts", () => {
@@ -134,6 +161,7 @@ describe("SEO/GEO core", () => {
     const withoutLocation = { ...entity };
     delete (withoutLocation as { locationId?: string }).locationId;
     expect(buildGeoTruthSignal({ ...withoutLocation, geoScope: "city" })).toBeNull();
+    expect(buildGeoTruthSignal({ ...withoutLocation, geoScope: "country", country: "AZ" })?.country).toBe("AZ");
   });
 
   it("models intent, coverage, and freshness without inventing facts", () => {
