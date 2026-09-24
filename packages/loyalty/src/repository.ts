@@ -1,4 +1,4 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
+import { brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
 
 export type LoyaltyProgramStatus = "draft" | "active" | "paused" | "retired";
