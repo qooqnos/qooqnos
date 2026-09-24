@@ -3,6 +3,7 @@ import { AI_MODULE } from "@qooqnos/ai";
 import { DOCUMENTS_MODULE } from "@qooqnos/documents";
 import { SEO_MODULE } from "@qooqnos/seo";
 import { MEDIA_MODULE } from "@qooqnos/media";
+import { PROMOTION_MODULE } from "@qooqnos/promotion";
 import { CATALOG_MODULE } from "@qooqnos/catalog";
 import { BUSINESS_MODULE } from "@qooqnos/business";
 import { BOOKING_MODULE } from "@qooqnos/booking";
@@ -57,6 +58,7 @@ const modules: readonly RuntimeModule[] = [
   CASE_SUPPORT_MODULE,
   TRUST_MODULE,
   MEDIA_MODULE,
+  PROMOTION_MODULE,
   onboardingModule,
   AI_MODULE,
   DOCUMENTS_MODULE,
