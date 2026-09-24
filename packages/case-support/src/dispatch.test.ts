@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { brandId } from "@qooqnos/core";
 import {
-  CaseDispatchProviderError,
   createCaseDispatchProviderRegistry,
   createHttpCaseDispatchProviderAdapter,
 } from "./dispatch-adapter";
