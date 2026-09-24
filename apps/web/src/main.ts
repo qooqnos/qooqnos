@@ -381,7 +381,7 @@ async function loadCustomerState(): Promise<void> {
       ? timeline.map((event) => `
         <div class="timeline-item">
           <span class="timeline-dot"></span>
-          <div><strong>${escapeHtml(event.eventType ?? event.type ?? "event")}</strong><p>${escapeHtml(event.summary ?? event.description ?? "تعامل ثبت‌شده در CRM")}</p><small>${escapeHtml(formatDate(event.occurredAt ?? event.createdAt))}</small></div>
+          <div><strong>${escapeHtml(event.eventType ?? event.type ?? "event")}</strong><p>${escapeHtml(event.summary ?? event.description ?? stringifyTimelinePayload(event.payload))}</p><small>${escapeHtml(formatDate(event.occurredAt ?? event.createdAt))} · ${escapeHtml(event.sourceModule ?? "crm")}</small></div>
         </div>`).join("")
       : '<div class="slot-empty"><span>◌</span><p>timeline خالی است.</p></div>';
     historyMeta.textContent = `${timeline.length} رویداد`;
@@ -424,9 +424,21 @@ type CustomerHistoryView = {
   type?: string | null;
   summary?: string | null;
   description?: string | null;
+  sourceModule?: string | null;
+  payload?: Record<string, unknown> | null;
   occurredAt?: string | null;
   createdAt?: string;
 };
+
+function stringifyTimelinePayload(payload?: Record<string, unknown> | null): string {
+  if (!payload) return "تعامل ثبت‌شده در CRM";
+  try {
+    const compact = JSON.stringify(payload);
+    return compact && compact.length > 180 ? compact.slice(0, 177) + "…" : compact || "تعامل ثبت‌شده در CRM";
+  } catch {
+    return "تعامل ثبت‌شده در CRM";
+  }
+}
 
 function formatDate(value?: string | null): string {
   if (!value) return "—";
