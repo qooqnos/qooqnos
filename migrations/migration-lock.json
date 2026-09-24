@@ -574,6 +574,13 @@
       "moduleId": "seo",
       "checksum": "fa057f157eba1a76ee1156558f5c072915ba7bcc09b9c05f9efca0fa681eb48c",
       "filename": "0085_seo_audit_quality_gate.sql"
+    },
+    {
+      "id": "0086_seo_visibility_measurements",
+      "version": 86,
+      "moduleId": "seo",
+      "checksum": "74f5f794383d116dc461d210d981087733d54e0f65d1a6d34717756ce6f12c42",
+      "filename": "0086_seo_visibility_measurements.sql"
     }
   ]
 }
