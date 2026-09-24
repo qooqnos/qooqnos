@@ -804,3 +804,10 @@ The repository now includes an explicit Integration vendor activation runbook co
 Implementation commits: `5d3d97d357359ac6a277a297945891dcbfb8e3ee`, `5d3ce233d86868547124d5dc3d96b7721689f6ee`.
 
 The current main head remains subject to fresh CI/Phoenix verification; no green result is claimed until GitHub reports the runs.
+
+
+### Documents / Export implementation — 2026-09-24
+
+Core `Export Document` composition is now implemented as `@qooqnos/documents`: tenant-scoped request validation, public Query-capability boundary, immutable format-neutral snapshot, template/version provenance, attachments, and SHA-256 integrity evidence are covered by unit tests and registered in the runtime module registry. PDF/Print rendering and durable artifact persistence remain downstream adapter work and are not falsely marked complete.
+
+Implementation commits: `410127af9a52fd93718c6d4482ca410f1ef2a20d`, `ee2006853d1905e0611849af71ef346b7d4b14f8`.
