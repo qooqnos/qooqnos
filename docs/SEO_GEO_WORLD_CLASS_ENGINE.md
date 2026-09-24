@@ -624,3 +624,8 @@ Implementation must preserve these boundaries and must not create a parallel SEO
 - semantic related-entity links;
 - contextual action surfaces;
 - initial-HTML rendering and SPA hydration from the same persisted SEO representation.
+
+
+### 37. SEO Audit quality gate implementation
+
+**Implemented.** Audit now evaluates the entire published SEO/GEO projection instead of only checking Entity completeness. It is deterministic, explainable, decomposable by dimension, and enforceable during publication. Hard errors block indexable publication; advisory warnings remain visible for remediation.
