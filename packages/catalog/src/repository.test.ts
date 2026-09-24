@@ -18,6 +18,28 @@ function context(): RequestContext {
 }
 
 describe("CatalogRepository", () => {
+  it("projects active business products and services with workspace scope", async () => {
+    const statements: string[] = [];
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() {
+        if (statements.length === 1) return { results: [{ id: "product-1" }] as T[] };
+        return { results: [{ id: "service-1" }] as T[] };
+      },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { statements.push(sql); return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CatalogRepository(new D1Database(raw));
+    const result = await repository.listBusinessEntityIds(context(), brandId<"EntityId">("business-1"));
+    expect(result).toEqual({ productIds: ["product-1"], serviceIds: ["service-1"] });
+    expect(statements[0]).toContain("b.organization_id = ?");
+    expect(statements[1]).toContain("b.workspace_id = ?");
+  });
+
   it("requires tenant and workspace predicates when resolving a product business", async () => {
     const statements: string[] = [];
     let firstCalls = 0;
