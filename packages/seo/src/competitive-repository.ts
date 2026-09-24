@@ -282,7 +282,7 @@ export class SeoCompetitiveRepository extends Repository {
            ON o.organization_id=q.organization_id
           AND o.workspace_id IS q.workspace_id
           AND o.query_text=q.query_text
-          AND o.result_type<>'ai_citation'
+          AND o.result_type<>'ai_citation' AND o.rank_absolute IS NOT NULL AND o.result_type NOT LIKE 'ai_%'
          JOIN seo_competitive_runs r
            ON r.id=o.run_id
           AND r.organization_id=o.organization_id
