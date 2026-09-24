@@ -68,7 +68,7 @@ AI_SELLER_EXTRACT_MODEL_ID = "${modelId}"
 AI_SELLER_EXTRACT_MODEL_VERSION = "${modelVersion}"${gatewayId ? `\nAI_GATEWAY_ID = "${gatewayId}"` : ""}
 
 [env.production.triggers]
-crons = [ "17 * * * *" ]
+crons = [ "17 * * * *", "41 2 * * *" ]
 
 [env.production.ai]
 binding = "AI"
