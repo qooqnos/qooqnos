@@ -65,6 +65,7 @@ export async function runSeoCompetitiveIntelligence(
   let changes = 0;
   let failures = 0;
   let pageSnapshots = 0;
+  const discoveredDomainKeys = new Set<string>();
 
   for (const row of rows) {
     const context = workerContext(row.organizationId, row.workspaceId);
@@ -97,6 +98,7 @@ export async function runSeoCompetitiveIntelligence(
       const result = await provider.observe(query);
       const citationUrls = new Set(result.aiCitations.map((item) => normalizeUrl(item.url)));
       let runObservationCount = 0;
+      const currentSerpDomains = new Set<string>();
 
       for (const item of result.results) {
         if (!item.url || !item.domain) continue;
@@ -109,7 +111,10 @@ export async function runSeoCompetitiveIntelligence(
             now,
             provenance: result.provenance,
           });
-          discoveredCompetitors += 1;
+          if (!discoveredDomainKeys.has(item.domain)) {
+            discoveredDomainKeys.add(item.domain);
+            discoveredCompetitors += 1;
+          }
         }
         await repository.recordObservation(context, {
           id: runId + ":" + crypto.randomUUID(),
@@ -128,18 +133,21 @@ export async function runSeoCompetitiveIntelligence(
           observedAt: now,
           provenance: result.provenance,
         });
-        await repository.detectChanges(context, {
-          queryText: row.queryText,
-          currentRunId: runId,
-          ...(competitorId ? { competitorId } : {}),
-          domain: item.domain,
-          currentUrl: item.url,
-          ...(item.rankAbsolute !== undefined ? { currentRank: item.rankAbsolute } : {}),
-          currentAiCitation: citationUrls.has(normalizeUrl(item.url)),
-          observationType: "serp",
-          detectedAt: now,
-          provenance: result.provenance,
-        });
+        if (!currentSerpDomains.has(item.domain)) {
+          changes += await repository.detectChanges(context, {
+            queryText: row.queryText,
+            currentRunId: runId,
+            ...(competitorId ? { competitorId } : {}),
+            domain: item.domain,
+            currentUrl: item.url,
+            ...(item.rankAbsolute !== undefined ? { currentRank: item.rankAbsolute } : {}),
+            currentAiCitation: citationUrls.has(normalizeUrl(item.url)),
+            observationType: "serp",
+            detectedAt: now,
+            provenance: result.provenance,
+          });
+          currentSerpDomains.add(item.domain);
+        }
         observations += 1;
         runObservationCount += 1;
       }
@@ -248,7 +256,7 @@ export async function runSeoCompetitiveIntelligence(
           observedAt: now,
           provenance: { ...result.provenance, citationPosition: citation.position },
         });
-        await repository.detectChanges(context, {
+        changes += await repository.detectChanges(context, {
           queryText: row.queryText,
           currentRunId: runId,
           competitorId,
