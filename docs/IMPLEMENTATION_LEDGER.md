@@ -670,7 +670,7 @@ The ledger is the continuity mechanism for future coding-agent sessions.
 
 ## 7. Current completion focus
 
-The canonical physical inventory reaches migration `0059_billing_refund_financial_accounting.sql`. Migrations 0057–0059 are registered and checksum-locked. The latest pre-refund verified head remains the deployment-strategy checkpoint; the new refund-accounting commits require the normal CI/Phoenix verification pass before being treated as a verified checkpoint.
+The canonical physical inventory reaches migration `0075_analytics_platform.sql`. Migrations 0057–0059 are registered and checksum-locked. The latest pre-refund verified head remains the deployment-strategy checkpoint; the new refund-accounting commits require the normal CI/Phoenix verification pass before being treated as a verified checkpoint.
 
 Latest fully verified head: `3f24f07a0a04e58ac3dbb389c6491d59802ad82e` — deployment-strategy reconciliation head, verified by current CI and Phoenix verification.
 
@@ -752,7 +752,7 @@ Invoice runtime/API note: `GET /api/v1/billing/invoices` is implemented through 
 
 | Settlement | 🟢 Settlement aggregate + immutable items + approval/processing/paid lifecycle + provider payout boundary + reconciled double-entry accounting + tests implemented | migrations/0061_billing_settlement.sql; packages/billing/src/settlement-repository.ts; packages/billing/src/settlement-service.ts; packages/billing/src/settlement-repository.test.ts; packages/billing/src/payment-provider-adapter.ts |
 
-| Billing Reconciliation | 🟢 Case lifecycle + mismatch financial evidence + idempotency + immutable event history + scoped resolution implemented | migrations/0062_billing_reconciliation_hardening.sql; packages/billing/src/reconciliation-repository.ts; packages/billing/src/reconciliation-repository.test.ts |
+| Billing Reconciliation | 🟢 Case lifecycle + mismatch financial evidence + idempotency + immutable event history + scoped resolution implemented | migrations/0062_billing_reconciliation_hardening.sql; packages/billing/src/reconciliation-repository.ts; packages/billing/src/reconciliation-repository.test.ts |\n| Analytics | 🟢 Outbox ingestion + immutable normalized events/facts + versioned metric registry + rebuildable aggregates + scheduled worker implemented | migrations/0075_analytics_platform.sql; packages/database/src/analytics-repository.ts; apps/api/src/outbox-worker.ts; apps/api/src/analytics-worker.ts; docs/ANALYTICS_IMPLEMENTATION_CONTRACT.md |
 
 | TrustSignal / anti-abuse | 🟢 Operational | migrations/0064_trust_signals_anti_abuse.sql; packages/trust/src/repository.ts; packages/trust/src/service.ts; apps/api/src/trust-worker.ts; apps/api/src/trust-routes.ts |
 
@@ -778,5 +778,14 @@ Implementation commits: `a51897e`, `e6bad36`, `a00a183`, `3e39a95`, `224b884`, `
 `0071_matching_act_outcome_links.sql` adds optional MatchRequest/Candidate references to authoritative Booking and Commerce Act records. `MatchingOutcomeProcessor` consumes the existing transactional outbox and maps `booking.completed`, `booking.no_show`, `booking.cancelled`, `commerce.order.completed`, `commerce.payment.completed`, `payment.captured`, and `fulfillment.completed` into the existing append-only Learning Signal repository. Event IDs are used as deterministic signal IDs for retry idempotency; ambiguous or unlinked outcomes are ignored rather than guessed. No second Learning system or duplicate outcome table was introduced.
 
 Implementation commits: `35ef63e` (migration), `f71191f` (processor), `b7ee74d` (export), `1f7f0f1` (outbox consumer), `6023b33` / `bd6d8b2` (Booking), `98b8932` / `ee6cda0` / `fad742c` / `849b8f4` (Commerce), `f95cb36` (retry-idempotent learning recording).
+
+Status: 🟢 Complete
+
+
+### Analytics implementation — 2026-09-24
+
+Migration `0075_analytics_platform.sql` closes the Analytics physical/operational contract. `AnalyticsRepository` ingests transactional Outbox events idempotently, stores only a normalized envelope plus payload hash, creates append-only measurement facts, owns versioned metric definitions and rebuildable aggregates. `apps/api/src/outbox-worker.ts` performs asynchronous ingestion and `analytics-worker.ts` rebuilds UTC daily event-count aggregates. Analytics remains derived and cannot become operational source of truth.
+
+Implementation commits: `1386c1e0`, `6b9f1c14`, `8f8e9cef`, `18718d44`, `2278fda1`, `287c0d32`, `19e26e9a`, `df8e0fad`, `5330552c`, `954b2763`, `46eb8be9`, `eb828953`, `7a453d7b`, `188e39dc`.
 
 Status: 🟢 Complete
