@@ -7,6 +7,7 @@ export interface CompetitiveQuery {
   readonly device?: "desktop" | "mobile";
   readonly depth?: number;
   readonly targetDomains?: readonly string[];
+  readonly pageSampleLimit?: number;
 }
 
 export interface CompetitiveResult {
