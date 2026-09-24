@@ -3,6 +3,27 @@ import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
 import { nextAutomationOccurrence, parseAutomationRecurrenceMs } from "./scheduler";
 
 export type AutomationExecutionStatus = "pending"|"running"|"waiting"|"completed"|"failed"|"cancelled";
+export type AutomationCompensationStatus = "defined"|"requested"|"completed"|"failed";
+
+export interface AutomationCompensationReferenceRecord {
+  readonly id: EntityId;
+  readonly executionId: EntityId | null;
+  readonly failedActionId: EntityId;
+  readonly failedStepExecutionId: EntityId | null;
+  readonly failedAttemptId: EntityId | null;
+  readonly compensationCapability: string;
+  readonly status: AutomationCompensationStatus;
+  readonly inputReference: string | null;
+  readonly outputReference: string | null;
+  readonly evidenceReference: string | null;
+  readonly idempotencyKey: string | null;
+  readonly attemptNumber: number;
+  readonly errorReference: string | null;
+  readonly requestedAt: string | null;
+  readonly completedAt: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
 
 export interface WorkflowRecord {
   readonly id: EntityId;
@@ -354,6 +375,7 @@ export class AutomationRepository extends Repository {
     readonly id: EntityId;
     readonly capability: string;
     readonly inputMappingJson: string;
+    readonly compensationPolicyJson: string | null;
     readonly sequence: number;
   }[]> {
     const version = await this.database.first<{ workflowId: EntityId }>(
@@ -363,7 +385,7 @@ export class AutomationRepository extends Repository {
     if (!version) throw new DatabaseError("Automation workflow version not found");
     await this.getWorkflow(context, version.workflowId);
     return this.database.all(
-      "SELECT id, capability, input_mapping_json AS inputMappingJson, sequence FROM automation_actions WHERE workflow_version_id = ? ORDER BY sequence ASC, id ASC",
+      "SELECT id, capability, input_mapping_json AS inputMappingJson, compensation_policy_json AS compensationPolicyJson, sequence FROM automation_actions WHERE workflow_version_id = ? ORDER BY sequence ASC, id ASC",
       workflowVersionId,
     );
   }
@@ -524,6 +546,83 @@ export class AutomationRepository extends Repository {
       input.providerReference ?? null,
       input.now,
     );
+  }
+
+  async getCompensationReference(
+    context: RequestContext,
+    executionId: EntityId,
+    failedActionId: EntityId,
+  ): Promise<AutomationCompensationReferenceRecord | null> {
+    await this.getExecution(context, executionId);
+    return this.database.first<AutomationCompensationReferenceRecord>(
+      "SELECT id, execution_id AS executionId, failed_action_id AS failedActionId, failed_step_execution_id AS failedStepExecutionId, failed_attempt_id AS failedAttemptId, compensation_capability AS compensationCapability, status, input_reference AS inputReference, output_reference AS outputReference, evidence_reference AS evidenceReference, idempotency_key AS idempotencyKey, attempt_number AS attemptNumber, error_reference AS errorReference, requested_at AS requestedAt, completed_at AS completedAt, created_at AS createdAt, updated_at AS updatedAt FROM automation_compensation_references WHERE execution_id = ? AND failed_action_id = ? LIMIT 1",
+      executionId,
+      failedActionId,
+    );
+  }
+
+  async createCompensationReference(
+    context: RequestContext,
+    input: {
+      readonly id: EntityId;
+      readonly executionId: EntityId;
+      readonly failedActionId: EntityId;
+      readonly failedStepExecutionId?: EntityId;
+      readonly failedAttemptId?: EntityId;
+      readonly compensationCapability: string;
+      readonly inputReference?: string;
+      readonly idempotencyKey: string;
+      readonly now: string;
+    },
+  ): Promise<AutomationCompensationReferenceRecord> {
+    await this.getExecution(context, input.executionId);
+    await this.database.run(
+      "INSERT INTO automation_compensation_references (id, failed_action_id, compensation_capability, status, created_at, updated_at, execution_id, failed_step_execution_id, failed_attempt_id, input_reference, idempotency_key, attempt_number, requested_at) VALUES (?, ?, ?, 'requested', ?, ?, ?, ?, ?, ?, ?, 1, ?)",
+      input.id,
+      input.failedActionId,
+      input.compensationCapability,
+      input.now,
+      input.now,
+      input.executionId,
+      input.failedStepExecutionId ?? null,
+      input.failedAttemptId ?? null,
+      input.inputReference ?? null,
+      input.idempotencyKey,
+      input.now,
+    );
+    const reference = await this.getCompensationReference(context, input.executionId, input.failedActionId);
+    if (!reference) throw new DatabaseError("Automation compensation reference not found after creation");
+    return reference;
+  }
+
+  async updateCompensationReference(
+    context: RequestContext,
+    input: {
+      readonly executionId: EntityId;
+      readonly failedActionId: EntityId;
+      readonly status: AutomationCompensationStatus;
+      readonly outputReference?: string;
+      readonly evidenceReference?: string;
+      readonly errorReference?: string;
+      readonly completedAt?: string;
+      readonly now: string;
+    },
+  ): Promise<AutomationCompensationReferenceRecord> {
+    await this.getExecution(context, input.executionId);
+    await this.database.run(
+      "UPDATE automation_compensation_references SET status = ?, output_reference = COALESCE(?, output_reference), evidence_reference = COALESCE(?, evidence_reference), error_reference = COALESCE(?, error_reference), completed_at = COALESCE(?, completed_at), updated_at = ? WHERE execution_id = ? AND failed_action_id = ?",
+      input.status,
+      input.outputReference ?? null,
+      input.evidenceReference ?? null,
+      input.errorReference ?? null,
+      input.completedAt ?? null,
+      input.now,
+      input.executionId,
+      input.failedActionId,
+    );
+    const reference = await this.getCompensationReference(context, input.executionId, input.failedActionId);
+    if (!reference) throw new DatabaseError("Automation compensation reference not found after update");
+    return reference;
   }
 
   async setExecutionStatus(context: RequestContext, id: EntityId, status: AutomationExecutionStatus, now: string): Promise<WorkflowExecutionRecord> {
