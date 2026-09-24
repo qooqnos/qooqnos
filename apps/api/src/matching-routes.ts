@@ -1,4 +1,4 @@
-import { MatchingLearningRepository, MatchingRepository, MatchingService } from "@qooqnos/matching";
+import { MatchingLearningRepository, MatchingRepository, MatchingService, type MatchLearningSignalType } from "@qooqnos/matching";
 import { DiscoveryRepository } from "@qooqnos/discovery";
 import { AppError, brandId, type EntityId } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
@@ -154,7 +154,7 @@ export function registerMatchingRoutes(
       const result = await service.recordLearningSignal(context, {
         matchRequestId: brandId<"EntityId">(requiredParam(params.matchRequestId, context.requestId)),
         ...(body.candidateId !== undefined ? { candidateId: requiredEntityId(body.candidateId, "candidateId", context.requestId) } : {}),
-        signalType: signalType as never,
+        signalType: signalType as MatchLearningSignalType,
         ...(signalValue !== undefined ? { signalValue } : {}),
         source: requiredString(body.source, "source", context.requestId),
         ...(typeof body.actorReference === "string" ? { actorReference: body.actorReference } : {}),
