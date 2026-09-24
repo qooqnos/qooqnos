@@ -205,6 +205,46 @@ describe("BusinessRepository", () => {
     expect(firstCalls).toBe(1);
   });
 
+  it("reads active canonical operating hours within tenant and workspace scope", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return { id: "workspace-1" } as T; },
+      async all<T>() {
+        return {
+          results: [{
+            id: "hours-1",
+            businessId: "business-1",
+            locationId: "location-1",
+            dayOfWeek: 1,
+            opens: "09:00",
+            closes: "18:00",
+            timezone: "Europe/Berlin",
+            status: "active",
+            createdAt: "2026-09-25T00:00:00.000Z",
+            updatedAt: "2026-09-25T00:00:00.000Z",
+          }] as T[],
+        };
+      },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new BusinessRepository(new D1Database(raw));
+    const result = await repository.listHours(
+      context(),
+      brandId<"EntityId">("business-1"),
+      brandId<"EntityId">("location-1"),
+    );
+    expect(result).toEqual([expect.objectContaining({
+      dayOfWeek: 1,
+      opens: "09:00",
+      closes: "18:00",
+      locationId: "location-1",
+    })]);
+  });
+
   it("rejects a stale business status transition", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
