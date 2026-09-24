@@ -22,6 +22,23 @@ export interface CommunicationProviderAdapter {
 
 export interface CommunicationProviderRegistry {
   resolve(channel: NotificationRecord["channel"]): CommunicationProviderAdapter | null;
+  report?(providerId: string, result: CommunicationDeliveryResult, now: string): void;
+  health?(providerId: string): CommunicationProviderHealth;
+}
+
+export type CommunicationProviderHealthState = "healthy" | "degraded" | "blocked";
+
+export interface CommunicationProviderHealth {
+  readonly providerId: string;
+  readonly state: CommunicationProviderHealthState;
+  readonly consecutiveFailures: number;
+  readonly nextProbeAt: string | null;
+}
+
+export interface CommunicationProviderRegistryOptions {
+  readonly failureThreshold?: number;
+  readonly cooldownSeconds?: number;
+  readonly clock?: () => number;
 }
 
 export interface HttpCommunicationProviderConfig {
@@ -38,17 +55,68 @@ export interface HttpCommunicationProviderConfig {
 
 export function createCommunicationProviderRegistry(
   adapters: readonly CommunicationProviderAdapter[] = [],
+  options: CommunicationProviderRegistryOptions = {},
 ): CommunicationProviderRegistry {
-  const channelMap = new Map<NotificationRecord["channel"], CommunicationProviderAdapter>();
+  const channelMap = new Map<NotificationRecord["channel"], CommunicationProviderAdapter[]>();
+  const healthMap = new Map<string, { failures: number; nextProbeAtMs: number }>();
+  const failureThreshold = Math.max(1, Math.floor(options.failureThreshold ?? 3));
+  const cooldownMs = Math.max(1000, Math.floor((options.cooldownSeconds ?? 30) * 1000));
+  const clock = options.clock ?? Date.now;
+
   for (const adapter of adapters) {
     if (!adapter.providerId.trim()) throw new Error("Communication providerId is required");
     if (adapter.channels.length === 0) throw new Error("Communication provider must declare channels");
+    if (healthMap.has(adapter.providerId)) throw new Error("Communication provider already registered: " + adapter.providerId);
+    healthMap.set(adapter.providerId, { failures: 0, nextProbeAtMs: 0 });
     for (const channel of adapter.channels) {
-      if (channelMap.has(channel)) throw new Error("Communication provider already registered for channel " + channel);
-      channelMap.set(channel, adapter);
+      const providers = channelMap.get(channel) ?? [];
+      providers.push(adapter);
+      channelMap.set(channel, providers);
     }
   }
-  return { resolve: (channel) => channelMap.get(channel) ?? null };
+
+  function snapshot(providerId: string): CommunicationProviderHealth {
+    const state = healthMap.get(providerId);
+    if (!state) return { providerId, state: "blocked", consecutiveFailures: 0, nextProbeAt: null };
+    const now = clock();
+    const health = state.failures === 0
+      ? "healthy"
+      : now < state.nextProbeAtMs ? "blocked"
+      : "degraded";
+    return {
+      providerId,
+      state,
+      consecutiveFailures: state.failures,
+      nextProbeAt: state.nextProbeAtMs > now ? new Date(state.nextProbeAtMs).toISOString() : null,
+    };
+  }
+
+  return {
+    resolve(channel) {
+      const providers = channelMap.get(channel) ?? [];
+      if (providers.length === 0) return null;
+      const now = clock();
+      const healthy = providers.find((provider) => {
+        const state = healthMap.get(provider.providerId);
+        return !state || state.nextProbeAtMs <= now;
+      });
+      return healthy ?? providers[0];
+    },
+    report(providerId, result, now) {
+      const state = healthMap.get(providerId);
+      if (!state) return;
+      if (result.status !== "failed" || result.failureClass === "permanent") {
+        state.failures = 0;
+        state.nextProbeAtMs = 0;
+        return;
+      }
+      state.failures += 1;
+      if (state.failures >= failureThreshold) {
+        state.nextProbeAtMs = Date.parse(now) + cooldownMs;
+      }
+    },
+    health: snapshot,
+  };
 }
 
 export function createHttpCommunicationProviderAdapter(
