@@ -23,6 +23,7 @@ import { TRUST_MODULE } from "@qooqnos/trust";
 import { onboardingModule } from "@qooqnos/onboarding";
 import {
   createAuthorizationRegistry,
+  AUTHORIZATION_GOVERNANCE_MODULE,
   RuntimeBoot,
   type AuthorizationRegistry,
   type RuntimeBootResult,
@@ -63,6 +64,7 @@ const modules: readonly RuntimeModule[] = [
   PROMOTION_MODULE,
   LOYALTY_MODULE,
   ADVERTISING_MODULE,
+  AUTHORIZATION_GOVERNANCE_MODULE,
   onboardingModule,
   AI_MODULE,
   DOCUMENTS_MODULE,
