@@ -26,7 +26,7 @@ describe("Automation compensation", () => {
     const registry = new CapabilityRegistry();
     registry.register({ id: "test.reserve", async handler() { calls.push("reserve"); return { id: "r1" }; } });
     registry.register({ id: "test.fail", async handler() { calls.push("fail"); throw new Error("boom"); } });
-    registry.register({ id: "test.release", async handler(_ctx, input: any) { calls.push("release:" + input.originalOutput.id); return { ok: true }; } });
+    registry.register({ id: "test.release", async handler({ input }) { const value = input as { originalOutput: { id: string } }; calls.push("release:" + value.originalOutput.id); return { ok: true }; } });
 
     const repository = {
       async getExecution() { return { id:"e",workflowId:"w",workflowVersionId:"v",triggerId:"t",organizationId:"o",workspaceId:"ws",businessId:null,status:executionStatus,inputReference:null,correlationId:"c",traceId:"tr",startedAt:null,completedAt:null,createdAt:"now",updatedAt:"now" }; },
