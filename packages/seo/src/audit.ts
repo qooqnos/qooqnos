@@ -1,4 +1,4 @@
-import type { AnswerRepresentation, Indexability, SeoAudit, SeoAuditIssue, SeoEntity, SeoMetadata, SeoPolicy, StructuredData } from "./types";
+import type { AnswerRepresentation, SeoAudit, SeoAuditIssue, SeoEntity, SeoMetadata, SeoPolicy, StructuredData } from "./types";
 import type { EntityPageModel } from "./entity-page";
 import { validateAnswerRepresentation } from "./answer-validation";
 import { validateStructuredData } from "./structured-validation";
@@ -154,7 +154,6 @@ export function auditEntity(
     }
   }
 
-  const errors = issues.filter((item) => item.severity === "error").length;
   const warnings = issues.filter((item) => item.severity === "warning").length;
   const metadataStats = bucketIssues(issues, ["MISSING_METADATA_TITLE","MISSING_METADATA_DESCRIPTION","METADATA_CANONICAL_MISMATCH","INVALID_METADATA_CANONICAL","MISSING_LOCALE_METADATA","MISSING_ROBOTS_METADATA","MISSING_SELF_HREFLANG","MISSING_X_DEFAULT","INVALID_HREFLANG_URL","DUPLICATE_HREFLANG","OPEN_GRAPH_CANONICAL_MISMATCH","MISSING_TWITTER_TITLE"]);
   const structuredStats = bucketIssues(issues, ["STRUCTURED_DATA_MISSING_CONTEXT","STRUCTURED_DATA_MISSING_TYPE","STRUCTURED_DATA_INVALID_URL","STRUCTURED_DATA_CANONICAL_MISMATCH","MISSING_BREADCRUMB_STRUCTURED_DATA","MISSING_PRODUCT_OFFER_SCHEMA","MISSING_EVENT_START_SCHEMA"]);
