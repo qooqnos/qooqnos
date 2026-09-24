@@ -80,6 +80,8 @@ export function auditEntity(
     if (!httpUrl(metadata.canonicalUrl)) issues.push(issue("INVALID_METADATA_CANONICAL", "error", "Metadata canonical is not HTTP(S)", owner, "Use an absolute HTTP(S) canonical URL"));
     if (!metadata.language.trim() || !metadata.locale.trim()) issues.push(issue("MISSING_LOCALE_METADATA", "warning", "Language/locale metadata is incomplete", owner, "Provide canonical language and locale"));
     if (!metadata.robots.trim()) issues.push(issue("MISSING_ROBOTS_METADATA", "error", "Robots metadata is missing", owner, "Emit the canonical indexability directive"));
+    if (!metadata.headings.length) issues.push(issue("MISSING_PAGE_HEADING", "warning", "Page metadata exposes no heading inventory", owner, "Keep the visible heading hierarchy represented in the SEO projection"));
+    if (e.imageUrl && !metadata.altTexts.some((value) => value.trim())) issues.push(issue("MISSING_IMAGE_ALT_TEXT", "warning", "Entity has an image but no alt text contract", owner, "Provide descriptive canonical alt text for public entity imagery"));
     const selfAlternate = metadata.alternates.find((item) => item.hreflang.toLowerCase() === metadata.locale.toLowerCase() && item.href === canonicalUrl);
     const defaultAlternate = metadata.alternates.find((item) => item.hreflang === "x-default");
     if (!selfAlternate) issues.push(issue("MISSING_SELF_HREFLANG", "warning", "Current locale has no self-referencing hreflang", owner, "Emit a self-referencing locale alternate"));
@@ -147,6 +149,9 @@ export function auditEntity(
     if (metadata && surface.policy.indexability === "index" && !/^index,follow(?:,|$)/i.test(metadata.robots)) {
       issues.push(issue("ROBOTS_INDEXABILITY_MISMATCH", "error", "Indexable policy does not match robots metadata", owner, "Emit index,follow for indexable pages"));
     }
+    if (metadata && surface.policy.indexability !== "index" && !/^noindex(?:,|$)/i.test(metadata.robots)) {
+      issues.push(issue("ROBOTS_NONINDEXABILITY_MISMATCH", "error", "Non-indexable policy does not match robots metadata", owner, "Emit noindex for non-indexable pages"));
+    }
   }
 
   const errors = issues.filter((item) => item.severity === "error").length;
@@ -155,7 +160,7 @@ export function auditEntity(
   const structuredStats = bucketIssues(issues, ["STRUCTURED_DATA_MISSING_CONTEXT","STRUCTURED_DATA_MISSING_TYPE","STRUCTURED_DATA_INVALID_URL","STRUCTURED_DATA_CANONICAL_MISMATCH","MISSING_BREADCRUMB_STRUCTURED_DATA","MISSING_PRODUCT_OFFER_SCHEMA","MISSING_EVENT_START_SCHEMA"]);
   const answerStats = bucketIssues(issues.filter((item) => item.code.startsWith("ANSWER_")), ["ANSWER_MISSING_ANSWER","ANSWER_MISSING_QUESTION","ANSWER_ENTITY_MISMATCH","ANSWER_INVALID_REPRESENTATION_TIMESTAMP","ANSWER_INVALID_FACT_TIMESTAMP","ANSWER_INVALID_FACT_PROVENANCE","ANSWER_RESTRICTED_SOURCE","ANSWER_STALE_SOURCE","ANSWER_CITATION_NOT_READY","ANSWER_NOT_CITATION_READY"]);
   const pageStats = bucketIssues(issues, ["PAGE_CANONICAL_MISMATCH","INVALID_BREADCRUMB_TRAIL","MISSING_ENTITY_ACTION","INVALID_INTERNAL_LINK","SELF_INTERNAL_LINK","DUPLICATE_INTERNAL_LINK","MISSING_PAGE_SECTION"]);
-  const technicalStats = bucketIssues(issues, ["INDEXABILITY_PUBLICATION_CONFLICT","INDEXABILITY_VISIBILITY_CONFLICT","INVALID_INDEXABILITY","MISSING_CANONICAL_URL","ROBOTS_INDEXABILITY_MISMATCH","INDEXABLE_NOT_IN_SITEMAP","NONINDEXABLE_IN_SITEMAP","INVALID_ENTITY_TIMESTAMP","STALE_ENTITY_SOURCE"]);
+  const technicalStats = bucketIssues(issues, ["INDEXABILITY_PUBLICATION_CONFLICT","INDEXABILITY_VISIBILITY_CONFLICT","INVALID_INDEXABILITY","MISSING_CANONICAL_URL","ROBOTS_INDEXABILITY_MISMATCH","ROBOTS_NONINDEXABILITY_MISMATCH","INDEXABLE_NOT_IN_SITEMAP","NONINDEXABLE_IN_SITEMAP","INVALID_ENTITY_TIMESTAMP","STALE_ENTITY_SOURCE"]);
   const contentStats = bucketIssues(issues, ["MISSING_ENTITY_NAME","MISSING_DESCRIPTION","THIN_ENTITY_DESCRIPTION","MISSING_CANONICAL_ID","NO_RELATIONSHIPS"]);
   const geoStats = bucketIssues(issues, ["GEO_SCOPE_WITHOUT_LOCATION","SERVICE_AREA_WITHOUT_EVIDENCE"]);
   const scores = {
