@@ -16,3 +16,6 @@ export * from "./query-intelligence";
 export * from "./freshness";
 export * from "./consistency";
 export * from "./agentic-readiness";
+
+export * from "./canonical";
+export * from "./invalidation";
