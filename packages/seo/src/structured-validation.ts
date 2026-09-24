@@ -13,7 +13,7 @@ export interface StructuredDataValidationResult {
 }
 
 const APPROVED_TYPES = new Set([
-  "Organization","LocalBusiness","Person","Service","Product","Offer","Place","Event","Brand","Article","FAQPage","BreadcrumbList","Review","CollectionPage",
+  "Organization","LocalBusiness","Person","Service","Product","Offer","Place","Thing","EducationalOccupationalCredential","Event","Brand","Article","FAQPage","BreadcrumbList","Review","CollectionPage",
 ]);
 
 export function validateStructuredData(value: StructuredData): StructuredDataValidationResult {
