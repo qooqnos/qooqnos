@@ -51,3 +51,9 @@ All endpoints are organization/workspace scoped and require authentication.
 For the top observed competitor URLs, Phoenix also uses DataForSEO Instant Pages to record page-level SEO evidence such as title, description, canonical URL, H1 count, text-word count, internal/external links, images and SEO checks.
 
 Page snapshot sampling is bounded by `SEO_COMPETITIVE_PAGE_SAMPLE_LIMIT` (default 5) and selects at most one URL per competitor domain per run.
+
+## Keyword-gap evidence
+
+Competitive runs also query DataForSEO Labs Domain Intersection with `intersections=false`, using competitor as `target1` and Phoenix as `target2`. This returns keywords for which the competitor has a SERP result and Phoenix does not, with keyword metrics and the competitor SERP element.
+
+The production sample is bounded by `SEO_COMPETITIVE_KEYWORD_GAP_COMPETITOR_LIMIT` (default 3 competitors per tracked query) and `SEO_COMPETITIVE_KEYWORD_GAP_LIMIT` (default 15 keywords per competitor). DataForSEO Labs refreshes this underlying keyword dataset weekly, so these observations are provider-dated evidence rather than a minute-by-minute SERP snapshot.
