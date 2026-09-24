@@ -83,6 +83,7 @@ const routes: Route[] = [
   { path: "/checkout", label: "خرید", icon: "◫", render: renderCheckout },
   { path: "/customer", label: "مشتری", icon: "♙", render: renderCustomer },
   { path: "/communication", label: "ارتباطات", icon: "◌", render: renderCommunication },
+  { path: "/billing", label: "مالی", icon: "◈", render: renderBilling },
 ];
 
 const theme = getInitialTheme();
@@ -148,6 +149,7 @@ function render(): void {
   if (route.path === "/account") void loadAccountState();
   if (route.path === "/customer") void loadCustomerState();
   if (route.path === "/communication") void loadCommunicationState();
+  if (route.path === "/billing") void loadBillingState();
 }
 
 function renderHeader(route: Route): string {
@@ -276,6 +278,123 @@ function renderHome(): string {
       </div>
     </section>
   `;
+}
+
+function renderBilling(): string {
+  const business = localStorage.getItem(STORAGE.business) ?? "";
+  const customer = localStorage.getItem(STORAGE.customer) ?? "";
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Billing & Plans</span><h1>هزینه و ارزش را <em>شفاف</em> ببینید.</h1><p>Plans و invoices از Billing canonical خوانده می‌شوند؛ frontend محاسبه مالی انجام نمی‌دهد.</p></div>
+      <div class="heading-actions"><button class="button button-ghost" type="button" data-load-billing>بروزرسانی</button></div>
+    </section>
+    <section class="billing-grid">
+      <article class="glass-card billing-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Plans</span><h2>طرح‌های فعال</h2></div><span id="billing-plan-meta">—</span></div>
+        <div id="billing-plans" class="plan-list"><div class="slot-empty"><span>◈</span><p>در حال بارگذاری…</p></div></div>
+      </article>
+      <article class="glass-card billing-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Invoices</span><h2>صورتحساب‌ها</h2></div><span id="billing-invoice-meta">—</span></div>
+        <div class="billing-filters">
+          <input class="studio-input-line" id="billing-business" type="text" value="${escapeAttr(business)}" placeholder="Business ID" />
+          <input class="studio-input-line" id="billing-customer" type="text" value="${escapeAttr(customer)}" placeholder="Customer ID" />
+        </div>
+        <div id="billing-invoices" class="invoice-list"><div class="slot-empty"><span>◫</span><p>برای خواندن invoice، شناسه را وارد کنید.</p></div></div>
+      </article>
+    </section>
+  `;
+}
+
+type BillingPlanView = Record<string, unknown>;
+type BillingInvoiceView = Record<string, unknown>;
+
+async function loadBillingState(): Promise<void> {
+  const plans = document.querySelector<HTMLDivElement>("#billing-plans");
+  const invoices = document.querySelector<HTMLDivElement>("#billing-invoices");
+  const planMeta = document.querySelector<HTMLElement>("#billing-plan-meta");
+  const invoiceMeta = document.querySelector<HTMLElement>("#billing-invoice-meta");
+  if (!plans || !invoices || !planMeta || !invoiceMeta) return;
+
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
+
+  plans.innerHTML = '<div class="slot-loading">در حال خواندن plans…</div>';
+  try {
+    const response = await apiJson<{ data: BillingPlanView[] }>("/api/v1/billing/plans");
+    const items = Array.isArray(response.data) ? response.data : [];
+    plans.innerHTML = items.length
+      ? items.map((plan) => {
+          const name = getRecordString(plan, ["name", "displayName", "code"]) ?? "Plan";
+          const description = getRecordString(plan, ["description", "summary"]) ?? "طرح Billing";
+          const status = getRecordString(plan, ["status"]) ?? "active";
+          return `<div class="plan-item"><div><span class="section-kicker">Plan</span><strong>${escapeHtml(name)}</strong><p>${escapeHtml(description)}</p></div><span class="pill ${status === "active" ? "success" : ""}">${escapeHtml(status)}</span></div>`;
+        }).join("")
+      : '<div class="slot-empty"><span>◈</span><p>Plan فعال پیدا نشد.</p></div>';
+    planMeta.textContent = `${items.length} plan`;
+  } catch (error) {
+    plans.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن plans ناموفق بود.")}</p></div>`;
+  }
+
+  await loadBillingInvoices();
+}
+
+async function loadBillingInvoices(): Promise<void> {
+  const invoices = document.querySelector<HTMLDivElement>("#billing-invoices");
+  const meta = document.querySelector<HTMLElement>("#billing-invoice-meta");
+  const business = document.querySelector<HTMLInputElement>("#billing-business")?.value.trim() ?? "";
+  const customer = document.querySelector<HTMLInputElement>("#billing-customer")?.value.trim() ?? "";
+  if (!invoices || !meta) return;
+  if (!business && !customer) {
+    invoices.innerHTML = '<div class="slot-empty"><span>◫</span><p>Business ID یا Customer ID را وارد کنید.</p></div>';
+    meta.textContent = "—";
+    return;
+  }
+
+  const params = new URLSearchParams({ limit: "50" });
+  if (business) params.set("business_id", business);
+  if (customer) params.set("customer_id", customer);
+
+  invoices.innerHTML = '<div class="slot-loading">در حال خواندن invoices…</div>';
+  try {
+    const response = await apiJson<{ data: BillingInvoiceView[] }>(`/api/v1/billing/invoices?${params.toString()}`);
+    const items = Array.isArray(response.data) ? response.data : [];
+    invoices.innerHTML = items.length
+      ? items.map((invoice) => {
+          const id = getRecordString(invoice, ["id", "invoiceId"]) ?? "—";
+          const status = getRecordString(invoice, ["status"]) ?? "unknown";
+          const currency = getRecordString(invoice, ["currency"]) ?? "";
+          const total = getRecordNumber(invoice, ["totalMinor", "grandTotalMinor", "amountMinor"]);
+          const created = getRecordString(invoice, ["issuedAt", "createdAt"]);
+          return `<div class="invoice-item"><div><strong>${escapeHtml(id)}</strong><p>${escapeHtml(status)} · ${escapeHtml(currency)} ${total !== undefined ? formatMinor(total) : "—"}</p></div><small>${escapeHtml(formatDate(created))}</small></div>`;
+        }).join("")
+      : '<div class="slot-empty"><span>◫</span><p>Invoiceای پیدا نشد.</p></div>';
+    meta.textContent = `${items.length} invoice`;
+  } catch (error) {
+    invoices.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن invoice ناموفق بود.")}</p></div>`;
+    meta.textContent = "خطا";
+  }
+}
+
+function getRecordString(record: Record<string, unknown>, keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  return undefined;
+}
+
+function getRecordNumber(record: Record<string, unknown>, keys: string[]): number | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+  }
+  return undefined;
+}
+
+function formatMinor(value: number): string {
+  return (value / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function renderCommunication(): string {
@@ -1035,6 +1154,9 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-comm-load]")?.addEventListener("click", loadCommunicationState);
   document.querySelector<HTMLButtonElement>("[data-send-notification]")?.addEventListener("click", sendCommunicationNotification);
   document.querySelector<HTMLButtonElement>("[data-save-comm-pref]")?.addEventListener("click", saveCommunicationPreference);
+  document.querySelector<HTMLButtonElement>("[data-load-billing]")?.addEventListener("click", loadBillingState);
+  document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
+  document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
   document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
