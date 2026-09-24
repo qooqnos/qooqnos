@@ -79,6 +79,7 @@ import loyaltyCore from "../../../migrations/0081_loyalty_core.sql";
 import advertisingCore from "../../../migrations/0082_advertising_core.sql";
 import authorizationApproval from "../../../migrations/0083_authorization_approval_workflow.sql";
 import seoPublicRenderIndex from "../../../migrations/0083_seo_public_render_index.sql";
+import seoAuditQualityGate from "../../../migrations/0084_seo_audit_quality_gate.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -163,4 +164,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0082_advertising_core.sql", sql: advertisingCore },
   { path: "migrations/0083_authorization_approval_workflow.sql", sql: authorizationApproval },
   { path: "migrations/0083_seo_public_render_index.sql", sql: seoPublicRenderIndex },
+  { path: "migrations/0084_seo_audit_quality_gate.sql", sql: seoAuditQualityGate },
   ];
