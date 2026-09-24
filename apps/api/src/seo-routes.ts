@@ -2,6 +2,7 @@ import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
 import { buildRobotsTxt, buildSitemapXml } from "@qooqnos/seo";
+import { crawlStoredSeoRepresentation } from "./seo-production-crawler";
 
 export function registerSeoRoutes(router: ApiRouter, database: D1Database | undefined): void {
   router.register({
@@ -78,6 +79,40 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
         },
       });
       return json({ audit: await repository.getLatestAudit(context, params.entityId) }, 200, context.requestId);
+    },
+  });
+
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/crawl/:entityId",
+    module: "seo",
+    operation: "crawl.run",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params }) => {
+      if (!database) return json({ status: "unavailable" }, 503, context.requestId);
+      const repository = new (await import("@qooqnos/seo")).SeoRepository(database);
+      const locale = "en-US";
+      const representation = await repository.getRepresentation(context, params.entityId, locale);
+      if (!representation) return json({ error: { code: "NOT_FOUND", message: "SEO representation not found." } }, 404, context.requestId);
+      const scope = context.tenantId;
+      const workspaceId = context.workspaceId ?? null;
+      const row = {
+        organizationId: scope,
+        workspaceId,
+        entityId: params.entityId,
+        canonicalUrl: representation.canonicalUrl,
+        representationJson: JSON.stringify({
+          entity: representation.entity,
+          ...(representation.metadata ? { metadata: representation.metadata } : {}),
+          ...(representation.structuredData ? { structuredData: representation.structuredData } : {}),
+          ...(representation.answer ? { answer: representation.answer } : {}),
+          ...(representation.page ? { page: representation.page } : {}),
+        }),
+      };
+      const result = await crawlStoredSeoRepresentation(database, row, new Date().toISOString());
+      return json({ crawl: result }, result.errors.length ? 502 : 200, context.requestId);
     },
   });
 
