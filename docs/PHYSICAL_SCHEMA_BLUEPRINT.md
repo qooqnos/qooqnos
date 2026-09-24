@@ -314,7 +314,25 @@ Uniqueness is enforced on `source_module + source_event_id` for idempotent event
 
 The relationship, organization and workspace scope must agree. The originating domain remains authoritative for the underlying business fact.
 
-A separate `crm_timeline_projections` table is intentionally not physicalized yet because its read-model fields, rebuild contract and projection ownership are not sufficiently specified.
+### `crm_timeline_projections`
+
+Rebuildable CRM timeline read model. One row maps to exactly one `crm_timeline_events` row; it is never authoritative domain state.
+
+Required fields:
+
+`id`, `organization_id`, `workspace_id`, `relationship_id`, `customer_id`, `business_id`, `timeline_event_id`, `source_module`, `source_event_id`, `event_type`, `event_version`, `occurred_at`, `received_at`, `actor_reference?`, `visibility`, `redaction_class`, `projection_version`, `projected_at`, `created_at`, `updated_at`.
+
+Rules:
+
+- `timeline_event_id` is unique and references the canonical event.
+- customer/business keys are denormalized from the authoritative CRM relationship only for read performance.
+- ordering is `occurred_at DESC, timeline_event_id DESC`.
+- projection writes are idempotent and monotonic by `projection_version`.
+- rebuild reads canonical timeline events plus authoritative relationship/customer/business scope; it never reads the projection as input.
+- deletion/retention of canonical timeline events cascades to the derived projection.
+- visibility and redaction class are inherited from the canonical event and remain subject to authorization at read time.
+
+The canonical implementation contract is `docs/CRM_TIMELINE_PROJECTION_CONTRACT.md`.
 
 ## 8. Booking / Availability
 
