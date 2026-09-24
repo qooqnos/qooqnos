@@ -1,9 +1,9 @@
 import type { RequestContext } from "@qooqnos/core";
-import type { D1Database, Repository } from "@qooqnos/database";
+import { D1Database, Repository } from "@qooqnos/database";
 import type { CompetitiveResult } from "./competitive-provider";
 
-export class SeoCompetitiveRepository {
-  constructor(private readonly database: D1Database) {}
+export class SeoCompetitiveRepository extends Repository {
+  constructor(database: D1Database) { super(database); }
 
   async upsertCompetitor(
     context: RequestContext,
