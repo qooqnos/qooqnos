@@ -86,6 +86,22 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
     if (Object.keys(address).length > 1) x.address = address;
   }
 
+  if (entity.geoPoint && Number.isFinite(entity.geoPoint.latitude) && Number.isFinite(entity.geoPoint.longitude) &&
+      entity.geoPoint.latitude >= -90 && entity.geoPoint.latitude <= 90 &&
+      entity.geoPoint.longitude >= -180 && entity.geoPoint.longitude <= 180) {
+    x.geo = { "@type": "GeoCoordinates", latitude: entity.geoPoint.latitude, longitude: entity.geoPoint.longitude };
+  }
+  if ((entity.type === "Business" || entity.type === "Branch") && entity.openingHours?.length) {
+    x.openingHoursSpecification = entity.openingHours
+      .filter((hours) => hours.dayOfWeek.length > 0 && hours.opens && hours.closes)
+      .map((hours) => ({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: hours.dayOfWeek,
+        opens: hours.opens,
+        closes: hours.closes,
+      }));
+  }
+
   if (entity.type === "Business" || entity.type === "Branch" || entity.type === "Organization") {
     if (entity.telephone) x.telephone = clean(entity.telephone);
     if (entity.email) x.email = clean(entity.email);
