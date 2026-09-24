@@ -338,3 +338,28 @@ Events / Schedules / Commands
             ↓
           Events
 ```
+
+## Compensation / rollback contract
+
+Automation uses saga-style compensation rather than distributed rollback. When an action fails after prior actions completed, the executor walks prior completed actions in reverse sequence order and applies each action's immutable compensation policy.
+
+```text
+Failed Action
+  ↓
+Compensation Policy
+  ↓
+Completed prior actions (reverse order)
+  ↓
+CapabilityRegistry
+  ↓
+Compensation Reference
+  ↓
+Evidence
+```
+
+Action compensation policy is versioned with the workflow action and has three modes: `automatic`, `manual`, and `none`. Automatic compensation invokes an approved compensating capability; manual compensation records operational recovery work; none explicitly records that no automatic reversal exists.
+
+Every compensation reference is scoped to the execution and original action, has a stable idempotency key, and records output/error/evidence references. Compensation capabilities must be idempotent because a worker crash can leave a requested operation with an unknown external outcome.
+
+Automation never mutates domain truth to simulate rollback. Booking, Commerce, Billing, Fulfillment, Communication, and other domains remain authoritative for their successful side effects. Compensation only invokes the domain-owned capability that reverses or reconciles that side effect.
+
