@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T11:30:00.000Z",
+  "generatedAt": "2026-09-24T11:35:00.000Z",
   "migrations": [
     {
       "id": "0001_foundation",
@@ -471,18 +471,18 @@
       "filename": "0070_automation_compensation_pairing.sql"
     },
     {
-      "id": "0071_localization_registry",
-      "version": 71,
-      "moduleId": "localization",
-      "checksum": "4e8064d5373145ceeed66597b21b0a4ca0e4a04ae64832c092b025eb798840c4",
-      "filename": "0071_localization_registry.sql"
-    },
-    {
       "id": "0071_matching_act_outcome_links",
       "version": 71,
       "moduleId": "matching",
       "checksum": "c18531ed5e43d634b79b5721fcd1dd6630d6d7a715ba6484de42656cda9c22ac",
       "filename": "0071_matching_act_outcome_links.sql"
+    },
+    {
+      "id": "0072_localization_registry",
+      "version": 72,
+      "moduleId": "localization",
+      "checksum": "4e8064d5373145ceeed66597b21b0a4ca0e4a04ae64832c092b025eb798840c4",
+      "filename": "0072_localization_registry.sql"
     }
   ]
 }
