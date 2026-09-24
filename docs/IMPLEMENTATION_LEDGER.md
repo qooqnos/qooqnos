@@ -1085,3 +1085,12 @@ Canonical files:
 - `apps/web/src/main.ts`
 - `apps/web/styles.css`
 - `apps/web/public/styles.css`
+
+### Frontend Business Workspace Access — 2026-09-25
+
+The business workspace header now verifies live authorization context through `GET /api/v1/business-access` instead of presenting an unconditional healthy state.
+
+Implemented:
+- real authorized/unauthorized/error state;
+- live workspace and tenant context visibility;
+- no business policy or authorization logic duplicated in frontend.
