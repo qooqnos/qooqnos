@@ -1469,3 +1469,18 @@ Implemented real external visibility measurement:
 Provider activation is configuration-gated: unconfigured providers are not treated as zero visibility. Missing credentials result in an unconfigured measurement run rather than fabricated data.
 
 Provider activation contract: `docs/SEO_MEASUREMENT_PROVIDER_ACTIVATION.md`.
+
+### Competitive Intelligence — completed — 2026-09-25
+
+Implemented real competitive intelligence from external SERP evidence:
+- DataForSEO Google Organic Live Advanced provider with explicit location, language, device and depth;
+- real competitor discovery from observed SERP domains;
+- tenant-scoped competitor registry with direct/alternative/publisher/directory/discovered classifications;
+- durable competitive runs and observations including URL, title, snippet, rank group, rank absolute and AI-citation evidence;
+- rank up/down, URL change, new/lost entry and AI-citation gained/lost detection;
+- same-run SERP gap opportunities where competitors are observed and Phoenix is absent;
+- daily production sampling plus authenticated entity-scoped manual measurement;
+- Control Plane displays competitor observations, changes and query gaps;
+- no synthetic market share or inferred universal rank is generated.
+
+Provider activation remains configuration-gated through DataForSEO credentials and a deliberate location/language configuration.
