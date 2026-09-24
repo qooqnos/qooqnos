@@ -85,6 +85,7 @@ Conditions are side-effect free.
 | `timeout_policy` | Execution timeout |
 | `retry_policy` | Retry policy |
 | `approval_policy` | Required approval policy where applicable |
+| `compensation_policy` | Versioned recovery policy: AUTOMATIC / MANUAL / NONE plus compensating capability |
 
 Invariant: every consequential action references an existing approved capability.
 
@@ -216,16 +217,28 @@ Automation never owns approval truth.
 
 ## 15. CompensationReference
 
-Explicit recovery action reference.
+Explicit recovery action reference for saga-style compensation. A reference belongs to one workflow execution and one previously completed action.
 
 | Field | Meaning |
 |---|---|
 | `compensation_reference_id` | Opaque identifier |
 | `failed_action_id` | Original action |
 | `compensation_capability` | Approved capability |
+| `execution_id` | Workflow execution being recovered |
+| `failed_step_execution_id` | Failed step/attempt lineage where known |
+| `failed_attempt_id` | Failed attempt lineage where known |
+| `compensation_capability` | Approved compensating capability |
 | `status` | DEFINED / REQUESTED / COMPLETED / FAILED |
+| `input_reference` | Recovery input lineage |
+| `output_reference` | Compensating capability result |
+| `evidence_reference` | Durable recovery evidence |
+| `idempotency_key` | Stable compensation operation key |
+| `attempt_number` | Compensation attempt number |
+| `error_reference` | Normalized compensation failure evidence |
+| `requested_at` | Recovery request timestamp |
+| `completed_at` | Recovery terminal timestamp |
 
-Compensation is not assumed to be universally possible.
+Compensation is not assumed to be universally possible. Automatic compensation runs in reverse order over previously completed actions only. Compensating capabilities must be idempotent. Automation never performs distributed domain rollback; each domain remains authoritative for its side effect.
 
 ## 16. Scope and Tenancy
 
@@ -262,7 +275,13 @@ Failure/cancellation may occur from non-terminal operational states according to
 
 Terminal states are immutable.
 
-## 19. Canonical Capabilities
+## 19. Compensation Policy Contract
+
+Action-level `compensation_policy` is immutable with the workflow version. Canonical shape: `{ version, mode, capability }`. `mode=automatic` invokes the capability after a later action fails; `mode=manual` records recovery work without automatic invocation; `mode=none` explicitly accepts non-compensatable work. Missing or malformed policy is recorded as evidence and never treated as successful compensation.
+
+Recovery input is a bounded envelope containing execution ID, original action ID, failed action ID, original output, original input reference when available, and compensation reference ID. Compensation evidence is operational evidence and never becomes domain truth.
+
+## 20. Canonical Capabilities
 
 - `CAP.AUTOMATION.WORKFLOW.CREATE`
 - `CAP.AUTOMATION.WORKFLOW.UPDATE`
@@ -276,7 +295,7 @@ Terminal states are immutable.
 - `CAP.AUTOMATION.EXECUTION.RETRY`
 - `CAP.AUTOMATION.EXECUTION.RESUME`
 
-## 20. Canonical Events
+## 21. Canonical Events
 
 - `automation.workflow.activated`
 - `automation.workflow.paused`
@@ -292,7 +311,7 @@ Terminal states are immutable.
 
 Event payloads reference canonical IDs and versions and carry tenant/correlation context.
 
-## 21. Ownership Matrix
+## 22. Ownership Matrix
 
 | Data | Owner |
 |---|---|
@@ -307,7 +326,7 @@ Event payloads reference canonical IDs and versions and carry tenant/correlation
 | Fulfillment state | Fulfillment |
 | AI proposal/reasoning | AI |
 
-## 22. Data Invariants
+## 23. Data Invariants
 
 1. Opaque IDs are canonical.
 2. UTC is the persistence timestamp standard.
@@ -322,7 +341,7 @@ Event payloads reference canonical IDs and versions and carry tenant/correlation
 11. Terminal execution evidence is auditable.
 12. Automation never becomes a source of truth for another domain.
 
-## 23. Anti-Duplication Rule
+## 24. Anti-Duplication Rule
 
 No vertical-specific copies of:
 - Workflow;
@@ -336,10 +355,10 @@ No vertical-specific copies of:
 
 Beauty, Fashion, Medical, CRM, Commerce, Booking, Fulfillment, and AI all use the same canonical Automation model.
 
-## 24. Definition of Done
+## 25. Definition of Done
 
 The Automation data contract is complete when definitions, versions, triggers, conditions, actions, schedules, executions, attempts, errors, policies, approvals, compensation references, scope, idempotency, states, capabilities, events, ownership, and invariants are represented by one canonical vocabulary.
 
-## 25. Final Decision
+## 26. Final Decision
 
 Phoenix has one canonical Automation & Workflow Engine data model. Domain modules own domain truth; Automation owns orchestration state and execution evidence.
