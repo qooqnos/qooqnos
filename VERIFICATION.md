@@ -88,7 +88,7 @@ The physical schema is intentionally broad but not every operational concern is 
 1. Scheduled Automation polling, misfire handling, and CapabilityRegistry-backed scheduled action execution are implemented; only concrete rollback/compensation contracts remain gated.
 2. Integration durable claim/sync workers and provider-neutral adapter boundary are implemented; provider-specific adapters and credential contracts remain external integration work.
 3. Privacy consent expiry, subject scope validation, approved-request orchestration and the domain PrivacyProcessor registry are live; Customer export/delete processors and the tenant-safe retention sweep are implemented.
-4. Communication intent/consent/suppression policy, template registry and provider-neutral dispatch are live; external provider adapters plus platform rate-limit/anomaly controls remain gated.
+4. Communication intent/consent/suppression policy, template registry, provider-neutral dispatch, runtime-configured HTTP provider adapters, scoped dispatch rate limits and bounded burst-anomaly detection are implemented; provider credentials remain runtime configuration.
 5. AI durable worker lease/claim/reclaim infrastructure and the Seller AI production scheduler/input resolver are implemented; new AI operation types require an explicit resolver contract.
 6. Matching learning signals and broader Act integrations beyond the canonical Customer relationship/Connect path.
 7. CustomerProfile is resolved as a logical aggregate over existing Customer-owned records; CRM timeline is already physically implemented as events/projection input.
