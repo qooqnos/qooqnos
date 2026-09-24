@@ -95,7 +95,7 @@ Database completion note: all physical table contracts in docs/PHYSICAL_SCHEMA_B
 
 The remaining yellow legacy compatibility paths were removed from the active source tree. The in-memory database, legacy onboarding workflow/test, and legacy Node HTTP server are no longer part of the repository. The obsolete TypeScript aliases, lint exclusions, canonical-source allowlist entries and runtime exclusion were removed as well. The canonical D1 database, D1 onboarding service and Worker runtime are now the only active paths.
 
-Cleanup commits: `3fe67d1`, `8f02cfc`, `aa75afe`, `81162b0`, `6f7fe40`, `ed39a42`, `7fc6f16`, `4055287`.
+Cleanup commits: `3fe67d1`, `8f02cfc`, `aa75afe`, `81162b0`, `6f7fe40`, `ed39a42`, `7fc6f16`, `4055287`, `0c66ec0`, `cd1dadb`, `e7952ba`, `4abc6b9`, `98e25ea`, `9c03b9f`, `65b4796`, `da12643`.
 
 ## Database completion status — 2026-09-24
 
@@ -680,7 +680,7 @@ The canonical physical inventory reaches migration `0075_analytics_platform.sql`
 
 Latest fully verified head: `3f24f07a0a04e58ac3dbb389c6491d59802ad82e` — deployment-strategy reconciliation head, verified by current CI and Phoenix verification.
 
-The canonical source-boundary and runtime-module-registry guards are now themselves verified on the current head. Discovery's RuntimeModule was also registered in `apps/api/src/runtime.ts` so every canonical manifest is present in the runtime module list.
+The canonical source-boundary and runtime-module-registry guards remain mandatory verification gates; the post-cleanup head is awaiting its fresh CI/Phoenix verification run. Discovery's RuntimeModule was also registered in `apps/api/src/runtime.ts` so every canonical manifest is present in the runtime module list.
 
 GitHub Actions on the current head completed successfully:
 - Phoenix verification run `35922471460`
