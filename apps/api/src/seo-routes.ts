@@ -4,7 +4,7 @@ import { json } from "./http";
 import { buildRobotsTxt, buildSitemapXml } from "@qooqnos/seo";
 import { crawlStoredSeoRepresentation } from "./seo-production-crawler";
 
-export function registerSeoRoutes(router: ApiRouter, database: D1Database | undefined): void {
+export function registerSeoRoutes(router: ApiRouter, database: D1Database | undefined, canonicalBaseUrl = "https://qooqnos.com"): void {
   router.register({
     method: "GET",
     path: "/sitemap.xml",
@@ -30,7 +30,7 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     module: "seo",
     operation: "robots.read",
     handler: ({ context }) => {
-      const origin = context.tenantId ? "https://qooqnos.com" : "https://qooqnos.com";
+      const origin = canonicalBaseUrl.replace(/\\/$/, "");
       return new Response(buildRobotsTxt(`${origin}/sitemap.xml`), { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" } });
     },
   });
@@ -111,7 +111,7 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
           ...(representation.page ? { page: representation.page } : {}),
         }),
       };
-      const result = await crawlStoredSeoRepresentation(database, row, new Date().toISOString());
+      const result = await crawlStoredSeoRepresentation(database, row, new Date().toISOString(), fetch, canonicalBaseUrl);
       return json({ crawl: result }, result.errors.length ? 502 : 200, context.requestId);
     },
   });
