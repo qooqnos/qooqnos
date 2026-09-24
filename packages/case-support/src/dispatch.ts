@@ -34,7 +34,7 @@ export async function processCaseDispatches(
         failureClass: "permanent",
         nextAvailableAt: now,
         now,
-        attemptId: brandId<EntityId>(item.dispatch.id + ":attempt:" + item.dispatch.attempts),
+        attemptId: brandId<"EntityId">(item.dispatch.id + ":attempt:" + item.dispatch.attempts),
       });
       failed += 1;
       continue;
