@@ -70,6 +70,9 @@
     },
     {
       "path": "./packages/documents"
+    },
+    {
+      "path": "./packages/seo"
     }
   ],
   "files": []
