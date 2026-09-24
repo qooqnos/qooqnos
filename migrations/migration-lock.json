@@ -420,6 +420,13 @@
       "moduleId": "billing",
       "checksum": "427d9eed554ab6aa5fb1949a30474daf381970b84a484024740ba3d92841bcd8",
       "filename": "0060_billing_invoice_system.sql"
+    },
+    {
+      "id": "0061_billing_settlement",
+      "version": 61,
+      "moduleId": "billing",
+      "checksum": "611d97c8bc86292295afc3d549f818c8bef38097c372a78ad16c718af75d21a9",
+      "filename": "0061_billing_settlement.sql"
     }
   ]
 }
