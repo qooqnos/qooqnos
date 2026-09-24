@@ -345,8 +345,10 @@ Recommended tables:
 - `billing_invoices` (when invoicing is active)
 - `billing_payment_provider_refs`
 - `billing_reconciliation_cases`
-- future `billing_ledger_accounts`
-- future `billing_ledger_entries`
+- `billing_refunds`
+- `billing_ledger_accounts`
+- `billing_ledger_transactions`
+- `billing_ledger_entries`
 - future `billing_transaction_fees`
 
 ## 25. Security
