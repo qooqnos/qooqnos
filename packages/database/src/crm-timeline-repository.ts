@@ -102,24 +102,77 @@ export class CrmTimelineRepository extends Repository {
     }
 
     const payloadJson = input.payload ? JSON.stringify(input.payload) : null;
-    await this.database.run(
-      "INSERT INTO crm_timeline_events (id, organization_id, workspace_id, relationship_id, source_module, source_event_id, event_type, event_version, occurred_at, received_at, actor_reference, visibility, redaction_class, payload_json, projection_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      input.id,
-      organizationId,
-      workspaceId,
-      input.relationshipId,
-      input.sourceModule.trim(),
-      input.sourceEventId.trim(),
-      input.eventType.trim(),
-      input.eventVersion,
-      input.occurredAt,
-      input.receivedAt,
-      input.actorReference ?? null,
-      input.visibility.trim(),
-      input.redactionClass.trim(),
-      payloadJson,
-      input.projectionVersion,
-    );
+    await this.database.transaction([
+      {
+        sql: "INSERT INTO crm_timeline_events (id, organization_id, workspace_id, relationship_id, source_module, source_event_id, event_type, event_version, occurred_at, received_at, actor_reference, visibility, redaction_class, payload_json, projection_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params: [
+          input.id,
+          organizationId,
+          workspaceId,
+          input.relationshipId,
+          input.sourceModule.trim(),
+          input.sourceEventId.trim(),
+          input.eventType.trim(),
+          input.eventVersion,
+          input.occurredAt,
+          input.receivedAt,
+          input.actorReference ?? null,
+          input.visibility.trim(),
+          input.redactionClass.trim(),
+          payloadJson,
+          input.projectionVersion,
+        ],
+      },
+      {
+        sql: `INSERT INTO crm_timeline_projections (
+          id, organization_id, workspace_id, relationship_id, customer_id, business_id,
+          timeline_event_id, source_module, source_event_id, event_type, event_version,
+          occurred_at, received_at, actor_reference, visibility, redaction_class,
+          projection_version, projected_at, created_at, updated_at
+        )
+        SELECT
+          e.id, e.organization_id, e.workspace_id, e.relationship_id, cr.customer_id, cr.business_id,
+          e.id, e.source_module, e.source_event_id, e.event_type, e.event_version,
+          e.occurred_at, e.received_at, e.actor_reference, e.visibility, e.redaction_class,
+          e.projection_version, ?, ?, ?
+        FROM crm_timeline_events e
+        INNER JOIN customer_relationships cr ON cr.id = e.relationship_id
+        INNER JOIN customers c ON c.id = cr.customer_id
+        INNER JOIN businesses b ON b.id = cr.business_id
+        WHERE e.id = ? AND e.organization_id = ? AND e.workspace_id = ?
+          AND c.organization_id = ? AND b.organization_id = ? AND b.workspace_id = ?
+        ON CONFLICT(timeline_event_id) DO UPDATE SET
+          organization_id = excluded.organization_id,
+          workspace_id = excluded.workspace_id,
+          relationship_id = excluded.relationship_id,
+          customer_id = excluded.customer_id,
+          business_id = excluded.business_id,
+          source_module = excluded.source_module,
+          source_event_id = excluded.source_event_id,
+          event_type = excluded.event_type,
+          event_version = excluded.event_version,
+          occurred_at = excluded.occurred_at,
+          received_at = excluded.received_at,
+          actor_reference = excluded.actor_reference,
+          visibility = excluded.visibility,
+          redaction_class = excluded.redaction_class,
+          projection_version = excluded.projection_version,
+          projected_at = excluded.projected_at,
+          updated_at = excluded.updated_at
+        WHERE excluded.projection_version > crm_timeline_projections.projection_version`,
+        params: [
+          input.receivedAt,
+          input.receivedAt,
+          input.receivedAt,
+          input.id,
+          organizationId,
+          workspaceId,
+          organizationId,
+          organizationId,
+          workspaceId,
+        ],
+      },
+    ]);
 
     const record = await this.get(context, input.id);
     if (!record) throw new DatabaseError("Timeline event not found after append");
