@@ -133,6 +133,7 @@ export async function runSeoCompetitiveIntelligence(
           currentUrl: item.url,
           ...(item.rankAbsolute !== undefined ? { currentRank: item.rankAbsolute } : {}),
           currentAiCitation: citationUrls.has(normalizeUrl(item.url)),
+          observationType: "serp",
           detectedAt: now,
           provenance: result.provenance,
         });
@@ -188,6 +189,7 @@ export async function runSeoCompetitiveIntelligence(
           domain,
           currentUrl: citation.url,
           currentAiCitation: true,
+          observationType: "ai_citation",
           detectedAt: now,
           provenance: { ...result.provenance, citationPosition: citation.position },
         });
