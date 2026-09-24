@@ -123,3 +123,5 @@ export function getLocaleFromPreference(preference: string, fallback: Locale = "
 }
 
 export * from "./context";
+
+export * from "./physical-registry";
