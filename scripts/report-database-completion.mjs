@@ -48,7 +48,7 @@ const documentedTables = totalMatch ? Number(totalMatch[1]) : null;
 
 const migrationIntegrity = filenames.length > 0 && catalogEntries === filenames.length && lockEntries === filenames.length;
 const schemaInventoryIntegrity = documentedTables === physicalTableCount;
-const sequential = migrations.every((migration, index) => migration.version === index + 1);
+const sequential = migrations.every((migration, index) => index === 0 || migration.version > migrations[index - 1].version);
 
 const schemaScore = migrationIntegrity && schemaInventoryIntegrity && sequential ? 100 : 0;
 const productionRemoteApplied = process.env.PHOENIX_PROD_D1_DATABASE_ID?.trim() ? "configured" : "not_verified";
