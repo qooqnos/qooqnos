@@ -24,6 +24,7 @@ export interface SeoVisibilityWorkerConfig {
   readonly workspaceId?: string | null;
   readonly entityId?: string;
   readonly queryText?: string;
+  readonly locale?: string;
   readonly google?: {
     readonly siteUrl: string;
     readonly accessToken?: string;
@@ -56,6 +57,7 @@ export async function runSeoVisibilityMeasurements(
   if (config.workspaceId !== undefined) { filters.push("q.workspace_id IS ?"); params.push(config.workspaceId); }
   if (config.entityId) { filters.push("q.entity_id=?"); params.push(config.entityId); }
   if (config.queryText) { filters.push("q.query_text=?"); params.push(config.queryText); }
+  if (config.locale) { filters.push("q.locale=?"); params.push(config.locale); }
   params.push(limit);
   const rows = await database.all<MeasurementQueryRow>(
     `SELECT q.id AS id,
