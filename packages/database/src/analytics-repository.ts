@@ -98,19 +98,20 @@ export class AnalyticsRepository extends Repository {
     const now = receivedAt;
     const resourceId = event.aggregateId?.trim() || null;
 
-    await this.database.run(
-      "INSERT INTO analytics_events (id,event_name,event_version,occurred_at,received_at,organization_id,workspace_id,actor_reference,request_id,source_module,resource_type,resource_id,locale,country_context,privacy_classification,payload_hash,ingestion_status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-      event.id, event.eventType.trim(), event.eventVersion, event.occurredAt, receivedAt,
-      event.organizationId, event.workspaceId, null, null, sourceModule, event.aggregateType, resourceId,
-      null, null, privacyClassification, payloadHash, "accepted", now,
-    );
-
     const factId = event.id + ":event";
-    await this.database.run(
-      "INSERT OR IGNORE INTO analytics_facts (id,event_id,organization_id,workspace_id,fact_name,numeric_value,dimensions_json,occurred_at,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
-      factId, event.id, event.organizationId, event.workspaceId,
-      "event." + event.eventType.trim(), 1, null, event.occurredAt, now,
-    );
+    await this.database.transaction([
+      {
+        sql: "INSERT INTO analytics_events (id,event_name,event_version,occurred_at,received_at,organization_id,workspace_id,actor_reference,request_id,source_module,resource_type,resource_id,locale,country_context,privacy_classification,payload_hash,ingestion_status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        params: [event.id, event.eventType.trim(), event.eventVersion, event.occurredAt, receivedAt,
+          event.organizationId, event.workspaceId, null, null, sourceModule, event.aggregateType, resourceId,
+          null, null, privacyClassification, payloadHash, "accepted", now],
+      },
+      {
+        sql: "INSERT INTO analytics_facts (id,event_id,organization_id,workspace_id,fact_name,numeric_value,dimensions_json,occurred_at,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
+        params: [factId, event.id, event.organizationId, event.workspaceId,
+          "event." + event.eventType.trim(), 1, null, event.occurredAt, now],
+      },
+    ]);
 
     return this.getEvent(context, event.id);
   }
