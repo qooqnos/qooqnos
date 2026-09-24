@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createHttpCommunicationProviderAdapter } from "./adapter";
+import { createCommunicationProviderRegistry, createHttpCommunicationProviderAdapter } from "./adapter";
 import { CommunicationRateLimiter, detectCommunicationBurst } from "./rate-limit";
 
 describe("Communication providers and rate limits", () => {
@@ -78,5 +78,42 @@ describe("Communication providers and rate limits", () => {
   it("detects burst anomalies inside a bounded window", () => {
     expect(detectCommunicationBurst([900, 950, 990], 1000, 3, 200)).toBe(true);
     expect(detectCommunicationBurst([700, 950], 1000, 3, 200)).toBe(false);
+  });
+
+  it("fails over to a secondary provider after repeated transient failures", () => {
+    let now = 1000;
+    const primary = { providerId: "email.primary", channels: ["email"] as const, async deliver() {
+      return { status: "failed" as const, provider: "email.primary", failureClass: "transient" as const, failureCode: "provider_timeout" };
+    }};
+    const secondary = { providerId: "email.secondary", channels: ["email"] as const, async deliver() {
+      return { status: "sent" as const, provider: "email.secondary", providerReference: "secondary-1" };
+    }};
+    const registry = createCommunicationProviderRegistry([primary, secondary], { failureThreshold: 2, cooldownSeconds: 30, clock: () => now });
+    const notification = {
+      id: "n", organizationId: "o", workspaceId: null, recipientReference: "r", intent: "x", channel: "email" as const,
+      templateReference: null, templateVersion: null, locale: "en", variables: null, priority: "normal" as const,
+      status: "queued" as const, idempotencyKey: "i", scheduledAt: null, expiresAt: null, policyVersion: null,
+      lastPolicyEvaluatedAt: null, createdAt: "2026-09-24T10:00:00.000Z", updatedAt: "2026-09-24T10:00:00.000Z",
+    };
+    const first = registry.resolve("email")!;
+    registry.report?.(first.providerId, await first.deliver({ notification, now: "1970-01-01T00:00:01.000Z" }), "1970-01-01T00:00:01.000Z");
+    registry.report?.(first.providerId, await first.deliver({ notification, now: "1970-01-01T00:00:01.000Z" }), "1970-01-01T00:00:01.000Z");
+    now = 2000;
+    expect(registry.resolve("email")?.providerId).toBe("email.secondary");
+  });
+
+  it("blocks a burst during the anomaly cooldown", () => {
+    let now = 1000;
+    const limiter = new CommunicationRateLimiter(
+      [],
+      () => now,
+      [{ scope: "recipient", threshold: 3, windowMs: 10_000, cooldownMs: 5_000 }],
+    );
+    const key = { tenantReference: "org", recipientReference: "r", channel: "push", intent: "account.security_push_alert", provider: "push.http" };
+    expect(limiter.checkAndConsume(key).allowed).toBe(true);
+    expect(limiter.checkAndConsume(key).allowed).toBe(true);
+    expect(limiter.checkAndConsume(key)).toMatchObject({ allowed: false, anomalyDetected: true });
+    now = 7000;
+    expect(limiter.checkAndConsume(key).allowed).toBe(true);
   });
 });
