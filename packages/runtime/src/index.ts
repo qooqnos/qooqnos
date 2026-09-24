@@ -3,6 +3,7 @@
 export * from "./runtime";
 export * from "./authorization";
 export * from "./authorization-service";
+export * from "./approval-service";
 export * from "./boot";
 export * from "./ai-economics";
 export * from "./ai-provider-governance";
