@@ -55,7 +55,9 @@ export class SeoRepository extends Repository {
          publication_state=excluded.publication_state, visibility=excluded.visibility,
          canonical_url=excluded.canonical_url, indexability=excluded.indexability,
          representation_json=excluded.representation_json, source_updated_at=excluded.source_updated_at,
-         generated_at=excluded.generated_at, content_hash=excluded.content_hash`,
+         generated_at=excluded.generated_at, content_hash=excluded.content_hash
+       WHERE seo_entity_representations.source_updated_at <= excluded.source_updated_at
+         AND seo_entity_representations.source_version <= excluded.source_version`,
       input.id,
       scope.organizationId,
       scope.workspaceId,
