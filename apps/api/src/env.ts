@@ -22,6 +22,15 @@ export interface ApiEnv {
   readonly SEO_AI_CITATION_API_KEY?: string;
   readonly SEO_AI_CITATION_MODEL?: string;
   readonly SEO_AI_CITATION_AUTH_MODE?: "bearer" | "api-key";
+  readonly SEO_COMPETITIVE_LOGIN?: string;
+  readonly SEO_COMPETITIVE_PASSWORD?: string;
+  readonly SEO_COMPETITIVE_ENDPOINT?: string;
+  readonly SEO_COMPETITIVE_LOCATION_CODE?: string;
+  readonly SEO_COMPETITIVE_LOCATION_NAME?: string;
+  readonly SEO_COMPETITIVE_LANGUAGE_CODE?: string;
+  readonly SEO_COMPETITIVE_DEVICE?: "desktop" | "mobile";
+  readonly SEO_COMPETITIVE_DEPTH?: string;
+  readonly SEO_COMPETITIVE_SAMPLE_LIMIT?: string;
   readonly ENVIRONMENT?: string;
   readonly DB?: D1DatabaseLike;
   readonly AI?: CloudflareAIBinding;
