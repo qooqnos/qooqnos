@@ -511,6 +511,13 @@
       "moduleId": "ai",
       "filename": "0076_ai_memory.sql",
       "checksum": "83fa7fe5ccf2d64bf42722ffaadf27bf36a55575305d8046d784fd7a68a54728"
+    },
+    {
+      "id": "0077_seo_geo_engine",
+      "version": 77,
+      "moduleId": "seo",
+      "filename": "0077_seo_geo_engine.sql",
+      "checksum": "b32e8e239a251fe5da20879a31957d724887a3c97ab6e209a7e926157136de6a"
     }
   ]
 }
