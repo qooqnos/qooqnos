@@ -54,6 +54,7 @@ import aiRuntimeWorkerLeases from "../../../migrations/0053_ai_runtime_worker_le
 import discoveryIndexObservability from "../../../migrations/0054_discovery_index_observability.sql";
 import communicationPolicyConsent from "../../../migrations/0055_communication_policy_consent.sql";
 import communicationRequiredSuppression from "../../../migrations/0056_communication_required_suppression.sql";
+import matchingLearningSignals from "../../../migrations/0057_matching_learning_signals.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -113,4 +114,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0054_discovery_index_observability.sql", sql: discoveryIndexObservability },
   { path: "migrations/0055_communication_policy_consent.sql", sql: communicationPolicyConsent },
   { path: "migrations/0056_communication_required_suppression.sql", sql: communicationRequiredSuppression },
+  { path: "migrations/0057_matching_learning_signals.sql", sql: matchingLearningSignals },
 ];
