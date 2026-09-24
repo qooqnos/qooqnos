@@ -41,3 +41,12 @@ Verify tenant isolation, lifecycle transitions, AI usage metering, quota concurr
 - Execute provider payouts only through `PaymentProviderAdapter.payoutSettlement` with an idempotency key.
 - Record provider references as execution evidence; never store provider credentials in the financial schema.
 - Post settlement accounting only after item reconciliation and use immutable double-entry ledger transactions.
+
+## Reconciliation
+- Reconciliation cases are explicit exception records; never silently mutate financial truth to clear a mismatch.
+- Persist expected/observed minor-unit amounts and currency when the discrepancy is financial.
+- Every externally derived discrepancy requires idempotency, correlation and provider/local references where available.
+- Case events are append-only and immutable.
+- Enforce tenant/workspace/business scope at the database boundary.
+- Closed cases cannot be reopened by ordinary lifecycle transitions; create a new case for a new discrepancy.
+- Resolution requires an explicit resolution code/reason and actor identity.
