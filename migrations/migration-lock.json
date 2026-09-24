@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T10:45:00.000Z",
+  "generatedAt": "2026-09-24T10:52:00.000Z",
   "migrations": [
     {
       "id": "0001_foundation",
@@ -462,6 +462,13 @@
       "moduleId": "communication",
       "checksum": "e8f360013b6b0d070c3dd6a5b6b8179ca864ef571bc109075a1b156dece7be9a",
       "filename": "0065_communication_push_channel.sql"
+    },
+    {
+      "id": "0066_automation_compensation_pairing",
+      "version": 66,
+      "moduleId": "automation",
+      "checksum": "4051abb361b0ebccf8433ef49c91c3625dd057f8c30caf058f72c53722d78b90",
+      "filename": "0066_automation_compensation_pairing.sql"
     }
   ]
 }
