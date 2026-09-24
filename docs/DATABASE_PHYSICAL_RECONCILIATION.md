@@ -496,7 +496,13 @@ Current main schema baseline:
 | Automation | automation_workflows, automation_workflow_versions, automation_triggers, automation_conditions, automation_actions, automation_schedules, automation_executions, automation_step_executions, automation_execution_attempts, automation_execution_errors, automation_variables, automation_policies, automation_approval_references, automation_compensation_references | Core versioned workflow/execution persistence plus CapabilityRegistry-backed idempotent execution implemented; durable schedule polling, ISO-8601 recurrence/misfire handling and scheduled action execution run from Worker scheduler |
 | Integration | integration_providers, integration_accounts, integration_webhooks, integration_sync_jobs, integration_external_references | Core external account/webhook/sync/reference persistence implemented; provider adapters and durable sync workers remain |
 | Case & Support Operations | cases, case_types, case_queues, case_assignments, case_participants, case_events, case_notes, case_evidence_references, case_links, case_escalations, case_resolutions, case_slas, case_actions, case_templates | Core case lifecycle/assignment/escalation/resolution persistence implemented; SLA breach worker, first-response event, CaseAction approval/completion routes and CapabilityRegistry-backed execution worker are live; external queue/provider integrations remain |
-| Localization / Documents / Analytics | no dedicated canonical tables identified in current migration set | Missing |
+| Localization / Documents / Analytics | `localization_locales`, `localization_countries`, `localization_regions`, `localization_legal_profiles`, `localization_market_profiles`, `localization_domain_configs` | Localization registry implemented in migration 0072; Documents and Analytics remain separate gates |
+
+## Localization registry reconciliation — 0072
+
+The Localization contract now has one canonical physical owner. `0072_localization_registry.sql` provides locale, country, region, legal-profile, market-profile and domain-configuration registries. Currency, timezone and calendar are market-profile properties rather than separate competing domain tables. The repository boundary is `LocalizationRegistryRepository`; domain modules must resolve localization context through this boundary instead of creating country/locale tables of their own.
+
+The migration seeds only `en`, `fa` and `ar` locale metadata. Country, region and legal activation data are intentionally not fabricated: those records are operational jurisdiction configuration and must be explicitly reviewed before activation.
 
 ## 3. Important semantic mismatches
 
@@ -742,7 +748,7 @@ The remaining implementation work is operational/provider/projection work; Catal
 11. Complete Fulfillment provider-specific adapters, callback reconciliation and durable polling only where an external provider contract exists; canonical tracking/service completion persistence is implemented.
 12. Business lifecycle vocabulary reconciliation is closed; do not introduce another Business status model.
 13. Complete Case queue dispatch/provider integrations where explicit contracts exist; CaseAction capability execution is already implemented.
-14. Add Localization/Documents and Analytics structures where their contracts are sufficiently explicit.
+14. Add Documents and Analytics structures where their contracts are sufficiently explicit; Localization registry contract is now implemented by migration 0072.
 
 Every future step must use a new numbered module-owned migration and must preserve all prior migration IDs and checksums. Migrations 0043–0047 are integrity-only and add no tables; 0048 completes the Review-owned moderation/reputation projection layer; 0054 adds Discovery index generations and observability evidence; 0064 completes the TrustSignal/anti-abuse physical boundary.
 
