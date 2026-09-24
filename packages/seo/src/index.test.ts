@@ -108,6 +108,23 @@ describe("SEO/GEO core", () => {
       ],
     });
     expect(structured["@type"]).toBe("Product");
+    const variantStructured = generateStructuredData({
+      ...product,
+      productGroupId: "PG-001",
+      variantDimensions: ["https://schema.org/color", "https://schema.org/size"],
+      productVariants: [
+        { id: "v-red-m", sku: "RED-M", name: "Phoenix Chair Red M", url: url + "?variant=red-m", price: 209, currency: "USD", availability: "in_stock", attributes: { color: "red", size: "M" } },
+      ],
+      shippingDetails: { country: "US", shippingRate: 10, currency: "USD", handlingTimeMinDays: 1, handlingTimeMaxDays: 3 },
+      returnPolicy: { applicableCountry: "US", returnWindowDays: 30, returnFees: "FreeReturn", returnMethod: "ReturnByMail" },
+    }, { canonicalUrl: url });
+    expect(variantStructured["@type"]).toBe("ProductGroup");
+    expect(variantStructured.productGroupID).toBe("PG-001");
+    expect(variantStructured.variesBy).toEqual(["https://schema.org/color", "https://schema.org/size"]);
+    expect(variantStructured.hasVariant).toHaveLength(1);
+    expect((variantStructured.offers as Record<string, unknown>).shippingDetails).toBeDefined();
+    expect((variantStructured.offers as Record<string, unknown>).hasMerchantReturnPolicy).toBeDefined();
+    expect(validateStructuredData(variantStructured).valid).toBe(true);
     expect(structured.brand).toEqual({ "@type": "Brand", name: "Phoenix" });
     expect(structured.offers).toMatchObject({ "@type": "Offer", price: 199, priceCurrency: "USD", availability: "https://schema.org/InStock" });
     const page = buildEntityPageModel(
