@@ -42,6 +42,8 @@ export class AIMemoryRepository extends Repository {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = context.workspaceId ?? null;
     if (input.ownerScope === "workspace" && !workspaceId) throw new DatabaseError("Workspace AI memory requires workspace scope");
+    if (input.ownerScope === "workspace" && input.ownerReference !== workspaceId) throw new DatabaseError("Workspace AI memory owner must match request workspace");
+    if (input.ownerScope === "user" && (!context.actorId || input.ownerReference !== context.actorId)) throw new DatabaseError("User AI memory owner must match authenticated actor");
     if (!input.ownerReference.trim() || !input.memoryType.trim() || !input.contentReference.trim()) throw new DatabaseError("AI memory owner/type/content reference is required");
     if (input.classification === "sensitive" || input.classification === "restricted") {
       if (!input.consentReference?.trim()) throw new DatabaseError("Sensitive AI memory requires consent reference");
@@ -85,6 +87,8 @@ export class AIMemoryRepository extends Repository {
   async list(context: RequestContext, ownerScope: AIMemoryOwnerScope, ownerReference: string, limit = 50): Promise<readonly AIMemoryRecord[]> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = context.workspaceId ?? null;
+    if (ownerScope === "workspace" && (!workspaceId || ownerReference !== workspaceId)) throw new DatabaseError("Workspace AI memory owner must match request workspace");
+    if (ownerScope === "user" && (!context.actorId || ownerReference !== context.actorId)) throw new DatabaseError("User AI memory owner must match authenticated actor");
     const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
     return (await this.database.all<AIMemoryRow>(
       `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
