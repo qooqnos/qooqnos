@@ -1,6 +1,7 @@
 import { DISCOVERY_MODULE } from "@qooqnos/discovery";
 import { AI_MODULE } from "@qooqnos/ai";
 import { DOCUMENTS_MODULE } from "@qooqnos/documents";
+import { SEO_MODULE } from "@qooqnos/seo";
 import { MEDIA_MODULE } from "@qooqnos/media";
 import { CATALOG_MODULE } from "@qooqnos/catalog";
 import { BUSINESS_MODULE } from "@qooqnos/business";
@@ -59,6 +60,7 @@ const modules: readonly RuntimeModule[] = [
   onboardingModule,
   AI_MODULE,
   DOCUMENTS_MODULE,
+  SEO_MODULE,
 ];
 
 const bootPromises = new WeakMap<D1Database, Promise<RuntimeBootResult>>();
