@@ -5,6 +5,7 @@ import type {
   PaymentCreateRequest,
   PaymentProviderRegistry,
   PaymentRefundRequest,
+  PaymentPayoutRequest,
   PaymentProviderResult,
 } from "./payment-provider-adapter";
 
@@ -44,6 +45,13 @@ export class PaymentProviderService {
     const adapter = this.requireProvider(providerId);
     const result = await adapter.refundPayment(request);
     await this.recordReference(context, result, "refund");
+    return result;
+  }
+
+  async payoutSettlement(context: RequestContext, providerId: string, request: PaymentPayoutRequest): Promise<PaymentProviderResult> {
+    const adapter = this.requireProvider(providerId);
+    const result = await adapter.payoutSettlement(request);
+    await this.recordReference(context, result, "settlement_payout");
     return result;
   }
 
