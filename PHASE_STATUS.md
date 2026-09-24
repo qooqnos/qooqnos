@@ -55,7 +55,7 @@ The 12-gate rubric is:
 11. critical invariant verification;
 12. credentialed remote production-D1 application.
 - **Production remote migration state:** not verified from this runtime because no Cloudflare credential/connector is exposed here. The canonical remote migration executor is implemented and verifies D1 identity plus migration checksums before applying anything.
-- Payment provider adapters are implemented behind the Billing boundary; other provider-specific adapters, Analytics, Documents and AI Memory remain separate operational/schema gates; the Localization registry contract is now physically implemented in migration 0072.
+- Payment provider adapters are implemented behind the Billing boundary; Analytics is implemented as a rebuildable Outbox-derived projection in migration 0075; Documents and AI Memory remain separate operational/schema gates; the Localization registry contract is physically implemented in migration 0072.
 
 ## 3. Critical database rule
 
