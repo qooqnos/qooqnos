@@ -1,1 +1,10 @@
-import type {SeoEntity} from "./types"; export function slugify(v:string):string{return v.normalize("NFKC").toLowerCase().trim().replace(/[^\\p{L}\\p{N}]+/gu,"-").replace(/^-+|-+$/g,"")||"entity"}; export function canonicalEntityUrl(base:string,e:SeoEntity):string{return base.replace(/\\/$/,"")+"/"+encodeURIComponent(e.locale)+"/"+e.type.toLowerCase()+"/"+slugify(e.preferredName)+"-"+encodeURIComponent(e.id)}
+import type { SeoEntity } from "./types";
+
+export function slugify(value: string): string {
+  return value.normalize("NFKC").toLowerCase().trim().replace(/[^\\p{L}\\p{N}]+/gu, "-").replace(/^-+|-+$/g, "") || "entity";
+}
+
+export function canonicalEntityUrl(baseUrl: string, entity: SeoEntity): string {
+  const base = baseUrl.replace(/\\/$/, "");
+  return base + "/" + encodeURIComponent(entity.locale) + "/" + entity.type.toLowerCase() + "/" + slugify(entity.preferredName) + "-" + encodeURIComponent(entity.id);
+}
