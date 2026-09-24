@@ -64,6 +64,7 @@ function payloadEntity(payloadJson: string): SeoEntity | null {
         publicationState: payloadObject.publicationStatus === "published" ? "published" : "unpublished",
         visibility: "public", preferredName: String(payloadObject.displayName ?? payloadObject.name),
         summary: String(payloadObject.name), locale: typeof payloadObject.locale === "string" ? payloadObject.locale : "en",
+        ...optionalSeoEntityFields(payloadObject),
         updatedAt: typeof payloadObject.updatedAt === "string" ? payloadObject.updatedAt : new Date().toISOString(),
       } as SeoEntity;
     }
@@ -74,6 +75,7 @@ function payloadEntity(payloadJson: string): SeoEntity | null {
         ...(typeof payloadObject.description === "string" ? { description: payloadObject.description } : {}),
         locale: typeof payloadObject.locale === "string" ? payloadObject.locale : "en",
         relatedEntityIds: typeof payloadObject.businessId === "string" ? [String(payloadObject.businessId)] : [],
+        ...optionalSeoEntityFields(payloadObject),
         updatedAt: typeof payloadObject.updatedAt === "string" ? payloadObject.updatedAt : new Date().toISOString(),
       } as SeoEntity;
     }
@@ -365,4 +367,37 @@ async function loadSeoEntityGraph(
     confidence: row.confidence,
     ...(row.verifiedAt ? { verifiedAt: row.verifiedAt } : {}),
   })));
+}
+
+
+function optionalSeoEntityFields(payload: Record<string, unknown>): Partial<SeoEntity> {
+  const fields: Partial<SeoEntity> = {};
+  const strings = [
+    "country", "locationId", "canonicalId", "imageUrl", "telephone", "email",
+    "priceRange", "currency", "availability", "brandName", "categoryName",
+    "startDate", "endDate",
+  ] as const;
+  for (const key of strings) {
+    if (typeof payload[key] === "string" && String(payload[key]).trim()) {
+      (fields as Record<string, unknown>)[key] = String(payload[key]).trim();
+    }
+  }
+  if (typeof payload.price === "number" && Number.isFinite(payload.price)) fields.price = payload.price;
+  if (payload.geoScope === "exact" || payload.geoScope === "branch" || payload.geoScope === "city" ||
+      payload.geoScope === "region" || payload.geoScope === "country" || payload.geoScope === "service-area") {
+    fields.geoScope = payload.geoScope;
+  }
+  if (Array.isArray(payload.serviceArea)) {
+    const values = payload.serviceArea.filter((value): value is string => typeof value === "string").map((value) => value.trim()).filter(Boolean);
+    if (values.length) fields.serviceArea = values;
+  }
+  if (payload.address && typeof payload.address === "object" && !Array.isArray(payload.address)) {
+    const raw = payload.address as Record<string, unknown>;
+    const address: NonNullable<SeoEntity["address"]> = {};
+    for (const key of ["streetAddress", "addressLocality", "addressRegion", "postalCode", "addressCountry"] as const) {
+      if (typeof raw[key] === "string" && raw[key].trim()) address[key] = raw[key].trim();
+    }
+    if (Object.keys(address).length) fields.address = address;
+  }
+  return fields;
 }
