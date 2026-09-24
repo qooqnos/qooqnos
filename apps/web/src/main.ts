@@ -219,11 +219,16 @@ function normalizePath(path: string): string {
 }
 
 function navigate(path: string): void {
-  if (normalizePath(location.pathname) === normalizePath(path)) {
+  const target = normalizePath(path);
+  if (target !== normalizePath(location.pathname) && !routes.some((route) => route.path === target)) {
+    window.location.assign(target);
+    return;
+  }
+  if (normalizePath(location.pathname) === target) {
     render();
     return;
   }
-  history.pushState({}, "", path);
+  history.pushState({}, "", target);
   render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -2562,7 +2567,14 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-window.addEventListener("popstate", render);
+window.addEventListener("popstate", () => {
+  const target = normalizePath(location.pathname);
+  if (!routes.some((route) => route.path === target)) {
+    window.location.reload();
+    return;
+  }
+  render();
+});
 window.addEventListener("keydown", handleGlobalShortcut);
 render();
 void hydrateSessionContext();
