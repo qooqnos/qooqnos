@@ -7,3 +7,6 @@ export * from "./structured-data";
 export * from "./answer";
 export * from "./sitemap";
 export * from "./audit";
+export * from "./entity-graph";
+export * from "./internal-links";
+export * from "./geo";
