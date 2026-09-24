@@ -189,6 +189,20 @@ export class SeoRepository extends Repository {
           input.sourceUpdatedAt, input.sourceVersion, input.contentHash],
       },
       {
+        sql: `INSERT INTO seo_entity_graph_nodes
+          (organization_id, workspace_id, entity_id, entity_type, source_module, source_version, publication_state, visibility, locale, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(organization_id, workspace_id, entity_id)
+         DO UPDATE SET entity_type=excluded.entity_type, source_module=excluded.source_module,
+           source_version=excluded.source_version, publication_state=excluded.publication_state,
+           visibility=excluded.visibility, locale=excluded.locale, updated_at=excluded.updated_at`,
+        params: [
+          scope.organizationId, scope.workspaceId, input.plan.entityId, input.plan.entityType,
+          input.plan.sourceModule, input.sourceVersion, input.plan.publicationState, input.plan.visibility,
+          input.plan.locale, input.now, input.now,
+        ],
+      },
+      {
         sql: `DELETE FROM seo_entity_graph_edges
           WHERE organization_id = ? AND workspace_id IS ? AND source_entity_id = ? AND provenance = ?`,
         params: [scope.organizationId, scope.workspaceId, input.plan.entityId, "canonical-related-entity"],
