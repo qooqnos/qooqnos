@@ -1147,3 +1147,8 @@ Closed implementation gates must not be reopened by future agents: Booking trans
 ## 20. Definition of Done
 
 The physical data model is architecture-complete when every planned physical table can be generated from this blueprint without inventing a new concept, scope, source of truth, ownership rule, lifecycle, or business invariant during migration design.
+
+
+### Billing invoice system — implemented
+
+`billing_invoices`, `billing_invoice_lines`, and `billing_invoice_payment_applications` are the canonical physical representation for Billing invoices. Invoice values are integer minor units and invoice lines are historical snapshots. Draft invoices may be assembled; once issued, financial fields and lines are immutable. Payment applications update paid/due state only through the Billing invoice repository. External payment-provider execution remains an adapter/reconciliation concern.
