@@ -116,7 +116,7 @@ describe("SEO/GEO core", () => {
       "https://example.com",
     );
     expect(page.breadcrumbs).toHaveLength(3);
-    expect(page.actions.some((action) => action.href.includes("/checkout?product="))).toBe(true);
+    expect(page.actions.some((action) => action.href.includes("/discover?q="))).toBe(true);
     expect(page.sections.some((section) => section.kind === "commerce")).toBe(true);
   });
 
