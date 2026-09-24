@@ -1,4 +1,4 @@
-import { brandId, type EntityId } from "@qooqnos/core";
+import { type EntityId } from "@qooqnos/core";
 import { D1Database, Repository, DatabaseError } from "@qooqnos/database";
 
 export interface CaseDispatchRecord {
