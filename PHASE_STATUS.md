@@ -31,14 +31,14 @@ The authoritative architecture is defined by docs/PHOENIX_ARCHITECTURE.md and th
 | Migration lock | ✅ Implemented | reviewed SQL identity/checksum is enforced |
 | D1 database boundary | ✅ Implemented | packages/database exposes D1-compatible access |
 | D1 runtime boot | ✅ Implemented in runtime boundary | runtime boot consumes migration catalog/lock |
-| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references 0001–0064 |
+| Canonical migrations | 🟢 Active | apps/api/src/migrations.ts references the current canonical migration catalog through 0075 |
 | Full logical model | 🟢 Core logical model resolved | remaining work is operational/provider/projection gates, not an unimplemented CustomerProfile table |
-| Final D1 physical schema | 🟢 Physical blueprint complete | 192 physical tables across migrations 0001–0064; remaining work is explicit contract/provider/worker gates and credentialed remote D1 migration/application |
+| Final D1 physical schema | 🟢 Physical blueprint complete | the current canonical physical inventory across migrations 0001–0075; remaining work is explicit contract/provider/worker gates and credentialed remote D1 migration/application |
 | Legacy PostgreSQL path | ✅ Removed from active source | historical git history only |
 
 ## 2.1 Database completion percentage
 
-- **Physical D1 schema: 100% complete** — 64 ordered migrations define the canonical physical schema and the reconciled inventory is 192 tables.
+- **Physical D1 schema: 100% complete** — the current ordered migration set defines the canonical physical schema and the reconciled inventory is maintained by the migration audit.
 - **Database engineering readiness: 91.7%** on the explicit 12-gate readiness rubric: 11 repository/schema/runtime gates are closed; one credentialed remote-D1 application gate remains.
 
 The 12-gate rubric is:
@@ -55,7 +55,7 @@ The 12-gate rubric is:
 11. critical invariant verification;
 12. credentialed remote production-D1 application.
 - **Production remote migration state:** not verified from this runtime because no Cloudflare credential/connector is exposed here. The canonical remote migration executor is implemented and verifies D1 identity plus migration checksums before applying anything.
-- Payment provider adapters are implemented behind the Billing boundary; Analytics is implemented as a rebuildable Outbox-derived projection in migration 0075; Documents and AI Memory remain separate operational/schema gates; the Localization registry contract is physically implemented in migration 0072.
+- Payment provider adapters are implemented behind the Billing boundary; Analytics is implemented as a rebuildable Outbox-derived projection in migration 0075; Documents/Export composition is implemented; PDF/Print rendering and durable artifact persistence remain downstream adapter gates, while AI Memory remains a separate operational/schema gate.; the Localization registry contract is physically implemented in migration 0072.
 
 ## 3. Critical database rule
 
@@ -107,9 +107,9 @@ Completion requires:
 
 ## 7. Latest runtime verification
 
-- Last fully verified code checkpoint is commit `3f3192819a9879fb453070e82e04785b3fea5e80`.
-- Current main is now of that checkpoint; the compare contains no canonical migration SQL changes, but the latest head has not been independently CI-verified through the currently exposed connector.
-- Migration lock verification is registered through migration `0056` and passed in the latest CI/Phoenix verification workflows.
+- The last fully verified code checkpoint is recorded in the verification snapshot; the current main head includes subsequent implementation changes and awaits fresh CI/Phoenix verification.
+- Current main is beyond that checkpoint and has not been independently CI-verified through the currently exposed connector.
+- Migration lock verification covers the current canonical migration catalog and was passed in the latest fully verified checkpoint.
 - The prior checkpoint is covered by successful CI/Phoenix verification. The current cleanup head requires a fresh CI/Phoenix verification run before it is treated as a verified checkpoint.
 - Matching Match → Connect is implemented through the canonical CustomerRelationship owner.
 
