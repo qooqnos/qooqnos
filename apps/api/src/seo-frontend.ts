@@ -138,11 +138,11 @@ export async function renderSeoAwareDocument(
   baseHeaders.set("content-type", "text/html; charset=utf-8");
   baseHeaders.set("cache-control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
   baseHeaders.set("etag", etag);
+  baseHeaders.set("x-robots-tag", hydration.metadata.robots);
 
   if (requestEtag === etag) return new Response(null, { status: 304, headers: baseHeaders });
 
   const html = injectSeoRepresentation(await assetResponse.text(), hydration);
-  baseHeaders.set("x-robots-tag", hydration.metadata.robots);
   return new Response(html, { status: 200, headers: baseHeaders });
 }
 
