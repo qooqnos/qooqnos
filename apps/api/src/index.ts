@@ -36,6 +36,7 @@ import { registerLoyaltyRoutes } from "./loyalty-routes";
 import { registerAdvertisingRoutes } from "./advertising-routes";
 import { registerAuthorizationGovernanceRoutes } from "./authorization-governance-routes";
 import { renderSeoAwareDocument } from "./seo-frontend";
+import { runProductionSeoCrawler } from "./seo-production-crawler";
 
 const homePage = (version: string): string => `<!doctype html>
 <html lang="en">
@@ -583,7 +584,13 @@ export default {
     await processPrivacyRetention(env, now);
     await processIntegration(env, now);
     await processAnalyticsAggregates(env, now);
-    if (database) await processSeoPublicationJobs(database, now, 25, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com");
+    if (database) {
+      await processSeoPublicationJobs(database, now, 25, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com");
+      if (env.ENVIRONMENT === "production") {
+        const sampleLimit = Number(env.SEO_CRAWLER_SAMPLE_LIMIT ?? "25");
+        await runProductionSeoCrawler(database, Number.isFinite(sampleLimit) ? sampleLimit : 25, now);
+      }
+    }
 
     const database = getDatabase(env);
     if (database && env.AI && env.AI_SELLER_EXTRACT_MODEL_ID) {
