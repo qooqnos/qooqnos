@@ -14,6 +14,7 @@ import {
   evaluateSeoPolicy,
   generateMetadata,
   generateStructuredData,
+  validateStructuredData,
   recommendInternalLinks,
   compareEntityRepresentations,
 } from "./index";
@@ -58,7 +59,19 @@ describe("SEO/GEO core", () => {
     expect(metadata.alternates.some((item) => item.hreflang === "x-default")).toBe(true);
     expect(metadata.openGraph.type).toBe("website");
     expect(metadata.openGraph.image).toContain("og/default.png");
-    expect(generateStructuredData(entity)["@type"]).toBe("LocalBusiness");
+    const structured = generateStructuredData({
+      ...entity,
+      canonicalId: "https://example.com/entities/biz-1",
+      alternateNames: ["Phoenix Studio", "Phoenix"],
+      sameAs: ["https://example.com/about", "not-a-url"],
+      serviceArea: ["Baku", "Azerbaijan"],
+      type: "Business",
+    });
+    expect(structured["@type"]).toBe("LocalBusiness");
+    expect(structured["@id"]).toBe("https://example.com/entities/biz-1");
+    expect(structured.sameAs).toEqual(["https://example.com/about"]);
+    expect(Array.isArray(structured.areaServed)).toBe(true);
+    expect(validateStructuredData(structured).valid).toBe(true);
   });
 
   it("builds attributable answer representations", () => {
