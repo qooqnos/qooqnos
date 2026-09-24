@@ -17,6 +17,7 @@ export interface MatchingOutcomeProcessorOptions {
   readonly learning: MatchingLearningRepository;
   readonly database: {
     first<T>(sql: string, ...params: unknown[]): Promise<T | null>;
+    all<T>(sql: string, ...params: unknown[]): Promise<readonly T[]>;
   };
 }
 
