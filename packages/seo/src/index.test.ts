@@ -6,7 +6,10 @@ import {
   buildGeoTruthSignal,
   buildRobotsTxt,
   buildSitemapXml,
+  buildSearchQuery,
   canonicalEntityUrl,
+  evaluateFreshness,
+  evaluateQueryCoverage,
   evaluateSeoPolicy,
   generateMetadata,
   generateStructuredData,
@@ -85,5 +88,12 @@ describe("SEO/GEO core", () => {
     const withoutLocation = { ...entity };
     delete (withoutLocation as { locationId?: string }).locationId;
     expect(buildGeoTruthSignal({ ...withoutLocation, geoScope: "city" })).toBeNull();
+  });
+
+  it("models intent, coverage, and freshness without inventing facts", () => {
+    const query = buildSearchQuery("Phoenix Studio near me", "en-US", "city");
+    expect(query.intent).toBe("local");
+    expect(evaluateQueryCoverage(query, [entity]).state).toBe("fully-covered");
+    expect(evaluateFreshness(entity, "2026-09-24T12:00:00Z").stale).toBe(false);
   });
 });
