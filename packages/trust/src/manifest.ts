@@ -1,4 +1,4 @@
-import type { RuntimeModule } from "@qooqnos/runtime";
+import { ownerResourcePolicy, type RuntimeModule } from "@qooqnos/runtime";
 import { TRUST_PERMISSIONS } from "./service";
 
 export const TRUST_MODULE: RuntimeModule = {
@@ -7,6 +7,6 @@ export const TRUST_MODULE: RuntimeModule = {
   dependencies: [],
   permissions: [...TRUST_PERMISSIONS],
   registerAuthorization(registry) {
-    for (const permission of TRUST_PERMISSIONS) registry.registerPermission(permission);
+    for (const permission of TRUST_PERMISSIONS) registry.registerPermission(permission, permission === "trust.verification.review" ? ownerResourcePolicy() : undefined);
   },
 };
