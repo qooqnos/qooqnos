@@ -158,6 +158,7 @@ const routes: Route[] = [
   { path: "/seo", label: "SEO", icon: "◎", render: renderSeo },
   { path: "/control", label: "کنترل", icon: "⌘", render: renderControlCenter },
   { path: "/catalog", label: "کاتالوگ", icon: "▤", render: renderCatalog },
+  { path: "/promotion", label: "پروموشن", icon: "٪", render: renderPromotion },
 ];
 
 const theme = getInitialTheme();
@@ -522,6 +523,70 @@ function renderHome(): string {
   `;
 }
 
+
+function renderPromotion(): string {
+  return "<section class='page-heading'><div><span class='eyebrow'><i></i> Promotion Studio</span><h1>مشوق را تعریف کنید؛ <em>قانون را قفل کنید.</em></h1><p>Promotion فقط policy و eligibility را مالک است.</p></div></section>" +
+    "<section class='engine-grid'>" +
+    "<article class='glass-card engine-card'><div class='card-section-heading'><span class='section-kicker'>Create</span><h2>Promotion</h2></div><div class='engine-form'><input id='promo-name' class='studio-input-line' placeholder='نام promotion' /><input id='promo-type' class='studio-input-line' value='percentage_discount' /><select id='promo-scope' class='studio-input-line'><option value='workspace'>workspace</option><option value='business'>business</option><option value='campaign'>campaign</option></select><input id='promo-business' class='studio-input-line' value='" + escapeAttr(localStorage.getItem(STORAGE.business) ?? "") + "' placeholder='Business ID' /></div><button class='button button-primary' type='button' data-promo-create>ساخت Promotion</button><div id='promo-create-state' class='connection-state'>—</div></article>" +
+    "<article class='glass-card engine-card'><div class='card-section-heading'><span class='section-kicker'>Version</span><h2>Policy version</h2></div><div class='engine-form'><input id='promo-id' class='studio-input-line' placeholder='Promotion ID' /><input id='promo-version' class='studio-input-line' type='number' value='1' /><input id='promo-minimum' class='studio-input-line' type='number' value='0' /><input id='promo-benefit' class='studio-input-line' type='number' value='10' /><input id='promo-effective' class='studio-input-line' type='datetime-local' value='" + toDateTimeLocal(new Date()) + "' /><input id='promo-version-id' class='studio-input-line' placeholder='Version ID' /></div><div class='engine-actions'><button class='button button-primary' type='button' data-promo-version>ساخت Version</button><button class='button button-ghost' type='button' data-promo-activate>Activate</button></div><div id='promo-version-state' class='connection-state'>—</div></article>" +
+    "<article class='glass-card engine-card'><div class='card-section-heading'><span class='section-kicker'>Decision</span><h2>Eligibility</h2></div><div class='engine-form'><input id='promo-eval-id' class='studio-input-line' placeholder='Promotion ID' /><input id='promo-customer' class='studio-input-line' value='" + escapeAttr(localStorage.getItem(STORAGE.customer) ?? "") + "' placeholder='Customer ID' /><input id='promo-amount' class='studio-input-line' type='number' value='0' /><input id='promo-channel' class='studio-input-line' value='web' /></div><button class='button button-primary' type='button' data-promo-evaluate>Evaluate</button><div id='promo-eval-state' class='connection-state'>—</div></article>" +
+    "</section>";
+}
+
+async function createPromotion(): Promise<void> {
+  const state=document.querySelector<HTMLElement>("#promo-create-state"); if(!state)return;
+  if(!sessionStorage.getItem(STORAGE.accessToken)){openConnectionPanel();return;}
+  try{
+    const response=await apiJson<{data:{id:string}}>("/api/v1/promotions",{method:"POST",body:{
+      name:document.querySelector<HTMLInputElement>("#promo-name")?.value.trim(),
+      promotionType:document.querySelector<HTMLInputElement>("#promo-type")?.value.trim(),
+      scope:document.querySelector<HTMLSelectElement>("#promo-scope")?.value,
+      businessId:document.querySelector<HTMLInputElement>("#promo-business")?.value.trim()||undefined
+    }});
+    document.querySelector<HTMLInputElement>("#promo-id")!.value=response.data.id;
+    document.querySelector<HTMLInputElement>("#promo-eval-id")!.value=response.data.id;
+    state.textContent="Promotion ساخته شد · "+response.data.id; state.className="connection-state success";
+  }catch(error){state.textContent=error instanceof Error?error.message:"ساخت Promotion ناموفق بود.";state.className="connection-state error";}
+}
+async function createPromotionVersion(): Promise<void>{
+  const state=document.querySelector<HTMLElement>("#promo-version-state");if(!state)return;
+  const id=document.querySelector<HTMLInputElement>("#promo-id")?.value.trim()??"";
+  if(!id){showToast("Promotion ID لازم است.");return;}
+  try{
+    const response=await apiJson<{data:{id:string;version:number}}>("/api/v1/promotions/"+encodeURIComponent(id)+"/versions",{method:"POST",body:{
+      version:Number(document.querySelector<HTMLInputElement>("#promo-version")?.value||"1"),
+      benefit:{type:"percentage",value:Number(document.querySelector<HTMLInputElement>("#promo-benefit")?.value||"0")},
+      eligibilityRules:{minimumAmountMinor:Number(document.querySelector<HTMLInputElement>("#promo-minimum")?.value||"0")},
+      stackPolicy:{stack:"exclusive"},
+      effectiveFrom:new Date(document.querySelector<HTMLInputElement>("#promo-effective")?.value||Date.now()).toISOString()
+    }});
+    document.querySelector<HTMLInputElement>("#promo-version-id")!.value=response.data.id;
+    state.textContent="Version "+response.data.version+" ساخته شد · "+response.data.id;state.className="connection-state success";
+  }catch(error){state.textContent=error instanceof Error?error.message:"ساخت Version ناموفق بود.";state.className="connection-state error";}
+}
+async function activatePromotion(): Promise<void>{
+  const state=document.querySelector<HTMLElement>("#promo-version-state");if(!state)return;
+  const id=document.querySelector<HTMLInputElement>("#promo-id")?.value.trim()??"";
+  const versionId=document.querySelector<HTMLInputElement>("#promo-version-id")?.value.trim()??"";
+  if(!id||!versionId){showToast("Promotion ID و Version ID لازم هستند.");return;}
+  try{
+    const response=await apiJson<{data:{status:string}}>( "/api/v1/promotions/"+encodeURIComponent(id)+"/activate",{method:"POST",body:{versionId}});
+    state.textContent="Promotion فعال شد · "+response.data.status;state.className="connection-state success";
+  }catch(error){state.textContent=error instanceof Error?error.message:"Activation ناموفق بود.";state.className="connection-state error";}
+}
+async function evaluatePromotion(): Promise<void>{
+  const state=document.querySelector<HTMLElement>("#promo-eval-state");if(!state)return;
+  try{
+    const response=await apiJson<{data:{decision:string;reasons:string[]}}>("/api/v1/promotions/evaluate",{method:"POST",body:{
+      promotionId:document.querySelector<HTMLInputElement>("#promo-eval-id")?.value.trim(),
+      subjectId:document.querySelector<HTMLInputElement>("#promo-customer")?.value.trim(),
+      idempotencyKey:crypto.randomUUID(),
+      amountMinor:Number(document.querySelector<HTMLInputElement>("#promo-amount")?.value||"0"),
+      channel:document.querySelector<HTMLInputElement>("#promo-channel")?.value.trim()
+    }});
+    state.textContent=response.data.decision+" · "+response.data.reasons.join(", ");state.className=response.data.decision==="qualified"?"connection-state success":"connection-state";
+  }catch(error){state.textContent=error instanceof Error?error.message:"Evaluation ناموفق بود.";state.className="connection-state error";}
+}
 function renderCatalog(): string {
   const business = localStorage.getItem(STORAGE.business) ?? "";
   return `
@@ -1994,6 +2059,10 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-privacy-consent]")?.addEventListener("click", () => { void grantPrivacyConsent(); });
   document.querySelector<HTMLButtonElement>("[data-privacy-request]")?.addEventListener("click", () => { void createPrivacyRequest(); });
   document.querySelector<HTMLButtonElement>("[data-catalog-create]")?.addEventListener("click", () => { void createCatalogProduct(); });
+  document.querySelector<HTMLButtonElement>("[data-promo-create]")?.addEventListener("click", () => { void createPromotion(); });
+  document.querySelector<HTMLButtonElement>("[data-promo-version]")?.addEventListener("click", () => { void createPromotionVersion(); });
+  document.querySelector<HTMLButtonElement>("[data-promo-activate]")?.addEventListener("click", () => { void activatePromotion(); });
+  document.querySelector<HTMLButtonElement>("[data-promo-evaluate]")?.addEventListener("click", () => { void evaluatePromotion(); });
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
