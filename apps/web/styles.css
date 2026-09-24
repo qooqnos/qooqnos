@@ -940,3 +940,18 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
 .seo-related-link small{color:var(--faint);font-size:7px;white-space:nowrap}
 .seo-public-actions{margin-top:20px}
 @media(max-width:820px){.seo-related-list{grid-template-columns:1fr}}
+
+
+.seo-audit-summary{display:grid;grid-template-columns:1.2fr repeat(3,1fr);gap:9px;margin:16px 0}
+.seo-audit-summary>div{padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);display:grid;gap:4px}
+.seo-audit-summary span{font-size:7px;color:var(--faint)}
+.seo-audit-summary strong{font-size:14px;color:var(--text)}
+.seo-audit-summary small{font-size:7px;color:var(--faint)}
+.seo-audit-score strong{font-size:24px}
+.seo-audit-issues{display:grid;gap:8px;margin-top:12px}
+.seo-audit-issues article{padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2)}
+.seo-audit-issues article>div{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.seo-audit-issues strong{font-size:8px}
+.seo-audit-issues p{margin:8px 0 4px;color:var(--text);font-size:8px;line-height:1.7}
+.seo-audit-issues small{color:var(--faint);font-size:7px;line-height:1.6}
+@media(max-width:820px){.seo-audit-summary{grid-template-columns:1fr 1fr}.seo-audit-score{grid-column:1/-1}}
