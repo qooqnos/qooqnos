@@ -434,6 +434,13 @@
       "moduleId": "billing",
       "checksum": "68f6daa8e283109e20c116472595cd23d9da8e2b7f59cf11216e7d699ca50b6b",
       "filename": "0062_billing_reconciliation_hardening.sql"
+    },
+    {
+      "id": "0063_catalog_attribute_cutover",
+      "version": 63,
+      "moduleId": "catalog",
+      "checksum": "7ada3b3d1c43385f644938bfd55d2368ee0e43e5ca96a2a1425b44bd6245ab1a",
+      "filename": "0063_catalog_attribute_cutover.sql"
     }
   ]
 }
