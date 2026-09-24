@@ -213,7 +213,7 @@ Verification is a case/check/decision system, not a boolean.
 - `verification_decisions`: immutable reviewer/system decisions.
 - `verification_decision_checks`: supporting-check links.
 
-The core Trust chain is now physically implemented through migrations 0021–0024. Verification reviewer assignment, expiry workflow, trust signals and historical event projection remain separate capabilities.
+The core Trust chain is physically implemented through migrations 0021–0025 and 0064. Verification reviewer assignment/completion authorization, expiry processing, TrustSignal persistence and anti-abuse moderation automation are implemented; historical event projections remain separately gated.
 
 Example check types:
 
