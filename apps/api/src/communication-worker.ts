@@ -31,6 +31,13 @@ export async function processCommunicationDispatch(
       { scope: "channel", max: 500, windowMs: 60_000 },
       { scope: "provider", max: 300, windowMs: 60_000 },
       { scope: "platform", max: 1000, windowMs: 60_000 },
+    ],
+    Date.now,
+    [
+      { scope: "recipient", threshold: 25, windowMs: 10_000, cooldownMs: 30_000 },
+      { scope: "tenant", threshold: 250, windowMs: 10_000, cooldownMs: 30_000 },
+      { scope: "provider", threshold: 400, windowMs: 10_000, cooldownMs: 30_000 },
+      { scope: "platform", threshold: 1000, windowMs: 10_000, cooldownMs: 30_000 },
     ]),
   );
 }
