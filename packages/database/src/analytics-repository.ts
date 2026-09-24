@@ -90,6 +90,17 @@ export class AnalyticsRepository extends Repository {
       if (existing.payloadHash !== payloadHash || existing.eventName !== event.eventType) {
         throw new DatabaseError("Analytics event id conflicts with an existing event identity");
       }
+      const fact = await this.database.first<{ id: string }>(
+        "SELECT id FROM analytics_facts WHERE event_id = ? LIMIT 1",
+        event.id,
+      );
+      if (!fact) {
+        await this.database.run(
+          "INSERT OR IGNORE INTO analytics_facts (id,event_id,organization_id,workspace_id,fact_name,numeric_value,dimensions_json,occurred_at,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
+          event.id + ":event", event.id, event.organizationId, event.workspaceId,
+          "event." + event.eventType.trim(), 1, null, event.occurredAt, receivedAt,
+        );
+      }
       return existing;
     }
 
