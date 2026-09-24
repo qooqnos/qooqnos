@@ -287,7 +287,7 @@ export class LoyaltyRepository extends Repository {
     );
     if (existing) return existing;
 
-    const ledgerId = brandId<EntityId>(input.id + ":ledger");
+    const ledgerId = brandId<"EntityId">(input.id + ":ledger");
     const ledgerIdempotencyKey = input.idempotencyKey.trim() + ":ledger";
     const results = await this.database.transaction([
       {
