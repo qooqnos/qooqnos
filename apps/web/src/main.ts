@@ -648,6 +648,8 @@ function bindGlobalEvents(): void {
 
   document.querySelector<HTMLButtonElement>("[data-generate-draft]")?.addEventListener("click", generateDraft);
   document.querySelectorAll<HTMLButtonElement>("[data-open-connection]").forEach((button) => button.addEventListener("click", openConnectionPanel));
+  document.querySelector<HTMLButtonElement>("[data-confirm-seller-draft]")?.addEventListener("click", confirmSellerDraft);
+  document.querySelector<HTMLButtonElement>("[data-cancel-seller-draft]")?.addEventListener("click", cancelSellerDraft);
 
   // Keyboard shortcut is registered once at module load.
 }
@@ -775,9 +777,15 @@ async function generateDraft(): Promise<void> {
     );
 
     if (result.data.status === "succeeded") {
-      draft.innerHTML = renderRemoteDraft(result.data);
+      const sessionState = await apiJson<{ session: { id: string; currentDraftVersion: number }; draft: unknown }>(
+        `/api/v1/ai/seller/product-creation-sessions/${encodeURIComponent(sessionId)}`,
+      );
+      draft.dataset.sessionId = sessionId;
+      draft.dataset.draftVersion = String(sessionState.session.currentDraftVersion);
+      draft.innerHTML = renderRemoteDraft(result.data, sessionId, sessionState.session.currentDraftVersion);
       status.textContent = "پیش‌نویس آماده";
       status.className = "pill success";
+      bindGlobalEvents();
     } else {
       draft.innerHTML = renderRemotePending(result.data.status, result.data.error);
       status.textContent = result.data.retryable ? "نیازمند تلاش مجدد" : "بررسی لازم";
@@ -808,7 +816,7 @@ type SellerRunResult = {
   } | null;
 };
 
-function renderRemoteDraft(result: SellerRunResult): string {
+function renderRemoteDraft(result: SellerRunResult, sessionId: string, version: number): string {
   const product = result.output?.product ?? {};
   const name = stringField(product, "name") ?? stringField(product, "title") ?? "محصول پیشنهادی";
   const description = stringField(product, "description") ?? "پیش‌نویس توسط Seller AI تولید شد.";
@@ -817,21 +825,80 @@ function renderRemoteDraft(result: SellerRunResult): string {
     <div class="draft-ready">
       <div class="draft-preview-art"><span>AI</span></div>
       <div class="draft-copy">
-        <span class="section-kicker">پیش‌نویس واقعی</span>
+        <span class="section-kicker">پیش‌نویس واقعی · نسخه ${version}</span>
         <h2>${escapeHtml(name)}</h2>
         <p>${escapeHtml(description)}</p>
         <div class="draft-fields">
           <span><b>دسته</b> ${escapeHtml(category)}</span>
           <span><b>وضعیت</b> آماده بازبینی</span>
-          <span><b>منبع</b> Seller AI runtime</span>
+          <span><b>Session</b> ${escapeHtml(sessionId)}</span>
         </div>
         <div class="draft-actions">
-          <button class="button button-primary" type="button" data-toast="بازبینی و تأیید به مرحله بعدی متصل می‌شود.">بازبینی و تأیید</button>
-          <button class="button button-ghost" type="button" data-toast="نسخه جایگزین در slice بعدی اضافه می‌شود.">اصلاح با AI</button>
+          <button class="button button-primary" type="button" data-confirm-seller-draft>بازبینی و ساخت محصول</button>
+          <button class="button button-ghost" type="button" data-cancel-seller-draft>لغو session</button>
         </div>
+        <div id="seller-confirm-state" class="connection-state">نسخه ${version} برای بازبینی آماده است.</div>
       </div>
     </div>`;
 }
+
+async function confirmSellerDraft(): Promise<void> {
+  const draft = document.querySelector<HTMLElement>("#studio-draft");
+  const state = document.querySelector<HTMLElement>("#seller-confirm-state");
+  if (!draft || !state) return;
+  const sessionId = draft.dataset.sessionId;
+  const version = Number(draft.dataset.draftVersion);
+  if (!sessionId || !Number.isSafeInteger(version) || version < 1) {
+    showToast("اطلاعات نسخه Seller AI در UI موجود نیست.");
+    return;
+  }
+
+  const button = document.querySelector<HTMLButtonElement>("[data-confirm-seller-draft]");
+  if (button) button.disabled = true;
+  state.textContent = "در حال ثبت بازبینی…";
+  state.className = "connection-state";
+
+  try {
+    await apiJson<{ reviewed: boolean }>(
+      `/api/v1/ai/seller/product-creation-sessions/${encodeURIComponent(sessionId)}/review`,
+      { method: "POST", body: { version } },
+    );
+    state.textContent = "بازبینی ثبت شد؛ در حال ساخت محصول در Catalog…";
+
+    const response = await apiJson<{ confirmed: boolean; catalogSaved: boolean; catalogProductId?: string; version: number }>(
+      `/api/v1/ai/seller/product-creation-sessions/${encodeURIComponent(sessionId)}/confirm`,
+      { method: "POST", body: { version } },
+    );
+
+    if (!response.confirmed || !response.catalogSaved) throw new Error("Catalog linkage was not confirmed.");
+    state.textContent = `محصول Catalog ساخته شد · ${response.catalogProductId ?? "ID unavailable"}`;
+    state.className = "connection-state success";
+    showToast("محصول Seller AI به Catalog متصل شد.");
+    if (button) button.textContent = "محصول ساخته شد";
+  } catch (error) {
+    state.textContent = error instanceof Error ? error.message : "تأیید Seller AI ناموفق بود.";
+    state.className = "connection-state error";
+    if (button) button.disabled = false;
+  }
+}
+
+async function cancelSellerDraft(): Promise<void> {
+  const draft = document.querySelector<HTMLElement>("#studio-draft");
+  if (!draft) return;
+  const sessionId = draft.dataset.sessionId;
+  if (!sessionId) return;
+  try {
+    await apiJson<{ cancelled: boolean }>(
+      `/api/v1/ai/seller/product-creation-sessions/${encodeURIComponent(sessionId)}/cancel`,
+      { method: "POST" },
+    );
+    showToast("Seller AI session لغو شد.");
+    draft.innerHTML = '<div class="draft-empty"><div class="draft-orb">×</div><strong>Session لغو شد</strong><p>می‌توانید دوباره یک محصول جدید بسازید.</p></div>';
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "لغو session ناموفق بود.");
+  }
+}
+
 
 function renderRemotePending(status: string, error?: string | null): string {
   return `
