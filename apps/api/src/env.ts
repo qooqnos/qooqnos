@@ -13,6 +13,12 @@ export interface ApiEnv {
   readonly AI_SELLER_EXTRACT_MODEL_ID?: string;
   readonly AI_SELLER_EXTRACT_MODEL_VERSION?: string;
   readonly AI_WORKER_ID?: string;
+  readonly EMAIL_PROVIDER_ENDPOINT?: string;
+  readonly EMAIL_PROVIDER_TOKEN?: string;
+  readonly SMS_PROVIDER_ENDPOINT?: string;
+  readonly SMS_PROVIDER_TOKEN?: string;
+  readonly WHATSAPP_PROVIDER_ENDPOINT?: string;
+  readonly WHATSAPP_PROVIDER_TOKEN?: string;
 }
 
 export function requireDatabase(env: ApiEnv): D1DatabaseLike {
