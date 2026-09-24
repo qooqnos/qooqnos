@@ -1431,3 +1431,20 @@ The SEO Audit is now a deterministic production quality gate across the full can
 - Audit result status, overall score and blockers are persisted for operational dashboards;
 - frontend SEO dashboard exposes overall score, status, blockers, dimension scores and remediation evidence.
 - migration `0085_seo_audit_quality_gate.sql` persists the operational audit gate fields.
+
+### Production Crawler / Rendering Integration — completed — 2026-09-25
+
+Implemented as the runtime closure between persisted SEO projections and the actual production HTML surface:
+- deterministic SSR crawler verification in packages/seo/src/crawler.ts;
+- crawler compares live production HTML against persisted canonical metadata, robots, canonical URL, JSON-LD, Answer Representation, hydration marker, breadcrumb surface, and H1 shape;
+- canonical-origin enforcement prevents crawler SSRF against non-Phoenix origins;
+- scheduled production sampling uses existing seo_measurements observability and rotates toward least-recently-crawled indexable pages;
+- authenticated manual probe: POST /api/v1/seo/crawl/:entityId?locale=...;
+- SEO health now exposes recent production-crawler failures;
+- production renderer emits explicit SSR/cache/content headers including ETag, Last-Modified, X-Robots-Tag, X-Phoenix-Render-Mode and X-Phoenix-SEO;
+- production SSR dependency failures return HTTP 503/noindex instead of silently serving SPA fallback;
+- public sitemap is canonical-origin scoped and publicly crawlable without requiring tenant auth context;
+- production cron trigger runs hourly at minute 17, with a 25-page sample by default;
+- Control Plane exposes a manual Production Crawl action beside SEO Audit.
+
+Runtime verification remains separate from implementation: the deployed Worker must still be probed against a real public entity URL after deployment.
