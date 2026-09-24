@@ -41,6 +41,14 @@ export interface CompetitiveCitation {
 
 
 
+
+export interface CompetitiveLinkGap {
+  readonly referringDomain: string;
+  readonly competitorBacklinks?: number;
+  readonly competitorDomainRank?: number;
+  readonly provenance: Record<string, unknown>;
+}
+
 export interface CompetitiveKeywordGap {
   readonly keyword: string;
   readonly searchVolume?: number;
@@ -188,6 +196,70 @@ export class DataForSeoGoogleCompetitiveProvider {
     };
   }
 
+
+
+  async observeLinkGaps(
+    competitorDomain: string,
+    phoenixDomain: string,
+    limit = 25,
+  ): Promise<readonly CompetitiveLinkGap[]> {
+    const endpoint = "https://api.dataforseo.com/v3/backlinks/domain_intersection/live";
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Basic " + bytesToBase64(new TextEncoder().encode(this.config.login + ":" + this.config.password)),
+      },
+      body: JSON.stringify([{
+        targets: {
+          "1": normalizeDomain(competitorDomain),
+          "2": normalizeDomain(phoenixDomain),
+        },
+        exclude_targets: [normalizeDomain(phoenixDomain)],
+        include_subdomains: false,
+        include_indirect_links: true,
+        exclude_internal_backlinks: true,
+        limit: Math.min(Math.max(Math.trunc(limit), 1), 100),
+        order_by: ["1.backlinks,desc"],
+      }]),
+    });
+    if (!response.ok) throw new Error("DataForSEO Backlinks Domain Intersection returned HTTP " + response.status);
+    const payload = await response.json() as {
+      tasks?: readonly {
+        status_code?: number;
+        status_message?: string;
+        result?: readonly {
+          items?: readonly Record<string, unknown>[];
+        }[];
+      }[];
+    };
+    const task = payload.tasks?.[0];
+    if (!task || task.status_code !== 20000) {
+      throw new Error("DataForSEO Backlinks Domain Intersection failed: " + (task?.status_message || "unknown provider error"));
+    }
+    const items = task.result?.[0]?.items ?? [];
+    const output: CompetitiveLinkGap[] = [];
+    for (const item of items) {
+      const intersection = isRecord(item.domain_intersection) ? item.domain_intersection : {};
+      const first = isRecord(intersection["1"]) ? intersection["1"] : {};
+      const second = isRecord(intersection["2"]) ? intersection["2"] : {};
+      const referringDomain = typeof first.target === "string" ? normalizeDomain(first.target) : undefined;
+      if (!referringDomain || Object.keys(second).length > 0) continue;
+      output.push({
+        referringDomain,
+        ...(finiteInteger(first.backlinks) !== undefined ? { competitorBacklinks: finiteInteger(first.backlinks) } : {}),
+        ...(finiteNumber(first.rank) !== undefined ? { competitorDomainRank: finiteNumber(first.rank) } : {}),
+        provenance: {
+          provider: this.id,
+          endpoint,
+          competitorDomain: normalizeDomain(competitorDomain),
+          phoenixDomain: normalizeDomain(phoenixDomain),
+          observedAt: new Date().toISOString(),
+        },
+      });
+    }
+    return output;
+  }
 
   async observeKeywordGaps(
     competitorDomain: string,
