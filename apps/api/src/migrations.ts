@@ -132,7 +132,7 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0062_billing_reconciliation_hardening.sql", sql: billingReconciliationHardening },
   { path: "migrations/0063_catalog_attribute_cutover.sql", sql: catalogAttributeCutover },
   { path: "migrations/0064_trust_signals_anti_abuse.sql", sql: trustSignalsAntiAbuse },
-  { path: "migrations/0065_automation_compensation_contract.sql", sql: automationCompensationContract },
-  { path: "migrations/0066_automation_compensation_pairing.sql", sql: automationCompensationPairing },
+  { path: "migrations/0069_automation_compensation_contract.sql", sql: automationCompensationContract },
+  { path: "migrations/0070_automation_compensation_pairing.sql", sql: automationCompensationPairing },
   { path: "migrations/0067_communication_push_channel.sql", sql: communicationPushChannel },
 ];
