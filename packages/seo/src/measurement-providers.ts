@@ -80,6 +80,7 @@ export interface BingWebmasterConfig {
   readonly apiKey: string;
 }
 
+// Bing JSON/HTTP endpoint. Do not migrate this to the retired SOAP/POX protocol.
 export class BingWebmasterProvider implements SeoMeasurementProvider {
   readonly id = "bing-webmaster";
   readonly surface = "search-engine" as const;
