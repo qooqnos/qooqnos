@@ -18,6 +18,11 @@ import { generateStructuredData } from "./structured-data";
 
 export interface SeoProjectionPlan {
   readonly entityId: string;
+  readonly entityType: string;
+  readonly sourceModule: string;
+  readonly sourceVersion: string;
+  readonly publicationState: string;
+  readonly visibility: string;
   readonly locale: string;
   readonly canonicalUrl: string;
   readonly policy: SeoPolicy;
@@ -54,6 +59,11 @@ export function buildSeoProjectionPlan(input: SeoProjectionInput): SeoProjection
 
   return {
     entityId: input.entity.id,
+    entityType: input.entity.type,
+    sourceModule: input.entity.sourceModule,
+    sourceVersion: input.entity.sourceVersion,
+    publicationState: input.entity.publicationState,
+    visibility: input.entity.visibility,
     locale: input.entity.locale,
     canonicalUrl,
     policy,
