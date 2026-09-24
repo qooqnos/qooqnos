@@ -1150,3 +1150,32 @@ Canonical files:
 - `apps/web/src/main.ts`
 - `apps/web/styles.css`
 - `apps/web/public/styles.css`
+
+
+### SEO core hardening — 2026-09-25
+
+The SEO core now has production-oriented crawl and metadata contracts rather than only minimal metadata helpers.
+
+Implemented:
+- metadata generation now emits canonical URL, indexability-aware robots directives, Open Graph metadata, Twitter card metadata, and locale/x-default alternate links;
+- structured data now maps Phoenix entity types to appropriate Schema.org types and carries only canonical facts already present on the entity;
+- sitemap generation now validates URLs, removes duplicates, sorts deterministically, and optionally emits `lastmod`;
+- robots generation now explicitly keeps operational/private application surfaces out of crawl scope while publishing the canonical sitemap;
+- the public web entry document now contains canonical, robots, Open Graph, Twitter, and locale metadata;
+- SEO unit coverage now verifies metadata contracts, Schema.org type mapping, deterministic sitemap behavior, duplicate filtering, invalid URL filtering, and robots directives.
+
+Canonical files:
+- `packages/seo/src/types.ts`
+- `packages/seo/src/metadata.ts`
+- `packages/seo/src/structured-data.ts`
+- `packages/seo/src/sitemap.ts`
+- `packages/seo/src/index.test.ts`
+- `apps/web/index.html`
+
+Implementation commits:
+- `14a1bd7ad192797bd39b57d28f492a25422b5b9d`
+- `a50824a57b7cc37d74eb85ba09c9cedb1818db5f`
+- `3629b405a907419c348e3620c68107d9f758aeeb`
+- `298da8905d2ab5853e1ec21f933feda12b96eee3`
+- `2a2720703eea1ecbcc6d540114830cb95f78380e`
+- `ac5cdd8710ba7f046f7c9d60d2cb7137f84471e9`
