@@ -37,6 +37,8 @@ import { registerAuthorizationGovernanceRoutes } from "./authorization-governanc
 import { renderSeoAwareDocument } from "./seo-frontend";
 import { runProductionSeoCrawler } from "./seo-production-crawler";
 import { runSeoVisibilityMeasurements } from "./seo-visibility-worker";
+import { runSeoCompetitiveIntelligence } from "./seo-competitive-worker";
+import { registerSeoCompetitiveRoutes } from "./seo-competitive-routes";
 
 const homePage = (version: string): string => `<!doctype html>
 <html lang="en">
@@ -107,6 +109,22 @@ function buildSeoVisibilityWorkerConfig(env: ApiEnv, limit: number) {
   };
 }
 
+function buildSeoCompetitiveWorkerConfig(env: ApiEnv, limit: number) {
+  const locationCode = env.SEO_COMPETITIVE_LOCATION_CODE ? Number(env.SEO_COMPETITIVE_LOCATION_CODE) : undefined;
+  const depth = env.SEO_COMPETITIVE_DEPTH ? Number(env.SEO_COMPETITIVE_DEPTH) : undefined;
+  return {
+    login: env.SEO_COMPETITIVE_LOGIN ?? "",
+    password: env.SEO_COMPETITIVE_PASSWORD ?? "",
+    ...(env.SEO_COMPETITIVE_ENDPOINT ? { endpoint: env.SEO_COMPETITIVE_ENDPOINT } : {}),
+    ...(locationCode !== undefined && Number.isFinite(locationCode) ? { locationCode } : {}),
+    ...(env.SEO_COMPETITIVE_LOCATION_NAME ? { locationName: env.SEO_COMPETITIVE_LOCATION_NAME } : {}),
+    languageCode: env.SEO_COMPETITIVE_LANGUAGE_CODE ?? "en",
+    device: env.SEO_COMPETITIVE_DEVICE ?? "desktop",
+    ...(depth !== undefined && Number.isFinite(depth) ? { depth } : {}),
+    limit,
+  };
+}
+
 function createRouter(version: string, database: D1Database | undefined, env: ApiEnv): ApiRouter {
   const authorization = createApiAuthorizationRegistry();
   const router = new ApiRouter({ authorization, ...(database ? { database } : {}), seoCanonicalBaseUrl: env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com" });
@@ -114,6 +132,7 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   registerPromotionRoutes(router, database, authorization);
   registerLoyaltyRoutes(router, database, authorization);
   registerAdvertisingRoutes(router, database, authorization);
+  registerSeoCompetitiveRoutes(router, database, env);
   registerAuthorizationGovernanceRoutes(router, database, authorization);
 
   router.register({
@@ -653,6 +672,15 @@ export default {
         if (measurementAt.getUTCHours() === 2 && measurementAt.getUTCMinutes() === 41) {
           const measurementLimit = Number(env.SEO_MEASUREMENT_SAMPLE_LIMIT ?? "25");
           await runSeoVisibilityMeasurements(database, buildSeoVisibilityWorkerConfig(env, Number.isFinite(measurementLimit) ? measurementLimit : 25), now);
+        }
+        if (measurementAt.getUTCHours() === 3 && measurementAt.getUTCMinutes() === 17 && env.SEO_COMPETITIVE_LOGIN && env.SEO_COMPETITIVE_PASSWORD) {
+          const competitiveLimit = Number(env.SEO_COMPETITIVE_SAMPLE_LIMIT ?? "10");
+          await runSeoCompetitiveIntelligence(
+            database,
+            buildSeoCompetitiveWorkerConfig(env, Number.isFinite(competitiveLimit) ? competitiveLimit : 10),
+            env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com",
+            now,
+          );
         }
       }
     }
