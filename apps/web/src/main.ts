@@ -85,6 +85,7 @@ const routes: Route[] = [
   { path: "/communication", label: "ارتباطات", icon: "◌", render: renderCommunication },
   { path: "/billing", label: "مالی", icon: "◈", render: renderBilling },
   { path: "/trust", label: "اعتماد", icon: "✓", render: renderTrust },
+  { path: "/operations", label: "عملیات", icon: "⚙", render: renderOperations },
 ];
 
 const theme = getInitialTheme();
@@ -153,6 +154,7 @@ function render(): void {
   if (route.path === "/billing") void loadBillingState();
   if (route.path === "/business") void loadBusinessAccess();
   if (route.path === "/trust") void loadTrustSignals();
+  if (route.path === "/operations") void loadCases();
 }
 
 function renderHeader(route: Route): string {
@@ -281,6 +283,140 @@ function renderHome(): string {
       </div>
     </section>
   `;
+}
+
+function renderOperations(): string {
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Operations Center</span><h1>عملیات را یکجا <em>کنترل کنید.</em></h1><p>Case Support و Fulfillment از backend canonical خوانده می‌شوند و تغییر وضعیت مستقیم به commandهای دامنه متصل است.</p></div>
+      <div class="heading-actions"><button class="button button-ghost" type="button" data-ops-refresh>بروزرسانی</button></div>
+    </section>
+    <section class="operations-grid">
+      <article class="glass-card ops-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Case Support</span><h2>پرونده‌های اخیر</h2></div><span id="cases-meta" class="pill">—</span></div>
+        <div class="ops-toolbar"><input id="case-limit" class="studio-input-line" type="number" value="50" min="1" max="100" /><button class="button button-primary" type="button" data-load-cases>خواندن پرونده‌ها</button></div>
+        <div id="case-list" class="case-list"><div class="slot-empty"><span>⚙</span><p>در حال آماده‌سازی…</p></div></div>
+      </article>
+      <article class="glass-card ops-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Fulfillment</span><h2>پیگیری تحویل</h2></div><span id="fulfillment-status" class="pill">—</span></div>
+        <div class="ops-toolbar"><input id="fulfillment-id" class="studio-input-line" type="text" placeholder="Fulfillment ID" /><button class="button button-primary" type="button" data-load-fulfillment>خواندن</button></div>
+        <div id="fulfillment-detail" class="fulfillment-detail"><div class="slot-empty"><span>◫</span><p>Fulfillment ID را وارد کنید.</p></div></div>
+      </article>
+    </section>
+  `;
+}
+
+type CaseView = {
+  id: string;
+  status: string;
+  priority: string;
+  severity: string;
+  subjectType: string;
+  subjectId: string;
+  requesterType: string;
+  requesterId: string;
+  version: number;
+  updatedAt: string;
+};
+
+async function loadCases(): Promise<void> {
+  const host = document.querySelector<HTMLDivElement>("#case-list");
+  const meta = document.querySelector<HTMLElement>("#cases-meta");
+  const limit = Number(document.querySelector<HTMLInputElement>("#case-limit")?.value ?? "50");
+  if (!host || !meta) return;
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  host.innerHTML = '<div class="slot-loading">در حال خواندن cases…</div>';
+  try {
+    const response = await apiJson<{ data: CaseView[] }>(`/api/v1/cases?limit=${Math.min(Math.max(limit || 50,1),100)}`);
+    const items = Array.isArray(response.data) ? response.data : [];
+    host.innerHTML = items.length ? items.map((item) => `
+      <div class="case-item">
+        <div class="case-main">
+          <div class="case-line"><strong>${escapeHtml(item.id)}</strong><span class="pill ${item.status === "resolved" || item.status === "closed" ? "success" : ""}">${escapeHtml(item.status)}</span></div>
+          <p>${escapeHtml(item.subjectType)} · ${escapeHtml(item.subjectId)}</p>
+          <small>${escapeHtml(item.priority)} · severity ${escapeHtml(item.severity)} · v${item.version}</small>
+        </div>
+        <div class="case-actions">
+          <button class="button button-ghost" type="button" data-case-response="${escapeAttr(item.id)}">first response</button>
+          <select class="studio-input-line case-status-select" data-case-status="${escapeAttr(item.id)}" data-case-version="${item.version}">
+            ${["open","triaged","assigned","in_progress","waiting","escalated","resolved","closed","reopened"].map((status) => `<option value="${status}" ${status === item.status ? "selected" : ""}>${status}</option>`).join("")}
+          </select>
+          <button class="button button-primary" type="button" data-case-save="${escapeAttr(item.id)}">ذخیره</button>
+        </div>
+      </div>`).join("") : '<div class="slot-empty"><span>✓</span><p>پرونده‌ای پیدا نشد.</p></div>';
+    meta.textContent = `${items.length} case`;
+    bindCaseActions();
+  } catch (error) {
+    meta.textContent = "خطا";
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن cases ناموفق بود.")}</p></div>`;
+  }
+}
+
+function bindCaseActions(): void {
+  document.querySelectorAll<HTMLButtonElement>("[data-case-response]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const caseId = button.dataset.caseResponse;
+      if (!caseId) return;
+      try {
+        await apiJson(`/api/v1/cases/${encodeURIComponent(caseId)}/first-response`, { method: "POST" });
+        showToast("First response ثبت شد.");
+        void loadCases();
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : "ثبت first response ناموفق بود.");
+      }
+    });
+  });
+  document.querySelectorAll<HTMLButtonElement>("[data-case-save]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const caseId = button.dataset.caseSave;
+      const select = document.querySelector<HTMLSelectElement>(`[data-case-status="${CSS.escape(caseId ?? "")}"]`);
+      if (!caseId || !select) return;
+      const version = Number(select.dataset.caseVersion ?? "0");
+      try {
+        await apiJson(`/api/v1/cases/${encodeURIComponent(caseId)}/status`, {
+          method: "POST",
+          body: { status: select.value, expectedVersion: version },
+        });
+        showToast("وضعیت Case به‌روز شد.");
+        void loadCases();
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : "به‌روزرسانی case ناموفق بود.");
+      }
+    });
+  });
+}
+
+async function loadFulfillment(): Promise<void> {
+  const id = document.querySelector<HTMLInputElement>("#fulfillment-id")?.value.trim() ?? "";
+  const host = document.querySelector<HTMLDivElement>("#fulfillment-detail");
+  const status = document.querySelector<HTMLElement>("#fulfillment-status");
+  if (!id || !host || !status) { if (!id) showToast("Fulfillment ID لازم است."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  host.innerHTML = '<div class="slot-loading">در حال خواندن fulfillment…</div>';
+  try {
+    const response = await apiJson<{ data: { fulfillment: Record<string, unknown>; items: Record<string, unknown>[] } }>(
+      `/api/v1/fulfillment/${encodeURIComponent(id)}`,
+    );
+    const order = response.data.fulfillment;
+    const items = response.data.items ?? [];
+    const fulfillmentStatus = getRecordString(order, ["status"]) ?? "—";
+    status.textContent = fulfillmentStatus;
+    status.className = fulfillmentStatus === "completed" ? "pill success" : "pill warning";
+    host.innerHTML = `
+      <div class="fulfillment-summary">
+        <div class="account-row"><span>Fulfillment</span><strong>${escapeHtml(getRecordString(order, ["id"]) ?? id)}</strong></div>
+        <div class="account-row"><span>Source</span><strong>${escapeHtml(getRecordString(order, ["sourceType"]) ?? "—")}</strong></div>
+        <div class="account-row"><span>Business</span><strong>${escapeHtml(getRecordString(order, ["businessId"]) ?? "—")}</strong></div>
+        <div class="account-row"><span>Type</span><strong>${escapeHtml(getRecordString(order, ["fulfillmentType"]) ?? "—")}</strong></div>
+      </div>
+      <div class="fulfillment-items">
+        ${items.length ? items.map((item) => `<div class="fulfillment-item"><span>${escapeHtml(getRecordString(item, ["id"]) ?? "item")}</span><strong>${escapeHtml(getRecordString(item, ["status"]) ?? "—")}</strong><small>qty ${getRecordNumber(item, ["quantity"]) ?? "—"}</small></div>`).join("") : '<div class="slot-empty"><span>◫</span><p>Fulfillment item ندارد.</p></div>'}
+      </div>`;
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن fulfillment ناموفق بود.")}</p></div>`;
+  }
 }
 
 function renderTrust(): string {
@@ -1323,6 +1459,9 @@ function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-trust-load]")?.forEach((button) => button.addEventListener("click", loadTrustSignals));
   document.querySelector<HTMLButtonElement>("[data-trust-rebuild]")?.addEventListener("click", rebuildTrustReputation);
   document.querySelector<HTMLButtonElement>("[data-trust-create-review]")?.addEventListener("click", createTrustReview);
+  document.querySelector<HTMLButtonElement>("[data-ops-refresh]")?.addEventListener("click", () => { void loadCases(); });
+  document.querySelector<HTMLButtonElement>("[data-load-cases]")?.addEventListener("click", () => { void loadCases(); });
+  document.querySelector<HTMLButtonElement>("[data-load-fulfillment]")?.addEventListener("click", () => { void loadFulfillment(); });
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
