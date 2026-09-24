@@ -588,6 +588,13 @@
       "moduleId": "seo",
       "checksum": "8351a7f737f02ef7b0a71283cb62ed9d0073e0efa0d3ca14a941c36191a6be9a",
       "filename": "0087_seo_competitive_intelligence.sql"
+    },
+    {
+      "id": "0088_seo_competitor_page_snapshots",
+      "version": 88,
+      "moduleId": "seo",
+      "checksum": "8ad1ce8a1d33b1e84bc6b7d37fa0c0a7d08126257e1bacec5c7fd1b592befb6c",
+      "filename": "0088_seo_competitor_page_snapshots.sql"
     }
   ]
 }
