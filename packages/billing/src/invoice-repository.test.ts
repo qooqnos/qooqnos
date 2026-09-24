@@ -18,10 +18,11 @@ function context(): RequestContext {
 }
 
 function repositoryWithInvoice(status: "draft" | "issued" | "paid" | "overdue", totalMinor = 1500, amountPaidMinor = 0) {
+  let preparedQuery = "";
   const statement: D1PreparedStatementLike = {
     bind() { return this; },
-    async first<T>(query?: string) {
-      if (query?.includes("billing_invoice_payment_applications")) return null;
+    async first<T>() {
+      if (preparedQuery.includes("billing_invoice_payment_applications")) return null;
       return {
         id: "invoice-1",
         organizationId: "tenant-1",
@@ -56,7 +57,7 @@ function repositoryWithInvoice(status: "draft" | "issued" | "paid" | "overdue", 
     async run() { return { success: true, meta: { changes: 1 } }; },
   };
   const raw: D1DatabaseLike = {
-    prepare() { return statement; },
+    prepare(query: string) { preparedQuery = query; return statement; },
     async batch() { return []; },
   };
   return new BillingInvoiceRepository(new D1Database(raw));
