@@ -10,3 +10,5 @@ export * from "./payment-provider-adapter";
 export * from "./payment-provider-service";
 
 export * from "./settlement-repository";
+
+export * from "./settlement-service";
