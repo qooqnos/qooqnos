@@ -3,6 +3,8 @@ import {
   createCommunicationProviderRegistry,
   dispatchQueuedNotifications,
   inAppCommunicationProvider,
+  createConfiguredCommunicationProviders,
+  CommunicationRateLimiter,
 } from "@qooqnos/communication";
 import { getDatabase } from "./database";
 import type { ApiEnv } from "./env";
@@ -17,8 +19,18 @@ export async function processCommunicationDispatch(
 
   return dispatchQueuedNotifications(
     new CommunicationRepository(database),
-    createCommunicationProviderRegistry([inAppCommunicationProvider]),
+    createCommunicationProviderRegistry([
+      inAppCommunicationProvider,
+      ...createConfiguredCommunicationProviders(env),
+    ]),
     now,
     limit,
+    new CommunicationRateLimiter([
+      { scope: "tenant", max: 100, windowMs: 60_000 },
+      { scope: "recipient", max: 10, windowMs: 60_000 },
+      { scope: "channel", max: 500, windowMs: 60_000 },
+      { scope: "provider", max: 300, windowMs: 60_000 },
+      { scope: "platform", max: 1000, windowMs: 60_000 },
+    ]),
   );
 }
