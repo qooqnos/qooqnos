@@ -897,3 +897,8 @@ The engine remains truth-first: SEO/GEO is derived from canonical domain state a
 Dependency invalidation is now operational: source changes resolve affected SEO representations through `seo_dependencies`, enqueue deterministic rebuild jobs for dependent entities, and dependent representations retain a canonical entity snapshot so the worker can rebuild without incorrectly treating the changed source entity as the target representation. This keeps SEO derived state tenant-scoped and makes relationship/location/credential-driven invalidation durable rather than advisory.
 
 Latest implementation commits: `3afc5760f0c4ca15e8e40b297b539e131abc9361`, `a4c8d4414e910840393393f8f3a16e3eeba29b54`, `edff5a8667c4d3edd5274b7bbaf4049b6255bc93`.
+
+
+### SEO/GEO stale-write protection — 2026-09-24
+
+Concurrent publication is now guarded at persistence level: representation upserts compare source update time and source version, so a delayed worker cannot overwrite a newer canonical SEO representation with stale derived state. Publication passes the canonical source version explicitly into persistence. Commits: `c772319cbad9b5839e683c649e195a2ff81d92a8`, `d63591f763a6a94aefe06bc7711df5127a3d7ba7`, `0ee1cfb10bdf93579d46a378ac1f72e2edaf3518`.
