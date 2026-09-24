@@ -61,6 +61,7 @@ describe("FinancialAuditRepository", () => {
       eventType: row.eventType,
       entityType: row.entityType,
       entityId: brandId<"EntityId">("payment-1"),
+      businessId: brandId<"EntityId">("business-1"),
       outcome: row.outcome,
       amountMinor: row.amountMinor,
       currency: row.currency,
