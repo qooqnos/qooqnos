@@ -34,7 +34,7 @@ export interface SeoFrontendHydration {
   readonly page: EntityPageModel;
   readonly entity: Pick<SeoEntity,
     "id" | "type" | "preferredName" | "summary" | "description" | "locale" |
-    "country" | "geoScope" | "locationId" | "serviceArea" | "imageUrl" | "updatedAt"
+    "country" | "geoScope" | "locationId" | "serviceArea" | "imageUrl" | "telephone" | "email" | "priceRange" | "price" | "currency" | "availability" | "brandName" | "categoryName" | "startDate" | "endDate" | "address" | "updatedAt"
   >;
 }
 
@@ -131,6 +131,17 @@ export async function renderSeoAwareDocument(
       ...(parsed.entity.locationId ? { locationId: parsed.entity.locationId } : {}),
       ...(parsed.entity.serviceArea ? { serviceArea: parsed.entity.serviceArea } : {}),
       ...(parsed.entity.imageUrl ? { imageUrl: parsed.entity.imageUrl } : {}),
+      ...(parsed.entity.telephone ? { telephone: parsed.entity.telephone } : {}),
+      ...(parsed.entity.email ? { email: parsed.entity.email } : {}),
+      ...(parsed.entity.priceRange ? { priceRange: parsed.entity.priceRange } : {}),
+      ...(parsed.entity.price !== undefined ? { price: parsed.entity.price } : {}),
+      ...(parsed.entity.currency ? { currency: parsed.entity.currency } : {}),
+      ...(parsed.entity.availability ? { availability: parsed.entity.availability } : {}),
+      ...(parsed.entity.brandName ? { brandName: parsed.entity.brandName } : {}),
+      ...(parsed.entity.categoryName ? { categoryName: parsed.entity.categoryName } : {}),
+      ...(parsed.entity.startDate ? { startDate: parsed.entity.startDate } : {}),
+      ...(parsed.entity.endDate ? { endDate: parsed.entity.endDate } : {}),
+      ...(parsed.entity.address ? { address: parsed.entity.address } : {}),
       updatedAt: parsed.entity.updatedAt,
     },
   };
@@ -198,6 +209,13 @@ function renderAnswerMarkup(
   page: EntityPageModel,
 ): string {
   const facts = answer.facts.map((fact) => `<li>${escapeHtml(fact.fact)}</li>`).join("");
+  const commerce = [
+    entity.price !== undefined ? `<span>قیمت: ${escapeHtml(String(entity.price))}</span>` : "",
+    entity.currency ? `<span>ارز: ${escapeHtml(entity.currency)}</span>` : "",
+    entity.priceRange ? `<span>بازه قیمت: ${escapeHtml(entity.priceRange)}</span>` : "",
+    entity.availability ? `<span>دسترسی: ${escapeHtml(entity.availability)}</span>` : "",
+    entity.brandName ? `<span>برند: ${escapeHtml(entity.brandName)}</span>` : "",
+  ].filter(Boolean).join("");
   const geography = answer.geography
     ? [
         answer.geography.country ? `<span>${escapeHtml(answer.geography.country)}</span>` : "",
@@ -230,6 +248,7 @@ function renderAnswerMarkup(
         </section>
         ${facts ? `<section class="seo-facts"><h2>Verified facts</h2><ul>${facts}</ul></section>` : ""}
         ${geography ? `<section class="seo-geo"><h2>Geographic scope</h2><div class="metadata-cloud">${geography}</div></section>` : ""}
+        ${commerce ? `<section class="seo-commerce"><h2>Commerce</h2><div class="metadata-cloud">${commerce}</div></section>` : ""}
         ${related ? `<section class="seo-related"><h2>Related entities</h2><div class="seo-related-list">${related}</div></section>` : ""}
         <footer class="seo-public-footer"><div class="seo-action-row">${actions}</div></footer>
       </article>
