@@ -609,6 +609,13 @@
       "moduleId": "seo",
       "checksum": "096730abebd8ce4508190abb29c23a0d59032b0c3b1d53c3dff39c1d3acbcced",
       "filename": "0090_seo_competitive_link_gaps.sql"
+    },
+    {
+      "id": "0091_business_hours",
+      "version": 91,
+      "moduleId": "business",
+      "checksum": "26889c9fe5de34ecbb0bd26b5bfc88f882ac2d6e5bc4772c1870b38b61af061d",
+      "filename": "0091_business_hours.sql"
     }
   ]
 }
