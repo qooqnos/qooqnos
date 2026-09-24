@@ -1160,3 +1160,7 @@ The physical data model is architecture-complete when every planned physical tab
 ### Settlement physical model — implemented
 
 `billing_settlements` and `billing_settlement_items` are the authoritative settlement/payout records. Settlement items are immutable, tenant/business/workspace/currency scoped, and reconcile exactly to settlement net amount before ledger posting. Provider references are external execution evidence, not financial truth.
+
+### `billing_reconciliation_cases` — implemented
+
+The reconciliation case is the canonical exception record for Billing/provider mismatches. It carries tenant/workspace/business scope, provider and local/external references, expected/observed amounts, currency, category, resolution metadata, correlation and idempotency. `billing_reconciliation_case_events` is append-only and immutable for auditability.
