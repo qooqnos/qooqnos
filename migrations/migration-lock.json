@@ -558,7 +558,7 @@
       "id": "0083_authorization_approval_workflow",
       "version": 83,
       "moduleId": "authorization-governance",
-      "checksum": "pending",
+      "checksum": "c8b97c66346f56006cdab7e93b02d8bf834248f14b9e065cbfb031bbe4a2858c",
       "filename": "0083_authorization_approval_workflow.sql"
     },
     {
