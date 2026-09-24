@@ -16,6 +16,16 @@ export interface ProductRecord {
   readonly updatedAt: string;
 }
 
+export interface ServiceRecord {
+  readonly id: EntityId;
+  readonly businessId: EntityId | null;
+  readonly name: string;
+  readonly description: string | null;
+  readonly status: CatalogStatus;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export interface ProductVariantRecord {
   readonly id: EntityId;
   readonly productId: EntityId;
@@ -78,6 +88,48 @@ interface ProductVariantRow {
 
 export class CatalogRepository extends Repository {
   constructor(database: D1Database) { super(database); }
+
+  async getService(context: RequestContext, id: EntityId): Promise<ServiceRecord | null> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    return this.database.first<ServiceRecord>(
+      `SELECT s.id, s.business_id AS businessId, s.name, s.description, s.status,
+              s.created_at AS createdAt, s.updated_at AS updatedAt
+       FROM services s
+       LEFT JOIN businesses b ON b.id = s.business_id
+       WHERE s.id = ? AND (s.business_id IS NULL OR (b.organization_id = ? AND b.workspace_id = ?))
+       LIMIT 1`,
+      id, organizationId, workspaceId,
+    );
+  }
+
+  async listBusinessEntityIds(context: RequestContext, businessId: EntityId): Promise<{
+    readonly productIds: readonly EntityId[];
+    readonly serviceIds: readonly EntityId[];
+  }> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const products = await this.database.all<{ id: EntityId }>(
+      `SELECT p.id FROM products p
+       INNER JOIN businesses b ON b.id = p.business_id
+       WHERE p.business_id = ? AND p.status = 'active'
+         AND b.organization_id = ? AND b.workspace_id = ?
+       ORDER BY p.id ASC`,
+      businessId, organizationId, workspaceId,
+    );
+    const services = await this.database.all<{ id: EntityId }>(
+      `SELECT s.id FROM services s
+       INNER JOIN businesses b ON b.id = s.business_id
+       WHERE s.business_id = ? AND s.status = 'active'
+         AND b.organization_id = ? AND b.workspace_id = ?
+       ORDER BY s.id ASC`,
+      businessId, organizationId, workspaceId,
+    );
+    return {
+      productIds: products.map((row) => row.id),
+      serviceIds: services.map((row) => row.id),
+    };
+  }
 
   async getProduct(context: RequestContext, id: EntityId): Promise<ProductRecord | null> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
