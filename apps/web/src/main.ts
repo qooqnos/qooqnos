@@ -84,6 +84,7 @@ const routes: Route[] = [
   { path: "/customer", label: "مشتری", icon: "♙", render: renderCustomer },
   { path: "/communication", label: "ارتباطات", icon: "◌", render: renderCommunication },
   { path: "/billing", label: "مالی", icon: "◈", render: renderBilling },
+  { path: "/trust", label: "اعتماد", icon: "✓", render: renderTrust },
 ];
 
 const theme = getInitialTheme();
@@ -151,6 +152,7 @@ function render(): void {
   if (route.path === "/communication") void loadCommunicationState();
   if (route.path === "/billing") void loadBillingState();
   if (route.path === "/business") void loadBusinessAccess();
+  if (route.path === "/trust") void loadTrustSignals();
 }
 
 function renderHeader(route: Route): string {
@@ -279,6 +281,138 @@ function renderHome(): string {
       </div>
     </section>
   `;
+}
+
+function renderTrust(): string {
+  const business = localStorage.getItem(STORAGE.business) ?? "";
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Trust & Verification</span><h1>اعتماد را <em>قابل مشاهده</em> کنید.</h1><p>Verification، trust signals و reputation از هسته Trust ققنوس خوانده می‌شوند.</p></div>
+      <div class="heading-actions"><button class="button button-ghost" type="button" data-trust-load>بروزرسانی</button></div>
+    </section>
+    <section class="trust-grid">
+      <article class="glass-card trust-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Trust Signals</span><h2>سیگنال‌های اعتماد</h2></div><span id="trust-meta" class="pill">—</span></div>
+        <div class="trust-filters">
+          <input id="trust-subject" class="studio-input-line" type="text" value="${escapeAttr(business)}" placeholder="Subject ID" />
+          <select id="trust-subject-type" class="studio-input-line"><option value="business">business</option><option value="product">product</option><option value="offering">offering</option></select>
+          <select id="trust-signal-status" class="studio-input-line"><option value="">همه وضعیت‌ها</option><option value="active">active</option><option value="expired">expired</option><option value="superseded">superseded</option><option value="dismissed">dismissed</option></select>
+          <button class="button button-primary" type="button" data-trust-load>خواندن سیگنال‌ها</button>
+        </div>
+        <div id="trust-signals" class="signal-list"><div class="slot-empty"><span>✓</span><p>شناسه subject را وارد کنید.</p></div></div>
+      </article>
+      <article class="glass-card trust-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Reputation</span><h2>بازسازی اعتبار</h2></div></div>
+        <div class="reputation-action">
+          <p>محاسبه reputation توسط Trust backend انجام می‌شود؛ UI فقط command canonical را ارسال می‌کند.</p>
+          <label class="field-label" for="trust-policy">Policy version</label>
+          <input id="trust-policy" class="studio-input-line" type="text" value="trust-v1" />
+          <button class="button button-primary button-lg" type="button" data-trust-rebuild>بازسازی reputation <span>→</span></button>
+          <div id="trust-rebuild-state" class="connection-state">هنوز اجرا نشده است.</div>
+        </div>
+      </article>
+    </section>
+    <section class="glass-card review-create-card">
+      <div class="card-section-heading"><div><span class="section-kicker">Customer Voice</span><h2>ثبت review</h2></div></div>
+      <div class="review-form-grid">
+        <input id="trust-review-customer" class="studio-input-line" type="text" value="${escapeAttr(localStorage.getItem(STORAGE.customer) ?? "")}" placeholder="Customer ID" />
+        <input id="trust-review-business" class="studio-input-line" type="text" value="${escapeAttr(business)}" placeholder="Business ID" />
+        <select id="trust-review-rating" class="studio-input-line"><option value="5">5 ★</option><option value="4">4 ★</option><option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option></select>
+        <input id="trust-review-content" class="studio-input-line review-content-input" type="text" placeholder="نظر مشتری…" />
+        <button class="button button-primary" type="button" data-trust-create-review>ثبت review</button>
+      </div>
+      <div id="trust-review-state" class="connection-state">Review با وضعیت moderation backend کنترل می‌شود.</div>
+    </section>
+  `;
+}
+
+async function loadTrustSignals(): Promise<void> {
+  const subject = document.querySelector<HTMLInputElement>("#trust-subject")?.value.trim() ?? "";
+  const subjectType = document.querySelector<HTMLSelectElement>("#trust-subject-type")?.value ?? "";
+  const status = document.querySelector<HTMLSelectElement>("#trust-signal-status")?.value ?? "";
+  const host = document.querySelector<HTMLDivElement>("#trust-signals");
+  const meta = document.querySelector<HTMLElement>("#trust-meta");
+  if (!host || !meta) return;
+  if (!subject) {
+    showToast("Subject ID لازم است.");
+    return;
+  }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
+  const params = new URLSearchParams({ subjectType, subjectId: subject, limit: "100" });
+  if (status) params.set("status", status);
+  host.innerHTML = '<div class="slot-loading">در حال خواندن trust signals…</div>';
+  try {
+    const response = await apiJson<{ data: Record<string, unknown>[] }>(`/api/v1/trust/signals?${params.toString()}`);
+    const items = Array.isArray(response.data) ? response.data : [];
+    host.innerHTML = items.length
+      ? items.map((signal) => {
+          const kind = getRecordString(signal, ["signalType", "type"]) ?? "signal";
+          const signalStatus = getRecordString(signal, ["status"]) ?? "—";
+          const source = getRecordString(signal, ["source"]) ?? "—";
+          const confidence = getRecordNumber(signal, ["confidence"]);
+          const value = signal.value;
+          return `<div class="signal-item"><div><strong>${escapeHtml(kind)}</strong><p>${escapeHtml(typeof value === "string" ? value : JSON.stringify(value) ?? "—")}</p></div><div class="signal-side"><span class="pill ${signalStatus === "active" ? "success" : ""}">${escapeHtml(signalStatus)}</span><small>${confidence !== undefined ? `conf. ${Math.round(confidence*100)}%` : ""} · ${escapeHtml(source)}</small></div></div>`;
+        }).join("")
+      : '<div class="slot-empty"><span>✓</span><p>سیگنال فعالی پیدا نشد.</p></div>';
+    meta.textContent = `${items.length} signal`;
+    localStorage.setItem(STORAGE.business, subjectType === "business" ? subject : (localStorage.getItem(STORAGE.business) ?? ""));
+  } catch (error) {
+    meta.textContent = "خطا";
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن trust signals ناموفق بود.")}</p></div>`;
+  }
+}
+
+async function rebuildTrustReputation(): Promise<void> {
+  const targetId = document.querySelector<HTMLInputElement>("#trust-subject")?.value.trim() ?? "";
+  const targetType = document.querySelector<HTMLSelectElement>("#trust-subject-type")?.value ?? "";
+  const policyVersion = document.querySelector<HTMLInputElement>("#trust-policy")?.value.trim() ?? "";
+  const state = document.querySelector<HTMLElement>("#trust-rebuild-state");
+  if (!state) return;
+  if (!targetId || !policyVersion) { showToast("Target ID و Policy version لازم هستند."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  state.textContent = "در حال بازسازی…";
+  state.className = "connection-state";
+  try {
+    const response = await apiJson<{ data: Record<string, unknown> }>("/api/v1/trust/reputation/rebuild", {
+      method: "POST",
+      body: { targetType, targetId, policyVersion },
+    });
+    const score = getRecordNumber(response.data, ["score", "reputationScore"]);
+    state.textContent = score !== undefined ? `Reputation بازسازی شد · ${score}` : "Reputation بازسازی شد.";
+    state.className = "connection-state success";
+    await loadTrustSignals();
+  } catch (error) {
+    state.textContent = error instanceof Error ? error.message : "بازسازی reputation ناموفق بود.";
+    state.className = "connection-state error";
+  }
+}
+
+async function createTrustReview(): Promise<void> {
+  const customerId = document.querySelector<HTMLInputElement>("#trust-review-customer")?.value.trim() ?? "";
+  const businessId = document.querySelector<HTMLInputElement>("#trust-review-business")?.value.trim() ?? "";
+  const ratingValue = Number(document.querySelector<HTMLSelectElement>("#trust-review-rating")?.value ?? "0");
+  const content = document.querySelector<HTMLInputElement>("#trust-review-content")?.value.trim() ?? "";
+  const state = document.querySelector<HTMLElement>("#trust-review-state");
+  if (!state) return;
+  if (!customerId || !businessId || !Number.isSafeInteger(ratingValue)) { showToast("Customer، Business و Rating لازم هستند."); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  state.textContent = "در حال ثبت review…";
+  state.className = "connection-state";
+  try {
+    const response = await apiJson<{ data: { id: string; moderationState?: string } }>("/api/v1/trust/reviews", {
+      method: "POST",
+      body: { customerId, businessId, ratingValue, ...(content ? { content } : {}) },
+    });
+    state.textContent = `Review ساخته شد · ${response.data.id} · ${response.data.moderationState ?? "pending"}`;
+    state.className = "connection-state success";
+    showToast("Review ثبت شد.");
+  } catch (error) {
+    state.textContent = error instanceof Error ? error.message : "ثبت review ناموفق بود.";
+    state.className = "connection-state error";
+  }
 }
 
 function renderBilling(): string {
@@ -1186,6 +1320,9 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-send-notification]")?.addEventListener("click", sendCommunicationNotification);
   document.querySelector<HTMLButtonElement>("[data-save-comm-pref]")?.addEventListener("click", saveCommunicationPreference);
   document.querySelector<HTMLButtonElement>("[data-load-billing]")?.addEventListener("click", loadBillingState);
+  document.querySelectorAll<HTMLButtonElement>("[data-trust-load]")?.forEach((button) => button.addEventListener("click", loadTrustSignals));
+  document.querySelector<HTMLButtonElement>("[data-trust-rebuild]")?.addEventListener("click", rebuildTrustReputation);
+  document.querySelector<HTMLButtonElement>("[data-trust-create-review]")?.addEventListener("click", createTrustReview);
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
