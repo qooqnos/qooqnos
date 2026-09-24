@@ -1,5 +1,5 @@
-import { createHmac } from "crypto";
-import { UserId, AuthContext, createUserId, createRequestId, createCorrelationId } from "@qooqnos/core";
+import { createHmac, pbkdf2Sync, randomBytes } from "node:crypto";
+import { AuthContext, createUserId, createWorkspaceId, createRequestId, createCorrelationId, type Permission } from "@qooqnos/core";
 
 // ============================================================================
 // JWT AUTHENTICATION SYSTEM
@@ -169,12 +169,15 @@ export class AuthMiddleware {
 
     const { payload } = result;
 
+    const permissions = payload.permissions.filter((permission): permission is Permission =>
+      permission === "read" || permission === "write" || permission === "delete" || permission === "admin",
+    );
     return {
       userId: createUserId(payload.userId),
-      workspaceId: payload.workspaceId as any,
-      permissions: payload.permissions as any,
-      requestId: requestId as any,
-      correlationId: correlationId as any,
+      workspaceId: createWorkspaceId(payload.workspaceId),
+      permissions,
+      requestId: createRequestId(requestId),
+      correlationId: createCorrelationId(correlationId),
     };
   }
 
@@ -243,13 +246,11 @@ export class PasswordHasher {
     hash: string;
     salt: string;
   } {
-    const crypto = require("crypto");
     if (!salt) {
-      salt = crypto.randomBytes(16).toString("hex");
+      salt = randomBytes(16).toString("hex");
     }
 
-    const hash = crypto
-      .pbkdf2Sync(
+    const hash = pbkdf2Sync(
         password,
         salt,
         this.ITERATIONS,
