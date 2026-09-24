@@ -150,6 +150,7 @@ function render(): void {
   if (route.path === "/customer") void loadCustomerState();
   if (route.path === "/communication") void loadCommunicationState();
   if (route.path === "/billing") void loadBillingState();
+  if (route.path === "/business") void loadBusinessAccess();
 }
 
 function renderHeader(route: Route): string {
@@ -1030,8 +1031,9 @@ function renderBusiness(): string {
 
     <section class="business-grid">
       <article class="glass-card business-main">
-        <div class="card-section-heading"><div><span class="section-kicker">نمای کلی</span><h2>وضعیت فضای کاری</h2></div><span class="pill success">همه‌چیز سالم</span></div>
+        <div class="card-section-heading"><div><span class="section-kicker">نمای کلی</span><h2>وضعیت فضای کاری</h2></div><span id="business-access-status" class="pill">در حال بررسی</span></div>
         <div class="workspace-stats">
+          <div><span>Workspace</span><strong id="business-workspace-short">—</strong><small id="business-access-note">در حال خواندن context…</small></div>
           <div><span>محصولات</span><strong>۱۲</strong><small>۳ مورد در انتظار تأیید</small></div>
           <div><span>کشف‌پذیری</span><strong>۸۶٪</strong><small>+۱۲٪ در ۳۰ روز</small></div>
           <div><span>اعتماد</span><strong>۹۲</strong><small>Verification کامل</small></div>
@@ -1057,6 +1059,35 @@ function renderBusiness(): string {
       </div>
     </section>
   `;
+}
+
+async function loadBusinessAccess(): Promise<void> {
+  const status = document.querySelector<HTMLElement>("#business-access-status");
+  const workspace = document.querySelector<HTMLElement>("#business-workspace-short");
+  const note = document.querySelector<HTMLElement>("#business-access-note");
+  if (!status || !workspace || !note) return;
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    status.textContent = "بدون session";
+    status.className = "pill warning";
+    note.textContent = "اتصال لازم است";
+    return;
+  }
+  try {
+    const response = await apiJson<{ status: string; tenantId?: string; workspaceId?: string }>("/api/v1/business-access");
+    status.textContent = response.status === "authorized" ? "مجاز" : response.status;
+    status.className = response.status === "authorized" ? "pill success" : "pill warning";
+    workspace.textContent = compactId(response.workspaceId);
+    note.textContent = response.tenantId ? `tenant · ${compactId(response.tenantId)}` : "workspace context فعال";
+  } catch (error) {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    note.textContent = error instanceof Error ? error.message : "دسترسی workspace خوانده نشد.";
+  }
+}
+
+function compactId(value?: string): string {
+  if (!value) return "—";
+  return value.length > 12 ? value.slice(0, 6) + "…" + value.slice(-4) : value;
 }
 
 function renderProductStudio(): string {
