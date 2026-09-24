@@ -538,3 +538,42 @@ The analytics platform is production-ready when:
 - analytics outage cannot block core transactions
 - data freshness and quality are visible
 - retention and deletion policies are enforceable
+
+
+## 29. Physical / Operational Implementation — 2026-09-24
+
+The contract-gated Analytics path is now implemented.
+
+Canonical physical projection tables are introduced by migration `0075_analytics_platform.sql`:
+
+- `analytics_events` — immutable normalized event envelope and payload hash;
+- `analytics_facts` — append-only measurement facts;
+- `analytics_metric_definitions` — versioned metric registry;
+- `analytics_metric_aggregates` — rebuildable hourly/daily aggregate projection;
+- `analytics_ingestion_quarantine` — durable invalid-event evidence.
+
+Runtime boundaries:
+
+```
+Domain Event
+  ↓
+Transactional Outbox
+  ↓
+Outbox Queue
+  ↓
+AnalyticsRepository.ingestOutboxEvent
+  ↓
+analytics_events
+  ↓
+analytics_facts
+  ↓
+Scheduled rebuild
+  ↓
+analytics_metric_aggregates
+```
+
+Implementation is deliberately provider-neutral. A future warehouse adapter may replace or extend the analytical storage implementation without changing domain event ownership.
+
+The Analytics implementation does not copy raw event payloads into analytical storage. It stores the normalized envelope plus a payload hash. This keeps the analytical projection rebuildable while reducing privacy exposure.
+
+See `docs/ANALYTICS_IMPLEMENTATION_CONTRACT.md` for the executable implementation contract.
