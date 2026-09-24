@@ -77,6 +77,7 @@ import seoOperationalControlPlane from "../../../migrations/0079_seo_operational
 import promotionCore from "../../../migrations/0080_promotion_core.sql";
 import loyaltyCore from "../../../migrations/0081_loyalty_core.sql";
 import advertisingCore from "../../../migrations/0082_advertising_core.sql";
+import authorizationApproval from "../../../migrations/0083_authorization_approval_workflow.sql";
 import seoPublicRenderIndex from "../../../migrations/0083_seo_public_render_index.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
@@ -160,5 +161,6 @@ export const migrationSources: readonly MigrationSource[] = [
     { path: "migrations/0080_promotion_core.sql", sql: promotionCore },
   { path: "migrations/0081_loyalty_core.sql", sql: loyaltyCore },
   { path: "migrations/0082_advertising_core.sql", sql: advertisingCore },
+  { path: "migrations/0083_authorization_approval_workflow.sql", sql: authorizationApproval },
   { path: "migrations/0083_seo_public_render_index.sql", sql: seoPublicRenderIndex },
   ];
