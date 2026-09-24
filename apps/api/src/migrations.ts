@@ -59,6 +59,7 @@ import billingFinancialAuditTrail from "../../../migrations/0058_billing_financi
 import billingRefundFinancialAccounting from "../../../migrations/0059_billing_refund_financial_accounting.sql";
 import billingInvoiceSystem from "../../../migrations/0060_billing_invoice_system.sql";
 import billingSettlement from "../../../migrations/0061_billing_settlement.sql";
+import billingReconciliationHardening from "../../../migrations/0062_billing_reconciliation_hardening.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -123,4 +124,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0059_billing_refund_financial_accounting.sql", sql: billingRefundFinancialAccounting },
   { path: "migrations/0060_billing_invoice_system.sql", sql: billingInvoiceSystem },
   { path: "migrations/0061_billing_settlement.sql", sql: billingSettlement },
+  { path: "migrations/0062_billing_reconciliation_hardening.sql", sql: billingReconciliationHardening },
 ];
