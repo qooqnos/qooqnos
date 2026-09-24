@@ -890,3 +890,10 @@ The SEO/GEO engine control plane is now wired end-to-end: canonical domain/outbo
 Operational implementation commits: `68558fea703113788d2ce0c7c9809e5dbcc624c7`, `f226977697f25b4377ab55cdf842476433985af3`, `bbdc3d89502116899825955c533412b8a039d44d`, `17904dbd259237a733422f8f35ad5759f12c3771`, `db19f07c52eef16e7a13312f8a53fd2f8f6e2b12`, `689a150f0914be1e143b7cd1f7c31b414c371787`, `a0366f8711723979a578e3f71f294ce190cdaa4c`, `2283fa62e9eaf3e8d2d1a44876bbc1958db5e084`, `5fd49aab67f0442b38ae2959fa63ab3533a1d7a2`, `11c19dde03b64f207a6bd0db304a6dcebdd875cf`, plus migration registration/lock commits.
 
 The engine remains truth-first: SEO/GEO is derived from canonical domain state and never becomes a second source of truth. External search/AI vendor activation is intentionally separated from repository-owned core implementation.
+
+
+### SEO/GEO dependency-aware rebuild — 2026-09-24
+
+Dependency invalidation is now operational: source changes resolve affected SEO representations through `seo_dependencies`, enqueue deterministic rebuild jobs for dependent entities, and dependent representations retain a canonical entity snapshot so the worker can rebuild without incorrectly treating the changed source entity as the target representation. This keeps SEO derived state tenant-scoped and makes relationship/location/credential-driven invalidation durable rather than advisory.
+
+Latest implementation commits: `3afc5760f0c4ca15e8e40b297b539e131abc9361`, `a4c8d4414e910840393393f8f3a16e3eeba29b54`, `edff5a8667c4d3edd5274b7bbaf4049b6255bc93`.
