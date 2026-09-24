@@ -450,13 +450,6 @@
       "filename": "0064_trust_signals_anti_abuse.sql"
     },
     {
-      "id": "0065_automation_compensation_contract",
-      "version": 65,
-      "moduleId": "automation",
-      "checksum": "b3a64eed9080e54c57105b92a9e1b9cef928eae671740b792f57bf16f3d9b7b3",
-      "filename": "0065_automation_compensation_contract.sql"
-    },
-    {
       "id": "0065_communication_push_channel",
       "version": 65,
       "moduleId": "communication",
@@ -464,11 +457,18 @@
       "filename": "0065_communication_push_channel.sql"
     },
     {
-      "id": "0066_automation_compensation_pairing",
-      "version": 66,
+      "id": "0067_automation_compensation_contract",
+      "version": 67,
+      "moduleId": "automation",
+      "checksum": "b3a64eed9080e54c57105b92a9e1b9cef928eae671740b792f57bf16f3d9b7b3",
+      "filename": "0067_automation_compensation_contract.sql"
+    },
+    {
+      "id": "0068_automation_compensation_pairing",
+      "version": 68,
       "moduleId": "automation",
       "checksum": "4051abb361b0ebccf8433ef49c91c3625dd057f8c30caf058f72c53722d78b90",
-      "filename": "0066_automation_compensation_pairing.sql"
+      "filename": "0068_automation_compensation_pairing.sql"
     }
   ]
 }
