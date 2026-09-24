@@ -207,18 +207,23 @@ export class SeoRepository extends Repository {
           WHERE organization_id = ? AND workspace_id IS ? AND source_entity_id = ? AND provenance = ?`,
         params: [scope.organizationId, scope.workspaceId, input.plan.entityId, "canonical-related-entity"],
       },
-      ...((input.plan.entity.relatedEntityIds ?? []).filter((id) => id.trim() && id !== input.plan.entityId).map((targetId) => ({
+      ...((
+        input.plan.entity.relatedEntities
+          ?? (input.plan.entity.relatedEntityIds ?? []).map((entityId) => ({ entityId, relation: "relatedTo" }))
+      )
+        .filter((relationship) => relationship.entityId.trim() && relationship.entityId !== input.plan.entityId && relationship.relation.trim())
+        .map((relationship) => ({
         sql: `INSERT INTO seo_entity_graph_edges
           (id, organization_id, workspace_id, source_entity_id, target_entity_id, relation, provenance, confidence, verified_at, created_at)
-         SELECT ?, ?, ?, ?, r.entity_id, ?, ?, 1.0, ?, ?
+         SELECT ?, ?, ?, ?, r.entity_id, ?, 'canonical-related-entity', 1.0, ?, ?
          FROM seo_entity_representations r
          WHERE r.organization_id = ? AND r.workspace_id IS ? AND r.entity_id = ?
          AND r.publication_state = 'published' AND r.visibility = 'public'
          ON CONFLICT DO NOTHING`,
         params: [
-          `seo-edge:${input.plan.entityId}:${targetId}:related`, scope.organizationId, scope.workspaceId,
-          input.plan.entityId, "relatedTo", "canonical-related-entity", input.now,
-          scope.organizationId, scope.workspaceId, targetId, input.now,
+          `seo-edge:${input.plan.entityId}:${relationship.entityId}:${relationship.relation}`,
+          scope.organizationId, scope.workspaceId, input.plan.entityId, relationship.relation, input.now,
+          input.now, scope.organizationId, scope.workspaceId, relationship.entityId,
         ],
       }))),
 
