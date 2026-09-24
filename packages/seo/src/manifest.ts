@@ -1,0 +1,2 @@
+import type { RuntimeModule } from "@qooqnos/runtime";
+export const SEO_MODULE: RuntimeModule = { id: "seo", version: "0.1.0", dependencies: ["business","catalog","discovery","i18n","media","trust"], permissions: [] };
