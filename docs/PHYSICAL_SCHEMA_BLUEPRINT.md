@@ -1152,3 +1152,7 @@ The physical data model is architecture-complete when every planned physical tab
 ### Billing invoice system — implemented
 
 `billing_invoices`, `billing_invoice_lines`, and `billing_invoice_payment_applications` are the canonical physical representation for Billing invoices. Invoice values are integer minor units and invoice lines are historical snapshots. Draft invoices may be assembled; once issued, financial fields and lines are immutable. Payment applications update paid/due state only through the Billing invoice repository. External payment-provider execution remains an adapter/reconciliation concern.
+
+### Payment provider reference contract — implemented
+
+`billing_provider_refs` is now actively used by the Billing payment-provider service. Provider execution state is normalized at the adapter boundary and external references are persisted without provider credentials or signing secrets.
