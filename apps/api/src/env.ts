@@ -19,6 +19,8 @@ export interface ApiEnv {
   readonly SMS_PROVIDER_TOKEN?: string;
   readonly WHATSAPP_PROVIDER_ENDPOINT?: string;
   readonly WHATSAPP_PROVIDER_TOKEN?: string;
+  readonly PUSH_PROVIDER_ENDPOINT?: string;
+  readonly PUSH_PROVIDER_TOKEN?: string;
 }
 
 export function requireDatabase(env: ApiEnv): D1DatabaseLike {
