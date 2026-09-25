@@ -106,9 +106,27 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
     if (entity.telephone) x.telephone = clean(entity.telephone);
     if (entity.email) x.email = clean(entity.email);
     if (entity.priceRange) x.priceRange = limit(entity.priceRange, 100);
+    if (entity.aggregateRating && entity.aggregateRating.reviewCount > 0 && Number.isFinite(entity.aggregateRating.ratingValue)) {
+      x.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: entity.aggregateRating.ratingValue,
+        reviewCount: entity.aggregateRating.reviewCount,
+        bestRating: entity.aggregateRating.bestRating,
+        worstRating: entity.aggregateRating.worstRating,
+      };
+    }
   }
 
   if (entity.type === "Product") {
+    if (entity.aggregateRating && entity.aggregateRating.reviewCount > 0 && Number.isFinite(entity.aggregateRating.ratingValue)) {
+      x.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: entity.aggregateRating.ratingValue,
+        reviewCount: entity.aggregateRating.reviewCount,
+        bestRating: entity.aggregateRating.bestRating,
+        worstRating: entity.aggregateRating.worstRating,
+      };
+    }
     const variants = entity.productVariants ?? [];
     if (variants.length) {
       x["@type"] = "ProductGroup";
