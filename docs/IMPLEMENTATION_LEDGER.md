@@ -1826,3 +1826,5 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added production environment controls: `SEO_SOCIAL_MAX_ATTEMPTS`, `SEO_SOCIAL_TIMEOUT_MS`, `SEO_SOCIAL_BASE_DELAY_MS`, `SEO_SOCIAL_MAX_DELAY_MS`.
 - Added regression coverage for safe retries and the no-duplicate-publish rule.
 - Commits: `f738854899697ce0fb5adffde979eba9d99e8566`, `ae45c65bcb6069455245c248703ea1c92f1989f0`, `25f6e1237569900adc7686c156997f1d078c9b17`, `eeb53dc170195bed3a00b4ed0ecfffa1aecf8a5b`, `51019e99a96ebdbc6de058bcc57f505e7f1918b0`, `4be31250a1c342f8e3531dc3a69e73d6b65fd29a`, `513e3f2176e9e12faa2d9a846e9894bad96d6ec9`, `943fd0f63b9247319c00e41dea520ca0d7b0ccb4`.
+
+- Social control-plane hardening: added Instagram media read/measurement route and capability-aware provider status (`configured`/`read`/`publish` plus transport settings). Commit: `795d9eff6aafddc3e12736608d48d17d270f8581`.
