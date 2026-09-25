@@ -85,6 +85,7 @@ function isApiFirstPublicPath(pathname: string): boolean {
     || pathname === "/ready"
     || pathname === "/robots.txt"
     || pathname === "/sitemap.xml"
+    || pathname === "/image-sitemap.xml"
     || /^\/sitemap-\d+\.xml$/.test(pathname)
     || pathname.startsWith("/api/");
 }
@@ -106,6 +107,17 @@ function buildSeoVisibilityWorkerConfig(env: ApiEnv, limit: number) {
     ...(env.SEO_AI_CITATION_ENDPOINT && env.SEO_AI_CITATION_API_KEY && env.SEO_AI_CITATION_MODEL
       ? { ai: { endpoint: env.SEO_AI_CITATION_ENDPOINT, apiKey: env.SEO_AI_CITATION_API_KEY, model: env.SEO_AI_CITATION_MODEL, ...(env.SEO_AI_CITATION_AUTH_MODE ? { authMode: env.SEO_AI_CITATION_AUTH_MODE } : {}) } }
       : {}),
+  };
+}
+
+function buildSeoIndexNowConfig(env: ApiEnv) {
+  if (!env.SEO_INDEXNOW_KEY?.trim()) return undefined;
+  const batchLimit = env.SEO_INDEXNOW_BATCH_LIMIT ? Number(env.SEO_INDEXNOW_BATCH_LIMIT) : undefined;
+  return {
+    key: env.SEO_INDEXNOW_KEY.trim(),
+    ...(env.SEO_INDEXNOW_KEY_LOCATION ? { keyLocation: env.SEO_INDEXNOW_KEY_LOCATION.trim() } : {}),
+    ...(env.SEO_INDEXNOW_ENDPOINT ? { endpoint: env.SEO_INDEXNOW_ENDPOINT.trim() } : {}),
+    ...(batchLimit !== undefined && Number.isFinite(batchLimit) ? { batchLimit } : {}),
   };
 }
 
@@ -674,7 +686,13 @@ export default {
     await processIntegration(env, now);
     await processAnalyticsAggregates(env, now);
     if (database) {
-      await processSeoPublicationJobs(database, now, 25, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com");
+      await processSeoPublicationJobs(
+        database,
+        now,
+        25,
+        env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com",
+        { ...(buildSeoIndexNowConfig(env) ? { indexNow: buildSeoIndexNowConfig(env) } : {}) },
+      );
       if (env.ENVIRONMENT === "production") {
         const crawlerLimit = Number(env.SEO_CRAWLER_SAMPLE_LIMIT ?? "25");
         await runProductionSeoCrawler(database, env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com", Number.isFinite(crawlerLimit) ? crawlerLimit : 25, now);
