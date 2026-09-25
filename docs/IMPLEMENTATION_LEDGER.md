@@ -15,6 +15,7 @@ SEO/GEO implementation has started from the frozen architecture contracts; all f
 - 🟢 E2E coverage verifies that a Homepage demand query is preserved on `/discover` and that the canonical Discovery response is rendered automatically.
 
 Implementation commits: 52e4d0a (web), 4ecdaa5 (E2E).
+Syntax repair: `50a7201` — restore the four accidentally escaped template-literal delimiters in `apps/web/src/main.ts`; this resolves the `TS1127`/cascade parse failures reported by the production web build.
 
 
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
