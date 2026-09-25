@@ -1,7 +1,7 @@
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
-import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, buildImageSitemapXml, SITEMAP_URL_LIMIT, type RobotsAiPolicy } from "@qooqnos/seo";
+import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, buildImageSitemapXml, buildMerchantProductFeedXml, projectMerchantProductFeed, SITEMAP_URL_LIMIT, type RobotsAiPolicy, SeoObservabilityRepository, parseGoogleSearchConsoleExport, parseBingAiPerformanceExport } from "@qooqnos/seo";
 import { crawlStoredSeoRepresentation } from "./seo-production-crawler";
 import { evaluateSeoProductionReadiness } from "./seo-production-readiness";
 import type { ApiEnv } from "./env";
@@ -78,6 +78,102 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       return new Response(xml, { status: 200, headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300, s-maxage=300" } });
     },
   });
+  router.register({
+    method: "GET",
+    path: "/merchant-center/products.xml",
+    module: "seo",
+    operation: "merchant-feed.read",
+    handler: async () => {
+      if (!database) return new Response("Database is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
+      const canonicalPrefix = canonicalBaseUrl.replace(/\\/$/, "") + "/";
+      const limitValue = Number(environment?.SEO_MERCHANT_FEED_LIMIT ?? "50000");
+      const limit = Number.isFinite(limitValue) ? Math.min(Math.max(Math.trunc(limitValue), 1), 50000) : 50000;
+      const rows = await database.all<{ representationJson: string }>(
+        `SELECT representation_json AS representationJson
+           FROM seo_entity_representations
+          WHERE entity_type='Product'
+            AND indexability='index'
+            AND publication_state='published'
+            AND visibility='public'
+            AND canonical_url LIKE ?
+          ORDER BY canonical_url ASC
+          LIMIT ?`,
+        canonicalPrefix + "%", limit,
+      );
+      const entities = rows.flatMap((row) => {
+        try {
+          const parsed = JSON.parse(row.representationJson) as { entity?: import("@qooqnos/seo").SeoEntity };
+          return parsed.entity ? [parsed.entity] : [];
+        } catch {
+          return [];
+        }
+      });
+      const projection = projectMerchantProductFeed(entities, { canonicalBaseUrl });
+      const xml = buildMerchantProductFeedXml(projection.items);
+      return new Response(xml, {
+        status: 200,
+        headers: {
+          "content-type": "application/xml; charset=utf-8",
+          "cache-control": "public, max-age=900, s-maxage=900",
+          "x-phoenix-merchant-feed-items": String(projection.items.length),
+          "x-phoenix-merchant-feed-skipped": String(projection.skipped.length),
+        },
+      });
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/visibility/import/google-search-console",
+    module: "seo",
+    operation: "visibility.import.google_search_console",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!database) return json({ status: "unavailable" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const report = body.report === "generative-ai" ? "generative-ai" : body.report === "multimodal" ? "multimodal" : null;
+      if (!report) return json({ error: { code: "VALIDATION_ERROR", message: "report must be multimodal or generative-ai." } }, 400, context.requestId);
+      const locale = typeof body.locale === "string" && body.locale.trim() ? body.locale.trim() : "en-US";
+      const source = typeof body.content === "string" ? body.content : Array.isArray(body.rows) ? body.rows.filter((row) => row && typeof row === "object" && !Array.isArray(row)) as Record<string, unknown>[] : null;
+      if (!source) return json({ error: { code: "VALIDATION_ERROR", message: "Provide CSV/JSON content or rows." } }, 400, context.requestId);
+      const observations = parseGoogleSearchConsoleExport(source, {
+        report, locale,
+        ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}),
+        ...(typeof body.entityType === "string" ? { entityType: body.entityType } : {}),
+        ...(typeof body.canonicalUrl === "string" ? { canonicalUrl: body.canonicalUrl } : {}),
+        ...(typeof body.exportReference === "string" ? { exportReference: body.exportReference } : {}),
+      });
+      return recordImportedVisibility(database, context, observations, "google-search-console-export", report, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/visibility/import/bing-ai-performance",
+    module: "seo",
+    operation: "visibility.import.bing_ai_performance",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!database) return json({ status: "unavailable" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const datasets = new Set(["pages", "grounding-queries", "timeseries"]);
+      const dataset = typeof body.dataset === "string" && datasets.has(body.dataset) ? body.dataset as "pages" | "grounding-queries" | "timeseries" : null;
+      if (!dataset) return json({ error: { code: "VALIDATION_ERROR", message: "dataset must be pages, grounding-queries, or timeseries." } }, 400, context.requestId);
+      const locale = typeof body.locale === "string" && body.locale.trim() ? body.locale.trim() : "en-US";
+      const source = typeof body.content === "string" ? body.content : Array.isArray(body.rows) ? body.rows.filter((row) => row && typeof row === "object" && !Array.isArray(row)) as Record<string, unknown>[] : null;
+      if (!source) return json({ error: { code: "VALIDATION_ERROR", message: "Provide CSV/JSON content or rows." } }, 400, context.requestId);
+      const observations = parseBingAiPerformanceExport(source, {
+        dataset, locale,
+        ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}),
+        ...(typeof body.entityType === "string" ? { entityType: body.entityType } : {}),
+        ...(typeof body.exportReference === "string" ? { exportReference: body.exportReference } : {}),
+      });
+      return recordImportedVisibility(database, context, observations, "bing-ai-performance-export", dataset, context.requestId);
+    },
+  });
+
   router.register({
     method: "GET",
     path: "/robots.txt",
@@ -314,3 +410,53 @@ function buildRobotsAiPolicy(environment?: ApiEnv): RobotsAiPolicy {
     ...(Number.isFinite(delay) && delay >= 0 ? { crawlDelaySeconds: delay } : {}),
   };
 }
+
+async function recordImportedVisibility(database: D1Database, context: Parameters<NonNullable<typeof registerSeoRoutes>>[2] extends never ? never : any, observations: readonly import("@qooqnos/seo").ExternalVisibilityObservation[], providerId: string, dataset: string, requestId: string): Promise<Response> {
+  const repository = new SeoObservabilityRepository(database);
+  const runId = "seo-import:" + providerId + ":" + crypto.randomUUID();
+  const queryText = observations.find((item) => item.queryText)?.queryText ?? dataset;
+  const locale = observations[0] ? String(observations[0].provenance.locale ?? "en-US") : "en-US";
+  await repository.createMeasurementRun(context, {
+    id: runId,
+    providerId,
+    surface: observations.some((item) => item.surface === "ai-answer") ? "ai-answer" : "search-engine",
+    queryText,
+    locale,
+    ...(observations[0]?.entityId ? { entityId: observations[0].entityId } : {}),
+    startedAt: new Date().toISOString(),
+    provenance: { provider: providerId, dataset, imported: true },
+  });
+  const now = new Date().toISOString();
+  let count = 0;
+  for (const item of observations) {
+    await repository.record(context, {
+      id: runId + ":" + crypto.randomUUID(),
+      surface: item.surface,
+      metric: item.metric,
+      ...(item.entityId ? { entityId: item.entityId } : {}),
+      queryClass: "external-export",
+      ...(item.numericValue !== undefined ? { numericValue: item.numericValue } : {}),
+      ...(item.textValue !== undefined ? { textValue: item.textValue } : {}),
+      provenance: { ...item.provenance, importedAt: now },
+      observedAt: item.observedAt,
+    });
+    if (item.citationUrl) {
+      await repository.recordMeasurementCitation(context, {
+        id: runId + ":citation:" + crypto.randomUUID(),
+        runId,
+        ...(item.entityId ? { entityId: item.entityId } : {}),
+        citationUrl: item.citationUrl,
+        ...(item.citationTitle ? { citationTitle: item.citationTitle } : {}),
+        ...(item.citationPosition !== undefined ? { citationPosition: item.citationPosition } : {}),
+        ...(item.citationCount !== undefined ? { citationCount: item.citationCount } : {}),
+        sourceType: item.surface === "ai-answer" ? "ai-answer" : "search-engine",
+        observedAt: item.observedAt,
+        provenance: { ...item.provenance, importedAt: now },
+      });
+    }
+    count += 1;
+  }
+  await repository.completeMeasurementRun(context, { id: runId, status: "succeeded", completedAt: now, observationCount: count });
+  return json({ imported: count, runId, providerId, dataset }, 200, requestId);
+}
+
