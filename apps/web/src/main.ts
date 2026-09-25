@@ -284,21 +284,22 @@ function render(): void {
   const route = currentRoute();
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
+  const isHome = route.path === "/";
   appRoot.innerHTML = `
-    <div class="app-shell">
-      ${renderHeader(route)}
+    <div class="app-shell ${isHome ? "home-shell" : ""}">
+      ${isHome ? renderPublicHeader() : renderHeader(route)}
       <div class="app-body">
-        ${renderSidebar(route)}
-        <main id="main" class="page-content">${page}</main>
+        ${isHome ? "" : renderSidebar(route)}
+        <main id="main" class="page-content ${isHome ? "home-page-content" : ""}">${page}</main>
       </div>
-      ${renderMobileNav(route)}
+      ${isHome ? "" : renderMobileNav(route)}
       ${renderToastHost()}
     </div>
   `;
   bindGlobalEvents();
   syncThemeButtons();
   void loadShellContext();
-  if (route.path === "/") void loadHomeState();
+  if (route.path === "/") bindHomeEvents();
   if (route.path === "/account") void loadAccountState();
   if (route.path === "/customer") void loadCustomerState();
   if (route.path === "/communication") void loadCommunicationState();
@@ -462,6 +463,28 @@ function setLink(rel: string, href: string): void {
   tag.href = href;
 }
 
+function renderPublicHeader(): string {
+  return \`
+    <header class="phoenix-public-header">
+      <div class="phoenix-public-header-inner container-wide">
+        <a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس">
+          <span class="brand-mark" aria-hidden="true">ق</span>
+          <span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
+        </a>
+        <nav class="phoenix-public-nav" aria-label="ناوبری اصلی">
+          <a href="/discover" data-nav>کشف</a>
+          <a href="#phoenix-loop">چگونه کار می‌کند؟</a>
+          <a href="/business" data-nav>برای کسب‌وکارها</a>
+        </nav>
+        <div class="phoenix-public-actions">
+          <button type="button" class="button button-ghost" data-open-connection>ورود</button>
+          <button type="button" class="icon-button" data-theme-toggle aria-label="تغییر پوسته">◐</button>
+        </div>
+      </div>
+    </header>
+  \`;
+}
+
 function renderHeader(route: Route): string {
   return `
     <header class="app-header">
@@ -546,57 +569,155 @@ function renderToastHost(): string {
 }
 
 function renderHome(): string {
-  return `
-    <section class="dashboard-hero">
-      <div class="hero-copy-block">
-        <span class="eyebrow"><i></i> تصمیم‌یار هوشمند شما</span>
-        <h1>از نیاز تا <em>اقدام</em><br/>یک قدم فاصله است.</h1>
-        <p>ققنوس نیاز مشتری را می‌فهمد، عرضه مناسب را پیدا می‌کند و مسیر بعدی را ساده می‌کند.</p>
-        <div class="hero-actions">
-          <a class="button button-primary button-lg" href="/discover" data-nav>شروع کشف <span>←</span></a>
-          <a class="button button-ghost button-lg" href="/product-studio" data-nav>ساخت محصول با AI <span>✦</span></a>
+  return \`
+    <div class="phoenix-home">
+      <section class="phoenix-home-hero">
+        <div class="phoenix-home-copy">
+          <span class="phoenix-eyebrow"><i></i> لایه هوشمند تصمیم‌گیری و اتصال</span>
+          <h1>چیزی که نیاز داری را بگو.<br/><em>ققنوس راهش را پیدا می‌کند.</em></h1>
+          <p>نیازت را به زبان خودت تعریف کن. ققنوس آن را می‌فهمد، گزینه‌های مناسب را پیدا می‌کند و مسیر اقدام را ساده می‌کند.</p>
+          <form class="phoenix-demand-box" id="phoenix-demand-form">
+            <label for="phoenix-demand-input" class="sr-only">نیاز خود را بنویسید</label>
+            <textarea id="phoenix-demand-input" rows="3" autocomplete="off" placeholder="مثلاً برای جمعه شب یک رستوران آرام برای ۴ نفر می‌خواهم، نزدیک مرکز شهر و با قیمت متوسط..."></textarea>
+            <div class="phoenix-demand-footer">
+              <span class="phoenix-demand-hint">نیازت را هرطور راحتی بنویس.</span>
+              <button class="button button-primary phoenix-demand-submit" type="submit">پیدا کن <span>←</span></button>
+            </div>
+          </form>
+          <div class="phoenix-intent-chips" aria-label="نمونه نیازها">
+            <button type="button" data-phoenix-example="یک محصول مناسب برای هدیه می‌خواهم">یک محصول پیدا کن</button>
+            <button type="button" data-phoenix-example="یک خدمت مناسب برای نیازم پیدا کن">یک خدمت پیدا کن</button>
+            <button type="button" data-phoenix-example="یک کسب‌وکار مناسب نزدیک من می‌خواهم">یک کسب‌وکار پیدا کن</button>
+            <button type="button" data-phoenix-example="بین چند گزینه مناسب کمکم کن انتخاب کنم">برای انتخاب کمکم کن</button>
+          </div>
         </div>
-      </div>
-      <div class="hero-orbit">
-        <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
-        <div class="core-card glass-card">
-          <div class="core-head"><span>وضعیت زنده</span><span id="home-live-status" class="pill">در حال خواندن</span></div>
-          <div class="core-question">امروز چه کاری می‌تواند برای شما ارزشمندتر باشد؟</div>
-          <div class="decision-item"><span class="decision-icon">⌕</span><div><strong>Demand</strong><small id="home-demand-insight">در انتظار activity</small></div><b id="home-demand-value">—</b></div>
-          <div class="decision-item"><span class="decision-icon purple">✦</span><div><strong>Matching</strong><small id="home-matching-insight">پس از Discovery واقعی</small></div><b id="home-matching-value">—</b></div>
-          <div class="decision-foot"><span id="home-live-question">بدون عدد ساختگی؛ فقط سیگنال‌های قابل مشاهده</span><span id="home-live-time">—</span></div>
+        <div class="phoenix-home-visual" aria-label="چرخه تصمیم‌گیری ققنوس">
+          <div class="phoenix-orbit-ring ring-one"></div>
+          <div class="phoenix-orbit-ring ring-two"></div>
+          <div class="phoenix-orbit-core">
+            <span class="phoenix-core-spark">✦</span>
+            <strong>ققنوس</strong>
+            <small>Understand · Decide · Match</small>
+          </div>
+          <div class="phoenix-floating-node node-demand"><b>نیاز</b><span>Understand</span></div>
+          <div class="phoenix-floating-node node-match"><b>تطبیق</b><span>Match</span></div>
+          <div class="phoenix-floating-node node-connect"><b>اتصال</b><span>Connect</span></div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section-block">
-      <div class="section-topline"><div><span class="section-kicker">تصویر امروز</span><h2>یک نگاه، سه فرصت</h2></div><a href="/discover" data-nav class="text-link">مشاهده همه <span>←</span></a></div>
-      <div class="metric-grid">
-        <article class="metric-card feature">
-          <div class="metric-symbol">⌕</div><span>Demand</span><strong id="home-demand-count">—</strong><small id="home-demand-note">جست‌وجوی اخیر</small><div class="sparkline"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        </article>
-        <article class="metric-card">
-          <div class="metric-top"><span>Supply</span><span id="home-business-badge" class="tiny-status">● بررسی</span></div>
-          <strong id="home-business-status" class="metric-value">—</strong><small id="home-business-note">Business context</small>
-          <div class="progress-line"><span id="home-business-progress" style="width:0%"></span></div><b id="home-business-detail">داده تکمیل پروفایل هنوز اندازه‌گیری نشده</b>
-        </article>
-        <article class="metric-card">
-          <div class="metric-top"><span>AI</span><span class="ai-badge">RUNTIME</span></div>
-          <strong id="home-ai-usage" class="metric-value">—</strong><small id="home-ai-note">آخرین اجرای Seller AI</small>
-          <div class="mini-product-row"><span class="mini-product one">ک</span><span class="mini-product two">س</span><span class="mini-product three">ب</span><span class="mini-product four">م</span></div>
-        </article>
-      </div>
-    </section>
+      <section class="phoenix-section phoenix-live-demo">
+        <div class="phoenix-section-heading">
+          <span class="phoenix-kicker">یک تجربه واقعی</span>
+          <h2>ققنوس فقط جستجو نمی‌کند.</h2>
+          <p>اول می‌فهمد چه چیزی برایت مهم است، بعد گزینه‌هایی را پیدا می‌کند که با نیازت ارتباط دارند.</p>
+        </div>
+        <div class="phoenix-demo-grid">
+          <article class="phoenix-demo-request">
+            <span>نیاز مشتری</span>
+            <blockquote>«برای تولد پدرم یک هدیه کاربردی می‌خواهم، حدود ۵ میلیون تومان.»</blockquote>
+          </article>
+          <article class="phoenix-understanding">
+            <span>ققنوس فهمید</span>
+            <div class="phoenix-understanding-chips">
+              <span>مناسب برای: پدر</span><span>مناسبت: تولد</span><span>بودجه: حدود ۵ میلیون</span><span>ویژگی مهم: کاربردی</span>
+            </div>
+            <div class="phoenix-demo-result">
+              <div class="phoenix-demo-result-icon">✦</div>
+              <div><strong>گزینه‌های متناسب</strong><small>بر اساس نیاز، بودجه و ویژگی‌های مهم انتخاب شده‌اند.</small></div>
+            </div>
+          </article>
+        </div>
+      </section>
 
-    <section class="section-block">
-      <div class="section-topline"><div><span class="section-kicker">مسیر اصلی</span><h2>ققنوس چطور ارزش می‌سازد؟</h2></div></div>
-      <div class="loop-grid">
-        ${["نیاز را می‌فهمد","عرضه را غنی می‌کند","تصمیم می‌گیرد","متصل می‌کند","اقدام را آسان می‌کند"].map((label,index)=>`<div class="loop-step"><span>0${index+1}</span><strong>${label}</strong><small>${["Demand","Supply","Decision","Matching","Action"][index]}</small></div>`).join("")}
-      </div>
-    </section>
-  `;
+      <section class="phoenix-section" id="phoenix-loop">
+        <div class="phoenix-section-heading centered">
+          <span class="phoenix-kicker">Phoenix Loop</span>
+          <h2>از نیاز تا اقدام، با تصمیم هوشمند.</h2>
+        </div>
+        <div class="phoenix-loop">
+          <div><b>01</b><strong>نیاز را می‌فهمد</strong><small>Understand Demand</small></div><span>←</span>
+          <div><b>02</b><strong>عرضه را می‌شناسد</strong><small>Understand Supply</small></div><span>←</span>
+          <div><b>03</b><strong>تصمیم می‌گیرد</strong><small>Decide</small></div><span>←</span>
+          <div><b>04</b><strong>تطبیق می‌دهد</strong><small>Match</small></div><span>←</span>
+          <div><b>05</b><strong>متصل می‌کند</strong><small>Connect</small></div><span>←</span>
+          <div><b>06</b><strong>اقدام را ممکن می‌کند</strong><small>Act</small></div>
+        </div>
+      </section>
+
+      <section class="phoenix-section">
+        <div class="phoenix-section-heading">
+          <span class="phoenix-kicker">Discovery</span>
+          <h2>هر نیازی، یک مسیر برای شروع.</h2>
+          <p>لازم نیست محصول یا دسته‌بندی را از قبل بشناسی. کافی است نیازت را بگویی.</p>
+        </div>
+        <div class="phoenix-discovery-grid">
+          <button type="button" data-phoenix-example="برای یک شام آرام برای دو نفر رستوران مناسب پیدا کن"><strong>🍽 رستوران و مکان</strong><span>«برای شام یک جای آرام می‌خواهم...»</span></button>
+          <button type="button" data-phoenix-example="یک هدیه کاربردی برای پدرم با بودجه متوسط پیدا کن"><strong>🛍 محصول</strong><span>«برای تولد یک هدیه مناسب می‌خواهم...»</span></button>
+          <button type="button" data-phoenix-example="یک متخصص مناسب برای نیاز من پیدا کن"><strong>✦ خدمت</strong><span>«یک متخصص خوب برای این کار می‌خواهم...»</span></button>
+          <button type="button" data-phoenix-example="به من کمک کن بین چند گزینه مناسب انتخاب کنم"><strong>◈ تصمیم</strong><span>«بین چند گزینه نمی‌دانم کدام را انتخاب کنم...»</span></button>
+        </div>
+      </section>
+
+      <section class="phoenix-section phoenix-business-section">
+        <div>
+          <span class="phoenix-kicker">For Business</span>
+          <h2>کسب‌وکارت را به نیاز درست وصل کن.</h2>
+          <p>اطلاعات و عرضه کسب‌وکارت را در اختیار ققنوس بگذار تا وقتی نیاز مناسبی شناسایی شد، بتواند تو را به مشتری مرتبط کند.</p>
+          <a class="button button-primary" href="/business" data-nav>برای کسب‌وکارها <span>←</span></a>
+        </div>
+        <div class="phoenix-business-flow"><span>Supply</span><i>→</i><span>Phoenix</span><i>→</i><span>Customer Need</span></div>
+      </section>
+
+      <section class="phoenix-section phoenix-seller-ai">
+        <div class="phoenix-section-heading">
+          <span class="phoenix-kicker">Seller AI</span>
+          <h2>فقط محصولت را معرفی کن.</h2>
+          <p>ققنوس می‌تواند ورودی خام را به عرضه‌ای ساختاریافته و آماده برای کشف و تطبیق تبدیل کند؛ محتوای تولیدشده تا زمان تأیید، پیشنهادی باقی می‌ماند.</p>
+        </div>
+        <div class="phoenix-seller-flow">
+          <div><b>01</b><strong>عکس یا اطلاعات خام</strong></div><span>→</span>
+          <div><b>02</b><strong>درک و غنی‌سازی AI</strong></div><span>→</span>
+          <div><b>03</b><strong>تأیید فروشنده</strong></div><span>→</span>
+          <div><b>04</b><strong>قابل کشف و Match</strong></div>
+        </div>
+        <a class="text-link" href="/product-studio" data-nav>استودیو محصول ققنوس <span>←</span></a>
+      </section>
+
+      <section class="phoenix-final-cta">
+        <span class="phoenix-kicker">Ask Phoenix</span>
+        <h2>حالا تو بگو چه چیزی نیاز داری.</h2>
+        <form class="phoenix-demand-box compact" id="phoenix-demand-form-final">
+          <label for="phoenix-demand-input-final" class="sr-only">نیاز خود را بنویسید</label>
+          <textarea id="phoenix-demand-input-final" rows="2" placeholder="نیازت را به زبان خودت بنویس..."></textarea>
+          <button class="button button-primary" type="submit">از ققنوس بپرس <span>←</span></button>
+        </form>
+      </section>
+    </div>
+  \`;
 }
 
+function bindHomeEvents(): void {
+  const submit = (input: HTMLTextAreaElement | null): void => {
+    const query = input?.value.trim() ?? "";
+    if (!query) { input?.focus(); showToast("اول نیازت را بنویس."); return; }
+    window.location.assign("/discover?q=" + encodeURIComponent(query));
+  };
+  document.querySelector<HTMLFormElement>("#phoenix-demand-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    submit(document.querySelector<HTMLTextAreaElement>("#phoenix-demand-input"));
+  });
+  document.querySelector<HTMLFormElement>("#phoenix-demand-form-final")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    submit(document.querySelector<HTMLTextAreaElement>("#phoenix-demand-input-final"));
+  });
+  document.querySelectorAll<HTMLButtonElement>("[data-phoenix-example]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const value = button.dataset.phoenixExample ?? "";
+      const input = document.querySelector<HTMLTextAreaElement>("#phoenix-demand-input");
+      if (input) { input.value = value; input.focus(); input.scrollIntoView({ behavior: "smooth", block: "center" }); }
+    });
+  });
+}
 
 function toDateTimeLocal(value: Date): string {
   const pad = (number: number): string => String(number).padStart(2, "0");
