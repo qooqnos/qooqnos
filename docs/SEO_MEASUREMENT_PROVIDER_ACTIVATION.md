@@ -177,3 +177,26 @@ Provider data is returned with explicit provenance. The layer does not synthesiz
 - Google Ads Search / Ads Advertisers intelligence via DataForSEO Ads Transparency SERP endpoints.
 
 - Google Events discovery, Google Reviews reputation evidence, and DataForSEO Business Listings local-supply discovery are also exposed through the Search Intelligence control plane.
+
+
+## Social Intelligence + Distribution Control Plane
+
+Phoenix now has provider adapters for social discovery, trend signals, reputation evidence and authorized content distribution:
+- Facebook Pages Graph API: feed read + Page publishing.
+- Instagram Graph API: media listing + image publishing through the media-container flow.
+- X API v2: recent post search + authenticated post publishing.
+- Pinterest API v5: Pin search + keyword trends + Pin creation.
+- LinkedIn Posts API: organization post publishing + organization share statistics.
+- TikTok Content Posting API: creator-info query + video publishing initialization. Public research data is not assumed because TikTok Research Tools require eligibility/approval and are not generally available to commercial users.
+- Reddit: search integration through the current public/Developer Platform boundary; Reddit platform access policy can change, so production activation remains provider-gated.
+
+Runtime secrets:
+- SEO_FACEBOOK_PAGE_ID / SEO_FACEBOOK_ACCESS_TOKEN
+- SEO_INSTAGRAM_USER_ID / SEO_INSTAGRAM_ACCESS_TOKEN
+- SEO_X_BEARER_TOKEN / SEO_X_USER_ACCESS_TOKEN
+- SEO_PINTEREST_ACCESS_TOKEN
+- SEO_LINKEDIN_ACCESS_TOKEN / SEO_LINKEDIN_VERSION
+- SEO_TIKTOK_ACCESS_TOKEN
+- SEO_REDDIT_ACCESS_TOKEN (optional for the configured Reddit path)
+
+Authenticated control-plane routes are under `/api/v1/seo/social/*`. Social data is treated as provider-observed evidence and is not converted into invented universal popularity, ranking, reach or sentiment metrics.
