@@ -24,6 +24,7 @@ describe("search intelligence", () => {
       "google-shopping",
       "google-ads-search",
       "google-ads-advertisers",
+      "google-events",
       "bing-organic",
       "bing-images",
       "bing-videos",
@@ -113,3 +114,43 @@ describe("search intelligence", () => {
     expect(request?.url).toContain("regionCode=US");
   });
 });
+
+
+  it("uses DataForSEO Google Reviews task flow", async () => {
+    const urls: string[] = [];
+    let step = 0;
+    const client = new DataForSeoSearchIntelligenceClient({
+      login: "login",
+      password: "password",
+      fetcher: async (input, init) => {
+        const request = new Request(input, init);
+        urls.push(request.url);
+        step += 1;
+        return step === 1
+          ? jsonResponse({ tasks: [{ id: "review-task" }] })
+          : jsonResponse({ tasks: [{ status_code: 20000, result: [{ items: [{ rating: 5, review_text: "Great" }] }] }] });
+      },
+    });
+    const result = await client.googleReviews({ keyword: "qooqnos", depth: 10 });
+    expect(urls[0]).toContain("/v3/business_data/google/reviews/task_post");
+    expect(urls[1]).toContain("/v3/business_data/google/reviews/task_get/review-task");
+    expect(result).toBeTruthy();
+  });
+
+  it("queries DataForSEO business listings for local supply discovery", async () => {
+    let request: Request | undefined;
+    const client = new DataForSeoSearchIntelligenceClient({
+      login: "login",
+      password: "password",
+      fetcher: async (input, init) => {
+        request = new Request(input, init);
+        return jsonResponse({ tasks: [{ status_code: 20000, result: [{ items: [{ title: "Cafe" }] }] }] });
+      },
+    });
+    await client.businessListingsSearch({
+      categories: ["coffee_shop"],
+      locationCode: 2840,
+      limit: 10,
+    });
+    expect(request?.url).toContain("/v3/business_data/business_listings/search/live");
+  });
