@@ -64,4 +64,24 @@ describe("CatalogCommandRepository", () => {
     expect(batches).toHaveLength(1);
     expect(batches[0]).toHaveLength(5);
   });
+  it("persists service, audit, outbox and idempotency in one batch", async () => {
+    const { database, batches } = createDatabase();
+    const repository = new CatalogCommandRepository(database);
+    const result = await repository.createService({
+      context: {
+        requestId: "req_2" as never, correlationId: "cor_2" as never,
+        tenantId: "org_1" as never, workspaceId: "ws_1" as never, actorId: "user_1" as never,
+        module: "catalog", operation: "service.create", locale: "en-US", timezone: "UTC",
+      },
+      id: "service_1" as never, businessId: "business_1" as never, name: "Consulting",
+      now: "2026-09-25T09:00:00.000Z", expiresAt: "2026-09-25T10:00:00.000Z",
+      idempotencyKey: "idem_service_1", requestFingerprint: "fingerprint_service_1",
+      auditId: "audit_service_1", eventId: "event_service_1",
+    });
+    expect(result.kind).toBe("executed");
+    expect(result.result).toEqual({ serviceId: "service_1", businessId: "business_1" });
+    expect(batches).toHaveLength(1);
+    expect(batches[0]).toHaveLength(5);
+  });
+
 });
