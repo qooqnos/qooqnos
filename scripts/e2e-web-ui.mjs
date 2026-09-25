@@ -103,8 +103,11 @@ await page.addInitScript(() => {
   localStorage.setItem("phoenix-workspace-id", "ws-1");
 });
 
+const shellStartedAt = Date.now();
 await page.goto(baseURL + "/");
 await page.waitForSelector(".app-shell");
+const shellMs = Date.now() - shellStartedAt;
+assert.ok(shellMs < 1500, `Phoenix shell render budget exceeded: ${shellMs}ms`);
 assert.equal(await page.locator(".brand-copy strong").innerText(), "ققنوس");
 
 const initialTheme = await page.locator("html").getAttribute("data-theme");
@@ -159,4 +162,4 @@ await page.getByText("درخواست انتشار ثبت شد").waitFor();
 
 await browser.close();
 server.kill("SIGTERM");
-process.stdout.write("Phoenix UI E2E smoke passed.\n");
+process.stdout.write("Phoenix UI E2E smoke passed; shell budget " + shellMs + "ms.\n");
