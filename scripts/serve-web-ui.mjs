@@ -18,11 +18,20 @@ const mime = new Map([
 
 const server = createServer((request, response) => {
   const requestPath = decodeURIComponent(new URL(request.url ?? "/", "http://127.0.0.1").pathname);
-  const safePath = normalize(join(root, requestPath === "/" ? "index.html" : requestPath.replace(/^\/+/, "")));
-  if (!safePath.startsWith(root) || !existsSync(safePath) || !statSync(safePath).isFile()) {
+  const requestedPath = requestPath === "/" ? "index.html" : requestPath.replace(/^\/+/, "");
+  let safePath = normalize(join(root, requestedPath));
+  if (!safePath.startsWith(root)) {
     response.statusCode = 404;
     response.end("Not found");
     return;
+  }
+  if (!existsSync(safePath) || !statSync(safePath).isFile()) {
+    if (requestedPath.includes(".")) {
+      response.statusCode = 404;
+      response.end("Not found");
+      return;
+    }
+    safePath = join(root, "index.html");
   }
   const extension = safePath.slice(safePath.lastIndexOf("."));
   response.setHeader("content-type", mime.get(extension) ?? "application/octet-stream");
