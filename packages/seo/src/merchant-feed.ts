@@ -110,12 +110,12 @@ function toItem(
   const description = clean(variant?.description) || clean(entity.description) || clean(entity.summary);
   if (!description) reasons.push("missing-description");
 
-  const variantImageUrl = variant?.imageUrl;\n  const imageLink = validHttpUrl(variantImageUrl) ? variantImageUrl : validHttpUrl(entity.imageUrl) ? entity.imageUrl! : "";
-  if (!imageLink) reasons.push("missing-image");
-
-  const price = variant?.price ?? entity.price;
-  if (price === undefined || !Number.isFinite(price) || price < 0) reasons.push("missing-price");
-
+  const variantImageUrl = variant?.imageUrl;
+  const imageLink = validHttpUrl(variantImageUrl)
+    ? variantImageUrl
+    : validHttpUrl(entity.imageUrl)
+      ? entity.imageUrl!
+      : "";
   const currency = clean(variant?.currency) || clean(entity.currency);
   if (!currency) reasons.push("missing-currency");
 
