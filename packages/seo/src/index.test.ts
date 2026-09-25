@@ -85,6 +85,17 @@ describe("SEO/GEO core", () => {
     }, { canonicalUrl: url });
     expect(geoHoursStructured.geo).toEqual({ "@type": "GeoCoordinates", latitude: 40.7128, longitude: -74.006 });
     expect(geoHoursStructured.openingHoursSpecification).toHaveLength(1);
+    const locationStructured = generateStructuredData({
+      ...entity,
+      type: "Location",
+      preferredName: "Phoenix Studio Downtown",
+      geoPoint: { latitude: 40.7128, longitude: -74.006 },
+      openingHours: [{ dayOfWeek: ["https://schema.org/Monday"], opens: "09:00", closes: "18:00" }],
+    }, { canonicalUrl: url + "/location" });
+    expect(locationStructured["@type"]).toBe("Place");
+    expect(locationStructured.geo).toEqual({ "@type": "GeoCoordinates", latitude: 40.7128, longitude: -74.006 });
+    expect(locationStructured.openingHoursSpecification).toHaveLength(1);
+    expect(validateStructuredData(locationStructured).valid).toBe(true);
     expect(((structured.mainEntityOfPage as Record<string, unknown>).breadcrumb as Record<string, unknown>)["@type"]).toBe("BreadcrumbList");
     expect(structured["@id"]).toBe("https://example.com/entities/biz-1");
     expect(structured.sameAs).toEqual(["https://example.com/about"]);
