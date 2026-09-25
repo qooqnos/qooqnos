@@ -1459,3 +1459,27 @@ button:disabled, .button:disabled { cursor: not-allowed; }
   .phoenix-demand-submit { width:100%; }
   .phoenix-demo-request blockquote { font-size:15px; }
 }
+
+
+/* Phoenix homepage polish */
+.phoenix-demand-topline { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:3px 7px 0; color:var(--faint); }
+.phoenix-demand-topline span { display:inline-flex; align-items:center; gap:6px; color:var(--primary); font-size:8px; font-weight:800; direction:ltr; }
+.phoenix-demand-topline span i { width:5px; height:5px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 10%,transparent); }
+.phoenix-demand-topline small { font-size:7px; }
+.phoenix-demand-box:focus-within { border-color:color-mix(in srgb,var(--primary) 45%,var(--line-strong)); box-shadow:0 26px 80px color-mix(in srgb,var(--primary) 12%,transparent), 0 0 0 4px color-mix(in srgb,var(--primary) 5%,transparent); }
+.phoenix-demand-submit { transition:transform .18s ease, box-shadow .18s ease; }
+.phoenix-demand-submit:hover { transform:translateY(-1px); }
+.phoenix-final-cta-copy { max-width:520px; margin:-12px auto 24px; color:var(--muted); font-size:10px; line-height:1.9; }
+.phoenix-home-footer { width:min(1180px,calc(100% - 40px)); margin:0 auto; padding:28px 0 42px; border-top:1px solid var(--line); display:flex; align-items:end; justify-content:space-between; gap:24px; }
+.phoenix-home-footer p { margin:9px 0 0; color:var(--faint); font-size:8px; }
+.phoenix-home-footer nav { display:flex; gap:18px; flex-wrap:wrap; }
+.phoenix-home-footer nav a { color:var(--muted); text-decoration:none; font-size:8px; }
+.phoenix-home-footer nav a:hover { color:var(--text); }
+@media (max-width:720px) {
+  .phoenix-home-footer { width:min(100% - 24px,1180px); align-items:flex-start; flex-direction:column; padding-bottom:30px; }
+  .phoenix-demand-topline { align-items:flex-start; flex-direction:column; gap:4px; }
+  .phoenix-demand-topline small { display:none; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .phoenix-discovery-grid button, .phoenix-demand-submit { transition:none; }
+}
