@@ -7,6 +7,16 @@
 SEO/GEO implementation has started from the frozen architecture contracts; all future SEO/GEO work must extend the single reusable platform capability and never duplicate SEO logic inside vertical modules.
 **Documentation reconciliation:** 2026-09-22; see repository history and this ledger for the latest commit references.
 
+### Homepage → Discovery continuity — 2026-09-26
+
+- 🟢 Ask Phoenix on `/` now transitions into `/discover?q=...` and automatically executes the canonical Discovery search when the query is present; no second manual click is required.
+- 🟢 Discovery keeps using the existing `GET /api/v1/discovery/search` boundary and tenant/workspace-aware runtime context; no parallel matching/search implementation was introduced.
+- 🟢 The Discovery result heading now reflects the submitted user need for clearer continuity between demand and results.
+- 🟢 E2E coverage verifies that a Homepage demand query is preserved on `/discover` and that the canonical Discovery response is rendered automatically.
+
+Implementation commits: 52e4d0a (web), 4ecdaa5 (E2E).
+
+
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
 
 ## 1. Capability status
