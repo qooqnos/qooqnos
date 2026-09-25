@@ -1714,3 +1714,10 @@ Residual gate status:
 - Code/doc commits: `adc5945278f3923d10b2523340d396463f752b4a`, `2e897133b123b103cfafc7ce2adeb897231b12c1`, `b6592dc61d6d41ffd922f21b9c1dbf8770aa72ab`, `59e1a65e11206c74f590abdda3fd7d67c684a320`, `11280a1f268f089528ba5e14497e3a384de7f67c`, `ce16c9ef2d340295596e332da881808e05378be5`, `9a9c8cf74861c47bb060a7227e41aa9d818af578`, `8983d764d97b0e10bdc64c37b97f4ab9fce78f55`, `0d8d0898dfab9b93997a2902db7b7f8a4513dab5`, `e29c6474362a073bd97ba89a7d5835f882566238`, `b5df2b1282b4b66cb1f0e75061d0ac94256d3ecd`.
 
 Residual external gates remain intentionally evidence-bound: Google Search Console multimodal Search Analytics API support and Bing Webmaster AI Performance machine-readable ingestion. Neither is synthesized while the provider API does not expose the required data.
+
+### SEO/GEO verification fixes — 2026-09-25
+
+- Fixed strict Fetch API typing in the IndexNow regression test (`b39348057c...`, `613682b56c...`).
+- Restored the required `aggregateType` field in the Location lifecycle test fixture (`bddb41d60a...`).
+- Fixed the remaining Location invalidation contract so `business.location.changed.v1` derives the owning Business dependency from its canonical `businessId` payload when `relatedEntityIds` is not explicitly present (`4f18d1df4063d29f0b4c38fb7f00617b6b23f310`).
+- Latest Phoenix CI before this fix had 319/320 tests passing; the only failing test was the Location invalidation dependency assertion.
