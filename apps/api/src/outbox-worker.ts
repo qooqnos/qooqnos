@@ -187,6 +187,7 @@ export async function consumeOutbox(
         discovery
         && (
           event.eventType === "catalog.product.created"
+          || event.eventType === "catalog.service.created"
           || event.eventType === "business.created.v1"
           || event.eventType === "business.publication.changed.v1"
         )
