@@ -523,6 +523,136 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
 
   router.register({
     method: "GET",
+    path: "/api/v1/businesses/:businessId/management",
+    module: "business",
+    operation: "business.management.read",
+    permission: "business.update",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const businessId = brandId<"EntityId">(requiredRouteParam(params, "businessId", context.requestId));
+      const repository = new BusinessRepository(database);
+      const business = await repository.get(context, businessId);
+      if (!business) throw new AppError({ code: "NOT_FOUND", message: "Business not found.", requestId: context.requestId });
+      await createAuthorizationService(new AuthorizationRepository(database), authorization).assert({
+        context,
+        permission: "business.update",
+        resource: { tenantId: business.organizationId, workspaceId: business.workspaceId },
+        requireAuthentication: true,
+        requireWorkspace: true,
+      });
+      const [locations, hours, contacts, socialLinks] = await Promise.all([
+        repository.listLocations(context, businessId),
+        repository.listHours(context, businessId),
+        repository.listPublicContacts(context, businessId),
+        repository.listPublicSocialLinks(context, businessId),
+      ]);
+      return json({ data: { business, locations, hours, contacts, socialLinks } }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "PATCH",
+    path: "/api/v1/businesses/:businessId",
+    module: "business",
+    operation: "business.update",
+    permission: "business.update",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const businessId = brandId<"EntityId">(requiredRouteParam(params, "businessId", context.requestId));
+      const command = await parseJsonCommand(request, isUpdateBusinessCommand, "Business update payload is invalid.", context.requestId);
+      const service = new BusinessService({
+        repository: new BusinessRepository(database),
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
+        id: () => brandId<"EntityId">(crypto.randomUUID()),
+        now: () => new Date().toISOString(),
+      });
+      const data = await service.update(context, businessId, command);
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/businesses/:businessId/locations",
+    module: "business",
+    operation: "business.location.create",
+    permission: "business.update",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const businessId = brandId<"EntityId">(requiredRouteParam(params, "businessId", context.requestId));
+      const command = await parseJsonCommand(request, isCreateBusinessLocationCommand, "Location payload is invalid.", context.requestId);
+      const service = new BusinessService({
+        repository: new BusinessRepository(database),
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
+        id: () => brandId<"EntityId">(crypto.randomUUID()),
+        now: () => new Date().toISOString(),
+      });
+      const data = await service.createLocation(context, { businessId, ...command });
+      return json({ data }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "PATCH",
+    path: "/api/v1/businesses/:businessId/locations/:locationId",
+    module: "business",
+    operation: "business.location.update",
+    permission: "business.update",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const businessId = brandId<"EntityId">(requiredRouteParam(params, "businessId", context.requestId));
+      const locationId = brandId<"EntityId">(requiredRouteParam(params, "locationId", context.requestId));
+      const command = await parseJsonCommand(request, isUpdateBusinessLocationCommand, "Location update payload is invalid.", context.requestId);
+      const service = new BusinessService({
+        repository: new BusinessRepository(database),
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
+        id: () => brandId<"EntityId">(crypto.randomUUID()),
+        now: () => new Date().toISOString(),
+      });
+      const existing = await new BusinessRepository(database).getLocation(context, locationId);
+      if (!existing || existing.businessId !== businessId) throw new AppError({ code: "NOT_FOUND", message: "Location not found for business.", requestId: context.requestId });
+      const data = await service.updateLocation(context, locationId, command);
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/businesses/:businessId/locations/:locationId/status",
+    module: "business",
+    operation: "business.location.status",
+    permission: "business.update",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const businessId = brandId<"EntityId">(requiredRouteParam(params, "businessId", context.requestId));
+      const locationId = brandId<"EntityId">(requiredRouteParam(params, "locationId", context.requestId));
+      const command = await parseJsonCommand(request, isBusinessLocationStatusCommand, "Location status payload is invalid.", context.requestId);
+      const repository = new BusinessRepository(database);
+      const existing = await repository.getLocation(context, locationId);
+      if (!existing || existing.businessId !== businessId) throw new AppError({ code: "NOT_FOUND", message: "Location not found for business.", requestId: context.requestId });
+      const service = new BusinessService({
+        repository,
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
+        id: () => brandId<"EntityId">(crypto.randomUUID()),
+        now: () => new Date().toISOString(),
+      });
+      const data = await service.setLocationStatus(context, locationId, command.status);
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/business-access",
     module: "business",
     operation: "business.access",
@@ -762,6 +892,68 @@ function isCreateBusinessCommand(value: unknown): value is {
   if (!value || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;
   return typeof body.name === "string" && typeof body.displayName === "string" && optionalStrings(body, ["businessType", "primaryCategoryId", "defaultLocale", "timezone", "defaultCurrency"]);
+}
+
+function isUpdateBusinessCommand(value: unknown): value is {
+  name: string;
+  displayName: string;
+  businessType?: string;
+  primaryCategoryId?: string;
+  defaultLocale?: string;
+  timezone?: string;
+  defaultCurrency?: string;
+} {
+  return isCreateBusinessCommand(value);
+}
+
+function isCreateBusinessLocationCommand(value: unknown): value is {
+  name: string;
+  locationType: "physical" | "virtual" | "service_area";
+  timezone?: string;
+  address?: Readonly<Record<string, unknown>>;
+  geoPoint?: { latitude: number; longitude: number };
+} {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const body = value as Record<string, unknown>;
+  const locationType = body.locationType;
+  const geoPoint = body.geoPoint;
+  if (typeof body.name !== "string" || !(locationType === "physical" || locationType === "virtual" || locationType === "service_area")) return false;
+  if (!optionalStrings(body, ["timezone"])) return false;
+  if (body.address !== undefined && (!body.address || typeof body.address !== "object" || Array.isArray(body.address))) return false;
+  if (geoPoint !== undefined) {
+    if (!geoPoint || typeof geoPoint !== "object" || Array.isArray(geoPoint)) return false;
+    const value = geoPoint as Record<string, unknown>;
+    if (typeof value.latitude !== "number" || !Number.isFinite(value.latitude) || value.latitude < -90 || value.latitude > 90) return false;
+    if (typeof value.longitude !== "number" || !Number.isFinite(value.longitude) || value.longitude < -180 || value.longitude > 180) return false;
+  }
+  return true;
+}
+
+function isUpdateBusinessLocationCommand(value: unknown): value is {
+  name?: string;
+  locationType?: "physical" | "virtual" | "service_area";
+  timezone?: string | null;
+  address?: Readonly<Record<string, unknown>> | null;
+  geoPoint?: { latitude: number; longitude: number } | null;
+} {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const body = value as Record<string, unknown>;
+  if (!optionalStrings(body, ["name", "timezone"])) return false;
+  if (body.locationType !== undefined && body.locationType !== "physical" && body.locationType !== "virtual" && body.locationType !== "service_area") return false;
+  if (body.address !== undefined && body.address !== null && (typeof body.address !== "object" || Array.isArray(body.address))) return false;
+  if (body.geoPoint !== undefined && body.geoPoint !== null) {
+    if (typeof body.geoPoint !== "object" || Array.isArray(body.geoPoint)) return false;
+    const value = body.geoPoint as Record<string, unknown>;
+    if (typeof value.latitude !== "number" || !Number.isFinite(value.latitude) || value.latitude < -90 || value.latitude > 90) return false;
+    if (typeof value.longitude !== "number" || !Number.isFinite(value.longitude) || value.longitude < -180 || value.longitude > 180) return false;
+  }
+  return true;
+}
+
+function isBusinessLocationStatusCommand(value: unknown): value is { status: "active" | "inactive" | "archived" } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const status = (value as Record<string, unknown>).status;
+  return status === "active" || status === "inactive" || status === "archived";
 }
 
 function isCreateProductCommand(value: unknown): value is {
