@@ -108,3 +108,17 @@ ProductGroup markup now emits supported `variesBy` properties as full Schema.org
 ## Production crawler hardening
 
 The production SEO crawler now validates public HTTPS canonical URLs, 200 responses, HTML/XHTML MIME type, a 4 MiB HTML safety bound, exactly one canonical link, title/description/robots presence and drift, JSON-LD parseability, SSR hydration markers, breadcrumb rendering and exact `X-Robots-Tag` consistency.
+
+### Search-engine API reliability / control plane
+
+The provider action layer uses one unified gateway and a bounded HTTP policy:
+- \`SEO_SEARCH_ENGINE_MAX_ATTEMPTS\` — maximum attempts per provider request; default 3, hard-capped at 5.
+- \`SEO_SEARCH_ENGINE_TIMEOUT_MS\` — per-attempt timeout; default 15 seconds, bounded to 1–60 seconds.
+- \`SEO_SEARCH_ENGINE_BASE_DELAY_MS\` — exponential-backoff base delay; default 500 ms.
+- \`SEO_SEARCH_ENGINE_MAX_DELAY_MS\` — maximum retry delay; default 10 seconds, bounded to 60 seconds.
+- HTTP \`408\`, \`429\`, and \`5xx\` responses are retryable; \`Retry-After\` is honored when present.
+- Each attempt produces a non-secret audit event through the runtime audit sink. Provider credentials are never emitted in audit payloads.
+- \`GET /api/v1/seo/search-engines/status\` exposes provider capability/configuration state without returning credentials.
+- \`GET /api/v1/seo/search-engines/yandex/indexing-history\` exposes the Yandex indexing-history action through the same authenticated control plane.
+
+Publication-triggered Bing/Yandex actions use the same retry/timeout/audit contract as the authenticated control-plane routes.
