@@ -800,6 +800,7 @@ export class CommerceRepository extends Repository {
     if (input.shippingRateMinor !== undefined && (!Number.isSafeInteger(input.shippingRateMinor) || input.shippingRateMinor < 0)) {
       throw new DatabaseError("Commerce shipping rate must be a non-negative integer minor-unit value");
     }
+    if (input.returnWindowDays !== undefined && (!Number.isSafeInteger(input.returnWindowDays) || input.returnWindowDays < 0)) throw new DatabaseError("Commerce return window must be a non-negative integer");
     if (input.handlingTimeMinDays !== undefined && (!Number.isSafeInteger(input.handlingTimeMinDays) || input.handlingTimeMinDays < 0)) {
       throw new DatabaseError("Commerce minimum handling time must be a non-negative integer");
     }
