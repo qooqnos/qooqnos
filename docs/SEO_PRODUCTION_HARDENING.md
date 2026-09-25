@@ -40,3 +40,10 @@ A provider that has not been activated, or that has failed authentication/config
 ## Completion criterion
 
 Production SEO hardening is complete only when the deployed environment passes the verification sequence and provider evidence is being persisted over time. Source-code implementation alone does not manufacture external search evidence.
+## AI crawler and freshness-discovery hardening — 2026-09-25
+
+The production SEO surface now supports explicit policy control for major AI crawler identities without changing the default wildcard robots behavior. `SEO_AI_CRAWLER_INDEXING_CONTRACT.md` is the canonical operational contract.
+
+Supported policy controls are `OAI-SearchBot`, `GPTBot`, `Google-Extended`, `ClaudeBot`, `PerplexityBot`, and optional `Crawl-delay`.
+
+Canonical SEO publication can also emit an optional IndexNow notification after successful representation persistence. IndexNow failures are secondary discovery-provider failures and do not invalidate the canonical publication transaction.
