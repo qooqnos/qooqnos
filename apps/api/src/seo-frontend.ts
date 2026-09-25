@@ -138,6 +138,7 @@ export async function renderSeoAwareDocument(
       ...(parsed.entity.price !== undefined ? { price: parsed.entity.price } : {}),
       ...(parsed.entity.currency ? { currency: parsed.entity.currency } : {}),
       ...(parsed.entity.availability ? { availability: parsed.entity.availability } : {}),
+      ...(parsed.entity.aggregateRating ? { aggregateRating: parsed.entity.aggregateRating } : {}),
       ...(parsed.entity.brandName ? { brandName: parsed.entity.brandName } : {}),
       ...(parsed.entity.categoryName ? { categoryName: parsed.entity.categoryName } : {}),
       ...(parsed.entity.startDate ? { startDate: parsed.entity.startDate } : {}),
@@ -231,6 +232,9 @@ function renderAnswerMarkup(
   page: EntityPageModel,
 ): string {
   const facts = answer.facts.map((fact) => `<li>${escapeHtml(fact.fact)}</li>`).join("");
+  const rating = entity.aggregateRating && entity.aggregateRating.reviewCount > 0 && Number.isFinite(entity.aggregateRating.ratingValue)
+    ? `<div class="seo-rating" aria-label="Average rating ${escapeHtml(String(entity.aggregateRating.ratingValue))} out of 5 from ${escapeHtml(String(entity.aggregateRating.reviewCount))} reviews"><strong>${escapeHtml(entity.aggregateRating.ratingValue.toFixed(1))}/5</strong><span>${escapeHtml(String(entity.aggregateRating.reviewCount))} reviews</span></div>`
+    : "";
   const commerce = [
     entity.price !== undefined ? `<span>قیمت: ${escapeHtml(String(entity.price))}</span>` : "",
     entity.currency ? `<span>ارز: ${escapeHtml(entity.currency)}</span>` : "",
@@ -270,6 +274,7 @@ function renderAnswerMarkup(
         </section>
         ${facts ? `<section class="seo-facts"><h2>Verified facts</h2><ul>${facts}</ul></section>` : ""}
         ${geography ? `<section class="seo-geo"><h2>Geographic scope</h2><div class="metadata-cloud">${geography}</div></section>` : ""}
+        ${rating ? `<section class="seo-reviews" aria-label="Customer reviews"><h2>Customer reviews</h2>${rating}</section>` : ""}
         ${commerce ? `<section class="seo-commerce"><h2>Commerce</h2><div class="metadata-cloud">${commerce}</div></section>` : ""}
         ${related ? `<section class="seo-related"><h2>Related entities</h2><div class="seo-related-list">${related}</div></section>` : ""}
         <footer class="seo-public-footer"><div class="seo-action-row">${actions}</div></footer>
