@@ -7,6 +7,7 @@ export type SearchIntelligenceVertical =
   | "google-images"
   | "google-jobs"
   | "google-autocomplete"
+  | "google-shopping"
   | "google-dataset-search"
   | "bing-organic"
   | "bing-news"
@@ -85,6 +86,7 @@ const VERTICAL_ENDPOINTS: Readonly<Record<SearchIntelligenceVertical, string>> =
   "google-images": "/v3/serp/google/images/live/advanced",
   "google-jobs": "/v3/serp/google/jobs/live/advanced",
   "google-autocomplete": "/v3/serp/google/autocomplete/live/advanced",
+  "google-shopping": "/v3/merchant/google/products/task_post",
   "google-dataset-search": "/v3/serp/google/dataset_search/live/advanced",
   "bing-organic": "/v3/serp/bing/organic/live/advanced",
   "bing-news": "/v3/serp/bing/news/live/advanced",
@@ -120,6 +122,7 @@ export class DataForSeoSearchIntelligenceClient {
       ...(query.device ? { device: query.device } : {}),
       ...(query.depth !== undefined ? { depth: Math.min(Math.max(Math.trunc(query.depth), 10), 100) } : {}),
       ...(query.targetDomains?.length ? { stop_crawl_on_match: query.targetDomains } : {}),
+      ...(query.vertical === "google-organic" ? { load_async_ai_overview: true } : {}),
       ...(query.extra ?? {}),
     };
 
@@ -186,6 +189,49 @@ export class DataForSeoSearchIntelligenceClient {
     };
   }
 
+  async googleShoppingProducts(request: {
+    readonly keyword: string;
+    readonly locationCode?: number;
+    readonly locationName?: string;
+    readonly languageCode?: string;
+    readonly languageName?: string;
+    readonly depth?: number;
+    readonly sortBy?: string;
+    readonly priceMin?: number;
+    readonly priceMax?: number;
+  }): Promise<unknown> {
+    const keyword = request.keyword.trim();
+    if (!keyword) throw new Error("Google Shopping keyword cannot be empty.");
+    const base = (this.config.endpoint?.trim() || "https://api.dataforseo.com").replace(/\/$/, "");
+    const postUrl = base + "/v3/merchant/google/products/task_post";
+    const payload = [{
+      keyword,
+      ...(request.locationCode !== undefined ? { location_code: request.locationCode } : {}),
+      ...(request.locationName ? { location_name: request.locationName } : {}),
+      ...(request.languageCode ? { language_code: request.languageCode } : {}),
+      ...(request.languageName ? { language_name: request.languageName } : {}),
+      ...(request.depth !== undefined ? { depth: Math.min(Math.max(Math.trunc(request.depth), 10), 200) } : {}),
+      ...(request.sortBy ? { sort_by: request.sortBy } : {}),
+      ...(request.priceMin !== undefined ? { price_min: request.priceMin } : {}),
+      ...(request.priceMax !== undefined ? { price_max: request.priceMax } : {}),
+    }];
+    const posted = await this.rawRequest(postUrl, { method: "POST", body: JSON.stringify(payload) });
+    const taskId = (((posted as { tasks?: readonly { id?: string }[] }).tasks ?? [])[0]?.id);
+    if (!taskId) throw new Error("Google Shopping task did not return a task id.");
+    const deadline = Date.now() + Math.min(Math.max(Math.trunc(this.config.timeoutMs ?? 30000), 5000), 60000);
+    const getUrl = base + "/v3/merchant/google/products/task_get/advanced/" + encodeURIComponent(taskId);
+    while (Date.now() < deadline) {
+      const result = await this.rawRequest(getUrl, { method: "GET" });
+      const task = ((result as { tasks?: readonly { status_code?: number; status_message?: string; result?: unknown[] }[] }).tasks ?? [])[0];
+      if (task?.status_code === 20000 && task.result?.length) return result;
+      if (task?.status_code && task.status_code >= 40000) {
+        throw new Error("Google Shopping task failed: " + (task.status_message || "unknown provider error"));
+      }
+      await new Promise<void>((resolve) => setTimeout(resolve, 1000));
+    }
+    throw new Error("Google Shopping task timed out before results were ready.");
+  }
+
   async searchByImage(request: SearchByImageRequest): Promise<unknown> {
     if (!/^https?:\/\//i.test(request.imageUrl)) throw new Error("Search-by-image requires an HTTPS/HTTP image URL.");
     const endpoint = (this.config.endpoint?.trim() || "https://api.dataforseo.com").replace(/\/$/, "")
@@ -224,6 +270,25 @@ export class DataForSeoSearchIntelligenceClient {
       ...(request.languageCode ? { language_code: request.languageCode } : {}),
       ...(request.languageName ? { language_name: request.languageName } : {}),
     });
+  }
+
+  private async rawRequest(endpoint: string, init: { readonly method?: string; readonly body?: string }): Promise<unknown> {
+    const response = await fetchWithTimeout(
+      this.config.fetcher ?? fetch,
+      endpoint,
+      {
+        method: init.method,
+        headers: {
+          "content-type": "application/json",
+          authorization: "Basic " + bytesToBase64(new TextEncoder().encode(this.config.login + ":" + this.config.password)),
+        },
+        ...(init.body ? { body: init.body } : {}),
+      },
+      Math.min(Math.max(Math.trunc(this.config.timeoutMs ?? 30000), 1000), 60000),
+    );
+    if (!response.ok) throw new Error("DataForSEO search intelligence returned HTTP " + response.status);
+    const body = await response.json();
+    return body;
   }
 
   private async requestSingle(endpoint: string, payload: Record<string, unknown>): Promise<unknown> {
@@ -314,6 +379,62 @@ export class GooglePlacesClient {
       };
     }
     return this.post("https://places.googleapis.com/v1/places:searchText", body,
+      "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.websiteUri");
+  }
+
+  async autocomplete(request: {
+    readonly input: string;
+    readonly regionCode?: string;
+    readonly includedPrimaryTypes?: readonly string[];
+    readonly includeQueryPredictions?: boolean;
+    readonly sessionToken?: string;
+    readonly latitude?: number;
+    readonly longitude?: number;
+    readonly radiusMeters?: number;
+  }): Promise<unknown> {
+    const input = request.input.trim();
+    if (!input) throw new Error("Google Places autocomplete input is required.");
+    const body: Record<string, unknown> = {
+      input,
+      ...(request.regionCode ? { regionCode: request.regionCode } : {}),
+      ...(request.includedPrimaryTypes?.length ? { includedPrimaryTypes: request.includedPrimaryTypes.slice(0, 5) } : {}),
+      ...(request.includeQueryPredictions ? { includeQueryPredictions: true } : {}),
+      ...(request.sessionToken ? { sessionToken: request.sessionToken } : {}),
+    };
+    if (request.latitude !== undefined && request.longitude !== undefined && request.radiusMeters !== undefined) {
+      body.locationBias = {
+        circle: {
+          center: { latitude: request.latitude, longitude: request.longitude },
+          radius: Math.min(Math.max(request.radiusMeters, 1), 50000),
+        },
+      };
+    }
+    return this.post("https://places.googleapis.com/v1/places:autocomplete", body,
+      "suggestions.placePrediction.text.text,suggestions.placePrediction.placeId,suggestions.queryPrediction.text.text");
+  }
+
+  async nearbySearch(request: {
+    readonly latitude: number;
+    readonly longitude: number;
+    readonly radiusMeters: number;
+    readonly includedTypes: readonly string[];
+    readonly maxResultCount?: number;
+    readonly languageCode?: string;
+    readonly regionCode?: string;
+  }): Promise<unknown> {
+    const body: Record<string, unknown> = {
+      maxResultCount: Math.min(Math.max(Math.trunc(request.maxResultCount ?? 20), 1), 20),
+      includedTypes: request.includedTypes.slice(0, 50),
+      locationRestriction: {
+        circle: {
+          center: { latitude: request.latitude, longitude: request.longitude },
+          radius: Math.min(Math.max(request.radiusMeters, 1), 50000),
+        },
+      },
+      ...(request.languageCode ? { languageCode: request.languageCode } : {}),
+      ...(request.regionCode ? { regionCode: request.regionCode } : {}),
+    };
+    return this.post("https://places.googleapis.com/v1/places:searchNearby", body,
       "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.websiteUri");
   }
 
