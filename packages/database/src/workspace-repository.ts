@@ -93,6 +93,14 @@ export class WorkspaceRepository extends Repository {
   }
 
 
+  async listMembers(context: RepositoryContext): Promise<MembershipRecord[]> {
+    const workspaceId = this.requireWorkspace(context);
+    return this.database.all<MembershipRecord>(
+      "SELECT id, workspace_id AS workspaceId, user_id AS userId, status, created_at AS createdAt, updated_at AS updatedAt FROM memberships WHERE workspace_id = ? AND status = 'active' ORDER BY created_at ASC, id ASC",
+      workspaceId,
+    );
+  }
+
   async createMembership(context: RepositoryContext, input: CreateMembershipInput): Promise<MembershipRecord> {
     const workspaceId = this.requireWorkspace(context);
     const workspace = await this.get(context);
