@@ -100,9 +100,12 @@ function toItem(
 ): { item?: MerchantProductFeedItem; reasons: MerchantProductFeedItemSkipReason[] } {
   const reasons: MerchantProductFeedItemSkipReason[] = [];
   const baseUrl = options.canonicalBaseUrl.replace(/\/$/, "");
+  const configuredCanonicalUrl = options.canonicalUrlByEntityId?.[entity.id];
   const link = validHttpUrl(variant?.url)
-    ? variant!.url!
-    : (validHttpUrl(options.canonicalUrlByEntityId?.[entity.id]) ? options.canonicalUrlByEntityId![entity.id] : baseUrl + entityUrl(entity));
+    ? variant.url!
+    : validHttpUrl(configuredCanonicalUrl)
+      ? configuredCanonicalUrl
+      : baseUrl + entityUrl(entity);
 
   const description = clean(variant?.description) || clean(entity.description) || clean(entity.summary);
   if (!description) reasons.push("missing-description");
