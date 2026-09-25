@@ -1635,3 +1635,8 @@ Competitive intelligence evidence layers now include:
 - Registered `catalog.service.created` in the SEO publication reason map.
 - Outbox SEO enrichment now resolves the canonical Service through `CatalogRepository.getService()` and emits a truth-bound `Service` SEO entity: active Services are public/published; draft/inactive Services are not exposed as public.
 - Service → owning Business is represented canonically as `ownedByBusiness`; no SEO-owned relationship source was introduced.
+
+## Catalog Service Discovery Projection — September 2026
+- `catalog.service.created` now enters the existing Discovery projection pipeline alongside canonical Product creation.
+- Discovery remains a derived projection; Catalog remains the canonical Service source.
+- Tenant/workspace validation continues to be enforced by the existing outbox worker context.
