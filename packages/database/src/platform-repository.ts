@@ -28,6 +28,25 @@ export interface OutboxEventInput {
 /** Canonical persistence boundary for platform audit, idempotency and outbox state. */
 export class PlatformRepository extends Repository {
   constructor(database: D1Database) { super(database); }
+  async listAudit(context: RepositoryContext, limit = 50): Promise<readonly AuditEventInput[]> {
+    const organizationId = context.organizationId;
+    const workspaceId = context.workspaceId ?? null;
+    if (!organizationId) throw new DatabaseError("Organization context is required");
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
+    return this.database.all<AuditEventInput>(
+      `SELECT id, actor_id AS actorId, organization_id AS organizationId, workspace_id AS workspaceId,
+              action, target_type AS targetType, target_id AS targetId, outcome,
+              request_id AS requestId, correlation_id AS correlationId,
+              metadata_json AS metadataJson, created_at AS createdAt
+       FROM audit_events
+       WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?)
+       ORDER BY created_at DESC, id DESC LIMIT ?`,
+      organizationId,
+      workspaceId,
+      safeLimit,
+    );
+  }
+
   async appendAudit(context: RepositoryContext, input: AuditEventInput): Promise<void> {
     await this.database.run(`INSERT INTO audit_events
        (id, actor_id, organization_id, workspace_id, action, target_type, target_id, outcome, request_id, correlation_id, metadata_json, created_at)
