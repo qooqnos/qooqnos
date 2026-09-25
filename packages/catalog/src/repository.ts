@@ -144,6 +144,59 @@ export class CatalogRepository extends Repository {
     );
   }
 
+  async getProductCommerceFacts(context: RequestContext, productId: EntityId, now: string): Promise<{
+    readonly price?: number;
+    readonly currency?: string;
+    readonly availability?: "in_stock" | "out_of_stock";
+  }> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const price = await this.database.first<{
+      amountMinor: number;
+      currency: string;
+      pricingType: "fixed" | "starting_at" | "from" | "custom" | "free";
+    }>(
+      `SELECT pr.amount_minor AS amountMinor, pr.currency,
+              pr.pricing_type AS pricingType
+         FROM prices pr
+         INNER JOIN offerings o ON o.id = pr.offering_id
+         INNER JOIN products p ON p.id = o.product_id
+         INNER JOIN businesses b ON b.id = p.business_id
+        WHERE p.id = ?
+          AND b.organization_id = ?
+          AND b.workspace_id = ?
+          AND p.status = 'active'
+          AND o.status = 'active'
+          AND o.publication_status = 'published'
+          AND pr.status = 'active'
+          AND pr.effective_from <= ?
+          AND (pr.effective_to IS NULL OR pr.effective_to > ?)
+        ORDER BY pr.effective_from DESC, pr.updated_at DESC
+        LIMIT 1`,
+      productId, organizationId, workspaceId, now, now,
+    );
+    const stock = await this.database.first<{ availableQuantity: number }>(
+      `SELECT COALESCE(SUM(ii.quantity_on_hand - ii.quantity_reserved), 0) AS availableQuantity
+         FROM inventory_items ii
+         INNER JOIN product_variants pv ON pv.id = ii.product_variant_id
+         INNER JOIN products p ON p.id = pv.product_id
+         INNER JOIN businesses b ON b.id = p.business_id
+        WHERE p.id = ?
+          AND b.organization_id = ?
+          AND b.workspace_id = ?
+          AND pv.status = 'active'`,
+      productId, organizationId, workspaceId,
+    );
+    const result: { price?: number; currency?: string; availability?: "in_stock" | "out_of_stock" } = {};
+    if (price && price.pricingType !== "custom") {
+      const fractionDigits = new Intl.NumberFormat("en", { style: "currency", currency: price.currency }).resolvedOptions().maximumFractionDigits;
+      result.price = price.amountMinor / 10 ** fractionDigits;
+      result.currency = price.currency;
+    }
+    if (stock) result.availability = stock.availableQuantity > 0 ? "in_stock" : "out_of_stock";
+    return result;
+  }
+
   async getProductVariant(context: RequestContext, id: EntityId): Promise<ProductVariantRecord | null> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
