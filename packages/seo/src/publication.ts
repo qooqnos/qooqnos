@@ -72,6 +72,19 @@ function payloadEntity(payloadJson: string): SeoEntity | null {
         updatedAt: typeof payloadObject.updatedAt === "string" ? payloadObject.updatedAt : new Date().toISOString(),
       } as SeoEntity;
     }
+    if (payloadObject.locationId && typeof payloadObject.businessId === "string" && typeof payloadObject.name === "string") {
+      const status = payloadObject.status === "active" ? "published" : "unpublished";
+      return {
+        id: String(payloadObject.locationId), type: "Location", sourceModule: "business", sourceVersion: "1",
+        publicationState: status, visibility: status === "published" ? "public" : "private", preferredName: String(payloadObject.name),
+        summary: String(payloadObject.name), locale: typeof payloadObject.locale === "string" ? payloadObject.locale : "en",
+        relatedEntityIds: [String(payloadObject.businessId)],
+        relatedEntities: [{ entityId: String(payloadObject.businessId), relation: "locatedAtBusiness" }],
+        ...(payloadObject.timezone ? { timezone: String(payloadObject.timezone) } : {}),
+        ...optionalSeoEntityFields(payloadObject),
+        updatedAt: typeof payloadObject.updatedAt === "string" ? payloadObject.updatedAt : new Date().toISOString(),
+      } as SeoEntity;
+    }
     if (payloadObject.productId && typeof payloadObject.name === "string") {
       return {
         id: String(payloadObject.productId), type: "Product", sourceModule: "catalog", sourceVersion: "1",
@@ -101,7 +114,9 @@ export async function enqueueSeoPublication(
   event: SeoPublicationEvent,
   now: string,
 ): Promise<number> {
-  const reason = EVENT_REASON[event.eventType] ?? DOMAIN_EVENT_REASONS[event.eventType];
+  const eventPayload = JSON.parse(event.payloadJson) as Record<string, unknown>;
+  const locationChange = event.eventType === "business.location.changed.v1" && typeof eventPayload.changeType === "string" ? eventPayload.changeType as SeoPublicationReason : undefined;
+  const reason = locationChange ?? EVENT_REASON[event.eventType] ?? DOMAIN_EVENT_REASONS[event.eventType];
   if (!reason) return 0;
   const entity = payloadEntity(event.payloadJson);
   if (!entity) return 0;
