@@ -371,13 +371,19 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     requireAuthentication: true,
     requireWorkspace: true,
     handler: ({ context }) => json({
-      facebook: Boolean(environment?.SEO_FACEBOOK_PAGE_ID && environment?.SEO_FACEBOOK_ACCESS_TOKEN),
-      instagram: Boolean(environment?.SEO_INSTAGRAM_USER_ID && environment?.SEO_INSTAGRAM_ACCESS_TOKEN),
-      x: Boolean(environment?.SEO_X_BEARER_TOKEN),
-      pinterest: Boolean(environment?.SEO_PINTEREST_ACCESS_TOKEN),
-      linkedin: Boolean(environment?.SEO_LINKEDIN_ACCESS_TOKEN),
-      tiktok: Boolean(environment?.SEO_TIKTOK_ACCESS_TOKEN),
-      reddit: Boolean(environment?.SEO_REDDIT_ACCESS_TOKEN),
+      facebook: { configured: Boolean(environment?.SEO_FACEBOOK_PAGE_ID && environment?.SEO_FACEBOOK_ACCESS_TOKEN), read: Boolean(environment?.SEO_FACEBOOK_PAGE_ID && environment?.SEO_FACEBOOK_ACCESS_TOKEN), publish: Boolean(environment?.SEO_FACEBOOK_PAGE_ID && environment?.SEO_FACEBOOK_ACCESS_TOKEN) },
+      instagram: { configured: Boolean(environment?.SEO_INSTAGRAM_USER_ID && environment?.SEO_INSTAGRAM_ACCESS_TOKEN), read: Boolean(environment?.SEO_INSTAGRAM_USER_ID && environment?.SEO_INSTAGRAM_ACCESS_TOKEN), publish: Boolean(environment?.SEO_INSTAGRAM_USER_ID && environment?.SEO_INSTAGRAM_ACCESS_TOKEN) },
+      x: { configured: Boolean(environment?.SEO_X_BEARER_TOKEN || environment?.SEO_X_USER_ACCESS_TOKEN), read: Boolean(environment?.SEO_X_BEARER_TOKEN), publish: Boolean(environment?.SEO_X_USER_ACCESS_TOKEN) },
+      pinterest: { configured: Boolean(environment?.SEO_PINTEREST_ACCESS_TOKEN), read: Boolean(environment?.SEO_PINTEREST_ACCESS_TOKEN), publish: Boolean(environment?.SEO_PINTEREST_ACCESS_TOKEN) },
+      linkedin: { configured: Boolean(environment?.SEO_LINKEDIN_ACCESS_TOKEN && environment?.SEO_LINKEDIN_VERSION), read: Boolean(environment?.SEO_LINKEDIN_ACCESS_TOKEN && environment?.SEO_LINKEDIN_VERSION), publish: Boolean(environment?.SEO_LINKEDIN_ACCESS_TOKEN && environment?.SEO_LINKEDIN_VERSION) },
+      tiktok: { configured: Boolean(environment?.SEO_TIKTOK_ACCESS_TOKEN), read: Boolean(environment?.SEO_TIKTOK_ACCESS_TOKEN), publish: Boolean(environment?.SEO_TIKTOK_ACCESS_TOKEN) },
+      reddit: { configured: Boolean(environment?.SEO_REDDIT_ACCESS_TOKEN), read: Boolean(environment?.SEO_REDDIT_ACCESS_TOKEN), publish: false },
+      transport: {
+        maxAttempts: boundedEnvNumber(environment?.SEO_SOCIAL_MAX_ATTEMPTS, 3, 1, 5),
+        timeoutMs: boundedEnvNumber(environment?.SEO_SOCIAL_TIMEOUT_MS, 15000, 1000, 60000),
+        baseDelayMs: boundedEnvNumber(environment?.SEO_SOCIAL_BASE_DELAY_MS, 500, 50, 10000),
+        maxDelayMs: boundedEnvNumber(environment?.SEO_SOCIAL_MAX_DELAY_MS, 5000, 500, 60000),
+      },
     }, 200, context.requestId),
   });
 
@@ -411,6 +417,29 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       if (!textValue) return json({ error: { code: "VALIDATION_ERROR", message: "text is required." } }, 400, context.requestId);
       const result = await new FacebookPageClient({ pageId: environment.SEO_FACEBOOK_PAGE_ID, accessToken: environment.SEO_FACEBOOK_ACCESS_TOKEN , ...buildSocialRuntime() }).publish(textValue, typeof body.link === "string" ? body.link : undefined);
       return json({ provider: "facebook", result }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/instagram/search",
+    module: "seo",
+    operation: "social.instagram.search",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_INSTAGRAM_USER_ID || !environment.SEO_INSTAGRAM_ACCESS_TOKEN) return json({ status: "unavailable", provider: "instagram" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const result = await new InstagramGraphClient({ igUserId: environment.SEO_INSTAGRAM_USER_ID, accessToken: environment.SEO_INSTAGRAM_ACCESS_TOKEN, ...buildSocialRuntime() }).listMedia(Number(body.limit ?? 25));
+      const measurement = database ? await ingestSocialSignals(database, context, {
+        platform: "instagram",
+        queryText: typeof body.query === "string" ? body.query : "media",
+        locale: typeof body.locale === "string" ? body.locale : "und",
+        ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}),
+        raw: result,
+        observedAt: new Date().toISOString(),
+      }) : undefined;
+      return json({ provider: "instagram", result, ...(measurement ? { measurement } : {}) }, 200, context.requestId);
     },
   });
 
