@@ -36,6 +36,15 @@ describe("Merchant Center feed", () => {
     expect(result.skipped[0]?.reasons).toContain("missing-condition");
   });
 
+  it("uses the persisted canonical URL and excludes condition from variant title suffix", () => {
+    const result = projectMerchantProductFeed([entity], {
+      canonicalBaseUrl: "https://qooqnos.com",
+      canonicalUrlByEntityId: { "product-1": "https://qooqnos.com/en-US/product/red-shirt" },
+    });
+    expect(result.items[0]?.link).toBe("https://qooqnos.com/en-US/product/red-shirt");
+    expect(result.items[0]?.title).toBe("Red Shirt - color: red, size: M");
+  });
+
   it("emits Google product attributes", () => {
     const result = projectMerchantProductFeed([entity], { canonicalBaseUrl: "https://qooqnos.com" });
     const xml = buildMerchantProductFeedXml(result.items, "https://qooqnos.com");
