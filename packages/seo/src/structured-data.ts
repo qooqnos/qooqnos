@@ -1,4 +1,4 @@
-import type { BreadcrumbItem, SeoEntity, StructuredData } from "./types";
+import type { BreadcrumbItem, SeoEntity, SeoProductVariantSeo, StructuredData } from "./types";
 
 const TYPE_MAP: Readonly<Record<SeoEntity["type"], string>> = {
   Organization: "Organization",
