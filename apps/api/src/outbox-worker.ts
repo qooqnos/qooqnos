@@ -158,7 +158,7 @@ export async function consumeOutbox(
           organizationId: event.organizationId,
           workspaceId: event.workspaceId ?? null,
           ...(event.aggregateId ? { aggregateId: event.aggregateId } : {}),
-          payloadJson: await enrichSeoPayload(event, catalog, business, commerce),
+          payloadJson: await enrichSeoPayload(event, catalog, business, commerce, trust),
           occurredAt: event.occurredAt,
         };
         await enqueueSeoPublication(database, seoContext, new Date().toISOString());
@@ -256,6 +256,7 @@ async function enrichSeoPayload(
   catalog: CatalogRepository | null,
   business: BusinessRepository | null,
   commerce: CommerceRepository | null,
+  trust: TrustReviewRepository | null,
 ): Promise<string> {
   if (!event.organizationId || !event.workspaceId) return event.payloadJson;
   const payload = parsePayload(event.payloadJson);
