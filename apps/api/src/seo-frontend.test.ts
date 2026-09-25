@@ -158,7 +158,7 @@ describe("SEO frontend surface", () => {
       page: { ...hydration.page, canonicalUrl: "https://qooqnos.com/en-US/location/phoenix-downtown-location-1", breadcrumbs: [...hydration.page.breadcrumbs.slice(0, 2), { name: "Phoenix Downtown", url: "https://qooqnos.com/en-US/location/phoenix-downtown-location-1" }] },
       entity: { ...hydration.entity, id: "location-1", type: "Location", preferredName: "Phoenix Downtown", geoScope: "exact", locationId: "location-1", address: { addressLocality: "Baku", addressCountry: "AZ" }, updatedAt: "2026-09-25T08:00:00Z" },
     };
-    const source = "<!doctype html><html><head><title>old</title></head><body><div id="app"></div></body></html>";
+    const source = `<!doctype html><html><head><title>old</title></head><body><div id="app"></div></body></html>`;
     const html = injectSeoRepresentation(source, locationHydration);
     expect(html).toContain("<title>Phoenix Downtown | Phoenix</title>");
     expect(html).toContain('rel="canonical" href="https://qooqnos.com/en-US/location/phoenix-downtown-location-1"');
