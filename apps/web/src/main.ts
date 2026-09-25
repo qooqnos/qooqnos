@@ -3540,29 +3540,74 @@ async function loadAdminState(): Promise<void> {
   const memberCount = document.querySelector<HTMLElement>("#admin-member-count");
   const notificationCount = document.querySelector<HTMLElement>("#admin-notification-count");
   const contextStatus = document.querySelector<HTMLElement>("#admin-context-status");
+  const usageSummary = document.querySelector<HTMLElement>("#admin-ai-usage-summary");
+  const usageList = document.querySelector<HTMLElement>("#admin-ai-usage-list");
+  const auditList = document.querySelector<HTMLElement>("#admin-audit-list");
+  const auditMeta = document.querySelector<HTMLElement>("#admin-audit-meta");
   if (tenant) tenant.textContent = shellContext.tenantId ? compactId(shellContext.tenantId) : "—";
   if (workspace) workspace.textContent = shellContext.workspaceId ? compactId(shellContext.workspaceId) : "—";
   if (notificationCount) notificationCount.textContent = String(shellNotifications.length);
-  if (!members) return;
-  members.innerHTML = '<div class="slot-loading">در حال خواندن اعضا…</div>';
-  if (!shellContext.workspaceId) {
-    members.innerHTML = '<div class="slot-empty"><span>◎</span><p>Workspace context موجود نیست.</p></div>';
-    return;
-  }
-  try {
-    const response = await apiJson<{ data: { id: string; userId: string; status: string }[] }>(`/api/v1/workspaces/${encodeURIComponent(shellContext.workspaceId)}/members`);
-    const items = Array.isArray(response.data) ? response.data : [];
-    if (memberCount) memberCount.textContent = String(items.length);
-    if (contextStatus) {
-      contextStatus.textContent = "Connected";
-      contextStatus.className = "pill success";
+  if (usageList) usageList.innerHTML = '<div class="slot-loading">در حال خواندن AI telemetry…</div>';
+  if (auditList) auditList.innerHTML = '<div class="slot-loading">در حال خواندن Audit…</div>';
+
+  const tasks: Promise<void>[] = [];
+  if (members) {
+    members.innerHTML = '<div class="slot-loading">در حال خواندن اعضا…</div>';
+    if (!shellContext.workspaceId) {
+      members.innerHTML = '<div class="slot-empty"><span>◎</span><p>Workspace context موجود نیست.</p></div>';
+    } else {
+      tasks.push((async () => {
+        try {
+          const response = await apiJson<{ data: { id: string; userId: string; status: string }[] }>(`/api/v1/workspaces/${encodeURIComponent(shellContext.workspaceId)}/members`);
+          const items = Array.isArray(response.data) ? response.data : [];
+          if (memberCount) memberCount.textContent = String(items.length);
+          if (contextStatus) {
+            contextStatus.textContent = "Connected";
+            contextStatus.className = "pill success";
+          }
+          members.innerHTML = items.length ? items.map((item) => `
+            <div class="admin-member-row"><span class="avatar">${escapeHtml((item.userId || "U").slice(0,1).toUpperCase())}</span><div><strong>${escapeHtml(item.userId)}</strong><small>${escapeHtml(item.status)}</small></div><span class="pill success">member</span></div>`).join("") : '<div class="slot-empty"><span>◎</span><p>عضوی ثبت نشده است.</p></div>';
+        } catch (error) {
+          members.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن اعضا ناموفق بود.")}</p></div>`;
+        }
+      })());
     }
-    members.innerHTML = items.length ? items.map((item) => `
-      <div class="admin-member-row"><span class="avatar">${escapeHtml((item.userId || "U").slice(0,1).toUpperCase())}</span><div><strong>${escapeHtml(item.userId)}</strong><small>${escapeHtml(item.status)}</small></div><span class="pill success">member</span></div>`).join("") : '<div class="slot-empty"><span>◎</span><p>عضوی ثبت نشده است.</p></div>';
-  } catch (error) {
-    members.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن اعضا ناموفق بود.")}</p></div>`;
   }
+
+  if (usageList) {
+    tasks.push((async () => {
+      try {
+        const response = await apiJson<{ data: { operationId: string; operationType: string; meterUnit: string; quantity: number; modelId?: string | null; billingUsageReference?: string | null; createdAt: string }[] }>("/api/v1/ai/usage?limit=12");
+        const items = Array.isArray(response.data) ? response.data : [];
+        const total = items.reduce((sum, item) => sum + (Number.isFinite(item.quantity) ? item.quantity : 0), 0);
+        if (usageSummary) usageSummary.textContent = items.length ? `${items.length} رکورد · ${total.toLocaleString("fa-IR")} ${items[0]?.meterUnit ?? "units"}` : "هنوز telemetry AI برای این حساب ثبت نشده است.";
+        usageList.innerHTML = items.length ? items.slice(0,6).map((item) => `
+          <div class="admin-usage-row"><div><strong>${escapeHtml(item.operationType)}</strong><small>${escapeHtml(item.modelId ?? "provider/model نامشخص")} · ${escapeHtml(formatDate(item.createdAt))}</small></div><span>${escapeHtml(String(item.quantity))} ${escapeHtml(item.meterUnit)}</span></div>`).join("") : '<div class="slot-empty"><span>✦</span><p>Usage فعالی ثبت نشده است.</p></div>';
+      } catch (error) {
+        usageList.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن AI usage ناموفق بود.")}</p></div>`;
+        if (usageSummary) usageSummary.textContent = "Usage API در دسترس نیست.";
+      }
+    })());
+  }
+
+  if (auditList) {
+    tasks.push((async () => {
+      try {
+        const response = await apiJson<{ data: { id: string; actorId?: string; action: string; targetType?: string; targetId?: string; outcome: string; createdAt: string }[] }>("/api/v1/audit?limit=20");
+        const items = Array.isArray(response.data) ? response.data : [];
+        if (auditMeta) auditMeta.textContent = `${items.length} رویداد`;
+        auditList.innerHTML = items.length ? items.slice(0,10).map((item) => `
+          <div class="admin-audit-row"><div><strong>${escapeHtml(item.action)}</strong><small>${escapeHtml(item.targetType ?? "target")} · ${escapeHtml(item.targetId ?? "—")} · ${escapeHtml(formatDate(item.createdAt))}</small></div><span class="pill ${item.outcome === "succeeded" ? "success" : "warning"}">${escapeHtml(item.outcome)}</span></div>`).join("") : '<div class="slot-empty"><span>◎</span><p>Audit eventی برای این scope پیدا نشد.</p></div>';
+      } catch (error) {
+        if (auditMeta) auditMeta.textContent = "خطا";
+        auditList.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن Audit ناموفق بود.")}</p></div>`;
+      }
+    })());
+  }
+
+  await Promise.all(tasks);
 }
+
 
 function showToast(message: string): void {
   let host = document.querySelector<HTMLDivElement>(".toast-host");
