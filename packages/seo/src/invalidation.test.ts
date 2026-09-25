@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planSeoInvalidation } from "./invalidation";
+import { domainChangeFromOutboxEvent, planSeoInvalidation } from "./invalidation";
 import { loadCanonicalEntityGraph } from "./canonical";
 
 describe("SEO canonical ingestion and invalidation", () => {
@@ -48,7 +48,6 @@ describe("SEO canonical ingestion and invalidation", () => {
     expect(targets.map((target) => target.entityId)).toEqual(["business-1", "category-1", "service-1"]);
   });
   it("treats canonical Business Location changes as location invalidations", async () => {
-    const { domainChangeFromOutboxEvent } = await import("./invalidation");
     const change = domainChangeFromOutboxEvent({
       id: "location-event-1",
       eventType: "business.location.changed.v1",
