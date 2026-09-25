@@ -83,6 +83,43 @@ export class BusinessService {
     }, this.options.now());
   }
 
+  async createLocation(context: RequestContext, input: {
+    readonly businessId: EntityId;
+    readonly name: string;
+    readonly locationType: "physical" | "virtual" | "service_area";
+    readonly timezone?: string;
+    readonly address?: Readonly<Record<string, unknown>>;
+    readonly geoPoint?: { readonly latitude: number; readonly longitude: number };
+  }) {
+    const business = await this.options.repository.get(context, input.businessId);
+    if (!business) throw new Error("Business not found");
+    await this.options.authorization.assert({ context, permission: "business.update", resource: { tenantId: business.organizationId, workspaceId: business.workspaceId }, requireAuthentication: true, requireWorkspace: true });
+    if (!input.name.trim()) throw new Error("Location name is required");
+    if (input.name.trim().length > 200) throw new Error("Location name exceeds the maximum length");
+    validateGeoPoint(input.geoPoint);
+    return this.options.repository.createLocation(context, { ...input, id: this.options.id(), name: input.name.trim(), timezone: normalizeOptional(input.timezone), now: this.options.now() });
+  }
+
+  async updateLocation(context: RequestContext, id: EntityId, patch: Parameters<BusinessRepository["updateLocation"]>[2]) {
+    const location = await this.options.repository.getLocation(context, id);
+    if (!location) throw new Error("Location not found");
+    const business = await this.options.repository.get(context, location.businessId);
+    if (!business) throw new Error("Business not found");
+    await this.options.authorization.assert({ context, permission: "business.update", resource: { tenantId: business.organizationId, workspaceId: business.workspaceId }, requireAuthentication: true, requireWorkspace: true });
+    if (patch.name !== undefined) { if (!patch.name.trim()) throw new Error("Location name is required"); if (patch.name.trim().length > 200) throw new Error("Location name exceeds the maximum length"); }
+    validateGeoPoint(patch.geoPoint === undefined ? location.geoPoint ?? undefined : patch.geoPoint ?? undefined);
+    return this.options.repository.updateLocation(context, id, { ...patch, ...(patch.name !== undefined ? { name: patch.name.trim() } : {}) }, this.options.now());
+  }
+
+  async setLocationStatus(context: RequestContext, id: EntityId, status: "active" | "inactive" | "archived") {
+    const location = await this.options.repository.getLocation(context, id);
+    if (!location) throw new Error("Location not found");
+    const business = await this.options.repository.get(context, location.businessId);
+    if (!business) throw new Error("Business not found");
+    await this.options.authorization.assert({ context, permission: "business.update", resource: { tenantId: business.organizationId, workspaceId: business.workspaceId }, requireAuthentication: true, requireWorkspace: true });
+    return this.options.repository.setLocationStatus(context, id, status, this.options.now());
+  }
+
   async requestPublication(context: RequestContext, id: EntityId): Promise<BusinessRecord> {
     const current = await this.options.repository.get(context, id);
     if (!current) throw new Error("Business not found");
@@ -156,4 +193,9 @@ function normalizeCurrency(value: string | undefined): string | undefined {
   const normalized = normalizeOptional(value)?.toUpperCase();
   if (normalized && !/^[A-Z]{3}$/.test(normalized)) throw new Error("defaultCurrency must be a 3-letter ISO currency code");
   return normalized;
+}
+
+function validateGeoPoint(value: { readonly latitude: number; readonly longitude: number } | undefined): void {
+  if (!value) return;
+  if (!Number.isFinite(value.latitude) || !Number.isFinite(value.longitude) || value.latitude < -90 || value.latitude > 90 || value.longitude < -180 || value.longitude > 180) throw new Error("Invalid geographic coordinates");
 }
