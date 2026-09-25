@@ -2,12 +2,307 @@ import type { RequestContext } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
-import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, buildImageSitemapXml, buildMerchantProductFeedXml, projectMerchantProductFeed, SITEMAP_URL_LIMIT, type RobotsAiPolicy, SeoObservabilityRepository, parseGoogleSearchConsoleExport, parseBingAiPerformanceExport } from "@qooqnos/seo";
+import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, buildImageSitemapXml, buildMerchantProductFeedXml, projectMerchantProductFeed, SITEMAP_URL_LIMIT, type RobotsAiPolicy, SeoObservabilityRepository, parseGoogleSearchConsoleExport, parseBingAiPerformanceExport, DataForSeoSearchIntelligenceClient, GooglePlacesClient, GoogleRoutesClient, YouTubeSearchClient, searchIntelligenceVerticals, type SearchIntelligenceVertical } from "@qooqnos/seo";
 import { crawlStoredSeoRepresentation } from "./seo-production-crawler";
 import { evaluateSeoProductionReadiness } from "./seo-production-readiness";
 import type { ApiEnv } from "./env";
 
 export function registerSeoRoutes(router: ApiRouter, database: D1Database | undefined, canonicalBaseUrl = "https://qooqnos.com", environment?: ApiEnv): void {
+
+  const buildSearchIntelligenceClient = (): DataForSeoSearchIntelligenceClient | undefined => {
+    const login = environment?.SEO_SEARCH_INTELLIGENCE_LOGIN ?? environment?.SEO_COMPETITIVE_LOGIN;
+    const password = environment?.SEO_SEARCH_INTELLIGENCE_PASSWORD ?? environment?.SEO_COMPETITIVE_PASSWORD;
+    if (!login || !password) return undefined;
+    return new DataForSeoSearchIntelligenceClient({
+      login,
+      password,
+      ...(environment?.SEO_SEARCH_INTELLIGENCE_ENDPOINT ? { endpoint: environment.SEO_SEARCH_INTELLIGENCE_ENDPOINT } : {}),
+    });
+  };
+
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/seo/intelligence/providers",
+    module: "seo",
+    operation: "intelligence.providers",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: ({ context }) => json({
+      dataForSeo: Boolean(buildSearchIntelligenceClient()),
+      dataForSeoVerticals: searchIntelligenceVerticals(),
+      googlePlaces: Boolean(environment?.SEO_GOOGLE_PLACES_API_KEY),
+      googleRoutes: Boolean(environment?.SEO_GOOGLE_ROUTES_API_KEY ?? environment?.SEO_GOOGLE_PLACES_API_KEY),
+      youtube: Boolean(environment?.SEO_YOUTUBE_API_KEY),
+    }, 200, context.requestId),
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/search",
+    module: "seo",
+    operation: "intelligence.search",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const client = buildSearchIntelligenceClient();
+      if (!client) return json({ status: "unavailable", provider: "dataforseo" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const vertical = typeof body.vertical === "string" ? body.vertical : "";
+      const allowed = new Set(searchIntelligenceVerticals());
+      if (!allowed.has(vertical as SearchIntelligenceVertical)) return json({ error: { code: "VALIDATION_ERROR", message: "Unsupported search intelligence vertical." } }, 400, context.requestId);
+      const keyword = typeof body.keyword === "string" ? body.keyword.trim() : "";
+      if (!keyword) return json({ error: { code: "VALIDATION_ERROR", message: "keyword is required." } }, 400, context.requestId);
+      const result = await client.search({
+        vertical: vertical as SearchIntelligenceVertical,
+        keyword,
+        ...(Number.isFinite(Number(body.locationCode)) ? { locationCode: Number(body.locationCode) } : {}),
+        ...(typeof body.locationName === "string" ? { locationName: body.locationName } : {}),
+        ...(typeof body.languageCode === "string" ? { languageCode: body.languageCode } : {}),
+        ...(typeof body.languageName === "string" ? { languageName: body.languageName } : {}),
+        ...(body.device === "desktop" || body.device === "mobile" ? { device: body.device } : {}),
+        ...(Number.isFinite(Number(body.depth)) ? { depth: Number(body.depth) } : {}),
+        ...(Array.isArray(body.targetDomains) ? { targetDomains: body.targetDomains.filter((value): value is string => typeof value === "string") } : {}),
+        ...(body.extra && typeof body.extra === "object" && !Array.isArray(body.extra) ? { extra: body.extra as Record<string, unknown> } : {}),
+      });
+      return json({ provider: "dataforseo", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/search-by-image",
+    module: "seo",
+    operation: "intelligence.search_by_image",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const client = buildSearchIntelligenceClient();
+      if (!client) return json({ status: "unavailable", provider: "dataforseo" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const imageUrl = typeof body.imageUrl === "string" ? body.imageUrl.trim() : "";
+      if (!/^https?:\/\//i.test(imageUrl)) return json({ error: { code: "VALIDATION_ERROR", message: "imageUrl must be an HTTP(S) URL." } }, 400, context.requestId);
+      const result = await client.searchByImage({
+        imageUrl,
+        ...(Number.isFinite(Number(body.locationCode)) ? { locationCode: Number(body.locationCode) } : {}),
+        ...(typeof body.locationName === "string" ? { locationName: body.locationName } : {}),
+        ...(typeof body.languageCode === "string" ? { languageCode: body.languageCode } : {}),
+        ...(typeof body.languageName === "string" ? { languageName: body.languageName } : {}),
+      });
+      return json({ provider: "dataforseo", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/trends",
+    module: "seo",
+    operation: "intelligence.trends",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const client = buildSearchIntelligenceClient();
+      if (!client) return json({ status: "unavailable", provider: "dataforseo" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const keywords = Array.isArray(body.keywords) ? body.keywords.filter((value): value is string => typeof value === "string") : [];
+      if (!keywords.length) return json({ error: { code: "VALIDATION_ERROR", message: "keywords is required." } }, 400, context.requestId);
+      const result = await client.exploreTrends({
+        keywords,
+        ...(Number.isFinite(Number(body.locationCode)) ? { locationCode: Number(body.locationCode) } : {}),
+        ...(typeof body.locationName === "string" ? { locationName: body.locationName } : {}),
+        ...(body.type === "web" || body.type === "news" || body.type === "shopping" ? { type: body.type } : {}),
+      });
+      return json({ provider: "dataforseo", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/business",
+    module: "seo",
+    operation: "intelligence.business",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const client = buildSearchIntelligenceClient();
+      if (!client) return json({ status: "unavailable", provider: "dataforseo" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const keyword = typeof body.keyword === "string" ? body.keyword.trim() : "";
+      if (!keyword) return json({ error: { code: "VALIDATION_ERROR", message: "keyword is required." } }, 400, context.requestId);
+      const result = await client.businessInfo({
+        keyword,
+        ...(Number.isFinite(Number(body.locationCode)) ? { locationCode: Number(body.locationCode) } : {}),
+        ...(typeof body.locationName === "string" ? { locationName: body.locationName } : {}),
+        ...(typeof body.languageCode === "string" ? { languageCode: body.languageCode } : {}),
+        ...(typeof body.languageName === "string" ? { languageName: body.languageName } : {}),
+      });
+      return json({ provider: "dataforseo", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/shopping",
+    module: "seo",
+    operation: "intelligence.shopping",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const client = buildSearchIntelligenceClient();
+      if (!client) return json({ status: "unavailable", provider: "dataforseo" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const keyword = typeof body.keyword === "string" ? body.keyword.trim() : "";
+      if (!keyword) return json({ error: { code: "VALIDATION_ERROR", message: "keyword is required." } }, 400, context.requestId);
+      const result = await client.googleShoppingProducts({
+        keyword,
+        ...(Number.isFinite(Number(body.locationCode)) ? { locationCode: Number(body.locationCode) } : {}),
+        ...(typeof body.locationName === "string" ? { locationName: body.locationName } : {}),
+        ...(typeof body.languageCode === "string" ? { languageCode: body.languageCode } : {}),
+        ...(typeof body.languageName === "string" ? { languageName: body.languageName } : {}),
+        ...(Number.isFinite(Number(body.depth)) ? { depth: Number(body.depth) } : {}),
+        ...(typeof body.sortBy === "string" ? { sortBy: body.sortBy } : {}),
+        ...(Number.isFinite(Number(body.priceMin)) ? { priceMin: Number(body.priceMin) } : {}),
+        ...(Number.isFinite(Number(body.priceMax)) ? { priceMax: Number(body.priceMax) } : {}),
+      });
+      return json({ provider: "dataforseo", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/places/search",
+    module: "seo",
+    operation: "intelligence.places.search",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const apiKey = environment?.SEO_GOOGLE_PLACES_API_KEY;
+      if (!apiKey) return json({ status: "unavailable", provider: "google-places" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const textQuery = typeof body.textQuery === "string" ? body.textQuery.trim() : "";
+      if (!textQuery) return json({ error: { code: "VALIDATION_ERROR", message: "textQuery is required." } }, 400, context.requestId);
+      const result = await new GooglePlacesClient({ apiKey }).textSearch({
+        textQuery,
+        ...(typeof body.languageCode === "string" ? { languageCode: body.languageCode } : {}),
+        ...(typeof body.regionCode === "string" ? { regionCode: body.regionCode } : {}),
+        ...(Number.isFinite(Number(body.pageSize)) ? { pageSize: Number(body.pageSize) } : {}),
+        ...(typeof body.includedType === "string" ? { includedType: body.includedType } : {}),
+        ...(Number.isFinite(Number(body.latitude)) ? { latitude: Number(body.latitude) } : {}),
+        ...(Number.isFinite(Number(body.longitude)) ? { longitude: Number(body.longitude) } : {}),
+        ...(Number.isFinite(Number(body.radiusMeters)) ? { radiusMeters: Number(body.radiusMeters) } : {}),
+      });
+      return json({ provider: "google-places", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/places/autocomplete",
+    module: "seo",
+    operation: "intelligence.places.autocomplete",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const apiKey = environment?.SEO_GOOGLE_PLACES_API_KEY;
+      if (!apiKey) return json({ status: "unavailable", provider: "google-places" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const input = typeof body.input === "string" ? body.input.trim() : "";
+      if (!input) return json({ error: { code: "VALIDATION_ERROR", message: "input is required." } }, 400, context.requestId);
+      const result = await new GooglePlacesClient({ apiKey }).autocomplete({
+        input,
+        ...(typeof body.regionCode === "string" ? { regionCode: body.regionCode } : {}),
+        ...(Array.isArray(body.includedPrimaryTypes) ? { includedPrimaryTypes: body.includedPrimaryTypes.filter((value): value is string => typeof value === "string") } : {}),
+        ...(body.includeQueryPredictions === true ? { includeQueryPredictions: true } : {}),
+        ...(typeof body.sessionToken === "string" ? { sessionToken: body.sessionToken } : {}),
+        ...(Number.isFinite(Number(body.latitude)) ? { latitude: Number(body.latitude) } : {}),
+        ...(Number.isFinite(Number(body.longitude)) ? { longitude: Number(body.longitude) } : {}),
+        ...(Number.isFinite(Number(body.radiusMeters)) ? { radiusMeters: Number(body.radiusMeters) } : {}),
+      });
+      return json({ provider: "google-places", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/places/nearby",
+    module: "seo",
+    operation: "intelligence.places.nearby",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const apiKey = environment?.SEO_GOOGLE_PLACES_API_KEY;
+      if (!apiKey) return json({ status: "unavailable", provider: "google-places" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const includedTypes = Array.isArray(body.includedTypes) ? body.includedTypes.filter((value): value is string => typeof value === "string") : [];
+      if (!Number.isFinite(Number(body.latitude)) || !Number.isFinite(Number(body.longitude)) || !Number.isFinite(Number(body.radiusMeters)) || !includedTypes.length) return json({ error: { code: "VALIDATION_ERROR", message: "latitude, longitude, radiusMeters and includedTypes are required." } }, 400, context.requestId);
+      const result = await new GooglePlacesClient({ apiKey }).nearbySearch({
+        latitude: Number(body.latitude),
+        longitude: Number(body.longitude),
+        radiusMeters: Number(body.radiusMeters),
+        includedTypes,
+        ...(Number.isFinite(Number(body.maxResultCount)) ? { maxResultCount: Number(body.maxResultCount) } : {}),
+        ...(typeof body.languageCode === "string" ? { languageCode: body.languageCode } : {}),
+        ...(typeof body.regionCode === "string" ? { regionCode: body.regionCode } : {}),
+      });
+      return json({ provider: "google-places", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/seo/intelligence/places/:placeId",
+    module: "seo",
+    operation: "intelligence.places.details",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params, request }) => {
+      const apiKey = environment?.SEO_GOOGLE_PLACES_API_KEY;
+      if (!apiKey) return json({ status: "unavailable", provider: "google-places" }, 503, context.requestId);
+      const fields = new URL(request.url).searchParams.get("fields") ?? "id,displayName,formattedAddress,location,rating,userRatingCount,regularOpeningHours,websiteUri,reviews";
+      const result = await new GooglePlacesClient({ apiKey }).placeDetails(params.placeId, fields);
+      return json({ provider: "google-places", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/routes",
+    module: "seo",
+    operation: "intelligence.routes.compute",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const apiKey = environment?.SEO_GOOGLE_ROUTES_API_KEY ?? environment?.SEO_GOOGLE_PLACES_API_KEY;
+      if (!apiKey) return json({ status: "unavailable", provider: "google-routes" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const result = await new GoogleRoutesClient({ apiKey }).computeRoutes(body, typeof body.fieldMask === "string" ? body.fieldMask : undefined);
+      return json({ provider: "google-routes", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/youtube/search",
+    module: "seo",
+    operation: "intelligence.youtube.search",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const apiKey = environment?.SEO_YOUTUBE_API_KEY;
+      if (!apiKey) return json({ status: "unavailable", provider: "youtube-data-api" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const query = typeof body.query === "string" ? body.query.trim() : "";
+      if (!query) return json({ error: { code: "VALIDATION_ERROR", message: "query is required." } }, 400, context.requestId);
+      const result = await new YouTubeSearchClient({ apiKey }).search(query, {
+        ...(typeof body.regionCode === "string" ? { regionCode: body.regionCode } : {}),
+        ...(typeof body.relevanceLanguage === "string" ? { relevanceLanguage: body.relevanceLanguage } : {}),
+        ...(body.type === "video" || body.type === "channel" || body.type === "playlist" ? { type: body.type } : {}),
+        ...(Number.isFinite(Number(body.maxResults)) ? { maxResults: Number(body.maxResults) } : {}),
+      });
+      return json({ provider: "youtube-data-api", result }, 200, context.requestId);
+    },
+  });
+
   router.register({
     method: "GET",
     path: "/sitemap.xml",
