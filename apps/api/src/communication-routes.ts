@@ -119,6 +119,22 @@ export function registerCommunicationRoutes(
 
   router.register({
     method: "GET",
+    path: "/api/v1/notifications",
+    module: "communication",
+    operation: "communication.notification.read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const rawLimit = Number(new URL(request.url).searchParams.get("limit") ?? "20");
+      const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 20;
+      const data = await service.listOwnNotifications(context, limit);
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/communications/preferences",
     module: "communication",
     operation: "communication.preference.read",
