@@ -89,16 +89,22 @@
 - [x] E2E smoke test covering shell, command palette, Discovery, shortlist, Workspace switching, Notification Center, Admin, Design System and Seller AI publication
 - [x] UI shell performance budget assertion in E2E
 - [x] CI workflow: `.github/workflows/web-ui-verification.yml`
+- [x] Cloudflare production environment now explicitly binds SPA assets for `/admin` and other client-side routes
+- [x] `qooqnos.qooqnos.workers.dev` preview deployment workflow added so the current UI is published to the existing workers.dev preview target
 
-## Verification gate
+## Deployment / verification gate
 
-The repository now contains the implementation and verification path, but this session cannot truthfully mark the final production-verification gate green without an observed GitHub Actions run. The workflow runs:
+The repository now contains the implementation and verification path. Cloudflare Workers named environments do not inherit non-inheritable bindings such as assets, so the generated production Wrangler configuration explicitly defines the `ASSETS` binding and SPA fallback. citeturn866748view0turn623440search0
+
+The repository also contains a main-branch UI preview deployment workflow at `.github/workflows/web-preview-deploy.yml`. It builds `apps/web` and deploys the top-level `qooqnos` Worker, which is the Worker behind `qooqnos.qooqnos.workers.dev`.
+
+The final external verification gate remains: GitHub Actions UI E2E must be observed green before calling production UI 100% verified. The verification workflow runs:
 1. `npm ci`
 2. `npm run build`
 3. Playwright/Chromium installation
 4. `scripts/e2e-web-ui.mjs`
 
-Until that run is observed as green, the correct status is **implementation complete / production verification pending**, not a fabricated 100% verification claim.
+Until those runs are observed as green, the correct status is **implementation complete / production verification pending**, not a fabricated 100% verification claim.
 
 ## Continuation rule
 
@@ -114,3 +120,5 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - `2aa6463631f816fd214137eda4f06d569ff3f6dc` — shared Design System primitives.
 - `1e75fd6a39cf201f2ae33f3640e1b6e85dcd7b68` — UI verification workflow.
 - `42d55e940c3dc69fcca6b91a1cb3903fceb69006` — final implementation ledger and verification gate.
+- `7edd3793cf8d79f419af9ced1b1dd697cf2b45a8` — production SPA asset binding fix.
+- `0be4c6a7b09a91e14066c2bd4461702b6cfdd830` — workers.dev preview deployment workflow.
