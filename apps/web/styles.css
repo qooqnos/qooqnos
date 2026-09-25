@@ -1267,3 +1267,8 @@ button:disabled, .button:disabled { cursor: not-allowed; }
 .admin-usage-row strong,.admin-audit-row strong { font-size:8px; }
 .admin-usage-row small,.admin-audit-row small { margin-top:2px; color:var(--faint); font-size:7px; }
 .admin-usage-row>span { color:var(--primary); font-size:9px; font-weight:800; }
+
+.seller-publication-controls { margin-top: 12px; }
+.publication-mini-card { padding: 12px; border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line)); border-radius: 13px; background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
+.publication-mini-card > p { margin: 6px 0 10px; color: var(--muted); font-size: 8px; line-height: 1.8; }
+.publication-mini-card .engine-actions { display:flex; gap:7px; flex-wrap:wrap; margin-top:8px; }
