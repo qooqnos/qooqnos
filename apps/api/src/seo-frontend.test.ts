@@ -150,4 +150,22 @@ describe("SEO frontend surface", () => {
     expect(html.match(/name="description"/gi)?.length).toBe(1);
     expect(html.match(/rel="canonical"/gi)?.length).toBe(1);
   });
+  it("renders a canonical Location page with GEO-aware structured data and graph links", () => {
+    const locationHydration: SeoFrontendHydration = {
+      ...hydration,
+      metadata: { ...metadata, title: "Phoenix Downtown | Phoenix", canonicalUrl: "https://qooqnos.com/en-US/location/phoenix-downtown-location-1", openGraph: { ...metadata.openGraph, title: "Phoenix Downtown | Phoenix", url: "https://qooqnos.com/en-US/location/phoenix-downtown-location-1" }, twitter: { ...metadata.twitter, title: "Phoenix Downtown | Phoenix" } },
+      structuredData: { "@context": "https://schema.org", "@type": "Place", name: "Phoenix Downtown", geo: { "@type": "GeoCoordinates", latitude: 40.4093, longitude: 49.8671 } },
+      page: { ...hydration.page, canonicalUrl: "https://qooqnos.com/en-US/location/phoenix-downtown-location-1", breadcrumbs: [...hydration.page.breadcrumbs.slice(0, 2), { name: "Phoenix Downtown", url: "https://qooqnos.com/en-US/location/phoenix-downtown-location-1" }] },
+      entity: { ...hydration.entity, id: "location-1", type: "Location", preferredName: "Phoenix Downtown", geoScope: "exact", locationId: "location-1", address: { addressLocality: "Baku", addressCountry: "AZ" }, updatedAt: "2026-09-25T08:00:00Z" },
+    };
+    const source = "<!doctype html><html><head><title>old</title></head><body><div id="app"></div></body></html>";
+    const html = injectSeoRepresentation(source, locationHydration);
+    expect(html).toContain("<title>Phoenix Downtown | Phoenix</title>");
+    expect(html).toContain('rel="canonical" href="https://qooqnos.com/en-US/location/phoenix-downtown-location-1"');
+    expect(html).toContain('"@type":"Place"');
+    expect(html).toContain('"latitude":40.4093');
+    expect(html).toContain("Phoenix Downtown");
+    expect(html).toContain("Breadcrumb");
+  });
+
 });
