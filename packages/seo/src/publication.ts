@@ -53,6 +53,7 @@ const EVENT_REASON: Readonly<Record<string, SeoPublicationReason>> = {
   "business.profile.published.v1": "entity-published",
   "business.profile.suspended.v1": "entity-unpublished",
   "catalog.product.created": "entity-created",
+  "catalog.service.created": "entity-created",
 };
 
 function payloadEntity(payloadJson: string): SeoEntity | null {
