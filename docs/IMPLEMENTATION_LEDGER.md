@@ -1806,3 +1806,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - TikTok public Research API is not fabricated; commercial/eligible research access remains approval-gated, while Content Posting API is implemented.
 - SerpApi is not used.
 - Commits: `21a18899b1abf3ee7a5de8eefe5795d3b5ee98e6`, `6f93739e810b2ace0a8a430af0356ca951aed7c7`, `6a1bcd2af108a56d5a5c0371854ad29655e46dda`, `c669ace84e9683fb679610e0011b100388306075`, `178db5d5dade62e031d57b977ac1dd5642b5a05c`, `a47b282100557fb5d7ee47530e9eea623171b4f2`, `7a911b82705c3570f050d40295a4b5899efd0080`, `937de9c71585f6d979b76e36e15eab2a1ca95067`.
+
+
+## Social Signals → SEO Measurement Evidence — 2026-09-25
+
+- Added `packages/seo/src/social-signal-ingestion.ts` to normalize social provider responses into the existing `seo_measurement_runs` and `seo_measurements` persistence model.
+- Facebook, X, Pinterest, LinkedIn and Reddit search/analytics routes now persist provider-observed social signals when a D1 database is available.
+- Entity-aware ingestion attaches measurements to the supplied Phoenix Entity while preserving provider/platform/query/locale provenance.
+- Added persistence/scoping regression coverage in `packages/seo/src/social-signal-ingestion.test.ts`.
+- Commits: `db6635cd16d7179eae75dca579b11e96640bd3ae`, `f23a6320ef12a674443a722a132bd9341dcf19a4`, `114963f25416b012d6d52c0053dd34085cf829c0`, `8ee80c9012a51517df48ede8ed51f8bf8d5866c3`, `1807a4384955a331cedf5d2c7d5c1d29f57af2fa`, `b07bbbe7d78db1e6dcbbcf8cbfdb686376d902c7`.
