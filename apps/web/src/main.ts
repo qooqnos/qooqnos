@@ -3141,7 +3141,7 @@ function renderRemoteDraft(result: SellerRunResult, sessionId: string, version: 
           <button class="button button-primary" type="button" data-confirm-seller-draft>بازبینی و ساخت محصول</button>
           <button class="button button-ghost" type="button" data-cancel-seller-draft>لغو session</button>
         </div>
-        <div id="seller-confirm-state" class="connection-state">نسخه ${version} برای بازبینی آماده است.</div>
+        <div id="seller-confirm-state" class="connection-state">نسخه ${version} برای بازبینی آماده است.</div><div id="seller-confirm-state" class="connection-state">نسخه ${version} برای بازبینی آماده است.</div><div id="seller-publication-controls" class="seller-publication-controls"></div>
       </div>
     </div>`;
 }
@@ -3177,12 +3177,87 @@ async function confirmSellerDraft(): Promise<void> {
     if (!response.confirmed || !response.catalogSaved) throw new Error("Catalog linkage was not confirmed.");
     state.textContent = `محصول Catalog ساخته شد · ${response.catalogProductId ?? "ID unavailable"}`;
     state.className = "connection-state success";
+    if (response.catalogProductId) {
+      draft.dataset.catalogProductId = response.catalogProductId;
+      renderSellerPublicationControls(draft, response.catalogProductId);
+    }
     showToast("محصول Seller AI به Catalog متصل شد.");
     if (button) button.textContent = "محصول ساخته شد";
   } catch (error) {
     state.textContent = error instanceof Error ? error.message : "تأیید Seller AI ناموفق بود.";
     state.className = "connection-state error";
     if (button) button.disabled = false;
+  }
+}
+
+function renderSellerPublicationControls(container: HTMLElement, productId: string): void {
+  const host = container.querySelector<HTMLElement>("#seller-publication-controls");
+  if (!host) return;
+  host.innerHTML = `
+    <div class="publication-mini-card">
+      <div class="card-section-heading"><div><span class="section-kicker">Publication</span><strong>Listing انتشار</strong></div><span class="pill">مرحله بعد</span></div>
+      <label class="field-label" for="seller-offer-title">عنوان Listing</label>
+      <input id="seller-offer-title" class="studio-input-line" value="محصول ققنوس" placeholder="عنوان قابل نمایش" />
+      <p>برای انتشار عمومی، محصول باید به یک Offering canonical متصل شود.</p>
+      <div class="engine-actions">
+        <button class="button button-primary" type="button" data-create-seller-offer data-product-id="${escapeAttr(productId)}">ساخت Listing</button>
+        <button class="button button-ghost" type="button" data-publish-seller-offer disabled>درخواست انتشار</button>
+      </div>
+      <div id="seller-publication-state" class="connection-state">هنوز Offering ساخته نشده است.</div>
+    </div>`;
+  host.querySelector<HTMLButtonElement>("[data-create-seller-offer]")?.addEventListener("click", () => { void createSellerOffer(); });
+  host.querySelector<HTMLButtonElement>("[data-publish-seller-offer]")?.addEventListener("click", () => { void publishSellerOffer(); });
+}
+
+async function createSellerOffer(): Promise<void> {
+  const button = document.querySelector<HTMLButtonElement>("[data-create-seller-offer]");
+  const productId = button?.dataset.productId;
+  const businessId = localStorage.getItem(STORAGE.business);
+  const draft = document.querySelector<HTMLElement>("#studio-draft");
+  const state = document.querySelector<HTMLElement>("#seller-publication-state");
+  const title = document.querySelector<HTMLInputElement>("#seller-offer-title")?.value.trim() ?? "";
+  if (!productId || !businessId || !title || !draft || !state) {
+    showToast("Business، Product و عنوان Listing لازم هستند.");
+    return;
+  }
+  button.disabled = true;
+  try {
+    const response = await apiJson<{ data: { id: string; status: string; publicationStatus: string } }>("/api/v1/catalog/offers", {
+      method: "POST",
+      body: { businessId, productId, offeringType: "product", title },
+    });
+    draft.dataset.offeringId = response.data.id;
+    state.textContent = "Listing ساخته شد · " + response.data.id;
+    state.className = "connection-state success";
+    const publish = document.querySelector<HTMLButtonElement>("[data-publish-seller-offer]");
+    if (publish) publish.disabled = false;
+  } catch (error) {
+    state.textContent = error instanceof Error ? error.message : "ساخت Listing ناموفق بود.";
+    state.className = "connection-state error";
+    button.disabled = false;
+  }
+}
+
+async function publishSellerOffer(): Promise<void> {
+  const draft = document.querySelector<HTMLElement>("#studio-draft");
+  const state = document.querySelector<HTMLElement>("#seller-publication-state");
+  const button = document.querySelector<HTMLButtonElement>("[data-publish-seller-offer]");
+  const offeringId = draft?.dataset.offeringId;
+  if (!offeringId || !state || !button) return;
+  button.disabled = true;
+  state.textContent = "در حال ثبت درخواست انتشار…";
+  state.className = "connection-state";
+  try {
+    const response = await apiJson<{ data: { id: string; publicationStatus: string } }>(
+      "/api/v1/catalog/offers/" + encodeURIComponent(offeringId) + "/publish",
+      { method: "POST" },
+    );
+    state.textContent = "درخواست انتشار ثبت شد · " + response.data.publicationStatus;
+    state.className = "connection-state success";
+  } catch (error) {
+    state.textContent = error instanceof Error ? error.message : "درخواست انتشار ناموفق بود.";
+    state.className = "connection-state error";
+    button.disabled = false;
   }
 }
 
