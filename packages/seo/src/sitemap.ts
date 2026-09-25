@@ -39,5 +39,5 @@ export function buildImageSitemapXml(entries: readonly ImageSitemapEntry[]): str
     (entry.lastmod ? "<lastmod>" + escapeXml(entry.lastmod) + "</lastmod>" : "") +
     "</url>",
   ).join("");
-  return "<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">" + body + "</urlset>";
+  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">" + body + "</urlset>";
 }
