@@ -621,7 +621,7 @@
       "id": "0092_business_public_contact_links",
       "version": 92,
       "moduleId": "business",
-      "checksum": "1c98f2e2c7d49b86f39a91d65c84a6a65d85c3f8c57f75e0f8dfb76c5f7d5f6a",
+      "checksum": "24bb4f9a2659265c8afb1f44cb4641024587d17cd9137e136868b0e31f3a8284",
       "filename": "0092_business_public_contact_links.sql"
     }
   ]
