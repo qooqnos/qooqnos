@@ -1661,6 +1661,7 @@ Competitive intelligence evidence layers now include:
 - Remaining verification gate: run the repository CI/typecheck/test suite and, where production credentials are available, verify the live Worker → D1 → outbox → SEO publication → SSR page chain.
 
 
+- CI identified four regressions in the existing lifecycle/commerce assertions. Structured Data now preserves canonical Location `GeoCoordinates` and emits `OfferShippingDetails` / `MerchantReturnPolicy`; Location event parsing now resolves Location before the Business fallback. Fix commits: `cc6c4598`, `7d9314b4`, `c74d2d8a`.
 ## Commerce Shipping + Returns Canonical Policy — September 2026
 
 The former SEO/GEO commerce gap is now implemented through a canonical Commerce-owned policy boundary. SEO does not own or persist shipping/returns truth.
