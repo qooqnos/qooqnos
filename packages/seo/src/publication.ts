@@ -7,7 +7,7 @@ import { buildEntityGraph } from "./entity-graph";
 import { buildSeoProjectionPlan } from "./projection";
 import { planSeoInvalidation, type SeoDomainChange } from "./invalidation";
 import { notifyIndexNow, type SeoIndexNowConfig } from "./indexnow";
-import { BingWebmasterActions, GoogleSearchConsoleActions, YandexWebmasterActions, type BingWebmasterActionsConfig, type GoogleSearchConsoleActionsConfig, type YandexWebmasterActionsConfig } from "./search-engine-actions";
+import { BingWebmasterActions, YandexWebmasterActions, type BingWebmasterActionsConfig, type YandexWebmasterActionsConfig } from "./search-engine-actions";
 import type { SeoEntity } from "./types";
 
 export type SeoPublicationReason = "entity-created" | "entity-updated" | "entity-published" | "entity-unpublished" | "entity-deleted" | "dependency-changed";
@@ -172,8 +172,6 @@ export async function processSeoPublicationJobs(
   canonicalBaseUrl = "https://qooqnos.com",
   options: {
     readonly indexNow?: SeoIndexNowConfig;
-    readonly google?: GoogleSearchConsoleActionsConfig;
-    readonly googleSitemapUrl?: string;
     readonly bing?: BingWebmasterActionsConfig;
     readonly yandex?: YandexWebmasterActionsConfig;
     readonly yandexRecrawl?: boolean;
