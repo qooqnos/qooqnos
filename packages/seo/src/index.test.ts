@@ -234,7 +234,7 @@ describe("SEO/GEO core", () => {
 
   it("notifies IndexNow with validated canonical URLs and preserves same-host scope", async () => {
     const requests: Request[] = [];
-    const fetcher = async (input: string | URL, init?: RequestInit) => {
+    const fetcher = async (input: string | URL | Request, init?: RequestInit) => {
       requests.push(new Request(input, init));
       return new Response(null, { status: 200 });
     };
