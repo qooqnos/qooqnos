@@ -296,6 +296,7 @@ function render(): void {
   bindGlobalEvents();
   syncThemeButtons();
   void loadShellContext();
+  if (route.path === "/") void loadHomeState();
   if (route.path === "/account") void loadAccountState();
   if (route.path === "/customer") void loadCustomerState();
   if (route.path === "/communication") void loadCommunicationState();
@@ -557,11 +558,11 @@ function renderHome(): string {
       <div class="hero-orbit">
         <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
         <div class="core-card glass-card">
-          <div class="core-head"><span>تصمیم زنده</span><span class="pill success">فعال</span></div>
+          <div class="core-head"><span>وضعیت زنده</span><span id="home-live-status" class="pill">در حال خواندن</span></div>
           <div class="core-question">امروز چه کاری می‌تواند برای شما ارزشمندتر باشد؟</div>
-          <div class="decision-item"><span class="decision-icon">⌕</span><div><strong>کشف نزدیک شما</strong><small>۸۲ گزینه تحلیل شد</small></div><b>94</b></div>
-          <div class="decision-item"><span class="decision-icon purple">✦</span><div><strong>پیشنهاد شخصی‌سازی‌شده</strong><small>۳ گزینه برای شما آماده است</small></div><b>92</b></div>
-          <div class="decision-foot"><span>بر اساس زمینه، اعتماد و دسترسی</span><span>۰٫۸۵ اطمینان</span></div>
+          <div class="decision-item"><span class="decision-icon">⌕</span><div><strong>Demand</strong><small id="home-demand-insight">در انتظار activity</small></div><b id="home-demand-value">—</b></div>
+          <div class="decision-item"><span class="decision-icon purple">✦</span><div><strong>Matching</strong><small id="home-matching-insight">پس از Discovery واقعی</small></div><b id="home-matching-value">—</b></div>
+          <div class="decision-foot"><span id="home-live-question">بدون عدد ساختگی؛ فقط سیگنال‌های قابل مشاهده</span><span id="home-live-time">—</span></div>
         </div>
       </div>
     </section>
@@ -570,16 +571,16 @@ function renderHome(): string {
       <div class="section-topline"><div><span class="section-kicker">تصویر امروز</span><h2>یک نگاه، سه فرصت</h2></div><a href="/discover" data-nav class="text-link">مشاهده همه <span>←</span></a></div>
       <div class="metric-grid">
         <article class="metric-card feature">
-          <div class="metric-symbol">⌕</div><span>کشف</span><strong>+۲۳٪</strong><small>پتانسیل کشف‌پذیری امروز</small><div class="sparkline"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="metric-symbol">⌕</div><span>Demand</span><strong id="home-demand-count">—</strong><small id="home-demand-note">جست‌وجوی اخیر</small><div class="sparkline"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
         </article>
         <article class="metric-card">
-          <div class="metric-top"><span>فضای کسب‌وکار</span><span class="tiny-status">● آماده</span></div>
-          <strong class="metric-value">۱۲</strong><small>فیلد مهم برای تکمیل پروفایل</small>
-          <div class="progress-line"><span style="width:78%"></span></div><b>۷۸٪ تکمیل</b>
+          <div class="metric-top"><span>Supply</span><span id="home-business-badge" class="tiny-status">● بررسی</span></div>
+          <strong id="home-business-status" class="metric-value">—</strong><small id="home-business-note">Business context</small>
+          <div class="progress-line"><span id="home-business-progress" style="width:0%"></span></div><b id="home-business-detail">داده تکمیل پروفایل هنوز اندازه‌گیری نشده</b>
         </article>
         <article class="metric-card">
-          <div class="metric-top"><span>استودیو محصول</span><span class="ai-badge">AI</span></div>
-          <strong class="metric-value">۴</strong><small>محصول آماده بازبینی</small>
+          <div class="metric-top"><span>AI</span><span class="ai-badge">RUNTIME</span></div>
+          <strong id="home-ai-usage" class="metric-value">—</strong><small id="home-ai-note">آخرین اجرای Seller AI</small>
           <div class="mini-product-row"><span class="mini-product one">ک</span><span class="mini-product two">س</span><span class="mini-product three">ب</span><span class="mini-product four">م</span></div>
         </article>
       </div>
@@ -2594,6 +2595,78 @@ function openSimpleFormDialog(title:string,kicker:string,fields:Array<{id:string
   });
 }
 
+async function loadHomeState(): Promise<void> {
+  const setText = (selector: string, value: string): void => {
+    const node = document.querySelector<HTMLElement>(selector);
+    if (node) node.textContent = value;
+  };
+  const setProgress = (selector: string, value: number): void => {
+    const node = document.querySelector<HTMLElement>(selector);
+    if (node) node.style.width = Math.max(0, Math.min(100, value)) + "%";
+  };
+  const recent = getSavedSearches();
+  const latestDiscovery = readStorageRecord<{ count: number; at: string }>("phoenix-last-discovery");
+  const latestAi = readStorageRecord<{ units: string; at: string }>("phoenix-last-ai-usage");
+
+  setText("#home-demand-count", String(recent.length));
+  setText("#home-demand-value", String(recent.length));
+  setText("#home-demand-insight", recent.length ? String(recent.length) + " جست‌وجوی اخیر ثبت شده است" : "هنوز نیاز قابل ردیابی ثبت نشده");
+  setText("#home-demand-note", latestDiscovery ? "آخرین کشف: " + String(latestDiscovery.count) + " نتیجه" : "جست‌وجوی اخیر");
+  setText("#home-matching-value", latestDiscovery ? String(latestDiscovery.count) : "—");
+  setText("#home-matching-insight", latestDiscovery ? "آخرین Discovery: " + formatDate(latestDiscovery.at) : "پس از Discovery واقعی");
+  setText("#home-live-time", new Intl.DateTimeFormat("fa-IR", { timeStyle: "short" }).format(new Date()));
+  if (latestAi) {
+    setText("#home-ai-usage", latestAi.units);
+    setText("#home-ai-note", "آخرین اجرا: " + formatDate(latestAi.at));
+  }
+
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    setText("#home-live-status", "Offline UI");
+    setText("#home-live-question", "برای context زنده، یک session ققنوس متصل کنید.");
+    setText("#home-business-status", "—");
+    setText("#home-business-note", "session متصل نیست");
+    return;
+  }
+
+  try {
+    const context = await apiJson<{ tenantId?: string; workspaceId?: string }>("/api/v1/context");
+    setText("#home-live-status", "متصل");
+    setText("#home-business-status", context.workspaceId ? "Connected" : "—");
+    setText("#home-business-note", context.tenantId ? "Tenant · " + compactId(context.tenantId) : "Business context");
+    setText("#home-live-question", context.workspaceId ? "Workspace معتبر و tenant-scoped فعال است." : "Workspace context موجود نیست.");
+    setProgress("#home-business-progress", context.workspaceId ? 100 : 0);
+    setText("#home-business-detail", context.workspaceId ? "Context معتبر و آمادهٔ عملیات است." : "برای Supply به Workspace نیاز است");
+
+    if (localStorage.getItem(STORAGE.business)) {
+      try {
+        const access = await apiJson<{ status: string }>("/api/v1/business-access");
+        const ok = access.status === "authorized";
+        setText("#home-business-status", ok ? "Ready" : "Blocked");
+        setText("#home-business-badge", ok ? "● آماده" : "● نیازمند توجه");
+        setText("#home-business-detail", ok ? "Business management قابل استفاده است." : "Business access قابل استفاده نیست.");
+        setProgress("#home-business-progress", ok ? 100 : 20);
+      } catch {
+        setText("#home-business-status", "Unknown");
+        setText("#home-business-note", "Business access خوانده نشد");
+      }
+    }
+  } catch (error) {
+    setText("#home-live-status", "نیازمند توجه");
+    setText("#home-live-question", error instanceof Error ? error.message : "context زنده در دسترس نیست.");
+  }
+}
+
+function readStorageRecord<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed as T : null;
+  } catch {
+    return null;
+  }
+}
+
 function renderProductStudio(): string {
   return `
     <section class="page-heading">
@@ -2989,6 +3062,9 @@ async function generateDraft(): Promise<void> {
       const sessionState = await apiJson<{ session: { id: string; currentDraftVersion: number }; draft: unknown }>(
         `/api/v1/ai/seller/product-creation-sessions/${encodeURIComponent(sessionId)}`,
       );
+      if (result.data.usage || result.data.cost) {
+        localStorage.setItem("phoenix-last-ai-usage", JSON.stringify({ units: String(result.data.usage?.providerUnits ?? ((result.data.usage?.inputTokens ?? 0) + (result.data.usage?.outputTokens ?? 0)) || "—"), at: new Date().toISOString() }));
+      }
       draft.dataset.sessionId = sessionId;
       draft.dataset.draftVersion = String(sessionState.session.currentDraftVersion);
       draft.innerHTML = renderRemoteDraft(result.data, sessionId, sessionState.session.currentDraftVersion);
