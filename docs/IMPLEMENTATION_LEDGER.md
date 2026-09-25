@@ -1681,3 +1681,10 @@ Residual gate status:
 - Canonical Geo Coordinates + Opening Hours: 🟢
 - Multimodal Search Measurement: 🟡 API-dependent
 - Bing AI Performance ingestion: 🟡 API-dependent
+
+
+## Business Location GEO Projection Regression — 2026-09-25
+- Fixed the Location event adapter so raw canonical `geoPoint` coordinates survive `seoEntityFromEvent()` into the SEO projection model.
+- This closes the regression exposed by `packages/seo/src/location-lifecycle.test.ts`; the canonical Location page now retains the authoritative latitude/longitude before structured-data generation.
+- Commit: `69b157b426d979817beac76190d2ec3b6b13df19`.
+- Phoenix verification passed on this commit; repository CI was still running at ledger update time.
