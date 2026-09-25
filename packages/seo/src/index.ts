@@ -33,3 +33,4 @@ export * from "./measurement-providers";
 export * from "./competitive-provider";
 export * from "./competitive-repository";
 export * from "./indexnow";
+export * from "./search-engine-actions";
