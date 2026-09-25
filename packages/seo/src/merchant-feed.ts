@@ -140,7 +140,7 @@ function toItem(
       link,
       imageLink,
       price: price!,
-      currency,
+      currency: currency!,
       availability: availability!,
       condition: condition!,
       ...(variant?.sku ? { sku: clean(variant.sku) } : {}),
