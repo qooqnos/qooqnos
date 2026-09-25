@@ -1817,3 +1817,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Commits: `db6635cd16d7179eae75dca579b11e96640bd3ae`, `f23a6320ef12a674443a722a132bd9341dcf19a4`, `114963f25416b012d6d52c0053dd34085cf829c0`, `8ee80c9012a51517df48ede8ed51f8bf8d5866c3`, `1807a4384955a331cedf5d2c7d5c1d29f57af2fa`, `b07bbbe7d78db1e6dcbbcf8cbfdb686376d902c7`.
 
 - TikTok Content Posting hardening: added photo direct-post initialization and publish-status polling, matching the current official Content Posting API contract. Commits: `ba049c8dc63c29d7370b9bb2db820af5fc27b22b`, `5187978a5d7617d16ed9c07bf59755c18f546e55`, `3c6edc6b558f821d28cf5bd9f5ba32038ecb36ea`.
+
+
+## Social Provider Production Hardening — 2026-09-25
+
+- Fixed Social route wiring so all Social clients and `ingestSocialSignals` are imported from the SEO package at the API boundary.
+- Added bounded timeout/backoff handling to Social provider HTTP adapters. Idempotent GET/HEAD/OPTIONS reads retry on 408/429/5xx; publish POSTs do not auto-retry to avoid duplicate publication.
+- Added production environment controls: `SEO_SOCIAL_MAX_ATTEMPTS`, `SEO_SOCIAL_TIMEOUT_MS`, `SEO_SOCIAL_BASE_DELAY_MS`, `SEO_SOCIAL_MAX_DELAY_MS`.
+- Added regression coverage for safe retries and the no-duplicate-publish rule.
+- Commits: `f738854899697ce0fb5adffde979eba9d99e8566`, `ae45c65bcb6069455245c248703ea1c92f1989f0`, `25f6e1237569900adc7686c156997f1d078c9b17`, `eeb53dc170195bed3a00b4ed0ecfffa1aecf8a5b`, `51019e99a96ebdbc6de058bcc57f505e7f1918b0`, `4be31250a1c342f8e3531dc3a69e73d6b65fd29a`, `513e3f2176e9e12faa2d9a846e9894bad96d6ec9`, `943fd0f63b9247319c00e41dea520ca0d7b0ccb4`.
