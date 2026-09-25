@@ -10,6 +10,7 @@ import { processCaseDispatch } from "./case-dispatch-worker";
 import { enqueueSeoPublication } from "@qooqnos/seo";
 import { CatalogRepository } from "@qooqnos/catalog";
 import { BusinessRepository } from "@qooqnos/business";
+import { CommerceRepository } from "@qooqnos/commerce";
 
 export interface ScheduledControllerLike {
   readonly scheduledTime: number;
@@ -71,6 +72,7 @@ export async function consumeOutbox(
   const analytics = database ? new AnalyticsRepository(database) : null;
   const catalog = database ? new CatalogRepository(database) : null;
   const business = database ? new BusinessRepository(database) : null;
+  const commerce = database ? new CommerceRepository(database) : null;
 
   for (const message of batch.messages) {
     try {
@@ -154,7 +156,7 @@ export async function consumeOutbox(
           organizationId: event.organizationId,
           workspaceId: event.workspaceId ?? null,
           ...(event.aggregateId ? { aggregateId: event.aggregateId } : {}),
-          payloadJson: await enrichSeoPayload(event, catalog, business),
+          payloadJson: await enrichSeoPayload(event, catalog, business, commerce),
           occurredAt: event.occurredAt,
         };
         await enqueueSeoPublication(database, seoContext, new Date().toISOString());
@@ -251,6 +253,7 @@ async function enrichSeoPayload(
   event: OutboxEventRecord,
   catalog: CatalogRepository | null,
   business: BusinessRepository | null,
+  commerce: CommerceRepository | null,
 ): Promise<string> {
   if (!event.organizationId || !event.workspaceId) return event.payloadJson;
   const payload = parsePayload(event.payloadJson);
@@ -295,6 +298,38 @@ async function enrichSeoPayload(
         ...(variants.length ? { productVariants: variants } : {}),
         updatedAt: product.updatedAt,
       };
+    }
+  }
+
+  if (catalog && commerce && (
+    event.eventType === "catalog.product.created"
+    || event.eventType === "catalog.product.updated"
+    || event.eventType === "catalog.variant.changed"
+    || event.eventType === "commerce.fulfillment.policy.changed"
+  ) && typeof payload.productId === "string") {
+    const product = await catalog.getProduct(context, brandId<"EntityId">(payload.productId));
+    if (product) {
+      const policy = await commerce.getFulfillmentPolicy(context, product.businessId, "product", product.id);
+      if (policy) {
+        payload.seoCommercePolicy = {
+          shippingDetails: {
+            ...(policy.destinationCountry ? { country: policy.destinationCountry } : {}),
+            ...(policy.destinationRegion ? { region: policy.destinationRegion } : {}),
+            ...(policy.destinationPostalCode ? { postalCode: policy.destinationPostalCode } : {}),
+            ...(policy.shippingRateMinor !== null ? { shippingRate: policy.shippingRateMinor / 100 } : {}),
+            ...(policy.shippingCurrency ? { currency: policy.shippingCurrency } : {}),
+            ...(policy.handlingTimeMinDays !== null ? { handlingTimeMinDays: policy.handlingTimeMinDays } : {}),
+            ...(policy.handlingTimeMaxDays !== null ? { handlingTimeMaxDays: policy.handlingTimeMaxDays } : {}),
+          },
+          returnPolicy: {
+            ...(policy.destinationCountry ? { applicableCountry: policy.destinationCountry } : {}),
+            ...(policy.returnWindowDays !== null ? { returnWindowDays: policy.returnWindowDays } : {}),
+            ...(policy.returnFees ? { returnFees: policy.returnFees } : {}),
+            ...(policy.returnMethod ? { returnMethod: policy.returnMethod } : {}),
+          },
+          policyVersion: policy.policyVersion,
+        };
+      }
     }
   }
 
