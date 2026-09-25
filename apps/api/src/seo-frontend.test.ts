@@ -166,6 +166,9 @@ describe("SEO frontend surface", () => {
     expect(html).toContain('"latitude":40.4093');
     expect(html).toContain("Phoenix Downtown");
     expect(html).toContain("Breadcrumb");
+    expect(html).toContain("40.4093");
+    expect(html).toContain("49.8671");
+    expect(html).toContain('data-seo-hydrated="true"');
   });
 
 });
