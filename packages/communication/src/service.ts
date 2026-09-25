@@ -208,6 +208,16 @@ export class CommunicationService {
     return this.options.repository.releaseSuppression(context, id, this.options.now());
   }
 
+  async listOwnNotifications(context: RequestContext, limit = 20) {
+    await this.options.authorization.assert({
+      context,
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    if (!context.actorId) return [];
+    return this.options.repository.listNotificationsForRecipient(context, context.actorId, limit);
+  }
+
   async updateDeliveryStatus(context: RequestContext, notificationId: EntityId, status: CommunicationMessageStatus) {
     await this.options.authorization.assert({context,permission:"communication.delivery.manage",requireAuthentication:true,requireWorkspace:false});
     return this.options.repository.setNotificationStatus(context,notificationId,status,this.options.now());
@@ -230,6 +240,7 @@ export const COMMUNICATION_PERMISSIONS = [
   "communication.conversation.manage",
   "communication.message.send",
   "communication.notification.send",
+  "communication.notification.read",
   "communication.preference.read",
   "communication.preference.manage",
   "communication.suppression.manage",
