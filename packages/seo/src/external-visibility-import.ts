@@ -51,7 +51,7 @@ export function parseGoogleSearchConsoleExport(
     const output: ExternalVisibilityObservation[] = [];
     const clicks = numberValue(row, ["clicks", "Clicks"]);
     const impressions = numberValue(row, ["impressions", "Impressions"]);
-    const ctr = numberValue(row, ["ctr", "CTR"]);
+    const ctr = numberValue(row, ["ctr", "CTR"], true);
     const position = numberValue(row, ["position", "Position"]);
     if (clicks !== undefined) output.push({ surface: "search-engine", metric: prefix + "-clicks", numericValue: clicks, ...entity, queryText, pageUrl, observedAt, provenance: baseProvenance });
     if (impressions !== undefined) output.push({ surface: "search-engine", metric: prefix + "-impressions", numericValue: impressions, ...entity, queryText, pageUrl, observedAt, provenance: baseProvenance });
@@ -73,7 +73,7 @@ export function parseBingAiPerformanceExport(
     const groundingQuery = stringValue(row, ["grounding query", "Grounding Query", "query", "Query", "grounding_query"]);
     const title = stringValue(row, ["title", "Title", "page title", "Page Title"]);
     const citations = numberValue(row, ["citations", "Citations", "citation count", "Citation Count", "citation_count"]);
-    const citationShare = numberValue(row, ["citation share", "Citation Share", "citation_share"]);
+    const citationShare = numberValue(row, ["citation share", "Citation Share", "citation_share"], true);
     const intent = stringValue(row, ["intent", "Intent"]);
     const topic = stringValue(row, ["topic", "Topic"]);
     const entity = options.entityId ? { entityId: options.entityId } : {};
