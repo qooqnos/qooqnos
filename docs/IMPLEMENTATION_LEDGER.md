@@ -1656,3 +1656,23 @@ Competitive intelligence evidence layers now include:
 - Location page verification covers canonical URL generation, Place structured data, GEO coordinates, breadcrumbs, publication eligibility and non-public behavior for inactive locations in `packages/seo/src/location-lifecycle.test.ts`.
 - Commits: `126f5657200e3e11827e074a4382593a7d62d531` (Business repository), `77746e84e01172286905e2384024a027d788613d` (Business service), `4e9b1d97cce5c0029bcd2c7fb9efa7b055789f9d` (SEO publication), `701c6be026d6c3b5b26511ea8a39a56c6746914f` (SEO outbox enrichment), plus `b2427f8eeb0be148c42f5a071c47c5c82aec7e08` (stale-write guard), `359863e1870b50cd259204d1fc610278f54a3369` (SEO graph verification test), and `a136f04f4969bf4d18f6539948cb16f0cb91a829` (SSR Location page verification).
 - Remaining verification gate: run the repository CI/typecheck/test suite and, where production credentials are available, verify the live Worker → D1 → outbox → SEO publication → SSR page chain.
+
+
+## Commerce Shipping + Returns Canonical Policy — September 2026
+
+The former SEO/GEO commerce gap is now implemented through a canonical Commerce-owned policy boundary. SEO does not own or persist shipping/returns truth.
+
+- **Canonical persistence:** `migrations/0091_commerce_fulfillment_policies.sql`
+- **Canonical repository:** `packages/commerce/src/repository.ts`
+- **Canonical capability:** `packages/commerce/src/service.ts` via `commerce.fulfillment_policy.manage`
+- **Lifecycle event:** `commerce.fulfillment.policy.changed` is emitted transactionally with policy writes.
+- **SEO projection:** `apps/api/src/outbox-worker.ts` resolves the product's active policy and attaches authoritative `shippingDetails` / `returnPolicy` to the canonical SEO entity before publication.
+- **Precedence:** resource-specific policy first, then the business-level policy for the same resource type.
+- **Invariant:** no SEO-specific shipping/returns table or duplicate source of truth was introduced.
+
+Residual gate status:
+- ProductGroup / Variants: 🟢
+- Shipping / Returns / Commerce Schema: 🟢 canonical source + lifecycle + SEO projection implemented
+- Canonical Geo Coordinates + Opening Hours: 🟢
+- Multimodal Search Measurement: 🟡 API-dependent
+- Bing AI Performance ingestion: 🟡 API-dependent
