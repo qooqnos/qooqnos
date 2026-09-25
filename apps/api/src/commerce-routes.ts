@@ -208,6 +208,38 @@ export function registerCommerceRoutes(
       return json({ data: order }, 200, context.requestId);
     },
   });
+  router.register({
+    method: "POST",
+    path: "/api/v1/commerce/fulfillment-policies",
+    module: "commerce",
+    operation: "commerce.fulfillment_policy.manage",
+    permission: "commerce.fulfillment_policy.manage",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const policy = await service.upsertFulfillmentPolicy(context, {
+        businessId: requiredId(body.businessId, "businessId", context.requestId),
+        resourceType: requiredFulfillmentPolicyResourceType(body.resourceType, context.requestId),
+        ...(body.resourceId !== undefined ? { resourceId: requiredId(body.resourceId, "resourceId", context.requestId) } : {}),
+        ...(body.destinationCountry !== undefined ? { destinationCountry: requiredString(body.destinationCountry, "destinationCountry", context.requestId) } : {}),
+        ...(body.destinationRegion !== undefined ? { destinationRegion: requiredString(body.destinationRegion, "destinationRegion", context.requestId) } : {}),
+        ...(body.destinationPostalCode !== undefined ? { destinationPostalCode: requiredString(body.destinationPostalCode, "destinationPostalCode", context.requestId) } : {}),
+        ...(body.shippingRateMinor !== undefined ? { shippingRateMinor: requiredNonNegativeInteger(body.shippingRateMinor, "shippingRateMinor", context.requestId) } : {}),
+        ...(body.shippingCurrency !== undefined ? { shippingCurrency: requiredString(body.shippingCurrency, "shippingCurrency", context.requestId) } : {}),
+        ...(body.handlingTimeMinDays !== undefined ? { handlingTimeMinDays: requiredNonNegativeInteger(body.handlingTimeMinDays, "handlingTimeMinDays", context.requestId) } : {}),
+        ...(body.handlingTimeMaxDays !== undefined ? { handlingTimeMaxDays: requiredNonNegativeInteger(body.handlingTimeMaxDays, "handlingTimeMaxDays", context.requestId) } : {}),
+        ...(body.returnWindowDays !== undefined ? { returnWindowDays: requiredNonNegativeInteger(body.returnWindowDays, "returnWindowDays", context.requestId) } : {}),
+        ...(body.returnFees !== undefined ? { returnFees: requiredReturnFees(body.returnFees, context.requestId) } : {}),
+        ...(body.returnMethod !== undefined ? { returnMethod: requiredReturnMethod(body.returnMethod, context.requestId) } : {}),
+        policyVersion: requiredString(body.policyVersion, "policyVersion", context.requestId),
+        ...(body.status !== undefined ? { status: requiredFulfillmentPolicyStatus(body.status, context.requestId) } : {}),
+      });
+      return json({ data: policy }, 201, context.requestId);
+    },
+  });
+
 }
 
 function createRepository(database: D1Database | undefined, requestId: EntityId): CommerceRepository {
@@ -304,6 +336,26 @@ function requiredStringArray(value: unknown, field: string, requestId: EntityId)
 function requiredResourceType(value: unknown, requestId: EntityId): "offering" | "product_variant" | "service" {
   if (value === "offering" || value === "product_variant" || value === "service") return value;
   throw new AppError({ code: "VALIDATION_ERROR", message: "resourceType is invalid.", requestId });
+}
+
+function requiredFulfillmentPolicyResourceType(value: unknown, requestId: EntityId): "product" | "product_variant" | "offering" {
+  if (value === "product" || value === "product_variant" || value === "offering") return value;
+  throw new AppError({ code: "VALIDATION_ERROR", message: "resourceType is invalid.", requestId });
+}
+
+function requiredReturnFees(value: unknown, requestId: EntityId): "FreeReturn" | "ReturnFeesCustomerResponsibility" | "ReturnShippingFees" {
+  if (value === "FreeReturn" || value === "ReturnFeesCustomerResponsibility" || value === "ReturnShippingFees") return value;
+  throw new AppError({ code: "VALIDATION_ERROR", message: "returnFees is invalid.", requestId });
+}
+
+function requiredReturnMethod(value: unknown, requestId: EntityId): "ReturnByMail" | "ReturnInStore" | "ReturnAtKiosk" {
+  if (value === "ReturnByMail" || value === "ReturnInStore" || value === "ReturnAtKiosk") return value;
+  throw new AppError({ code: "VALIDATION_ERROR", message: "returnMethod is invalid.", requestId });
+}
+
+function requiredFulfillmentPolicyStatus(value: unknown, requestId: EntityId): "draft" | "active" | "retired" {
+  if (value === "draft" || value === "active" || value === "retired") return value;
+  throw new AppError({ code: "VALIDATION_ERROR", message: "status is invalid.", requestId });
 }
 
 function requiredSourceChannel(value: unknown, requestId: EntityId): "web" | "app" | "agent" | "api" | "ai_tool" {
