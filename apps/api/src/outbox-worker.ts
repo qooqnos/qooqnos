@@ -311,7 +311,7 @@ async function enrichSeoPayload(
     if (product) {
       const policy = await commerce.getFulfillmentPolicy(context, product.businessId, "product", product.id);
       if (policy) {
-        payload.seoCommercePolicy = {
+        const commercePolicy = {
           shippingDetails: {
             ...(policy.destinationCountry ? { country: policy.destinationCountry } : {}),
             ...(policy.destinationRegion ? { region: policy.destinationRegion } : {}),
@@ -329,6 +329,13 @@ async function enrichSeoPayload(
           },
           policyVersion: policy.policyVersion,
         };
+        if (payload.seoEntity && typeof payload.seoEntity === "object" && !Array.isArray(payload.seoEntity)) {
+          payload.seoEntity = {
+            ...(payload.seoEntity as Record<string, unknown>),
+            shippingDetails: commercePolicy.shippingDetails,
+            returnPolicy: commercePolicy.returnPolicy,
+          };
+        }
       }
     }
   }
