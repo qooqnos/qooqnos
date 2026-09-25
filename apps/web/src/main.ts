@@ -941,6 +941,10 @@ function renderAdmin(): string {
         </div>
       </article>
       <article class="glass-card admin-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Jobs</span><h2>صف اجرای Automation</h2></div><span id="admin-jobs-meta" class="pill">—</span></div>
+        <div id="admin-jobs-list" class="admin-jobs-list"><div class="slot-loading">در حال خواندن jobs…</div></div>
+      </article>
+      <article class="glass-card admin-card">
         <div class="card-section-heading"><div><span class="section-kicker">Operations</span><h2>اجرای سیستم</h2></div></div>
         <div class="admin-link-grid">
           <a class="admin-link" href="/operations" data-nav><strong>Cases / Fulfillment</strong><small>عملیات زنده و وضعیت‌ها</small></a>
@@ -3739,11 +3743,14 @@ async function loadAdminState(): Promise<void> {
   const usageList = document.querySelector<HTMLElement>("#admin-ai-usage-list");
   const auditList = document.querySelector<HTMLElement>("#admin-audit-list");
   const auditMeta = document.querySelector<HTMLElement>("#admin-audit-meta");
+  const jobsList = document.querySelector<HTMLElement>("#admin-jobs-list");
+  const jobsMeta = document.querySelector<HTMLElement>("#admin-jobs-meta");
   if (tenant) tenant.textContent = shellContext.tenantId ? compactId(shellContext.tenantId) : "—";
   if (workspace) workspace.textContent = shellContext.workspaceId ? compactId(shellContext.workspaceId) : "—";
   if (notificationCount) notificationCount.textContent = String(shellNotifications.length);
   if (usageList) usageList.innerHTML = '<div class="slot-loading">در حال خواندن AI telemetry…</div>';
   if (auditList) auditList.innerHTML = '<div class="slot-loading">در حال خواندن Audit…</div>';
+  if (jobsList) jobsList.innerHTML = '<div class="slot-loading">در حال خواندن jobs…</div>';
 
   const tasks: Promise<void>[] = [];
   if (members) {
@@ -3781,6 +3788,22 @@ async function loadAdminState(): Promise<void> {
       } catch (error) {
         usageList.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن AI usage ناموفق بود.")}</p></div>`;
         if (usageSummary) usageSummary.textContent = "Usage API در دسترس نیست.";
+      }
+    })());
+  }
+
+  if (jobsList) {
+    tasks.push((async () => {
+      try {
+        const response = await apiJson<{ data: { id: string; status: string; workflowId: string; createdAt: string; businessId?: string | null }[] }>("/api/v1/automation/executions?limit=20");
+        const items = Array.isArray(response.data) ? response.data : [];
+        if (jobsMeta) jobsMeta.textContent = String(items.length) + " pending";
+        jobsList.innerHTML = items.length
+          ? items.map((item) => `<div class="admin-job-row"><div><strong>${escapeHtml(item.workflowId)}</strong><small>${escapeHtml(item.businessId ?? "workspace")} · ${escapeHtml(formatDate(item.createdAt))}</small></div><span class="pill warning">${escapeHtml(item.status)}</span></div>`).join("")
+          : '<div class="slot-empty"><span>⚙</span><p>Job pendingای وجود ندارد.</p></div>';
+      } catch (error) {
+        jobsList.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن jobs ناموفق بود.")}</p></div>`;
+        if (jobsMeta) jobsMeta.textContent = "خطا";
       }
     })());
   }
