@@ -41,7 +41,6 @@ export class GoogleMerchantCenterClient {
         },
         condition: item.condition.toUpperCase(),
         ...(item.itemGroupId ? { itemGroupId: item.itemGroupId } : {}),
-        ...(item.sku ? { mpn: item.sku } : {}),
       },
     };
     const response = await fetch(url, {
