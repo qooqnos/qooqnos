@@ -2381,51 +2381,134 @@ async function startCheckoutFlow(): Promise<void> {
   }
 }
 function renderBusiness(): string {
+  const businessId = localStorage.getItem(STORAGE.business) ?? "";
   return `
     <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Business Workspace</span><h1>کسب‌وکارتان را <em>قابل کشف</em> کنید.</h1><p>یک فضای کاری تمیز برای ساخت عرضه، رشد و کنترل عملیات.</p></div>
+      <div><span class="eyebrow"><i></i> Business Workspace</span><h1>کسب‌وکارتان را <em>قابل کشف</em> کنید.</h1><p>پروفایل، مکان‌ها، ساعات، تماس‌ها و وضعیت انتشار مستقیماً از Business canonical خوانده می‌شوند.</p></div>
       <div class="heading-actions">
         <button class="button button-ghost" type="button" data-business-create>ساخت کسب‌وکار</button>
-        <div class="heading-actions">
-          <a class="button button-ghost" href="/catalog" data-nav>مدیریت Catalog</a>
-          <a class="button button-primary" href="/product-studio" data-nav>ساخت محصول با AI <span>✦</span></a>
-        </div>
+        <button class="button button-ghost" type="button" data-business-refresh>بروزرسانی</button>
+        <a class="button button-primary" href="/product-studio" data-nav>ساخت محصول با AI <span>✦</span></a>
       </div>
     </section>
 
     <section class="business-grid">
       <article class="glass-card business-main">
-        <div class="card-section-heading"><div><span class="section-kicker">نمای کلی</span><h2>وضعیت فضای کاری</h2></div><span id="business-access-status" class="pill">در حال بررسی</span></div>
-        <div class="workspace-stats">
-          <div><span>Workspace</span><strong id="business-workspace-short">—</strong><small id="business-access-note">در حال خواندن context…</small></div>
-          <div><span>محصولات</span><strong>۱۲</strong><small>۳ مورد در انتظار تأیید</small></div>
-          <div><span>کشف‌پذیری</span><strong>۸۶٪</strong><small>+۱۲٪ در ۳۰ روز</small></div>
-          <div><span>اعتماد</span><strong>۹۲</strong><small>Verification کامل</small></div>
+        <div class="card-section-heading"><div><span class="section-kicker">Profile</span><h2>پروفایل کسب‌وکار</h2></div><span id="business-management-status" class="pill">در حال بررسی</span></div>
+        <div id="business-profile-content" class="business-profile-content"><div class="slot-empty"><span>▦</span><p>${businessId ? "در حال خواندن پروفایل…" : "یک Business ID برای مدیریت این فضای کاری ثبت کنید."}</p></div></div>
+        <div class="business-management-form">
+          <input id="business-name-input" class="studio-input-line" placeholder="نام canonical" />
+          <input id="business-display-name-input" class="studio-input-line" placeholder="نام نمایشی" />
+          <input id="business-type-input" class="studio-input-line" placeholder="نوع کسب‌وکار" />
+          <input id="business-timezone-input" class="studio-input-line" placeholder="Timezone" />
+          <input id="business-currency-input" class="studio-input-line" placeholder="Currency" />
+          <button class="button button-primary" type="button" data-business-save>${businessId ? "ذخیره پروفایل" : "ابتدا Business بسازید"}</button>
         </div>
-        <div class="chart-shell"><div class="chart-label"><span>کشف‌پذیری</span><span>۳۰ روز اخیر</span></div><div class="chart"><div class="chart-bars">${[34,48,40,54,58,68,63,78,71,86,82,92].map((h)=>`<i style="height:${h}%"></i>`).join("")}</div></div></div>
       </article>
 
       <article class="glass-card ai-action-card">
-        <div class="ai-card-glow"></div>
         <span class="ai-badge">AI COPILOT</span>
-        <h2>چه چیزی می‌تواند بهتر شود؟</h2>
-        <p>۳ پیشنهاد برای افزایش کیفیت عرضه و کشف‌پذیری شما آماده است.</p>
-        <button class="button button-primary" type="button" data-nav-click="/product-studio">پیشنهادها را ببین <span>→</span></button>
+        <h2>عرضه را سریع‌تر غنی کنید.</h2>
+        <p>Seller AI می‌تواند از متن و تصویر خام، پیش‌نویس محصول بسازد؛ Catalog و publication همچنان canonical باقی می‌مانند.</p>
+        <a class="button button-primary" href="/product-studio" data-nav>باز کردن Product Studio <span>→</span></a>
       </article>
     </section>
 
-    <section class="section-block compact">
-      <div class="section-topline"><div><span class="section-kicker">کارهای پیشنهادی</span><h2>قدم بعدی</h2></div></div>
-      <div class="task-grid">
-        <button class="task-card" type="button" data-nav-click="/product-studio"><span class="task-icon purple">✦</span><div><strong>۲ محصول را با AI بساز</strong><small>زمان تقریبی ۴ دقیقه</small></div><span>→</span></button>
-        <button class="task-card" type="button" data-toast="صفحه مدیریت پروفایل در حال آماده‌سازی است."><span class="task-icon green">✓</span><div><strong>پروفایل کسب‌وکار را کامل کن</strong><small>۱۲٪ تا تکمیل کامل</small></div><span>→</span></button>
-        <button class="task-card" type="button" data-toast="گزارش کشف‌پذیری به‌زودی فعال می‌شود."><span class="task-icon blue">↗</span><div><strong>گزارش کشف را مرور کن</strong><small>آخرین بروزرسانی: امروز</small></div><span>→</span></button>
-      </div>
+    <section class="business-detail-grid">
+      <article class="glass-card business-detail-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div><button class="button button-ghost" type="button" data-business-add-location>افزودن مکان</button></div>
+        <div id="business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>داده مکان بعد از اتصال نمایش داده می‌شود.</p></div></div>
+      </article>
+      <article class="glass-card business-detail-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Availability Context</span><h2>ساعات فعال</h2></div></div>
+        <div id="business-hours" class="business-hours-list"><div class="slot-empty"><span>◷</span><p>ساعات بعد از اتصال نمایش داده می‌شوند.</p></div></div>
+      </article>
+      <article class="glass-card business-detail-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Contacts</span><h2>راه‌های تماس</h2></div></div>
+        <div id="business-contacts" class="metadata-cloud"><span>—</span></div>
+      </article>
+      <article class="glass-card business-detail-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Publication</span><h2>وضعیت انتشار</h2></div><span id="business-publication-status" class="pill">—</span></div>
+        <div id="business-publication-detail" class="connection-state">—</div>
+      </article>
     </section>
   `;
 }
 
+
 async function loadBusinessAccess(): Promise<void> {
+  const status = document.querySelector<HTMLElement>("#business-management-status");
+  const profile = document.querySelector<HTMLElement>("#business-profile-content");
+  const locations = document.querySelector<HTMLElement>("#business-locations");
+  const hours = document.querySelector<HTMLElement>("#business-hours");
+  const contacts = document.querySelector<HTMLElement>("#business-contacts");
+  const publication = document.querySelector<HTMLElement>("#business-publication-status");
+  const publicationDetail = document.querySelector<HTMLElement>("#business-publication-detail");
+  if (!status || !profile || !locations || !hours || !contacts || !publication || !publicationDetail) return;
+  const businessId = localStorage.getItem(STORAGE.business);
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    status.textContent = "بدون session";
+    status.className = "pill warning";
+    return;
+  }
+  if (!businessId) {
+    status.textContent = "Business لازم است";
+    status.className = "pill warning";
+    profile.innerHTML = '<div class="slot-empty"><span>▦</span><p>Business ID ثبت نشده است.</p></div>';
+    return;
+  }
+  status.textContent = "در حال بارگذاری";
+  status.className = "pill";
+  profile.innerHTML = '<div class="slot-loading">در حال خواندن Business…</div>';
+  locations.innerHTML = '<div class="slot-loading">در حال خواندن Locations…</div>';
+  hours.innerHTML = '<div class="slot-loading">در حال خواندن Hours…</div>';
+  try {
+    const response = await apiJson<{ data: { business: Record<string, unknown>; locations: Array<Record<string, unknown>>; hours: Array<Record<string, unknown>>; contacts: Array<Record<string, unknown>>; socialLinks: Array<Record<string, unknown>> } }>(
+      `/api/v1/businesses/${encodeURIComponent(businessId)}/management`,
+    );
+    const business = response.data.business;
+    const locationsData = response.data.locations ?? [];
+    const hoursData = response.data.hours ?? [];
+    const contactsData = response.data.contacts ?? [];
+    profile.innerHTML = `
+      <div class="business-profile-grid">
+        <div><span>نام</span><strong>${escapeHtml(getRecordString(business, ["name"]) ?? "—")}</strong></div>
+        <div><span>نام نمایشی</span><strong>${escapeHtml(getRecordString(business, ["displayName"]) ?? "—")}</strong></div>
+        <div><span>وضعیت</span><strong>${escapeHtml(getRecordString(business, ["status"]) ?? "—")}</strong></div>
+        <div><span>Locale</span><strong>${escapeHtml(getRecordString(business, ["defaultLocale"]) ?? "—")}</strong></div>
+        <div><span>Timezone</span><strong>${escapeHtml(getRecordString(business, ["timezone"]) ?? "—")}</strong></div>
+        <div><span>Currency</span><strong>${escapeHtml(getRecordString(business, ["defaultCurrency"]) ?? "—")}</strong></div>
+      </div>`;
+    const setInput=(selector:string,key:string)=>{const input=document.querySelector<HTMLInputElement>(selector); if(input) input.value=getRecordString(business,[key])??"";};
+    setInput("#business-name-input","name");
+    setInput("#business-display-name-input","displayName");
+    setInput("#business-type-input","businessType");
+    setInput("#business-timezone-input","timezone");
+    setInput("#business-currency-input","defaultCurrency");
+    locations.innerHTML = locationsData.length ? locationsData.map((item)=>`
+      <div class="business-location-item">
+        <div><strong>${escapeHtml(getRecordString(item,["name"])??"Location")}</strong><small>${escapeHtml(getRecordString(item,["locationType"])??"—")} · ${escapeHtml(getRecordString(item,["timezone"])??"—")}</small></div>
+        <span class="pill ${getRecordString(item,["status"])==="active"?"success": "warning"}">${escapeHtml(getRecordString(item,["status"])??"—")}</span>
+      </div>`).join("") : '<div class="slot-empty"><span>⌖</span><p>هنوز مکانی ثبت نشده است.</p></div>';
+    hours.innerHTML = hoursData.length ? hoursData.map((item)=>`<div class="business-hour-item"><span>${escapeHtml(String(item.dayOfWeek ?? "—"))}</span><strong>${escapeHtml(String(item.opens ?? "—"))} — ${escapeHtml(String(item.closes ?? "—"))}</strong><small>${escapeHtml(String(item.timezone ?? "—"))}</small></div>`).join("") : '<div class="slot-empty"><span>◷</span><p>ساعت فعالی ثبت نشده است.</p></div>';
+    contacts.innerHTML = contactsData.length ? contactsData.map((item)=>`<span><b>${escapeHtml(getRecordString(item,["contactType"])??"contact")}</b> ${escapeHtml(getRecordString(item,["value"])??"—")}</span>`).join("") : '<span>تماس عمومی ثبت نشده است.</span>';
+    const publicationValue=getRecordString(business,["publicationStatus"])??"unpublished";
+    publication.textContent=publicationValue;
+    publication.className=publicationValue==="published"?"pill success":"pill warning";
+    publicationDetail.textContent=publicationValue==="published"?"این کسب‌وکار منتشر است.":"انتشار هنوز از policy canonical عبور نکرده است.";
+    status.textContent="Connected";
+    status.className="pill success";
+  } catch (error) {
+    status.textContent="خطا";
+    status.className="pill warning";
+    const message=error instanceof Error?error.message:"خواندن Business ناموفق بود.";
+    profile.innerHTML=`<div class="slot-empty"><span>!</span><p>${escapeHtml(message)}</p></div>`;
+    locations.innerHTML='<div class="slot-empty"><span>!</span><p>Locations در دسترس نیست.</p></div>';
+    hours.innerHTML='<div class="slot-empty"><span>!</span><p>Hours در دسترس نیست.</p></div>';
+  }
+}
+
+
   const status = document.querySelector<HTMLElement>("#business-access-status");
   const workspace = document.querySelector<HTMLElement>("#business-workspace-short");
   const note = document.querySelector<HTMLElement>("#business-access-note");
@@ -2452,6 +2535,63 @@ async function loadBusinessAccess(): Promise<void> {
 function compactId(value?: string): string {
   if (!value) return "—";
   return value.length > 12 ? value.slice(0, 6) + "…" + value.slice(-4) : value;
+}
+
+async function saveBusinessProfile(): Promise<void> {
+  const id=localStorage.getItem(STORAGE.business);
+  if(!id){showToast("Business ID لازم است.");return;}
+  const name=document.querySelector<HTMLInputElement>("#business-name-input")?.value.trim()??"";
+  const displayName=document.querySelector<HTMLInputElement>("#business-display-name-input")?.value.trim()??"";
+  if(!name||!displayName){showToast("نام و نام نمایشی الزامی است.");return;}
+  try{
+    await apiJson(`/api/v1/businesses/${encodeURIComponent(id)}`,{method:"PATCH",body:{
+      name,displayName,
+      businessType:document.querySelector<HTMLInputElement>("#business-type-input")?.value.trim()||undefined,
+      timezone:document.querySelector<HTMLInputElement>("#business-timezone-input")?.value.trim()||undefined,
+      defaultCurrency:document.querySelector<HTMLInputElement>("#business-currency-input")?.value.trim()||undefined,
+    }});
+    showToast("پروفایل Business ذخیره شد.");
+    await loadBusinessAccess();
+  }catch(error){showToast(error instanceof Error?error.message:"ذخیره Business ناموفق بود.");}
+}
+
+function openBusinessLocationPanel(): void {
+  const businessId=localStorage.getItem(STORAGE.business);
+  if(!businessId){showToast("ابتدا Business ID را ثبت کنید.");return;}
+  openSimpleFormDialog("افزودن مکان","Business Location",[
+    {id:"location-name",label:"نام مکان",placeholder:"مثلاً شعبه مرکزی",value:""},
+    {id:"location-timezone",label:"Timezone",placeholder:"Asia/Tehran",value:""},
+    {id:"location-type",label:"نوع",placeholder:"physical",value:"physical"},
+    {id:"location-address",label:"آدرس JSON",placeholder:'{"city":"..."}',value:""},
+    {id:"location-lat",label:"Latitude",placeholder:"35.7",value:""},
+    {id:"location-lng",label:"Longitude",placeholder:"51.4",value:""},
+  ],async(dialog)=>{
+    const name=dialog.querySelector<HTMLInputElement>("#location-name")?.value.trim()??"";
+    const type=dialog.querySelector<HTMLInputElement>("#location-type")?.value.trim()||"physical";
+    const timezone=dialog.querySelector<HTMLInputElement>("#location-timezone")?.value.trim()||undefined;
+    const lat=Number(dialog.querySelector<HTMLInputElement>("#location-lat")?.value);
+    const lng=Number(dialog.querySelector<HTMLInputElement>("#location-lng")?.value);
+    const addressRaw=dialog.querySelector<HTMLInputElement>("#location-address")?.value.trim()??"";
+    let address:Record<string,unknown>|undefined;
+    if(addressRaw){try{const parsed=JSON.parse(addressRaw);if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw new Error("آدرس باید JSON object باشد.");address=parsed as Record<string,unknown>}catch(error){showToast(error instanceof Error?error.message:"JSON آدرس نامعتبر است.");return false;}}
+    const geoPoint=Number.isFinite(lat)&&Number.isFinite(lng)?{latitude:lat,longitude:lng}:undefined;
+    try{
+      await apiJson(`/api/v1/businesses/${encodeURIComponent(businessId)}/locations`,{method:"POST",body:{name,locationType:type, ...(timezone?{timezone}:{}), ...(address?{address}:{}), ...(geoPoint?{geoPoint}:{}),}});
+      dialog.remove(); showToast("Location ساخته شد."); await loadBusinessAccess(); return true;
+    }catch(error){showToast(error instanceof Error?error.message:"ساخت Location ناموفق بود.");return false;}
+  });
+}
+
+function openSimpleFormDialog(title:string,kicker:string,fields:Array<{id:string;label:string;placeholder:string;value:string}>,onSubmit:(dialog:HTMLElement)=>Promise<boolean>|boolean):void{
+  const overlay=document.createElement("div");
+  overlay.className="connection-overlay";
+  overlay.innerHTML=`<div class="connection-backdrop" data-close-simple></div><section class="connection-modal glass-card" role="dialog" aria-modal="true" aria-labelledby="simple-form-title"><button class="connection-close" type="button" data-close-simple aria-label="بستن">×</button><span class="eyebrow"><i></i> ${escapeHtml(kicker)}</span><h2 id="simple-form-title">${escapeHtml(title)}</h2><div class="control-form">${fields.map(field=>`<label class="field-label" for="${escapeAttr(field.id)}">${escapeHtml(field.label)}<input id="${escapeAttr(field.id)}" class="studio-input-line" value="${escapeAttr(field.value)}" placeholder="${escapeAttr(field.placeholder)}" /></label>`).join("")}</div><div class="connection-actions"><button class="button button-ghost" type="button" data-close-simple>لغو</button><button class="button button-primary" type="button" data-submit-simple>ذخیره</button></div></section>`;
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll<HTMLElement>("[data-close-simple]").forEach(node=>node.addEventListener("click",()=>overlay.remove()));
+  overlay.querySelector<HTMLButtonElement>("[data-submit-simple]")?.addEventListener("click",async()=>{
+    const ok=await onSubmit(overlay);
+    if(ok) overlay.remove();
+  });
 }
 
 function renderProductStudio(): string {
