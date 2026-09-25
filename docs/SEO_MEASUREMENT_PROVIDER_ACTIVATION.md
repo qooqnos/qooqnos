@@ -175,3 +175,5 @@ For backward compatibility, Search Intelligence may reuse the existing SEO_COMPE
 Provider data is returned with explicit provenance. The layer does not synthesize search rank, citation, popularity or demand metrics.
 
 - Google Ads Search / Ads Advertisers intelligence via DataForSEO Ads Transparency SERP endpoints.
+
+- Google Events discovery, Google Reviews reputation evidence, and DataForSEO Business Listings local-supply discovery are also exposed through the Search Intelligence control plane.
