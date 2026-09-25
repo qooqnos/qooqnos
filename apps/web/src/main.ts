@@ -2557,30 +2557,6 @@ async function loadBusinessAccess(): Promise<void> {
   }
 }
 
-
-  const status = document.querySelector<HTMLElement>("#business-access-status");
-  const workspace = document.querySelector<HTMLElement>("#business-workspace-short");
-  const note = document.querySelector<HTMLElement>("#business-access-note");
-  if (!status || !workspace || !note) return;
-  if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    status.textContent = "بدون session";
-    status.className = "pill warning";
-    note.textContent = "اتصال لازم است";
-    return;
-  }
-  try {
-    const response = await apiJson<{ status: string; tenantId?: string; workspaceId?: string }>("/api/v1/business-access");
-    status.textContent = response.status === "authorized" ? "مجاز" : response.status;
-    status.className = response.status === "authorized" ? "pill success" : "pill warning";
-    workspace.textContent = compactId(response.workspaceId);
-    note.textContent = response.tenantId ? `tenant · ${compactId(response.tenantId)}` : "workspace context فعال";
-  } catch (error) {
-    status.textContent = "خطا";
-    status.className = "pill warning";
-    note.textContent = error instanceof Error ? error.message : "دسترسی workspace خوانده نشد.";
-  }
-}
-
 function compactId(value?: string): string {
   if (!value) return "—";
   return value.length > 12 ? value.slice(0, 6) + "…" + value.slice(-4) : value;
