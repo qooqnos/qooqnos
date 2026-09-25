@@ -101,6 +101,8 @@
 
 The repository now contains the implementation and verification path. Cloudflare Workers named environments do not inherit non-inheritable bindings such as assets, so the generated production Wrangler configuration explicitly defines the `ASSETS` binding and SPA fallback. citeturn866748view0turn623440search0
 
+The latest successful Worker deployment was followed by an automated live-route check. The Worker itself deployed successfully with the `ASSETS` binding, but `GET /admin` returned HTTP 200 containing the Cloudflare Access sign-in page rather than the SPA shell. This confirms the remaining `/admin` visibility issue is an edge Access policy/session issue, not a missing frontend asset or SPA route.
+
 The repository also contains a main-branch UI preview deployment workflow at `.github/workflows/web-preview-deploy.yml`. It builds `apps/web` and deploys the top-level `qooqnos` Worker, which is the Worker behind `qooqnos.qooqnos.workers.dev`.
 
 The final external verification gate remains: GitHub Actions UI E2E must be observed green before calling production UI 100% verified. The verification workflow runs:
