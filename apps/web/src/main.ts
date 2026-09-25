@@ -38,8 +38,30 @@ type ApiOptions = {
   headers?: Record<string, string>;
 };
 
+type WorkspaceSummary = {
+  id: string;
+  organizationId?: string;
+  name: string;
+  status?: string;
+  createdAt?: string;
+};
+
+type NotificationView = {
+  id: string;
+  intent?: string;
+  channel?: string;
+  priority?: string;
+  status?: string;
+  createdAt?: string;
+  variables?: Record<string, unknown> | null;
+};
+
 let activeDiscoveryItems: DiscoveryResult[] = [];
 let studioPreviewUrl: string | undefined;
+let shellWorkspaces: WorkspaceSummary[] = [];
+let shellNotifications: NotificationView[] = [];
+let shellContext: { actorId?: string; tenantId?: string; workspaceId?: string } = {};
+let shellLoadInFlight = false;
 
 type PublicSeoHydration = {
   metadata: {
@@ -176,6 +198,7 @@ const routes: Route[] = [
   { path: "/operations", label: "عملیات", icon: "⚙", render: renderOperations },
   { path: "/seo", label: "SEO", icon: "◎", render: renderSeo },
   { path: "/control", label: "کنترل", icon: "⌘", render: renderControlCenter },
+  { path: "/admin", label: "ادمین", icon: "◉", render: renderAdmin },
   { path: "/catalog", label: "کاتالوگ", icon: "▤", render: renderCatalog },
   { path: "/promotion", label: "پروموشن", icon: "٪", render: renderPromotion },
   { path: "/loyalty", label: "وفاداری", icon: "♢", render: renderLoyalty },
@@ -272,6 +295,7 @@ function render(): void {
   `;
   bindGlobalEvents();
   syncThemeButtons();
+  void loadShellContext();
   if (route.path === "/account") void loadAccountState();
   if (route.path === "/customer") void loadCustomerState();
   if (route.path === "/communication") void loadCommunicationState();
@@ -280,6 +304,9 @@ function render(): void {
   if (route.path === "/trust") void loadTrustSignals();
   if (route.path === "/operations") void loadCases();
   if (route.path === "/seo") void loadSeoHealth();
+  if (route.path === "/admin") {
+    void loadAdminState();
+  }
 }
 
 
@@ -441,19 +468,22 @@ function renderHeader(route: Route): string {
           <span class="brand-copy"><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
         </a>
         <div class="header-center">
-          <div class="command-palette" role="button" tabindex="0" data-focus-search>
+          <div class="command-palette" role="button" tabindex="0" data-focus-search aria-label="جست‌وجوی سراسری">
             <span class="command-icon">⌕</span>
             <span class="command-placeholder">کجا می‌خواهید بروید؟</span>
             <kbd>/</kbd>
           </div>
         </div>
         <div class="header-actions">
-          <button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button>
-          <a class="profile-chip" href="/account" data-nav aria-label="حساب کاربری">
+          <button class="icon-button notification-button" type="button" data-notification-toggle aria-label="اعلان‌ها" aria-haspopup="dialog">
+            <span aria-hidden="true">♢</span><b id="notification-count" class="notification-count" hidden>0</b>
+          </button>
+          <button class="profile-chip workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog">
             <span class="avatar">ق</span>
-            <span class="profile-copy"><strong>فضای شما</strong><small>${route.label}</small></span>
+            <span class="profile-copy"><strong id="shell-workspace-name">فضای شما</strong><small>${route.label}</small></span>
             <span class="chevron">⌄</span>
-          </a>
+          </button>
+          <button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button>
         </div>
       </div>
     </header>
@@ -464,11 +494,11 @@ function renderSidebar(route: Route): string {
   return `
     <aside class="sidebar">
       <div class="sidebar-top">
-        <div class="workspace-card">
+        <button class="workspace-card workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="انتخاب فضای کاری">
           <div class="workspace-icon">◆</div>
-          <div><strong>ققنوس</strong><span>فضای کاری من</span></div>
+          <div><strong id="sidebar-workspace-name">ققنوس</strong><span id="sidebar-workspace-status">فضای کاری من</span></div>
           <span class="status-live"></span>
-        </div>
+        </button>
       </div>
       <nav class="side-nav" aria-label="ناوبری برنامه">
         <div class="nav-label">محصول</div>
@@ -821,6 +851,66 @@ async function createCatalogProduct(): Promise<void> {
     result.textContent = error instanceof Error ? error.message : "ساخت محصول ناموفق بود.";
     result.className = "connection-state error";
   }
+}
+
+function renderAdmin(): string {
+  return `
+    <section class="page-heading">
+      <div>
+        <span class="eyebrow"><i></i> Admin / Operations</span>
+        <h1>کنترل مرکزی <em>ققنوس.</em></h1>
+        <p>یک نمای واحد برای tenant، workspace، اعضا، سلامت سیستم، مصرف AI و مسیرهای عملیاتی.</p>
+      </div>
+      <div class="heading-actions">
+        <button class="button button-ghost" type="button" data-admin-refresh>بروزرسانی</button>
+      </div>
+    </section>
+    <section class="admin-layout">
+      <article class="glass-card admin-summary">
+        <div class="card-section-heading"><div><span class="section-kicker">Tenant</span><h2>فضای جاری</h2></div><span id="admin-context-status" class="pill">—</span></div>
+        <div class="admin-metrics">
+          <div><span>Tenant</span><strong id="admin-tenant-id">—</strong></div>
+          <div><span>Workspace</span><strong id="admin-workspace-id">—</strong></div>
+          <div><span>اعضا</span><strong id="admin-member-count">—</strong></div>
+          <div><span>Notifications</span><strong id="admin-notification-count">—</strong></div>
+        </div>
+      </article>
+      <article class="glass-card admin-summary">
+        <div class="card-section-heading"><div><span class="section-kicker">System</span><h2>سلامت Runtime</h2></div><span id="admin-health-status" class="pill">—</span></div>
+        <div id="admin-health" class="admin-health-grid"><div class="slot-loading">در حال بررسی…</div></div>
+      </article>
+    </section>
+    <section class="admin-grid">
+      <article class="glass-card admin-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Users / Members</span><h2>اعضای workspace</h2></div></div>
+        <div id="admin-members" class="admin-member-list"><div class="slot-loading">در حال بارگذاری…</div></div>
+      </article>
+      <article class="glass-card admin-card">
+        <div class="card-section-heading"><div><span class="section-kicker">AI / Billing</span><h2>مصرف و مسیر مالی</h2></div></div>
+        <div id="admin-ai-usage" class="admin-usage-panel">
+          <div class="usage-callout"><strong>Seller AI</strong><span>مصرف واقعی Runtime در اجرای هر عملیات ثبت می‌شود.</span></div>
+          <div class="usage-actions">
+            <a class="button button-primary" href="/product-studio" data-nav>باز کردن Seller AI</a>
+            <a class="button button-ghost" href="/billing" data-nav>Billing</a>
+          </div>
+        </div>
+      </article>
+      <article class="glass-card admin-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Operations</span><h2>اجرای سیستم</h2></div></div>
+        <div class="admin-link-grid">
+          <a class="admin-link" href="/operations" data-nav><strong>Cases / Fulfillment</strong><small>عملیات زنده و وضعیت‌ها</small></a>
+          <a class="admin-link" href="/control" data-nav><strong>Automation / Integrations</strong><small>کنترل commandها و اتصال‌ها</small></a>
+          <a class="admin-link" href="/seo" data-nav><strong>SEO / GEO Health</strong><small>Publication و crawler</small></a>
+          <a class="admin-link" href="/trust" data-nav><strong>Trust / Verification</strong><small>اعتماد و reputation</small></a>
+        </div>
+      </article>
+      <article class="glass-card admin-card">
+        <div class="card-section-heading"><div><span class="section-kicker">Audit</span><h2>Audit Surface</h2></div></div>
+        <p class="admin-note">Commandها و mutationهای حساس ققنوس در canonical audit boundary ثبت می‌شوند. این سطح فعلاً برای مشاهده مستقیم به API اختصاصی Audit نیاز دارد.</p>
+        <div class="admin-actions"><button class="button button-ghost" type="button" data-toast="Audit read API در حال تکمیل است؛ mutationها همچنان از audit canonical عبور می‌کنند.">وضعیت Audit</button></div>
+      </article>
+    </section>
+  `;
 }
 
 function renderControlCenter(): string {
@@ -2505,6 +2595,9 @@ function bindGlobalEvents(): void {
     openCommandPalette();
   });
 
+  document.querySelectorAll<HTMLElement>("[data-workspace-toggle]").forEach((node) => node.addEventListener("click", openWorkspaceSwitcher));
+  document.querySelectorAll<HTMLElement>("[data-notification-toggle]").forEach((node) => node.addEventListener("click", openNotificationCenter));
+
   document.querySelector<HTMLElement>("[data-profile-toggle]")?.addEventListener("click", openConnectionPanel);
   document.querySelector<HTMLButtonElement>("[data-business-create]")?.addEventListener("click", openBusinessCreatePanel);
   document.querySelector<HTMLButtonElement>("[data-refresh-account]")?.addEventListener("click", loadAccountState);
@@ -2587,6 +2680,7 @@ function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-open-connection]").forEach((button) => button.addEventListener("click", openConnectionPanel));
   document.querySelector<HTMLButtonElement>("[data-confirm-seller-draft]")?.addEventListener("click", confirmSellerDraft);
   document.querySelector<HTMLButtonElement>("[data-cancel-seller-draft]")?.addEventListener("click", cancelSellerDraft);
+  document.querySelector<HTMLButtonElement>("[data-admin-refresh]")?.addEventListener("click", loadAdminState);
 
   // Keyboard shortcut is registered once at module load.
 }
@@ -2772,6 +2866,18 @@ type SellerRunResult = {
   status: string;
   retryable?: boolean;
   error?: string | null;
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+    imageUnits?: number;
+    providerUnits?: number;
+  } | null;
+  cost?: {
+    estimatedProviderCost?: number;
+    costCurrency?: string;
+    inputUnits?: number;
+    outputUnits?: number;
+  } | null;
   output?: {
     product?: Record<string, unknown>;
   } | null;
@@ -2794,6 +2900,13 @@ function renderRemoteDraft(result: SellerRunResult, sessionId: string, version: 
           <span><b>وضعیت</b> آماده بازبینی</span>
           <span><b>Session</b> ${escapeHtml(sessionId)}</span>
         </div>
+        ${result.usage || result.cost ? `
+          <div class="ai-usage-strip">
+            <span><b>مصرف</b> ${escapeHtml(String(result.usage?.providerUnits ?? ((result.usage?.inputTokens ?? 0) + (result.usage?.outputTokens ?? 0)) || "—"))}</span>
+            <span><b>ورودی</b> ${escapeHtml(String(result.usage?.inputTokens ?? "—"))}</span>
+            <span><b>خروجی</b> ${escapeHtml(String(result.usage?.outputTokens ?? "—"))}</span>
+            <span><b>هزینه داخلی</b> ${result.cost?.estimatedProviderCost !== undefined ? escapeHtml(String(result.cost.estimatedProviderCost)) + " " + escapeHtml(result.cost.costCurrency ?? "USD") : "ثبت شد"}</span>
+          </div>` : ""}
         <div class="draft-actions">
           <button class="button button-primary" type="button" data-confirm-seller-draft>بازبینی و ساخت محصول</button>
           <button class="button button-ghost" type="button" data-cancel-seller-draft>لغو session</button>
@@ -3083,6 +3196,219 @@ async function apiJson<T>(url: string, options: ApiOptions = {}): Promise<T> {
   return body as T;
 }
 
+
+async function loadShellContext(): Promise<void> {
+  if (shellLoadInFlight || !sessionStorage.getItem(STORAGE.accessToken)) {
+    updateShellIndicators();
+    return;
+  }
+  shellLoadInFlight = true;
+  try {
+    const [context, workspaces, notifications] = await Promise.all([
+      apiJson<{ actorId?: string; tenantId?: string; workspaceId?: string }>("/api/v1/context"),
+      apiJson<{ data: WorkspaceSummary[]; currentWorkspaceId?: string | null }>("/api/v1/workspaces"),
+      apiJson<{ data: NotificationView[] }>("/api/v1/notifications?limit=30"),
+    ]);
+    shellContext = context;
+    shellWorkspaces = Array.isArray(workspaces.data) ? workspaces.data : [];
+    shellNotifications = Array.isArray(notifications.data) ? notifications.data : [];
+  } catch {
+    // Shell remains usable when authenticated read models are unavailable.
+  } finally {
+    shellLoadInFlight = false;
+    updateShellIndicators();
+  }
+}
+
+function updateShellIndicators(): void {
+  const currentId = localStorage.getItem(STORAGE.workspace) ?? shellContext.workspaceId ?? "";
+  const current = shellWorkspaces.find((workspace) => workspace.id === currentId);
+  const name = current?.name ?? (currentId ? compactId(currentId) : "فضای شما");
+  document.querySelectorAll<HTMLElement>("#shell-workspace-name, #sidebar-workspace-name").forEach((node) => {
+    node.textContent = name;
+  });
+  document.querySelectorAll<HTMLElement>("#sidebar-workspace-status").forEach((node) => {
+    node.textContent = current?.status === "active" ? "فعال · Workspace" : current ? current.status ?? "Workspace" : "فضای کاری من";
+  });
+  const readIds = getReadNotificationIds();
+  const unread = shellNotifications.filter((item) => !readIds.has(item.id)).length;
+  document.querySelectorAll<HTMLElement>("#notification-count").forEach((node) => {
+    node.textContent = String(unread);
+    node.hidden = unread === 0;
+  });
+}
+
+function getReadNotificationIds(): Set<string> {
+  try {
+    const raw = JSON.parse(localStorage.getItem("phoenix-read-notifications") ?? "[]");
+    return new Set(Array.isArray(raw) ? raw.filter((value): value is string => typeof value === "string").slice(-200) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function markNotificationReadLocally(id: string): void {
+  const ids = getReadNotificationIds();
+  ids.add(id);
+  localStorage.setItem("phoenix-read-notifications", JSON.stringify(Array.from(ids).slice(-200)));
+  updateShellIndicators();
+}
+
+function openWorkspaceSwitcher(): void {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
+  const overlay = document.createElement("div");
+  overlay.className = "workspace-overlay";
+  const currentId = localStorage.getItem(STORAGE.workspace) ?? shellContext.workspaceId ?? "";
+  const rows = shellWorkspaces.length
+    ? shellWorkspaces.map((workspace) => `
+        <button class="workspace-option ${workspace.id === currentId ? "active" : ""}" type="button" data-select-workspace="${escapeAttr(workspace.id)}">
+          <span class="workspace-option-icon">◆</span>
+          <span><strong>${escapeHtml(workspace.name)}</strong><small>${escapeHtml(workspace.id)}</small></span>
+          <b>${workspace.id === currentId ? "✓" : "→"}</b>
+        </button>`).join("")
+    : '<div class="slot-empty"><span>◆</span><p>Workspace مجاز دیگری برای این حساب پیدا نشد.</p></div>';
+  overlay.innerHTML = `
+    <div class="connection-backdrop" data-close-workspace></div>
+    <section class="connection-modal glass-card workspace-modal" role="dialog" aria-modal="true" aria-labelledby="workspace-title">
+      <button class="connection-close" type="button" data-close-workspace aria-label="بستن">×</button>
+      <span class="eyebrow"><i></i> Workspace Switcher</span>
+      <h2 id="workspace-title">فضای کاری را انتخاب کنید</h2>
+      <p>فقط workspaceهایی که کاربر در آن‌ها Membership فعال دارد قابل انتخاب هستند.</p>
+      <div class="workspace-option-list">${rows}</div>
+      <div class="connection-actions">
+        <button class="button button-ghost" type="button" data-close-workspace>بستن</button>
+        <button class="button button-primary" type="button" data-refresh-shell>بروزرسانی</button>
+      </div>
+    </section>`;
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll<HTMLElement>("[data-close-workspace]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
+  overlay.querySelector<HTMLButtonElement>("[data-refresh-shell]")?.addEventListener("click", () => {
+    void loadShellContext();
+    showToast("Workspace context بروزرسانی شد.");
+  });
+  overlay.querySelectorAll<HTMLButtonElement>("[data-select-workspace]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const next = button.dataset.selectWorkspace;
+      if (!next) return;
+      const previous = localStorage.getItem(STORAGE.workspace);
+      localStorage.setItem(STORAGE.workspace, next);
+      try {
+        const context = await apiJson<{ authenticated: boolean; workspaceId?: string }>("/api/v1/context");
+        if (!context.authenticated || context.workspaceId !== next) throw new Error("Workspace context مجاز نیست.");
+        overlay.remove();
+        render();
+        showToast("Workspace تغییر کرد.");
+      } catch (error) {
+        if (previous) localStorage.setItem(STORAGE.workspace, previous); else localStorage.removeItem(STORAGE.workspace);
+        showToast(error instanceof Error ? error.message : "تغییر Workspace ناموفق بود.");
+      }
+    });
+  });
+}
+
+function openNotificationCenter(): void {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
+  const overlay = document.createElement("div");
+  overlay.className = "notification-overlay";
+  const readIds = getReadNotificationIds();
+  const rows = shellNotifications.length
+    ? shellNotifications.map((item) => `
+        <article class="notification-item ${readIds.has(item.id) ? "read" : "unread"}">
+          <div class="notification-item-icon">${item.channel === "in_app" ? "♢" : "◌"}</div>
+          <div class="notification-item-copy">
+            <div class="notification-item-top"><strong>${escapeHtml(item.intent ?? "notification")}</strong><span>${escapeHtml(item.priority ?? "normal")}</span></div>
+            <p>${escapeHtml(notificationSummary(item))}</p>
+            <small>${escapeHtml(formatDate(item.createdAt))} · ${escapeHtml(item.status ?? "created")}</small>
+          </div>
+          <button class="notification-read" type="button" data-mark-notification-read="${escapeAttr(item.id)}">${readIds.has(item.id) ? "خوانده شد" : "خواندم"}</button>
+        </article>`).join("")
+    : '<div class="slot-empty"><span>♢</span><p>اعلان جدیدی برای این حساب ثبت نشده است.</p></div>';
+  overlay.innerHTML = `
+    <div class="connection-backdrop" data-close-notification></div>
+    <section class="connection-modal glass-card notification-modal" role="dialog" aria-modal="true" aria-labelledby="notification-title">
+      <button class="connection-close" type="button" data-close-notification aria-label="بستن">×</button>
+      <span class="eyebrow"><i></i> Notification Center</span>
+      <h2 id="notification-title">اعلان‌های شما</h2>
+      <p>وضعیت خوانده‌شدن در سطح UI مدیریت می‌شود و delivery state همچنان متعلق به Communication است.</p>
+      <div class="notification-list">${rows}</div>
+    </section>`;
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll<HTMLElement>("[data-close-notification]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
+  overlay.querySelectorAll<HTMLButtonElement>("[data-mark-notification-read]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.markNotificationRead;
+      if (!id) return;
+      markNotificationReadLocally(id);
+      button.textContent = "خوانده شد";
+      button.parentElement?.classList.remove("unread");
+      button.parentElement?.classList.add("read");
+    });
+  });
+}
+
+function notificationSummary(item: NotificationView): string {
+  if (!item.variables || typeof item.variables !== "object") return "اعلان ثبت‌شده در ققنوس.";
+  const values = Object.values(item.variables).filter((value) => typeof value === "string" || typeof value === "number" || typeof value === "boolean");
+  return values.length ? values.slice(0, 2).map(String).join(" · ") : "اعلان ثبت‌شده در ققنوس.";
+}
+
+function renderAdminHealth(): void {
+  const status = document.querySelector<HTMLElement>("#admin-health-status");
+  const host = document.querySelector<HTMLElement>("#admin-health");
+  if (!status || !host) return;
+  host.innerHTML = '<div class="slot-loading">در حال بررسی readiness…</div>';
+  void fetch("/ready").then(async (response) => {
+    const body = await response.json().catch(() => ({}));
+    status.textContent = response.ok ? "Ready" : "Not Ready";
+    status.className = response.ok ? "pill success" : "pill warning";
+    host.innerHTML = `
+      <div><span>Runtime</span><strong>${escapeHtml(String(body?.checks?.runtime ?? "—"))}</strong></div>
+      <div><span>Database</span><strong>${escapeHtml(String(body?.checks?.database ?? "—"))}</strong></div>
+      <div><span>Migrations</span><strong>${escapeHtml(String(body?.checks?.migrationRegistry ?? "—"))}</strong></div>`;
+  }).catch((error) => {
+    status.textContent = "خطا";
+    status.className = "pill warning";
+    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "Readiness ناموفق بود.")}</p></div>`;
+  });
+}
+
+async function loadAdminState(): Promise<void> {
+  renderAdminHealth();
+  const tenant = document.querySelector<HTMLElement>("#admin-tenant-id");
+  const workspace = document.querySelector<HTMLElement>("#admin-workspace-id");
+  const members = document.querySelector<HTMLElement>("#admin-members");
+  const memberCount = document.querySelector<HTMLElement>("#admin-member-count");
+  const notificationCount = document.querySelector<HTMLElement>("#admin-notification-count");
+  const contextStatus = document.querySelector<HTMLElement>("#admin-context-status");
+  if (tenant) tenant.textContent = shellContext.tenantId ? compactId(shellContext.tenantId) : "—";
+  if (workspace) workspace.textContent = shellContext.workspaceId ? compactId(shellContext.workspaceId) : "—";
+  if (notificationCount) notificationCount.textContent = String(shellNotifications.length);
+  if (!members) return;
+  members.innerHTML = '<div class="slot-loading">در حال خواندن اعضا…</div>';
+  if (!shellContext.workspaceId) {
+    members.innerHTML = '<div class="slot-empty"><span>◎</span><p>Workspace context موجود نیست.</p></div>';
+    return;
+  }
+  try {
+    const response = await apiJson<{ data: { id: string; userId: string; status: string }[] }>(`/api/v1/workspaces/${encodeURIComponent(shellContext.workspaceId)}/members`);
+    const items = Array.isArray(response.data) ? response.data : [];
+    if (memberCount) memberCount.textContent = String(items.length);
+    if (contextStatus) {
+      contextStatus.textContent = "Connected";
+      contextStatus.className = "pill success";
+    }
+    members.innerHTML = items.length ? items.map((item) => `
+      <div class="admin-member-row"><span class="avatar">${escapeHtml((item.userId || "U").slice(0,1).toUpperCase())}</span><div><strong>${escapeHtml(item.userId)}</strong><small>${escapeHtml(item.status)}</small></div><span class="pill success">member</span></div>`).join("") : '<div class="slot-empty"><span>◎</span><p>عضوی ثبت نشده است.</p></div>';
+  } catch (error) {
+    members.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن اعضا ناموفق بود.")}</p></div>`;
+  }
+}
 
 function showToast(message: string): void {
   let host = document.querySelector<HTMLDivElement>(".toast-host");
