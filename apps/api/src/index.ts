@@ -31,7 +31,9 @@ import { assertProductionInfrastructure, checkRuntimeInfrastructure } from "./in
 import {
   BingWebmasterActions,
   GoogleSearchConsoleActions,
+  SearchEngineActionGateway,
   YandexWebmasterActions,
+  buildSearchEngineActionRuntime,
   processSeoPublicationJobs,
 } from "@qooqnos/seo";
 import { registerMediaRoutes } from "./media-routes";
@@ -130,6 +132,16 @@ function buildSeoVisibilityWorkerConfig(env: ApiEnv, limit: number) {
   };
 }
 
+function buildSearchEngineRuntime(env: ApiEnv) {
+  return buildSearchEngineActionRuntime({
+    maxAttempts: env.SEO_SEARCH_ENGINE_MAX_ATTEMPTS,
+    timeoutMs: env.SEO_SEARCH_ENGINE_TIMEOUT_MS,
+    baseDelayMs: env.SEO_SEARCH_ENGINE_BASE_DELAY_MS,
+    maxDelayMs: env.SEO_SEARCH_ENGINE_MAX_DELAY_MS,
+    onAudit: (event) => console.log(JSON.stringify({ type: "seo.search_engine_action", ...event })),
+  });
+}
+
 function buildGoogleSearchEngineActionsConfig(env: ApiEnv) {
   if (!env.SEO_GSC_SITE_URL || (!env.SEO_GSC_ACCESS_TOKEN && !(env.SEO_GSC_SERVICE_ACCOUNT_EMAIL && env.SEO_GSC_PRIVATE_KEY))) return undefined;
   return {
@@ -137,6 +149,7 @@ function buildGoogleSearchEngineActionsConfig(env: ApiEnv) {
     ...(env.SEO_GSC_ACCESS_TOKEN ? { accessToken: env.SEO_GSC_ACCESS_TOKEN } : {}),
     ...(env.SEO_GSC_SERVICE_ACCOUNT_EMAIL ? { serviceAccountEmail: env.SEO_GSC_SERVICE_ACCOUNT_EMAIL } : {}),
     ...(env.SEO_GSC_PRIVATE_KEY ? { serviceAccountPrivateKey: env.SEO_GSC_PRIVATE_KEY } : {}),
+    runtime: buildSearchEngineRuntime(env),
   };
 }
 
@@ -146,6 +159,7 @@ function buildBingSearchEngineActionsConfig(env: ApiEnv) {
     siteUrl: env.SEO_BING_SITE_URL,
     apiKey: env.SEO_BING_API_KEY ?? "",
     ...(env.SEO_BING_ACCESS_TOKEN ? { accessToken: env.SEO_BING_ACCESS_TOKEN } : {}),
+    runtime: buildSearchEngineRuntime(env),
   };
 }
 
@@ -155,6 +169,7 @@ function buildYandexSearchEngineActionsConfig(env: ApiEnv) {
     userId: env.SEO_YANDEX_USER_ID,
     hostId: env.SEO_YANDEX_HOST_ID,
     oauthToken: env.SEO_YANDEX_OAUTH_TOKEN,
+    runtime: buildSearchEngineRuntime(env),
   };
 }
 
@@ -233,6 +248,23 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
 
   router.register({
     method: "GET",
+    path: "/api/v1/seo/search-engines/status",
+    module: "seo",
+    operation: "search_engine.status",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: ({ context }) => {
+      const gateway = new SearchEngineActionGateway({
+        ...(buildGoogleSearchEngineActionsConfig(env) ? { google: buildGoogleSearchEngineActionsConfig(env) } : {}),
+        ...(buildBingSearchEngineActionsConfig(env) ? { bing: buildBingSearchEngineActionsConfig(env) } : {}),
+        ...(buildYandexSearchEngineActionsConfig(env) ? { yandex: buildYandexSearchEngineActionsConfig(env) } : {}),
+      });
+      return json({ providers: gateway.status() }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/seo/search-engines/google/inspect",
     module: "seo",
     operation: "search_engine.google.inspect",
@@ -301,6 +333,25 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
       if (!url) return json({ error: "url query parameter is required." }, 400, context.requestId);
       const result = await new YandexWebmasterActions(config).requestRecrawl(url);
       return json({ submitted: true, provider: "yandex-webmaster", url, ...result }, 202, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/seo/search-engines/yandex/indexing-history",
+    module: "seo",
+    operation: "search_engine.yandex.indexing_history",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const config = buildYandexSearchEngineActionsConfig(env);
+      if (!config) return json({ status: "unavailable", provider: "yandex-webmaster" }, 503, context.requestId);
+      const search = new URL(request.url).searchParams;
+      const result = await new YandexWebmasterActions(config).getIndexingHistory(
+        search.get("dateFrom")?.trim() || undefined,
+        search.get("dateTo")?.trim() || undefined,
+      );
+      return json({ provider: "yandex-webmaster", history: result }, 200, context.requestId);
     },
   });
 
