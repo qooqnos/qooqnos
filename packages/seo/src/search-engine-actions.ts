@@ -250,7 +250,7 @@ async function requestWithRetry(
   provider: SearchEngineProvider,
   action: string,
   target: string | undefined,
-  input: RequestInfo | URL,
+  input: Parameters<typeof fetch>[0],
   init: RequestInit,
   runtime: SearchEngineActionRuntimeOptions | undefined,
 ): Promise<Response> {
@@ -313,7 +313,7 @@ async function requestWithRetry(
   throw lastError instanceof Error ? lastError : new Error("Search engine request failed.");
 }
 
-async function fetchWithTimeout(fetcher: typeof fetch, input: RequestInfo | URL, init: RequestInit, timeoutMs: number): Promise<Response> {
+async function fetchWithTimeout(fetcher: typeof fetch, input: Parameters<typeof fetch>[0], init: RequestInit, timeoutMs: number): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
