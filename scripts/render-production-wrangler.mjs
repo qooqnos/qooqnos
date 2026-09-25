@@ -95,6 +95,12 @@ AI_SELLER_EXTRACT_MODEL_VERSION = "${modelVersion}"${gatewayId ? `\nAI_GATEWAY_I
 [env.production.triggers]
 crons = [ "17 * * * *", "41 2 * * *", "17 3 * * *" ]
 
+[env.production.assets]
+directory = "./apps/web/public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = [ "/*" ]
+
 [env.production.ai]
 binding = "AI"
 
