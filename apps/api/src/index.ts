@@ -434,6 +434,47 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   });
 
   router.register({
+    method: "POST",
+    path: "/api/v1/catalog/offers",
+    module: "catalog",
+    operation: "catalog.offering.create",
+    permission: "catalog.offering.create",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const command = await parseJsonCommand(request, isCreateOfferingCommand, "Offering payload is invalid.", context.requestId);
+      const service = getCatalogService(database, authorization);
+      const data = await service.createOffering(context, {
+        businessId: brandId<"EntityId">(command.businessId),
+        offeringType: command.offeringType,
+        title: command.title,
+        ...(command.description !== undefined ? { description: command.description } : {}),
+        ...(command.productId !== undefined ? { productId: brandId<"EntityId">(command.productId) } : {}),
+        ...(command.serviceId !== undefined ? { serviceId: brandId<"EntityId">(command.serviceId) } : {}),
+      });
+      return json({ data }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/catalog/offers/:offeringId/publish",
+    module: "catalog",
+    operation: "catalog.offering.publish",
+    permission: "catalog.offering.publish",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const offeringId = brandId<"EntityId">(requiredRouteParam(params, "offeringId", context.requestId));
+      const service = getCatalogService(database, authorization);
+      const data = await service.requestOfferingPublication(context, offeringId);
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "GET",
     path: "/api/v1/audit",
     module: "platform",
@@ -988,6 +1029,24 @@ function isBusinessLocationStatusCommand(value: unknown): value is { status: "ac
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const status = (value as Record<string, unknown>).status;
   return status === "active" || status === "inactive" || status === "archived";
+}
+
+function isCreateOfferingCommand(value: unknown): value is {
+  businessId: string;
+  offeringType: "service" | "product";
+  title: string;
+  description?: string;
+  serviceId?: string;
+  productId?: string;
+} {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const body = value as Record<string, unknown>;
+  if (typeof body.businessId !== "string" || typeof body.title !== "string") return false;
+  if (body.offeringType !== "service" && body.offeringType !== "product") return false;
+  if (!optionalStrings(body, ["description", "serviceId", "productId"])) return false;
+  if (body.offeringType === "product" && typeof body.productId !== "string") return false;
+  if (body.offeringType === "service" && typeof body.serviceId !== "string") return false;
+  return true;
 }
 
 function isCreateProductCommand(value: unknown): value is {
