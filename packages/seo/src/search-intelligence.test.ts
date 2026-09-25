@@ -22,6 +22,8 @@ describe("search intelligence", () => {
       "google-jobs",
       "google-autocomplete",
       "google-shopping",
+      "google-ads-search",
+      "google-ads-advertisers",
       "bing-organic",
       "bing-images",
       "bing-videos",
