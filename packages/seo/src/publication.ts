@@ -291,7 +291,10 @@ export async function processSeoPublicationJobs(
             const offerIds = payload.productVariants?.map((variant) => variant.id) ?? [payload.id];
             for (const offerId of offerIds) await client.delete(offerId);
           } else {
-            const projection = projectMerchantProductFeed([payload], { canonicalBaseUrl });
+            const projection = projectMerchantProductFeed([payload], {
+              canonicalBaseUrl,
+              canonicalUrlByEntityId: { [payload.id]: plan.metadata.canonicalUrl },
+            });
             for (const item of projection.items) await client.upsert(item);
           }
         } catch {
