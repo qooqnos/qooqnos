@@ -111,6 +111,41 @@ export class DataForSeoSearchIntelligenceClient {
       throw new Error("DataForSEO credentials are not configured.");
     }
 
+    if (query.vertical === "google-shopping") {
+      const shopping = await this.googleShoppingProducts({
+        keyword,
+        ...(query.locationCode !== undefined ? { locationCode: query.locationCode } : {}),
+        ...(query.locationName ? { locationName: query.locationName } : {}),
+        ...(query.languageCode ? { languageCode: query.languageCode } : {}),
+        ...(query.languageName ? { languageName: query.languageName } : {}),
+        ...(query.depth !== undefined ? { depth: query.depth } : {}),
+        ...(typeof query.extra?.sort_by === "string" ? { sortBy: query.extra.sort_by } : {}),
+        ...(typeof query.extra?.price_min === "number" ? { priceMin: query.extra.price_min } : {}),
+        ...(typeof query.extra?.price_max === "number" ? { priceMax: query.extra.price_max } : {}),
+      });
+      const task = (shopping as { tasks?: readonly { result?: readonly { keyword?: string; datetime?: string; check_url?: string; location_code?: number; language_code?: string; items?: readonly Record<string, unknown>[] }[] }[] }).tasks?.[0]?.result?.[0];
+      return {
+        vertical: query.vertical,
+        keyword: task?.keyword ?? keyword,
+        ...(task?.datetime ? { datetime: task.datetime } : {}),
+        ...(task?.check_url ? { checkUrl: task.check_url } : {}),
+        ...(task?.location_code !== undefined ? { locationCode: task.location_code } : {}),
+        ...(task?.language_code ? { languageCode: task.language_code } : {}),
+        items: task?.items ?? [],
+        raw: shopping,
+        provenance: {
+          provider: "dataforseo",
+          endpoint: (this.config.endpoint?.trim() || "https://api.dataforseo.com").replace(/\/$/, "") + "/v3/merchant/google/products/task_get/advanced",
+          vertical: query.vertical,
+          keyword,
+          locationCode: task?.location_code ?? query.locationCode ?? null,
+          locationName: query.locationName ?? null,
+          languageCode: task?.language_code ?? query.languageCode ?? query.languageName ?? null,
+          observedAt: new Date().toISOString(),
+        },
+      };
+    }
+
     const endpoint = (this.config.endpoint?.trim() || "https://api.dataforseo.com").replace(/\/$/, "")
       + VERTICAL_ENDPOINTS[query.vertical];
     const payload: Record<string, unknown> = {
@@ -494,6 +529,8 @@ export class GoogleRoutesClient {
 
   async computeRoutes(body: Record<string, unknown>, fieldMask = "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline"): Promise<unknown> {
     if (!body.origin || !body.destination) throw new Error("Google Routes requires origin and destination.");
+    const { fieldMask: ignoredFieldMask, ...routeBody } = body;
+    void ignoredFieldMask;
     const response = await fetchWithTimeout(
       this.config.fetcher ?? fetch,
       "https://routes.googleapis.com/directions/v2:computeRoutes",
@@ -504,7 +541,7 @@ export class GoogleRoutesClient {
           "x-goog-api-key": this.config.apiKey,
           "x-goog-fieldmask": fieldMask,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(routeBody),
       },
       Math.min(Math.max(Math.trunc(this.config.timeoutMs ?? 15000), 1000), 60000),
     );
