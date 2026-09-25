@@ -176,7 +176,7 @@ const demoBusinesses: DiscoveryResult[] = [
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    void navigator.serviceWorker.register("/sw.js?v=2").catch(() => undefined);
   }, { once: true });
 }
 
