@@ -65,7 +65,7 @@ export function projectMerchantProductFeed(
   return { items, skipped };
 }
 
-export function buildMerchantProductFeedXml(items: readonly MerchantProductFeedItem[]): string {
+export function buildMerchantProductFeedXml(items: readonly MerchantProductFeedItem[], canonicalBaseUrl = "https://qooqnos.com"): string {
   const body = items.map((item) => [
     "<item>",
     tag("g:id", item.id),
@@ -86,7 +86,7 @@ export function buildMerchantProductFeedXml(items: readonly MerchantProductFeedI
     '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">',
     "<channel>",
     tag("title", "Phoenix Merchant Center Product Feed"),
-    tag("link", "https://qooqnos.com/"),
+    tag("link", canonicalBaseUrl.replace(/\/$/, "") + "/"),
     tag("description", "Canonical Phoenix marketplace product data."),
     body,
     "</channel></rss>",
@@ -159,9 +159,7 @@ function normalizeMerchantAvailability(value: string | undefined): MerchantProdu
   const normalized = (value ?? "").trim().toLowerCase().replace(/[^a-z]/g, "");
   const map: Record<string, MerchantProductFeedItem["availability"]> = {
     instock: "in_stock",
-    in_stock: "in_stock",
     outofstock: "out_of_stock",
-    out_of_stock: "out_of_stock",
     preorder: "preorder",
     backorder: "backorder",
   };
