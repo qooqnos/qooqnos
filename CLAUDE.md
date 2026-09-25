@@ -24,6 +24,18 @@ Canonical product-direction documents:
 - `docs/CAPABILITY_DECISION_RULES.md`
 - `docs/SELLER_AI_PRODUCT_CREATION_CONTRACT.md` for seller-side AI supply creation
 
+## Homepage Product Gate
+
+When working on the Phoenix Homepage (`/`), read `docs/HOMEPAGE_PRODUCT_CONTRACT.md` before changing code.
+
+The Homepage is Phoenix's Intelligent Decision & Matching experience, not a Dashboard. Its primary interaction is customer demand expressed in natural language, followed by understanding, decision, matching, connection and action.
+
+Do not make revenue/KPI cards, product management, CRM, analytics, booking management, operational tables, or administrative navigation the dominant Homepage experience. Those capabilities belong to dedicated operational routes.
+
+Authenticated users must not be redirected from `/` into a Dashboard merely because they are signed in.
+
+Before changing `/`, inspect and reuse existing canonical Demand, Discovery, Matching, AI, Design System and authentication capabilities. Do not create parallel implementations or fabricate production intelligence.
+
 ## Implementation Continuation Protocol
 
 Every session continues from `docs/IMPLEMENTATION_LEDGER.md`, not from memory or a fresh repository re-analysis.
