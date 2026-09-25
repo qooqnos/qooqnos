@@ -1,3 +1,4 @@
+import type { D1Database } from "@qooqnos/database";
 import { describe, expect, it } from "vitest";
 import { ingestSocialSignals } from "./social-signal-ingestion";
 
