@@ -1794,3 +1794,5 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added authenticated SEO intelligence control-plane routes and readiness gates; SerpApi is intentionally not used.
 - Added regression tests and provider-neutral provenance; raw provider observations are not converted into invented universal rank/popularity metrics.
 - Commits: `bcfebd560c47245a7621e5f1bf342d773fe2f18e`, `81b8470dd0fdd534e0bdbc4c032a5696187aa904`, `7406b33a9d4d49ecb2b9fab7eade18007d0d85d4`, `bebba75946352900a39654fd8fed8ff5d2d07784d`, `93d9119d1cae2d122bad390f739edc60ddee8f45`, `7cbdc9f0f2ff6aedf1781b6ed9b3e2d79b1f9a5b`, `b19a2e003c01f5f30fc400b480f8260873e0a289`, `d3cf09ba19985d6584388244cfe2f7df96c0ffba`, `0682b369511f7ed0268cfbfc853d238dc290cac0`, `8f62b6ee13f07e27e36b9a3b6d769d881537bc15`, `c4757354da390b48303a4334ae6856c0d5b7eed8`.
+
+- Added Google Events, Google Reviews and DataForSEO Business Listings adapters/routes for event discovery, reputation intelligence and local supply discovery; SerpApi remains unused. Commit: `ed077cf6ec1a829bd3453fd594845dc7050c57b7`.
