@@ -92,6 +92,11 @@
 - [x] Cloudflare production environment now explicitly binds SPA assets for `/admin` and other client-side routes
 - [x] `qooqnos.qooqnos.workers.dev` preview deployment workflow added so the current UI is published to the existing workers.dev preview target
 
+- `e4be44f2c48726500c92364798b14f7cfdee6828` — removed duplicate SEO timeout helper that blocked Wrangler bundling.
+- `c057b894d1e17ffd4898b17b37c2ed9f0d071091` — preview deployment now materializes workspace runtime artifacts before Wrangler bundling.
+- `2bab22950bcac177a0816acc0ab436b3d2301381` — preview deployment uses the production GitHub environment for Cloudflare credentials.
+- `36181477232` — observed successful deployment of `qooqnos` to `https://qooqnos.qooqnos.workers.dev`, including SPA assets and `ASSETS` binding.
+
 ## Deployment / verification gate
 
 The repository now contains the implementation and verification path. Cloudflare Workers named environments do not inherit non-inheritable bindings such as assets, so the generated production Wrangler configuration explicitly defines the `ASSETS` binding and SPA fallback. citeturn866748view0turn623440search0
