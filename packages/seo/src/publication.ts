@@ -9,7 +9,7 @@ import { planSeoInvalidation, type SeoDomainChange } from "./invalidation";
 import { notifyIndexNow, type SeoIndexNowConfig } from "./indexnow";
 import { GoogleMerchantCenterClient, type GoogleMerchantCenterConfig } from "./merchant-api";
 import { projectMerchantProductFeed } from "./merchant-feed";
-import { BingWebmasterActions, YandexWebmasterActions, type BingWebmasterActionsConfig, type YandexWebmasterActionsConfig } from "./search-engine-actions";
+import { SearchEngineActionGateway, type BingWebmasterActionsConfig, type YandexWebmasterActionsConfig } from "./search-engine-gateway";
 import type { SeoEntity } from "./types";
 
 export type SeoPublicationReason = "entity-created" | "entity-updated" | "entity-published" | "entity-unpublished" | "entity-deleted" | "dependency-changed";
@@ -190,6 +190,10 @@ export async function processSeoPublicationJobs(
     now, Math.min(Math.max(limit, 1), 100),
   );
   const repository = new SeoRepository(database);
+  const searchEngineGateway = new SearchEngineActionGateway({
+    ...(options.bing ? { bing: options.bing } : {}),
+    ...(options.yandex ? { yandex: options.yandex } : {}),
+  });
   let succeeded = 0;
   let failed = 0;
   let indexNowFailures = 0;
@@ -272,14 +276,14 @@ export async function processSeoPublicationJobs(
       );
       if (options.bing && plan.metadata.canonicalUrl && job.reason !== "entity-unpublished") {
         try {
-          await new BingWebmasterActions(options.bing).submitUrl(plan.metadata.canonicalUrl);
+          await searchEngineGateway.submitBingUrl(plan.metadata.canonicalUrl);
         } catch {
           searchEngineApiFailures += 1;
         }
       }
       if (options.yandex && options.yandexRecrawl && plan.metadata.canonicalUrl && job.reason !== "entity-unpublished") {
         try {
-          await new YandexWebmasterActions(options.yandex).requestRecrawl(plan.metadata.canonicalUrl);
+          await searchEngineGateway.recrawlYandexUrl(plan.metadata.canonicalUrl);
         } catch {
           searchEngineApiFailures += 1;
         }
