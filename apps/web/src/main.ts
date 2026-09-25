@@ -2239,14 +2239,17 @@ function renderResultCards(items: DiscoveryResult[]): string {
     const score = item.score ?? 0;
     const rating = item.rating;
     const sourceType = escapeHtml(item.sourceType ?? "resource");
+    const key = item.id ?? item.sourceId ?? "";
+    const shortlisted = getShortlist().some((entry) => (entry.id ?? entry.sourceId) === key && Boolean(key));
     return `
-      <button class="result-card result-card-button" type="button" data-discovery-index="${index}">
+      <button class="result-card result-card-button${shortlisted ? " shortlisted" : ""}" type="button" data-discovery-index="${index}" aria-label="${title}">
         <div class="result-art result-${index % 3}"><span>${["ک","س","ب"][index % 3]}</span></div>
         <div class="result-content">
           <div class="result-head"><span class="tiny-status">● eligible</span><span class="score-chip">${score ? String(Math.round(score)) : "—"} <small>score</small></span></div>
           <h3>${title}</h3>
           <p>${description}</p>
           <div class="result-meta"><span>⌖ ${locality}</span><span>◈ ${sourceType}</span>${rating !== undefined && rating !== null ? `<span>★ ${Number(rating).toFixed(1)}</span>` : ""}</div>
+          ${shortlisted ? '<span class="result-shortlist-badge">✓ در فهرست انتخابی</span>' : ""}
         </div>
       </button>`;
   }).join("");
@@ -2272,13 +2275,21 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
         <div><span>Score</span><strong>${item.score ?? "—"}</strong></div>
       </div>
       ${metadataEntries.length ? `<div class="metadata-cloud">${metadataEntries.map(([key,value]) => `<span><b>${escapeHtml(key)}</b> ${escapeHtml(String(value))}</span>`).join("")}</div>` : ""}
-      <div class="connection-actions"><button class="button button-primary" type="button" data-open-booking-from-discovery>بررسی رزرو</button><button class="button button-ghost" type="button" data-close-discovery>بستن</button></div>
+      <div class="connection-actions">
+        <button class="button button-primary" type="button" data-open-booking-from-discovery>بررسی رزرو</button>
+        <button class="button button-ghost" type="button" data-toggle-shortlist>انتخاب برای مقایسه</button>
+        <button class="button button-ghost" type="button" data-close-discovery>بستن</button>
+      </div>
     </section>`;
   document.body.appendChild(overlay);
   overlay.querySelectorAll<HTMLElement>("[data-close-discovery]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
   overlay.querySelector<HTMLButtonElement>("[data-open-booking-from-discovery]")?.addEventListener("click", () => {
     overlay.remove();
     navigate("/booking");
+  });
+  overlay.querySelector<HTMLButtonElement>("[data-toggle-shortlist]")?.addEventListener("click", () => {
+    toggleShortlist(item);
+    renderShortlist();
   });
 }
 
