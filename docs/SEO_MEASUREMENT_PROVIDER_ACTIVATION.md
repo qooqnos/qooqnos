@@ -209,3 +209,9 @@ The ingestion layer records provider, platform, query, locale, external content 
 When an authenticated route supplies an entity ID, measurements are attached to that Phoenix entity while retaining the original provider provenance. The ingestion layer does not infer sentiment, sales, popularity, market share or universal rank without an explicit provider-observed field.
 
 - TikTok Content Posting now also supports photo direct-post initialization and publish-status polling; the current TikTok API documents both `/v2/post/publish/content/init/` for photos and `/v2/post/publish/status/fetch/` for status tracking. 
+
+
+## Social provider transport hardening
+
+Social adapters use bounded HTTP timeouts and configurable retry policy for idempotent reads only. Default production policy is 3 attempts, 15s timeout, 500ms base backoff and 5s maximum backoff; HTTP 408, 429 and 5xx responses are retryable, and `Retry-After` is honored when present.
+Publishing POSTs are deliberately not retried automatically because provider APIs may not expose a universal idempotency key and an automatic replay could create duplicate content. Transport settings are controlled through `SEO_SOCIAL_MAX_ATTEMPTS`, `SEO_SOCIAL_TIMEOUT_MS`, `SEO_SOCIAL_BASE_DELAY_MS` and `SEO_SOCIAL_MAX_DELAY_MS`.
