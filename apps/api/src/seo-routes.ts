@@ -118,6 +118,59 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
 
   router.register({
     method: "POST",
+    path: "/api/v1/seo/intelligence/reviews",
+    module: "seo",
+    operation: "intelligence.reviews",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const client = buildSearchIntelligenceClient();
+      if (!client) return json({ status: "unavailable", provider: "dataforseo" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const keyword = typeof body.keyword === "string" ? body.keyword.trim() : "";
+      if (!keyword) return json({ error: { code: "VALIDATION_ERROR", message: "keyword is required." } }, 400, context.requestId);
+      const result = await client.googleReviews({
+        keyword,
+        ...(Number.isFinite(Number(body.locationCode)) ? { locationCode: Number(body.locationCode) } : {}),
+        ...(typeof body.locationName === "string" ? { locationName: body.locationName } : {}),
+        ...(typeof body.languageCode === "string" ? { languageCode: body.languageCode } : {}),
+        ...(typeof body.languageName === "string" ? { languageName: body.languageName } : {}),
+        ...(Number.isFinite(Number(body.depth)) ? { depth: Number(body.depth) } : {}),
+        ...(body.sortBy === "relevance" || body.sortBy === "highest_rating" || body.sortBy === "lowest_rating" || body.sortBy === "newest" ? { sortBy: body.sortBy } : {}),
+      });
+      return json({ provider: "dataforseo", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/intelligence/business-listings",
+    module: "seo",
+    operation: "intelligence.business_listings",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const client = buildSearchIntelligenceClient();
+      if (!client) return json({ status: "unavailable", provider: "dataforseo" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const categories = Array.isArray(body.categories) ? body.categories.filter((value): value is string => typeof value === "string") : [];
+      const keyword = typeof body.keyword === "string" ? body.keyword.trim() : "";
+      if (!keyword && !categories.length) return json({ error: { code: "VALIDATION_ERROR", message: "keyword or categories is required." } }, 400, context.requestId);
+      const result = await client.businessListingsSearch({
+        ...(keyword ? { keyword } : {}),
+        ...(categories.length ? { categories } : {}),
+        ...(Number.isFinite(Number(body.locationCode)) ? { locationCode: Number(body.locationCode) } : {}),
+        ...(typeof body.locationName === "string" ? { locationName: body.locationName } : {}),
+        ...(typeof body.languageCode === "string" ? { languageCode: body.languageCode } : {}),
+        ...(typeof body.languageName === "string" ? { languageName: body.languageName } : {}),
+        ...(Number.isFinite(Number(body.limit)) ? { limit: Number(body.limit) } : {}),
+      });
+      return json({ provider: "dataforseo", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/seo/intelligence/business",
     module: "seo",
     operation: "intelligence.business",
