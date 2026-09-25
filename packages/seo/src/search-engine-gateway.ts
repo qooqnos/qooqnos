@@ -24,9 +24,9 @@ export interface SearchEngineProviderStatus {
 }
 
 export class SearchEngineActionGateway {
-  private readonly google?: GoogleSearchConsoleActions;
-  private readonly bing?: BingWebmasterActions;
-  private readonly yandex?: YandexWebmasterActions;
+  private readonly google: GoogleSearchConsoleActions | undefined;
+  private readonly bing: BingWebmasterActions | undefined;
+  private readonly yandex: YandexWebmasterActions | undefined;
 
   constructor(config: SearchEngineActionGatewayConfig) {
     this.google = config.google ? new GoogleSearchConsoleActions(config.google) : undefined;
@@ -101,3 +101,5 @@ export function buildSearchEngineActionRuntime(
     ...(values.onAudit ? { onAudit: values.onAudit } : {}),
   };
 }
+
+export type { BingWebmasterActionsConfig, YandexWebmasterActionsConfig, GoogleSearchConsoleActionsConfig } from "./search-engine-actions";
