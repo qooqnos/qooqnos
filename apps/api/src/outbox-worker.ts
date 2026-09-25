@@ -306,8 +306,20 @@ async function enrichSeoPayload(
     || event.eventType === "catalog.product.updated"
     || event.eventType === "catalog.variant.changed"
     || event.eventType === "commerce.fulfillment.policy.changed"
-  ) && typeof payload.productId === "string") {
-    const product = await catalog.getProduct(context, brandId<"EntityId">(payload.productId));
+  )) {
+    let commerceProductId = typeof payload.productId === "string" ? payload.productId : null;
+    if (
+      !commerceProductId
+      && event.eventType === "commerce.fulfillment.policy.changed"
+      && payload.resourceType === "product_variant"
+      && typeof payload.resourceId === "string"
+    ) {
+      const variant = await catalog.getProductVariant(context, brandId<"EntityId">(payload.resourceId));
+      commerceProductId = variant?.productId ?? null;
+    }
+    const product = commerceProductId
+      ? await catalog.getProduct(context, brandId<"EntityId">(commerceProductId))
+      : null;
     if (product) {
       const policy = await commerce.getFulfillmentPolicy(context, product.businessId, "product", product.id);
       if (policy) {
