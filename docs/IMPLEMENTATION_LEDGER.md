@@ -1694,3 +1694,10 @@ Residual gate status:
 - Registered the canonical `business.location.changed.v1` event in SEO domain invalidation as `location-changed`, so dependency-aware invalidation can consume the real Business Location lifecycle event directly.
 - Added regression coverage asserting Location changes retain related Business dependencies during domain-change conversion.
 - Commits: `11df4f426759716d661950468e48386a8ea785b2`, `4f00eaec0bb5dd8b20e2770d1d97ddebbdea7682`.
+
+
+## Business Location End-to-End Contract Verification — 2026-09-25
+- Extended Location lifecycle coverage across the canonical event → SEO domain invalidation → dependent representation target chain.
+- Added SSR assertions confirming Location GEO coordinates and hydration are present in the rendered public document surface.
+- The repository-level E2E contract now verifies the deterministic chain without introducing a second Location source of truth.
+- Commits: `c02bd6bb7d9f221f9dc789c9cd11beb61ddd5050`, `6b40e8fbbae5c837f71f62030a66836a51ff5587`.
