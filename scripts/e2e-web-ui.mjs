@@ -30,7 +30,7 @@ await page.route("**/api/v1/**", async (route) => {
   const path = url.pathname;
   const workspace = request.headers()["x-workspace-id"] ?? "ws-1";
 
-  const payloads: Record<string, unknown> = {
+  const payloads = {
     "/api/v1/session": { session: { authenticated: true, actorId: "user-1", tenantId: "tenant-1", workspaceId: workspace } },
     "/api/v1/context": { actorId: "user-1", tenantId: "tenant-1", workspaceId: workspace, authenticated: true, roles: ["admin"], permissions: ["context:read"] },
     "/api/v1/workspaces": { data: [
