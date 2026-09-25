@@ -22,8 +22,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Build
-        run: npm run build
+      - name: Build web assets
+        run: npm --workspace=@qooqnos/web run build
       - name: Install Playwright test runner
         run: npm install --no-save @playwright/test@1.55.0
       - name: Install Chromium
