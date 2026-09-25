@@ -1796,3 +1796,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Commits: `bcfebd560c47245a7621e5f1bf342d773fe2f18e`, `81b8470dd0fdd534e0bdbc4c032a5696187aa904`, `7406b33a9d4d49ecb2b9fab7eade18007d0d85d4`, `bebba75946352900a39654fd8fed8ff5d2d07784d`, `93d9119d1cae2d122bad390f739edc60ddee8f45`, `7cbdc9f0f2ff6aedf1781b6ed9b3e2d79b1f9a5b`, `b19a2e003c01f5f30fc400b480f8260873e0a289`, `d3cf09ba19985d6584388244cfe2f7df96c0ffba`, `0682b369511f7ed0268cfbfc853d238dc290cac0`, `8f62b6ee13f07e27e36b9a3b6d769d881537bc15`, `c4757354da390b48303a4334ae6856c0d5b7eed8`.
 
 - Added Google Events, Google Reviews and DataForSEO Business Listings adapters/routes for event discovery, reputation intelligence and local supply discovery; SerpApi remains unused. Commit: `ed077cf6ec1a829bd3453fd594845dc7050c57b7`.
+
+
+## Social Intelligence + Distribution Providers — 2026-09-25
+
+- Added `packages/seo/src/social-intelligence.ts` with Facebook Pages, Instagram Graph, X API v2, Pinterest API v5, LinkedIn Posts/organization statistics, TikTok Content Posting, and Reddit search adapters.
+- Added authenticated `/api/v1/seo/social/*` control-plane routes and social provider readiness gates.
+- Added regression tests for provider contracts and readiness activation.
+- TikTok public Research API is not fabricated; commercial/eligible research access remains approval-gated, while Content Posting API is implemented.
+- SerpApi is not used.
+- Commits: `21a18899b1abf3ee7a5de8eefe5795d3b5ee98e6`, `6f93739e810b2ace0a8a430af0356ca951aed7c7`, `6a1bcd2af108a56d5a5c0371854ad29655e46dda`, `c669ace84e9683fb679610e0011b100388306075`, `178db5d5dade62e031d57b977ac1dd5642b5a05c`, `a47b282100557fb5d7ee47530e9eea623171b4f2`, `7a911b82705c3570f050d40295a4b5899efd0080`, `937de9c71585f6d979b76e36e15eab2a1ca95067`.
