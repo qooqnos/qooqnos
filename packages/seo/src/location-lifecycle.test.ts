@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSeoProjectionPlan, buildEntityPageModel, generateStructuredData, seoEntityFromEvent } from "@qooqnos/seo";
+import { buildSeoProjectionPlan, seoEntityFromEvent } from "@qooqnos/seo";
 
 describe("Business Location SEO lifecycle", () => {
   const event = {
