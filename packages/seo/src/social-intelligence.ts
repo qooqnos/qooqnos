@@ -82,7 +82,7 @@ export class LinkedInClient {
     return this.request("https://api.linkedin.com/rest/posts", { method: "POST", body: JSON.stringify(body) });
   }
   async organizationShareStatistics(organizationUrn: string): Promise<unknown> { const u = new URL("https://api.linkedin.com/rest/organizationalEntityShareStatistics"); u.searchParams.set("q", "organizationalEntity"); u.searchParams.set("organizationalEntity", organizationUrn); return this.request(u, {}); }
-  private async request(input: string | URL, init: RequestInit): Promise<unknown> { const headers = new Headers(init.headers); headers.set("Authorization", "Bearer " + this.config.accessToken.trim()); headers.set("Linkedin-Version", this.config.version); headers.set("X-Restli-Protocol-Version", "2.0.0"); headers.set("Content-Type", headers.get("Content-Type") ?? "application/json"); const r = await requestWithTimeout(this.config.fetcher ?? fetch, input, { ...init, headers }, this.config.timeoutMs ?? 15000); if (!r.ok) throw new Error("LinkedIn API returned HTTP " + r.status); return r.status === 204 ? null : r.json(); }
+  private async request(input: string | URL, init: RequestInit): Promise<unknown> { const headers = new Headers(init.headers); headers.set("Authorization", "Bearer " + this.config.accessToken.trim()); headers.set("Linkedin-Version", this.config.version); headers.set("X-Restli-Protocol-Version", "2.0.0"); headers.set("Content-Type", headers.get("Content-Type") ?? "application/json"); const r = await requestWithTimeout(this.config.fetcher ?? fetch, input, { ...init, headers }, this.config.timeoutMs ?? 15000, this.config); if (!r.ok) throw new Error("LinkedIn API returned HTTP " + r.status); return r.status === 204 ? null : r.json(); }
 }
 
 export class TikTokClient {
@@ -108,7 +108,7 @@ export class RedditClient {
 
 async function requestWithTimeout(
   fetcher: typeof fetch,
-  input: RequestInfo | URL,
+  input: Parameters<typeof fetch>[0],
   init: RequestInit,
   timeoutMs: number,
   runtime: SocialRuntime,
