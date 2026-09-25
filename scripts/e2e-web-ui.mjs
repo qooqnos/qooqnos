@@ -43,7 +43,6 @@ await page.route("**/api/v1/**", async (route) => {
     "/api/v1/business-access": { status: "authorized", tenantId: "tenant-1", workspaceId: workspace },
     "/api/v1/ai/usage": { data: [{ operationId: "op-1", operationType: "seller.product.extract", meterUnit: "provider_units", quantity: 17, modelId: "test-model", billingUsageReference: "bill-1", createdAt: new Date().toISOString() }] },
     "/api/v1/audit": { data: [{ id: "audit-1", action: "business.updated", targetType: "business", targetId: "biz-1", outcome: "succeeded", createdAt: new Date().toISOString() }] },
-    "/api/v1/workspaces/" + workspace + "/members": { data: [{ id: "member-1", userId: "user-1", status: "active" }] },
     "/api/v1/discovery/search": { data: [{ id: "result-1", sourceType: "business", sourceId: "biz-1", title: "موجودیت واقعی تست", description: "نتیجهٔ canonical برای تست UI", locality: "مرکز شهر", score: 88, rating: 4.8 }] },
     "/api/v1/ai/seller/product-creation-sessions": { session: { id: "seller-session-1" } },
     "/api/v1/ai/seller/product-creation-sessions/seller-session-1": { session: { id: "seller-session-1", currentDraftVersion: 1 }, draft: {} },
@@ -80,6 +79,11 @@ await page.route("**/api/v1/**", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payloads[path]) });
     return;
   }
+  if (path === "/api/v1/workspaces/" + workspace + "/members") {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: [{ id: "member-1", userId: "user-1", status: "active" }] }) });
+    return;
+  }
+
   if (path === "/api/v1/discovery/search") {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payloads["/api/v1/discovery/search"]) });
     return;
