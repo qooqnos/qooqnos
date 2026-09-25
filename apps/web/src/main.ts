@@ -581,7 +581,7 @@ function renderHome(): string {
             <label for="phoenix-demand-input" class="sr-only">نیاز خود را بنویسید</label>
             <textarea id="phoenix-demand-input" rows="3" autocomplete="off" spellcheck="true" placeholder="مثلاً برای جمعه شب یک رستوران آرام برای ۴ نفر می‌خواهم، نزدیک مرکز شهر و با قیمت متوسط..."></textarea>
             <div class="phoenix-demand-footer">
-              <span class="phoenix-demand-hint">هرچه برای تصمیم مهم است بنویس؛ ققنوس مسیر کشف را باز می‌کند.</span>
+              <span class="phoenix-demand-hint">هرچه برای تصمیم مهم است بنویس؛ ققنوس مسیر کشف را باز می‌کند.</span><span class="phoenix-demand-count" id="phoenix-demand-count">۰</span>
               <button class="button button-primary phoenix-demand-submit" type="submit">شروع کن <span>←</span></button>
             </div>
           </form>
@@ -716,11 +716,17 @@ function bindHomeEvents(): void {
     event.preventDefault();
     submit(document.querySelector<HTMLTextAreaElement>("#phoenix-demand-input-final"));
   });
+  const syncCount = (input: HTMLTextAreaElement | null, counterId: string): void => {
+    const counter = document.querySelector<HTMLElement>("#" + counterId);
+    if (counter) counter.textContent = String(input?.value.trim().length ?? 0);
+  };
+  const primaryInput = document.querySelector<HTMLTextAreaElement>("#phoenix-demand-input");
+  primaryInput?.addEventListener("input", () => syncCount(primaryInput, "phoenix-demand-count"));
   document.querySelectorAll<HTMLButtonElement>("[data-phoenix-example]").forEach((button) => {
     button.addEventListener("click", () => {
       const value = button.dataset.phoenixExample ?? "";
       const input = document.querySelector<HTMLTextAreaElement>("#phoenix-demand-input");
-      if (input) { input.value = value; input.focus(); input.scrollIntoView({ behavior: "smooth", block: "center" }); }
+      if (input) { input.value = value; syncCount(input, "phoenix-demand-count"); input.focus(); input.scrollIntoView({ behavior: "smooth", block: "center" }); }
     });
   });
 }
