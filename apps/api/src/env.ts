@@ -11,6 +11,13 @@ export interface ApiEnv {
   readonly SEO_CRAWLER_SAMPLE_LIMIT?: string;
   readonly SEO_MEASUREMENT_SAMPLE_LIMIT?: string;
   readonly SEO_MERCHANT_FEED_LIMIT?: string;
+  readonly SEO_MERCHANT_API_ACCOUNT?: string;
+  readonly SEO_MERCHANT_API_DATA_SOURCE?: string;
+  readonly SEO_MERCHANT_API_FEED_LABEL?: string;
+  readonly SEO_MERCHANT_API_CONTENT_LANGUAGE?: string;
+  readonly SEO_MERCHANT_API_ACCESS_TOKEN?: string;
+  readonly SEO_MERCHANT_API_SERVICE_ACCOUNT_EMAIL?: string;
+  readonly SEO_MERCHANT_API_PRIVATE_KEY?: string;
   readonly SEO_GSC_SITE_URL?: string;
   readonly SEO_GSC_ACCESS_TOKEN?: string;
   readonly SEO_GSC_SERVICE_ACCOUNT_EMAIL?: string;
