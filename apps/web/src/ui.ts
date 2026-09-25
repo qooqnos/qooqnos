@@ -43,7 +43,7 @@ export function uiTable(headers: readonly string[], rows: readonly (readonly str
 }
 
 export function uiDropdown(id: string, label: string, items: readonly string[]): string {
-  return `<div class="ds-dropdown" data-dropdown="${escapeUi(id)}"><button class="button button-ghost" type="button" aria-haspopup="menu" aria-expanded="false">${escapeUi(label)}⌄</button><div class="ds-dropdown-menu" role="menu">${items.map((item) => `<button class="ds-dropdown-item" type="button" role="menuitem">${escapeUi(item)}</button>`).join("")}</div></div>`;
+  return `<details class="ds-dropdown" data-dropdown="${escapeUi(id)}"><summary class="button button-ghost">${escapeUi(label)}⌄</summary><div class="ds-dropdown-menu" role="menu">${items.map((item) => `<button class="ds-dropdown-item" type="button" role="menuitem">${escapeUi(item)}</button>`).join("")}</div></details>`;
 }
 
 export function uiDialog(id: string, title: string, body: string): string {
