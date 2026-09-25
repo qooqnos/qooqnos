@@ -1,6 +1,15 @@
 import type {SeoEntity} from "./types";
 
 export interface SitemapEntry{url:string;lastmod?:string}
+
+export interface RobotsAiPolicy {
+  readonly oaiSearchBot?: boolean;
+  readonly gptBot?: boolean;
+  readonly googleExtended?: boolean;
+  readonly claudeBot?: boolean;
+  readonly perplexityBot?: boolean;
+  readonly crawlDelaySeconds?: number;
+}
 function escapeXml(v:string):string{return v.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");}
 function normalizeEntries(entries:readonly(string|SitemapEntry)[]):SitemapEntry[]{
  const seen=new Set<string>();const result:SitemapEntry[]=[];
@@ -12,8 +21,27 @@ export function buildSitemapXml(entries:readonly(string|SitemapEntry)[]):string{
  const body=normalizeEntries(entries).map(entry=>"<url><loc>"+escapeXml(entry.url)+"</loc>"+(entry.lastmod?"<lastmod>"+escapeXml(entry.lastmod)+"</lastmod>":"")+"</url>").join("");
  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"+body+"</urlset>";
 }
-export function buildRobotsTxt(sitemapUrl:string,disallowedPaths:readonly string[]=["/api/","/account","/billing","/customer","/communication","/operations","/trust","/checkout"]):string{
- const lines=["User-agent: *","Allow: /",...disallowedPaths.filter(Boolean).map(path=>"Disallow: "+path)];if(sitemapUrl.trim())lines.push("Sitemap: "+sitemapUrl.trim());return lines.join("\n")+"\n";
+export function buildRobotsTxt(
+  sitemapUrl:string,
+  disallowedPaths:readonly string[]=["/api/","/account","/billing","/customer","/communication","/operations","/trust","/checkout"],
+  aiPolicy: RobotsAiPolicy = {},
+):string{
+ const lines=["User-agent: *","Allow: /",...disallowedPaths.filter(Boolean).map(path=>"Disallow: "+path)];
+ const bots: readonly [string, boolean | undefined][] = [
+   ["OAI-SearchBot", aiPolicy.oaiSearchBot],
+   ["GPTBot", aiPolicy.gptBot],
+   ["Google-Extended", aiPolicy.googleExtended],
+   ["ClaudeBot", aiPolicy.claudeBot],
+   ["PerplexityBot", aiPolicy.perplexityBot],
+ ];
+ for (const [userAgent, allowed] of bots) {
+   if (allowed === undefined) continue;
+   lines.push("User-agent: "+userAgent, allowed ? "Allow: /" : "Disallow: /");
+ }
+ if (aiPolicy.crawlDelaySeconds !== undefined && Number.isFinite(aiPolicy.crawlDelaySeconds) && aiPolicy.crawlDelaySeconds >= 0) {
+   lines.push("User-agent: *", "Crawl-delay: "+String(aiPolicy.crawlDelaySeconds));
+ }
+ if(sitemapUrl.trim())lines.push("Sitemap: "+sitemapUrl.trim());return lines.join("\n")+"\n";
 }
 export function indexableEntities(e:readonly SeoEntity[],p:(x:SeoEntity)=>boolean):readonly SeoEntity[]{return e.filter(p)}
 export function buildSitemapIndexXml(sitemapUrls: readonly string[]): string {
