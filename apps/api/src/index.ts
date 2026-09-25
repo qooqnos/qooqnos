@@ -88,6 +88,7 @@ const homePage = (version: string): string => `<!doctype html>
 function isApiFirstPublicPath(pathname: string): boolean {
   return pathname === "/health"
     || pathname === "/ready"
+    || pathname === "/merchant-center/products.xml"
     || pathname === "/robots.txt"
     || pathname === "/sitemap.xml"
     || pathname === "/image-sitemap.xml"
