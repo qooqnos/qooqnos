@@ -2408,6 +2408,75 @@ function bindDiscoveryResultEvents(): void {
     });
   });
 }
+
+function openCommandPalette(): void {
+  const existing = document.querySelector(".command-overlay");
+  if (existing) {
+    existing.querySelector<HTMLInputElement>("#global-command-input")?.focus();
+    return;
+  }
+
+  const items = routes.map((route) => ({
+    path: route.path,
+    label: route.label,
+    icon: route.icon,
+  }));
+  const overlay = document.createElement("div");
+  overlay.className = "command-overlay";
+  overlay.innerHTML = `
+    <div class="command-backdrop" data-close-command></div>
+    <section class="command-modal glass-card" role="dialog" aria-modal="true" aria-labelledby="global-command-title">
+      <div class="command-modal-head">
+        <div>
+          <span class="section-kicker">Phoenix Command</span>
+          <h2 id="global-command-title">کجا می‌خواهید بروید؟</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-command aria-label="بستن">×</button>
+      </div>
+      <div class="command-search-row">
+        <span>⌕</span>
+        <input id="global-command-input" class="command-modal-input" autocomplete="off" placeholder="جست‌وجوی بخش‌ها، ابزارها و صفحات…" />
+        <kbd>Esc</kbd>
+      </div>
+      <div id="global-command-results" class="command-results"></div>
+      <div class="command-hint"><span>↑↓ انتخاب</span><span>Enter باز کردن</span><span>/ جست‌وجوی سریع</span></div>
+    </section>`;
+  document.body.appendChild(overlay);
+
+  const input = overlay.querySelector<HTMLInputElement>("#global-command-input");
+  const results = overlay.querySelector<HTMLElement>("#global-command-results");
+  let selected = 0;
+
+  const renderResults = (): void => {
+    const query = input?.value.trim().toLocaleLowerCase("fa") ?? "";
+    const filtered = items.filter((item) => !query || (item.label + " " + item.path).toLocaleLowerCase("fa").includes(query));
+    selected = Math.min(selected, Math.max(0, filtered.length - 1));
+    if (!results) return;
+    results.innerHTML = filtered.length
+      ? filtered.map((item, index) => `<button type="button" class="command-result ${index === selected ? "selected" : ""}" data-command-path="${escapeAttr(item.path)}"><span class="command-result-icon">${escapeHtml(item.icon)}</span><span><strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.path)}</small></span><b>↵</b></button>`).join("")
+      : '<div class="command-no-results">نتیجه‌ای پیدا نشد.</div>';
+    results.querySelectorAll<HTMLButtonElement>("[data-command-path]").forEach((button) => button.addEventListener("click", () => {
+      const path = button.dataset.commandPath ?? "/";
+      overlay.remove();
+      navigate(path);
+    }));
+  };
+
+  const close = (): void => overlay.remove();
+  overlay.querySelectorAll<HTMLElement>("[data-close-command]").forEach((node) => node.addEventListener("click", close));
+  input?.addEventListener("input", () => { selected = 0; renderResults(); });
+  input?.addEventListener("keydown", (event) => {
+    const query = input.value.trim().toLocaleLowerCase("fa");
+    const filtered = items.filter((item) => !query || (item.label + " " + item.path).toLocaleLowerCase("fa").includes(query));
+    if (event.key === "Escape") { event.preventDefault(); close(); }
+    else if (event.key === "ArrowDown") { event.preventDefault(); selected = Math.min(selected + 1, Math.max(0, filtered.length - 1)); renderResults(); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); selected = Math.max(selected - 1, 0); renderResults(); }
+    else if (event.key === "Enter" && filtered[selected]) { event.preventDefault(); const path = filtered[selected]!.path; close(); navigate(path); }
+  });
+  renderResults();
+  window.requestAnimationFrame(() => input?.focus());
+}
+
 function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLElement>("[data-nav]").forEach((element) => {
     element.addEventListener("click", (event) => {
@@ -2433,14 +2502,7 @@ function bindGlobalEvents(): void {
   });
 
   document.querySelector<HTMLElement>("[data-focus-search]")?.addEventListener("click", () => {
-    const input = document.querySelector<HTMLInputElement>("#discover-query");
-    if (input) {
-      input.focus();
-      input.scrollIntoView({ behavior: "smooth", block: "center" });
-    } else {
-      navigate("/discover");
-      window.setTimeout(() => document.querySelector<HTMLInputElement>("#discover-query")?.focus(), 80);
-    }
+    openCommandPalette();
   });
 
   document.querySelector<HTMLElement>("[data-profile-toggle]")?.addEventListener("click", openConnectionPanel);
@@ -2530,9 +2592,15 @@ function bindGlobalEvents(): void {
 }
 
 function handleGlobalShortcut(event: KeyboardEvent): void {
-  if (event.key === "/" && !["INPUT", "TEXTAREA"].includes((event.target as HTMLElement | null)?.tagName ?? "")) {
+  const target = event.target as HTMLElement | null;
+  const tag = target?.tagName ?? "";
+  if (event.key === "Escape") {
+    document.querySelector<HTMLElement>("[data-close-command]")?.click();
+    return;
+  }
+  if (event.key === "/" && !["INPUT", "TEXTAREA", "SELECT"].includes(tag)) {
     event.preventDefault();
-    document.querySelector<HTMLElement>("[data-focus-search]")?.click();
+    openCommandPalette();
   }
 }
 
