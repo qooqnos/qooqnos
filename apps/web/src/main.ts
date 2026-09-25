@@ -2751,6 +2751,9 @@ function bindGlobalEvents(): void {
 
   document.querySelector<HTMLElement>("[data-profile-toggle]")?.addEventListener("click", openConnectionPanel);
   document.querySelector<HTMLButtonElement>("[data-business-create]")?.addEventListener("click", openBusinessCreatePanel);
+  document.querySelector<HTMLButtonElement>("[data-business-refresh]")?.addEventListener("click", () => { void loadBusinessAccess(); });
+  document.querySelector<HTMLButtonElement>("[data-business-save]")?.addEventListener("click", () => { void saveBusinessProfile(); });
+  document.querySelector<HTMLButtonElement>("[data-business-add-location]")?.addEventListener("click", openBusinessLocationPanel);
   document.querySelector<HTMLButtonElement>("[data-refresh-account]")?.addEventListener("click", loadAccountState);
   document.querySelector<HTMLButtonElement>("[data-account-connect]")?.addEventListener("click", openConnectionPanel);
   document.querySelector<HTMLButtonElement>("[data-account-revoke]")?.addEventListener("click", revokeCurrentSession);
