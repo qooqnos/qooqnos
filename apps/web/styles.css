@@ -1483,3 +1483,6 @@ button:disabled, .button:disabled { cursor: not-allowed; }
 @media (prefers-reduced-motion:reduce) {
   .phoenix-discovery-grid button, .phoenix-demand-submit { transition:none; }
 }
+
+.phoenix-demand-count { color:var(--faint); font-size:7px; direction:ltr; min-width:18px; text-align:center; }
+.phoenix-demand-footer { flex-wrap:wrap; }
