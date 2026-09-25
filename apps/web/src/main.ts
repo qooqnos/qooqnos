@@ -1,3 +1,4 @@
+import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui";
 type Theme = "dark" | "light";
 
 type Route = {
@@ -199,6 +200,7 @@ const routes: Route[] = [
   { path: "/seo", label: "SEO", icon: "◎", render: renderSeo },
   { path: "/control", label: "کنترل", icon: "⌘", render: renderControlCenter },
   { path: "/admin", label: "ادمین", icon: "◉", render: renderAdmin },
+  { path: "/design-system", label: "Design System", icon: "◈", render: renderDesignSystem },
   { path: "/catalog", label: "کاتالوگ", icon: "▤", render: renderCatalog },
   { path: "/promotion", label: "پروموشن", icon: "٪", render: renderPromotion },
   { path: "/loyalty", label: "وفاداری", icon: "♢", render: renderLoyalty },
@@ -852,6 +854,48 @@ async function createCatalogProduct(): Promise<void> {
     result.textContent = error instanceof Error ? error.message : "ساخت محصول ناموفق بود.";
     result.className = "connection-state error";
   }
+}
+
+function renderDesignSystem(): string {
+  return `
+    <section class="page-heading">
+      <div><span class="eyebrow"><i></i> Design System</span><h1>Primitiveهای مشترک <em>ققنوس.</em></h1><p>یک owner مشترک برای visual language و تعامل‌های پایه؛ صفحات محصول از همین primitiveها compose می‌شوند.</p></div>
+    </section>
+    <section class="ds-playground-grid">
+      <article class="glass-card ds-playground-card">
+        <span class="section-kicker">Actions / Forms</span>
+        <h2>Button · Input · Select</h2>
+        <div class="ds-playground-stack">
+          ${uiField({ id: "ds-name", label: "نام", placeholder: "کسب‌وکار" })}
+          ${uiSelect({ id: "ds-status", label: "وضعیت", items: [{ value: "active", label: "فعال", selected: true }, { value: "draft", label: "پیش‌نویس" }] })}
+          <div class="hero-actions">
+            ${uiButton("Primary", { variant: "primary" })}
+            ${uiButton("Ghost")}
+            ${uiButton("Disabled", { disabled: true })}
+          </div>
+        </div>
+      </article>
+      <article class="glass-card ds-playground-card">
+        <span class="section-kicker">Navigation</span>
+        <h2>Tabs · Dropdown</h2>
+        <div class="ds-playground-stack">
+          ${uiTabs([{ id: "overview", label: "Overview", selected: true }, { id: "metrics", label: "Metrics" }])}
+          ${uiDropdown("sample-menu", "Actions", ["Edit", "Duplicate", "Archive"])}
+          ${uiSkeleton(3)}
+        </div>
+      </article>
+      <article class="glass-card ds-playground-card">
+        <span class="section-kicker">Data</span>
+        <h2>Table / DataGrid base</h2>
+        ${uiTable(["Entity", "Status", "Score"], [["Business", "Active", "92"], ["Product", "Draft", "—"]])}
+      </article>
+      <article class="glass-card ds-playground-card">
+        <span class="section-kicker">Feedback</span>
+        <h2>Dialog · Empty</h2>
+        <div class="ds-dialog-demo">${uiDialog("ds-sample-dialog", "نمونه Dialog", uiEmpty("✓", "آماده", "این یک primitive قابل composition است."))}</div>
+      </article>
+    </section>
+  `;
 }
 
 function renderAdmin(): string {
