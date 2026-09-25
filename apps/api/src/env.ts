@@ -16,8 +16,11 @@ export interface ApiEnv {
   readonly SEO_GSC_PRIVATE_KEY?: string;
   readonly SEO_GSC_LOOKBACK_DAYS?: string;
   readonly SEO_GSC_END_LAG_DAYS?: string;
+  readonly SEO_GSC_SITEMAP_URL?: string;
+  readonly SEO_GSC_INSPECTION_LANGUAGE?: string;
   readonly SEO_BING_SITE_URL?: string;
   readonly SEO_BING_API_KEY?: string;
+  readonly SEO_BING_ACCESS_TOKEN?: string;
   readonly SEO_AI_CITATION_ENDPOINT?: string;
   readonly SEO_AI_CITATION_API_KEY?: string;
   readonly SEO_AI_CITATION_MODEL?: string;
@@ -40,6 +43,10 @@ export interface ApiEnv {
   readonly SEO_INDEXNOW_KEY_LOCATION?: string;
   readonly SEO_INDEXNOW_ENDPOINT?: string;
   readonly SEO_INDEXNOW_BATCH_LIMIT?: string;
+  readonly SEO_YANDEX_USER_ID?: string;
+  readonly SEO_YANDEX_HOST_ID?: string;
+  readonly SEO_YANDEX_OAUTH_TOKEN?: string;
+  readonly SEO_YANDEX_ENABLE_RECRAWL?: string;
   readonly SEO_ALLOW_OAI_SEARCHBOT?: string;
   readonly SEO_ALLOW_GPTBOT?: string;
   readonly SEO_ALLOW_GOOGLE_EXTENDED?: string;
