@@ -200,3 +200,10 @@ Runtime secrets:
 - SEO_REDDIT_ACCESS_TOKEN (optional for the configured Reddit path)
 
 Authenticated control-plane routes are under `/api/v1/seo/social/*`. Social data is treated as provider-observed evidence and is not converted into invented universal popularity, ranking, reach or sentiment metrics.
+
+
+## Social signal measurement ingestion
+
+Social discovery/analytics responses are now normalized into the existing `seo_measurement_runs` + `seo_measurements` evidence model instead of being transient API responses only.
+The ingestion layer records provider, platform, query, locale, external content identifiers when supplied, and observed engagement/trend metrics such as impressions, likes, comments, shares, clicks, saves, engagement, Reddit score/upvote ratio, and Pinterest trend growth.
+When an authenticated route supplies an entity ID, measurements are attached to that Phoenix entity while retaining the original provider provenance. The ingestion layer does not infer sentiment, sales, popularity, market share or universal rank without an explicit provider-observed field.
