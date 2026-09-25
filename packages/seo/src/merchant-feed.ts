@@ -116,6 +116,9 @@ function toItem(
     : validHttpUrl(entity.imageUrl)
       ? entity.imageUrl!
       : "";
+  const price = variant?.price ?? entity.price;
+  if (price === undefined || !Number.isFinite(price) || price < 0) reasons.push("missing-price");
+
   const currency = clean(variant?.currency) || clean(entity.currency);
   if (!currency) reasons.push("missing-currency");
 
