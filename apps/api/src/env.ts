@@ -59,6 +59,12 @@ export interface ApiEnv {
   readonly SEO_SEARCH_ENGINE_TIMEOUT_MS?: string;
   readonly SEO_SEARCH_ENGINE_BASE_DELAY_MS?: string;
   readonly SEO_SEARCH_ENGINE_MAX_DELAY_MS?: string;
+  readonly SEO_SEARCH_INTELLIGENCE_LOGIN?: string;
+  readonly SEO_SEARCH_INTELLIGENCE_PASSWORD?: string;
+  readonly SEO_SEARCH_INTELLIGENCE_ENDPOINT?: string;
+  readonly SEO_GOOGLE_PLACES_API_KEY?: string;
+  readonly SEO_GOOGLE_ROUTES_API_KEY?: string;
+  readonly SEO_YOUTUBE_API_KEY?: string;
   readonly SEO_ALLOW_OAI_SEARCHBOT?: string;
   readonly SEO_ALLOW_GPTBOT?: string;
   readonly SEO_ALLOW_GOOGLE_EXTENDED?: string;
