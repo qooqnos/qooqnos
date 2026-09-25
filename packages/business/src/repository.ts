@@ -515,7 +515,7 @@ export class BusinessRepository extends Repository {
     const nextTimezone = patch.timezone === undefined ? current.timezone : patch.timezone;
     const nextAddress = patch.address === undefined ? current.address : patch.address;
     const nextGeo = patch.geoPoint === undefined ? current.geoPoint : patch.geoPoint;
-    await this.database.transaction([
+    const results = await this.database.transaction([
       {
         sql: `UPDATE locations SET name=?, location_type=?, timezone=?, address_json=?, geo_point_json=?, updated_at=? WHERE id=? AND business_id=? AND status != 'archived'`,
         params: [nextName, nextType, nextTimezone, nextAddress ? JSON.stringify(nextAddress) : null, nextGeo ? JSON.stringify(nextGeo) : null, now, id, current.businessId],
@@ -530,6 +530,7 @@ export class BusinessRepository extends Repository {
         ],
       },
     ]);
+    if ((results[0]?.meta?.changes ?? 0) !== 1) throw new DatabaseError("Concurrent location update rejected");
     const updated = await this.getLocation(context, id);
     if (!updated) throw new DatabaseError("Location not found after update");
     return updated;
