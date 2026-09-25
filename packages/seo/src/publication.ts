@@ -6,6 +6,7 @@ import { validateAnswerRepresentation } from "./answer-validation";
 import { buildEntityGraph } from "./entity-graph";
 import { buildSeoProjectionPlan } from "./projection";
 import { planSeoInvalidation, type SeoDomainChange } from "./invalidation";
+import { notifyIndexNow, type SeoIndexNowConfig } from "./indexnow";
 import type { SeoEntity } from "./types";
 
 export type SeoPublicationReason = "entity-created" | "entity-updated" | "entity-published" | "entity-unpublished" | "entity-deleted" | "dependency-changed";
@@ -168,7 +169,8 @@ export async function processSeoPublicationJobs(
   now: string,
   limit = 25,
   canonicalBaseUrl = "https://qooqnos.com",
-): Promise<{ processed: number; succeeded: number; failed: number }> {
+  options: { readonly indexNow?: SeoIndexNowConfig } = {},
+): Promise<{ processed: number; succeeded: number; failed: number; indexNowFailures: number }> {
   const jobs = await database.all<SeoPublicationJob>(
     `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
       entity_id AS entityId, entity_type AS entityType, locale, reason, attempts, available_at AS availableAt, source_event_id AS sourceEventId
@@ -181,6 +183,7 @@ export async function processSeoPublicationJobs(
   const repository = new SeoRepository(database);
   let succeeded = 0;
   let failed = 0;
+  let indexNowFailures = 0;
 
   for (const job of jobs) {
     const locked = await database.run(
@@ -256,6 +259,14 @@ export async function processSeoPublicationJobs(
           ...(payload.relatedEntityIds ?? []).map((entityId) => ({ entityId, entityType: "related", version: payload.sourceVersion })),
         ],
       );
+      if (options.indexNow?.key && plan.metadata.canonicalUrl) {
+        try {
+          await notifyIndexNow([plan.metadata.canonicalUrl], options.indexNow);
+        } catch {
+          // IndexNow is an external discovery hint; publication success must not depend on provider availability.
+          indexNowFailures += 1;
+        }
+      }
       await database.run(`UPDATE seo_publication_jobs SET status='succeeded', updated_at=?, last_error=NULL WHERE id=?`, now, job.id);
       succeeded += 1;
     } catch (error) {
@@ -268,7 +279,7 @@ export async function processSeoPublicationJobs(
       failed += 1;
     }
   }
-  return { processed: succeeded + failed, succeeded, failed };
+  return { processed: succeeded + failed, succeeded, failed, indexNowFailures };
 }
 
 async function stableHash(value: unknown): Promise<string> {
