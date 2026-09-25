@@ -122,3 +122,54 @@ The provider action layer uses one unified gateway and a bounded HTTP policy:
 - \`GET /api/v1/seo/search-engines/yandex/indexing-history\` exposes the Yandex indexing-history action through the same authenticated control plane.
 
 Publication-triggered Bing/Yandex actions use the same retry/timeout/audit contract as the authenticated control-plane routes.
+
+
+## Search Intelligence Control Plane — non-SerpApi
+
+Phoenix now exposes a provider-neutral Search Intelligence layer backed by documented DataForSEO APIs plus official Google APIs where they are the authoritative product surface.
+
+Supported DataForSEO verticals include:
+- Google Organic + asynchronous AI Overview evidence
+- Google AI Mode
+- Google Maps / Local Finder
+- Google News / Images / Jobs / Autocomplete / Dataset Search
+- Google Search by Image / Lens
+- Google Shopping
+- Bing Organic / News / Images / Videos
+- Yandex Organic
+- Yahoo / Baidu / Naver / Seznam Organic
+- YouTube SERP
+- Amazon product search
+
+Additional provider integrations:
+- Google Places (New): Text Search, Nearby Search, Autocomplete, Place Details and Place Photos
+- Google Routes API
+- YouTube Data API v3 search
+- DataForSEO Trends Explore
+- DataForSEO Google business information
+
+Control-plane routes:
+- GET /api/v1/seo/intelligence/providers
+- POST /api/v1/seo/intelligence/search
+- POST /api/v1/seo/intelligence/search-by-image
+- POST /api/v1/seo/intelligence/trends
+- POST /api/v1/seo/intelligence/business
+- POST /api/v1/seo/intelligence/shopping
+- POST /api/v1/seo/intelligence/places/search
+- POST /api/v1/seo/intelligence/places/autocomplete
+- POST /api/v1/seo/intelligence/places/nearby
+- GET /api/v1/seo/intelligence/places/:placeId
+- POST /api/v1/seo/intelligence/routes
+- POST /api/v1/seo/intelligence/youtube/search
+
+Runtime configuration:
+- SEO_SEARCH_INTELLIGENCE_LOGIN
+- SEO_SEARCH_INTELLIGENCE_PASSWORD
+- optional SEO_SEARCH_INTELLIGENCE_ENDPOINT
+- SEO_GOOGLE_PLACES_API_KEY
+- optional SEO_GOOGLE_ROUTES_API_KEY (falls back to Places key)
+- SEO_YOUTUBE_API_KEY
+
+For backward compatibility, Search Intelligence may reuse the existing SEO_COMPETITIVE_LOGIN / SEO_COMPETITIVE_PASSWORD DataForSEO credentials.
+
+Provider data is returned with explicit provenance. The layer does not synthesize search rank, citation, popularity or demand metrics.
