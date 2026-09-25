@@ -77,7 +77,6 @@ export function buildMerchantProductFeedXml(items: readonly MerchantProductFeedI
     tag("g:condition", item.condition),
     tag("g:price", formatPrice(item.price, item.currency)),
     ...(item.itemGroupId ? [tag("g:item_group_id", item.itemGroupId)] : []),
-    ...(item.sku && item.sku !== item.id ? [tag("g:mpn", item.sku)] : []),
     "</item>",
   ].join("")).join("");
 
