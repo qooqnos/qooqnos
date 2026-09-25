@@ -155,6 +155,8 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
         if (variant.url && validHttpUrl(variant.url)) {
           item.url = variant.url;
           item["@id"] = variant.url + "#variant";
+        } else if (canonicalUrl && stableVariantId) {
+          item["@id"] = canonicalUrl + "#variant-" + encodeURIComponent(stableVariantId);
         }
         if (variant.imageUrl && validHttpUrl(variant.imageUrl)) item.image = variant.imageUrl;
         if (variant.price !== undefined && Number.isFinite(variant.price)) {
