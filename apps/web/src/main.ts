@@ -298,6 +298,10 @@ function render(): void {
   `;
   bindGlobalEvents();
   syncThemeButtons();
+  if (route.path === "/discover") {
+    const initialDiscoveryQuery = new URLSearchParams(location.search).get("q")?.trim() ?? "";
+    if (initialDiscoveryQuery) void runDiscovery();
+  }
   void loadShellContext();
   if (route.path === "/") bindHomeEvents();
   if (route.path === "/account") void loadAccountState();
@@ -3145,9 +3149,14 @@ async function runDiscovery(): Promise<void> {
   const input = document.querySelector<HTMLInputElement>("#discover-query");
   const resultHost = document.querySelector<HTMLDivElement>("#discovery-results");
   const meta = document.querySelector<HTMLElement>("#results-meta");
+  const title = document.querySelector<HTMLElement>("#results-title");
   if (!input || !resultHost || !meta) return;
 
   const query = input.value.trim();
+  if (title) {
+    const preview = query.length > 48 ? query.slice(0, 48) + "…" : query;
+    title.textContent = preview ? `نتایج برای «${preview}»` : "پیشنهادهای امروز";
+  }
   if (!query) {
     showToast("یک نیاز یا عبارت جست‌وجو وارد کن.");
     input.focus();
