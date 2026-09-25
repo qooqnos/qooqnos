@@ -56,8 +56,12 @@ describe("social intelligence providers", () => {
     const client = new TikTokClient({ accessToken: "token", fetcher: async (input, init) => { urls.push(new Request(input, init).url); return response({ data: {} }); } });
     await client.creatorInfo();
     await client.initializeVideoPost({ videoUrl: "https://qooqnos.com/video.mp4", privacyLevel: "SELF_ONLY" });
+    await client.initializePhotoPost({ imageUrls: ["https://qooqnos.com/image.jpg"], privacyLevel: "SELF_ONLY" });
+    await client.getPostStatus("publish-1");
     expect(urls[0]).toContain("/v2/post/publish/creator_info/query/");
     expect(urls[1]).toContain("/v2/post/publish/video/init/");
+    expect(urls[2]).toContain("/v2/post/publish/content/init/");
+    expect(urls[3]).toContain("/v2/post/publish/status/fetch/");
   });
 
   it("uses Reddit search with bounded limits", async () => {
