@@ -138,13 +138,19 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       const locale = typeof body.locale === "string" && body.locale.trim() ? body.locale.trim() : "en-US";
       const source = typeof body.content === "string" ? body.content : Array.isArray(body.rows) ? body.rows.filter((row) => row && typeof row === "object" && !Array.isArray(row)) as Record<string, unknown>[] : null;
       if (!source) return json({ error: { code: "VALIDATION_ERROR", message: "Provide CSV/JSON content or rows." } }, 400, context.requestId);
-      const observations = parseGoogleSearchConsoleExport(source, {
-        report, locale,
-        ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}),
-        ...(typeof body.entityType === "string" ? { entityType: body.entityType } : {}),
-        ...(typeof body.canonicalUrl === "string" ? { canonicalUrl: body.canonicalUrl } : {}),
-        ...(typeof body.exportReference === "string" ? { exportReference: body.exportReference } : {}),
-      });
+      let observations;
+      try {
+        observations = parseGoogleSearchConsoleExport(source, {
+          report, locale,
+          ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}),
+          ...(typeof body.entityType === "string" ? { entityType: body.entityType } : {}),
+          ...(typeof body.canonicalUrl === "string" ? { canonicalUrl: body.canonicalUrl } : {}),
+          ...(typeof body.exportReference === "string" ? { exportReference: body.exportReference } : {}),
+        });
+      } catch (error) {
+        return json({ error: { code: "VALIDATION_ERROR", message: error instanceof Error ? error.message : "Google Search Console export is invalid." } }, 400, context.requestId);
+      }
+      if (!observations.length) return json({ error: { code: "VALIDATION_ERROR", message: "Google Search Console export contained no recognized metrics." } }, 400, context.requestId);
       return recordImportedVisibility(database, context, observations, "google-search-console-export", report, context.requestId);
     },
   });
@@ -165,12 +171,18 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       const locale = typeof body.locale === "string" && body.locale.trim() ? body.locale.trim() : "en-US";
       const source = typeof body.content === "string" ? body.content : Array.isArray(body.rows) ? body.rows.filter((row) => row && typeof row === "object" && !Array.isArray(row)) as Record<string, unknown>[] : null;
       if (!source) return json({ error: { code: "VALIDATION_ERROR", message: "Provide CSV/JSON content or rows." } }, 400, context.requestId);
-      const observations = parseBingAiPerformanceExport(source, {
-        dataset, locale,
-        ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}),
-        ...(typeof body.entityType === "string" ? { entityType: body.entityType } : {}),
-        ...(typeof body.exportReference === "string" ? { exportReference: body.exportReference } : {}),
-      });
+      let observations;
+      try {
+        observations = parseBingAiPerformanceExport(source, {
+          dataset, locale,
+          ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}),
+          ...(typeof body.entityType === "string" ? { entityType: body.entityType } : {}),
+          ...(typeof body.exportReference === "string" ? { exportReference: body.exportReference } : {}),
+        });
+      } catch (error) {
+        return json({ error: { code: "VALIDATION_ERROR", message: error instanceof Error ? error.message : "Bing AI Performance export is invalid." } }, 400, context.requestId);
+      }
+      if (!observations.length) return json({ error: { code: "VALIDATION_ERROR", message: "Bing AI Performance export contained no recognized metrics." } }, 400, context.requestId);
       return recordImportedVisibility(database, context, observations, "bing-ai-performance-export", dataset, context.requestId);
     },
   });
@@ -429,12 +441,14 @@ async function recordImportedVisibility(database: D1Database, context: RequestCo
   });
   const now = new Date().toISOString();
   let count = 0;
+  const entityCache = new Map<string, string | undefined>();
   for (const item of observations) {
+    const resolvedEntityId = item.entityId ?? (item.pageUrl ? await resolveSeoEntityId(database, context, item.pageUrl, entityCache) : undefined);
     await repository.record(context, {
       id: runId + ":" + crypto.randomUUID(),
       surface: item.surface,
       metric: item.metric,
-      ...(item.entityId ? { entityId: item.entityId } : {}),
+      ...(resolvedEntityId ? { entityId: resolvedEntityId } : {}),
       queryClass: "external-export",
       ...(item.numericValue !== undefined ? { numericValue: item.numericValue } : {}),
       ...(item.textValue !== undefined ? { textValue: item.textValue } : {}),
@@ -445,7 +459,7 @@ async function recordImportedVisibility(database: D1Database, context: RequestCo
       await repository.recordMeasurementCitation(context, {
         id: runId + ":citation:" + crypto.randomUUID(),
         runId,
-        ...(item.entityId ? { entityId: item.entityId } : {}),
+        ...(resolvedEntityId ? { entityId: resolvedEntityId } : {}),
         citationUrl: item.citationUrl,
         ...(item.citationTitle ? { citationTitle: item.citationTitle } : {}),
         ...(item.citationPosition !== undefined ? { citationPosition: item.citationPosition } : {}),
@@ -461,3 +475,18 @@ async function recordImportedVisibility(database: D1Database, context: RequestCo
   return json({ imported: count, runId, providerId, dataset }, 200, requestId);
 }
 
+
+async function resolveSeoEntityId(database: D1Database, context: RequestContext, pageUrl: string, cache: Map<string, string | undefined>): Promise<string | undefined> {
+  if (cache.has(pageUrl)) return cache.get(pageUrl);
+  const row = await database.first<{ entityId: string }>(
+    `SELECT entity_id AS entityId
+       FROM seo_entity_representations
+      WHERE organization_id=? AND workspace_id IS ? AND canonical_url=?
+      ORDER BY generated_at DESC
+      LIMIT 1`,
+    context.tenantId, context.workspaceId ?? null, pageUrl,
+  );
+  const entityId = row?.entityId;
+  cache.set(pageUrl, entityId);
+  return entityId;
+}
