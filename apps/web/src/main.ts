@@ -3793,9 +3793,10 @@ async function loadAdminState(): Promise<void> {
     if (!shellContext.workspaceId) {
       members.innerHTML = '<div class="slot-empty"><span>◎</span><p>Workspace context موجود نیست.</p></div>';
     } else {
+      const workspaceId = shellContext.workspaceId;
       tasks.push((async () => {
         try {
-          const response = await apiJson<{ data: { id: string; userId: string; status: string }[] }>(`/api/v1/workspaces/${encodeURIComponent(shellContext.workspaceId)}/members`);
+          const response = await apiJson<{ data: { id: string; userId: string; status: string }[] }>(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/members`);
           const items = Array.isArray(response.data) ? response.data : [];
           if (memberCount) memberCount.textContent = String(items.length);
           if (contextStatus) {
