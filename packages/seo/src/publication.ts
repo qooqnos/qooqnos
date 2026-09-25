@@ -7,6 +7,8 @@ import { buildEntityGraph } from "./entity-graph";
 import { buildSeoProjectionPlan } from "./projection";
 import { planSeoInvalidation, type SeoDomainChange } from "./invalidation";
 import { notifyIndexNow, type SeoIndexNowConfig } from "./indexnow";
+import { GoogleMerchantCenterClient, type GoogleMerchantCenterConfig } from "./merchant-api";
+import { projectMerchantProductFeed } from "./merchant-feed";
 import { BingWebmasterActions, YandexWebmasterActions, type BingWebmasterActionsConfig, type YandexWebmasterActionsConfig } from "./search-engine-actions";
 import type { SeoEntity } from "./types";
 
@@ -175,8 +177,9 @@ export async function processSeoPublicationJobs(
     readonly bing?: BingWebmasterActionsConfig;
     readonly yandex?: YandexWebmasterActionsConfig;
     readonly yandexRecrawl?: boolean;
+    readonly merchantCenter?: GoogleMerchantCenterConfig;
   } = {},
-): Promise<{ processed: number; succeeded: number; failed: number; indexNowFailures: number }> {
+): Promise<{ processed: number; succeeded: number; failed: number; indexNowFailures: number; searchEngineApiFailures: number; merchantCenterFailures: number }> {
   const jobs = await database.all<SeoPublicationJob>(
     `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
       entity_id AS entityId, entity_type AS entityType, locale, reason, attempts, available_at AS availableAt, source_event_id AS sourceEventId
@@ -191,6 +194,7 @@ export async function processSeoPublicationJobs(
   let failed = 0;
   let indexNowFailures = 0;
   let searchEngineApiFailures = 0;
+  let merchantCenterFailures = 0;
 
   for (const job of jobs) {
     const locked = await database.run(
@@ -280,6 +284,20 @@ export async function processSeoPublicationJobs(
           searchEngineApiFailures += 1;
         }
       }
+      if (options.merchantCenter && payload.type === "Product") {
+        try {
+          const client = new GoogleMerchantCenterClient(options.merchantCenter);
+          if (job.reason === "entity-unpublished" || job.reason === "entity-deleted") {
+            const offerIds = payload.productVariants?.map((variant) => variant.id) ?? [payload.id];
+            for (const offerId of offerIds) await client.delete(offerId);
+          } else {
+            const projection = projectMerchantProductFeed([payload], { canonicalBaseUrl });
+            for (const item of projection.items) await client.upsert(item);
+          }
+        } catch {
+          merchantCenterFailures += 1;
+        }
+      }
       if (options.indexNow?.key && plan.metadata.canonicalUrl) {
         try {
           await notifyIndexNow([plan.metadata.canonicalUrl], options.indexNow);
@@ -300,7 +318,7 @@ export async function processSeoPublicationJobs(
       failed += 1;
     }
   }
-  return { processed: succeeded + failed, succeeded, failed, indexNowFailures, searchEngineApiFailures };
+  return { processed: succeeded + failed, succeeded, failed, indexNowFailures, searchEngineApiFailures, merchantCenterFailures };
 }
 
 async function stableHash(value: unknown): Promise<string> {
