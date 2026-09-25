@@ -174,7 +174,6 @@ export async function processSeoPublicationJobs(
     readonly indexNow?: SeoIndexNowConfig;
     readonly google?: GoogleSearchConsoleActionsConfig;
     readonly googleSitemapUrl?: string;
-    readonly googleInspectionLanguage?: string;
     readonly bing?: BingWebmasterActionsConfig;
     readonly yandex?: YandexWebmasterActionsConfig;
     readonly yandexRecrawl?: boolean;
@@ -269,14 +268,6 @@ export async function processSeoPublicationJobs(
           ...(payload.relatedEntityIds ?? []).map((entityId) => ({ entityId, entityType: "related", version: payload.sourceVersion })),
         ],
       );
-      if (options.google && plan.metadata.canonicalUrl) {
-        try {
-          const google = new GoogleSearchConsoleActions(options.google);
-          if (options.googleSitemapUrl) await google.submitSitemap(options.googleSitemapUrl);
-        } catch {
-          searchEngineApiFailures += 1;
-        }
-      }
       if (options.bing && plan.metadata.canonicalUrl && job.reason !== "entity-unpublished") {
         try {
           await new BingWebmasterActions(options.bing).submitUrl(plan.metadata.canonicalUrl);
