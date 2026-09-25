@@ -97,6 +97,7 @@
 - `2bab22950bcac177a0816acc0ab436b3d2301381` — preview deployment uses the production GitHub environment for Cloudflare credentials.
 - `36181477232` — observed successful deployment of `qooqnos` to `https://qooqnos.qooqnos.workers.dev`, including SPA assets and `ASSETS` binding.
 - `b5caa603ee66156b78f21fa697ea3efefd34fb2e` / `d690273667784d08c8251bb1ddad182a31351e6e` / `9443bd090bff3c39c84a3a79c17c8ae7590a4cdf` — Service Worker cache version, registration URL, and frontend asset URLs are versioned to prevent stale `main.js` from rendering a blank dark shell after deployment.
+- `e6c5cdaf185ea2439ac1955ced2a0d290c62e6e5` / `c56536cad5528ef8cd06d70a50db5ff11a31e417` / `8dfcd2af9b2dc724d87d2b0005631898aa07dadd` — synchronized the npm workspace lockfile: registered `documents`/`seo` workspace metadata and symlink entries, aligned onboarding Vitest with the locked 3.x version, and aligned CI/deploy workflows on `npm ci` so Cloudflare's clean-install path is reproducible.
 
 ## Deployment / verification gate
 
