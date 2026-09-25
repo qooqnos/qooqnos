@@ -25,6 +25,16 @@ export interface OutboxEventInput {
   readonly occurredAt: string;
 }
 
+function parseAuditMetadata(value: string | null): Readonly<Record<string, unknown>> | undefined {
+  if (!value) return undefined;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Readonly<Record<string, unknown>> : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Canonical persistence boundary for platform audit, idempotency and outbox state. */
 export class PlatformRepository extends Repository {
   constructor(database: D1Database) { super(database); }
@@ -33,11 +43,12 @@ export class PlatformRepository extends Repository {
     const workspaceId = context.workspaceId ?? null;
     if (!organizationId) throw new DatabaseError("Organization context is required");
     const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
-    return this.database.all<AuditEventInput>(
-      `SELECT id, actor_id AS actorId, organization_id AS organizationId, workspace_id AS workspaceId,
-              action, target_type AS targetType, target_id AS targetId, outcome,
-              request_id AS requestId, correlation_id AS correlationId,
-              metadata_json AS metadataJson, created_at AS createdAt
+    const rows = await this.database.all<{
+      id: string; actorId: string | null; action: string; targetType: string | null; targetId: string | null;
+      outcome: string; requestId: string | null; correlationId: string | null; metadataJson: string | null; createdAt: string;
+    }>(
+      `SELECT id, actor_id AS actorId, action, target_type AS targetType, target_id AS targetId, outcome,
+              request_id AS requestId, correlation_id AS correlationId, metadata_json AS metadataJson, created_at AS createdAt
        FROM audit_events
        WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?)
        ORDER BY created_at DESC, id DESC LIMIT ?`,
@@ -45,6 +56,18 @@ export class PlatformRepository extends Repository {
       workspaceId,
       safeLimit,
     );
+    return rows.map((row) => ({
+      id: row.id,
+      ...(row.actorId ? { actorId: row.actorId } : {}),
+      action: row.action,
+      ...(row.targetType ? { targetType: row.targetType } : {}),
+      ...(row.targetId ? { targetId: row.targetId } : {}),
+      outcome: row.outcome,
+      ...(row.requestId ? { requestId: row.requestId } : {}),
+      ...(row.correlationId ? { correlationId: row.correlationId } : {}),
+      metadata: parseAuditMetadata(row.metadataJson),
+      createdAt: row.createdAt,
+    }));
   }
 
   async appendAudit(context: RepositoryContext, input: AuditEventInput): Promise<void> {
