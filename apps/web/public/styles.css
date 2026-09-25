@@ -850,3 +850,10 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
   .business-management-form { grid-template-columns:1fr; }
   .business-profile-grid { grid-template-columns:1fr; }
 }
+
+.admin-usage-list,.admin-audit-list { display:grid; gap:7px; margin-top:11px; max-height:300px; overflow:auto; }
+.admin-usage-row,.admin-audit-row { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; padding:9px 10px; border-radius:11px; background:var(--surface-2); }
+.admin-usage-row strong,.admin-usage-row small,.admin-audit-row strong,.admin-audit-row small { display:block; }
+.admin-usage-row strong,.admin-audit-row strong { font-size:8px; }
+.admin-usage-row small,.admin-audit-row small { margin-top:2px; color:var(--faint); font-size:7px; }
+.admin-usage-row>span { color:var(--primary); font-size:9px; font-weight:800; }
