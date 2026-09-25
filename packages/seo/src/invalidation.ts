@@ -51,6 +51,7 @@ export const SEO_EVENT_REASON_MAP: Readonly<Record<string, SeoInvalidationReason
   "entity.deleted": "entity-deleted",
   "entity.relationship.changed": "relationship-changed",
   "entity.location.changed": "location-changed",
+  "business.location.changed.v1": "location-changed",
   "entity.locale.published": "locale-published",
   "credential.changed": "credential-changed",
 };
