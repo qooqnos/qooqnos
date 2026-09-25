@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildEntityGraph, buildSeoProjectionPlan, seoEntityFromEvent } from "@qooqnos/seo";
+import { buildEntityGraph, buildSeoProjectionPlan, domainChangeFromOutboxEvent, planSeoInvalidation, seoEntityFromEvent } from "@qooqnos/seo";
 
 describe("Business Location SEO lifecycle", () => {
   const event = {
@@ -63,4 +63,19 @@ describe("Business Location SEO lifecycle", () => {
     expect(inactive?.publicationState).toBe("unpublished");
     expect(inactive?.visibility).toBe("private");
   });
+  it("carries the real Location event through invalidation and dependent Business regeneration", () => {
+    const change = domainChangeFromOutboxEvent(event);
+    expect(change?.entityId).toBe("location-1");
+    expect(change?.reason).toBe("location-changed");
+    expect(change?.relatedEntityIds).toEqual(["business-1"]);
+
+    const targets = planSeoInvalidation(change!, [
+      { representationEntityId: "business-1", dependencyEntityId: "location-1" },
+    ]);
+    expect(targets).toEqual([
+      { entityId: "business-1", reason: "relationship-changed" },
+      { entityId: "location-1", reason: "location-changed" },
+    ]);
+  });
+
 });
