@@ -1274,8 +1274,10 @@ button:disabled, .button:disabled { cursor: not-allowed; }
 .publication-mini-card .engine-actions { display:flex; gap:7px; flex-wrap:wrap; margin-top:8px; }
 
 .ds-dropdown { position: relative; display: inline-block; }
-.ds-dropdown-menu { position:absolute; inset-inline-end:0; top:calc(100% + 6px); min-width:170px; display:none; z-index:40; padding:5px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); }
-.ds-dropdown:focus-within .ds-dropdown-menu, .ds-dropdown:hover .ds-dropdown-menu { display:grid; }
+.ds-dropdown > summary { list-style: none; }
+.ds-dropdown > summary::-webkit-details-marker { display: none; }
+.ds-dropdown-menu { position:absolute; inset-inline-end:0; top:calc(100% + 6px); min-width:170px; display:grid; z-index:40; padding:5px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); }
+.ds-dropdown:not([open]) .ds-dropdown-menu { display:none; }
 .ds-dropdown-item { padding:8px 10px; border-radius:8px; background:transparent; text-align:start; color:var(--muted); font-size:9px; }
 .ds-dropdown-item:hover { background:var(--surface-2); color:var(--text); }
 .ds-dialog { padding:18px; min-width:min(100%,420px); }
