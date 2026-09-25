@@ -1,48 +1,105 @@
 # Phoenix UI Implementation Progress
 
 ## Status
-- Core Phoenix web UI implementation pass: **substantially implemented**
-- Checklist audit against the full product/UI architecture: **not yet 100% complete**
-- Last audited: 2026-09-25
+- Product/UI implementation pass: **complete for the requested current web scope**
+- Final external verification gate: **CI/E2E execution must be observed green before calling the production UI 100% verified**
+- Last implementation update: 2026-09-25
 - Primary frontend: `apps/web`
 
-## Verified completed
-- [x] RTL-first application shell
-- [x] Dark/light theme with persistence
-- [x] Responsive desktop/tablet/mobile layout
-- [x] Skip link, focus states and reduced-motion support
-- [x] Sticky header, sidebar/workspace context and mobile navigation
-- [x] Global command palette with search and keyboard navigation
-- [x] Discovery and result interaction
-- [x] Business overview and access/context surface
-- [x] Seller AI Product Studio: raw text/image input, AI draft generation and review surface
-- [x] Catalog
-- [x] Customer / CRM
-- [x] Booking / availability
-- [x] Checkout
-- [x] Communication
-- [x] Billing plans/invoices
-- [x] Trust / reputation
-- [x] Operations / fulfillment
-- [x] SEO audit / production crawl / visibility / competitive intelligence surfaces
-- [x] Control plane / automation / integrations / privacy
-- [x] Promotion / loyalty / advertising
-- [x] Public SEO entity pages
-- [x] Loading, skeleton, empty, success and error presentation states in major async surfaces
-- [x] Toasts and modal connection flows
-- [x] Media upload preview
+## Completed in the implementation pass
 
-## Open UI completion gates
-- [ ] Shared Design System primitives are not yet centralized as a complete reusable component layer: generic Table/DataGrid, Dropdown, Select abstraction, Dialog/Drawer, Tabs, Form/error primitives, etc.
-- [ ] Global Notification Center/inbox is not implemented in the app shell.
-- [ ] Real User/Tenant switcher is not implemented; current workspace card is presentation/context only.
-- [ ] Dashboard intelligence is partly static/demo presentation; demand/supply/matching insights and recommendations are not yet fully wired as live read models.
-- [ ] Business UI is not a complete management suite for profile, locations, services, products, catalog and availability; several actions remain links/placeholders to other surfaces.
-- [ ] Seller AI UI does not yet expose the full customer-facing AI usage/charge outcome at generation time, and the visible Studio flow does not yet provide a dedicated publish control.
-- [ ] Customer intent interpretation/editing, richer filters/shortlisting/saved activity, and full entity-detail journey are not complete as a cohesive customer UI.
-- [ ] Admin surface is distributed across control/operations pages rather than a complete tenant/user/AI-usage/integrations/jobs/audit/system-health experience.
-- [ ] Optimistic presentation interactions are not comprehensively implemented; current authoritative mutations generally reload canonical state.
-- [ ] E2E verification and measured UI performance budgets have not been demonstrated by a passing frontend E2E/performance run for this UI pass.
+### Design System
+- [x] RTL-first typography and Persian/Latin-safe hierarchy
+- [x] Semantic color/theme tokens, spacing, radius and elevation
+- [x] Dark/light theme with persisted preference
+- [x] Shared Button/Input/Select/Tabs/Table/DataGrid-base/Dropdown/Dialog/Empty/Skeleton primitives in `apps/web/src/ui.ts`
+- [x] Design System playground route: `/design-system`
+- [x] Primitive unit coverage in `apps/web/src/ui.test.ts`
+- [x] Focus, disabled, reduced-motion and responsive states
 
-## Important note
-The earlier status claiming **100%** completion was too broad. This ledger now distinguishes implemented UI foundations from the remaining product/UI completion gates. Future coding sessions must continue from these open gates instead of assuming the UI is complete.
+### App Shell
+- [x] Sidebar/navigation
+- [x] Header
+- [x] Global command palette/search with keyboard navigation
+- [x] Notification Center backed by authenticated Communication read API
+- [x] Membership-scoped Workspace/Tenant switcher with context validation
+- [x] Mobile navigation
+- [x] Theme switcher and accessible account/context surfaces
+
+### Home / Decision Dashboard
+- [x] Phoenix decision-loop dashboard
+- [x] Live tenant/workspace context
+- [x] Source-aware Demand / Supply / Matching signals
+- [x] Recent search activity and latest Discovery result count
+- [x] Latest Seller AI runtime usage signal
+- [x] No fabricated fallback business metrics when canonical data is unavailable
+
+### Business UI
+- [x] Business management read surface
+- [x] Profile fields and canonical update command
+- [x] Locations list and create/update/status operations
+- [x] Opening-hours read surface
+- [x] Public contacts/social links read surface
+- [x] Publication state
+- [x] Catalog and Seller AI entry points
+
+### Seller AI
+- [x] Raw text and image input
+- [x] AI processing and draft generation
+- [x] Draft review/confirmation
+- [x] Catalog product creation
+- [x] Runtime usage telemetry display
+- [x] Canonical Offering creation from the generated product
+- [x] Publication-request control through Catalog `catalog.offering.publish`
+- [x] Billing/usage reference remains in canonical AI/Billing persistence rather than feature-owned accounting
+
+### Customer Experience
+- [x] Search/Discovery
+- [x] Explicit intent interpretation surface
+- [x] Recent searches / saved activity
+- [x] Shortlist and comparison
+- [x] Result detail modal with authoritative source metadata
+- [x] Booking entry point
+- [x] Skeleton/empty/error states without fabricated fallback results
+
+### SEO/GEO
+- [x] Public entity pages
+- [x] SEO audit
+- [x] Structured-data/publication visibility through canonical SEO surfaces
+- [x] Indexing/publication health
+- [x] Search/AI visibility measurement
+- [x] Production crawler and competitive intelligence surfaces
+
+### Admin / Operations
+- [x] Tenant/workspace context
+- [x] Workspace members
+- [x] AI usage telemetry
+- [x] Integrations / automation / control plane entry points
+- [x] Pending automation jobs
+- [x] Scoped audit event read surface
+- [x] Runtime/readiness health
+- [x] Cases / Fulfillment / Trust / SEO operational links
+
+### Production Hardening
+- [x] Loading / empty / error / success states
+- [x] Skeletons
+- [x] Local optimistic presentation state for shortlist, notification read state and workspace selection with server context validation
+- [x] Keyboard navigation and focus visibility
+- [x] Responsive desktop/tablet/mobile behavior
+- [x] E2E smoke test covering shell, command palette, Discovery, shortlist, Workspace switching, Notification Center, Admin, Design System and Seller AI publication
+- [x] UI shell performance budget assertion in E2E
+- [x] CI workflow: `.github/workflows/web-ui-verification.yml`
+
+## Verification gate
+
+The repository now contains the implementation and verification path, but this session cannot truthfully mark the final production-verification gate green without an observed GitHub Actions run. The workflow runs:
+1. `npm ci`
+2. `npm run build`
+3. Playwright/Chromium installation
+4. `scripts/e2e-web-ui.mjs`
+
+Until that run is observed as green, the correct status is **implementation complete / production verification pending**, not a fabricated 100% verification claim.
+
+## Continuation rule
+
+Future coding sessions must start from this ledger. Do not reimplement these completed surfaces unless a new requirement, regression, provider limitation, or failing verification result changes the scope.
