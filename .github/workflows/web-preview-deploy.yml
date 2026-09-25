@@ -68,7 +68,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --location --retry 10 --retry-delay 2 --retry-all-errors https://qooqnos.qooqnos.workers.dev/admin > /tmp/phoenix-admin.html
-          grep -q 'id="app"' /tmp/phoenix-admin.html
-          grep -q '/dist/main.js' /tmp/phoenix-admin.html
+          http_code=$(curl --silent --show-error --location --retry 10 --retry-delay 2 --retry-all-errors -o /tmp/phoenix-admin.html -w "%{http_code}" https://qooqnos.qooqnos.workers.dev/admin)
+          echo "Phoenix /admin HTTP status: $http_code"
+          echo "--- response head ---"
+          head -c 1200 /tmp/phoenix-admin.html || true
+          echo
+          test "$http_code" = "200"
+          grep -Fq '<div id="app"></div>' /tmp/phoenix-admin.html
+          grep -Fq '/dist/main.js' /tmp/phoenix-admin.html
           echo "Phoenix /admin SPA route is serving the deployed application shell."
