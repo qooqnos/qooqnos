@@ -1635,7 +1635,7 @@ Competitive intelligence evidence layers now include:
 - Corrected `migrations/migration-lock.json` version 92 checksum to `24bb4f9a2659265c8afb1f44cb4641024587d17cd9137e136868b0e31f3a8284`.
 - Migration source and lock are now content-aligned; production migration verification must still be confirmed by the deployment pipeline.
 - CI surfaced the exact source checksum as `24bb4f9a2659265c8afb1f44cb4641024587d17cd9137e136868b0e31f3a8284`; `migration-lock.json` was corrected accordingly in commit `0e10b1a89376f4aee836300b443c859b38b0b3d5`.
-- CI then exposed a second migration-integrity gap: the Commerce policy migration had been named `0091_*` alongside Business Hours, while the API catalog omitted Business Hours and Public Contact Links. The canonical ordered catalog is now restored as 0091 Business Hours, 0092 Public Contact Links, 0093 Commerce Fulfillment Policies in commit `6c98532aee7e9265da7b240622fbd493dca302ed`.
+- CI then exposed a second migration-integrity gap: the Commerce policy migration had been named `0091_*` alongside Business Hours, while the API catalog omitted Business Hours and Public Contact Links. The canonical ordered catalog is now restored as 0091 Business Hours, 0092 Public Contact Links, 0093 Commerce Fulfillment Policies in commit `6c98532aee7e9265da7b240622fbd493dca302ed`. The final reconciliation is on `main` at `4c446cfb5485d69563423f0095960a1ceefa225e`, with Commerce lock metadata and checksum `0e9f19efe9f4c2e48f8fb7b4dc842f88007926560838817c139b2790b74225a3`.
 - Restored the Location lifecycle test's accidental literal newline regression in commit `e04ffb7254af41e2efcd674e421fbb02d215dd46`.
 
 ## Catalog Service Lifecycle → SEO/GEO Publication — September 2026
