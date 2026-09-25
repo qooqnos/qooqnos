@@ -40,3 +40,5 @@ export * from "./search-intelligence";
 export * from "./merchant-feed";
 export * from "./external-visibility-import";
 export * from "./merchant-api";
+
+export * from "./social-intelligence";
