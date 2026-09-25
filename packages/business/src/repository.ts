@@ -463,6 +463,110 @@ export class BusinessRepository extends Repository {
     return result;
   }
 
+  async createLocation(context: RequestContext, input: {
+    readonly id: EntityId;
+    readonly businessId: EntityId;
+    readonly name: string;
+    readonly locationType: BusinessLocationRecord["locationType"];
+    readonly timezone?: string | undefined;
+    readonly address?: Readonly<Record<string, unknown>> | undefined;
+    readonly geoPoint?: BusinessLocationRecord["geoPoint"] | undefined;
+    readonly now: string;
+  }): Promise<BusinessLocationRecord> {
+    const business = await this.get(context, input.businessId);
+    if (!business) throw new DatabaseError("Business not found");
+    const addressJson = input.address ? JSON.stringify(input.address) : null;
+    const geoPointJson = input.geoPoint ? JSON.stringify(input.geoPoint) : null;
+    await this.database.transaction([
+      {
+        sql: `INSERT INTO locations
+          (id, business_id, name, location_type, timezone, address_json, geo_point_json, status, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+        params: [input.id, input.businessId, input.name, input.locationType, input.timezone ?? business.timezone, addressJson, geoPointJson, input.now, input.now],
+      },
+      {
+        sql: `INSERT INTO outbox_events
+          (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at)
+          VALUES (?, 'business.location.changed.v1', 1, 'location', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)`,
+        params: [
+          `${input.id}:business.location.changed.v1:${input.now}`, input.id, business.organizationId, business.workspaceId,
+          JSON.stringify({ businessId: business.id, locationId: input.id, changeType: "entity-created", status: "active", name: input.name, locationType: input.locationType, timezone: input.timezone ?? business.timezone, address: input.address ?? null, geoPoint: input.geoPoint ?? null, businessPublicationStatus: business.publicationStatus, updatedAt: input.now }), input.now, input.now,
+        ],
+      },
+    ]);
+    const created = (await this.listLocations(context, input.businessId)).find((item) => item.id === input.id);
+    if (!created) throw new DatabaseError("Location not found after creation");
+    return created;
+  }
+
+  async updateLocation(context: RequestContext, id: EntityId, patch: {
+    readonly name?: string | undefined;
+    readonly locationType?: BusinessLocationRecord["locationType"] | undefined;
+    readonly timezone?: string | null | undefined;
+    readonly address?: Readonly<Record<string, unknown>> | null | undefined;
+    readonly geoPoint?: BusinessLocationRecord["geoPoint"] | null | undefined;
+  }, now: string): Promise<BusinessLocationRecord> {
+    const current = await this.getLocation(context, id);
+    if (!current) throw new DatabaseError("Location not found");
+    const business = await this.get(context, current.businessId);
+    if (!business) throw new DatabaseError("Business not found");
+    const nextName = patch.name ?? current.name;
+    const nextType = patch.locationType ?? current.locationType;
+    const nextTimezone = patch.timezone === undefined ? current.timezone : patch.timezone;
+    const nextAddress = patch.address === undefined ? current.address : patch.address;
+    const nextGeo = patch.geoPoint === undefined ? current.geoPoint : patch.geoPoint;
+    await this.database.transaction([
+      {
+        sql: `UPDATE locations SET name=?, location_type=?, timezone=?, address_json=?, geo_point_json=?, updated_at=? WHERE id=? AND business_id=? AND status != 'archived'`,
+        params: [nextName, nextType, nextTimezone, nextAddress ? JSON.stringify(nextAddress) : null, nextGeo ? JSON.stringify(nextGeo) : null, now, id, current.businessId],
+      },
+      {
+        sql: `INSERT INTO outbox_events
+          (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at)
+          VALUES (?, 'business.location.changed.v1', 1, 'location', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)`,
+        params: [
+          `${id}:business.location.changed.v1:${now}`, id, business.organizationId, business.workspaceId,
+          JSON.stringify({ businessId: business.id, locationId: id, changeType: "entity-updated", status: current.status, name: nextName, locationType: nextType, timezone: nextTimezone, address: nextAddress, geoPoint: nextGeo, businessPublicationStatus: business.publicationStatus, updatedAt: now }), now, now,
+        ],
+      },
+    ]);
+    const updated = await this.getLocation(context, id);
+    if (!updated) throw new DatabaseError("Location not found after update");
+    return updated;
+  }
+
+  async setLocationStatus(context: RequestContext, id: EntityId, status: BusinessLocationRecord["status"], now: string): Promise<BusinessLocationRecord> {
+    const current = await this.getLocation(context, id);
+    if (!current) throw new DatabaseError("Location not found");
+    if (current.status === status) return current;
+    const business = await this.get(context, current.businessId);
+    if (!business) throw new DatabaseError("Business not found");
+    const changeType = status === "active" ? "entity-published" : "entity-unpublished";
+    const results = await this.database.transaction([
+      { sql: `UPDATE locations SET status=?, updated_at=? WHERE id=? AND business_id=? AND status=?`, params: [status, now, id, current.businessId, current.status] },
+      { sql: `INSERT INTO outbox_events
+          (id, event_type, event_version, aggregate_type, aggregate_id, organization_id, workspace_id, payload_json, status, attempts, available_at, occurred_at, published_at)
+          VALUES (?, 'business.location.changed.v1', 1, 'location', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)`,
+        params: [`${id}:business.location.changed.v1:${now}`, id, business.organizationId, business.workspaceId,
+          JSON.stringify({ businessId: business.id, locationId: id, changeType, status, name: current.name, locationType: current.locationType, timezone: current.timezone, address: current.address, geoPoint: current.geoPoint, businessPublicationStatus: business.publicationStatus, updatedAt: now }), now, now] },
+    ]);
+    if ((results[0]?.meta?.changes ?? 0) !== 1) throw new DatabaseError("Concurrent location status transition rejected");
+    const updated = await this.getLocation(context, id);
+    if (!updated) throw new DatabaseError("Location not found after status update");
+    return updated;
+  }
+
+  async getLocation(context: RequestContext, id: EntityId): Promise<BusinessLocationRecord | null> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const row = await this.database.first<{ id: EntityId; businessId: EntityId; name: string; locationType: BusinessLocationRecord["locationType"]; timezone: string | null; addressJson: string | null; geoPointJson: string | null; status: BusinessLocationRecord["status"]; createdAt: string; updatedAt: string }>(
+      `SELECT l.id,l.business_id AS businessId,l.name,l.location_type AS locationType,l.timezone,l.address_json AS addressJson,l.geo_point_json AS geoPointJson,l.status,l.created_at AS createdAt,l.updated_at AS updatedAt
+       FROM locations l JOIN businesses b ON b.id=l.business_id
+       WHERE l.id=? AND b.organization_id=? AND b.workspace_id=? LIMIT 1`, id, organizationId, workspaceId);
+    if (!row) return null;
+    return parseLocationRow(row);
+  }
+
   private async assertWorkspace(organizationId: EntityId, workspaceId: EntityId): Promise<void> {
     const workspace = await this.database.first<{ id: string }>(
       `SELECT id FROM workspaces WHERE id = ? AND organization_id = ? AND status = 'active' LIMIT 1`,
@@ -470,4 +574,16 @@ export class BusinessRepository extends Repository {
     );
     if (!workspace) throw new DatabaseError("Workspace is not active in the requested organization");
   }
+}
+
+function parseLocationRow(row: {
+  id: EntityId; businessId: EntityId; name: string; locationType: BusinessLocationRecord["locationType"];
+  timezone: string | null; addressJson: string | null; geoPointJson: string | null;
+  status: BusinessLocationRecord["status"]; createdAt: string; updatedAt: string;
+}): BusinessLocationRecord {
+  let address: Readonly<Record<string, unknown>> | null = null;
+  let geoPoint: BusinessLocationRecord["geoPoint"] = null;
+  if (row.addressJson) { try { const value = JSON.parse(row.addressJson); if (value && typeof value === "object" && !Array.isArray(value)) address = value as Readonly<Record<string, unknown>>; } catch {} }
+  if (row.geoPointJson) { try { const value = JSON.parse(row.geoPointJson) as Record<string, unknown>; if (typeof value.latitude === "number" && Number.isFinite(value.latitude) && typeof value.longitude === "number" && Number.isFinite(value.longitude) && value.latitude >= -90 && value.latitude <= 90 && value.longitude >= -180 && value.longitude <= 180) geoPoint = { latitude: value.latitude, longitude: value.longitude }; } catch {} }
+  return { id: row.id, businessId: row.businessId, name: row.name, locationType: row.locationType, timezone: row.timezone, address, geoPoint, status: row.status, createdAt: row.createdAt, updatedAt: row.updatedAt };
 }
