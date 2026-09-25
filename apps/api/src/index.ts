@@ -448,6 +448,26 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   });
 
   router.register({
+    method: "GET",
+    path: "/api/v1/workspaces/:workspaceId/members",
+    module: "identity",
+    operation: "workspace.members.read",
+    permission: "context:read",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params }) => {
+      if (!database || !context.workspaceId) return json({ data: [] }, 200, context.requestId);
+      const requested = params.workspaceId;
+      if (!requested || requested !== context.workspaceId) {
+        return json({ data: [] }, 403, context.requestId);
+      }
+      const repository = new WorkspaceRepository(database);
+      const data = await repository.listMembers({ organizationId: context.tenantId, workspaceId: context.workspaceId });
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "POST",
     path: "/api/v1/businesses",
     module: "business",
