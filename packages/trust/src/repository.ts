@@ -24,6 +24,23 @@ export interface ReviewRecord {
   readonly updatedAt: string;
 }
 
+export interface ReputationSummaryRecord {
+  readonly id: EntityId;
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId | null;
+  readonly targetType: ReviewTargetType;
+  readonly targetId: EntityId;
+  readonly publishedReviewCount: number;
+  readonly ratingSum: number;
+  readonly ratingDistributionJson: string;
+  readonly reportCount: number;
+  readonly projectionVersion: number;
+  readonly sourceReviewCursor: string | null;
+  readonly calculatedAt: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export interface TrustSignalRecord {
   readonly id: EntityId;
   readonly organizationId: EntityId;
@@ -417,6 +434,20 @@ export class TrustReviewRepository extends Repository {
     return this.database.first(
       "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, target_type AS targetType, target_id AS targetId, published_review_count AS publishedReviewCount, rating_sum AS ratingSum, rating_distribution_json AS ratingDistributionJson, report_count AS reportCount, projection_version AS projectionVersion, source_review_cursor AS sourceReviewCursor, calculated_at AS calculatedAt, created_at AS createdAt, updated_at AS updatedAt FROM reputation_summaries WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND target_type = ? AND target_id = ? LIMIT 1",
       organizationId, target.workspaceId, input.targetType, input.targetId,
+    );
+  }
+
+  async getReputationSummary(
+    context: RequestContext,
+    input: { readonly targetType: ReviewTargetType; readonly targetId: EntityId },
+  ): Promise<ReputationSummaryRecord | null> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    return this.database.first<ReputationSummaryRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, target_type AS targetType, target_id AS targetId, published_review_count AS publishedReviewCount, rating_sum AS ratingSum, rating_distribution_json AS ratingDistributionJson, report_count AS reportCount, projection_version AS projectionVersion, source_review_cursor AS sourceReviewCursor, calculated_at AS calculatedAt, created_at AS createdAt, updated_at AS updatedAt FROM reputation_summaries WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND target_type = ? AND target_id = ? LIMIT 1",
+      organizationId,
+      context.workspaceId ?? null,
+      input.targetType,
+      input.targetId,
     );
   }
 
