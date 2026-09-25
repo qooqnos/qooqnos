@@ -2,7 +2,7 @@ import { BusinessService, BusinessRepository } from "@qooqnos/business";
 import { CatalogService, CatalogRepository } from "@qooqnos/catalog";
 import { SellerProductSessionService, createSellerProductSessionRepository } from "@qooqnos/ai";
 import { AppError, brandId, type RequestId } from "@qooqnos/core";
-import { AuthorizationRepository, CatalogCommandRepository, SessionRepository, sha256Hex } from "@qooqnos/database";
+import { AuthorizationRepository, CatalogCommandRepository, SessionRepository, sha256Hex, WorkspaceRepository } from "@qooqnos/database";
 import type { D1Database } from "@qooqnos/database";
 import { createAuthorizationService } from "@qooqnos/runtime";
 import { createSellerProductService, processSellerProductAIRuntimeWork } from "./ai-composition";
@@ -414,6 +414,24 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
     requireAuthentication: true,
     handler: ({ context, authenticatedSessionId }) =>
       json({ session: { id: authenticatedSessionId, actorId: context.actorId, tenantId: context.tenantId, workspaceId: context.workspaceId, authenticated: context.authenticated } }, 200, context.requestId),
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/workspaces",
+    module: "identity",
+    operation: "workspace.list",
+    permission: "context:read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context }) => {
+      if (!database || !context.actorId || !context.tenantId) {
+        return json({ data: [] }, 200, context.requestId);
+      }
+      const repository = new WorkspaceRepository(database);
+      const data = await repository.listForUser({ organizationId: context.tenantId }, context.actorId);
+      return json({ data, currentWorkspaceId: context.workspaceId ?? null }, 200, context.requestId);
+    },
   });
 
   router.register({
