@@ -131,6 +131,35 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
     }
     if (entity.brandName) x.brand = { "@type": "Brand", name: clean(entity.brandName) };
     if (entity.categoryName) x.category = clean(entity.categoryName);
+    if (entity.shippingDetails) {
+      const shipping = entity.shippingDetails;
+      const destination: Record<string, unknown> = { "@type": "DefinedRegion" };
+      if (shipping.country) destination.addressCountry = clean(shipping.country);
+      if (shipping.region) destination.addressRegion = clean(shipping.region);
+      if (shipping.postalCode) destination.postalCode = clean(shipping.postalCode);
+      const shippingRate: Record<string, unknown> = { "@type": "MonetaryAmount" };
+      if (shipping.shippingRate !== undefined && Number.isFinite(shipping.shippingRate)) shippingRate.value = shipping.shippingRate;
+      if (shipping.currency) shippingRate.currency = clean(shipping.currency);
+      const shippingDetails: Record<string, unknown> = { "@type": "OfferShippingDetails", shippingDestination: destination };
+      if (shipping.shippingRate !== undefined && Number.isFinite(shipping.shippingRate)) shippingDetails.shippingRate = shippingRate;
+      if (shipping.handlingTimeMinDays !== undefined || shipping.handlingTimeMaxDays !== undefined) {
+        const handlingTime: Record<string, unknown> = { "@type": "QuantitativeValue" };
+        if (shipping.handlingTimeMinDays !== undefined && Number.isFinite(shipping.handlingTimeMinDays)) handlingTime.minValue = shipping.handlingTimeMinDays;
+        if (shipping.handlingTimeMaxDays !== undefined && Number.isFinite(shipping.handlingTimeMaxDays)) handlingTime.maxValue = shipping.handlingTimeMaxDays;
+        handlingTime.unitCode = "DAY";
+        shippingDetails.deliveryTime = { "@type": "ShippingDeliveryTime", handlingTime };
+      }
+      x.shippingDetails = shippingDetails;
+    }
+    if (entity.returnPolicy) {
+      const policy = entity.returnPolicy;
+      const merchantReturnPolicy: Record<string, unknown> = { "@type": "MerchantReturnPolicy" };
+      if (policy.applicableCountry) merchantReturnPolicy.applicableCountry = clean(policy.applicableCountry);
+      if (policy.returnWindowDays !== undefined && Number.isFinite(policy.returnWindowDays)) merchantReturnPolicy.merchantReturnDays = policy.returnWindowDays;
+      if (policy.returnFees) merchantReturnPolicy.returnFees = "https://schema.org/" + policy.returnFees;
+      if (policy.returnMethod) merchantReturnPolicy.returnMethod = "https://schema.org/" + policy.returnMethod;
+      x.hasMerchantReturnPolicy = merchantReturnPolicy;
+    }
     if (entity.price !== undefined || entity.currency || entity.availability || entity.shippingDetails || entity.returnPolicy) {
       const offer: Record<string, unknown> = { "@type": "Offer" };
       if (canonicalUrl) offer.url = canonicalUrl;
@@ -156,7 +185,6 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
     if (canonicalUrl) x.url = canonicalUrl;
   }
 
-  if (entity.type === "Location") x.geo = entity.locationId ? { "@type": "Place", identifier: entity.locationId } : undefined;
   if (entity.type === "Person" && entity.email) x.email = clean(entity.email);
 
   if (entity.type === "Article") {
