@@ -11,6 +11,8 @@ import {
   type AddOrderLineInput,
   type OrderRecord,
   type OrderStatus,
+  type FulfillmentPolicyRecord,
+  type UpsertFulfillmentPolicyInput,
 } from "./repository";
 
 export interface CommerceServiceOptions {
@@ -135,6 +137,23 @@ export class CommerceService {
     });
   }
 
+  async upsertFulfillmentPolicy(
+    context: RequestContext,
+    input: Omit<UpsertFulfillmentPolicyInput, "id" | "now">,
+  ): Promise<FulfillmentPolicyRecord> {
+    await this.options.authorization.assert({
+      context,
+      permission: "commerce.fulfillment_policy.manage",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    return this.options.repository.upsertFulfillmentPolicy(context, {
+      ...input,
+      id: this.options.id(),
+      now: this.options.now(),
+    });
+  }
+
   async setOrderStatus(
     context: RequestContext,
     id: EntityId,
@@ -174,4 +193,5 @@ export const COMMERCE_PERMISSIONS = [
   "commerce.order.amend",
   "commerce.order.request_refund",
   "commerce.order.complete",
+  "commerce.fulfillment_policy.manage",
 ] as const;
