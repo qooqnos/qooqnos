@@ -123,6 +123,8 @@ assert.ok((await page.locator("#phoenix-demand-input").inputValue()).length > 0)
 await page.locator("#phoenix-demand-input").fill("یک کسب‌وکار مناسب نزدیک من می‌خواهم");
 await page.locator("#phoenix-demand-form [type=submit]").click();
 await page.waitForURL(/\/discover\?q=/);
+assert.equal(await page.locator("#discover-query").inputValue(), "یک کسب‌وکار مناسب نزدیک من می‌خواهم");
+await page.getByText("موجودیت واقعی تست").waitFor();
 
 const initialTheme = await page.locator("html").getAttribute("data-theme");
 await page.locator("[data-theme-toggle]").click();
