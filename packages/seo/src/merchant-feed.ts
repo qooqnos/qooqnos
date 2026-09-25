@@ -32,6 +32,7 @@ export interface MerchantProductFeedProjection {
 
 export interface MerchantProductFeedOptions {
   readonly canonicalBaseUrl: string;
+  readonly canonicalUrlByEntityId?: Readonly<Record<string, string>>;
   readonly now?: string;
 }
 
@@ -99,7 +100,9 @@ function toItem(
 ): { item?: MerchantProductFeedItem; reasons: MerchantProductFeedItemSkipReason[] } {
   const reasons: MerchantProductFeedItemSkipReason[] = [];
   const baseUrl = options.canonicalBaseUrl.replace(/\/$/, "");
-  const link = validHttpUrl(variant?.url) ? variant!.url! : baseUrl + entityUrl(entity);
+  const link = validHttpUrl(variant?.url)
+    ? variant!.url!
+    : (validHttpUrl(options.canonicalUrlByEntityId?.[entity.id]) ? options.canonicalUrlByEntityId![entity.id] : baseUrl + entityUrl(entity));
 
   const description = clean(variant?.description) || clean(entity.description) || clean(entity.summary);
   if (!description) reasons.push("missing-description");
@@ -167,6 +170,7 @@ function normalizeMerchantAvailability(value: string | undefined): MerchantProdu
 
 function variantTitleSuffix(variant: SeoProductVariantSeo): string {
   return Object.entries(variant.attributes ?? {})
+    .filter(([key]) => key.trim().toLowerCase() !== "condition")
     .map(([key, value]) => [humanize(key), clean(value)].filter(Boolean).join(": "))
     .filter(Boolean)
     .sort()
