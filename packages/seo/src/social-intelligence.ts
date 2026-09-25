@@ -92,6 +92,14 @@ export class TikTokClient {
     if (!/^https?:\/\//i.test(input.videoUrl)) throw new Error("TikTok videoUrl must be HTTP(S).");
     return this.post("https://open.tiktokapis.com/v2/post/publish/video/init/", { post_info: { title: input.title ?? "", privacy_level: input.privacyLevel, disable_duet: false, disable_comment: false, disable_stitch: false }, source_info: { source: "PULL_FROM_URL", video_url: input.videoUrl } });
   }
+  async initializePhotoPost(input: { readonly imageUrls: readonly string[]; readonly privacyLevel: string }): Promise<unknown> {
+    if (!input.imageUrls.length || input.imageUrls.some((url) => !/^https?:\/\//i.test(url))) throw new Error("TikTok imageUrls must be non-empty HTTP(S) URLs.");
+    return this.post("https://open.tiktokapis.com/v2/post/publish/content/init/", { post_info: { privacy_level: input.privacyLevel, disable_comment: false, disable_duet: false, disable_stitch: false }, source_info: { source: "PULL_FROM_URL", media_type: "PHOTO", photo_cover_index: 0, photo_images: input.imageUrls } });
+  }
+  async getPostStatus(publishId: string): Promise<unknown> {
+    if (!publishId.trim()) throw new Error("TikTok publishId is required.");
+    return this.post("https://open.tiktokapis.com/v2/post/publish/status/fetch/", { publish_id: publishId });
+  }
   private async post(url: string, body: unknown): Promise<unknown> { const r = await requestWithTimeout(this.config.fetcher ?? fetch, url, { method: "POST", headers: { Authorization: "Bearer " + this.config.accessToken, "Content-Type": "application/json; charset=UTF-8" }, body: JSON.stringify(body) }, this.config.timeoutMs ?? 20000, this.config); if (!r.ok) throw new Error("TikTok API returned HTTP " + r.status); return r.json(); }
 }
 
