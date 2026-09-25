@@ -71,4 +71,33 @@ describe("social intelligence providers", () => {
     expect(url).toContain("/r/technology/search.json");
     expect(url).toContain("limit=25");
   });
+  it("retries idempotent reads on 429/5xx but never retries publish POSTs", async () => {
+    let readAttempts = 0;
+    const readClient = new XApiClient({
+      bearerToken: "bearer",
+      fetcher: async () => {
+        readAttempts += 1;
+        return readAttempts < 3 ? response({}, readAttempts === 1 ? 429 : 503) : response({ data: [] });
+      },
+      baseDelayMs: 1,
+      maxDelayMs: 2,
+    });
+    await readClient.recentSearch("phoenix");
+    expect(readAttempts).toBe(3);
+
+    let publishAttempts = 0;
+    const publishClient = new XApiClient({
+      bearerToken: "bearer",
+      userAccessToken: "user",
+      fetcher: async () => {
+        publishAttempts += 1;
+        return response({}, 503);
+      },
+      baseDelayMs: 1,
+      maxDelayMs: 2,
+    });
+    await expect(publishClient.createPost("hello")).rejects.toThrow("X API returned HTTP 503");
+    expect(publishAttempts).toBe(1);
+  });
+
 });
