@@ -1841,3 +1841,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Updated `CLAUDE.md` with a Homepage Product Gate.
 - Commits: `69c81cb3c256944bd0c1fdde8527871b1b1fc92c`, `e276ffcb34f323c2a931d5366e852b882264ef34`, `5ca3ad612a0951fe3daef631772407bf5e919f19`, `d40b59e9614abad477abe312a581fbdfd5b86168`
 - Remaining verification gate: run the repository web build/type/lint/E2E checks and visually inspect `/` in the deployed/preview environment.
+
+
+## Homepage UX Polish — 2026-09-26
+- Refined the public Homepage demand interaction so Ask Phoenix is visually explicit and the primary textarea has a stronger focus state.
+- Added concise interaction guidance without introducing fabricated backend intelligence.
+- Added a responsive public footer linking Discovery, Business, and Seller AI Product Studio.
+- Added reduced-motion handling for Homepage interaction polish.
+- Commits: `d908dcb00cc45a32ea665c1460c995cef4090015`, `2e777e4aa7961bc30d7502ed3105dd07e71b90aa`.
+- Verification gate remains: repository web build/type/E2E and visual preview inspection.
