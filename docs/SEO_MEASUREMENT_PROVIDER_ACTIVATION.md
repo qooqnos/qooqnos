@@ -173,3 +173,5 @@ Runtime configuration:
 For backward compatibility, Search Intelligence may reuse the existing SEO_COMPETITIVE_LOGIN / SEO_COMPETITIVE_PASSWORD DataForSEO credentials.
 
 Provider data is returned with explicit provenance. The layer does not synthesize search rank, citation, popularity or demand metrics.
+
+- Google Ads Search / Ads Advertisers intelligence via DataForSEO Ads Transparency SERP endpoints.
