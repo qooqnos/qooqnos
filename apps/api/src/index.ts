@@ -793,12 +793,18 @@ export default {
     await processAnalyticsAggregates(env, now);
     if (database) {
       const indexNow = buildSeoIndexNowConfig(env);
+      const bingActions = buildBingSearchEngineActionsConfig(env);
+      const yandexActions = buildYandexSearchEngineActionsConfig(env);
       await processSeoPublicationJobs(
         database,
         now,
         25,
         env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com",
-        { ...(indexNow ? { indexNow } : {}) },
+        {
+          ...(indexNow ? { indexNow } : {}),
+          ...(bingActions ? { bing: bingActions } : {}),
+          ...(yandexActions && env.SEO_YANDEX_ENABLE_RECRAWL === "true" ? { yandex: yandexActions, yandexRecrawl: true } : {}),
+        },
       );
       if (env.ENVIRONMENT === "production") {
         const crawlerLimit = Number(env.SEO_CRAWLER_SAMPLE_LIMIT ?? "25");
