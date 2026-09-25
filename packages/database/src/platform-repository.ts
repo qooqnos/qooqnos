@@ -56,18 +56,21 @@ export class PlatformRepository extends Repository {
       workspaceId,
       safeLimit,
     );
-    return rows.map((row) => ({
-      id: row.id,
-      ...(row.actorId ? { actorId: row.actorId } : {}),
-      action: row.action,
-      ...(row.targetType ? { targetType: row.targetType } : {}),
-      ...(row.targetId ? { targetId: row.targetId } : {}),
-      outcome: row.outcome,
-      ...(row.requestId ? { requestId: row.requestId } : {}),
-      ...(row.correlationId ? { correlationId: row.correlationId } : {}),
-      metadata: parseAuditMetadata(row.metadataJson),
-      createdAt: row.createdAt,
-    }));
+    return rows.map((row) => {
+      const metadata = parseAuditMetadata(row.metadataJson);
+      return {
+        id: row.id,
+        ...(row.actorId ? { actorId: row.actorId } : {}),
+        action: row.action,
+        ...(row.targetType ? { targetType: row.targetType } : {}),
+        ...(row.targetId ? { targetId: row.targetId } : {}),
+        outcome: row.outcome,
+        ...(row.requestId ? { requestId: row.requestId } : {}),
+        ...(row.correlationId ? { correlationId: row.correlationId } : {}),
+        ...(metadata ? { metadata } : {}),
+        createdAt: row.createdAt,
+      };
+    });
   }
 
   async appendAudit(context: RepositoryContext, input: AuditEventInput): Promise<void> {
