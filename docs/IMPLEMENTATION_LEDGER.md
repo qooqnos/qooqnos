@@ -1756,3 +1756,11 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 | Production SEO crawler hardening | 🟢 Implemented | HTTPS canonical validation, 200/MIME checks, 4 MiB safety limit, single canonical enforcement, metadata drift, JSON-LD parseability, exact X-Robots consistency |
 | Tests | 🟢 Added | Merchant feed, Google/Bing import, and crawler hardening coverage |
 | External activation gates | 🟡 Provider-account dependent | Merchant Center account/data source/credentials, Google Search Console export availability, Bing Webmaster export data remain external provider operations; no synthetic measurements |
+
+
+### Final hardening additions after initial 2026-09-25 completion pass
+- Merchant feed links now resolve from persisted `seo_entity_representations.canonical_url`; fallback URL construction is used only when no persisted canonical URL is available.
+- Merchant variant titles exclude `condition` from differentiating title text; condition remains a dedicated commerce field.
+- ProductGroup nested variants no longer redundantly emit `inProductGroupWithID`; parent `productGroupID` is canonical for the nested representation.
+- Variants without dedicated URLs still receive stable JSON-LD `@id` values derived from the canonical parent URL and variant ID.
+- Production Wrangler rendering now carries optional Merchant Center account/data-source/feed-label/content-language variables.
