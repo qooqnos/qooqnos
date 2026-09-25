@@ -81,13 +81,13 @@ export function parseBingAiPerformanceExport(
     const output: ExternalVisibilityObservation[] = [];
     if (citations !== undefined) {
       const metric = options.dataset === "pages" ? "bing-ai-page-citations" : options.dataset === "grounding-queries" ? "bing-ai-grounding-query-citations" : "bing-ai-citations";
-      output.push({ surface: "ai-answer", metric, numericValue: citations, ...entity, queryText: groundingQuery, pageUrl, observedAt, provenance: baseProvenance });
-      if (pageUrl) output.push({ surface: "ai-answer", metric: "bing-ai-citation-observed", numericValue: 1, ...entity, queryText: groundingQuery, pageUrl, citationUrl: pageUrl, ...(title ? { citationTitle: title } : {}), citationCount: citations, observedAt, provenance: baseProvenance });
+      output.push({ surface: "ai-answer", metric, numericValue: citations, ...entity, ...(groundingQuery ? { queryText: groundingQuery } : {}), ...(pageUrl ? { pageUrl } : {}), observedAt, provenance: baseProvenance });
+      if (pageUrl) output.push({ surface: "ai-answer", metric: "bing-ai-citation-observed", numericValue: 1, ...entity, ...(groundingQuery ? { queryText: groundingQuery } : {}), ...(pageUrl ? { pageUrl } : {}), citationUrl: pageUrl, ...(title ? { citationTitle: title } : {}), citationCount: citations, observedAt, provenance: baseProvenance });
     }
-    if (citationShare !== undefined) output.push({ surface: "ai-answer", metric: "bing-ai-citation-share", numericValue: citationShare, ...entity, queryText: groundingQuery, pageUrl, observedAt, provenance: baseProvenance });
-    if (intent) output.push({ surface: "ai-answer", metric: "bing-ai-intent", textValue: intent, ...entity, queryText: groundingQuery, pageUrl, observedAt, provenance: baseProvenance });
-    if (topic) output.push({ surface: "ai-answer", metric: "bing-ai-topic", textValue: topic, ...entity, queryText: groundingQuery, pageUrl, observedAt, provenance: baseProvenance });
-    if (pageUrl && options.dataset === "pages") output.push({ surface: "ai-answer", metric: "bing-ai-page-observed", textValue: pageUrl, ...entity, queryText: groundingQuery, pageUrl, observedAt, provenance: baseProvenance });
+    if (citationShare !== undefined) output.push({ surface: "ai-answer", metric: "bing-ai-citation-share", numericValue: citationShare, ...entity, ...(groundingQuery ? { queryText: groundingQuery } : {}), ...(pageUrl ? { pageUrl } : {}), observedAt, provenance: baseProvenance });
+    if (intent) output.push({ surface: "ai-answer", metric: "bing-ai-intent", textValue: intent, ...entity, ...(groundingQuery ? { queryText: groundingQuery } : {}), ...(pageUrl ? { pageUrl } : {}), observedAt, provenance: baseProvenance });
+    if (topic) output.push({ surface: "ai-answer", metric: "bing-ai-topic", textValue: topic, ...entity, ...(groundingQuery ? { queryText: groundingQuery } : {}), ...(pageUrl ? { pageUrl } : {}), observedAt, provenance: baseProvenance });
+    if (pageUrl && options.dataset === "pages") output.push({ surface: "ai-answer", metric: "bing-ai-page-observed", textValue: pageUrl, ...entity, ...(groundingQuery ? { queryText: groundingQuery } : {}), ...(pageUrl ? { pageUrl } : {}), observedAt, provenance: baseProvenance });
     return output;
   });
 }
