@@ -468,7 +468,7 @@ function setLink(rel: string, href: string): void {
 }
 
 function renderPublicHeader(): string {
-  return \`
+  return `
     <header class="phoenix-public-header">
       <div class="phoenix-public-header-inner container-wide">
         <a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس">
@@ -486,7 +486,7 @@ function renderPublicHeader(): string {
         </div>
       </div>
     </header>
-  \`;
+  `;
 }
 
 function renderHeader(route: Route): string {
@@ -573,7 +573,7 @@ function renderToastHost(): string {
 }
 
 function renderHome(): string {
-  return \`
+  return `
     <div class="phoenix-home">
       <section class="phoenix-home-hero">
         <div class="phoenix-home-copy">
@@ -703,7 +703,7 @@ function renderHome(): string {
         <nav aria-label="پیوندهای پایانی"><a href="/discover" data-nav>کشف</a><a href="/business" data-nav>برای کسب‌وکارها</a><a href="/product-studio" data-nav>استودیو محصول</a></nav>
       </footer>
     </div>
-  \`;
+  `;
 }
 
 function bindHomeEvents(): void {
