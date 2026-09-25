@@ -110,7 +110,7 @@ function toItem(
   const description = clean(variant?.description) || clean(entity.description) || clean(entity.summary);
   if (!description) reasons.push("missing-description");
 
-  const imageLink = validHttpUrl(variant?.imageUrl) ? variant!.imageUrl! : validHttpUrl(entity.imageUrl) ? entity.imageUrl! : "";
+  const variantImageUrl = variant?.imageUrl;\n  const imageLink = validHttpUrl(variantImageUrl) ? variantImageUrl : validHttpUrl(entity.imageUrl) ? entity.imageUrl! : "";
   if (!imageLink) reasons.push("missing-image");
 
   const price = variant?.price ?? entity.price;
@@ -215,7 +215,7 @@ function truncate(value: string, max: number): string {
   return value.length > max ? value.slice(0, max).trimEnd() : value;
 }
 
-function validHttpUrl(value: string | undefined): boolean {
+function validHttpUrl(value: string | undefined): value is string {
   if (!value?.trim()) return false;
   try {
     const url = new URL(value);
