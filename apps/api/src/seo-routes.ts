@@ -385,7 +385,8 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       if (!environment?.SEO_FACEBOOK_PAGE_ID || !environment.SEO_FACEBOOK_ACCESS_TOKEN) return json({ status: "unavailable", provider: "facebook" }, 503, context.requestId);
       const body = await request.json() as Record<string, unknown>;
       const result = await new FacebookPageClient({ pageId: environment.SEO_FACEBOOK_PAGE_ID, accessToken: environment.SEO_FACEBOOK_ACCESS_TOKEN }).listFeed(Number(body.limit ?? 25));
-      return json({ provider: "facebook", result }, 200, context.requestId);
+      const measurement = database ? await ingestSocialSignals(database, context, { platform: "facebook", queryText: typeof body.query === "string" ? body.query : "page-feed", locale: typeof body.locale === "string" ? body.locale : "und", ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}), raw: result, observedAt: new Date().toISOString() }) : undefined;
+      return json({ provider: "facebook", result, ...(measurement ? { measurement } : {}) }, 200, context.requestId);
     },
   });
 
@@ -436,7 +437,8 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       const query = typeof body.query === "string" ? body.query.trim() : "";
       if (!query) return json({ error: { code: "VALIDATION_ERROR", message: "query is required." } }, 400, context.requestId);
       const result = await new XApiClient({ bearerToken: environment.SEO_X_BEARER_TOKEN, userAccessToken: environment.SEO_X_USER_ACCESS_TOKEN }).recentSearch(query, Number(body.maxResults ?? 25));
-      return json({ provider: "x", result }, 200, context.requestId);
+      const measurement = database ? await ingestSocialSignals(database, context, { platform: "x", queryText: query, locale: typeof body.locale === "string" ? body.locale : "und", ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}), raw: result, observedAt: new Date().toISOString() }) : undefined;
+      return json({ provider: "x", result, ...(measurement ? { measurement } : {}) }, 200, context.requestId);
     },
   });
 
@@ -470,7 +472,8 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       const query = typeof body.query === "string" ? body.query.trim() : "";
       if (!query) return json({ error: { code: "VALIDATION_ERROR", message: "query is required." } }, 400, context.requestId);
       const result = await new PinterestClient({ accessToken: environment.SEO_PINTEREST_ACCESS_TOKEN }).searchPins(query, Number(body.pageSize ?? 25));
-      return json({ provider: "pinterest", result }, 200, context.requestId);
+      const measurement = database ? await ingestSocialSignals(database, context, { platform: "pinterest", queryText: query, locale: typeof body.locale === "string" ? body.locale : "und", ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}), raw: result, observedAt: new Date().toISOString() }) : undefined;
+      return json({ provider: "pinterest", result, ...(measurement ? { measurement } : {}) }, 200, context.requestId);
     },
   });
 
@@ -487,7 +490,8 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       const regionCode = typeof body.regionCode === "string" ? body.regionCode.trim() : "";
       if (!regionCode) return json({ error: { code: "VALIDATION_ERROR", message: "regionCode is required." } }, 400, context.requestId);
       const result = await new PinterestClient({ accessToken: environment.SEO_PINTEREST_ACCESS_TOKEN }).trends(regionCode, typeof body.trendType === "string" ? body.trendType : "monthly");
-      return json({ provider: "pinterest", result }, 200, context.requestId);
+      const measurement = database ? await ingestSocialSignals(database, context, { platform: "pinterest", queryText: "trends:" + regionCode, locale: typeof body.locale === "string" ? body.locale : regionCode, ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}), raw: result, observedAt: new Date().toISOString() }) : undefined;
+      return json({ provider: "pinterest", result, ...(measurement ? { measurement } : {}) }, 200, context.requestId);
     },
   });
 
@@ -540,7 +544,8 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       const organizationUrn = typeof body.organizationUrn === "string" ? body.organizationUrn.trim() : "";
       if (!organizationUrn) return json({ error: { code: "VALIDATION_ERROR", message: "organizationUrn is required." } }, 400, context.requestId);
       const result = await new LinkedInClient({ accessToken: environment.SEO_LINKEDIN_ACCESS_TOKEN, version: environment.SEO_LINKEDIN_VERSION }).organizationShareStatistics(organizationUrn);
-      return json({ provider: "linkedin", result }, 200, context.requestId);
+      const measurement = database ? await ingestSocialSignals(database, context, { platform: "linkedin", queryText: organizationUrn, locale: typeof body.locale === "string" ? body.locale : "und", ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}), raw: result, observedAt: new Date().toISOString() }) : undefined;
+      return json({ provider: "linkedin", result, ...(measurement ? { measurement } : {}) }, 200, context.requestId);
     },
   });
 
@@ -588,7 +593,8 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       const query = typeof body.query === "string" ? body.query.trim() : "";
       if (!query) return json({ error: { code: "VALIDATION_ERROR", message: "query is required." } }, 400, context.requestId);
       const result = await new RedditClient({ ...(environment?.SEO_REDDIT_ACCESS_TOKEN ? { accessToken: environment.SEO_REDDIT_ACCESS_TOKEN } : {}) }).searchPosts(query, typeof body.subreddit === "string" ? body.subreddit : undefined, Number(body.limit ?? 25));
-      return json({ provider: "reddit", result }, 200, context.requestId);
+      const measurement = database ? await ingestSocialSignals(database, context, { platform: "reddit", queryText: query, locale: typeof body.locale === "string" ? body.locale : "und", ...(typeof body.entityId === "string" ? { entityId: body.entityId } : {}), raw: result, observedAt: new Date().toISOString() }) : undefined;
+      return json({ provider: "reddit", result, ...(measurement ? { measurement } : {}) }, 200, context.requestId);
     },
   });
 
