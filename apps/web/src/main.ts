@@ -26,7 +26,7 @@ type DiscoveryResult = {
 };
 
 const STORAGE = {
-  theme: "phoenix-theme",
+  theme: "phoenix-theme-v2",
   workspace: "phoenix-workspace-id",
   accessToken: "phoenix-access-token",
   business: "phoenix-business-id",
@@ -230,7 +230,7 @@ async function hydrateSessionContext(): Promise<void> {
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem(STORAGE.theme);
   if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  return "light";
 }
 
 function toggleTheme(): void {
