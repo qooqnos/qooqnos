@@ -316,6 +316,31 @@ async function enrichSeoPayload(
     }
   }
 
+  if (business && event.eventType === "business.location.changed.v1" && typeof payload.locationId === "string") {
+    const location = await business.getLocation(context, brandId<"EntityId">(payload.locationId));
+    if (location) {
+      const locale = typeof payload.locale === "string" ? payload.locale : "en";
+      const published = location.status === "active" && (typeof payload.businessPublicationStatus === "string" ? payload.businessPublicationStatus === "published" : false);
+      payload.seoEntity = {
+        id: location.id,
+        type: "Location",
+        sourceModule: "business",
+        sourceVersion: "1",
+        publicationState: published ? "published" : "unpublished",
+        visibility: published ? "public" : "private",
+        preferredName: location.name,
+        summary: location.name,
+        locale,
+        relatedEntityIds: [location.businessId],
+        relatedEntities: [{ entityId: location.businessId, relation: "locatedAtBusiness" }],
+        ...(location.geoPoint ? { geoPoint: location.geoPoint, geoScope: "exact" as const } : {}),
+        ...(location.address ? { address: mapSeoAddress(location.address) } : {}),
+        ...(location.timezone ? { timezone: location.timezone } : {}),
+        updatedAt: location.updatedAt,
+      };
+    }
+  }
+
   if (business && (event.eventType === "business.created.v1" || event.eventType === "business.publication.changed.v1"
     || event.eventType === "business.profile.updated.v1" || event.eventType === "business.profile.published.v1"
     || event.eventType === "business.profile.suspended.v1")) {
