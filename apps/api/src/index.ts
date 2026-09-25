@@ -29,10 +29,7 @@ import { processAnalyticsAggregates } from "./analytics-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 import { assertProductionInfrastructure, checkRuntimeInfrastructure } from "./infrastructure";
 import {
-  BingWebmasterActions,
-  GoogleSearchConsoleActions,
   SearchEngineActionGateway,
-  YandexWebmasterActions,
   buildSearchEngineActionRuntime,
   processSeoPublicationJobs,
 } from "@qooqnos/seo";
@@ -173,6 +170,14 @@ function buildYandexSearchEngineActionsConfig(env: ApiEnv) {
   };
 }
 
+function buildSearchEngineActionGateway(env: ApiEnv) {
+  return new SearchEngineActionGateway({
+    ...(buildGoogleSearchEngineActionsConfig(env) ? { google: buildGoogleSearchEngineActionsConfig(env) } : {}),
+    ...(buildBingSearchEngineActionsConfig(env) ? { bing: buildBingSearchEngineActionsConfig(env) } : {}),
+    ...(buildYandexSearchEngineActionsConfig(env) ? { yandex: buildYandexSearchEngineActionsConfig(env) } : {}),
+  });
+}
+
 function buildSeoIndexNowConfig(env: ApiEnv) {
   if (!env.SEO_INDEXNOW_KEY?.trim()) return undefined;
   const batchLimit = env.SEO_INDEXNOW_BATCH_LIMIT ? Number(env.SEO_INDEXNOW_BATCH_LIMIT) : undefined;
@@ -254,11 +259,7 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
     requireAuthentication: true,
     requireWorkspace: true,
     handler: ({ context }) => {
-      const gateway = new SearchEngineActionGateway({
-        ...(buildGoogleSearchEngineActionsConfig(env) ? { google: buildGoogleSearchEngineActionsConfig(env) } : {}),
-        ...(buildBingSearchEngineActionsConfig(env) ? { bing: buildBingSearchEngineActionsConfig(env) } : {}),
-        ...(buildYandexSearchEngineActionsConfig(env) ? { yandex: buildYandexSearchEngineActionsConfig(env) } : {}),
-      });
+      const gateway = buildSearchEngineActionGateway(env);
       return json({ providers: gateway.status() }, 200, context.requestId);
     },
   });
@@ -271,12 +272,12 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
     requireAuthentication: true,
     requireWorkspace: true,
     handler: async ({ context, request }) => {
-      const config = buildGoogleSearchEngineActionsConfig(env);
-      if (!config) return json({ status: "unavailable", provider: "google-search-console" }, 503, context.requestId);
+      const gateway = buildSearchEngineActionGateway(env);
+      if (!buildGoogleSearchEngineActionsConfig(env)) return json({ status: "unavailable", provider: "google-search-console" }, 503, context.requestId);
       const search = new URL(request.url).searchParams;
       const inspectionUrl = search.get("url")?.trim();
       if (!inspectionUrl) return json({ error: "url query parameter is required." }, 400, context.requestId);
-      const result = await new GoogleSearchConsoleActions(config).inspectUrl(
+      const result = await gateway.inspectGoogleUrl(
         inspectionUrl,
         env.SEO_GSC_INSPECTION_LANGUAGE ?? "en-US",
       );
@@ -292,10 +293,10 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
     requireAuthentication: true,
     requireWorkspace: true,
     handler: async ({ context }) => {
-      const config = buildGoogleSearchEngineActionsConfig(env);
+      const gateway = buildSearchEngineActionGateway(env);
       const sitemapUrl = env.SEO_GSC_SITEMAP_URL?.trim();
-      if (!config || !sitemapUrl) return json({ status: "unavailable", provider: "google-search-console" }, 503, context.requestId);
-      await new GoogleSearchConsoleActions(config).submitSitemap(sitemapUrl);
+      if (!buildGoogleSearchEngineActionsConfig(env) || !sitemapUrl) return json({ status: "unavailable", provider: "google-search-console" }, 503, context.requestId);
+      await gateway.submitGoogleSitemap(sitemapUrl);
       return json({ submitted: true, provider: "google-search-console", sitemapUrl }, 200, context.requestId);
     },
   });
@@ -308,12 +309,12 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
     requireAuthentication: true,
     requireWorkspace: true,
     handler: async ({ context, request }) => {
-      const config = buildBingSearchEngineActionsConfig(env);
-      if (!config) return json({ status: "unavailable", provider: "bing-webmaster" }, 503, context.requestId);
+      const gateway = buildSearchEngineActionGateway(env);
+      if (!buildBingSearchEngineActionsConfig(env)) return json({ status: "unavailable", provider: "bing-webmaster" }, 503, context.requestId);
       const search = new URL(request.url).searchParams;
       const url = search.get("url")?.trim();
       if (!url) return json({ error: "url query parameter is required." }, 400, context.requestId);
-      await new BingWebmasterActions(config).submitUrl(url);
+      await gateway.submitBingUrl(url);
       return json({ submitted: true, provider: "bing-webmaster", url }, 200, context.requestId);
     },
   });
@@ -326,12 +327,12 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
     requireAuthentication: true,
     requireWorkspace: true,
     handler: async ({ context, request }) => {
-      const config = buildYandexSearchEngineActionsConfig(env);
-      if (!config) return json({ status: "unavailable", provider: "yandex-webmaster" }, 503, context.requestId);
+      const gateway = buildSearchEngineActionGateway(env);
+      if (!buildYandexSearchEngineActionsConfig(env)) return json({ status: "unavailable", provider: "yandex-webmaster" }, 503, context.requestId);
       const search = new URL(request.url).searchParams;
       const url = search.get("url")?.trim();
       if (!url) return json({ error: "url query parameter is required." }, 400, context.requestId);
-      const result = await new YandexWebmasterActions(config).requestRecrawl(url);
+      const result = await gateway.recrawlYandexUrl(url);
       return json({ submitted: true, provider: "yandex-webmaster", url, ...result }, 202, context.requestId);
     },
   });
@@ -344,10 +345,10 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
     requireAuthentication: true,
     requireWorkspace: true,
     handler: async ({ context, request }) => {
-      const config = buildYandexSearchEngineActionsConfig(env);
-      if (!config) return json({ status: "unavailable", provider: "yandex-webmaster" }, 503, context.requestId);
+      const gateway = buildSearchEngineActionGateway(env);
+      if (!buildYandexSearchEngineActionsConfig(env)) return json({ status: "unavailable", provider: "yandex-webmaster" }, 503, context.requestId);
       const search = new URL(request.url).searchParams;
-      const result = await new YandexWebmasterActions(config).getIndexingHistory(
+      const result = await gateway.yandexIndexingHistory(
         search.get("dateFrom")?.trim() || undefined,
         search.get("dateTo")?.trim() || undefined,
       );
