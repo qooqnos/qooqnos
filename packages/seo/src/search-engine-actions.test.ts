@@ -81,4 +81,64 @@ describe("search engine API actions", () => {
     expect(request?.url).toContain("/v4/user/123/hosts/https%3Aexample.com%3A443/recrawl/queue");
     expect(request?.headers.get("authorization")).toBe("OAuth ya-token");
   });
+
+  it("retries transient provider failures and records an audit trail", async () => {
+    const calls: Request[] = [];
+    const audits: Array<{ status: string; attempt: number; httpStatus?: number }> = [];
+    const delays: number[] = [];
+    let count = 0;
+    const api = new BingWebmasterActions({
+      siteUrl: "https://example.com/",
+      apiKey: "bing-key",
+      runtime: {
+        maxAttempts: 3,
+        baseDelayMs: 25,
+        maxDelayMs: 100,
+        sleep: async (milliseconds) => { delays.push(milliseconds); },
+        onAudit: (event) => { audits.push({ status: event.status, attempt: event.attempt, ...(event.httpStatus ? { httpStatus: event.httpStatus } : {}) }); },
+      },
+      fetcher: async (input, init) => {
+        calls.push(new Request(input, init));
+        count += 1;
+        return count === 1
+          ? response({ message: "busy" }, 429)
+          : response({ d: null });
+      },
+    });
+
+    await api.submitUrl("https://example.com/p/1");
+
+    expect(calls).toHaveLength(2);
+    expect(delays).toEqual([25]);
+    expect(audits).toEqual([
+      { status: "retry", attempt: 1, httpStatus: 429 },
+      { status: "success", attempt: 2, httpStatus: 200 },
+    ]);
+  });
+
+  it("honors Retry-After on transient responses without retrying permanent 4xx errors", async () => {
+    const delays: number[] = [];
+    let count = 0;
+    const api = new BingWebmasterActions({
+      siteUrl: "https://example.com/",
+      apiKey: "bing-key",
+      runtime: {
+        maxAttempts: 3,
+        baseDelayMs: 1,
+        maxDelayMs: 5000,
+        sleep: async (milliseconds) => { delays.push(milliseconds); },
+      },
+      fetcher: async () => {
+        count += 1;
+        return count === 1
+          ? new Response(JSON.stringify({ error: "busy" }), { status: 429, headers: { "retry-after": "7" } })
+          : response({}, 400);
+      },
+    });
+
+    await expect(api.submitUrl("https://example.com/p/2")).rejects.toThrow("Bing Webmaster URL submission returned HTTP 400");
+    expect(count).toBe(2);
+    expect(delays).toEqual([5000]);
+  });
+
 });
