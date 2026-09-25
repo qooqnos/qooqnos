@@ -1618,3 +1618,13 @@ Competitive intelligence evidence layers now include:
 - Product projections emit `ownedByBusiness`; Business projections emit `offersProduct`, `offersService`, and `hasLocation` from canonical repositories.
 - SEO graph persistence preserves the semantic relation instead of collapsing every canonical relationship to `relatedTo`.
 - Legacy ID-only payloads remain supported through a `relatedTo` fallback.
+
+## SEO/GEO Repository Projection Test Hardening — September 2026
+- Corrected the Business repository regression test so public contacts and social links are validated against distinct canonical result shapes.
+- The social-link assertion now verifies platform and URL rather than accidentally accepting a contact row as a social row.
+- This closes a false-positive test path in the Business → SEO public signal boundary.
+
+## Migration Integrity — September 2026
+- Recomputed the SHA-256 checksum for `0092_business_public_contact_links.sql` from the committed migration contents.
+- Corrected `migrations/migration-lock.json` version 92 checksum to `24bb4f9a2659265c8afb1f44cb4641024587d17cd9137e136868b0e31f3a8284`.
+- Migration source and lock are now content-aligned; production migration verification must still be confirmed by the deployment pipeline.
