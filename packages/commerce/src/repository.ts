@@ -215,6 +215,49 @@ export interface AddOrderLineInput {
   readonly now: string;
 }
 
+export interface FulfillmentPolicyRecord {
+  readonly id: EntityId;
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId;
+  readonly businessId: EntityId;
+  readonly resourceType: "product" | "product_variant" | "offering";
+  readonly resourceId: EntityId | null;
+  readonly destinationCountry: string | null;
+  readonly destinationRegion: string | null;
+  readonly destinationPostalCode: string | null;
+  readonly shippingRateMinor: number | null;
+  readonly shippingCurrency: string | null;
+  readonly handlingTimeMinDays: number | null;
+  readonly handlingTimeMaxDays: number | null;
+  readonly returnWindowDays: number | null;
+  readonly returnFees: "FreeReturn" | "ReturnFeesCustomerResponsibility" | "ReturnShippingFees" | null;
+  readonly returnMethod: "ReturnByMail" | "ReturnInStore" | "ReturnAtKiosk" | null;
+  readonly policyVersion: string;
+  readonly status: "draft" | "active" | "retired";
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface UpsertFulfillmentPolicyInput {
+  readonly id: EntityId;
+  readonly businessId: EntityId;
+  readonly resourceType: FulfillmentPolicyRecord["resourceType"];
+  readonly resourceId?: EntityId | undefined;
+  readonly destinationCountry?: string | undefined;
+  readonly destinationRegion?: string | undefined;
+  readonly destinationPostalCode?: string | undefined;
+  readonly shippingRateMinor?: number | undefined;
+  readonly shippingCurrency?: string | undefined;
+  readonly handlingTimeMinDays?: number | undefined;
+  readonly handlingTimeMaxDays?: number | undefined;
+  readonly returnWindowDays?: number | undefined;
+  readonly returnFees?: NonNullable<FulfillmentPolicyRecord["returnFees"]> | undefined;
+  readonly returnMethod?: NonNullable<FulfillmentPolicyRecord["returnMethod"]> | undefined;
+  readonly policyVersion: string;
+  readonly status?: FulfillmentPolicyRecord["status"] | undefined;
+  readonly now: string;
+}
+
 export class CommerceRepository extends Repository {
   constructor(database: D1Database) {
     super(database);
@@ -747,6 +790,56 @@ export class CommerceRepository extends Repository {
   }
 
 
+  async upsertFulfillmentPolicy(context: RequestContext, input: UpsertFulfillmentPolicyInput): Promise<FulfillmentPolicyRecord> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const country = normalizeOptionalCode(input.destinationCountry, 2);
+    const region = normalizeOptionalText(input.destinationRegion);
+    const postal = normalizeOptionalText(input.destinationPostalCode);
+    if (!input.policyVersion.trim()) throw new DatabaseError("Commerce fulfillment policy version is required");
+    if (input.shippingRateMinor !== undefined && (!Number.isSafeInteger(input.shippingRateMinor) || input.shippingRateMinor < 0)) {
+      throw new DatabaseError("Commerce shipping rate must be a non-negative integer minor-unit value");
+    }
+    if (input.handlingTimeMinDays !== undefined && (!Number.isSafeInteger(input.handlingTimeMinDays) || input.handlingTimeMinDays < 0)) {
+      throw new DatabaseError("Commerce minimum handling time must be a non-negative integer");
+    }
+    if (input.handlingTimeMaxDays !== undefined && (!Number.isSafeInteger(input.handlingTimeMaxDays) || input.handlingTimeMaxDays < 0)) {
+      throw new DatabaseError("Commerce maximum handling time must be a non-negative integer");
+    }
+    if (input.handlingTimeMinDays !== undefined && input.handlingTimeMaxDays !== undefined && input.handlingTimeMaxDays < input.handlingTimeMinDays) {
+      throw new DatabaseError("Commerce maximum handling time cannot be less than minimum handling time");
+    }
+    if (input.shippingRateMinor !== undefined && !input.shippingCurrency) throw new DatabaseError("Commerce shipping currency is required with a shipping rate");
+    const currency = input.shippingCurrency ? normalizeCurrency(input.shippingCurrency) : null;
+    await this.database.transaction([
+      {
+        sql: "UPDATE commerce_fulfillment_policies SET status='retired', updated_at=? WHERE organization_id=? AND workspace_id=? AND business_id=? AND resource_type=? AND COALESCE(resource_id,'')=COALESCE(?, '') AND COALESCE(destination_country,'')=COALESCE(?, '') AND COALESCE(destination_region,'')=COALESCE(?, '') AND COALESCE(destination_postal_code,'')=COALESCE(?, '') AND status='active'",
+        params: [input.now, organizationId, workspaceId, input.businessId, input.resourceType, input.resourceId ?? null, country, region, postal],
+      },
+      {
+        sql: "INSERT INTO commerce_fulfillment_policies (id,organization_id,workspace_id,business_id,resource_type,resource_id,destination_country,destination_region,destination_postal_code,shipping_rate_minor,shipping_currency,handling_time_min_days,handling_time_max_days,return_window_days,return_fees,return_method,policy_version,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        params: [input.id, organizationId, workspaceId, input.businessId, input.resourceType, input.resourceId ?? null, country, region, postal, input.shippingRateMinor ?? null, currency, input.handlingTimeMinDays ?? null, input.handlingTimeMaxDays ?? null, input.returnWindowDays ?? null, input.returnFees ?? null, input.returnMethod ?? null, input.policyVersion.trim(), input.status ?? "active", input.now, input.now],
+      },
+    ]);
+    const record = await this.getFulfillmentPolicy(context, input.businessId, input.resourceType, input.resourceId);
+    if (!record) throw new DatabaseError("Commerce fulfillment policy not found after creation");
+    return record;
+  }
+
+  async getFulfillmentPolicy(
+    context: RequestContext,
+    businessId: EntityId,
+    resourceType: FulfillmentPolicyRecord["resourceType"],
+    resourceId?: EntityId,
+  ): Promise<FulfillmentPolicyRecord | null> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    return this.database.first<FulfillmentPolicyRecord>(
+      "SELECT id,organization_id AS organizationId,workspace_id AS workspaceId,business_id AS businessId,resource_type AS resourceType,resource_id AS resourceId,destination_country AS destinationCountry,destination_region AS destinationRegion,destination_postal_code AS destinationPostalCode,shipping_rate_minor AS shippingRateMinor,shipping_currency AS shippingCurrency,handling_time_min_days AS handlingTimeMinDays,handling_time_max_days AS handlingTimeMaxDays,return_window_days AS returnWindowDays,return_fees AS returnFees,return_method AS returnMethod,policy_version AS policyVersion,status,created_at AS createdAt,updated_at AS updatedAt FROM commerce_fulfillment_policies WHERE organization_id=? AND workspace_id=? AND business_id=? AND resource_type=? AND status='active' AND (resource_id=? OR resource_id IS NULL) ORDER BY CASE WHEN resource_id=? THEN 0 ELSE 1 END, updated_at DESC LIMIT 1",
+      organizationId, workspaceId, businessId, resourceType, resourceId ?? null, resourceId ?? null,
+    );
+  }
+
   async appendOrderEvent(
     context: RequestContext,
     input: {
@@ -901,6 +994,17 @@ function parseObjectArray(value: string): readonly Readonly<Record<string, unkno
   } catch {
     throw new DatabaseError("Stored Commerce snapshot is invalid");
   }
+}
+
+function normalizeOptionalText(value: string | undefined): string | null {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}
+
+function normalizeOptionalCode(value: string | undefined, length: number): string | null {
+  const normalized = normalizeOptionalText(value)?.toUpperCase() ?? null;
+  if (normalized !== null && normalized.length !== length) throw new DatabaseError("Commerce destination country code is invalid");
+  return normalized;
 }
 
 function normalizeCurrency(value: string): string {
