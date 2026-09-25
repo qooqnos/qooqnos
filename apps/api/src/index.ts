@@ -95,6 +95,20 @@ function isApiFirstPublicPath(pathname: string): boolean {
     || pathname.startsWith("/api/");
 }
 
+function buildSeoMerchantCenterConfig(env: ApiEnv) {
+  if (!env.SEO_MERCHANT_API_ACCOUNT || !env.SEO_MERCHANT_API_DATA_SOURCE || !env.SEO_MERCHANT_API_FEED_LABEL || !env.SEO_MERCHANT_API_CONTENT_LANGUAGE) return undefined;
+  if (!env.SEO_MERCHANT_API_ACCESS_TOKEN && !(env.SEO_MERCHANT_API_SERVICE_ACCOUNT_EMAIL && env.SEO_MERCHANT_API_PRIVATE_KEY)) return undefined;
+  return {
+    accountId: env.SEO_MERCHANT_API_ACCOUNT,
+    dataSource: env.SEO_MERCHANT_API_DATA_SOURCE,
+    feedLabel: env.SEO_MERCHANT_API_FEED_LABEL,
+    contentLanguage: env.SEO_MERCHANT_API_CONTENT_LANGUAGE,
+    ...(env.SEO_MERCHANT_API_ACCESS_TOKEN ? { accessToken: env.SEO_MERCHANT_API_ACCESS_TOKEN } : {}),
+    ...(env.SEO_MERCHANT_API_SERVICE_ACCOUNT_EMAIL ? { serviceAccountEmail: env.SEO_MERCHANT_API_SERVICE_ACCOUNT_EMAIL } : {}),
+    ...(env.SEO_MERCHANT_API_PRIVATE_KEY ? { serviceAccountPrivateKey: env.SEO_MERCHANT_API_PRIVATE_KEY } : {}),
+  };
+}
+
 function buildSeoVisibilityWorkerConfig(env: ApiEnv, limit: number) {
   return {
     limit,
