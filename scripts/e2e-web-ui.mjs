@@ -112,12 +112,23 @@ await page.goto(baseURL + "/");
 await page.waitForSelector(".app-shell");
 const shellMs = Date.now() - shellStartedAt;
 assert.ok(shellMs < 1500, `Phoenix shell render budget exceeded: ${shellMs}ms`);
-assert.equal(await page.locator(".brand-copy strong").innerText(), "ققنوس");
+assert.equal(await page.locator(".phoenix-public-brand strong").innerText(), "ققنوس");
+assert.ok(await page.locator(".phoenix-home").count() > 0);
+assert.ok(await page.locator("#phoenix-demand-input").count() > 0);
+await page.locator("#phoenix-demand-input").fill("یک کسب‌وکار مناسب نزدیک من می‌خواهم");
+assert.ok(await page.locator("[data-phoenix-example]").count() >= 4);
+await page.locator("#phoenix-demand-input").fill("");
+await page.locator("[data-phoenix-example]").first().click();
+assert.ok((await page.locator("#phoenix-demand-input").inputValue()).length > 0);
+await page.locator("#phoenix-demand-input").fill("یک کسب‌وکار مناسب نزدیک من می‌خواهم");
+await page.locator("#phoenix-demand-form [type=submit]").click();
+await page.waitForURL(/\/discover\?q=/);
 
 const initialTheme = await page.locator("html").getAttribute("data-theme");
 await page.locator("[data-theme-toggle]").click();
 assert.notEqual(await page.locator("html").getAttribute("data-theme"), initialTheme);
 
+await page.goto(baseURL + "/dashboard");
 await page.locator("[data-focus-search]").click();
 await page.locator(".command-modal").waitFor();
 assert.ok(await page.locator(".command-result").count() > 0);
@@ -131,7 +142,7 @@ await page.locator("[data-toggle-shortlist]").click();
 await page.locator("[data-close-discovery]").first().click();
 assert.equal(await page.locator("#shortlist-count").innerText(), "1");
 
-await page.goto(baseURL + "/");
+await page.goto(baseURL + "/dashboard");
 await page.locator("[data-workspace-toggle]").first().click();
 await page.getByText("Workspace دوم").waitFor();
 await page.locator("[data-select-workspace='ws-2']").click();
