@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSeoProjectionPlan, seoEntityFromEvent } from "@qooqnos/seo";
+import { buildEntityGraph, buildSeoProjectionPlan, seoEntityFromEvent } from "@qooqnos/seo";
 
 describe("Business Location SEO lifecycle", () => {
   const event = {
@@ -32,15 +32,20 @@ describe("Business Location SEO lifecycle", () => {
     expect(entity?.relatedEntityIds).toEqual(["business-1"]);
     expect(entity?.geoPoint).toEqual({ latitude: 40.4093, longitude: 49.8671 });
 
+    const graph = buildEntityGraph([
+      { entityId: "location-1", entityType: "Location", sourceModule: "business", sourceVersion: "1", publicationState: "published", visibility: "public", locale: "en", preferredName: "Phoenix Downtown", canonicalUrl: "https://qooqnos.com/en/location/phoenix-downtown-location-1" },
+      { entityId: "business-1", entityType: "Business", sourceModule: "business", sourceVersion: "1", publicationState: "published", visibility: "public", locale: "en", preferredName: "Phoenix Studio", canonicalUrl: "https://qooqnos.com/en/business/phoenix-studio-business-1" },
+    ], [{ sourceEntityId: "business-1", targetEntityId: "location-1", relation: "hasLocation", provenance: "business-canonical", confidence: 1, verifiedAt: "2026-09-25T08:00:00.000Z" }]);
     const plan = buildSeoProjectionPlan({
       entity: entity!,
+      graph,
       canonicalBaseUrl: "https://qooqnos.com",
       now: "2026-09-25T08:00:00.000Z",
     });
 
     expect(plan.canonicalUrl).toContain("/en/location/phoenix-downtown-location-1");
     expect(plan.audit.status).not.toBe("blocked");
-    expect(plan.page.breadcrumbs.at(-1)?.url).toBe(plan.canonicalUrl);
+    expect(plan.page.breadcrumbs.at(-1)?.url).toBe(plan.canonicalUrl);\n    expect(plan.internalLinks.some((link) => link.targetEntityId === "business-1")).toBe(true);
     expect(plan.structuredData["@type"]).toBe("Place");
     expect(plan.structuredData.geo).toEqual({
       "@type": "GeoCoordinates",
