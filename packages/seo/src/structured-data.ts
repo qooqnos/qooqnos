@@ -156,7 +156,6 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
           item.url = variant.url;
           item["@id"] = variant.url + "#variant";
         }
-        if (entity.productGroupId) item.inProductGroupWithID = clean(entity.productGroupId);
         if (variant.imageUrl && validHttpUrl(variant.imageUrl)) item.image = variant.imageUrl;
         if (variant.price !== undefined && Number.isFinite(variant.price)) {
           item.offers = { "@type": "Offer", price: variant.price, ...(variant.currency ? { priceCurrency: clean(variant.currency) } : {}), ...(normalizeAvailability(variant.availability) ? { availability: normalizeAvailability(variant.availability) } : {}) };
