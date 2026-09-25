@@ -4,7 +4,7 @@
 
 This contract defines how Phoenix exposes public SEO/GEO pages to search crawlers, AI-search crawlers and freshness-discovery protocols without creating a second content source.
 
-The canonical source remains the published SEO representation generated from Business, Catalog, Commerce, Location and other owning modules.
+The canonical source remains the published SEO representation generated from Business, Catalog, Commerce, Location, Trust and other owning modules.
 
 ## AI crawler policy
 
@@ -59,7 +59,7 @@ Phoenix must not:
 5. add AI-only markup merely because an AI search product exists;
 6. claim that IndexNow guarantees indexing.
 
-Google AI Search guidance is therefore treated as an extension of normal technical SEO rather than as a separate markup system. The engine continues to prioritize crawlability, indexability, canonical identity, useful visible content, internal links, valid structured data, freshness and provenance.
+Google AI Search guidance is therefore treated as an extension of normal technical SEO rather than as a separate markup system. Public entities can also expose canonical Trust reputation summaries as AggregateRating only when the same values are rendered in the visible page. The engine continues to prioritize crawlability, indexability, canonical identity, useful visible content, internal links, valid structured data, freshness and provenance.
 
 ## External provider gates
 
