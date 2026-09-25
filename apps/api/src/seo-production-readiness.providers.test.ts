@@ -26,6 +26,19 @@ describe("SEO production readiness provider matrix", () => {
     const r = evaluateSeoProductionReadiness(env({ ...base, SEO_INDEXNOW_KEY: "0123456789abcdef" }));
     expect(r.providers.indexNow.ready).toBe(true);
   });
+  it("accepts search intelligence through the shared DataForSEO credentials", () => {
+    const r = evaluateSeoProductionReadiness(env({ ...base, SEO_SEARCH_INTELLIGENCE_LOGIN: "login", SEO_SEARCH_INTELLIGENCE_PASSWORD: "password" }));
+    expect(r.providers.searchIntelligence.ready).toBe(true);
+  });
+  it("accepts Google Places activation", () => {
+    const r = evaluateSeoProductionReadiness(env({ ...base, SEO_GOOGLE_PLACES_API_KEY: "key" }));
+    expect(r.providers.googlePlaces.ready).toBe(true);
+    expect(r.providers.googleRoutes.ready).toBe(true);
+  });
+  it("accepts YouTube activation", () => {
+    const r = evaluateSeoProductionReadiness(env({ ...base, SEO_YOUTUBE_API_KEY: "key" }));
+    expect(r.providers.youtube.ready).toBe(true);
+  });
   it("requires the complete competitive-intelligence activation tuple", () => {
     const r = evaluateSeoProductionReadiness(env({ ...base, SEO_COMPETITIVE_LOGIN: "login", SEO_COMPETITIVE_PASSWORD: "password", SEO_COMPETITIVE_LOCATION_CODE: "2840" }));
     expect(r.providers.competitive.ready).toBe(false);
