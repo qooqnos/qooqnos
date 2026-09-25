@@ -10,6 +10,7 @@ export interface ApiEnv {
   readonly SEO_CANONICAL_BASE_URL?: string;
   readonly SEO_CRAWLER_SAMPLE_LIMIT?: string;
   readonly SEO_MEASUREMENT_SAMPLE_LIMIT?: string;
+  readonly SEO_MERCHANT_FEED_LIMIT?: string;
   readonly SEO_GSC_SITE_URL?: string;
   readonly SEO_GSC_ACCESS_TOKEN?: string;
   readonly SEO_GSC_SERVICE_ACCOUNT_EMAIL?: string;
