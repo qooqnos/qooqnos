@@ -424,7 +424,7 @@ export function searchIntelligenceVerticals(): readonly SearchIntelligenceVertic
 
 async function fetchWithTimeout(
   fetcher: typeof fetch,
-  input: RequestInfo | URL,
+  input: Parameters<typeof fetch>[0],
   init: RequestInit,
   timeoutMs: number,
 ): Promise<Response> {
