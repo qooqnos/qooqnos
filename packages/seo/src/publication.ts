@@ -7,6 +7,7 @@ import { buildEntityGraph } from "./entity-graph";
 import { buildSeoProjectionPlan } from "./projection";
 import { planSeoInvalidation, type SeoDomainChange } from "./invalidation";
 import { notifyIndexNow, type SeoIndexNowConfig } from "./indexnow";
+import { BingWebmasterActions, GoogleSearchConsoleActions, YandexWebmasterActions, type BingWebmasterActionsConfig, type GoogleSearchConsoleActionsConfig, type YandexWebmasterActionsConfig } from "./search-engine-actions";
 import type { SeoEntity } from "./types";
 
 export type SeoPublicationReason = "entity-created" | "entity-updated" | "entity-published" | "entity-unpublished" | "entity-deleted" | "dependency-changed";
@@ -169,7 +170,15 @@ export async function processSeoPublicationJobs(
   now: string,
   limit = 25,
   canonicalBaseUrl = "https://qooqnos.com",
-  options: { readonly indexNow?: SeoIndexNowConfig } = {},
+  options: {
+    readonly indexNow?: SeoIndexNowConfig;
+    readonly google?: GoogleSearchConsoleActionsConfig;
+    readonly googleSitemapUrl?: string;
+    readonly googleInspectionLanguage?: string;
+    readonly bing?: BingWebmasterActionsConfig;
+    readonly yandex?: YandexWebmasterActionsConfig;
+    readonly yandexRecrawl?: boolean;
+  } = {},
 ): Promise<{ processed: number; succeeded: number; failed: number; indexNowFailures: number }> {
   const jobs = await database.all<SeoPublicationJob>(
     `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
@@ -184,6 +193,7 @@ export async function processSeoPublicationJobs(
   let succeeded = 0;
   let failed = 0;
   let indexNowFailures = 0;
+  let searchEngineApiFailures = 0;
 
   for (const job of jobs) {
     const locked = await database.run(
@@ -259,6 +269,28 @@ export async function processSeoPublicationJobs(
           ...(payload.relatedEntityIds ?? []).map((entityId) => ({ entityId, entityType: "related", version: payload.sourceVersion })),
         ],
       );
+      if (options.google && plan.metadata.canonicalUrl) {
+        try {
+          const google = new GoogleSearchConsoleActions(options.google);
+          if (options.googleSitemapUrl) await google.submitSitemap(options.googleSitemapUrl);
+        } catch {
+          searchEngineApiFailures += 1;
+        }
+      }
+      if (options.bing && plan.metadata.canonicalUrl && job.reason !== "entity-unpublished") {
+        try {
+          await new BingWebmasterActions(options.bing).submitUrl(plan.metadata.canonicalUrl);
+        } catch {
+          searchEngineApiFailures += 1;
+        }
+      }
+      if (options.yandex && options.yandexRecrawl && plan.metadata.canonicalUrl && job.reason !== "entity-unpublished") {
+        try {
+          await new YandexWebmasterActions(options.yandex).requestRecrawl(plan.metadata.canonicalUrl);
+        } catch {
+          searchEngineApiFailures += 1;
+        }
+      }
       if (options.indexNow?.key && plan.metadata.canonicalUrl) {
         try {
           await notifyIndexNow([plan.metadata.canonicalUrl], options.indexNow);
@@ -279,7 +311,7 @@ export async function processSeoPublicationJobs(
       failed += 1;
     }
   }
-  return { processed: succeeded + failed, succeeded, failed, indexNowFailures };
+  return { processed: succeeded + failed, succeeded, failed, indexNowFailures, searchEngineApiFailures };
 }
 
 async function stableHash(value: unknown): Promise<string> {
