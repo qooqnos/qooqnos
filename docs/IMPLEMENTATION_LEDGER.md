@@ -1640,3 +1640,13 @@ Competitive intelligence evidence layers now include:
 - `catalog.service.created` now enters the existing Discovery projection pipeline alongside canonical Product creation.
 - Discovery remains a derived projection; Catalog remains the canonical Service source.
 - Tenant/workspace validation continues to be enforced by the existing outbox worker context.
+
+
+## Business Location lifecycle → SEO/GEO publication → page verification — 2026-09-25
+
+- Canonical Business Location lifecycle commands are now implemented in `packages/business/src/repository.ts` and exposed through `packages/business/src/service.ts`: create, update and status transitions are tenant/workspace scoped, concurrency guarded, and emit the single canonical `business.location.changed.v1` outbox event.
+- SEO publication now understands Location lifecycle change reasons and converts Location event payloads into canonical `SeoEntity` representations; Location representations retain the owning Business dependency for deterministic invalidation.
+- Outbox SEO enrichment now materializes the authoritative Location snapshot, including publication state, address, exact GEO coordinates, timezone and Business relationship before the SEO engine consumes the event.
+- Location page verification covers canonical URL generation, Place structured data, GEO coordinates, breadcrumbs, publication eligibility and non-public behavior for inactive locations in `packages/seo/src/location-lifecycle.test.ts`.
+- Commits: `126f5657200e3e11827e074a4382593a7d62d531` (Business repository), `77746e84e01172286905e2384024a027d788613d` (Business service), `4e9b1d97cce5c0029bcd2c7fb9efa7b055789f9d` (SEO publication), `701c6be026d6c3b5b26511ea8a39a56c6746914f` (SEO outbox enrichment), plus the Location lifecycle test commit.
+- Remaining verification gate: run the repository CI/typecheck/test suite and, where production credentials are available, verify the live Worker → D1 → outbox → SEO publication → SSR page chain.
