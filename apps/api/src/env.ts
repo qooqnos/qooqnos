@@ -76,6 +76,10 @@ export interface ApiEnv {
   readonly SEO_LINKEDIN_VERSION?: string;
   readonly SEO_TIKTOK_ACCESS_TOKEN?: string;
   readonly SEO_REDDIT_ACCESS_TOKEN?: string;
+  readonly SEO_SOCIAL_MAX_ATTEMPTS?: string;
+  readonly SEO_SOCIAL_TIMEOUT_MS?: string;
+  readonly SEO_SOCIAL_BASE_DELAY_MS?: string;
+  readonly SEO_SOCIAL_MAX_DELAY_MS?: string;
   readonly SEO_ALLOW_OAI_SEARCHBOT?: string;
   readonly SEO_ALLOW_GPTBOT?: string;
   readonly SEO_ALLOW_GOOGLE_EXTENDED?: string;
