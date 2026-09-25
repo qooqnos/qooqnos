@@ -487,6 +487,27 @@ export class CommunicationRepository extends Repository {
     return hydrateNotification(row);
   }
 
+  async listNotificationsForRecipient(
+    context: RequestContext,
+    recipientReference: string,
+    limit = 20,
+  ): Promise<readonly NotificationRecord[]> {
+    const boundedLimit = Math.min(Math.max(Number.isSafeInteger(limit) ? limit : 20, 1), 100);
+    return this.database.all<NotificationRecord>(
+      `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference,
+              intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale,
+              variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey,
+              scheduled_at AS scheduledAt, expires_at AS expiresAt, policy_version AS policyVersion,
+              last_policy_evaluated_at AS lastPolicyEvaluatedAt, created_at AS createdAt, updated_at AS updatedAt
+       FROM communication_notifications
+       WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND recipient_reference = ?
+       ORDER BY created_at DESC, id DESC LIMIT ${boundedLimit}`,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+      recipientReference.trim(),
+    ).then((rows) => rows.map(hydrateNotification));
+  }
+
   async listCommunicationPreferences(
     context: RequestContext,
     recipientReference: string,
