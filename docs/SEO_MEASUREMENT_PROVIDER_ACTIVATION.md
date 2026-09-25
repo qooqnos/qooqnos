@@ -58,3 +58,20 @@ Each provider execution creates:
 - seo_measurement_citations rows for explicit AI URL citations.
 
 Unconfigured providers are omitted from the run. They are never recorded as zero visibility.
+## Search-engine action APIs
+
+The SEO core also exposes provider-specific operational APIs. These are separate from visibility measurement:
+
+- Google Search Console: URL Inspection and sitemap submission.
+- Bing Webmaster: URL submission.
+- Yandex Webmaster v4: URL recrawl requests and indexing history.
+- IndexNow: multi-engine freshness notification for canonical URL changes.
+
+Environment configuration:
+- `SEO_GSC_SITEMAP_URL` — canonical sitemap submitted to Google Search Console when the explicit Google sitemap action is invoked.
+- `SEO_GSC_INSPECTION_LANGUAGE` — language code for Google URL Inspection; defaults to `en-US`.
+- `SEO_BING_ACCESS_TOKEN` — optional OAuth bearer token for Bing write operations; `SEO_BING_API_KEY` remains supported.
+- `SEO_YANDEX_USER_ID`, `SEO_YANDEX_HOST_ID`, `SEO_YANDEX_OAUTH_TOKEN` — Yandex Webmaster v4 credentials.
+- `SEO_YANDEX_ENABLE_RECRAWL=true` — enables non-blocking Yandex recrawl notification after successful SEO publication.
+
+Google URL Inspection and sitemap submission are exposed through authenticated SEO API routes rather than being executed for every publication job. Bing URL submission is wired to publication; Yandex recrawl is opt-in. External provider failure never rolls back canonical SEO publication.
