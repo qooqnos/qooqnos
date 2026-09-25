@@ -1,4 +1,5 @@
 import { BusinessService, BusinessRepository } from "@qooqnos/business";
+import { AutomationRepository } from "@qooqnos/automation";
 import { CatalogService, CatalogRepository } from "@qooqnos/catalog";
 import { SellerProductSessionService, createSellerProductSessionRepository, AiRuntimeRepository } from "@qooqnos/ai";
 import { AppError, brandId, type RequestId } from "@qooqnos/core";
@@ -471,6 +472,24 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
       const service = getCatalogService(database, authorization);
       const data = await service.requestOfferingPublication(context, offeringId);
       return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/automation/executions",
+    module: "automation",
+    operation: "automation.execution.read",
+    permission: "automation.execution.read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const rawLimit = Number(new URL(request.url).searchParams.get("limit") ?? "20");
+      const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 20;
+      const data = await new AutomationRepository(database).listPendingExecutions(new Date().toISOString(), limit);
+      const scoped = data.filter((item) => item.organizationId === context.tenantId && (item.workspaceId === null || item.workspaceId === context.workspaceId));
+      return json({ data: scoped }, 200, context.requestId);
     },
   });
 
