@@ -31,7 +31,7 @@ export class InstagramGraphClient {
     return this.request(u, {});
   }
   async publishImage(imageUrl: string, caption = ""): Promise<unknown> {
-    if (!/^https?:\\/\\//i.test(imageUrl)) throw new Error("Instagram publishing requires an HTTP(S) image URL.");
+    if (!/^https?:\/\//i.test(imageUrl)) throw new Error("Instagram publishing requires an HTTP(S) image URL.");
     const container = await this.request("https://graph.facebook.com/v26.0/" + encodeURIComponent(this.config.igUserId) + "/media", { method: "POST", params: { image_url: imageUrl, caption } }) as { id?: string };
     if (!container.id) throw new Error("Instagram media container creation returned no id.");
     return this.request("https://graph.facebook.com/v26.0/" + encodeURIComponent(this.config.igUserId) + "/media_publish", { method: "POST", params: { creation_id: container.id } });
@@ -67,7 +67,7 @@ export class PinterestClient {
   }
   async trends(regionCode: string, trendType = "monthly"): Promise<unknown> { return this.request("https://api.pinterest.com/v5/trends/keywords/" + encodeURIComponent(regionCode) + "/top/" + encodeURIComponent(trendType), {}); }
   async createPin(input: { readonly boardId: string; readonly imageUrl: string; readonly title?: string; readonly description?: string; readonly link?: string }): Promise<unknown> {
-    if (!/^https?:\\/\\//i.test(input.imageUrl)) throw new Error("Pinterest imageUrl must be HTTP(S).");
+    if (!/^https?:\/\//i.test(input.imageUrl)) throw new Error("Pinterest imageUrl must be HTTP(S).");
     return this.request("https://api.pinterest.com/v5/pins", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ board_id: input.boardId, title: input.title, description: input.description, link: input.link, media_source: { source_type: "image_url", url: input.imageUrl } }) });
   }
   private async request(input: string | URL, init: RequestInit): Promise<unknown> { const headers = new Headers(init.headers); headers.set("Authorization", "Bearer " + this.config.accessToken.trim()); headers.set("Accept", "application/json"); const r = await requestWithTimeout(this.config.fetcher ?? fetch, input, { ...init, headers }, this.config.timeoutMs ?? 15000, this.config); if (!r.ok) throw new Error("Pinterest API returned HTTP " + r.status); return r.json(); }
@@ -89,7 +89,7 @@ export class TikTokClient {
   constructor(private readonly config: SocialRuntime & { readonly accessToken: string }) {}
   async creatorInfo(): Promise<unknown> { return this.post("https://open.tiktokapis.com/v2/post/publish/creator_info/query/", {}); }
   async initializeVideoPost(input: { readonly title?: string; readonly privacyLevel: string; readonly videoUrl: string }): Promise<unknown> {
-    if (!/^https?:\\/\\//i.test(input.videoUrl)) throw new Error("TikTok videoUrl must be HTTP(S).");
+    if (!/^https?:\/\//i.test(input.videoUrl)) throw new Error("TikTok videoUrl must be HTTP(S).");
     return this.post("https://open.tiktokapis.com/v2/post/publish/video/init/", { post_info: { title: input.title ?? "", privacy_level: input.privacyLevel, disable_duet: false, disable_comment: false, disable_stitch: false }, source_info: { source: "PULL_FROM_URL", video_url: input.videoUrl } });
   }
   private async post(url: string, body: unknown): Promise<unknown> { const r = await requestWithTimeout(this.config.fetcher ?? fetch, url, { method: "POST", headers: { Authorization: "Bearer " + this.config.accessToken, "Content-Type": "application/json; charset=UTF-8" }, body: JSON.stringify(body) }, this.config.timeoutMs ?? 20000, this.config); if (!r.ok) throw new Error("TikTok API returned HTTP " + r.status); return r.json(); }
