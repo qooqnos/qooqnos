@@ -258,6 +258,35 @@ describe("SEO/GEO core", () => {
     expect(body.urlList).toHaveLength(1);
   });
 
+  it("emits truth-bound AggregateRating for public Business and Product entities", () => {
+    const business = generateStructuredData({
+      ...entity,
+      type: "Business",
+      aggregateRating: { ratingValue: 4.5, reviewCount: 12, bestRating: 5, worstRating: 1 },
+    }, { canonicalUrl: "https://example.com/business/1" });
+    expect(business.aggregateRating).toEqual({
+      "@type": "AggregateRating",
+      ratingValue: 4.5,
+      reviewCount: 12,
+      bestRating: 5,
+      worstRating: 1,
+    });
+
+    const product = generateStructuredData({
+      ...entity,
+      id: "product-1",
+      type: "Product",
+      aggregateRating: { ratingValue: 4.2, reviewCount: 7, bestRating: 5, worstRating: 1 },
+    }, { canonicalUrl: "https://example.com/product/1" });
+    expect(product.aggregateRating).toEqual({
+      "@type": "AggregateRating",
+      ratingValue: 4.2,
+      reviewCount: 7,
+      bestRating: 5,
+      worstRating: 1,
+    });
+  });
+
   it("audits crawl/indexability consistency and canonical identity", () => {
     const draftEntity = { ...entity, publicationState: "draft" as const };
     delete (draftEntity as { canonicalId?: string }).canonicalId;
