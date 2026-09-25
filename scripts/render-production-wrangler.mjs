@@ -84,7 +84,11 @@ SEO_BING_SITE_URL = "https://qooqnos.com/"
 SEO_SEARCH_ENGINE_MAX_ATTEMPTS = "3"
 SEO_SEARCH_ENGINE_TIMEOUT_MS = "15000"
 SEO_SEARCH_ENGINE_BASE_DELAY_MS = "500"
-SEO_SEARCH_ENGINE_MAX_DELAY_MS = "10000"${seoAiEndpoint ? `\nSEO_AI_CITATION_ENDPOINT = "${seoAiEndpoint}"` : ""}${seoAiModel ? `\nSEO_AI_CITATION_MODEL = "${seoAiModel}"` : ""}${seoAiAuthMode ? `\nSEO_AI_CITATION_AUTH_MODE = "${seoAiAuthMode}"` : ""}${seoMerchantVars ? `\n${seoMerchantVars}` : ""}
+SEO_SEARCH_ENGINE_MAX_DELAY_MS = "10000"
+SEO_SOCIAL_MAX_ATTEMPTS = "3"
+SEO_SOCIAL_TIMEOUT_MS = "15000"
+SEO_SOCIAL_BASE_DELAY_MS = "500"
+SEO_SOCIAL_MAX_DELAY_MS = "5000"${seoAiEndpoint ? `\nSEO_AI_CITATION_ENDPOINT = "${seoAiEndpoint}"` : ""}${seoAiModel ? `\nSEO_AI_CITATION_MODEL = "${seoAiModel}"` : ""}${seoAiAuthMode ? `\nSEO_AI_CITATION_AUTH_MODE = "${seoAiAuthMode}"` : ""}${seoMerchantVars ? `\n${seoMerchantVars}` : ""}
 AI_SELLER_EXTRACT_MODEL_ID = "${modelId}"
 AI_SELLER_EXTRACT_MODEL_VERSION = "${modelVersion}"${gatewayId ? `\nAI_GATEWAY_ID = "${gatewayId}"` : ""}
 
