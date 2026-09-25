@@ -45,7 +45,8 @@ describe("Business Location SEO lifecycle", () => {
 
     expect(plan.canonicalUrl).toContain("/en/location/phoenix-downtown-location-1");
     expect(plan.audit.status).not.toBe("blocked");
-    expect(plan.page.breadcrumbs.at(-1)?.url).toBe(plan.canonicalUrl);\n    expect(plan.internalLinks.some((link) => link.targetEntityId === "business-1")).toBe(true);
+    expect(plan.page.breadcrumbs.at(-1)?.url).toBe(plan.canonicalUrl);
+    expect(plan.internalLinks.some((link) => link.targetEntityId === "business-1")).toBe(true);
     expect(plan.structuredData["@type"]).toBe("Place");
     expect(plan.structuredData.geo).toEqual({
       "@type": "GeoCoordinates",
