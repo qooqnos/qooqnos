@@ -91,7 +91,7 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
       entity.geoPoint.longitude >= -180 && entity.geoPoint.longitude <= 180) {
     x.geo = { "@type": "GeoCoordinates", latitude: entity.geoPoint.latitude, longitude: entity.geoPoint.longitude };
   }
-  if ((entity.type === "Business" || entity.type === "Branch") && entity.openingHours?.length) {
+  if ((entity.type === "Business" || entity.type === "Branch" || entity.type === "Location") && entity.openingHours?.length) {
     x.openingHoursSpecification = entity.openingHours
       .filter((hours) => hours.dayOfWeek.length > 0 && hours.opens && hours.closes)
       .map((hours) => ({
