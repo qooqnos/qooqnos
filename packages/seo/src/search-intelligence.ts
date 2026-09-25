@@ -380,7 +380,7 @@ export class DataForSeoSearchIntelligenceClient {
       this.config.fetcher ?? fetch,
       endpoint,
       {
-        method: init.method,
+        ...(init.method ? { method: init.method } : {}),
         headers: {
           "content-type": "application/json",
           authorization: "Basic " + bytesToBase64(new TextEncoder().encode(this.config.login + ":" + this.config.password)),
