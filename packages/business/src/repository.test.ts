@@ -210,6 +210,15 @@ describe("BusinessRepository", () => {
       bind() { return this; },
       async first<T>() { return { id: "workspace-1" } as T; },
       async all<T>() {
+        const sql = (this as unknown as { sql?: string }).sql ?? "";
+        if (sql.includes("business_social_links")) {
+          return {
+            results: [{
+              id: "social-1", businessId: "business-1", platform: "instagram",
+              url: "https://instagram.com/phoenix",
+            }] as T[],
+          };
+        }
         return {
           results: [{
             id: "contact-1", businessId: "business-1", locationId: null,
@@ -220,14 +229,21 @@ describe("BusinessRepository", () => {
       async run() { return { success: true }; },
     };
     const raw: D1DatabaseLike = {
-      prepare() { return statement; },
+      prepare(sql: string) {
+        (statement as unknown as { sql?: string }).sql = sql;
+        return statement;
+      },
       async batch() { return []; },
     };
     const repository = new BusinessRepository(new D1Database(raw));
     const contacts = await repository.listPublicContacts(context(), brandId<"EntityId">("business-1"));
     const links = await repository.listPublicSocialLinks(context(), brandId<"EntityId">("business-1"));
     expect(contacts[0]).toMatchObject({ contactType: "phone", value: "+491234567890" });
-    expect(links[0]).toMatchObject({ id: "contact-1" });
+    expect(links[0]).toMatchObject({
+      id: "social-1",
+      platform: "instagram",
+      url: "https://instagram.com/phoenix",
+    });
   });
 
   it("reads active canonical operating hours within tenant and workspace scope", async () => {
