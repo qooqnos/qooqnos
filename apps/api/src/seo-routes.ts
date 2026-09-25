@@ -86,7 +86,7 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     operation: "merchant-feed.read",
     handler: async () => {
       if (!database) return new Response("Database is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
-      const canonicalPrefix = canonicalBaseUrl.replace(/\\/$/, "") + "/";
+      const canonicalPrefix = canonicalBaseUrl.replace(/\/$/, "") + "/";
       const limitValue = Number(environment?.SEO_MERCHANT_FEED_LIMIT ?? "50000");
       const limit = Number.isFinite(limitValue) ? Math.min(Math.max(Math.trunc(limitValue), 1), 50000) : 50000;
       const rows = await database.all<{ representationJson: string }>(
