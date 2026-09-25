@@ -321,6 +321,12 @@ async function enrichSeoPayload(
     if (location) {
       const locale = typeof payload.locale === "string" ? payload.locale : "en";
       const published = location.status === "active" && (typeof payload.businessPublicationStatus === "string" ? payload.businessPublicationStatus === "published" : false);
+      const hours = await business.listHours(context, location.businessId, location.id);
+      const openingHours = hours.map((entry) => ({
+        dayOfWeek: [schemaDayOfWeek(entry.dayOfWeek)],
+        opens: entry.opens,
+        closes: entry.closes,
+      }));
       payload.seoEntity = {
         id: location.id,
         type: "Location",
@@ -336,6 +342,7 @@ async function enrichSeoPayload(
         ...(location.geoPoint ? { geoPoint: location.geoPoint, geoScope: "exact" as const } : {}),
         ...(location.address ? { address: mapSeoAddress(location.address) } : {}),
         ...(location.timezone ? { timezone: location.timezone } : {}),
+        ...(openingHours.length ? { openingHours } : {}),
         updatedAt: location.updatedAt,
       };
     }
