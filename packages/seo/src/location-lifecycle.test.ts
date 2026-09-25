@@ -9,6 +9,7 @@ describe("Business Location SEO lifecycle", () => {
     organizationId: "org-1",
     workspaceId: "ws-1",
     aggregateId: "location-1",
+    aggregateType: "location",
     occurredAt: "2026-09-25T08:00:00.000Z",
     payloadJson: JSON.stringify({
       locationId: "location-1",
