@@ -167,6 +167,8 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
       if (entity.currency) offer.priceCurrency = clean(entity.currency);
       const availability = normalizeAvailability(entity.availability);
       if (availability) offer.availability = availability;
+      if (entity.shippingDetails) offer.shippingDetails = x.shippingDetails;
+      if (entity.returnPolicy) offer.hasMerchantReturnPolicy = x.hasMerchantReturnPolicy;
       x.offers = offer;
     }
   }
