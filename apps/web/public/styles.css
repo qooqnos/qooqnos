@@ -877,3 +877,9 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
 .ds-dialog-demo { min-height:180px; display:grid; place-items:center; border:1px dashed var(--line); border-radius:14px; padding:12px; }
 .ds-skeleton-stack { display:grid; gap:7px; }
 @media (max-width:900px) { .ds-playground-grid { grid-template-columns:1fr; } }
+
+.admin-jobs-list { display:grid; gap:7px; margin-top:11px; max-height:240px; overflow:auto; }
+.admin-job-row { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; padding:9px 10px; border-radius:11px; background:var(--surface-2); }
+.admin-job-row strong,.admin-job-row small { display:block; }
+.admin-job-row strong { font-size:8px; }
+.admin-job-row small { margin-top:2px; color:var(--faint); font-size:7px; }
