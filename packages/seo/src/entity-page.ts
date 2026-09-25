@@ -23,7 +23,7 @@ export interface EntityPageModel {
   readonly sections: readonly {
     id: string;
     title: string;
-    kind: "overview" | "facts" | "relationships" | "geography" | "commerce" | "action";
+    kind: "overview" | "facts" | "relationships" | "geography" | "commerce" | "reviews" | "action";
   }[];
 }
 
@@ -104,6 +104,7 @@ export function buildEntityPageModel(
   if (relatedLinks.length) sections.push({ id: "relationships", title: "Related", kind: "relationships" });
   if (entity.geoScope || entity.country || entity.locationId || entity.serviceArea?.length) sections.push({ id: "geography", title: "Geographic scope", kind: "geography" });
   if (entity.price !== undefined || entity.currency || entity.priceRange || entity.availability) sections.push({ id: "commerce", title: "Commerce", kind: "commerce" });
+  if (entity.aggregateRating && entity.aggregateRating.reviewCount > 0) sections.push({ id: "reviews", title: "Customer reviews", kind: "reviews" });
   sections.push({ id: "action", title: "Next action", kind: "action" });
 
   return {
