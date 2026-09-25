@@ -131,21 +131,57 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
     if (variants.length) {
       x["@type"] = "ProductGroup";
       if (entity.productGroupId) x.productGroupID = clean(entity.productGroupId);
-      const dimensions = unique(entity.variantDimensions ?? []);
+      const dimensions = unique(entity.variantDimensions ?? [])
+        .map(schemaVariantDimension)
+        .filter((value): value is string => Boolean(value));
       if (dimensions.length) x.variesBy = dimensions;
+      if (entity.aggregateRating && entity.aggregateRating.reviewCount > 0 && Number.isFinite(entity.aggregateRating.ratingValue)) {
+        x.aggregateRating = {
+          "@type": "AggregateRating",
+          ratingValue: entity.aggregateRating.ratingValue,
+          reviewCount: entity.aggregateRating.reviewCount,
+          bestRating: entity.aggregateRating.bestRating,
+          worstRating: entity.aggregateRating.worstRating,
+        };
+      }
+      const seenVariantIds = new Set<string>();
       x.hasVariant = variants.map((variant) => {
         const item: Record<string, unknown> = { "@type": "Product" };
-        if (variant.name) item.name = clean(variant.name);
+        const stableVariantId = clean(variant.sku) || clean(variant.id);
+        if (stableVariantId && seenVariantIds.has(stableVariantId)) return null;
+        if (stableVariantId) {
+          seenVariantIds.add(stableVariantId);
+          item.identifier = stableVariantId;
+        }
+        const variantName = clean(variant.name) || deriveVariantName(name, variant);
+        if (variantName) item.name = variantName;
+        if (variant.description) item.description = clean(variant.description);
         if (variant.sku) item.sku = clean(variant.sku);
-        if (variant.url && validHttpUrl(variant.url)) item.url = variant.url;
+        if (variant.url && validHttpUrl(variant.url)) {
+          item.url = variant.url;
+          item["@id"] = variant.url + "#variant";
+        }
+        if (entity.productGroupId) item.inProductGroupWithID = clean(entity.productGroupId);
         if (variant.imageUrl && validHttpUrl(variant.imageUrl)) item.image = variant.imageUrl;
         if (variant.price !== undefined && Number.isFinite(variant.price)) {
           item.offers = { "@type": "Offer", price: variant.price, ...(variant.currency ? { priceCurrency: clean(variant.currency) } : {}), ...(normalizeAvailability(variant.availability) ? { availability: normalizeAvailability(variant.availability) } : {}) };
         }
         const attrs = variant.attributes ?? {};
-        for (const [key, value] of Object.entries(attrs)) if (clean(value)) item[key] = clean(value);
+        for (const [key, value] of Object.entries(attrs)) {
+          if (!clean(value)) continue;
+          const schemaKey = schemaVariantProperty(key);
+          if (schemaKey) item[schemaKey] = clean(value);
+        }
         return item;
-      });
+      }).filter((item): item is Record<string, unknown> => Boolean(item));
+    } else if (entity.aggregateRating && entity.aggregateRating.reviewCount > 0 && Number.isFinite(entity.aggregateRating.ratingValue)) {
+      x.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: entity.aggregateRating.ratingValue,
+        reviewCount: entity.aggregateRating.reviewCount,
+        bestRating: entity.aggregateRating.bestRating,
+        worstRating: entity.aggregateRating.worstRating,
+      };
     }
     if (entity.brandName) x.brand = { "@type": "Brand", name: clean(entity.brandName) };
     if (entity.categoryName) x.category = clean(entity.categoryName);
@@ -245,6 +281,40 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
 
 function limit(value: string, max: number): string {
   return value.length > max ? value.slice(0, max).trimEnd() : value;
+}
+
+function schemaVariantDimension(value: string): string | undefined {
+  const normalized = value.trim().replace(/^https?:\/\/schema\.org\//, "");
+  const supported = new Set(["color", "size", "suggestedAge", "suggestedGender", "material", "pattern"]);
+  return supported.has(normalized) ? "https://schema.org/" + normalized : undefined;
+}
+
+function schemaVariantProperty(value: string): string | undefined {
+  const normalized = value.trim().replace(/^https?:\/\/schema\.org\//, "");
+  const aliases: Record<string, string> = {
+    color: "color",
+    size: "size",
+    material: "material",
+    pattern: "pattern",
+    suggestedAge: "suggestedAge",
+    suggestedGender: "suggestedGender",
+    gender: "suggestedGender",
+    age: "suggestedAge",
+  };
+  return aliases[normalized] ?? (validHttpSchemaProperty(value) ? normalized : undefined);
+}
+
+function validHttpSchemaProperty(value: string): boolean {
+  return /^https:\/\/schema\.org\/[A-Za-z][A-Za-z0-9]*$/.test(value.trim());
+}
+
+function deriveVariantName(parentName: string, variant: SeoProductVariantSeo): string {
+  const suffix = Object.entries(variant.attributes ?? {})
+    .map(([key, value]) => [key.replace(/[_-]+/g, " "), clean(value)].filter(Boolean).join(": "))
+    .filter(Boolean)
+    .sort()
+    .join(", ");
+  return suffix ? parentName + " - " + suffix : parentName;
 }
 
 function normalizeAvailability(value: string | undefined): string | undefined {
