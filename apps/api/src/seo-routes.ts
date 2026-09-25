@@ -89,7 +89,7 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
       const canonicalPrefix = canonicalBaseUrl.replace(/\/$/, "") + "/";
       const limitValue = Number(environment?.SEO_MERCHANT_FEED_LIMIT ?? "50000");
       const limit = Number.isFinite(limitValue) ? Math.min(Math.max(Math.trunc(limitValue), 1), 50000) : 50000;
-      const rows = await database.all<{ representationJson: string }>(
+      const rows = await database.all<{ canonicalUrl: string; representationJson: string }>(
         `SELECT representation_json AS representationJson
            FROM seo_entity_representations
           WHERE entity_type='Product'
@@ -101,15 +101,19 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
           LIMIT ?`,
         canonicalPrefix + "%", limit,
       );
-      const entities = rows.flatMap((row) => {
+      const entities: import("@qooqnos/seo").SeoEntity[] = [];
+      const canonicalUrlByEntityId: Record<string, string> = {};
+      for (const row of rows) {
         try {
           const parsed = JSON.parse(row.representationJson) as { entity?: import("@qooqnos/seo").SeoEntity };
-          return parsed.entity ? [parsed.entity] : [];
+          if (!parsed.entity) continue;
+          entities.push(parsed.entity);
+          canonicalUrlByEntityId[parsed.entity.id] = row.canonicalUrl;
         } catch {
-          return [];
+          // Skip malformed historical projections; publication will repair them.
         }
-      });
-      const projection = projectMerchantProductFeed(entities, { canonicalBaseUrl });
+      }
+      const projection = projectMerchantProductFeed(entities, { canonicalBaseUrl, canonicalUrlByEntityId });
       const xml = buildMerchantProductFeedXml(projection.items, canonicalBaseUrl);
       return new Response(xml, {
         status: 200,
