@@ -25,6 +25,20 @@ export function evaluateSeoProductionReadiness(env: ApiEnv): SeoProductionReadin
   const googleRoutesReady = Boolean(env.SEO_GOOGLE_ROUTES_API_KEY || env.SEO_GOOGLE_PLACES_API_KEY);
   const youtubeConfigured = configured(env.SEO_YOUTUBE_API_KEY);
   const youtubeReady = Boolean(env.SEO_YOUTUBE_API_KEY);
+  const facebookConfigured = configured(env.SEO_FACEBOOK_PAGE_ID, env.SEO_FACEBOOK_ACCESS_TOKEN);
+  const facebookReady = Boolean(env.SEO_FACEBOOK_PAGE_ID && env.SEO_FACEBOOK_ACCESS_TOKEN);
+  const instagramConfigured = configured(env.SEO_INSTAGRAM_USER_ID, env.SEO_INSTAGRAM_ACCESS_TOKEN);
+  const instagramReady = Boolean(env.SEO_INSTAGRAM_USER_ID && env.SEO_INSTAGRAM_ACCESS_TOKEN);
+  const xConfigured = configured(env.SEO_X_BEARER_TOKEN, env.SEO_X_USER_ACCESS_TOKEN);
+  const xReady = Boolean(env.SEO_X_BEARER_TOKEN || env.SEO_X_USER_ACCESS_TOKEN);
+  const pinterestConfigured = configured(env.SEO_PINTEREST_ACCESS_TOKEN);
+  const pinterestReady = Boolean(env.SEO_PINTEREST_ACCESS_TOKEN);
+  const linkedinConfigured = configured(env.SEO_LINKEDIN_ACCESS_TOKEN, env.SEO_LINKEDIN_VERSION);
+  const linkedinReady = Boolean(env.SEO_LINKEDIN_ACCESS_TOKEN && env.SEO_LINKEDIN_VERSION);
+  const tiktokConfigured = configured(env.SEO_TIKTOK_ACCESS_TOKEN);
+  const tiktokReady = Boolean(env.SEO_TIKTOK_ACCESS_TOKEN);
+  const redditConfigured = configured(env.SEO_REDDIT_ACCESS_TOKEN);
+  const redditReady = Boolean(env.SEO_REDDIT_ACCESS_TOKEN);
   const competitiveConfigured = configured(env.SEO_COMPETITIVE_LOGIN, env.SEO_COMPETITIVE_PASSWORD, env.SEO_COMPETITIVE_LOCATION_CODE, env.SEO_COMPETITIVE_LOCATION_NAME, env.SEO_COMPETITIVE_LANGUAGE_CODE);
   const competitiveReady = Boolean(env.SEO_COMPETITIVE_LOGIN && env.SEO_COMPETITIVE_PASSWORD && (env.SEO_COMPETITIVE_LOCATION_CODE || env.SEO_COMPETITIVE_LOCATION_NAME) && env.SEO_COMPETITIVE_LANGUAGE_CODE);
   if (searchConsoleConfigured && !searchConsoleReady) warnings.push("Google Search Console is partially configured; it must not be interpreted as zero visibility.");
@@ -38,7 +52,14 @@ export function evaluateSeoProductionReadiness(env: ApiEnv): SeoProductionReadin
   if (googlePlacesConfigured && !googlePlacesReady) warnings.push("Google Places is partially configured and is not production-ready.");
   if (googleRoutesConfigured && !googleRoutesReady) warnings.push("Google Routes is partially configured and is not production-ready.");
   if (youtubeConfigured && !youtubeReady) warnings.push("YouTube Data API is partially configured and is not production-ready.");
-  const configuredProviders = [searchConsoleReady, googleActionsReady, bingReady, yandexReady, indexNowReady, aiReady, competitiveReady, searchIntelligenceReady, googlePlacesReady, googleRoutesReady, youtubeReady].filter(Boolean).length;
+  if (facebookConfigured && !facebookReady) warnings.push("Facebook Page API is partially configured and is not production-ready.");
+  if (instagramConfigured && !instagramReady) warnings.push("Instagram Graph API is partially configured and is not production-ready.");
+  if (xConfigured && !xReady) warnings.push("X API is partially configured and is not production-ready.");
+  if (pinterestConfigured && !pinterestReady) warnings.push("Pinterest API is partially configured and is not production-ready.");
+  if (linkedinConfigured && !linkedinReady) warnings.push("LinkedIn API is partially configured and is not production-ready.");
+  if (tiktokConfigured && !tiktokReady) warnings.push("TikTok Content Posting API is partially configured and is not production-ready.");
+  if (redditConfigured && !redditReady) warnings.push("Reddit API is partially configured; access may depend on platform-level application policy.");
+  const configuredProviders = [searchConsoleReady, googleActionsReady, bingReady, yandexReady, indexNowReady, aiReady, competitiveReady, searchIntelligenceReady, googlePlacesReady, googleRoutesReady, youtubeReady, facebookReady, instagramReady, xReady, pinterestReady, linkedinReady, tiktokReady, redditReady].filter(Boolean).length;
   const state: SeoProductionState = blockers.length > 0 ? "invalid" : warnings.length > 0 ? "partial" : configuredProviders === 0 ? "unconfigured" : "ready";
-  return { state, canonical: { ready: canonicalReady, ...(canonicalReason ? { reason: canonicalReason } : {}) }, providers: { searchConsole: { configured: searchConsoleConfigured, ready: searchConsoleReady }, googleActions: { configured: googleActionsConfigured, ready: googleActionsReady }, bing: { configured: bingConfigured, ready: bingReady }, yandex: { configured: yandexConfigured, ready: yandexReady }, indexNow: { configured: indexNowConfigured, ready: indexNowReady }, aiCitation: { configured: aiConfigured, ready: aiReady }, competitive: { configured: competitiveConfigured, ready: competitiveReady }, searchIntelligence: { configured: searchIntelligenceConfigured, ready: searchIntelligenceReady }, googlePlaces: { configured: googlePlacesConfigured, ready: googlePlacesReady }, googleRoutes: { configured: googleRoutesConfigured, ready: googleRoutesReady }, youtube: { configured: youtubeConfigured, ready: youtubeReady } }, blockers, warnings };
+  return { state, canonical: { ready: canonicalReady, ...(canonicalReason ? { reason: canonicalReason } : {}) }, providers: { searchConsole: { configured: searchConsoleConfigured, ready: searchConsoleReady }, googleActions: { configured: googleActionsConfigured, ready: googleActionsReady }, bing: { configured: bingConfigured, ready: bingReady }, yandex: { configured: yandexConfigured, ready: yandexReady }, indexNow: { configured: indexNowConfigured, ready: indexNowReady }, aiCitation: { configured: aiConfigured, ready: aiReady }, competitive: { configured: competitiveConfigured, ready: competitiveReady }, searchIntelligence: { configured: searchIntelligenceConfigured, ready: searchIntelligenceReady }, googlePlaces: { configured: googlePlacesConfigured, ready: googlePlacesReady }, googleRoutes: { configured: googleRoutesConfigured, ready: googleRoutesReady }, youtube: { configured: youtubeConfigured, ready: youtubeReady }, facebook: { configured: facebookConfigured, ready: facebookReady }, instagram: { configured: instagramConfigured, ready: instagramReady }, x: { configured: xConfigured, ready: xReady }, pinterest: { configured: pinterestConfigured, ready: pinterestReady }, linkedin: { configured: linkedinConfigured, ready: linkedinReady }, tiktok: { configured: tiktokConfigured, ready: tiktokReady }, reddit: { configured: redditConfigured, ready: redditReady } }, blockers, warnings };
 }
