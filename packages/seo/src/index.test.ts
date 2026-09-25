@@ -141,6 +141,8 @@ describe("SEO/GEO core", () => {
     expect(variantStructured.productGroupID).toBe("PG-001");
     expect(variantStructured.variesBy).toEqual(["https://schema.org/color", "https://schema.org/size"]);
     expect(variantStructured.hasVariant).toHaveLength(1);
+    expect((variantStructured.hasVariant as Record<string, unknown>[])[0]?.["@id"]).toBe(url + "?variant=red-m#variant");
+    expect((variantStructured.hasVariant as Record<string, unknown>[])[0]?.inProductGroupWithID).toBeUndefined();
     expect((variantStructured.offers as Record<string, unknown>).shippingDetails).toBeDefined();
     expect((variantStructured.offers as Record<string, unknown>).hasMerchantReturnPolicy).toBeDefined();
     expect(validateStructuredData(variantStructured).valid).toBe(true);
