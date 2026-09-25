@@ -42,3 +42,5 @@ export * from "./external-visibility-import";
 export * from "./merchant-api";
 
 export * from "./social-intelligence";
+
+export * from "./social-signal-ingestion";
