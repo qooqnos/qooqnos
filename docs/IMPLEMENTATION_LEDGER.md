@@ -1701,3 +1701,16 @@ Residual gate status:
 - Added SSR assertions confirming Location GEO coordinates and hydration are present in the rendered public document surface.
 - The repository-level E2E contract now verifies the deterministic chain without introducing a second Location source of truth.
 - Commits: `c02bd6bb7d9f221f9dc789c9cd11beb61ddd5050`, `6b40e8fbbae5c837f71f62030a66836a51ff5587`.
+
+## SEO/GEO Standards Hardening — 2026-09-25
+
+- Completed the standards-driven AI crawler policy surface without changing the existing default wildcard robots behavior.
+- Added independently configurable robots controls for `OAI-SearchBot`, `GPTBot`, `Google-Extended`, `ClaudeBot`, and `PerplexityBot`, plus optional `Crawl-delay`.
+- Added an optional IndexNow adapter with same-host validation, batching capped at the protocol maximum, optional key-location/endpoint configuration, and non-blocking failure semantics.
+- Wired IndexNow to successful canonical SEO publication so external freshness notification is derived only from the persisted canonical URL.
+- Added the operational contract `docs/SEO_AI_CRAWLER_INDEXING_CONTRACT.md` and production-hardening guidance.
+- Added regression coverage for AI crawler directives and IndexNow payload validation.
+- Added `/image-sitemap.xml` to API-first Worker routing so the canonical image discovery surface cannot fall through to SPA assets.
+- Code/doc commits: `adc5945278f3923d10b2523340d396463f752b4a`, `2e897133b123b103cfafc7ce2adeb897231b12c1`, `b6592dc61d6d41ffd922f21b9c1dbf8770aa72ab`, `59e1a65e11206c74f590abdda3fd7d67c684a320`, `11280a1f268f089528ba5e14497e3a384de7f67c`, `ce16c9ef2d340295596e332da881808e05378be5`, `9a9c8cf74861c47bb060a7227e41aa9d818af578`, `8983d764d97b0e10bdc64c37b97f4ab9fce78f55`, `0d8d0898dfab9b93997a2902db7b7f8a4513dab5`, `e29c6474362a073bd97ba89a7d5835f882566238`, `b5df2b1282b4b66cb1f0e75061d0ac94256d3ecd`.
+
+Residual external gates remain intentionally evidence-bound: Google Search Console multimodal Search Analytics API support and Bing Webmaster AI Performance machine-readable ingestion. Neither is synthesized while the provider API does not expose the required data.
