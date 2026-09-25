@@ -1828,3 +1828,16 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Commits: `f738854899697ce0fb5adffde979eba9d99e8566`, `ae45c65bcb6069455245c248703ea1c92f1989f0`, `25f6e1237569900adc7686c156997f1d078c9b17`, `eeb53dc170195bed3a00b4ed0ecfffa1aecf8a5b`, `51019e99a96ebdbc6de058bcc57f505e7f1918b0`, `4be31250a1c342f8e3531dc3a69e73d6b65fd29a`, `513e3f2176e9e12faa2d9a846e9894bad96d6ec9`, `943fd0f63b9247319c00e41dea520ca0d7b0ccb4`.
 
 - Social control-plane hardening: added Instagram media read/measurement route and capability-aware provider status (`configured`/`read`/`publish` plus transport settings). Commit: `795d9eff6aafddc3e12736608d48d17d270f8581`.
+
+
+## Homepage Redesign — 2026-09-26
+- Status: **IMPLEMENTED — first approved Homepage redesign slice**
+- Product contract: `docs/HOMEPAGE_PRODUCT_CONTRACT.md`
+- Homepage route `/` is now a public Phoenix decision/matching experience instead of the previous decision-dashboard layout.
+- Replaced the dashboard-style Home hero/metrics/loop with: public header, natural-language Ask Phoenix input, intent examples, decision/matching demonstration, Phoenix loop, discovery examples, business supply section, Seller AI supply-enrichment section, and final Ask Phoenix CTA.
+- Removed the Dashboard sidebar/mobile navigation from the Homepage only; operational routes remain unchanged.
+- Existing Discovery remains the next-step destination through `/discover?q=...`; no fake production matching backend was introduced.
+- Added responsive/accessibility-oriented Homepage styles and kept the existing shared design system primitives available to other routes.
+- Updated `CLAUDE.md` with a Homepage Product Gate.
+- Commits: `69c81cb3c256944bd0c1fdde8527871b1b1fc92c`, `e276ffcb34f323c2a931d5366e852b882264ef34`, `5ca3ad612a0951fe3daef631772407bf5e919f19`, `d40b59e9614abad477abe312a581fbdfd5b86168`
+- Remaining verification gate: run the repository web build/type/lint/E2E checks and visually inspect `/` in the deployed/preview environment.
