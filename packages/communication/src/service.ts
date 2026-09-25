@@ -211,6 +211,7 @@ export class CommunicationService {
   async listOwnNotifications(context: RequestContext, limit = 20) {
     await this.options.authorization.assert({
       context,
+      permission: "communication.notification.read",
       requireAuthentication: true,
       requireWorkspace: false,
     });
