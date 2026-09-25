@@ -28,7 +28,12 @@ import { processIntegration } from "./integration-worker";
 import { processAnalyticsAggregates } from "./analytics-worker";
 import { createApiAuthorizationRegistry, ensureRuntimeBoot } from "./runtime";
 import { assertProductionInfrastructure, checkRuntimeInfrastructure } from "./infrastructure";
-import { processSeoPublicationJobs } from "@qooqnos/seo";
+import {
+  BingWebmasterActions,
+  GoogleSearchConsoleActions,
+  YandexWebmasterActions,
+  processSeoPublicationJobs,
+} from "@qooqnos/seo";
 import { registerMediaRoutes } from "./media-routes";
 import { registerPromotionRoutes } from "./promotion-routes";
 import { registerLoyaltyRoutes } from "./loyalty-routes";
@@ -110,6 +115,34 @@ function buildSeoVisibilityWorkerConfig(env: ApiEnv, limit: number) {
   };
 }
 
+function buildGoogleSearchEngineActionsConfig(env: ApiEnv) {
+  if (!env.SEO_GSC_SITE_URL || (!env.SEO_GSC_ACCESS_TOKEN && !(env.SEO_GSC_SERVICE_ACCOUNT_EMAIL && env.SEO_GSC_PRIVATE_KEY))) return undefined;
+  return {
+    siteUrl: env.SEO_GSC_SITE_URL,
+    ...(env.SEO_GSC_ACCESS_TOKEN ? { accessToken: env.SEO_GSC_ACCESS_TOKEN } : {}),
+    ...(env.SEO_GSC_SERVICE_ACCOUNT_EMAIL ? { serviceAccountEmail: env.SEO_GSC_SERVICE_ACCOUNT_EMAIL } : {}),
+    ...(env.SEO_GSC_PRIVATE_KEY ? { serviceAccountPrivateKey: env.SEO_GSC_PRIVATE_KEY } : {}),
+  };
+}
+
+function buildBingSearchEngineActionsConfig(env: ApiEnv) {
+  if (!env.SEO_BING_SITE_URL || (!env.SEO_BING_API_KEY && !env.SEO_BING_ACCESS_TOKEN)) return undefined;
+  return {
+    siteUrl: env.SEO_BING_SITE_URL,
+    apiKey: env.SEO_BING_API_KEY ?? "",
+    ...(env.SEO_BING_ACCESS_TOKEN ? { accessToken: env.SEO_BING_ACCESS_TOKEN } : {}),
+  };
+}
+
+function buildYandexSearchEngineActionsConfig(env: ApiEnv) {
+  if (!env.SEO_YANDEX_USER_ID || !env.SEO_YANDEX_HOST_ID || !env.SEO_YANDEX_OAUTH_TOKEN) return undefined;
+  return {
+    userId: env.SEO_YANDEX_USER_ID,
+    hostId: env.SEO_YANDEX_HOST_ID,
+    oauthToken: env.SEO_YANDEX_OAUTH_TOKEN,
+  };
+}
+
 function buildSeoIndexNowConfig(env: ApiEnv) {
   if (!env.SEO_INDEXNOW_KEY?.trim()) return undefined;
   const batchLimit = env.SEO_INDEXNOW_BATCH_LIMIT ? Number(env.SEO_INDEXNOW_BATCH_LIMIT) : undefined;
@@ -180,6 +213,79 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
       }, new Date().toISOString());
       const status = result.providerRuns === 0 ? 503 : result.failures > 0 ? 207 : 200;
       return json({ measurement: result }, status, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/seo/search-engines/google/inspect",
+    module: "seo",
+    operation: "search_engine.google.inspect",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const config = buildGoogleSearchEngineActionsConfig(env);
+      if (!config) return json({ status: "unavailable", provider: "google-search-console" }, 503, context.requestId);
+      const search = new URL(request.url).searchParams;
+      const inspectionUrl = search.get("url")?.trim();
+      if (!inspectionUrl) return json({ error: "url query parameter is required." }, 400, context.requestId);
+      const result = await new GoogleSearchConsoleActions(config).inspectUrl(
+        inspectionUrl,
+        env.SEO_GSC_INSPECTION_LANGUAGE ?? "en-US",
+      );
+      return json({ provider: "google-search-console", inspection: result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/search-engines/google/sitemap",
+    module: "seo",
+    operation: "search_engine.google.submit_sitemap",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context }) => {
+      const config = buildGoogleSearchEngineActionsConfig(env);
+      const sitemapUrl = env.SEO_GSC_SITEMAP_URL?.trim();
+      if (!config || !sitemapUrl) return json({ status: "unavailable", provider: "google-search-console" }, 503, context.requestId);
+      await new GoogleSearchConsoleActions(config).submitSitemap(sitemapUrl);
+      return json({ submitted: true, provider: "google-search-console", sitemapUrl }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/search-engines/bing/submit",
+    module: "seo",
+    operation: "search_engine.bing.submit_url",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const config = buildBingSearchEngineActionsConfig(env);
+      if (!config) return json({ status: "unavailable", provider: "bing-webmaster" }, 503, context.requestId);
+      const search = new URL(request.url).searchParams;
+      const url = search.get("url")?.trim();
+      if (!url) return json({ error: "url query parameter is required." }, 400, context.requestId);
+      await new BingWebmasterActions(config).submitUrl(url);
+      return json({ submitted: true, provider: "bing-webmaster", url }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/search-engines/yandex/recrawl",
+    module: "seo",
+    operation: "search_engine.yandex.recrawl",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const config = buildYandexSearchEngineActionsConfig(env);
+      if (!config) return json({ status: "unavailable", provider: "yandex-webmaster" }, 503, context.requestId);
+      const search = new URL(request.url).searchParams;
+      const url = search.get("url")?.trim();
+      if (!url) return json({ error: "url query parameter is required." }, 400, context.requestId);
+      const result = await new YandexWebmasterActions(config).requestRecrawl(url);
+      return json({ submitted: true, provider: "yandex-webmaster", url, ...result }, 202, context.requestId);
     },
   });
 
