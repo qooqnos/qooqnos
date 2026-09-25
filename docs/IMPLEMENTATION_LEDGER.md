@@ -1635,6 +1635,8 @@ Competitive intelligence evidence layers now include:
 - Corrected `migrations/migration-lock.json` version 92 checksum to `24bb4f9a2659265c8afb1f44cb4641024587d17cd9137e136868b0e31f3a8284`.
 - Migration source and lock are now content-aligned; production migration verification must still be confirmed by the deployment pipeline.
 - CI surfaced the exact source checksum as `24bb4f9a2659265c8afb1f44cb4641024587d17cd9137e136868b0e31f3a8284`; `migration-lock.json` was corrected accordingly in commit `0e10b1a89376f4aee836300b443c859b38b0b3d5`.
+- CI then exposed a second migration-integrity gap: the Commerce policy migration had been named `0091_*` alongside Business Hours, while the API catalog omitted Business Hours and Public Contact Links. The canonical ordered catalog is now restored as 0091 Business Hours, 0092 Public Contact Links, 0093 Commerce Fulfillment Policies in commit `6c98532aee7e9265da7b240622fbd493dca302ed`.
+- Restored the Location lifecycle test's accidental literal newline regression in commit `e04ffb7254af41e2efcd674e421fbb02d215dd46`.
 
 ## Catalog Service Lifecycle → SEO/GEO Publication — September 2026
 - Added the canonical transactional `CatalogCommandRepository.createService()` path with tenant/workspace validation, idempotency, audit, and `catalog.service.created` outbox event.
