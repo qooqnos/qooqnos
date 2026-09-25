@@ -9,6 +9,9 @@ import {
   buildSitemapXml,
   buildSitemapIndexXml,
   SITEMAP_URL_LIMIT,
+  buildRobotsTxt,
+  notifyIndexNow,
+
   canonicalEntityUrl,
   evaluateAgenticReadiness,
   evaluateFreshness,
@@ -215,9 +218,44 @@ describe("SEO/GEO core", () => {
     ]);
     expect(sitemap.indexOf("https://example.com/a")).toBeLessThan(sitemap.indexOf("https://example.com/b"));
     expect(sitemap.match(/<url>/g)).toHaveLength(2);
+    const robots = buildRobotsTxt("https://example.com/sitemap.xml", undefined, {
+      oaiSearchBot: true,
+      gptBot: false,
+      googleExtended: true,
+      claudeBot: true,
+      perplexityBot: true,
+    });
+    expect(robots).toContain("User-agent: OAI-SearchBot");
+    expect(robots).toContain("User-agent: GPTBot");
+    expect(robots).toContain("Disallow: /");
+    expect(robots).toContain("User-agent: Google-Extended");
     expect(buildRobotsTxt("https://example.com/sitemap.xml")).toContain("Disallow: /api/");
     expect(SITEMAP_URL_LIMIT).toBe(50000);
     expect(buildSitemapIndexXml(["https://example.com/sitemap-2.xml", "https://example.com/sitemap-1.xml", "https://example.com/sitemap-1.xml"])).toContain("<sitemapindex");
+  });
+
+  it("notifies IndexNow with validated canonical URLs and preserves same-host scope", async () => {
+    const requests: Request[] = [];
+    const fetcher = async (input: RequestInfo | URL, init?: RequestInit) => {
+      requests.push(new Request(input, init));
+      return new Response(null, { status: 200 });
+    };
+    const result = await notifyIndexNow(
+      [
+        "https://example.com/b#fragment",
+        "https://example.com/a",
+        "https://other.example/a",
+        "not-a-url",
+      ],
+      { key: "secret", fetcher, batchLimit: 1 },
+    );
+    expect(result.submitted).toBe(2);
+    expect(result.skipped).toBe(2);
+    expect(requests).toHaveLength(2);
+    const body = await requests[0].clone().json() as { host: string; key: string; urlList: string[] };
+    expect(body.host).toBe("example.com");
+    expect(body.key).toBe("secret");
+    expect(body.urlList).toHaveLength(1);
   });
 
   it("audits crawl/indexability consistency and canonical identity", () => {
