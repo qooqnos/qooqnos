@@ -1634,6 +1634,7 @@ Competitive intelligence evidence layers now include:
 - Recomputed the SHA-256 checksum for `0092_business_public_contact_links.sql` from the committed migration contents.
 - Corrected `migrations/migration-lock.json` version 92 checksum to `24bb4f9a2659265c8afb1f44cb4641024587d17cd9137e136868b0e31f3a8284`.
 - Migration source and lock are now content-aligned; production migration verification must still be confirmed by the deployment pipeline.
+- CI surfaced the exact source checksum as `24bb4f9a2659265c8afb1f44cb4641024587d17cd9137e136868b0e31f3a8284`; `migration-lock.json` was corrected accordingly in commit `0e10b1a89376f4aee836300b443c859b38b0b3d5`.
 
 ## Catalog Service Lifecycle → SEO/GEO Publication — September 2026
 - Added the canonical transactional `CatalogCommandRepository.createService()` path with tenant/workspace validation, idempotency, audit, and `catalog.service.created` outbox event.
