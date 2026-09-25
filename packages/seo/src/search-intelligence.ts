@@ -9,6 +9,8 @@ export type SearchIntelligenceVertical =
   | "google-autocomplete"
   | "google-shopping"
   | "google-dataset-search"
+  | "google-ads-search"
+  | "google-ads-advertisers"
   | "bing-organic"
   | "bing-news"
   | "bing-images"
@@ -88,6 +90,8 @@ const VERTICAL_ENDPOINTS: Readonly<Record<SearchIntelligenceVertical, string>> =
   "google-autocomplete": "/v3/serp/google/autocomplete/live/advanced",
   "google-shopping": "/v3/merchant/google/products/task_post",
   "google-dataset-search": "/v3/serp/google/dataset_search/live/advanced",
+  "google-ads-search": "/v3/serp/google/ads_search/live/advanced",
+  "google-ads-advertisers": "/v3/serp/google/ads_advertisers/live/advanced",
   "bing-organic": "/v3/serp/bing/organic/live/advanced",
   "bing-news": "/v3/serp/bing/news/live/advanced",
   "bing-images": "/v3/serp/bing/images/live/advanced",
