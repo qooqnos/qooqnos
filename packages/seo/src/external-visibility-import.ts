@@ -53,11 +53,11 @@ export function parseGoogleSearchConsoleExport(
     const impressions = numberValue(row, ["impressions", "Impressions"]);
     const ctr = numberValue(row, ["ctr", "CTR"], true);
     const position = numberValue(row, ["position", "Position"]);
-    if (clicks !== undefined) output.push({ surface: "search-engine", metric: prefix + "-clicks", numericValue: clicks, ...entity, queryText, pageUrl, observedAt, provenance: baseProvenance });
-    if (impressions !== undefined) output.push({ surface: "search-engine", metric: prefix + "-impressions", numericValue: impressions, ...entity, queryText, pageUrl, observedAt, provenance: baseProvenance });
-    if (ctr !== undefined) output.push({ surface: "search-engine", metric: prefix + "-ctr", numericValue: ctr, ...entity, queryText, pageUrl, observedAt, provenance: baseProvenance });
-    if (position !== undefined) output.push({ surface: "search-engine", metric: prefix + "-position", numericValue: position, ...entity, queryText, pageUrl, observedAt, provenance: baseProvenance });
-    if (pageUrl) output.push({ surface: "search-engine", metric: prefix + "-page-observed", textValue: pageUrl, ...entity, queryText, pageUrl, observedAt, provenance: baseProvenance });
+    if (clicks !== undefined) output.push({ surface: "search-engine", metric: prefix + "-clicks", numericValue: clicks, ...entity, ...(queryText ? { queryText } : {}), ...(pageUrl ? { pageUrl } : {}), observedAt, provenance: baseProvenance });
+    if (impressions !== undefined) output.push({ surface: "search-engine", metric: prefix + "-impressions", numericValue: impressions, ...entity, ...(queryText ? { queryText } : {}), ...(pageUrl ? { pageUrl } : {}), observedAt, provenance: baseProvenance });
+    if (ctr !== undefined) output.push({ surface: "search-engine", metric: prefix + "-ctr", numericValue: ctr, ...entity, ...(queryText ? { queryText } : {}), ...(pageUrl ? { pageUrl } : {}), observedAt, provenance: baseProvenance });
+    if (position !== undefined) output.push({ surface: "search-engine", metric: prefix + "-position", numericValue: position, ...entity, ...(queryText ? { queryText } : {}), ...(pageUrl ? { pageUrl } : {}), observedAt, provenance: baseProvenance });
+    if (pageUrl) output.push({ surface: "search-engine", metric: prefix + "-page-observed", textValue: pageUrl, ...entity, ...(queryText ? { queryText } : {}), ...(pageUrl ? { pageUrl } : {}), observedAt, provenance: baseProvenance });
     return output;
   });
 }
@@ -151,11 +151,12 @@ function stringValue(row: Record<string, unknown>, aliases: readonly string[]): 
   return undefined;
 }
 
-function numberValue(row: Record<string, unknown>, aliases: readonly string[]): number | undefined {
+function numberValue(row: Record<string, unknown>, aliases: readonly string[], percent = false): number | undefined {
   const raw = stringValue(row, aliases);
   if (!raw) return undefined;
   const normalized = raw.replace(/%/g, "").replace(/\s/g, "");
   const value = Number(normalized.replace(",", "."));
+  if (percent && raw.includes("%")) return Number.isFinite(value) ? value / 100 : undefined;
   return Number.isFinite(value) ? value : undefined;
 }
 
