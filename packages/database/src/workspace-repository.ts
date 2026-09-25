@@ -83,6 +83,15 @@ export class WorkspaceRepository extends Repository {
       organizationId,
     );
   }
+  async listForUser(context: RepositoryContext, userId: string): Promise<WorkspaceRecord[]> {
+    const organizationId = this.requireOrganization(context);
+    return this.database.all<WorkspaceRecord>(
+      "SELECT w.id, w.organization_id AS organizationId, w.name, w.status, w.created_at AS createdAt, w.updated_at AS updatedAt FROM workspaces w INNER JOIN memberships m ON m.workspace_id = w.id WHERE w.organization_id = ? AND m.user_id = ? AND m.status = 'active' AND w.status = 'active' ORDER BY w.created_at ASC, w.id ASC",
+      organizationId,
+      userId,
+    );
+  }
+
 
   async createMembership(context: RepositoryContext, input: CreateMembershipInput): Promise<MembershipRecord> {
     const workspaceId = this.requireWorkspace(context);
