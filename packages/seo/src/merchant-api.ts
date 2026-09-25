@@ -59,7 +59,8 @@ export class GoogleMerchantCenterClient {
     const endpoint = (this.config.endpoint ?? "https://merchantapi.googleapis.com").replace(/\/$/, "");
     const productInputName = "accounts/" + this.config.accountId + "/productInputs/"
       + this.config.contentLanguage + "~" + this.config.feedLabel + "~" + offerId;
-    const url = endpoint + "/products/v1/" + encodeURIComponent(productInputName)
+    const resourcePath = productInputName.split("/").map((segment) => encodeURIComponent(segment)).join("/");
+    const url = endpoint + "/products/v1/" + resourcePath
       + "?dataSource=" + encodeURIComponent(this.config.dataSource);
     const response = await fetch(url, {
       method: "DELETE",
