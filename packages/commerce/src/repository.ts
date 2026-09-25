@@ -820,6 +820,18 @@ export class CommerceRepository extends Repository {
         sql: "INSERT INTO commerce_fulfillment_policies (id,organization_id,workspace_id,business_id,resource_type,resource_id,destination_country,destination_region,destination_postal_code,shipping_rate_minor,shipping_currency,handling_time_min_days,handling_time_max_days,return_window_days,return_fees,return_method,policy_version,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         params: [input.id, organizationId, workspaceId, input.businessId, input.resourceType, input.resourceId ?? null, country, region, postal, input.shippingRateMinor ?? null, currency, input.handlingTimeMinDays ?? null, input.handlingTimeMaxDays ?? null, input.returnWindowDays ?? null, input.returnFees ?? null, input.returnMethod ?? null, input.policyVersion.trim(), input.status ?? "active", input.now, input.now],
       },
+      {
+        sql: "INSERT OR IGNORE INTO outbox_events (id,event_type,event_version,aggregate_type,aggregate_id,organization_id,workspace_id,payload_json,status,attempts,available_at,occurred_at,published_at) VALUES (?, 'commerce.fulfillment.policy.changed', 1, 'commerce_fulfillment_policy', ?, ?, ?, ?, 'pending', 0, ?, ?, NULL)",
+        params: [
+          input.id + ":seo:" + input.now,
+          input.id,
+          organizationId,
+          workspaceId,
+          JSON.stringify({ businessId: input.businessId, resourceType: input.resourceType, resourceId: input.resourceId ?? null, productId: input.resourceType === "product" ? input.resourceId ?? null : null }),
+          input.now,
+          input.now,
+        ],
+      },
     ]);
     const record = await this.getFulfillmentPolicy(context, input.businessId, input.resourceType, input.resourceId);
     if (!record) throw new DatabaseError("Commerce fulfillment policy not found after creation");
