@@ -1,7 +1,7 @@
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
-import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, buildImageSitemapXml, SITEMAP_URL_LIMIT } from "@qooqnos/seo";
+import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, buildImageSitemapXml, SITEMAP_URL_LIMIT, type RobotsAiPolicy } from "@qooqnos/seo";
 import { crawlStoredSeoRepresentation } from "./seo-production-crawler";
 import { evaluateSeoProductionReadiness } from "./seo-production-readiness";
 import type { ApiEnv } from "./env";
@@ -85,7 +85,7 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     operation: "robots.read",
     handler: () => {
       const origin = canonicalBaseUrl.replace(/\/$/, "");
-      return new Response(buildRobotsTxt(`${origin}/sitemap.xml`), { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" } });
+      return new Response(buildRobotsTxt(`${origin}/sitemap.xml`, undefined, buildRobotsAiPolicy(environment)), { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" } });
     },
   });
 
@@ -291,4 +291,26 @@ async function readSitemapShardRows(database: D1Database, canonicalPrefix: strin
     canonicalPrefix + "%", SITEMAP_URL_LIMIT, offset,
   );
   return rows.map((row) => ({ url: row.canonicalUrl, ...(row.lastmod ? { lastmod: row.lastmod } : {}) }));
+}
+
+
+function buildRobotsAiPolicy(environment?: ApiEnv): RobotsAiPolicy {
+  if (!environment) return {};
+  const boolean = (value: string | undefined): boolean | undefined => {
+    if (value === undefined) return undefined;
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return undefined;
+    if (normalized === "true" || normalized === "1" || normalized === "yes") return true;
+    if (normalized === "false" || normalized === "0" || normalized === "no") return false;
+    return undefined;
+  };
+  const delay = Number(environment.SEO_CRAWL_DELAY_SECONDS);
+  return {
+    ...(boolean(environment.SEO_ALLOW_OAI_SEARCHBOT) !== undefined ? { oaiSearchBot: boolean(environment.SEO_ALLOW_OAI_SEARCHBOT) } : {}),
+    ...(boolean(environment.SEO_ALLOW_GPTBOT) !== undefined ? { gptBot: boolean(environment.SEO_ALLOW_GPTBOT) } : {}),
+    ...(boolean(environment.SEO_ALLOW_GOOGLE_EXTENDED) !== undefined ? { googleExtended: boolean(environment.SEO_ALLOW_GOOGLE_EXTENDED) } : {}),
+    ...(boolean(environment.SEO_ALLOW_CLAUDEBOT) !== undefined ? { claudeBot: boolean(environment.SEO_ALLOW_CLAUDEBOT) } : {}),
+    ...(boolean(environment.SEO_ALLOW_PERPLEXITYBOT) !== undefined ? { perplexityBot: boolean(environment.SEO_ALLOW_PERPLEXITYBOT) } : {}),
+    ...(Number.isFinite(delay) && delay >= 0 ? { crawlDelaySeconds: delay } : {}),
+  };
 }
