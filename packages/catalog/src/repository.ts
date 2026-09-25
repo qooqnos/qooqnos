@@ -144,6 +144,17 @@ export class CatalogRepository extends Repository {
     );
   }
 
+  async getProductVariant(context: RequestContext, id: EntityId): Promise<ProductVariantRecord | null> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const row = await this.database.first<ProductVariantRecord & { attributesJson: string | null }>(
+      "SELECT v.id,v.product_id AS productId,v.sku,v.attributes_json AS attributesJson,v.status,v.created_at AS createdAt,v.updated_at AS updatedAt FROM product_variants v INNER JOIN products p ON p.id=v.product_id WHERE v.id=? AND p.organization_id=? AND p.workspace_id=? LIMIT 1",
+      id, organizationId, workspaceId,
+    );
+    if (!row) return null;
+    return { ...row, attributes: row.attributesJson ? parseObject(row.attributesJson) : null };
+  }
+
   async listProductVariants(context: RequestContext, productId: EntityId): Promise<readonly ProductVariantRecord[]> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
