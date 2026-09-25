@@ -1664,10 +1664,11 @@ The former SEO/GEO commerce gap is now implemented through a canonical Commerce-
 
 - **Canonical persistence:** `migrations/0091_commerce_fulfillment_policies.sql`
 - **Canonical repository:** `packages/commerce/src/repository.ts`
-- **Canonical capability:** `packages/commerce/src/service.ts` via `commerce.fulfillment_policy.manage`
+- **Canonical capability:** `packages/commerce/src/service.ts` via `commerce.fulfillment_policy.manage`.
+- **Management API:** `POST /api/v1/commerce/fulfillment-policies` with authorization enforcement.
 - **Lifecycle event:** `commerce.fulfillment.policy.changed` is emitted transactionally with policy writes.
 - **SEO projection:** `apps/api/src/outbox-worker.ts` resolves the product's active policy and attaches authoritative `shippingDetails` / `returnPolicy` to the canonical SEO entity before publication.
-- **Precedence:** resource-specific policy first, then the business-level policy for the same resource type.
+- **Precedence:** resource-specific policy first, then the business-level policy for the same resource type; variant identity is resolved through the canonical Catalog repository when a variant policy event triggers publication.
 - **Invariant:** no SEO-specific shipping/returns table or duplicate source of truth was introduced.
 
 Residual gate status:
