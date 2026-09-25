@@ -551,6 +551,48 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
 
   router.register({
     method: "POST",
+    path: "/api/v1/seo/social/tiktok/publish-photo",
+    module: "seo",
+    operation: "social.tiktok.publish_photo",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_TIKTOK_ACCESS_TOKEN) return json({ status: "unavailable", provider: "tiktok" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const imageUrls = Array.isArray(body.imageUrls) ? body.imageUrls.filter((value): value is string => typeof value === "string") : [];
+      const privacyLevel = typeof body.privacyLevel === "string" ? body.privacyLevel : "SELF_ONLY";
+      if (!imageUrls.length) return json({ error: { code: "VALIDATION_ERROR", message: "imageUrls is required." } }, 400, context.requestId);
+      const result = await new TikTokClient({ accessToken: environment.SEO_TIKTOK_ACCESS_TOKEN }).initializePhotoPost({
+        imageUrls,
+        privacyLevel,
+        ...(typeof body.title === "string" ? { title: body.title } : {}),
+        ...(typeof body.description === "string" ? { description: body.description } : {}),
+        ...(Number.isFinite(Number(body.coverIndex)) ? { coverIndex: Number(body.coverIndex) } : {}),
+        ...(typeof body.isAigc === "boolean" ? { isAigc: body.isAigc } : {}),
+      });
+      return json({ provider: "tiktok", result }, 202, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/tiktok/status",
+    module: "seo",
+    operation: "social.tiktok.status",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_TIKTOK_ACCESS_TOKEN) return json({ status: "unavailable", provider: "tiktok" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const publishId = typeof body.publishId === "string" ? body.publishId.trim() : "";
+      if (!publishId) return json({ error: { code: "VALIDATION_ERROR", message: "publishId is required." } }, 400, context.requestId);
+      const result = await new TikTokClient({ accessToken: environment.SEO_TIKTOK_ACCESS_TOKEN }).getPostStatus(publishId);
+      return json({ provider: "tiktok", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/seo/social/tiktok/publish",
     module: "seo",
     operation: "social.tiktok.publish",
