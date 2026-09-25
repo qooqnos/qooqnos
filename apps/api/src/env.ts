@@ -55,6 +55,10 @@ export interface ApiEnv {
   readonly SEO_YANDEX_HOST_ID?: string;
   readonly SEO_YANDEX_OAUTH_TOKEN?: string;
   readonly SEO_YANDEX_ENABLE_RECRAWL?: string;
+  readonly SEO_SEARCH_ENGINE_MAX_ATTEMPTS?: string;
+  readonly SEO_SEARCH_ENGINE_TIMEOUT_MS?: string;
+  readonly SEO_SEARCH_ENGINE_BASE_DELAY_MS?: string;
+  readonly SEO_SEARCH_ENGINE_MAX_DELAY_MS?: string;
   readonly SEO_ALLOW_OAI_SEARCHBOT?: string;
   readonly SEO_ALLOW_GPTBOT?: string;
   readonly SEO_ALLOW_GOOGLE_EXTENDED?: string;
