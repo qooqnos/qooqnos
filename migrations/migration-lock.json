@@ -623,6 +623,13 @@
       "moduleId": "business",
       "checksum": "24bb4f9a2659265c8afb1f44cb4641024587d17cd9137e136868b0e31f3a8284",
       "filename": "0092_business_public_contact_links.sql"
+    },
+    {
+      "id": "0093_commerce_fulfillment_policies",
+      "version": 93,
+      "filename": "0093_commerce_fulfillment_policies.sql",
+      "moduleId": "commerce",
+      "checksum": "0e9f19efe9f4c2e48f8fb7b4dc842f88007926560838817c139b2790b74225a3"
     }
   ]
 }

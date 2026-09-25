@@ -85,7 +85,9 @@ import seoCompetitiveIntelligence from "../../../migrations/0087_seo_competitive
 import seoCompetitorPageSnapshots from "../../../migrations/0088_seo_competitor_page_snapshots.sql";
 import seoCompetitiveKeywordGaps from "../../../migrations/0089_seo_competitive_keyword_gaps.sql";
 import seoCompetitiveLinkGaps from "../../../migrations/0090_seo_competitive_link_gaps.sql";
-import commerceFulfillmentPolicies from "../../../migrations/0091_commerce_fulfillment_policies.sql";
+import businessHours from "../../../migrations/0091_business_hours.sql";
+import businessPublicContactLinks from "../../../migrations/0092_business_public_contact_links.sql";
+import commerceFulfillmentPolicies from "../../../migrations/0093_commerce_fulfillment_policies.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -176,5 +178,7 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0088_seo_competitor_page_snapshots.sql", sql: seoCompetitorPageSnapshots },
   { path: "migrations/0089_seo_competitive_keyword_gaps.sql", sql: seoCompetitiveKeywordGaps },
   { path: "migrations/0090_seo_competitive_link_gaps.sql", sql: seoCompetitiveLinkGaps },
-  { path: "migrations/0091_commerce_fulfillment_policies.sql", sql: commerceFulfillmentPolicies },
+  { path: "migrations/0091_business_hours.sql", sql: businessHours },
+  { path: "migrations/0092_business_public_contact_links.sql", sql: businessPublicContactLinks },
+  { path: "migrations/0093_commerce_fulfillment_policies.sql", sql: commerceFulfillmentPolicies },
   ];
