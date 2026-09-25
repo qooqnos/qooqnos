@@ -1,4 +1,5 @@
 import type { RequestContext } from "@qooqnos/core";
+import type { D1Database } from "@qooqnos/database";
 import { SeoObservabilityRepository, type SeoProviderObservation } from "./observability";
 import type { SocialPlatform } from "./social-intelligence";
 
