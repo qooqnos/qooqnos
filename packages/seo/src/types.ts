@@ -3,7 +3,7 @@ export type PublicationState="draft"|"review"|"published"|"unpublished"|"deleted
 export type Visibility="public"|"restricted"|"private";
 export type Indexability="index"|"noindex"|"restricted"|"excluded";
 export type GeoScope="exact"|"branch"|"city"|"region"|"country"|"service-area";
-export interface SeoProductVariantSeo { readonly id: string; readonly sku?: string; readonly name?: string; readonly url?: string; readonly imageUrl?: string; readonly price?: number; readonly currency?: string; readonly availability?: string; readonly attributes?: Readonly<Record<string, string>>; }
+export interface SeoProductVariantSeo { readonly id: string; readonly sku?: string; readonly name?: string; readonly description?: string; readonly url?: string; readonly imageUrl?: string; readonly price?: number; readonly currency?: string; readonly availability?: string; readonly attributes?: Readonly<Record<string, string>>; }
 export interface SeoShippingDetails { readonly country?: string; readonly postalCode?: string; readonly region?: string; readonly shippingRate?: number; readonly currency?: string; readonly handlingTimeMinDays?: number; readonly handlingTimeMaxDays?: number; }
 export interface SeoGeoPoint { readonly latitude: number; readonly longitude: number; }
 export interface SeoOpeningHours { readonly dayOfWeek: readonly string[]; readonly opens: string; readonly closes: string; }
