@@ -234,7 +234,7 @@ describe("SEO/GEO core", () => {
 
   it("notifies IndexNow with validated canonical URLs and preserves same-host scope", async () => {
     const requests: Request[] = [];
-    const fetcher = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const fetcher = async (input: string | URL, init?: RequestInit) => {
       requests.push(new Request(input, init));
       return new Response(null, { status: 200 });
     };
@@ -250,7 +250,9 @@ describe("SEO/GEO core", () => {
     expect(result.submitted).toBe(2);
     expect(result.skipped).toBe(2);
     expect(requests).toHaveLength(2);
-    const body = await requests[0].clone().json() as { host: string; key: string; urlList: string[] };
+    const firstRequest = requests[0];
+    expect(firstRequest).toBeDefined();
+    const body = await firstRequest!.clone().json() as { host: string; key: string; urlList: string[] };
     expect(body.host).toBe("example.com");
     expect(body.key).toBe("secret");
     expect(body.urlList).toHaveLength(1);
