@@ -957,3 +957,97 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
 @media(max-width:820px){.seo-audit-summary{grid-template-columns:1fr 1fr}.seo-audit-score{grid-column:1/-1}}
 
 .pill.danger{color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,transparent)}
+
+
+
+/* Phoenix UI refinement layer: accessible focus, motion, density and responsive shell */
+:root {
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--primary) 28%, transparent);
+  --glass-border: color-mix(in srgb, var(--line-strong) 72%, transparent);
+  --surface-hover: color-mix(in srgb, var(--surface-2) 82%, var(--primary) 18%);
+}
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  box-shadow: var(--focus-ring);
+}
+button:disabled, .button:disabled { cursor: not-allowed; }
+.button-primary {
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--primary-strong) 18%, transparent);
+}
+.button-primary:hover {
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--primary-strong) 24%, transparent);
+}
+.icon-button:hover, .profile-chip:hover, .command-palette:hover {
+  border-color: var(--glass-border);
+  background: var(--surface-hover);
+}
+.glass-card, .stat-card, .panel-card, .workspace-card, .profile-chip {
+  border-color: var(--glass-border);
+}
+.section-block {
+  scroll-margin-top: 96px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+@media (max-width: 980px) {
+  .header-inner {
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+  }
+  .brand-copy small, .profile-copy {
+    display: none;
+  }
+  .page-content {
+    padding-inline: clamp(16px, 3vw, 28px);
+  }
+}
+@media (max-width: 720px) {
+  .app-header {
+    position: sticky;
+  }
+  .header-inner {
+    min-height: 66px;
+  }
+  .command-palette {
+    height: 40px;
+  }
+  .command-placeholder {
+    font-size: 10px;
+  }
+  .profile-chip {
+    padding: 4px;
+  }
+  .profile-chip .chevron {
+    display: none;
+  }
+  .page-content {
+    padding-top: 26px;
+    padding-bottom: 88px;
+  }
+}
+@media (max-width: 560px) {
+  .container-wide {
+    width: min(100% - 24px, 1420px);
+  }
+  .header-inner {
+    grid-template-columns: auto 1fr auto;
+  }
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+  }
+  .header-actions {
+    gap: 5px;
+  }
+  .icon-button {
+    width: 36px;
+    height: 36px;
+  }
+}
