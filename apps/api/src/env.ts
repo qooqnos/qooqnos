@@ -65,6 +65,17 @@ export interface ApiEnv {
   readonly SEO_GOOGLE_PLACES_API_KEY?: string;
   readonly SEO_GOOGLE_ROUTES_API_KEY?: string;
   readonly SEO_YOUTUBE_API_KEY?: string;
+  readonly SEO_FACEBOOK_PAGE_ID?: string;
+  readonly SEO_FACEBOOK_ACCESS_TOKEN?: string;
+  readonly SEO_INSTAGRAM_USER_ID?: string;
+  readonly SEO_INSTAGRAM_ACCESS_TOKEN?: string;
+  readonly SEO_X_BEARER_TOKEN?: string;
+  readonly SEO_X_USER_ACCESS_TOKEN?: string;
+  readonly SEO_PINTEREST_ACCESS_TOKEN?: string;
+  readonly SEO_LINKEDIN_ACCESS_TOKEN?: string;
+  readonly SEO_LINKEDIN_VERSION?: string;
+  readonly SEO_TIKTOK_ACCESS_TOKEN?: string;
+  readonly SEO_REDDIT_ACCESS_TOKEN?: string;
   readonly SEO_ALLOW_OAI_SEARCHBOT?: string;
   readonly SEO_ALLOW_GPTBOT?: string;
   readonly SEO_ALLOW_GOOGLE_EXTENDED?: string;
