@@ -1,3 +1,4 @@
+import type { RequestContext } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
@@ -109,7 +110,7 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
         }
       });
       const projection = projectMerchantProductFeed(entities, { canonicalBaseUrl });
-      const xml = buildMerchantProductFeedXml(projection.items);
+      const xml = buildMerchantProductFeedXml(projection.items, canonicalBaseUrl);
       return new Response(xml, {
         status: 200,
         headers: {
@@ -411,7 +412,7 @@ function buildRobotsAiPolicy(environment?: ApiEnv): RobotsAiPolicy {
   };
 }
 
-async function recordImportedVisibility(database: D1Database, context: Parameters<NonNullable<typeof registerSeoRoutes>>[2] extends never ? never : any, observations: readonly import("@qooqnos/seo").ExternalVisibilityObservation[], providerId: string, dataset: string, requestId: string): Promise<Response> {
+async function recordImportedVisibility(database: D1Database, context: RequestContext, observations: readonly import("@qooqnos/seo").ExternalVisibilityObservation[], providerId: string, dataset: string, requestId: string): Promise<Response> {
   const repository = new SeoObservabilityRepository(database);
   const runId = "seo-import:" + providerId + ":" + crypto.randomUUID();
   const queryText = observations.find((item) => item.queryText)?.queryText ?? dataset;
