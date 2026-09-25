@@ -293,6 +293,28 @@ async function enrichSeoPayload(
     }
   }
 
+  if (catalog && event.eventType === "catalog.service.created" && typeof payload.serviceId === "string") {
+    const service = await catalog.getService(context, brandId<"EntityId">(payload.serviceId));
+    if (service) {
+      payload.seoEntity = {
+        id: service.id,
+        type: "Service",
+        sourceModule: "catalog",
+        sourceVersion: "1",
+        publicationState: service.status === "active" ? "published" : "unpublished",
+        visibility: service.status === "active" ? "public" : "private",
+        preferredName: service.name,
+        ...(service.description ? { description: service.description } : {}),
+        locale: typeof payload.locale === "string" ? payload.locale : "en",
+        ...(service.businessId ? {
+          relatedEntityIds: [service.businessId],
+          relatedEntities: [{ entityId: service.businessId, relation: "ownedByBusiness" }],
+        } : {}),
+        updatedAt: service.updatedAt,
+      };
+    }
+  }
+
   if (business && (event.eventType === "business.created.v1" || event.eventType === "business.publication.changed.v1"
     || event.eventType === "business.profile.updated.v1" || event.eventType === "business.profile.published.v1"
     || event.eventType === "business.profile.suspended.v1")) {
