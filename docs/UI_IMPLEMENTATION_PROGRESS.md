@@ -103,3 +103,14 @@ Until that run is observed as green, the correct status is **implementation comp
 ## Continuation rule
 
 Future coding sessions must start from this ledger. Do not reimplement these completed surfaces unless a new requirement, regression, provider limitation, or failing verification result changes the scope.
+
+## Key implementation commits
+- `a9d53ff496258d781e33df53e2ecfa74b877ba47` — corrected the earlier over-broad UI completion claim.
+- `df348742fc819c329eb7369de2a89eec5e3dfbe4` — shell workspace switcher, notification center and Admin surface.
+- `b6cca19e3197a75857a88323f24c2492a862fbcc` — source-aware dashboard signals.
+- `63bfa2c0f43e82355e6c2377d467fc920f156e89` — canonical Business management/location APIs.
+- `c140fdecd986c73f7ff2f7a79801dd53d88eb026` — Catalog Offering create/publication APIs.
+- `a6cd63f1990833f3e9d9abafb94d70add6290fb2` — Seller AI Listing/publication UI.
+- `2aa6463631f816fd214137eda4f06d569ff3f6dc` — shared Design System primitives.
+- `1e75fd6a39cf201f2ae33f3640e1b6e85dcd7b68` — UI verification workflow.
+- `42d55e940c3dc69fcca6b91a1cb3903fceb69006` — final implementation ledger and verification gate.
