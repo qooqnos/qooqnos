@@ -144,15 +144,10 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
           worstRating: entity.aggregateRating.worstRating,
         };
       }
-      const seenVariantIds = new Set<string>();
       x.hasVariant = variants.map((variant) => {
         const item: Record<string, unknown> = { "@type": "Product" };
-        const stableVariantId = clean(variant.sku) || clean(variant.id);
-        if (stableVariantId && seenVariantIds.has(stableVariantId)) return null;
-        if (stableVariantId) {
-          seenVariantIds.add(stableVariantId);
-          item.identifier = stableVariantId;
-        }
+        const stableVariantId = clean(variant.id);
+        if (stableVariantId) item.identifier = stableVariantId;
         const variantName = clean(variant.name) || deriveVariantName(name, variant);
         if (variantName) item.name = variantName;
         if (variant.description) item.description = clean(variant.description);
@@ -173,7 +168,7 @@ export function generateStructuredData(entity: SeoEntity, options: StructuredDat
           if (schemaKey) item[schemaKey] = clean(value);
         }
         return item;
-      }).filter((item): item is Record<string, unknown> => Boolean(item));
+      });
     } else if (entity.aggregateRating && entity.aggregateRating.reviewCount > 0 && Number.isFinite(entity.aggregateRating.ratingValue)) {
       x.aggregateRating = {
         "@type": "AggregateRating",
