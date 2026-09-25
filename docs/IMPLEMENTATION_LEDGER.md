@@ -1731,3 +1731,15 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Public Entity Page model now exposes a dedicated Customer Reviews section when canonical reputation evidence exists.
 - Added regression coverage for Business/Product AggregateRating output.
 - Commits: `d42ad48eea...`, `2c088ff346...`, `f241b61126...`, `9e651ee0c9...`, `a48e76fc6a...`, `ae0a3a8f96...`, `55f0d57739...`, `4f3ec9ccdb...`, `d5a02a3d9b...`.
+## Search Engine API Control Plane — 2026-09-25
+
+- Added provider-native search-engine actions to the SEO core in `packages/seo/src/search-engine-actions.ts`.
+- Google Search Console: sitemap submission and URL Inspection API support using OAuth access tokens or service-account JWT credentials.
+- Bing Webmaster: URL submission via the documented JSON endpoint, supporting API-key or OAuth bearer authentication.
+- Yandex Webmaster: URL recrawl requests and indexing-history retrieval via the v4 API with OAuth authorization.
+- Added authenticated API routes for Google URL Inspection/sitemap submission, Bing URL submission, and Yandex recrawl requests.
+- Bing and optional Yandex recrawl notifications are wired into successful SEO publication; provider failures remain non-blocking to canonical SEO publication and are counted separately.
+- Existing IndexNow remains the multi-engine freshness notification path; these APIs add provider-specific control/inspection rather than duplicating the IndexNow protocol.
+- Official API constraints are respected: Google Indexing API is not used as a generic page-submission mechanism because Google restricts it to JobPosting and BroadcastEvent-in-VideoObject pages; ordinary Phoenix pages continue through sitemaps/Search Console and IndexNow/Bing/Yandex-supported notification paths.
+- Multimodal Search Console measurement and Bing AI Performance ingestion remain API-dependent and are not synthesized until official machine-readable fields/endpoints are exposed.
+- Commits: `a75c455a6a22c11be878ee1c1aaeada5c3915d96`, `3eba8f11276932efec32819a37868485e80ebb00`, `7ae3aee976c565ba6464d136abdf688832d77fcf`, `878479bbbeca5ea2164dea7c5b9590c7472fc279`, `3009ec007408b93a75d4bfcd81f3704eb0a5b51d`, `9b5188aeacbbe40a8c841e3170d0891a9aa056e3`.
