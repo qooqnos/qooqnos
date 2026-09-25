@@ -2,7 +2,7 @@ import { BusinessService, BusinessRepository } from "@qooqnos/business";
 import { CatalogService, CatalogRepository } from "@qooqnos/catalog";
 import { SellerProductSessionService, createSellerProductSessionRepository } from "@qooqnos/ai";
 import { AppError, brandId, type RequestId } from "@qooqnos/core";
-import { AuthorizationRepository, CatalogCommandRepository, SessionRepository, sha256Hex, WorkspaceRepository } from "@qooqnos/database";
+import { AuthorizationRepository, CatalogCommandRepository, SessionRepository, sha256Hex, WorkspaceRepository, PlatformRepository } from "@qooqnos/database";
 import type { D1Database } from "@qooqnos/database";
 import { createAuthorizationService } from "@qooqnos/runtime";
 import { createSellerProductService, processSellerProductAIRuntimeWork } from "./ai-composition";
@@ -414,6 +414,23 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
     requireAuthentication: true,
     handler: ({ context, authenticatedSessionId }) =>
       json({ session: { id: authenticatedSessionId, actorId: context.actorId, tenantId: context.tenantId, workspaceId: context.workspaceId, authenticated: context.authenticated } }, 200, context.requestId),
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/audit",
+    module: "platform",
+    operation: "audit.read",
+    permission: "audit.read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const rawLimit = Number(new URL(request.url).searchParams.get("limit") ?? "50");
+      const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 50;
+      const data = await new PlatformRepository(database).listAudit({ organizationId: context.tenantId, workspaceId: context.workspaceId }, limit);
+      return json({ data }, 200, context.requestId);
+    },
   });
 
   router.register({
