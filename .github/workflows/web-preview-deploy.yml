@@ -40,7 +40,7 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Build web assets and Worker
-        run: npm run build
+        run: npm --workspace=@qooqnos/web run build
 
       - name: Deploy web preview Worker
         env:
