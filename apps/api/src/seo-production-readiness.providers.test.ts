@@ -39,6 +39,28 @@ describe("SEO production readiness provider matrix", () => {
     const r = evaluateSeoProductionReadiness(env({ ...base, SEO_YOUTUBE_API_KEY: "key" }));
     expect(r.providers.youtube.ready).toBe(true);
   });
+  it("accepts social provider activation", () => {
+    const r = evaluateSeoProductionReadiness(env({
+      ...base,
+      SEO_FACEBOOK_PAGE_ID: "page",
+      SEO_FACEBOOK_ACCESS_TOKEN: "token",
+      SEO_INSTAGRAM_USER_ID: "ig",
+      SEO_INSTAGRAM_ACCESS_TOKEN: "token",
+      SEO_X_BEARER_TOKEN: "bearer",
+      SEO_PINTEREST_ACCESS_TOKEN: "token",
+      SEO_LINKEDIN_ACCESS_TOKEN: "token",
+      SEO_LINKEDIN_VERSION: "202608",
+      SEO_TIKTOK_ACCESS_TOKEN: "token",
+      SEO_REDDIT_ACCESS_TOKEN: "token",
+    }));
+    expect(r.providers.facebook.ready).toBe(true);
+    expect(r.providers.instagram.ready).toBe(true);
+    expect(r.providers.x.ready).toBe(true);
+    expect(r.providers.pinterest.ready).toBe(true);
+    expect(r.providers.linkedin.ready).toBe(true);
+    expect(r.providers.tiktok.ready).toBe(true);
+    expect(r.providers.reddit.ready).toBe(true);
+  });
   it("requires the complete competitive-intelligence activation tuple", () => {
     const r = evaluateSeoProductionReadiness(env({ ...base, SEO_COMPETITIVE_LOGIN: "login", SEO_COMPETITIVE_PASSWORD: "password", SEO_COMPETITIVE_LOCATION_CODE: "2840" }));
     expect(r.providers.competitive.ready).toBe(false);
