@@ -1628,3 +1628,10 @@ Competitive intelligence evidence layers now include:
 - Recomputed the SHA-256 checksum for `0092_business_public_contact_links.sql` from the committed migration contents.
 - Corrected `migrations/migration-lock.json` version 92 checksum to `24bb4f9a2659265c8afb1f44cb4641024587d17cd9137e136868b0e31f3a8284`.
 - Migration source and lock are now content-aligned; production migration verification must still be confirmed by the deployment pipeline.
+
+## Catalog Service Lifecycle → SEO/GEO Publication — September 2026
+- Added the canonical transactional `CatalogCommandRepository.createService()` path with tenant/workspace validation, idempotency, audit, and `catalog.service.created` outbox event.
+- Added regression coverage for the atomic Service creation command.
+- Registered `catalog.service.created` in the SEO publication reason map.
+- Outbox SEO enrichment now resolves the canonical Service through `CatalogRepository.getService()` and emits a truth-bound `Service` SEO entity: active Services are public/published; draft/inactive Services are not exposed as public.
+- Service → owning Business is represented canonically as `ownedByBusiness`; no SEO-owned relationship source was introduced.
