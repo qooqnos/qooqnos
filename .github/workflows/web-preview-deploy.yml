@@ -77,3 +77,12 @@ jobs:
           grep -Fq '<div id="app"></div>' /tmp/phoenix-admin.html
           grep -Fq '/dist/main.js' /tmp/phoenix-admin.html
           echo "Phoenix /admin SPA route is serving the deployed application shell."
+
+          for asset in "/" "/dist/main.js" "/dist/ui.js" "/styles.css"; do
+            echo "--- $asset ---"
+            curl --silent --show-error --location --retry 5 --retry-delay 1 --retry-all-errors -D /tmp/phoenix-headers.txt -o /tmp/phoenix-asset "https://qooqnos.qooqnos.workers.dev$asset" || true
+            head -n 20 /tmp/phoenix-headers.txt || true
+            echo "BODY:"
+            head -c 500 /tmp/phoenix-asset || true
+            echo
+          done
