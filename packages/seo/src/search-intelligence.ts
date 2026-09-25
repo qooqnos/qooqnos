@@ -9,6 +9,7 @@ export type SearchIntelligenceVertical =
   | "google-autocomplete"
   | "google-shopping"
   | "google-dataset-search"
+  | "google-events"
   | "google-ads-search"
   | "google-ads-advertisers"
   | "bing-organic"
@@ -90,6 +91,7 @@ const VERTICAL_ENDPOINTS: Readonly<Record<SearchIntelligenceVertical, string>> =
   "google-autocomplete": "/v3/serp/google/autocomplete/live/advanced",
   "google-shopping": "/v3/merchant/google/products/task_post",
   "google-dataset-search": "/v3/serp/google/dataset_search/live/advanced",
+  "google-events": "/v3/serp/google/events/live/advanced",
   "google-ads-search": "/v3/serp/google/ads_search/live/advanced",
   "google-ads-advertisers": "/v3/serp/google/ads_advertisers/live/advanced",
   "bing-organic": "/v3/serp/bing/organic/live/advanced",
@@ -294,6 +296,68 @@ export class DataForSeoSearchIntelligenceClient {
       ...(request.locationCode !== undefined ? { location_code: request.locationCode } : {}),
       ...(request.locationName ? { location_name: request.locationName } : {}),
       ...(request.type ? { type: request.type } : {}),
+    });
+  }
+
+  async googleReviews(request: {
+    readonly keyword: string;
+    readonly locationCode?: number;
+    readonly locationName?: string;
+    readonly languageCode?: string;
+    readonly languageName?: string;
+    readonly depth?: number;
+    readonly sortBy?: "relevance" | "highest_rating" | "lowest_rating" | "newest";
+  }): Promise<unknown> {
+    const keyword = request.keyword.trim();
+    if (!keyword) throw new Error("Google Reviews keyword cannot be empty.");
+    const base = (this.config.endpoint?.trim() || "https://api.dataforseo.com").replace(/\/$/, "");
+    const posted = await this.rawRequest(base + "/v3/business_data/google/reviews/task_post", {
+      method: "POST",
+      body: JSON.stringify([{
+        keyword,
+        ...(request.locationCode !== undefined ? { location_code: request.locationCode } : {}),
+        ...(request.locationName ? { location_name: request.locationName } : {}),
+        ...(request.languageCode ? { language_code: request.languageCode } : {}),
+        ...(request.languageName ? { language_name: request.languageName } : {}),
+        ...(request.depth !== undefined ? { depth: Math.min(Math.max(Math.trunc(request.depth), 1), 500) } : {}),
+        ...(request.sortBy ? { sort_by: request.sortBy } : {}),
+      }]),
+    });
+    const taskId = ((posted as { tasks?: readonly { id?: string }[] }).tasks ?? [])[0]?.id;
+    if (!taskId) throw new Error("Google Reviews task did not return a task id.");
+    const deadline = Date.now() + Math.min(Math.max(Math.trunc(this.config.timeoutMs ?? 30000), 5000), 60000);
+    const getUrl = base + "/v3/business_data/google/reviews/task_get/" + encodeURIComponent(taskId);
+    while (Date.now() < deadline) {
+      const result = await this.rawRequest(getUrl, { method: "GET" });
+      const task = ((result as { tasks?: readonly { status_code?: number; status_message?: string; result?: unknown[] }[] }).tasks ?? [])[0];
+      if (task?.status_code === 20000 && task.result?.length) return result;
+      if (task?.status_code && task.status_code >= 40000) throw new Error("Google Reviews task failed: " + (task.status_message || "unknown provider error"));
+      await new Promise<void>((resolve) => setTimeout(resolve, 1000));
+    }
+    throw new Error("Google Reviews task timed out before results were ready.");
+  }
+
+  async businessListingsSearch(request: {
+    readonly keyword?: string;
+    readonly categories?: readonly string[];
+    readonly locationCode?: number;
+    readonly locationName?: string;
+    readonly languageCode?: string;
+    readonly languageName?: string;
+    readonly limit?: number;
+  }): Promise<unknown> {
+    const categories = (request.categories ?? []).map((value) => value.trim()).filter(Boolean).slice(0, 20);
+    if (!request.keyword?.trim() && !categories.length) throw new Error("Business listings search requires keyword or categories.");
+    const endpoint = (this.config.endpoint?.trim() || "https://api.dataforseo.com").replace(/\/$/, "")
+      + "/v3/business_data/business_listings/search/live";
+    return this.requestSingle(endpoint, {
+      ...(request.keyword?.trim() ? { keyword: request.keyword.trim() } : {}),
+      ...(categories.length ? { categories } : {}),
+      ...(request.locationCode !== undefined ? { location_code: request.locationCode } : {}),
+      ...(request.locationName ? { location_name: request.locationName } : {}),
+      ...(request.languageCode ? { language_code: request.languageCode } : {}),
+      ...(request.languageName ? { language_name: request.languageName } : {}),
+      ...(request.limit !== undefined ? { limit: Math.min(Math.max(Math.trunc(request.limit), 1), 100) } : {}),
     });
   }
 
