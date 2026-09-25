@@ -1721,3 +1721,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Restored the required `aggregateType` field in the Location lifecycle test fixture (`bddb41d60a...`).
 - Fixed the remaining Location invalidation contract so `business.location.changed.v1` derives the owning Business dependency from its canonical `businessId` payload when `relatedEntityIds` is not explicitly present (`4f18d1df4063d29f0b4c38fb7f00617b6b23f310`).
 - Latest Phoenix CI before this fix had 319/320 tests passing; the only failing test was the Location invalidation dependency assertion.
+
+### Canonical Trust reputation → Public SEO/GEO projection — 2026-09-25
+
+- Added a public `ReputationSummaryRecord` read path to Trust so SEO consumes published reputation truth without duplicating the source of truth.
+- SEO outbox enrichment now attaches `AggregateRating` to Business and Product public entities only when canonical published review count is positive.
+- Structured Data emits Schema.org `AggregateRating` from the same canonical values.
+- SSR Entity Pages render the same rating value and review count visibly, preserving the structured-data visible-content invariant.
+- Public Entity Page model now exposes a dedicated Customer Reviews section when canonical reputation evidence exists.
+- Added regression coverage for Business/Product AggregateRating output.
+- Commits: `d42ad48eea...`, `2c088ff346...`, `f241b61126...`, `9e651ee0c9...`, `a48e76fc6a...`, `ae0a3a8f96...`, `55f0d57739...`, `4f3ec9ccdb...`, `d5a02a3d9b...`.
