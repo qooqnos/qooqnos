@@ -47,4 +47,19 @@ describe("SEO canonical ingestion and invalidation", () => {
     );
     expect(targets.map((target) => target.entityId)).toEqual(["business-1", "category-1", "service-1"]);
   });
+  it("treats canonical Business Location changes as location invalidations", async () => {
+    const { domainChangeFromOutboxEvent } = await import("./invalidation");
+    const change = domainChangeFromOutboxEvent({
+      id: "location-event-1",
+      eventType: "business.location.changed.v1",
+      eventVersion: 1,
+      aggregateId: "location-1",
+      aggregateType: "Location",
+      occurredAt: "2026-09-25T08:00:00.000Z",
+      payloadJson: JSON.stringify({ sourceModule: "business", sourceVersion: "1", relatedEntityIds: ["business-1"] }),
+    });
+    expect(change?.reason).toBe("location-changed");
+    expect(change?.relatedEntityIds).toEqual(["business-1"]);
+  });
+
 });
