@@ -1,4 +1,4 @@
-const CACHE_NAME = "phoenix-web-v1";
+const CACHE_NAME = "phoenix-web-v2";
 const STATIC_ASSETS = [
   "/",
   "/styles.css",
