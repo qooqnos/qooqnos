@@ -64,16 +64,6 @@ function payloadEntity(payloadJson: string): SeoEntity | null {
   const payloadObject = payload as Record<string, unknown>;
   const value = payloadObject.seoEntity ?? payloadObject.entity;
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    if (payloadObject.businessId && typeof payloadObject.name === "string") {
-      return {
-        id: String(payloadObject.businessId), type: "Business", sourceModule: "business", sourceVersion: "1",
-        publicationState: payloadObject.publicationStatus === "published" ? "published" : "unpublished",
-        visibility: "public", preferredName: String(payloadObject.displayName ?? payloadObject.name),
-        summary: String(payloadObject.name), locale: typeof payloadObject.locale === "string" ? payloadObject.locale : "en",
-        ...optionalSeoEntityFields(payloadObject),
-        updatedAt: typeof payloadObject.updatedAt === "string" ? payloadObject.updatedAt : new Date().toISOString(),
-      } as SeoEntity;
-    }
     if (payloadObject.locationId && typeof payloadObject.businessId === "string" && typeof payloadObject.name === "string") {
       const status = payloadObject.status === "active" ? "published" : "unpublished";
       return {
@@ -83,6 +73,16 @@ function payloadEntity(payloadJson: string): SeoEntity | null {
         relatedEntityIds: [String(payloadObject.businessId)],
         relatedEntities: [{ entityId: String(payloadObject.businessId), relation: "locatedAtBusiness" }],
         ...(payloadObject.timezone ? { timezone: String(payloadObject.timezone) } : {}),
+        ...optionalSeoEntityFields(payloadObject),
+        updatedAt: typeof payloadObject.updatedAt === "string" ? payloadObject.updatedAt : new Date().toISOString(),
+      } as SeoEntity;
+    }
+    if (payloadObject.businessId && typeof payloadObject.name === "string") {
+      return {
+        id: String(payloadObject.businessId), type: "Business", sourceModule: "business", sourceVersion: "1",
+        publicationState: payloadObject.publicationStatus === "published" ? "published" : "unpublished",
+        visibility: "public", preferredName: String(payloadObject.displayName ?? payloadObject.name),
+        summary: String(payloadObject.name), locale: typeof payloadObject.locale === "string" ? payloadObject.locale : "en",
         ...optionalSeoEntityFields(payloadObject),
         updatedAt: typeof payloadObject.updatedAt === "string" ? payloadObject.updatedAt : new Date().toISOString(),
       } as SeoEntity;
