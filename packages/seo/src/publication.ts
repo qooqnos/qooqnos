@@ -419,6 +419,12 @@ function optionalSeoEntityFields(payload: Record<string, unknown>): Partial<SeoE
     if (values.length) fields.relatedEntities = values;
   }
   if (typeof payload.price === "number" && Number.isFinite(payload.price)) fields.price = payload.price;
+  if (payload.geoPoint && typeof payload.geoPoint === "object" && !Array.isArray(payload.geoPoint)) {
+    const raw = payload.geoPoint as Record<string, unknown>;
+    if (typeof raw.latitude === "number" && Number.isFinite(raw.latitude) && typeof raw.longitude === "number" && Number.isFinite(raw.longitude)) {
+      fields.geoPoint = { latitude: raw.latitude, longitude: raw.longitude };
+    }
+  }
   if (payload.geoScope === "exact" || payload.geoScope === "branch" || payload.geoScope === "city" ||
       payload.geoScope === "region" || payload.geoScope === "country" || payload.geoScope === "service-area") {
     fields.geoScope = payload.geoScope;
