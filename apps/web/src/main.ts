@@ -2265,7 +2265,7 @@ function renderDiscover(): string {
     </section>
     <div class="discover-layout">
       <div class="results-column">
-        <div class="results-header"><strong id="results-title">پیشنهادهای امروز</strong><span id="results-meta">نمونه نمایشی</span></div>
+        <div class="results-header"><strong id="results-title">پیشنهادهای امروز</strong><span id="results-meta">نمونه نمایشی</span><button class="shortlist-counter" type="button" aria-label="فهرست انتخابی">انتخابی‌ها <b id="shortlist-count">0</b></button></div>
         <div id="discovery-results" class="results-grid">${renderResultCards(demoBusinesses)}</div>
       </div>
       <aside class="insight-card glass-card">
@@ -2277,6 +2277,65 @@ function renderDiscover(): string {
       </aside>
     </div>
   `;
+}
+
+function getShortlist(): DiscoveryResult[] {
+  try {
+    const raw = localStorage.getItem("phoenix-shortlist");
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((item): item is DiscoveryResult => Boolean(item) && typeof item === "object") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveShortlist(items: DiscoveryResult[]): void {
+  localStorage.setItem("phoenix-shortlist", JSON.stringify(items.slice(-20)));
+}
+
+function toggleShortlist(item: DiscoveryResult): void {
+  const key = item.id ?? item.sourceId ?? "";
+  if (!key) {
+    showToast("این نتیجه شناسه قابل نگهداری ندارد.");
+    return;
+  }
+  const current = getShortlist();
+  const exists = current.some((entry) => (entry.id ?? entry.sourceId) === key);
+  saveShortlist(exists ? current.filter((entry) => (entry.id ?? entry.sourceId) !== key) : [...current, item]);
+}
+
+function renderShortlist(): void {
+  const count = getShortlist().length;
+  document.querySelectorAll<HTMLElement>("#shortlist-count").forEach((node) => {
+    node.textContent = String(count);
+  });
+  document.querySelectorAll<HTMLElement>("[data-shortlist-count]").forEach((node) => {
+    node.textContent = String(count);
+  });
+  if (activeDiscoveryItems.length) {
+    const host = document.querySelector<HTMLElement>("#discovery-results");
+    if (host) host.innerHTML = renderResultCards(activeDiscoveryItems);
+    bindDiscoveryResultEvents();
+  }
+}
+
+function getSavedSearches(): string[] {
+  try {
+    const raw = localStorage.getItem("phoenix-saved-searches");
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string").slice(-30) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSearch(query: string): void {
+  const normalized = query.trim();
+  if (!normalized) return;
+  const current = getSavedSearches().filter((item) => item !== normalized);
+  localStorage.setItem("phoenix-saved-searches", JSON.stringify([...current, normalized].slice(-30)));
 }
 
 function renderResultCards(items: DiscoveryResult[]): string {
@@ -3087,7 +3146,7 @@ async function generateDraft(): Promise<void> {
         `/api/v1/ai/seller/product-creation-sessions/${encodeURIComponent(sessionId)}`,
       );
       if (result.data.usage || result.data.cost) {
-        localStorage.setItem("phoenix-last-ai-usage", JSON.stringify({ units: String(result.data.usage?.providerUnits ?? ((result.data.usage?.inputTokens ?? 0) + (result.data.usage?.outputTokens ?? 0)) || "—"), at: new Date().toISOString() }));
+        localStorage.setItem("phoenix-last-ai-usage", JSON.stringify({ units: String(result.data.usage?.providerUnits ?? (((result.data.usage?.inputTokens ?? 0) + (result.data.usage?.outputTokens ?? 0)) || "—")), at: new Date().toISOString() }));
       }
       draft.dataset.sessionId = sessionId;
       draft.dataset.draftVersion = String(sessionState.session.currentDraftVersion);
@@ -3156,7 +3215,7 @@ function renderRemoteDraft(result: SellerRunResult, sessionId: string, version: 
         </div>
         ${result.usage || result.cost ? `
           <div class="ai-usage-strip">
-            <span><b>مصرف</b> ${escapeHtml(String(result.usage?.providerUnits ?? ((result.usage?.inputTokens ?? 0) + (result.usage?.outputTokens ?? 0)) || "—"))}</span>
+            <span><b>مصرف</b> ${escapeHtml(String(result.usage?.providerUnits ?? (((result.usage?.inputTokens ?? 0) + (result.usage?.outputTokens ?? 0)) || "—")))}</span>
             <span><b>ورودی</b> ${escapeHtml(String(result.usage?.inputTokens ?? "—"))}</span>
             <span><b>خروجی</b> ${escapeHtml(String(result.usage?.outputTokens ?? "—"))}</span>
             <span><b>هزینه داخلی</b> ${result.cost?.estimatedProviderCost !== undefined ? escapeHtml(String(result.cost.estimatedProviderCost)) + " " + escapeHtml(result.cost.costCurrency ?? "USD") : "ثبت شد"}</span>
@@ -3165,7 +3224,7 @@ function renderRemoteDraft(result: SellerRunResult, sessionId: string, version: 
           <button class="button button-primary" type="button" data-confirm-seller-draft>بازبینی و ساخت محصول</button>
           <button class="button button-ghost" type="button" data-cancel-seller-draft>لغو session</button>
         </div>
-        <div id="seller-confirm-state" class="connection-state">نسخه ${version} برای بازبینی آماده است.</div><div id="seller-confirm-state" class="connection-state">نسخه ${version} برای بازبینی آماده است.</div><div id="seller-publication-controls" class="seller-publication-controls"></div>
+        <div id="seller-confirm-state" class="connection-state">نسخه ${version} برای بازبینی آماده است.</div><div id="seller-publication-controls" class="seller-publication-controls"></div>
       </div>
     </div>`;
 }
