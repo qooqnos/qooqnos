@@ -358,6 +358,242 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
 
   router.register({
     method: "GET",
+    path: "/api/v1/seo/social/providers",
+    module: "seo",
+    operation: "social.providers",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: ({ context }) => json({
+      facebook: Boolean(environment?.SEO_FACEBOOK_PAGE_ID && environment?.SEO_FACEBOOK_ACCESS_TOKEN),
+      instagram: Boolean(environment?.SEO_INSTAGRAM_USER_ID && environment?.SEO_INSTAGRAM_ACCESS_TOKEN),
+      x: Boolean(environment?.SEO_X_BEARER_TOKEN),
+      pinterest: Boolean(environment?.SEO_PINTEREST_ACCESS_TOKEN),
+      linkedin: Boolean(environment?.SEO_LINKEDIN_ACCESS_TOKEN),
+      tiktok: Boolean(environment?.SEO_TIKTOK_ACCESS_TOKEN),
+      reddit: Boolean(environment?.SEO_REDDIT_ACCESS_TOKEN),
+    }, 200, context.requestId),
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/facebook/search",
+    module: "seo",
+    operation: "social.facebook.search",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_FACEBOOK_PAGE_ID || !environment.SEO_FACEBOOK_ACCESS_TOKEN) return json({ status: "unavailable", provider: "facebook" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const result = await new FacebookPageClient({ pageId: environment.SEO_FACEBOOK_PAGE_ID, accessToken: environment.SEO_FACEBOOK_ACCESS_TOKEN }).listFeed(Number(body.limit ?? 25));
+      return json({ provider: "facebook", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/facebook/publish",
+    module: "seo",
+    operation: "social.facebook.publish",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_FACEBOOK_PAGE_ID || !environment.SEO_FACEBOOK_ACCESS_TOKEN) return json({ status: "unavailable", provider: "facebook" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const textValue = typeof body.text === "string" ? body.text.trim() : "";
+      if (!textValue) return json({ error: { code: "VALIDATION_ERROR", message: "text is required." } }, 400, context.requestId);
+      const result = await new FacebookPageClient({ pageId: environment.SEO_FACEBOOK_PAGE_ID, accessToken: environment.SEO_FACEBOOK_ACCESS_TOKEN }).publish(textValue, typeof body.link === "string" ? body.link : undefined);
+      return json({ provider: "facebook", result }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/instagram/publish-image",
+    module: "seo",
+    operation: "social.instagram.publish_image",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_INSTAGRAM_USER_ID || !environment.SEO_INSTAGRAM_ACCESS_TOKEN) return json({ status: "unavailable", provider: "instagram" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const imageUrl = typeof body.imageUrl === "string" ? body.imageUrl.trim() : "";
+      if (!/^https?:\/\//i.test(imageUrl)) return json({ error: { code: "VALIDATION_ERROR", message: "imageUrl is required." } }, 400, context.requestId);
+      const result = await new InstagramGraphClient({ igUserId: environment.SEO_INSTAGRAM_USER_ID, accessToken: environment.SEO_INSTAGRAM_ACCESS_TOKEN }).publishImage(imageUrl, typeof body.caption === "string" ? body.caption : "");
+      return json({ provider: "instagram", result }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/x/search",
+    module: "seo",
+    operation: "social.x.search",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_X_BEARER_TOKEN) return json({ status: "unavailable", provider: "x" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const query = typeof body.query === "string" ? body.query.trim() : "";
+      if (!query) return json({ error: { code: "VALIDATION_ERROR", message: "query is required." } }, 400, context.requestId);
+      const result = await new XApiClient({ bearerToken: environment.SEO_X_BEARER_TOKEN, userAccessToken: environment.SEO_X_USER_ACCESS_TOKEN }).recentSearch(query, Number(body.maxResults ?? 25));
+      return json({ provider: "x", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/x/publish",
+    module: "seo",
+    operation: "social.x.publish",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_X_BEARER_TOKEN || !environment.SEO_X_USER_ACCESS_TOKEN) return json({ status: "unavailable", provider: "x" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const textValue = typeof body.text === "string" ? body.text.trim() : "";
+      if (!textValue) return json({ error: { code: "VALIDATION_ERROR", message: "text is required." } }, 400, context.requestId);
+      const result = await new XApiClient({ bearerToken: environment.SEO_X_BEARER_TOKEN, userAccessToken: environment.SEO_X_USER_ACCESS_TOKEN }).createPost(textValue);
+      return json({ provider: "x", result }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/pinterest/search",
+    module: "seo",
+    operation: "social.pinterest.search",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_PINTEREST_ACCESS_TOKEN) return json({ status: "unavailable", provider: "pinterest" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const query = typeof body.query === "string" ? body.query.trim() : "";
+      if (!query) return json({ error: { code: "VALIDATION_ERROR", message: "query is required." } }, 400, context.requestId);
+      const result = await new PinterestClient({ accessToken: environment.SEO_PINTEREST_ACCESS_TOKEN }).searchPins(query, Number(body.pageSize ?? 25));
+      return json({ provider: "pinterest", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/pinterest/trends",
+    module: "seo",
+    operation: "social.pinterest.trends",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_PINTEREST_ACCESS_TOKEN) return json({ status: "unavailable", provider: "pinterest" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const regionCode = typeof body.regionCode === "string" ? body.regionCode.trim() : "";
+      if (!regionCode) return json({ error: { code: "VALIDATION_ERROR", message: "regionCode is required." } }, 400, context.requestId);
+      const result = await new PinterestClient({ accessToken: environment.SEO_PINTEREST_ACCESS_TOKEN }).trends(regionCode, typeof body.trendType === "string" ? body.trendType : "monthly");
+      return json({ provider: "pinterest", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/pinterest/publish",
+    module: "seo",
+    operation: "social.pinterest.publish",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_PINTEREST_ACCESS_TOKEN) return json({ status: "unavailable", provider: "pinterest" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const boardId = typeof body.boardId === "string" ? body.boardId.trim() : "";
+      const imageUrl = typeof body.imageUrl === "string" ? body.imageUrl.trim() : "";
+      if (!boardId || !/^https?:\/\//i.test(imageUrl)) return json({ error: { code: "VALIDATION_ERROR", message: "boardId and imageUrl are required." } }, 400, context.requestId);
+      const result = await new PinterestClient({ accessToken: environment.SEO_PINTEREST_ACCESS_TOKEN }).createPin({ boardId, imageUrl, ...(typeof body.title === "string" ? { title: body.title } : {}), ...(typeof body.description === "string" ? { description: body.description } : {}), ...(typeof body.link === "string" ? { link: body.link } : {}) });
+      return json({ provider: "pinterest", result }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/linkedin/publish",
+    module: "seo",
+    operation: "social.linkedin.publish",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_LINKEDIN_ACCESS_TOKEN || !environment.SEO_LINKEDIN_VERSION) return json({ status: "unavailable", provider: "linkedin" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const authorUrn = typeof body.authorUrn === "string" ? body.authorUrn.trim() : "";
+      const commentary = typeof body.commentary === "string" ? body.commentary.trim() : "";
+      if (!authorUrn || !commentary) return json({ error: { code: "VALIDATION_ERROR", message: "authorUrn and commentary are required." } }, 400, context.requestId);
+      const result = await new LinkedInClient({ accessToken: environment.SEO_LINKEDIN_ACCESS_TOKEN, version: environment.SEO_LINKEDIN_VERSION }).createOrganizationPost({ authorUrn, commentary, ...(typeof body.articleUrl === "string" ? { articleUrl: body.articleUrl } : {}), ...(typeof body.imageUrn === "string" ? { imageUrn: body.imageUrn } : {}) });
+      return json({ provider: "linkedin", result }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/linkedin/stats",
+    module: "seo",
+    operation: "social.linkedin.stats",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_LINKEDIN_ACCESS_TOKEN || !environment.SEO_LINKEDIN_VERSION) return json({ status: "unavailable", provider: "linkedin" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const organizationUrn = typeof body.organizationUrn === "string" ? body.organizationUrn.trim() : "";
+      if (!organizationUrn) return json({ error: { code: "VALIDATION_ERROR", message: "organizationUrn is required." } }, 400, context.requestId);
+      const result = await new LinkedInClient({ accessToken: environment.SEO_LINKEDIN_ACCESS_TOKEN, version: environment.SEO_LINKEDIN_VERSION }).organizationShareStatistics(organizationUrn);
+      return json({ provider: "linkedin", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/tiktok/publish",
+    module: "seo",
+    operation: "social.tiktok.publish",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!environment?.SEO_TIKTOK_ACCESS_TOKEN) return json({ status: "unavailable", provider: "tiktok" }, 503, context.requestId);
+      const body = await request.json() as Record<string, unknown>;
+      const videoUrl = typeof body.videoUrl === "string" ? body.videoUrl.trim() : "";
+      const privacyLevel = typeof body.privacyLevel === "string" ? body.privacyLevel : "SELF_ONLY";
+      if (!/^https?:\/\//i.test(videoUrl)) return json({ error: { code: "VALIDATION_ERROR", message: "videoUrl is required." } }, 400, context.requestId);
+      const result = await new TikTokClient({ accessToken: environment.SEO_TIKTOK_ACCESS_TOKEN }).initializeVideoPost({ videoUrl, privacyLevel, ...(typeof body.title === "string" ? { title: body.title } : {}) });
+      return json({ provider: "tiktok", result }, 202, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/tiktok/creator",
+    module: "seo",
+    operation: "social.tiktok.creator",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context }) => {
+      if (!environment?.SEO_TIKTOK_ACCESS_TOKEN) return json({ status: "unavailable", provider: "tiktok" }, 503, context.requestId);
+      const result = await new TikTokClient({ accessToken: environment.SEO_TIKTOK_ACCESS_TOKEN }).creatorInfo();
+      return json({ provider: "tiktok", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/seo/social/reddit/search",
+    module: "seo",
+    operation: "social.reddit.search",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const body = await request.json() as Record<string, unknown>;
+      const query = typeof body.query === "string" ? body.query.trim() : "";
+      if (!query) return json({ error: { code: "VALIDATION_ERROR", message: "query is required." } }, 400, context.requestId);
+      const result = await new RedditClient({ ...(environment?.SEO_REDDIT_ACCESS_TOKEN ? { accessToken: environment.SEO_REDDIT_ACCESS_TOKEN } : {}) }).searchPosts(query, typeof body.subreddit === "string" ? body.subreddit : undefined, Number(body.limit ?? 25));
+      return json({ provider: "reddit", result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/sitemap.xml",
     module: "seo",
     operation: "sitemap.read",
