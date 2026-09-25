@@ -11,6 +11,7 @@ import { enqueueSeoPublication } from "@qooqnos/seo";
 import { CatalogRepository } from "@qooqnos/catalog";
 import { BusinessRepository } from "@qooqnos/business";
 import { CommerceRepository } from "@qooqnos/commerce";
+import { TrustReviewRepository } from "@qooqnos/trust";
 
 export interface ScheduledControllerLike {
   readonly scheduledTime: number;
@@ -73,6 +74,7 @@ export async function consumeOutbox(
   const catalog = database ? new CatalogRepository(database) : null;
   const business = database ? new BusinessRepository(database) : null;
   const commerce = database ? new CommerceRepository(database) : null;
+  const trust = database ? new TrustReviewRepository(database) : null;
 
   for (const message of batch.messages) {
     try {
@@ -275,6 +277,15 @@ async function enrichSeoPayload(
   ) && typeof payload.productId === "string") {
     const product = await catalog.getProduct(context, brandId<"EntityId">(payload.productId));
     if (product) {
+      const reputation = trust ? await trust.getReputationSummary(context, { targetType: "product", targetId: product.id }) : null;
+      const aggregateRating = reputation && reputation.publishedReviewCount > 0
+        ? {
+            ratingValue: reputation.ratingSum / reputation.publishedReviewCount,
+            reviewCount: reputation.publishedReviewCount,
+            bestRating: 5,
+            worstRating: 1,
+          }
+        : undefined;
       const variants = (await catalog.listProductVariants(context, product.id))
         .filter((variant) => variant.status === "active")
         .map((variant) => ({
@@ -296,6 +307,7 @@ async function enrichSeoPayload(
         relatedEntities: [{ entityId: product.businessId, relation: "ownedByBusiness" }],
         productGroupId: product.id,
         ...(variants.length ? { productVariants: variants } : {}),
+        ...(aggregateRating ? { aggregateRating } : {}),
         updatedAt: product.updatedAt,
       };
     }
@@ -413,6 +425,15 @@ async function enrichSeoPayload(
     if (businessId) {
       const record = await business.get(context, brandId<"EntityId">(businessId));
       if (record) {
+        const reputation = trust ? await trust.getReputationSummary(context, { targetType: "business", targetId: record.id }) : null;
+        const aggregateRating = reputation && reputation.publishedReviewCount > 0
+          ? {
+              ratingValue: reputation.ratingSum / reputation.publishedReviewCount,
+              reviewCount: reputation.publishedReviewCount,
+              bestRating: 5,
+              worstRating: 1,
+            }
+          : undefined;
         const locations = await business.listLocations(context, record.id);
         const catalogRelationships = catalog ? await catalog.listBusinessEntityIds(context, record.id) : { productIds: [], serviceIds: [] };
         const relatedEntities = [
@@ -453,6 +474,7 @@ async function enrichSeoPayload(
             ...(email ? { email } : {}),
             ...(sameAs.length ? { sameAs } : {}),
             ...(openingHours.length ? { openingHours } : {}),
+            ...(aggregateRating ? { aggregateRating } : {}),
             updatedAt: record.updatedAt,
           };
         }
