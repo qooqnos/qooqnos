@@ -18,10 +18,10 @@ describe("search engine API actions", () => {
     });
     await api.submitSitemap("https://example.com/sitemap.xml");
     expect(calls).toHaveLength(1);
-    expect(calls[0].method).toBe("PUT");
-    expect(calls[0].url).toContain("/webmasters/v3/sites/");
-    expect(calls[0].url).toContain("sitemaps/");
-    expect(calls[0].headers.get("authorization")).toBe("Bearer token");
+    expect(calls[0]!.method).toBe("PUT");
+    expect(calls[0]!.url).toContain("/webmasters/v3/sites/");
+    expect(calls[0]!.url).toContain("sitemaps/");
+    expect(calls[0]!.headers.get("authorization")).toBe("Bearer token");
   });
 
   it("normalizes Google URL Inspection responses", async () => {
