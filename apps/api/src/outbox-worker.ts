@@ -316,7 +316,7 @@ async function enrichSeoPayload(
             ...(policy.destinationCountry ? { country: policy.destinationCountry } : {}),
             ...(policy.destinationRegion ? { region: policy.destinationRegion } : {}),
             ...(policy.destinationPostalCode ? { postalCode: policy.destinationPostalCode } : {}),
-            ...(policy.shippingRateMinor !== null ? { shippingRate: policy.shippingRateMinor / 100 } : {}),
+            ...(policy.shippingRateMinor !== null ? { shippingRate: minorToMajor(policy.shippingRateMinor, policy.shippingCurrency) } : {}),
             ...(policy.shippingCurrency ? { currency: policy.shippingCurrency } : {}),
             ...(policy.handlingTimeMinDays !== null ? { handlingTimeMinDays: policy.handlingTimeMinDays } : {}),
             ...(policy.handlingTimeMaxDays !== null ? { handlingTimeMaxDays: policy.handlingTimeMaxDays } : {}),
@@ -449,6 +449,12 @@ async function enrichSeoPayload(
   }
 
   return JSON.stringify(payload);
+}
+
+function minorToMajor(amountMinor: number, currency: string | null): number {
+  if (!currency) return amountMinor;
+  const fractionDigits = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits;
+  return amountMinor / 10 ** fractionDigits;
 }
 
 function mapSeoAddress(value: Readonly<Record<string, unknown>>): Record<string, string> {
