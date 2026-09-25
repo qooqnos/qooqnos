@@ -256,6 +256,31 @@ export class AiRuntimeRepository extends Repository {
     };
   }
 
+  async listUsage(context: RequestContext, limit = 50) {
+    const organizationId = context.tenantId;
+    if (!organizationId) throw new DatabaseError("AI usage organization context is required");
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
+    return this.database.all<{
+      id: string; operationId: string; actorId: string | null; operationType: string; operationVersion: number;
+      meterUnit: string; quantity: number; providerId: string | null; modelId: string | null;
+      usageStatus: string; billingUsageReference: string | null; createdAt: string;
+    }>(
+      `SELECT id, operation_id AS operationId, actor_id AS actorId, operation_type AS operationType,
+              operation_version AS operationVersion, meter_unit AS meterUnit, quantity,
+              provider_id AS providerId, model_id AS modelId, usage_status AS usageStatus,
+              billing_usage_reference AS billingUsageReference, created_at AS createdAt
+       FROM ai_usage_records
+       WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?)
+         AND (? IS NULL OR actor_id = ?)
+       ORDER BY created_at DESC, id DESC LIMIT ?`,
+      organizationId,
+      context.workspaceId ?? null,
+      context.actorId ?? null,
+      context.actorId ?? null,
+      safeLimit,
+    );
+  }
+
   async recordUsage(context: RequestContext, input: {
     readonly id: EntityId; readonly operationId: EntityId; readonly attemptId?: EntityId;
     readonly operationType: string; readonly operationVersion: number; readonly meterUnit: string; readonly quantity: number;
