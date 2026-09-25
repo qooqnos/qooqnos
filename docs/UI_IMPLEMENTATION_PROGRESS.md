@@ -96,6 +96,7 @@
 - `c057b894d1e17ffd4898b17b37c2ed9f0d071091` — preview deployment now materializes workspace runtime artifacts before Wrangler bundling.
 - `2bab22950bcac177a0816acc0ab436b3d2301381` — preview deployment uses the production GitHub environment for Cloudflare credentials.
 - `36181477232` — observed successful deployment of `qooqnos` to `https://qooqnos.qooqnos.workers.dev`, including SPA assets and `ASSETS` binding.
+- `b5caa603ee66156b78f21fa697ea3efefd34fb2e` / `d690273667784d08c8251bb1ddad182a31351e6e` / `9443bd090bff3c39c84a3a79c17c8ae7590a4cdf` — Service Worker cache version, registration URL, and frontend asset URLs are versioned to prevent stale `main.js` from rendering a blank dark shell after deployment.
 
 ## Deployment / verification gate
 
