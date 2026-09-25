@@ -1688,3 +1688,9 @@ Residual gate status:
 - This closes the regression exposed by `packages/seo/src/location-lifecycle.test.ts`; the canonical Location page now retains the authoritative latitude/longitude before structured-data generation.
 - Commit: `69b157b426d979817beac76190d2ec3b6b13df19`.
 - Phoenix verification passed on this commit; repository CI was still running at ledger update time.
+
+
+## Location Invalidation Contract Hardening — 2026-09-25
+- Registered the canonical `business.location.changed.v1` event in SEO domain invalidation as `location-changed`, so dependency-aware invalidation can consume the real Business Location lifecycle event directly.
+- Added regression coverage asserting Location changes retain related Business dependencies during domain-change conversion.
+- Commits: `11df4f426759716d661950468e48386a8ea785b2`, `4f00eaec0bb5dd8b20e2770d1d97ddebbdea7682`.
