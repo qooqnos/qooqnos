@@ -36,6 +36,16 @@ export interface ApiEnv {
   readonly SEO_COMPETITIVE_KEYWORD_GAP_LIMIT?: string;
   readonly SEO_COMPETITIVE_LINK_GAP_COMPETITOR_LIMIT?: string;
   readonly SEO_COMPETITIVE_LINK_GAP_LIMIT?: string;
+  readonly SEO_INDEXNOW_KEY?: string;
+  readonly SEO_INDEXNOW_KEY_LOCATION?: string;
+  readonly SEO_INDEXNOW_ENDPOINT?: string;
+  readonly SEO_INDEXNOW_BATCH_LIMIT?: string;
+  readonly SEO_ALLOW_OAI_SEARCHBOT?: string;
+  readonly SEO_ALLOW_GPTBOT?: string;
+  readonly SEO_ALLOW_GOOGLE_EXTENDED?: string;
+  readonly SEO_ALLOW_CLAUDEBOT?: string;
+  readonly SEO_ALLOW_PERPLEXITYBOT?: string;
+  readonly SEO_CRAWL_DELAY_SECONDS?: string;
   readonly ENVIRONMENT?: string;
   readonly DB?: D1DatabaseLike;
   readonly AI?: CloudflareAIBinding;
