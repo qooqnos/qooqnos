@@ -577,11 +577,12 @@ function renderHome(): string {
           <h1>چیزی که نیاز داری را بگو.<br/><em>ققنوس راهش را پیدا می‌کند.</em></h1>
           <p>نیازت را به زبان خودت تعریف کن. ققنوس آن را می‌فهمد، گزینه‌های مناسب را پیدا می‌کند و مسیر اقدام را ساده می‌کند.</p>
           <form class="phoenix-demand-box" id="phoenix-demand-form">
+            <div class="phoenix-demand-topline"><span><i></i> Ask Phoenix</span><small>با نیازت شروع کن، نه با کلمه کلیدی</small></div>
             <label for="phoenix-demand-input" class="sr-only">نیاز خود را بنویسید</label>
-            <textarea id="phoenix-demand-input" rows="3" autocomplete="off" placeholder="مثلاً برای جمعه شب یک رستوران آرام برای ۴ نفر می‌خواهم، نزدیک مرکز شهر و با قیمت متوسط..."></textarea>
+            <textarea id="phoenix-demand-input" rows="3" autocomplete="off" spellcheck="true" placeholder="مثلاً برای جمعه شب یک رستوران آرام برای ۴ نفر می‌خواهم، نزدیک مرکز شهر و با قیمت متوسط..."></textarea>
             <div class="phoenix-demand-footer">
-              <span class="phoenix-demand-hint">نیازت را هرطور راحتی بنویس.</span>
-              <button class="button button-primary phoenix-demand-submit" type="submit">پیدا کن <span>←</span></button>
+              <span class="phoenix-demand-hint">هرچه برای تصمیم مهم است بنویس؛ ققنوس مسیر کشف را باز می‌کند.</span>
+              <button class="button button-primary phoenix-demand-submit" type="submit">شروع کن <span>←</span></button>
             </div>
           </form>
           <div class="phoenix-intent-chips" aria-label="نمونه نیازها">
@@ -686,12 +687,17 @@ function renderHome(): string {
       <section class="phoenix-final-cta">
         <span class="phoenix-kicker">Ask Phoenix</span>
         <h2>حالا تو بگو چه چیزی نیاز داری.</h2>
+        <p class="phoenix-final-cta-copy">از یک جمله ساده شروع کن. ققنوس ادامه مسیر را در فضای کشف باز می‌کند.</p>
         <form class="phoenix-demand-box compact" id="phoenix-demand-form-final">
           <label for="phoenix-demand-input-final" class="sr-only">نیاز خود را بنویسید</label>
           <textarea id="phoenix-demand-input-final" rows="2" placeholder="نیازت را به زبان خودت بنویس..."></textarea>
           <button class="button button-primary" type="submit">از ققنوس بپرس <span>←</span></button>
         </form>
       </section>
+      <footer class="phoenix-home-footer">
+        <div><a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark" aria-hidden="true">ق</span><span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span></a><p>لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار.</p></div>
+        <nav aria-label="پیوندهای پایانی"><a href="/discover" data-nav>کشف</a><a href="/business" data-nav>برای کسب‌وکارها</a><a href="/product-studio" data-nav>استودیو محصول</a></nav>
+      </footer>
     </div>
   \`;
 }
