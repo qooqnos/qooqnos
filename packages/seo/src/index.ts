@@ -37,3 +37,4 @@ export * from "./search-engine-actions";
 
 export * from "./merchant-feed";
 export * from "./external-visibility-import";
+export * from "./merchant-api";
