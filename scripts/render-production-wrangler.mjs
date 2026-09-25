@@ -69,7 +69,7 @@ SEO_COMPETITIVE_LINK_GAP_COMPETITOR_LIMIT = "2"
 SEO_COMPETITIVE_LINK_GAP_LIMIT = "15"
 SEO_GSC_SITE_URL = "https://qooqnos.com/"
 SEO_GSC_LOOKBACK_DAYS = "7"
-SEO_GSC_END_LAG_DAYS = "3"
+SEO_GSC_END_LAG_DAYS = "3"\nSEO_GSC_SITEMAP_URL = "https://qooqnos.com/sitemap.xml"\nSEO_GSC_INSPECTION_LANGUAGE = "en-US"
 SEO_BING_SITE_URL = "https://qooqnos.com/"${seoAiEndpoint ? `\nSEO_AI_CITATION_ENDPOINT = "${seoAiEndpoint}"` : ""}${seoAiModel ? `\nSEO_AI_CITATION_MODEL = "${seoAiModel}"` : ""}${seoAiAuthMode ? `\nSEO_AI_CITATION_AUTH_MODE = "${seoAiAuthMode}"` : ""}
 AI_SELLER_EXTRACT_MODEL_ID = "${modelId}"
 AI_SELLER_EXTRACT_MODEL_VERSION = "${modelVersion}"${gatewayId ? `\nAI_GATEWAY_ID = "${gatewayId}"` : ""}
