@@ -75,7 +75,9 @@ export function domainChangeFromOutboxEvent(event: {
   const sourceVersion = typeof record.sourceVersion === "string" ? record.sourceVersion : String(event.eventVersion);
   const related = Array.isArray(record.relatedEntityIds)
     ? record.relatedEntityIds.filter((id): id is string => typeof id === "string" && id.trim().length > 0)
-    : undefined;
+    : event.eventType === "business.location.changed.v1" && typeof record.businessId === "string" && record.businessId.trim().length > 0
+      ? [record.businessId.trim()]
+      : undefined;
   return {
     eventId: event.id,
     entityId: event.aggregateId,
