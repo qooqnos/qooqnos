@@ -240,7 +240,6 @@ export const COMMUNICATION_PERMISSIONS = [
   "communication.conversation.manage",
   "communication.message.send",
   "communication.notification.send",
-  "communication.notification.read",
   "communication.preference.read",
   "communication.preference.manage",
   "communication.suppression.manage",
