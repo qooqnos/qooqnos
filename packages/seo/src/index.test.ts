@@ -9,9 +9,7 @@ import {
   buildSitemapXml,
   buildSitemapIndexXml,
   SITEMAP_URL_LIMIT,
-  buildRobotsTxt,
   notifyIndexNow,
-
   canonicalEntityUrl,
   evaluateAgenticReadiness,
   evaluateFreshness,
