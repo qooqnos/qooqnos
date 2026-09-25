@@ -265,7 +265,11 @@ async function enrichSeoPayload(
     authenticated: true,
   });
 
-  if (catalog && event.eventType === "catalog.product.created" && typeof payload.productId === "string") {
+  if (catalog && (
+    event.eventType === "catalog.product.created"
+    || event.eventType === "catalog.product.updated"
+    || event.eventType === "catalog.variant.changed"
+  ) && typeof payload.productId === "string") {
     const product = await catalog.getProduct(context, brandId<"EntityId">(payload.productId));
     if (product) {
       const variants = (await catalog.listProductVariants(context, product.id))
