@@ -1272,3 +1272,18 @@ button:disabled, .button:disabled { cursor: not-allowed; }
 .publication-mini-card { padding: 12px; border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line)); border-radius: 13px; background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
 .publication-mini-card > p { margin: 6px 0 10px; color: var(--muted); font-size: 8px; line-height: 1.8; }
 .publication-mini-card .engine-actions { display:flex; gap:7px; flex-wrap:wrap; margin-top:8px; }
+
+.ds-dropdown { position: relative; display: inline-block; }
+.ds-dropdown-menu { position:absolute; inset-inline-end:0; top:calc(100% + 6px); min-width:170px; display:none; z-index:40; padding:5px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); }
+.ds-dropdown:focus-within .ds-dropdown-menu, .ds-dropdown:hover .ds-dropdown-menu { display:grid; }
+.ds-dropdown-item { padding:8px 10px; border-radius:8px; background:transparent; text-align:start; color:var(--muted); font-size:9px; }
+.ds-dropdown-item:hover { background:var(--surface-2); color:var(--text); }
+.ds-dialog { padding:18px; min-width:min(100%,420px); }
+.ds-dialog h2 { margin:0 0 10px; font-size:18px; }
+.ds-playground-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.ds-playground-card { padding:18px; }
+.ds-playground-card h2 { margin:7px 0 14px; font-size:15px; }
+.ds-playground-stack { display:grid; gap:12px; }
+.ds-dialog-demo { min-height:180px; display:grid; place-items:center; border:1px dashed var(--line); border-radius:14px; padding:12px; }
+.ds-skeleton-stack { display:grid; gap:7px; }
+@media (max-width:900px) { .ds-playground-grid { grid-template-columns:1fr; } }
