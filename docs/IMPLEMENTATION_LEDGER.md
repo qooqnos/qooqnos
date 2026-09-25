@@ -1743,3 +1743,16 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Official API constraints are respected: Google Indexing API is not used as a generic page-submission mechanism because Google restricts it to JobPosting and BroadcastEvent-in-VideoObject pages; ordinary Phoenix pages continue through sitemaps/Search Console and IndexNow/Bing/Yandex-supported notification paths.
 - Multimodal Search Console measurement and Bing AI Performance ingestion remain API-dependent and are not synthesized until official machine-readable fields/endpoints are exposed.
 - Commits: `a75c455a6a22c11be878ee1c1aaeada5c3915d96`, `3eba8f11276932efec32819a37868485e80ebb00`, `7ae3aee976c565ba6464d136abdf688832d77fcf`, `878479bbbeca5ea2164dea7c5b9590c7472fc279`, `3009ec007408b93a75d4bfcd81f3704eb0a5b51d`, `9b5188aeacbbe40a8c841e3170d0891a9aa056e3`.
+
+## 2026-09-25 SEO/GEO completion hardening
+
+| Area | Status | Implementation |
+|---|---|---|
+| Merchant Center XML product feed | 🟢 Implemented | `packages/seo/src/merchant-feed.ts`; public `/merchant-center/products.xml`; canonical product projection; required-fact gating without fabricated condition/price/image/availability |
+| Google Merchant API | 🟢 Optional production sync ready | `packages/seo/src/merchant-api.ts`; `productInputs.insert/delete`; OAuth access-token or service-account JWT support; non-blocking publication integration |
+| ProductGroup / variants | 🟢 Hardened | full Schema.org `variesBy` URLs, ProductGroup AggregateRating, variant description/name derivation, stable variant identifiers, `inProductGroupWithID`, canonical variant preservation |
+| Google Search Console multimodal / Generative AI ingestion | 🟢 Export ingestion implemented; API limitation explicit | `packages/seo/src/external-visibility-import.ts`; authenticated import routes for multimodal and Generative AI Performance exports; page-to-entity resolution; provenance preserved |
+| Bing AI Performance | 🟢 Export ingestion implemented; API boundary truthful | authenticated CSV/JSON ingestion for pages, grounding queries and time-series; citation share/intent/topic capture; no undocumented scraping |
+| Production SEO crawler hardening | 🟢 Implemented | HTTPS canonical validation, 200/MIME checks, 4 MiB safety limit, single canonical enforcement, metadata drift, JSON-LD parseability, exact X-Robots consistency |
+| Tests | 🟢 Added | Merchant feed, Google/Bing import, and crawler hardening coverage |
+| External activation gates | 🟡 Provider-account dependent | Merchant Center account/data source/credentials, Google Search Console export availability, Bing Webmaster export data remain external provider operations; no synthetic measurements |
