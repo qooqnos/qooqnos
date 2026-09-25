@@ -30,7 +30,9 @@ describe("Merchant Center feed", () => {
   });
 
   it("blocks a product without canonical condition", () => {
-    const incomplete = { ...entity, productVariants: [{ ...entity.productVariants![0], attributes: { color: "red" } }] };
+    const firstVariant = entity.productVariants?.[0];
+    if (!firstVariant) throw new Error("test fixture variant missing");
+    const incomplete = { ...entity, productVariants: [{ ...firstVariant, attributes: { color: "red" } }] };
     const result = projectMerchantProductFeed([incomplete], { canonicalBaseUrl: "https://qooqnos.com" });
     expect(result.items).toHaveLength(0);
     expect(result.skipped[0]?.reasons).toContain("missing-condition");
