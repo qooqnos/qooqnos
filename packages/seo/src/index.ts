@@ -34,3 +34,6 @@ export * from "./competitive-provider";
 export * from "./competitive-repository";
 export * from "./indexnow";
 export * from "./search-engine-actions";
+
+export * from "./merchant-feed";
+export * from "./external-visibility-import";
