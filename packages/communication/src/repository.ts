@@ -493,7 +493,7 @@ export class CommunicationRepository extends Repository {
     limit = 20,
   ): Promise<readonly NotificationRecord[]> {
     const boundedLimit = Math.min(Math.max(Number.isSafeInteger(limit) ? limit : 20, 1), 100);
-    return this.database.all<NotificationRecord>(
+    return this.database.all<NotificationRow>(
       `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, recipient_reference AS recipientReference,
               intent, channel, template_reference AS templateReference, template_version AS templateVersion, locale,
               variables_json AS variablesJson, priority, status, idempotency_key AS idempotencyKey,
