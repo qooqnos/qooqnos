@@ -215,3 +215,6 @@ When an authenticated route supplies an entity ID, measurements are attached to 
 
 Social adapters use bounded HTTP timeouts and configurable retry policy for idempotent reads only. Default production policy is 3 attempts, 15s timeout, 500ms base backoff and 5s maximum backoff; HTTP 408, 429 and 5xx responses are retryable, and `Retry-After` is honored when present.
 Publishing POSTs are deliberately not retried automatically because provider APIs may not expose a universal idempotency key and an automatic replay could create duplicate content. Transport settings are controlled through `SEO_SOCIAL_MAX_ATTEMPTS`, `SEO_SOCIAL_TIMEOUT_MS`, `SEO_SOCIAL_BASE_DELAY_MS` and `SEO_SOCIAL_MAX_DELAY_MS`.
+
+- Instagram now has a first-party read/measurement route (`POST /api/v1/seo/social/instagram/search`) over the canonical media listing, so Instagram content metrics enter the same provider-evidence path as the other social read surfaces.
+- `GET /api/v1/seo/social/providers` now reports per-provider `configured`, `read`, and `publish` capabilities plus the effective transport policy without exposing credentials.
