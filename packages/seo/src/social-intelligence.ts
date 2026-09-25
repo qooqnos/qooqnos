@@ -106,17 +106,6 @@ export class RedditClient {
   }
 }
 
-class SocialHttpError extends Error {
-  readonly status: number;
-  readonly retryAfterMs?: number;
-  constructor(provider: string, status: number, retryAfterMs?: number) {
-    super(provider + " API returned HTTP " + status);
-    this.name = "SocialHttpError";
-    this.status = status;
-    if (retryAfterMs !== undefined) this.retryAfterMs = retryAfterMs;
-  }
-}
-
 async function requestWithTimeout(
   fetcher: typeof fetch,
   input: RequestInfo | URL,
