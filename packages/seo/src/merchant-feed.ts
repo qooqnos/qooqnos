@@ -123,6 +123,7 @@ function toItem(
   if (!condition) reasons.push("missing-condition");
 
   if (reasons.length) return { reasons };
+  if (!currency || !availability || !condition) return { reasons };
 
   const variantSuffix = variant ? variantTitleSuffix(variant) : "";
   const title = truncate(
