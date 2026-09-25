@@ -686,12 +686,13 @@ export default {
     await processIntegration(env, now);
     await processAnalyticsAggregates(env, now);
     if (database) {
+      const indexNow = buildSeoIndexNowConfig(env);
       await processSeoPublicationJobs(
         database,
         now,
         25,
         env.SEO_CANONICAL_BASE_URL ?? "https://qooqnos.com",
-        { ...(buildSeoIndexNowConfig(env) ? { indexNow: buildSeoIndexNowConfig(env) } : {}) },
+        { ...(indexNow ? { indexNow } : {}) },
       );
       if (env.ENVIRONMENT === "production") {
         const crawlerLimit = Number(env.SEO_CRAWLER_SAMPLE_LIMIT ?? "25");
