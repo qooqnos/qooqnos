@@ -1776,3 +1776,11 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added runtime configuration: \`SEO_SEARCH_ENGINE_MAX_ATTEMPTS\`, \`SEO_SEARCH_ENGINE_TIMEOUT_MS\`, \`SEO_SEARCH_ENGINE_BASE_DELAY_MS\`, \`SEO_SEARCH_ENGINE_MAX_DELAY_MS\`.
 - Added retry/audit and gateway regression tests.
 - Commits: \`ffa11d359e6d4f846d3b713af5659d5066076455\`, \`1f206b647292a5d57440621a0a53a02c6f6e5c60\`, \`f028d954d819218ffc4bd81e94d1a6229563d70a\`, \`0c18b682ad13c1a8e096b0cb4da82ebe48bce464\`, \`3891092e17c3d34ba376ea1141ebe6928d1d04df\`, \`afac97f545d1a5c09ce90f6d3eb14d99f090fc2\`, \`4cb87b518dd51758277964a0b759b142be2e4562\`, \`b436307d71a8ef20e21bc9ece980d880f8a630c6\`.
+
+
+### Search Engine Gateway routing completion — 2026-09-25
+
+- The authenticated Google/Bing/Yandex control-plane routes now invoke \`SearchEngineActionGateway\`; provider classes are no longer instantiated directly from \`apps/api/src/index.ts\`.
+- Publication-triggered Bing submission and Yandex recrawl already use the same gateway.
+- The control plane therefore has one provider abstraction for capability status, operational actions, retry/timeout behavior and audit hooks.
+- Commit: \`808c5001ad09493981df12951ec7304044a66cff\`.
