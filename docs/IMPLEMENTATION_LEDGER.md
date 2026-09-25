@@ -1764,3 +1764,15 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - ProductGroup nested variants no longer redundantly emit `inProductGroupWithID`; parent `productGroupID` is canonical for the nested representation.
 - Variants without dedicated URLs still receive stable JSON-LD `@id` values derived from the canonical parent URL and variant ID.
 - Production Wrangler rendering now carries optional Merchant Center account/data-source/feed-label/content-language variables.
+
+
+## Search Engine API Reliability + Unified Gateway — 2026-09-25
+
+- Hardened \`packages/seo/src/search-engine-actions.ts\` with bounded retry/backoff, \`Retry-After\` handling, per-attempt timeout, non-blocking transient retry behavior and a non-secret audit hook.
+- Google service-account access tokens are cached for the lifetime of an action adapter instead of being exchanged for every request.
+- Added \`packages/seo/src/search-engine-gateway.ts\` as the unified control-plane abstraction for Google Search Console, Bing Webmaster and Yandex Webmaster actions.
+- SEO publication now routes Bing submission and optional Yandex recrawl through the same gateway contract; authenticated API routes expose gateway-backed capability status.
+- Added authenticated \`GET /api/v1/seo/search-engines/status\` and \`GET /api/v1/seo/search-engines/yandex/indexing-history\`.
+- Added runtime configuration: \`SEO_SEARCH_ENGINE_MAX_ATTEMPTS\`, \`SEO_SEARCH_ENGINE_TIMEOUT_MS\`, \`SEO_SEARCH_ENGINE_BASE_DELAY_MS\`, \`SEO_SEARCH_ENGINE_MAX_DELAY_MS\`.
+- Added retry/audit and gateway regression tests.
+- Commits: \`ffa11d359e6d4f846d3b713af5659d5066076455\`, \`1f206b647292a5d57440621a0a53a02c6f6e5c60\`, \`f028d954d819218ffc4bd81e94d1a6229563d70a\`, \`0c18b682ad13c1a8e096b0cb4da82ebe48bce464\`, \`3891092e17c3d34ba376ea1141ebe6928d1d04df\`, \`afac97f545d1a5c09ce90f6d3eb14d99f090fc2\`, \`4cb87b518dd51758277964a0b759b142be2e4562\`, \`b436307d71a8ef20e21bc9ece980d880f8a630c6\`.
