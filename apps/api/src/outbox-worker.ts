@@ -294,6 +294,8 @@ async function enrichSeoPayload(
           ...(variant.sku ? { sku: variant.sku } : {}),
           attributes: Object.fromEntries(Object.entries(variant.attributes ?? {}).map(([key, value]) => [key, Array.isArray(value) ? value.join(", ") : String(value)])),
         }));
+      const commerceFacts = await catalog.getProductCommerceFacts(context, product.id, event.occurredAt);
+      const variantDimensions = Array.from(new Set(variants.flatMap((variant) => Object.keys(variant.attributes ?? {}))));
       payload.seoEntity = {
         id: product.id,
         type: "Product",
@@ -307,6 +309,10 @@ async function enrichSeoPayload(
         relatedEntityIds: [product.businessId],
         relatedEntities: [{ entityId: product.businessId, relation: "ownedByBusiness" }],
         productGroupId: product.id,
+        ...(variantDimensions.length ? { variantDimensions } : {}),
+        ...(commerceFacts.price !== undefined ? { price: commerceFacts.price } : {}),
+        ...(commerceFacts.currency ? { currency: commerceFacts.currency } : {}),
+        ...(commerceFacts.availability ? { availability: commerceFacts.availability } : {}),
         ...(variants.length ? { productVariants: variants } : {}),
         ...(aggregateRating ? { aggregateRating } : {}),
         updatedAt: product.updatedAt,
