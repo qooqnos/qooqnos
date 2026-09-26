@@ -86,3 +86,14 @@ Current verified architecture state is summarized in \`VERIFICATION.md\` and \`P
 6. Do not turn this file into general documentation.
 7. Detailed architecture belongs in `docs/`.
 8. Implementation-specific operating rules belong in `.claude/skills/`.
+
+
+## Social Commerce UI Product Gate
+
+When working on the customer-facing social commerce experience, read `docs/SOCIAL_COMMERCE_UI_PRODUCT_CONTRACT.md` before changing code.
+
+Phoenix may use familiar social interaction patterns such as Feed, Following, Explore, Create, Activity and Profile, but its content is primarily products and services and its purpose remains intelligent decision, matching and connection.
+
+The Social Commerce UI must reuse canonical Discovery, Catalog, Commerce, Checkout, Trust, Seller AI and Design System capabilities. Do not create a parallel recommendation engine, commerce source of truth, product model, or fabricated personalization signals in the web app.
+
+The first implementation slice must preserve the comparison interaction: selecting two or more comparable products exposes a visible/sticky Compare action without losing browsing context. Instant Buy must reuse the existing canonical checkout/commerce boundary.
