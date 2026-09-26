@@ -73,6 +73,15 @@ function socialTarget(item: DiscoveryResult): { targetType: "product" | "service
   return targetType && targetId ? { targetType, targetId } : null;
 }
 
+async function loadSocialActivity(): Promise<void> {
+  try {
+    const result = await apiJson<{ data: unknown[] }>("/api/v1/social/activity?limit=20");
+    if (result.data.length) showToast(result.data.length + " تعامل اجتماعی در فعالیت‌های ققنوس ثبت شده است.");
+  } catch {
+    // Activity is optional for anonymous/public browsing; no synthetic state is created.
+  }
+}
+
 async function persistSocialAction(action: "like" | "save", item: DiscoveryResult): Promise<void> {
   const target = socialTarget(item);
   if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
