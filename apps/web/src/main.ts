@@ -269,16 +269,19 @@ function normalizePath(path: string): string {
 }
 
 function navigate(path: string): void {
-  const target = normalizePath(path);
-  if (target !== normalizePath(location.pathname) && !routes.some((route) => route.path === target)) {
-    window.location.assign(target);
+  const url = new URL(path, window.location.origin);
+  const targetPath = normalizePath(url.pathname);
+  const targetUrl = targetPath + url.search + url.hash;
+  const currentUrl = normalizePath(location.pathname) + location.search + location.hash;
+  if (targetPath !== normalizePath(location.pathname) && !routes.some((route) => route.path === targetPath)) {
+    window.location.assign(targetUrl);
     return;
   }
-  if (normalizePath(location.pathname) === target) {
+  if (currentUrl === targetUrl) {
     render();
     return;
   }
-  history.pushState({}, "", target);
+  history.pushState({}, "", targetUrl);
   render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
