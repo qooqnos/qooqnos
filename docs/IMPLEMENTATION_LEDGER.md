@@ -1885,3 +1885,9 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Commit: `d2ccca0bbfc448691be6d865be09416cf4328e9f`.
 - Repository workflow defines web verification as `npm --workspace=@qooqnos/web run build`; full repository verification remains `lint`, `typecheck`, `build`, tests, and deployed SPA checks.
 - CI workflow inspection for this commit returned no PR-triggered workflow run, so production verification is still pending.
+
+## Social Commerce Navigation Polish — 2026-09-26
+- Fixed the Social Commerce header so the `Following` tab is visibly active on `/discover?tab=following`, matching the already-active Feed and Explore states.
+- Kept tab routing query-driven; no separate social recommendation/personalization engine was introduced.
+- Commit: `4c54808ecc11bd090796981f4c4ce5215f73de1a`.
+- Backend verification remains pending for real Follow/Like/Comment/Save persistence and differentiated Explore/Following feeds; the current UI must not imply those signals are persisted when no canonical API exists.
