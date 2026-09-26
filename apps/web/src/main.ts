@@ -3016,6 +3016,20 @@ function renderProductStudio(): string {
   `;
 }
 
+function openCreatePostPanel(): void {
+  const overlay = document.createElement("div");
+  overlay.className = "connection-overlay";
+  overlay.innerHTML = '<div class="connection-backdrop" data-close-create-post></div><section class="connection-modal glass-card phoenix-create-post-modal" role="dialog" aria-modal="true"><button class="connection-close" type="button" data-close-create-post aria-label="بستن">×</button><span class="eyebrow"><i></i> Create</span><h2>پست محصول یا خدمت</h2><p>محتوای خام خودت را وارد کن؛ این ورودی می‌تواند بعداً از مسیر Seller AI به عرضه ساختاریافته تبدیل شود.</p><label class="field-label" for="social-post-text">توضیح</label><textarea id="social-post-text" class="studio-input-line" rows="5" placeholder="مثلاً: میز کار چوبی دست‌ساز، مناسب اتاق کوچک..."></textarea><div class="connection-actions"><button class="button button-ghost" type="button" data-close-create-post>انصراف</button><button class="button button-primary" type="button" data-create-post-submit>ادامه</button></div></section>';
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll<HTMLElement>("[data-close-create-post]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
+  overlay.querySelector<HTMLButtonElement>("[data-create-post-submit]")?.addEventListener("click", () => {
+    const value = overlay.querySelector<HTMLTextAreaElement>("#social-post-text")?.value.trim() ?? "";
+    if (!value) { showToast("توضیح محصول یا خدمت را وارد کن."); return; }
+    overlay.remove();
+    navigate("/product-studio");
+  });
+}
+
 function bindDiscoveryResultEvents(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-discovery-index]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -3196,7 +3210,7 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
-  document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);
+  document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);\n  document.querySelectorAll<HTMLButtonElement>("[data-open-create-post]").forEach((button) => button.addEventListener("click", openCreatePostPanel));
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
     if (event.key === "Enter") runDiscovery();
   });
