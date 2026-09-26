@@ -21,6 +21,7 @@ import { FULFILLMENT_MODULE } from "@qooqnos/fulfillment";
 import { CASE_SUPPORT_MODULE } from "@qooqnos/case-support";
 import { TRUST_MODULE } from "@qooqnos/trust";
 import { onboardingModule } from "@qooqnos/onboarding";
+import { SOCIAL_ENGAGEMENT_MODULE } from "@qooqnos/social-engagement";
 import {
   createAuthorizationRegistry,
   AUTHORIZATION_GOVERNANCE_MODULE,
@@ -69,6 +70,7 @@ const modules: readonly RuntimeModule[] = [
   AI_MODULE,
   DOCUMENTS_MODULE,
   SEO_MODULE,
+  SOCIAL_ENGAGEMENT_MODULE,
 ];
 
 const bootPromises = new WeakMap<D1Database, Promise<RuntimeBootResult>>();
