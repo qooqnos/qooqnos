@@ -302,6 +302,7 @@ function render(): void {
   `;
   bindGlobalEvents();
   syncThemeButtons();
+  if (route.path === "/discover" || route.path === "/compare") bindSocialHeaderEvents();
   if (route.path === "/discover") {
     const initialDiscoveryQuery = new URLSearchParams(location.search).get("q")?.trim() ?? "";
     if (initialDiscoveryQuery) void runDiscovery();
@@ -2398,6 +2399,14 @@ async function revokeCurrentSession(): Promise<void> {
 }
 
 
+function bindSocialHeaderEvents(): void {
+  document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]").forEach((button) => button.addEventListener("click", () => {
+    const current = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+    const next: Theme = current === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem(STORAGE.theme, next);
+  }));
+}
 function renderSocialHeader(active: "feed" | "explore"): string {
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
     '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark">ق</span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
