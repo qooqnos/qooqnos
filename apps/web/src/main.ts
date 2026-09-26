@@ -2395,6 +2395,98 @@ async function revokeCurrentSession(): Promise<void> {
   }
 }
 
+
+function renderSocialHeader(active: "feed" | "explore"): string {
+  return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
+    '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark">ق</span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
+    '<nav class="phoenix-social-tabs" aria-label="ناوبری اجتماعی">' +
+    '<a href="/discover" data-nav class="' + (active === "feed" ? "active" : "") + '">برای تو</a>' +
+    '<a href="/discover?tab=following" data-nav>دنبال‌شده‌ها</a>' +
+    '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a></nav>' +
+    '<div class="phoenix-social-actions"><button class="icon-button" type="button" data-open-create-post aria-label="پست جدید">＋</button><button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button></div>' +
+    '</div></header>';
+}
+
+function renderSocialMobileNav(): string {
+  return '<nav class="phoenix-social-mobile-nav" aria-label="ناوبری اجتماعی موبایل">' +
+    '<a href="/discover" data-nav>⌂<small>برای تو</small></a><a href="/discover?tab=explore" data-nav>⌕<small>اکسپلور</small></a>' +
+    '<button type="button" data-open-create-post aria-label="پست جدید">＋</button><a href="/discover?tab=following" data-nav>♡<small>دنبال‌شده</small></a><a href="/account" data-nav>◉<small>پروفایل</small></a></nav>';
+}
+
+function renderSocialPosts(items: DiscoveryResult[]): string {
+  activeDiscoveryItems = items;
+  return items.map((item, index) => {
+    const title = escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول یا خدمت");
+    const description = escapeHtml(item.description ?? item.body ?? "اطلاعات این عرضه در ققنوس ثبت شده است.");
+    const locality = escapeHtml(item.locality ?? item.city ?? "در شبکه ققنوس");
+    const key = item.id ?? item.sourceId ?? "";
+    const compared = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key && Boolean(key));
+    return '<article class="phoenix-post-card">' +
+      '<header class="phoenix-post-author"><span class="phoenix-avatar">' + ["ق","س","ب"][index % 3] + '</span><div><strong>' + (index % 2 ? "استودیو سرو" : "فروشنده ققنوس") + '</strong><small>' + locality + ' · ' + (index % 2 ? "Business" : "Seller") + '</small></div><button type="button" class="post-follow" data-follow="' + escapeAttr(key) + '">دنبال کردن</button></header>' +
+      '<button type="button" class="phoenix-post-media" data-discovery-index="' + index + '" aria-label="' + title + '"><span>' + (index % 2 ? "خدمت" : "محصول") + '</span></button>' +
+      '<div class="phoenix-post-body"><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + (item.price ? Number(item.price).toLocaleString("fa-IR") + " " + escapeHtml(item.currency ?? "تومان") : "برای قیمت بپرس") + '</div>' +
+      '<div class="phoenix-post-actions"><button type="button" data-like="' + escapeAttr(key) + '">♡</button><button type="button" data-comment="' + escapeAttr(key) + '">💬</button><button type="button" data-save="' + escapeAttr(key) + '">🔖</button><button type="button" data-compare="' + escapeAttr(key) + '" class="' + (compared ? "selected" : "") + '">⚖ ' + (compared ? "انتخاب شد" : "مقایسه") + '</button><a class="button button-primary post-buy" href="/checkout?product=' + encodeURIComponent(key) + '" data-nav>خرید آنی</a></div></div></article>';
+  }).join("");
+}
+
+function getCompareItems(): DiscoveryResult[] {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem("phoenix-compare-items") ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((item): item is DiscoveryResult => Boolean(item) && typeof item === "object") : [];
+  } catch { return []; }
+}
+
+function saveCompareItems(items: DiscoveryResult[]): void {
+  localStorage.setItem("phoenix-compare-items", JSON.stringify(items.slice(-4)));
+}
+
+function toggleCompare(item: DiscoveryResult): void {
+  const key = item.id ?? item.sourceId ?? "";
+  if (!key) return;
+  const current = getCompareItems();
+  const exists = current.some((entry) => (entry.id ?? entry.sourceId) === key);
+  if (exists) saveCompareItems(current.filter((entry) => (entry.id ?? entry.sourceId) !== key));
+  else if (current.length < 4) saveCompareItems([...current, item]);
+  else showToast("حداکثر ۴ محصول برای مقایسه انتخاب می‌شود.");
+}
+
+function toggleCompareByKey(key: string): void {
+  const item = activeDiscoveryItems.find((entry) => (entry.id ?? entry.sourceId) === key);
+  if (item) toggleCompare(item);
+}
+
+function renderCompareTray(): void {
+  const host = document.querySelector<HTMLElement>("#phoenix-compare-tray");
+  if (!host) return;
+  const items = getCompareItems();
+  host.innerHTML = items.length ? '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items">' +
+    items.map((item) => '<span>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '<button type="button" data-remove-compare="' + escapeAttr(item.id ?? item.sourceId ?? "") + '" aria-label="حذف">×</button></span>').join("") +
+    '</div><button class="button button-primary" type="button" data-open-compare>⚖ مقایسه ' + items.length + ' محصول</button></div>' : "";
+  host.querySelectorAll<HTMLButtonElement>("[data-remove-compare]").forEach((button) => button.addEventListener("click", () => {
+    toggleCompareByKey(button.dataset.removeCompare ?? "");
+    renderCompareTray();
+    const results = document.querySelector<HTMLElement>("#discovery-results");
+    if (results) { results.innerHTML = renderSocialPosts(activeDiscoveryItems); bindDiscoveryResultEvents(); }
+  }));
+  host.querySelector<HTMLButtonElement>("[data-open-compare]")?.addEventListener("click", () => navigate("/compare"));
+}
+
+function renderCompare(): string {
+  const items = getCompareItems();
+  if (items.length < 2) return '<div class="phoenix-compare-page"><div class="phoenix-section-heading"><span class="phoenix-kicker">Compare</span><h1>مقایسه محصولات</h1><p>حداقل دو محصول را از فید انتخاب کن.</p></div><div class="glass-card phoenix-compare-empty"><strong>هنوز محصول کافی برای مقایسه انتخاب نشده است.</strong><p>به اکسپلور برگرد و روی «مقایسه» محصولات موردنظر بزن.</p><a class="button button-primary" href="/discover" data-nav>بازگشت به کشف</a></div></div>';
+  const rows = [
+    ["نوع", (item: DiscoveryResult) => item.sourceType ?? "product"],
+    ["قیمت", (item: DiscoveryResult) => item.price ? Number(item.price).toLocaleString("fa-IR") + " " + (item.currency ?? "تومان") : "استعلام قیمت"],
+    ["امتیاز", (item: DiscoveryResult) => item.rating ? Number(item.rating).toFixed(1) : "—"],
+    ["موقعیت", (item: DiscoveryResult) => item.locality ?? item.city ?? "—"],
+    ["توضیح", (item: DiscoveryResult) => item.description ?? item.body ?? "—"],
+  ];
+  return '<div class="phoenix-compare-page"><div class="phoenix-section-heading"><span class="phoenix-kicker">Compare</span><h1>مقایسه محصولات</h1><p>ویژگی‌های موجود را کنار هم ببین؛ ققنوس اطلاعاتی را که منبع canonical ندارد حدس نمی‌زند.</p></div>' +
+    '<div class="phoenix-compare-table"><div class="compare-row compare-head"><span>ویژگی</span>' + items.map((item) => '<strong>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '</strong>').join("") + '</div>' +
+    rows.map(([label, getter]) => '<div class="compare-row"><span>' + label + '</span>' + items.map((item) => '<span>' + escapeHtml(String((getter as (item: DiscoveryResult) => unknown)(item))) + '</span>').join("") + '</div>').join("") +
+    '</div><div class="phoenix-compare-actions"><a class="button button-primary" href="/checkout?product=' + encodeURIComponent(items[0].id ?? items[0].sourceId ?? "") + '" data-nav>خرید آنی</a><a class="button button-ghost" href="/discover" data-nav>ادامه کشف</a><button class="button button-ghost" type="button" data-clear-compare>پاک کردن مقایسه</button></div></div>';
+}
+
 function renderDiscover(): string {
   const params = new URLSearchParams(location.search);
   const initialQuery = params.get("q") ?? "";
