@@ -1877,3 +1877,11 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Existing Discovery API remains the canonical live discovery boundary; no recommendation engine or fabricated personalization backend was introduced.
 - Implementation commits: `ded0862` (contract), `fd9dc71` (CLAUDE gate), `1a75314` + `ea8bddb` + `f064f37` + `18a83ef` + `e449150` + `6187929` (web), `0ede6fc` + `c027a32` (styles).
 - Verification gate: repository build/type/E2E and visual inspection should be run against the updated main branch before calling this slice production-verified.
+
+
+## Social Commerce Navigation Verification — 2026-09-26
+- Fixed SPA navigation so query strings and hashes are preserved when using `data-nav` links.
+- This is required for Social Commerce tabs (`/discover?tab=following`, `/discover?tab=explore`) and Instant Buy (`/checkout?product=...`) to retain their route parameters instead of silently dropping them.
+- Commit: `d2ccca0bbfc448691be6d865be09416cf4328e9f`.
+- Repository workflow defines web verification as `npm --workspace=@qooqnos/web run build`; full repository verification remains `lint`, `typecheck`, `build`, tests, and deployed SPA checks.
+- CI workflow inspection for this commit returned no PR-triggered workflow run, so production verification is still pending.
