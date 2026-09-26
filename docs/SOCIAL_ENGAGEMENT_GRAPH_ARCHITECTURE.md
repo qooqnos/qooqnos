@@ -67,6 +67,11 @@ Consumers use the outbox event ID for idempotency. Events are inputs to preferen
 
 The API returns canonical persisted state. UI-only toasts are not a substitute once this boundary is available.
 
+## Activity Feed
+- `GET /api/v1/social/activity` is a canonical activity read boundary for the authenticated actor.
+- V1 activity is derived from durable outbox events; it does not create a second social timeline store.
+- Activity consumers must treat event payloads as signals, not ranking instructions.
+
 ## Frontend Integration Gate
 The Social Commerce UI may call this boundary only after the API capability is registered and verified. It must not recreate social state in localStorage.
 Compare selection remains client-side because it is browsing state, not a social engagement record.
