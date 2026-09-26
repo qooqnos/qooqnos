@@ -1891,3 +1891,9 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Kept tab routing query-driven; no separate social recommendation/personalization engine was introduced.
 - Commit: `4c54808ecc11bd090796981f4c4ce5215f73de1a`.
 - Backend verification remains pending for real Follow/Like/Comment/Save persistence and differentiated Explore/Following feeds; the current UI must not imply those signals are persisted when no canonical API exists.
+
+## Social Action Truthfulness — 2026-09-26
+- Updated Follow/Like/Comment/Save UI feedback so it no longer claims persistence in a backend social layer that does not currently exist.
+- The UI now explicitly states that these interactions are presentation-only until a canonical Social Engagement capability is implemented.
+- Compare remains locally persistent because it is an intentional UI selection state; Instant Buy continues through the canonical Checkout route.
+- Commit: `c98736c92ff8af73cd595067d18d92bc7c8050b6`.
