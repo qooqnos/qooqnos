@@ -2459,9 +2459,10 @@ function renderCompareTray(): void {
   const host = document.querySelector<HTMLElement>("#phoenix-compare-tray");
   if (!host) return;
   const items = getCompareItems();
-  host.innerHTML = items.length ? '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items">' +
+  if (items.length < 2) { host.innerHTML = ""; return; }
+  host.innerHTML = '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items">' +
     items.map((item) => '<span>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '<button type="button" data-remove-compare="' + escapeAttr(item.id ?? item.sourceId ?? "") + '" aria-label="حذف">×</button></span>').join("") +
-    '</div><button class="button button-primary" type="button" data-open-compare>⚖ مقایسه ' + items.length + ' محصول</button></div>' : "";
+    '</div><button class="button button-primary" type="button" data-open-compare>⚖ مقایسه ' + items.length + ' محصول</button></div>';
   host.querySelectorAll<HTMLButtonElement>("[data-remove-compare]").forEach((button) => button.addEventListener("click", () => {
     toggleCompareByKey(button.dataset.removeCompare ?? "");
     renderCompareTray();
