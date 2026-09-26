@@ -2490,30 +2490,14 @@ function renderCompare(): string {
 function renderDiscover(): string {
   const params = new URLSearchParams(location.search);
   const initialQuery = params.get("q") ?? "";
-  return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Discovery</span><h1>چیزی را که می‌خواهید، <em>پیدا کنید.</em></h1><p>جست‌وجو بر اساس نیاز، زمینه و عرضه واقعی ققنوس.</p></div>
-      <div class="heading-actions"><button class="button button-ghost" type="button" data-toast="فیلترها به‌زودی به Discovery اضافه می‌شوند.">فیلترها</button></div>
-    </section>
-    <section class="discover-search glass-card">
-      <div class="search-main"><span>⌕</span><input id="discover-query" type="search" autocomplete="off" value="${escapeAttr(initialQuery)}" placeholder="مثلاً یک کافه آرام برای جلسه عصر..." /></div>
-      <button class="button button-primary" type="button" data-run-discovery>کشف کن <span>→</span></button>
-    </section>
-    <div class="discover-layout">
-      <div class="results-column">
-        <div class="results-header"><strong id="results-title">پیشنهادهای امروز</strong><span id="results-meta">نمونه نمایشی</span><button class="shortlist-counter" type="button" aria-label="فهرست انتخابی">انتخابی‌ها <b id="shortlist-count">0</b></button></div>
-        <div id="discovery-results" class="results-grid">${renderResultCards(demoBusinesses)}</div>
-      </div>
-      <aside class="insight-card glass-card">
-        <div class="insight-icon">✦</div>
-        <span class="section-kicker">هوش ققنوس</span>
-        <h3>به‌جای رتبه ساده، زمینه را هم می‌بینیم.</h3>
-        <p>در نسخه زنده، Discovery از موجودیت‌های مجاز، مکان، اعتماد، دسترسی و سیگنال‌های matching برای ساخت نتایج استفاده می‌کند.</p>
-        <div class="insight-list"><span>✓ چندمعیاره</span><span>✓ tenant-aware</span><span>✓ قابل ردیابی</span></div>
-      </aside>
-    </div>
-  `;
+  const tab = params.get("tab") ?? "for-you";
+  const title = tab === "following" ? "چیزهایی که دنبال می‌کنی." : tab === "explore" ? "چیزهایی که احتمالاً به کارت می‌آیند." : "برای تو، بر اساس نیاز و علاقه‌ات.";
+  return '<div class="phoenix-social-page">' +
+    '<section class="phoenix-social-intro"><div><span class="phoenix-kicker">Phoenix ' + (tab === "explore" ? "Explore" : tab === "following" ? "Following" : "Feed") + '</span><h1>' + title + '</h1><p>محصول و خدمت را مثل محتوای اجتماعی کشف کن؛ بعد مقایسه، تصمیم و اقدام را همان‌جا انجام بده.</p></div><button class="button button-primary" type="button" data-open-create-post>＋ پست محصول / خدمت</button></section>' +
+    '<section class="phoenix-social-search glass-card"><span>⌕</span><input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="چه چیزی می‌خواهی پیدا کنی؟" /><button class="button button-primary" type="button" data-run-discovery>کشف کن</button></section>' +
+    '<div id="discovery-results" class="phoenix-social-feed">' + renderSocialPosts(demoBusinesses) + '</div><div id="phoenix-compare-tray"></div></div>';
 }
+
 
 function getShortlist(): DiscoveryResult[] {
   try {
@@ -3038,6 +3022,23 @@ function bindDiscoveryResultEvents(): void {
       const index = Number(button.dataset.discoveryIndex);
       const item = Number.isInteger(index) ? activeDiscoveryItems[index] : undefined;
       if (item) openDiscoveryResultPanel(item);
+    });
+  });
+  document.querySelectorAll<HTMLButtonElement>("[data-compare]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleCompareByKey(button.dataset.compare ?? "");
+      const results = document.querySelector<HTMLElement>("#discovery-results");
+      if (results) results.innerHTML = renderSocialPosts(activeDiscoveryItems);
+      bindDiscoveryResultEvents();
+      renderCompareTray();
+    });
+  });
+  document.querySelectorAll<HTMLButtonElement>("[data-follow],[data-like],[data-save],[data-comment]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const action = button.dataset.follow !== undefined ? "دنبال کردن" : button.dataset.like !== undefined ? "پسندیدن" : button.dataset.save !== undefined ? "ذخیره کردن" : "نظر";
+      showToast(action + " این پست در لایه اجتماعی ثبت شد.");
     });
   });
 }
