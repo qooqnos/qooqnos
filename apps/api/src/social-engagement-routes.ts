@@ -7,6 +7,9 @@ import { json } from "./http";
 export function registerSocialEngagementRoutes(router: ApiRouter, database: D1Database | undefined): void {
   const repo = () => { if (!database) throw new Error("Database is not configured"); return new SocialEngagementRepository(database); };
 
+  router.register({ method:"GET", path:"/api/v1/social/activity", module:"social-engagement", operation:"social.activity.list", requireAuthentication:true, requireWorkspace:false,
+    handler:async ({context,request})=>{const limit=Number(new URL(request.url).searchParams.get("limit") ?? "20");return json({data:await repo().activity(context,Number.isFinite(limit)?limit:20)},200,context.requestId)}
+  });
   router.register({ method:"POST", path:"/api/v1/social/follows", module:"social-engagement", operation:"social.follow.create", requireAuthentication:true, requireWorkspace:false,
     handler:async ({context,request})=>{const b=await object(request);const r=await repo().follow(context,{id:brandId<EntityId>(crypto.randomUUID()),targetType:followTarget(b.targetType),targetId:brandId<EntityId>(stringValue(b.targetId)),now:new Date().toISOString()});return json({data:r},201,context.requestId);}
   });
