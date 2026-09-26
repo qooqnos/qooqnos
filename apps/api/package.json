@@ -26,6 +26,7 @@
     "@qooqnos/discovery": "*",
     "@qooqnos/onboarding": "*",
     "@qooqnos/runtime": "*",
-    "@qooqnos/api-contracts": "*"
+    "@qooqnos/api-contracts": "*",
+    "@qooqnos/social-engagement": "*"
   }
 }
