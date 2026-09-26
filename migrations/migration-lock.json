@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T18:41:51.140Z",
+  "generatedAt": "2026-09-26T07:50:00.000Z",
   "migrations": [
     {
       "id": "0001_foundation",
@@ -630,6 +630,13 @@
       "filename": "0093_commerce_fulfillment_policies.sql",
       "moduleId": "commerce",
       "checksum": "0e9f19efe9f4c2e48f8fb7b4dc842f88007926560838817c139b2790b74225a3"
+    },
+    {
+      "id": "0094_social_engagement_graph",
+      "version": 94,
+      "moduleId": "social-engagement",
+      "checksum": "edc0407e890b39c9ed13603e342d4f20c7833a14cbe885707a448912acd5b545",
+      "filename": "0094_social_engagement_graph.sql"
     }
   ]
 }
