@@ -1862,3 +1862,18 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added reduced-motion handling for Homepage interaction polish.
 - Commits: `d908dcb00cc45a32ea665c1460c995cef4090015`, `2e777e4aa7961bc30d7502ed3105dd07e71b90aa`.
 - Verification gate remains: repository web build/type/E2E and visual preview inspection.
+
+
+## Social Commerce UI — 2026-09-26
+- Status: **IMPLEMENTED — first UI slice**
+- Product contract: `docs/SOCIAL_COMMERCE_UI_PRODUCT_CONTRACT.md`
+- Added the Social Commerce UI contract covering Feed, Following, Explore, Create/Post, product/service posts, Instant Buy, Compare, Intent Board direction and canonical recommendation/commerce boundaries.
+- Added the Social Commerce Product Gate to `CLAUDE.md`.
+- Added a social shell for customer-facing Discovery with Feed/Explore/Following navigation and mobile bottom navigation.
+- Discovery cards now present as social product/service posts with Follow, Like, Comment, Save, Compare and Instant Buy actions.
+- Added persistent comparison selection using local browser state, capped at four items. The Compare action is intentionally shown only after at least two products are selected.
+- Added `/compare` with a side-by-side comparison surface and canonical Checkout navigation for the selected product.
+- Added a Create/Post entry point that routes into the existing Seller/Product Studio boundary instead of creating a parallel publishing system.
+- Existing Discovery API remains the canonical live discovery boundary; no recommendation engine or fabricated personalization backend was introduced.
+- Implementation commits: `ded0862` (contract), `fd9dc71` (CLAUDE gate), `1a75314` + `ea8bddb` + `f064f37` + `18a83ef` + `e449150` + `6187929` (web), `0ede6fc` + `c027a32` (styles).
+- Verification gate: repository build/type/E2E and visual inspection should be run against the updated main branch before calling this slice production-verified.
