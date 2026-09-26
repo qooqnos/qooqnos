@@ -3067,7 +3067,7 @@ function bindDiscoveryResultEvents(): void {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       const action = button.dataset.follow !== undefined ? "دنبال کردن" : button.dataset.like !== undefined ? "پسندیدن" : button.dataset.save !== undefined ? "ذخیره کردن" : "نظر";
-      showToast(action + " این پست در لایه اجتماعی ثبت شد.");
+      showToast(action + " فعلاً در رابط کاربری نمایش داده می‌شود؛ اتصال به Social Engagement canonical هنوز انجام نشده است.");
     });
   });
 }
