@@ -3285,17 +3285,17 @@ async function runDiscovery(): Promise<void> {
     const data = await apiJson<{ data: DiscoveryResult[] }>(`/api/v1/discovery/search?${params.toString()}`);
     const items = Array.isArray(data.data) ? data.data : [];
     if (items.length === 0) {
-      resultHost.innerHTML = renderResultCards(demoBusinesses);
+      resultHost.innerHTML = renderSocialPosts(demoBusinesses);
       meta.textContent = "نمونه جایگزین؛ داده‌ای از API برنگشت";
       showToast("نتیجه‌ای از Discovery برنگشت؛ نتایج نمونه نمایش داده شدند.");
       bindDiscoveryResultEvents();
       return;
     }
-    resultHost.innerHTML = renderResultCards(items);
+    resultHost.innerHTML = renderSocialPosts(items);
     meta.textContent = `${items.length} نتیجه`;
     bindDiscoveryResultEvents();
   } catch (error) {
-    resultHost.innerHTML = renderResultCards(demoBusinesses);
+    resultHost.innerHTML = renderSocialPosts(demoBusinesses);
     meta.textContent = "Demo mode";
     showToast(error instanceof Error ? error.message : "اتصال به Discovery برقرار نشد؛ حالت نمایشی فعال شد.");
     bindDiscoveryResultEvents();
