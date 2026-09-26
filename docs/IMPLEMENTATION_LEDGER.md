@@ -1897,3 +1897,17 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - The UI now explicitly states that these interactions are presentation-only until a canonical Social Engagement capability is implemented.
 - Compare remains locally persistent because it is an intentional UI selection state; Instant Buy continues through the canonical Checkout route.
 - Commit: `c98736c92ff8af73cd595067d18d92bc7c8050b6`.
+
+
+## Canonical Social Engagement / Graph Backend — 2026-09-26
+- Added canonical product/architecture contract: `docs/SOCIAL_ENGAGEMENT_GRAPH_ARCHITECTURE.md`.
+- Added persistent Social Follow, Like/Save engagement, and Comment schema with tenant/workspace guards: `migrations/0094_social_engagement_graph.sql`.
+- Registered migration 0094 and checksum in `apps/api/src/migrations.ts` and `migrations/migration-lock.json`.
+- Added `@qooqnos/social-engagement` package with canonical repository and runtime module manifest.
+- Added API routes for Follow, Like, Save and Comment mutations under `/api/v1/social/*`.
+- State changes are paired transactionally with canonical outbox events.
+- Actor identity is taken from `RequestContext.actorId`; CRM customer relationships remain separate.
+- Social target validation currently supports published Business/Product/Service targets. Generic Post targets remain intentionally blocked until a canonical Phoenix content/supply entity exists.
+- Frontend Follow/Like/Save/Comment wiring remains presentation-only until API integration verification is completed.
+- Commits: `b4b601f6`, `b5b4f8d9`, `9aa7b19b`, `9e7cfee7`, `d966c24c`, `d4d7041f`, `1fbef816`, `35e37672`, `793e6721`, `f28c7f99`, `9766749f`, `1d729d67`, `425be46d`, `b42d52da`.
+- Verification still required: repository/package typecheck, API build/tests, migration verification, runtime registry verification, then real frontend API integration.
