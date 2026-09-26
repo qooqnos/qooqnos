@@ -294,7 +294,7 @@ function render(): void {
   const isSocial = route.path === "/discover" || route.path === "/compare";
   appRoot.innerHTML = `
     <div class="app-shell ${isHome ? "home-shell" : ""} ${isSocial ? "social-shell" : ""}">
-      ${isHome ? renderPublicHeader() : isSocial ? renderSocialHeader(route.path === "/discover" && new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : "feed") : renderHeader(route)}
+      ${isHome ? renderPublicHeader() : isSocial ? renderSocialHeader(route.path === "/discover" ? (new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : new URLSearchParams(location.search).get("tab") === "following" ? "following" : "feed") : "feed") : renderHeader(route)}
       <div class="app-body">
         ${isHome || isSocial ? "" : renderSidebar(route)}
         <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : ""}">${page}</main>
@@ -2410,12 +2410,12 @@ function bindSocialHeaderEvents(): void {
     localStorage.setItem(STORAGE.theme, next);
   }));
 }
-function renderSocialHeader(active: "feed" | "explore"): string {
+function renderSocialHeader(active: "feed" | "following" | "explore"): string {
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
     '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark">ق</span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
     '<nav class="phoenix-social-tabs" aria-label="ناوبری اجتماعی">' +
     '<a href="/discover" data-nav class="' + (active === "feed" ? "active" : "") + '">برای تو</a>' +
-    '<a href="/discover?tab=following" data-nav>دنبال‌شده‌ها</a>' +
+    '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">دنبال‌شده‌ها</a>' +
     '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a></nav>' +
     '<div class="phoenix-social-actions"><button class="icon-button" type="button" data-open-create-post aria-label="پست جدید">＋</button><button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button></div>' +
     '</div></header>';
