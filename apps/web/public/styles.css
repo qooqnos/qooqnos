@@ -1486,3 +1486,69 @@ button:disabled, .button:disabled { cursor: not-allowed; }
 
 .phoenix-demand-count { color:var(--faint); font-size:7px; direction:ltr; min-width:18px; text-align:center; }
 .phoenix-demand-footer { flex-wrap:wrap; }
+
+/* Phoenix Social Commerce UI */
+.social-shell .app-body { display: block; }
+.social-shell .social-page-content { width: 100%; max-width: none; padding: 0; }
+.phoenix-social-header { position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(18px); }
+.phoenix-social-header-inner { width: min(1180px, calc(100% - 32px)); margin: 0 auto; min-height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.phoenix-social-tabs { display: flex; gap: 28px; align-items: center; }
+.phoenix-social-tabs a { color: var(--muted); text-decoration: none; font-weight: 700; padding: 22px 4px 18px; border-bottom: 2px solid transparent; }
+.phoenix-social-tabs a.active, .phoenix-social-tabs a:hover { color: var(--text); border-bottom-color: var(--accent); }
+.phoenix-social-actions { display: flex; gap: 8px; }
+.phoenix-social-page { min-height: calc(100vh - 66px); background: var(--bg); padding: 34px 16px 100px; }
+.phoenix-social-intro { width: min(760px, 100%); margin: 0 auto 18px; display: flex; align-items: end; justify-content: space-between; gap: 20px; }
+.phoenix-social-intro h1 { margin: 8px 0 8px; font-size: clamp(25px, 4vw, 38px); letter-spacing: -.03em; }
+.phoenix-social-intro p { margin: 0; color: var(--muted); line-height: 1.8; }
+.phoenix-social-search { width: min(760px, 100%); margin: 0 auto 24px; display: flex; align-items: center; gap: 10px; padding: 9px; }
+.phoenix-social-search > span { font-size: 22px; color: var(--muted); padding-inline: 10px; }
+.phoenix-social-search input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--text); outline: 0; font: inherit; padding: 12px 4px; }
+.phoenix-social-feed { width: min(620px, 100%); margin: 0 auto; display: grid; gap: 22px; }
+.phoenix-post-card { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 12px 34px rgba(0,0,0,.07); }
+.phoenix-post-author { display: flex; align-items: center; gap: 11px; padding: 13px 14px; }
+.phoenix-avatar { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--line); font-weight: 800; }
+.phoenix-post-author > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.phoenix-post-author small { color: var(--muted); }
+.post-follow { border: 0; background: transparent; color: var(--accent); font-weight: 800; cursor: pointer; }
+.phoenix-post-media { width: 100%; aspect-ratio: 1 / .82; border: 0; cursor: pointer; display: grid; place-items: center; color: rgba(255,255,255,.92); background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.14), transparent 28%), linear-gradient(135deg, #223c63, #151d32); font-size: 34px; font-weight: 900; }
+.phoenix-post-media:hover { filter: brightness(1.06); }
+.phoenix-post-body { padding: 15px 16px 17px; }
+.phoenix-post-body h2 { margin: 0 0 7px; font-size: 18px; }
+.phoenix-post-body p { margin: 0 0 10px; color: var(--muted); line-height: 1.75; }
+.phoenix-post-price { font-weight: 900; margin-bottom: 13px; }
+.phoenix-post-actions { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.phoenix-post-actions > button { min-height: 38px; padding: 0 11px; border: 1px solid var(--line); border-radius: 11px; background: transparent; color: var(--text); cursor: pointer; }
+.phoenix-post-actions > button.selected { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.phoenix-post-actions .post-buy { margin-inline-start: auto; }
+.phoenix-compare-tray { position: sticky; bottom: 16px; z-index: 20; width: min(620px, 100%); margin: 20px auto 0; padding: 10px; display: flex; align-items: center; gap: 10px; box-shadow: 0 18px 45px rgba(0,0,0,.16); }
+.phoenix-compare-items { display: flex; gap: 6px; flex: 1; overflow: auto; }
+.phoenix-compare-items span { white-space: nowrap; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); font-size: 12px; }
+.phoenix-compare-items button { border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.phoenix-compare-page { width: min(1000px, 100%); margin: 0 auto; padding: 42px 16px 100px; }
+.phoenix-compare-table { overflow: auto; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
+.compare-row { min-width: 720px; display: grid; grid-template-columns: 130px repeat(4, minmax(150px, 1fr)); border-bottom: 1px solid var(--line); }
+.compare-row:last-child { border-bottom: 0; }
+.compare-row > * { padding: 15px; border-inline-start: 1px solid var(--line); line-height: 1.7; }
+.compare-row > :first-child { border-inline-start: 0; color: var(--muted); font-weight: 700; }
+.compare-head { background: var(--surface-2); }
+.phoenix-compare-actions { display: flex; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
+.phoenix-compare-empty { width: min(620px, 100%); margin: 20px auto; padding: 28px; text-align: center; }
+.phoenix-compare-empty p { color: var(--muted); line-height: 1.8; }
+.phoenix-social-mobile-nav { display: none; }
+.phoenix-create-post-modal textarea { width: 100%; box-sizing: border-box; resize: vertical; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); color: var(--text); padding: 12px; font: inherit; }
+@media (max-width: 720px) {
+  .phoenix-social-header-inner { width: calc(100% - 20px); min-height: 58px; }
+  .phoenix-social-header .phoenix-public-brand small { display: none; }
+  .phoenix-social-tabs { display: none; }
+  .phoenix-social-page { padding: 22px 10px 86px; }
+  .phoenix-social-intro { display: block; }
+  .phoenix-social-intro .button { margin-top: 14px; width: 100%; }
+  .phoenix-social-search { margin-bottom: 16px; }
+  .phoenix-post-card { border-radius: 16px; }
+  .phoenix-post-actions .post-buy { width: 100%; margin-inline-start: 0; }
+  .phoenix-social-mobile-nav { position: fixed; display: flex; left: 0; right: 0; bottom: 0; z-index: 50; min-height: 64px; align-items: center; justify-content: space-around; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(18px); }
+  .phoenix-social-mobile-nav a { color: var(--muted); text-decoration: none; display: grid; justify-items: center; gap: 2px; font-size: 20px; }
+  .phoenix-social-mobile-nav small { font-size: 9px; }
+  .phoenix-social-mobile-nav button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--accent); color: var(--on-accent); font-size: 24px; }
+  .phoenix-compare-tray { bottom: 76px; }
+}
