@@ -1925,3 +1925,15 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added authenticated Social Activity surface backed by `GET /api/v1/social/activity`; no second timeline store or synthetic activity state was introduced.
 - Commit: `049ae39eb1ddc31e703434047b33e56fd5f5e98e`.
 - Verification status: repository structure and TypeScript contracts were inspected; full local `lint`, `typecheck`, `build`, migration verification and tests still require execution in the repository/CI environment.
+
+
+## Master UI Product Contract — 2026-09-26
+- Added the comprehensive canonical UI/product contract: `docs/PHOENIX_MASTER_UI_PRODUCT_CONTRACT.md`.
+- The contract translates the supplied multi-screen UI reference into implementation rules for Individual, Organization/Business and Consumer Outcome experiences.
+- Defines the shared Business Workspace model: Business Type → Capabilities → Modules → Role Permissions → Vertical Workflow, avoiding one duplicated dashboard application per occupation.
+- Defines the occupation-specific composition model for clinic, shoe retail, restaurant, salon and future verticals.
+- Captures the reference's major flows: Ask Phoenix, Create Content, Commercial Content, Transaction/Deal, Purchase, Booking, Consultation, Team/Management, Payments, Activity, Profile and Social Commerce.
+- Establishes UI ownership, capability-driven navigation, responsive/RTL/accessibility rules, AI side-effect confirmation, medical safety boundary, state handling and anti-patterns.
+- Existing canonical contracts remain authoritative for Homepage, Customer Experience, Social Commerce, Authorization, Business Onboarding and module/runtime capabilities.
+- Documentation commit: `4c00828dc463f5e4bc4a19cadeec6f82761517cf`.
+- Implementation status: documentation contract complete; UI implementation should continue from this contract in coherent slices. Runtime/build/visual verification remains a separate gate.
