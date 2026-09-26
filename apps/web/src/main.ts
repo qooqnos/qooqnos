@@ -23,6 +23,8 @@ type DiscoveryResult = {
   rating?: number | null;
   score?: number | null;
   metadata?: Record<string, unknown> | null;
+  price?: number | null;
+  currency?: string | null;
 };
 
 const STORAGE = {
