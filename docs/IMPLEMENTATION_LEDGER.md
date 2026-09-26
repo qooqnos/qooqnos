@@ -1915,3 +1915,6 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Web social actions now call canonical Social Engagement for supported canonical Product/Service targets; Follow uses canonical Business identity when supplied by Discovery metadata; unsupported synthetic targets remain explicitly non-persistent.
 - Web API helper now supports DELETE for the forthcoming state-removal flows.
 - Commit: `1f2d446b`.
+
+- Added canonical authenticated Social Activity read endpoint backed by durable outbox events; frontend can consume it without introducing a second timeline store.
+- Commits: `6c17100b`, `f6d53cee`, `0f5e3bb0`, `ccd9d86e`.
