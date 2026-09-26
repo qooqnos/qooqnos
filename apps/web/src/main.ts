@@ -187,6 +187,7 @@ const appRoot = app;
 const routes: Route[] = [
   { path: "/", label: "خانه", icon: "⌂", render: renderHome },
   { path: "/discover", label: "کشف", icon: "⌕", render: renderDiscover },
+  { path: "/compare", label: "مقایسه", icon: "⚖", render: renderCompare },
   { path: "/business", label: "کسب‌وکار", icon: "▦", render: renderBusiness },
   { path: "/product-studio", label: "استودیو محصول", icon: "✦", render: renderProductStudio },
   { path: "/account", label: "حساب", icon: "◉", render: renderAccount },
@@ -285,14 +286,15 @@ function render(): void {
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/";
+  const isSocial = route.path === "/discover" || route.path === "/compare";
   appRoot.innerHTML = `
-    <div class="app-shell ${isHome ? "home-shell" : ""}">
-      ${isHome ? renderPublicHeader() : renderHeader(route)}
+    <div class="app-shell ${isHome ? "home-shell" : ""} ${isSocial ? "social-shell" : ""}">
+      ${isHome ? renderPublicHeader() : isSocial ? renderSocialHeader(route.path === "/discover" && new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : "feed") : renderHeader(route)}
       <div class="app-body">
-        ${isHome ? "" : renderSidebar(route)}
-        <main id="main" class="page-content ${isHome ? "home-page-content" : ""}">${page}</main>
+        ${isHome || isSocial ? "" : renderSidebar(route)}
+        <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : ""}">${page}</main>
       </div>
-      ${isHome ? "" : renderMobileNav(route)}
+      ${isHome ? "" : isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
       ${renderToastHost()}
     </div>
   `;
@@ -301,6 +303,11 @@ function render(): void {
   if (route.path === "/discover") {
     const initialDiscoveryQuery = new URLSearchParams(location.search).get("q")?.trim() ?? "";
     if (initialDiscoveryQuery) void runDiscovery();
+    bindDiscoveryResultEvents();
+    renderCompareTray();
+  }
+  if (route.path === "/compare") {
+    document.querySelector<HTMLButtonElement>("[data-clear-compare]")?.addEventListener("click", () => { localStorage.removeItem("phoenix-compare-items"); render(); });
   }
   void loadShellContext();
   if (route.path === "/") bindHomeEvents();
