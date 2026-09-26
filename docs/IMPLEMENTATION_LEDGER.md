@@ -1918,3 +1918,10 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 
 - Added canonical authenticated Social Activity read endpoint backed by durable outbox events; frontend can consume it without introducing a second timeline store.
 - Commits: `6c17100b`, `f6d53cee`, `0f5e3bb0`, `ccd9d86e`.
+
+
+## Social Engagement UI Completion — 2026-09-26
+- Like, Save and Follow now toggle through canonical POST/DELETE Social Engagement endpoints; UI state changes only after successful persistence.
+- Added authenticated Social Activity surface backed by `GET /api/v1/social/activity`; no second timeline store or synthetic activity state was introduced.
+- Commit: `049ae39eb1ddc31e703434047b33e56fd5f5e98e`.
+- Verification status: repository structure and TypeScript contracts were inspected; full local `lint`, `typecheck`, `build`, migration verification and tests still require execution in the repository/CI environment.
