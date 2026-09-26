@@ -36,7 +36,7 @@ const STORAGE = {
 };
 
 type ApiOptions = {
-  method?: "GET" | "POST" | "PATCH";
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   headers?: Record<string, string>;
 };
@@ -65,6 +65,36 @@ let shellWorkspaces: WorkspaceSummary[] = [];
 let shellNotifications: NotificationView[] = [];
 let shellContext: { actorId?: string; tenantId?: string; workspaceId?: string } = {};
 let shellLoadInFlight = false;
+const socialActionIds = new Map<string, string>();
+
+function socialTarget(item: DiscoveryResult): { targetType: "product" | "service"; targetId: string } | null {
+  const targetType = item.sourceType === "product" || item.sourceType === "service" ? item.sourceType : item.metadata && typeof item.metadata.offeringType === "string" && (item.metadata.offeringType === "product" || item.metadata.offeringType === "service") ? item.metadata.offeringType : undefined;
+  const targetId = item.sourceId ?? item.id;
+  return targetType && targetId ? { targetType, targetId } : null;
+}
+
+async function persistSocialAction(action: "like" | "save", item: DiscoveryResult): Promise<void> {
+  const target = socialTarget(item);
+  if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
+  const result = await apiJson<{ data: { id: string } }>("/api/v1/social/" + (action === "like" ? "likes" : "saves"), { method: "POST", body: target });
+  socialActionIds.set(action + ":" + target.targetType + ":" + target.targetId, result.data.id);
+}
+
+async function persistSocialFollow(item: DiscoveryResult): Promise<void> {
+  const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : undefined;
+  if (!businessId) throw new Error("شناسه کسب‌وکار این پروفایل هنوز canonical نشده است.");
+  const result = await apiJson<{ data: { id: string } }>("/api/v1/social/follows", { method: "POST", body: { targetType: "business", targetId: businessId } });
+  socialActionIds.set("follow:business:" + businessId, result.data.id);
+}
+
+async function persistSocialComment(item: DiscoveryResult): Promise<void> {
+  const target = socialTarget(item);
+  if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
+  const body = window.prompt("نظر شما چیست؟", "");
+  if (!body?.trim()) return;
+  await apiJson("/api/v1/social/comments", { method: "POST", body: { ...target, body: body.trim(), idempotencyKey: crypto.randomUUID() } });
+}
+
 
 type PublicSeoHydration = {
   metadata: {
@@ -3064,10 +3094,21 @@ function bindDiscoveryResultEvents(): void {
     });
   });
   document.querySelectorAll<HTMLButtonElement>("[data-follow],[data-like],[data-save],[data-comment]").forEach((button) => {
-    button.addEventListener("click", (event) => {
+    button.addEventListener("click", async (event) => {
       event.stopPropagation();
-      const action = button.dataset.follow !== undefined ? "دنبال کردن" : button.dataset.like !== undefined ? "پسندیدن" : button.dataset.save !== undefined ? "ذخیره کردن" : "نظر";
-      showToast(action + " فعلاً در رابط کاربری نمایش داده می‌شود؛ اتصال به Social Engagement canonical هنوز انجام نشده است.");
+      const index = Number(button.closest(".phoenix-post-card")?.querySelector<HTMLElement>("[data-discovery-index]")?.dataset.discoveryIndex ?? "-1");
+      const item = Number.isInteger(index) ? activeDiscoveryItems[index] : undefined;
+      if (!item) return;
+      try {
+        if (button.dataset.follow !== undefined) await persistSocialFollow(item);
+        else if (button.dataset.like !== undefined) await persistSocialAction("like", item);
+        else if (button.dataset.save !== undefined) await persistSocialAction("save", item);
+        else await persistSocialComment(item);
+        const action = button.dataset.follow !== undefined ? "دنبال کردن" : button.dataset.like !== undefined ? "پسندیدن" : button.dataset.save !== undefined ? "ذخیره کردن" : "نظر";
+        showToast(action + " در Social Engagement ثبت شد.");
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : "ثبت تعامل اجتماعی ممکن نشد.");
+      }
     });
   });
 }
