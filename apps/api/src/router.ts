@@ -20,6 +20,7 @@ import { registerBillingRoutes } from "./billing-routes";
 import { registerCaseSupportRoutes } from "./case-support-routes";
 import { registerCustomerRoutes } from "./customer-routes";
 import { registerSeoRoutes } from "./seo-routes";
+import { registerSocialEngagementRoutes } from "./social-engagement-routes";
 
 export interface ApiRouteContext {
   readonly request: Request;
@@ -72,6 +73,7 @@ export class ApiRouter {
     registerCaseSupportRoutes(this, options.database, options.authorization);
     registerCustomerRoutes(this, options.database, options.authorization);
     registerSeoRoutes(this, options.database, options.seoCanonicalBaseUrl ?? "https://qooqnos.com", options.seoEnvironment);
+    registerSocialEngagementRoutes(this, options.database);
   }
 
   register(route: ApiRoute): void {
