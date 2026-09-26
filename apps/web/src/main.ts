@@ -73,27 +73,62 @@ function socialTarget(item: DiscoveryResult): { targetType: "product" | "service
   return targetType && targetId ? { targetType, targetId } : null;
 }
 
-async function loadSocialActivity(): Promise<void> {
+async function loadSocialActivity(): Promise<unknown[]> {
+  const result = await apiJson<{ data: unknown[] }>("/api/v1/social/activity?limit=20");
+  return Array.isArray(result.data) ? result.data : [];
+}
+
+async function openSocialActivity(): Promise<void> {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
   try {
-    const result = await apiJson<{ data: unknown[] }>("/api/v1/social/activity?limit=20");
-    if (result.data.length) showToast(result.data.length + " تعامل اجتماعی در فعالیت‌های ققنوس ثبت شده است.");
-  } catch {
-    // Activity is optional for anonymous/public browsing; no synthetic state is created.
+    const items = await loadSocialActivity();
+    const overlay = document.createElement("div");
+    overlay.className = "notification-overlay";
+    const rows = items.length ? items.map((item) => {
+      const event = item && typeof item === "object" ? item as Record<string, unknown> : {};
+      const type = String(event.eventType ?? "social.event");
+      const occurredAt = String(event.occurredAt ?? "");
+      return '<article class="notification-item"><div class="notification-item-icon">♡</div><div class="notification-item-copy"><div class="notification-item-top"><strong>' + escapeHtml(type) + '</strong></div><small>' + escapeHtml(occurredAt) + '</small></div></article>';
+    }).join("") : '<div class="slot-empty"><span>♡</span><p>هنوز فعالیت اجتماعی ثبت نشده است.</p></div>';
+    overlay.innerHTML = '<div class="connection-backdrop" data-close-social-activity></div><section class="connection-modal glass-card notification-modal" role="dialog" aria-modal="true" aria-labelledby="social-activity-title"><button class="connection-close" type="button" data-close-social-activity aria-label="بستن">×</button><span class="eyebrow"><i></i> Social Activity</span><h2 id="social-activity-title">فعالیت‌های اجتماعی</h2><p>این فهرست از رویدادهای canonical Social Engagement خوانده می‌شود.</p><div class="notification-list">' + rows + '</div></section>';
+    document.body.appendChild(overlay);
+    overlay.querySelectorAll<HTMLElement>("[data-close-social-activity]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "خواندن فعالیت‌های اجتماعی ممکن نشد.");
   }
 }
 
-async function persistSocialAction(action: "like" | "save", item: DiscoveryResult): Promise<void> {
+async function persistSocialAction(action: "like" | "save", item: DiscoveryResult): Promise<boolean> {
   const target = socialTarget(item);
   if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
+  const key = action + ":" + target.targetType + ":" + target.targetId;
+  const existingId = socialActionIds.get(key);
+  if (existingId) {
+    await apiJson("/api/v1/social/" + (action === "like" ? "likes" : "saves") + "/" + encodeURIComponent(existingId), { method: "DELETE" });
+    socialActionIds.delete(key);
+    return false;
+  }
   const result = await apiJson<{ data: { id: string } }>("/api/v1/social/" + (action === "like" ? "likes" : "saves"), { method: "POST", body: target });
-  socialActionIds.set(action + ":" + target.targetType + ":" + target.targetId, result.data.id);
+  socialActionIds.set(key, result.data.id);
+  return true;
 }
 
-async function persistSocialFollow(item: DiscoveryResult): Promise<void> {
+async function persistSocialFollow(item: DiscoveryResult): Promise<boolean> {
   const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : undefined;
   if (!businessId) throw new Error("شناسه کسب‌وکار این پروفایل هنوز canonical نشده است.");
+  const key = "follow:business:" + businessId;
+  const existingId = socialActionIds.get(key);
+  if (existingId) {
+    await apiJson("/api/v1/social/follows/" + encodeURIComponent(existingId), { method: "DELETE" });
+    socialActionIds.delete(key);
+    return false;
+  }
   const result = await apiJson<{ data: { id: string } }>("/api/v1/social/follows", { method: "POST", body: { targetType: "business", targetId: businessId } });
-  socialActionIds.set("follow:business:" + businessId, result.data.id);
+  socialActionIds.set(key, result.data.id);
+  return true;
 }
 
 async function persistSocialComment(item: DiscoveryResult): Promise<void> {
@@ -2456,6 +2491,7 @@ function renderSocialHeader(active: "feed" | "following" | "explore"): string {
     '<a href="/discover" data-nav class="' + (active === "feed" ? "active" : "") + '">برای تو</a>' +
     '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">دنبال‌شده‌ها</a>' +
     '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a></nav>' +
+    '<button class="phoenix-social-activity-button" type="button" data-open-social-activity>فعالیت</button>' +
     '<div class="phoenix-social-actions"><button class="icon-button" type="button" data-open-create-post aria-label="پست جدید">＋</button><button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button></div>' +
     '</div></header>';
 }
@@ -3083,6 +3119,14 @@ function openCreatePostPanel(): void {
     navigate("/product-studio");
   });
 }
+
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target instanceof Element && target.closest("[data-open-social-activity]")) {
+    event.preventDefault();
+    void openSocialActivity();
+  }
+});
 
 function bindDiscoveryResultEvents(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-discovery-index]").forEach((button) => {
