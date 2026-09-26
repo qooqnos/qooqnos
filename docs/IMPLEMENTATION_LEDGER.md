@@ -1911,3 +1911,7 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Frontend Follow/Like/Save/Comment wiring remains presentation-only until API integration verification is completed.
 - Commits: `b4b601f6`, `b5b4f8d9`, `9aa7b19b`, `9e7cfee7`, `d966c24c`, `d4d7041f`, `1fbef816`, `35e37672`, `793e6721`, `f28c7f99`, `9766749f`, `1d729d67`, `425be46d`, `b42d52da`.
 - Verification still required: repository/package typecheck, API build/tests, migration verification, runtime registry verification, then real frontend API integration.
+
+- Web social actions now call canonical Social Engagement for supported canonical Product/Service targets; Follow uses canonical Business identity when supplied by Discovery metadata; unsupported synthetic targets remain explicitly non-persistent.
+- Web API helper now supports DELETE for the forthcoming state-removal flows.
+- Commit: `1f2d446b`.
