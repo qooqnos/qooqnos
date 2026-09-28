@@ -2440,3 +2440,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added regression assertions for the Canvas state contract and stable data-vwf-state attributes.
 - Implementation commits: 3e897a1c707967768a532119bef31fc4746cae34, 146ec3a9f9c49ab3ccb3ae24f4e67e7fe87bf076.
 - Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
+
+## 2026-09-29 — Vertical Workflow stage context contract
+- Extended the shared Vertical Workflow registry with a typed stage context contract: current stage, 1-based position, total stages, previous stage and next stage.
+- Added reusable previous/next navigation directly inside every Vertical Workflow Canvas so Clinic, Retail, Restaurant and Salon modules can move through their canonical workflow without creating vertical-specific navigation logic.
+- The Canvas now exposes stable `data-vwf-stage-index` and `data-vwf-stage-total` attributes for UI/visual regression coverage.
+- Added responsive styling for the stage context/navigation strip in both frontend stylesheet surfaces.
+- Added regression coverage for stage context resolution, fail-closed behavior for unknown modules, and rendered stage navigation.
+- No domain state, authorization rule, duplicate persistence model or fake operational data was introduced.
+- Implementation commits: `3dc4191344d1d0a542f114edbbf9db0aca39f91f`, `94c455474af48fc17c02858e0cfd9cf30fa7b30c`, `10407ed8e5c5b4f0c154b5281ad478b72354aba5`, `c0f8a6a82650f92d466110ff303e8a9f9796a093`, `2cbc0a0b486dbfa22b8f0879aa93a97cc02652ed`, `b0b6f79694721735ab12717a93a7b4a7783bdbc5`.
+- Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
