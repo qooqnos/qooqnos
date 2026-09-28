@@ -63,3 +63,44 @@ export function getVerticalWorkflowSteps(vertical: string): readonly string[] {
 export function getVerticalWorkflowStageModule(vertical: string, stage: string): string | undefined {
   return getVerticalWorkflowDefinition(vertical).stageModules[stage];
 }
+
+export type VerticalWorkflowStageContext = {
+  readonly vertical: string;
+  readonly index: number;
+  readonly total: number;
+  readonly stage: string;
+  readonly module: string;
+  readonly previous?: { readonly stage: string; readonly module: string };
+  readonly next?: { readonly stage: string; readonly module: string };
+};
+
+export function getVerticalWorkflowStageContext(vertical: string, module: string): VerticalWorkflowStageContext {
+  const definition = getVerticalWorkflowDefinition(vertical);
+  const entries = definition.steps.map((stage) => ({
+    stage,
+    module: definition.stageModules[stage] ?? stage,
+  }));
+  const index = entries.findIndex((entry) => entry.module === module);
+  if (index < 0) {
+    return {
+      vertical: definition.vertical,
+      index: -1,
+      total: entries.length,
+      stage: module,
+      module,
+    };
+  }
+  const current = entries[index]!;
+  const previous = entries[index - 1];
+  const next = entries[index + 1];
+  return {
+    vertical: definition.vertical,
+    index,
+    total: entries.length,
+    stage: current.stage,
+    module: current.module,
+    ...(previous ? { previous } : {}),
+    ...(next ? { next } : {}),
+  };
+}
+
