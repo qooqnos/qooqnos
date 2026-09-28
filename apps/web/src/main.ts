@@ -424,6 +424,7 @@ function render(): void {
   if (route.path === "/customer") void loadCustomerState();
   if (route.path === "/communication") void loadCommunicationState();
   if (route.path === "/billing") void loadBillingState();
+  if (parseBusinessModulePath(route.path)) bindVerticalWorkflowCanvas(appRoot);
   if (route.path === "/business") {
     if (new URLSearchParams(location.search).get("module")) void loadBusinessModuleContext();
     else void loadBusinessAccess();
@@ -3247,6 +3248,7 @@ function renderBusinessModule(vertical: string, module: string): string {
   const workflow = BUSINESS_VERTICAL_WORKFLOWS[ui.key] ?? BUSINESS_VERTICAL_WORKFLOWS.default;
   const moduleStatus = info.status ?? presentation?.stateLabel ?? "connected";
   const blueprint: VerticalModuleBlueprint = getVerticalModuleBlueprint(ui.key, module);
+  const workflowCanvas = renderVerticalWorkflowCanvas({ vertical: ui.key, module, blueprint });
   const blueprintLayoutLabels: Record<VerticalModuleBlueprint["layout"], string> = { command: "Command Center", calendar: "Timeline / Capacity", catalog: "Supply Canvas", people: "People / Relationship", commerce: "Commerce Control", operations: "Operations Board", communication: "Communication Workspace" };
   const contextRows = [
     { label: "Business", value: businessId ? compactId(businessId) : "هنوز انتخاب نشده" },
@@ -3287,6 +3289,7 @@ function renderBusinessModule(vertical: string, module: string): string {
       '</div>' +
       (blueprint.primaryAction ? '<a class="button button-primary" href="' + escapeAttr(businessModuleContextHref(blueprint.primaryAction.path, ui.key, module, businessId)) + '" data-nav>' + escapeHtml(blueprint.primaryAction.label) + ' <span>→</span></a>' : '') +
     '</section>' +
+    workflowCanvas +
     '<section class="phoenix-business-module-grid-page">' +
       '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + escapeHtml(info.label) + '</h2><p>این سطح یک UI تخصصی برای Workspace است؛ source of truth، permission و mutation همچنان در دامنه canonical باقی می‌مانند.</p>' +
         (canonicalPath ? '<a class="button button-primary" href="' + escapeAttr(canonicalPath) + '" data-nav>باز کردن ' + escapeHtml(info.label) + ' <span>→</span></a>' : '<span class="pill">endpoint مستقل این قابلیت هنوز ثبت نشده</span>') +
