@@ -3191,7 +3191,7 @@ const BUSINESS_MODULE_SLUGS: Record<string, Record<string, string>> = {
 
 function businessModuleSlug(vertical: string, module: string): string {
   const key = resolveBusinessVerticalKey(vertical);
-  return BUSINESS_MODULE_SLUGS[key]?.[module] ?? encodeURIComponent(module);
+  return BUSINESS_MODULE_SLUGS[key]?.[module] ?? module;
 }
 
 function businessModulePath(vertical: string, module: string): string {
