@@ -3512,6 +3512,11 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-business-refresh]")?.addEventListener("click", () => { void loadBusinessAccess(); });
   document.querySelector<HTMLButtonElement>("[data-business-save]")?.addEventListener("click", () => { void saveBusinessProfile(); });
   document.querySelector<HTMLButtonElement>("[data-business-add-location]")?.addEventListener("click", openBusinessLocationPanel);
+  document.querySelectorAll<HTMLButtonElement>("[data-business-quick-action]").forEach((button) => button.addEventListener("click", () => showToast(button.textContent?.replace("←", "").trim() + " از Workspace تخصصی ققنوس باز می‌شود؛ اتصال workflow این ماژول در حال تکمیل است.")));
+  document.querySelectorAll<HTMLButtonElement>(".phoenix-business-module").forEach((button) => button.addEventListener("click", () => showToast("ماژول «" + (button.querySelector("strong")?.textContent ?? "این بخش") + "» بر اساس Capabilityهای این کسب‌وکار مدیریت می‌شود.")));
+  document.querySelector<HTMLButtonElement>("[data-business-primary-action]")?.addEventListener("click", () => { const action = document.querySelector("#business-next-action")?.textContent?.trim() ?? "اقدام بعدی"; showToast(action + " آماده است؛ ابتدا وضعیت Workspace و Capabilityهای فعال را بررسی می‌کنیم."); });
+  document.querySelector<HTMLButtonElement>("[data-profile-refresh]")?.addEventListener("click", () => { void loadProfilePage(); });
+  document.querySelectorAll<HTMLButtonElement>("[data-refresh-notifications]").forEach((button) => button.addEventListener("click", () => { void loadNotificationsPage(); }));
   document.querySelector<HTMLButtonElement>("[data-refresh-account]")?.addEventListener("click", loadAccountState);
   document.querySelector<HTMLButtonElement>("[data-account-connect]")?.addEventListener("click", openConnectionPanel);
   document.querySelector<HTMLButtonElement>("[data-account-revoke]")?.addEventListener("click", revokeCurrentSession);
