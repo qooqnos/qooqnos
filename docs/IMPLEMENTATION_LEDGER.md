@@ -2489,3 +2489,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - 🟢 Reframed the matching demo as a clearly labelled static example and added decision-rationale/guardrail UI without fabricating production matching scores or rankings.
 - 🟢 Added responsive Homepage completion styles for the new sections.
 - Verification: code changes applied; build/runtime/browser verification pending.
+
+## Discovery / Social Commerce / Compare / Activity Completion — 2026-09-29
+- Discovery feed no longer falls back to static demo businesses; empty/error states are truthful and route users to canonical Discovery or Explore paths.
+- Added canonical authenticated Social Engagement state read at `GET /api/v1/social/state`, allowing like/save/follow state to survive page reloads without synthetic client state.
+- Added canonical Following Discovery boundary at `GET /api/v1/discovery/following`, backed by followed business IDs and the existing Discovery search documents.
+- Discovery now supports For You / Explore / Following behavior, paged loading, explicit empty/error/loading states, state synchronization, and canonical action bridges.
+- Social Commerce cards now show persisted follow/like/save state, type-aware actions, and canonical Product/Service/Business destinations.
+- Compare is constrained to 2–4 products, rejects non-product entries, derives optional comparison attributes only from existing metadata, and links each selected product to canonical Checkout.
+- Activity now renders readable labels and target context from canonical Social Engagement outbox events.
+- Verification status: code changes landed; full local `typecheck`, `build`, `lint`, tests and browser visual QA still require execution in repository/CI environment.
