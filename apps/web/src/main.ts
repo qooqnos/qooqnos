@@ -378,14 +378,15 @@ function render(): void {
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/";
   const isSocial = route.path === "/discover" || route.path === "/compare";
+  const isPublicBusiness = route.path.startsWith("/businesses/");
   appRoot.innerHTML = `
-    <div class="app-shell ${isHome ? "home-shell" : ""} ${isSocial ? "social-shell" : ""}">
-      ${isHome ? renderPublicHeader() : isSocial ? renderSocialHeader(route.path === "/discover" ? (new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : new URLSearchParams(location.search).get("tab") === "following" ? "following" : "feed") : "feed") : renderHeader(route)}
+    <div class="app-shell ${isHome ? "home-shell" : ""} ${isSocial ? "social-shell" : ""} ${isPublicBusiness ? "public-business-shell" : ""}">
+      ${isHome || isPublicBusiness ? renderPublicHeader() : isSocial ? renderSocialHeader(route.path === "/discover" ? (new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : new URLSearchParams(location.search).get("tab") === "following" ? "following" : "feed") : "feed") : renderHeader(route)}
       <div class="app-body">
-        ${isHome || isSocial ? "" : renderSidebar(route)}
-        <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : ""}">${page}</main>
+        ${isHome || isSocial || isPublicBusiness ? "" : renderSidebar(route)}
+        <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : isPublicBusiness ? "public-business-page-content" : ""}">${page}</main>
       </div>
-      ${isHome ? "" : isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
+      ${isHome || isPublicBusiness ? "" : isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
       ${renderToastHost()}
     </div>
   `;
@@ -415,6 +416,7 @@ function render(): void {
     void loadBusinessProfile();
     document.querySelector<HTMLElement>("#public-business-publication-action")?.addEventListener("click", () => void requestBusinessPublication());
   }
+  if (route.path.startsWith("/businesses/")) void loadBusinessPublicPage(route.path);
   if (route.path === "/trust") void loadTrustSignals();
   if (route.path === "/operations") void loadCases();
   if (route.path === "/seo") void loadSeoHealth();
