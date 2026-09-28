@@ -3468,3 +3468,94 @@ body::before {
   .phoenix-workspace-modal .connection-actions { padding-inline:18px; }
   .phoenix-workspace-current { margin-inline:18px; }
 }
+
+
+/* Team management workspace panel */
+.phoenix-team-modal { overflow:hidden; padding:0; }
+.phoenix-team-modal-head {
+  display:grid;
+  grid-template-columns:54px 1fr;
+  gap:13px;
+  align-items:center;
+  padding:22px 24px;
+  background:
+    radial-gradient(circle at 85% 0%,rgba(255,166,94,.20),transparent 35%),
+    var(--surface);
+  border-bottom:1px solid var(--line);
+}
+.phoenix-team-modal-head h2 { margin:5px 0 0;font-size:20px;letter-spacing:-.035em; }
+.phoenix-team-modal-head p { margin:4px 0 0;color:var(--muted);font-size:8px;line-height:1.7; }
+.phoenix-team-management-summary {
+  display:grid;
+  grid-template-columns:1.2fr 1fr .6fr;
+  gap:7px;
+  padding:16px 24px 8px;
+}
+.phoenix-team-management-summary > div {
+  display:grid;
+  gap:4px;
+  padding:11px;
+  border-radius:14px;
+  background:var(--surface-2);
+  min-width:0;
+}
+.phoenix-team-management-summary span { color:var(--faint);font-size:7px; }
+.phoenix-team-management-summary strong {
+  font-size:8px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  direction:ltr;
+  text-align:start;
+}
+.phoenix-team-management-list {
+  display:grid;
+  gap:7px;
+  padding:8px 24px;
+  max-height:280px;
+  overflow:auto;
+}
+.phoenix-team-management-row {
+  display:grid;
+  grid-template-columns:34px 1fr auto;
+  gap:9px;
+  align-items:center;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:var(--surface-2);
+}
+.phoenix-team-management-row strong,
+.phoenix-team-management-row small { display:block; }
+.phoenix-team-management-row strong { font-size:8px; }
+.phoenix-team-management-row small { margin-top:3px;color:var(--faint);font-size:7px;direction:ltr;text-align:start; }
+.phoenix-team-permission-summary {
+  margin:5px 24px 0;
+  padding:13px;
+  border-radius:15px;
+  background:color-mix(in srgb,var(--primary) 5%,var(--surface));
+  border:1px solid color-mix(in srgb,var(--primary) 10%,var(--line));
+}
+.phoenix-team-permission-summary > div {
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:8px;
+}
+.phoenix-team-readonly-note {
+  margin:10px 24px 0;
+  padding:11px 13px;
+  border-radius:13px;
+  color:var(--faint);
+  background:var(--surface-2);
+  font-size:7px;
+  line-height:1.8;
+}
+.phoenix-team-modal .connection-actions { padding:15px 24px 22px; }
+@media(max-width:560px){
+  .phoenix-team-modal-head { padding:18px; }
+  .phoenix-team-management-summary { grid-template-columns:1fr; padding-inline:18px; }
+  .phoenix-team-management-list { padding-inline:18px; }
+  .phoenix-team-permission-summary,
+  .phoenix-team-readonly-note { margin-inline:18px; }
+  .phoenix-team-modal .connection-actions { padding-inline:18px; }
+}
