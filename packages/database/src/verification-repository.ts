@@ -227,6 +227,19 @@ export class VerificationRepository extends Repository {
     super(database);
   }
 
+  async listCasesForSubject(context: RequestContext, input: { readonly subjectType: VerificationSubjectType; readonly subjectId: EntityId; readonly limit?: number }): Promise<readonly VerificationCaseRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const limit = Math.min(Math.max(Math.trunc(input.limit ?? 20), 1), 100);
+    return this.database.all<VerificationCaseRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, subject_type AS subjectType, subject_id AS subjectId, policy_id AS policyId, policy_version AS policyVersion, status, risk_class AS riskClass, submitted_at AS submittedAt, resolved_at AS resolvedAt, expires_at AS expiresAt, created_at AS createdAt, updated_at AS updatedAt FROM verification_cases WHERE organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) AND subject_type = ? AND subject_id = ? ORDER BY created_at DESC, id DESC LIMIT ?",
+      organizationId,
+      workspaceId,
+      input.subjectType,
+      input.subjectId,
+      limit,
+    );
+  }
   async getCase(context: RequestContext, id: EntityId): Promise<VerificationCaseRecord | null> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
