@@ -1,5 +1,5 @@
 import type { VerticalModuleBlueprint, VerticalModuleLayout } from "./business-module-ui.js";
-import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
+import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
 export type VerticalWorkflowCanvasModel = {
   readonly vertical: string;
@@ -233,7 +233,17 @@ function renderLayout(layout: VerticalModuleLayout, model: VerticalWorkflowCanva
 
 export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel): string {
   const copy = layoutCopy[model.blueprint.layout];
-  return '<section class="glass-card phoenix-vwf-canvas" data-vwf-root data-vwf-layout="' + escapeHtml(model.blueprint.layout) + '" data-vwf-active-view="overview" data-vwf-business-id="' + escapeHtml(model.businessId ?? "") + '" data-vwf-vertical="' + escapeHtml(model.vertical) + '" data-vwf-module="' + escapeHtml(model.module) + '">' +
+  const stageContext = getVerticalWorkflowStageContext(model.vertical, model.module);
+  const stagePosition = stageContext.index >= 0 ? String(stageContext.index + 1) + "/" + String(stageContext.total) : "—";
+  const stageNav = [
+    stageContext.previous
+      ? '<a class="button button-ghost phoenix-vwf-stage-nav-button" href="' + escapeHtml(workflowModuleHref(model, stageContext.previous.module)) + '" data-nav><span>←</span> ' + escapeHtml(stageContext.previous.stage) + '</a>'
+      : '<span class="phoenix-vwf-stage-nav-button is-disabled">← ابتدای Workflow</span>',
+    stageContext.next
+      ? '<a class="button button-primary phoenix-vwf-stage-nav-button" href="' + escapeHtml(workflowModuleHref(model, stageContext.next.module)) + '" data-nav>' + escapeHtml(stageContext.next.stage) + ' <span>→</span></a>'
+      : '<span class="phoenix-vwf-stage-nav-button is-disabled">انتهای Workflow →</span>',
+  ].join("");
+  return '<section class="glass-card phoenix-vwf-canvas" data-vwf-root data-vwf-layout="' + escapeHtml(model.blueprint.layout) + '" data-vwf-active-view="overview" data-vwf-business-id="' + escapeHtml(model.businessId ?? "") + '" data-vwf-vertical="' + escapeHtml(model.vertical) + '" data-vwf-module="' + escapeHtml(model.module) + '" data-vwf-stage-index="' + String(stageContext.index) + '" data-vwf-stage-total="' + String(stageContext.total) + '">' +
     '<nav class="phoenix-vwf-stage-rail" aria-label="مراحل Workflow">' +
       getVerticalWorkflowSteps(model.vertical).map((stage, index) => {
         const stageModule = getVerticalWorkflowStageModule(model.vertical, stage);
@@ -245,6 +255,10 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
           : '<div class="phoenix-vwf-stage' + (active ? " active" : "") + '">' + content + '</div>';
       }).join('<span class="phoenix-vwf-stage-connector" aria-hidden="true">→</span>') +
     '</nav>' +
+    '<div class="phoenix-vwf-stage-context">' +
+      '<div><span class="section-kicker">Workflow stage</span><strong>' + escapeHtml(stageContext.stage) + '</strong><span class="phoenix-vwf-stage-position">' + escapeHtml(stagePosition) + '</span></div>' +
+      '<div class="phoenix-vwf-stage-context-actions">' + stageNav + '</div>' +
+    '</div>' +
     '<div class="phoenix-vwf-header">' +
       '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>' + escapeHtml(copy.label) + ' canvas</h2><p>' + escapeHtml(copy.description) + '</p></div>' +
       '<div class="phoenix-vwf-header-actions"><span class="pill">Shared component</span><span class="pill" data-vwf-state-label data-vwf-state="requires-input">نیازمند Context</span><button type="button" class="button button-ghost" data-vwf-action="refresh" aria-label="تازه‌سازی داده‌های این Canvas">↻ تازه‌سازی</button></div>' +
