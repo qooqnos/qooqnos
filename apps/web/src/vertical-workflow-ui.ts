@@ -227,7 +227,7 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
   return '<section class="glass-card phoenix-vwf-canvas" data-vwf-root data-vwf-layout="' + escapeHtml(model.blueprint.layout) + '" data-vwf-active-view="overview" data-vwf-business-id="' + escapeHtml(model.businessId ?? "") + '" data-vwf-vertical="' + escapeHtml(model.vertical) + '" data-vwf-module="' + escapeHtml(model.module) + '">' +
     '<div class="phoenix-vwf-header">' +
       '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>' + escapeHtml(copy.label) + ' canvas</h2><p>' + escapeHtml(copy.description) + '</p></div>' +
-      '<span class="pill">Shared component</span>' +
+      '<div class="phoenix-vwf-header-actions"><span class="pill">Shared component</span><button type="button" class="button button-ghost" data-vwf-action="refresh" aria-label="تازه‌سازی داده‌های این Canvas">↻ تازه‌سازی</button></div>' +
     '</div>' +
     '<div data-vwf-content>' + renderLayout(model.blueprint.layout, model) + '</div>' +
     '<div class="phoenix-vwf-contract"><span>state</span><strong>canonical-only</strong><span>layout</span><strong>' + escapeHtml(model.blueprint.layout) + '</strong><span>interaction</span><strong>' + escapeHtml(model.blueprint.interaction) + '</strong></div>' +
@@ -281,7 +281,36 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     canvas.querySelectorAll<HTMLButtonElement>("[data-vwf-action]").forEach((button) => {
       button.addEventListener("click", () => {
         const action = button.dataset.vwfAction ?? "";
-        const label = action === "today" ? "بازه «امروز» برای hydrate شدن آماده است." : "این action فعلاً فقط state رابط را تغییر می‌دهد و mutation دامنه‌ای انجام نمی‌دهد.";
+        const layout = canvas.dataset.vwfLayout ?? "";
+        const businessId = canvas.dataset.vwfBusinessId?.trim();
+        if (action === "refresh") {
+          button.disabled = true;
+          const finish = () => { button.disabled = false; };
+          if (layout === "calendar" && businessId) {
+            void hydrateCalendarCanvas(canvas, businessId).finally(finish);
+            return;
+          }
+          if (layout === "catalog" && businessId) {
+            void hydrateCatalogCanvas(canvas, businessId).finally(finish);
+            return;
+          }
+          if (layout === "people") {
+            void hydratePeopleCanvas(canvas).finally(finish);
+            return;
+          }
+          if (layout === "operations") {
+            void hydrateOperationsCanvas(canvas).finally(finish);
+            return;
+          }
+          if (layout === "communication") {
+            void hydrateCommunicationCanvas(canvas).finally(finish);
+            return;
+          }
+          finish();
+        }
+        const label = action === "today"
+          ? "بازه «امروز» برای hydrate شدن آماده است."
+          : "این action فعلاً فقط state رابط را تغییر می‌دهد و mutation دامنه‌ای انجام نمی‌دهد.";
         const note = canvas.querySelector<HTMLElement>("[data-vwf-note]");
         if (note) note.textContent = label;
         else {
