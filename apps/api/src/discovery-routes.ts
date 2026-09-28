@@ -8,6 +8,30 @@ import { json } from "./http";
 export function registerDiscoveryRoutes(router: ApiRouter, database: D1Database | undefined): void {
   router.register({
     method: "GET",
+    path: "/api/v1/discovery/following",
+    module: "discovery",
+    operation: "discovery.following",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      if (!context.tenantId || !context.workspaceId || !context.actorId) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "Following feed requires authenticated workspace context.", requestId: context.requestId });
+      }
+      const url = new URL(request.url);
+      const limit = parseInteger(url.searchParams.get("limit"), "limit", context.requestId);
+      const offset = parseInteger(url.searchParams.get("offset"), "offset", context.requestId);
+      const repository = new DiscoveryRepository(database);
+      const data = await repository.searchFollowing(context, limit ?? 20, offset ?? 0);
+      return json({
+        data,
+        pagination: { limit: limit ?? 20, offset: offset ?? 0, count: data.length },
+      }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/discovery/search",
     module: "discovery",
     operation: "discovery.search",
