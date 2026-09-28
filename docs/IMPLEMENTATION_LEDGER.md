@@ -2005,3 +2005,14 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 
 - Added quick vertical presets to the Business profile editor (clinic, retail, restaurant, salon) so the occupation composition can be selected consistently without changing canonical business persistence semantics.
 - Commits: `9a013a71a9cf0661285d2e04972b80a9842b5528`, `df7e90a0834f8bc2ef810569734c0210ccf80bf9`, `481d8284e759a4f7e97d57f013a466b2a8b4c6c2`.
+
+
+## Business Workspace Role / Team / Access Lens — 2026-09-28
+- Added a role-aware Team & Access section to `/business`.
+- Current role/permissions are read from canonical `/api/v1/context`; the UI never treats the frontend role lens as authorization.
+- Workspace members are read from canonical `GET /api/v1/workspaces/:workspaceId/members` when a workspace context is available.
+- Added role lens states for management (`Owner/Admin/Manager`), sales, specialist/provider and finance/account roles; these reorder the explanatory UI emphasis without granting permissions.
+- Added permission chips, team member status, current-user marker, Workspace switch action and an explicit read-only management notice until role mutation APIs are wired.
+- Added shared Phoenix visual styling for role cards, permission chips, member rows and responsive mobile behavior.
+- Commits: `5fe78a63ebe7bf2fc78201442a66d819286e683f`, `d66dcef6857fec940543b349bb15d0d2a2bf1365`, `8e1c935ac08e6b2af8fdb87814d51c193c1ee6ae`.
+- Verification gate remains: web TypeScript build plus responsive/visual QA before production verification.
