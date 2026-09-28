@@ -3296,7 +3296,13 @@ function renderBusinessModule(vertical: string, module: string): string {
   const workflow = BUSINESS_VERTICAL_WORKFLOWS[ui.key] ?? BUSINESS_VERTICAL_WORKFLOWS.default;
   const moduleStatus = info.status ?? presentation?.stateLabel ?? "connected";
   const blueprint: VerticalModuleBlueprint = getVerticalModuleBlueprint(ui.key, module);
-  const workflowCanvas = renderVerticalWorkflowCanvas({ vertical: ui.key, module, blueprint, businessId });
+  const workflowCanvas = renderVerticalWorkflowCanvas({
+    vertical: ui.key,
+    module,
+    blueprint,
+    businessId,
+    contextualHref: (path) => businessModuleContextHref(path, ui.key, module, businessId),
+  });
   const blueprintLayoutLabels: Record<VerticalModuleBlueprint["layout"], string> = { command: "Command Center", calendar: "Timeline / Capacity", catalog: "Supply Canvas", people: "People / Relationship", commerce: "Commerce Control", operations: "Operations Board", communication: "Communication Workspace" };
   const contextRows = [
     { label: "Business", value: businessId ? compactId(businessId) : "هنوز انتخاب نشده" },
