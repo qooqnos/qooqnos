@@ -299,36 +299,6 @@ function readInitialSeoHydration(): PublicSeoHydration | null {
 const initialSeoHydration = readInitialSeoHydration();
 
 
-const demoBusinesses: DiscoveryResult[] = [
-  {
-    id: "demo-1",
-    displayName: "کافه و نان تازه",
-    name: "کافه و نان تازه",
-    description: "قهوه تخصصی، نان تازه و صبحانه‌های روزانه.",
-    locality: "مرکز شهر",
-    rating: 4.9,
-    score: 94,
-  },
-  {
-    id: "demo-2",
-    displayName: "استودیو سرو",
-    name: "استودیو سرو",
-    description: "استودیو زیبایی با رزرو آنلاین و خدمات شخصی‌سازی‌شده.",
-    locality: "ولیعصر",
-    rating: 4.8,
-    score: 91,
-  },
-  {
-    id: "demo-3",
-    displayName: "باغ بامداد",
-    name: "باغ بامداد",
-    description: "فضای سبز شهری برای تجربه‌های آرام، رویداد و دورهمی.",
-    locality: "شمال شهر",
-    rating: 4.7,
-    score: 89,
-  },
-];
-
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     void navigator.serviceWorker.register("/sw.js?v=2").catch(() => undefined);
