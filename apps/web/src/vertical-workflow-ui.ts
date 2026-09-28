@@ -275,6 +275,56 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
 }
 
 
+type VerticalWorkflowOffering = {
+  id: string;
+  businessId: string;
+  offeringType: "product" | "service";
+  title: string;
+  description?: string | null;
+  serviceId?: string | null;
+  productId?: string | null;
+  status: string;
+  publicationStatus: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+async function hydrateCatalogCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-catalog-items]");
+  if (!container) return;
+  const token = sessionStorage.getItem("phoenix-access-token");
+  const workspace = localStorage.getItem("phoenix-workspace-id");
+  if (!token || !workspace) {
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش عرضه‌های واقعی، session و Workspace context لازم است.</div>';
+    return;
+  }
+  const headers = new Headers({ Accept: "application/json", Authorization: "Bearer " + token, "x-workspace-id": workspace });
+  container.innerHTML = '<div class="slot-loading">در حال خواندن Offeringهای واقعی از Catalog…</div>';
+  try {
+    const response = await fetch("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/offers?limit=24", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowOffering[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Catalog offerings unavailable");
+    const offers = Array.isArray(body?.data) ? body.data : [];
+    if (!offers.length) {
+      container.innerHTML = emptyState("برای این Business هنوز Offering ثبت‌شده‌ای پیدا نشد.", "Catalog");
+      return;
+    }
+    container.innerHTML = offers.map((offer) => {
+      const typeLabel = offer.offeringType === "service" ? "خدمت" : "محصول";
+      const publicationLabel = offer.publicationStatus === "published" ? "منتشرشده" : offer.publicationStatus === "pending" ? "در انتظار انتشار" : offer.publicationStatus;
+      return '<article class="phoenix-vwf-live-supply-card" data-vwf-item>' +
+        '<div class="phoenix-vwf-live-supply-type"><span class="pill">' + escapeHtml(typeLabel) + '</span><span class="phoenix-vwf-source-chip">' + escapeHtml(offer.status) + '</span></div>' +
+        '<h4>' + escapeHtml(offer.title) + '</h4>' +
+        '<p>' + escapeHtml(offer.description ?? "توضیحی برای این عرضه ثبت نشده است.") + '</p>' +
+        '<div class="phoenix-vwf-live-supply-meta"><span>Publication</span><strong>' + escapeHtml(publicationLabel) + '</strong></div>' +
+        '<div class="phoenix-vwf-live-supply-meta"><span>Offering</span><strong>' + escapeHtml(offer.id) + '</strong></div>' +
+      '</article>';
+    }).join("");
+  } catch (error) {
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Catalog ناموفق بود.", "Catalog");
+  }
+}
+
 type VerticalWorkflowSchedule = {
   id: string;
   businessId: string;
