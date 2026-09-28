@@ -4237,6 +4237,23 @@ body::before {
 }
 
 
+/* Vertical module canvas */
+.phoenix-module-context-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:10px;border:1px solid var(--line);border-radius:18px;background:color-mix(in srgb,var(--surface) 84%,transparent)}
+.phoenix-module-context-strip>div{display:grid;gap:3px;min-width:0;padding:10px 12px;border-radius:13px;background:var(--surface-2)}
+.phoenix-module-context-strip span{color:var(--faint);font-size:7px}
+.phoenix-module-context-strip strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px}
+.phoenix-module-workbench-card{padding:22px 24px}
+.phoenix-module-workbench-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:14px}
+.phoenix-module-workbench-grid article{display:grid;align-content:start;gap:6px;min-height:145px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--surface-2)}
+.phoenix-module-workbench-grid article>strong{font-size:10px}
+.phoenix-module-workbench-grid article>p{margin:0;color:var(--muted);font-size:7px;line-height:1.85}
+.phoenix-module-workbench-grid article>a{margin-top:auto;color:var(--primary);font-size:7px}
+.phoenix-module-compact-links{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto}
+.phoenix-module-compact-links a,.phoenix-module-compact-links span{padding:5px 7px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:6px}
+.phoenix-workflow-step.current{border-color:color-mix(in srgb,var(--primary) 28%,var(--line));background:color-mix(in srgb,var(--primary) 7%,var(--surface-2))}
+@media(max-width:900px){.phoenix-module-context-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.phoenix-module-workbench-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.phoenix-module-context-strip{grid-template-columns:1fr}.phoenix-module-context-strip>div{padding:9px 10px}.phoenix-module-workbench-card{padding:18px}}
+
 /* Deep vertical module workbench */
 .phoenix-module-state-description {
   margin: 0 0 12px;
