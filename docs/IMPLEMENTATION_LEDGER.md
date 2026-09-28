@@ -2135,3 +2135,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Replaced previous module-click placeholder toasts with actual navigation into the contextual Business module page.
 - Implementation commits: `bf676bd37845a9787d97e10df73ed9c00b6894f6`, `4ec6c67a2c4479a966ddba36321b1913bcacf3e4`, `9c4f705d769bb3f456f94db4942cfde9bda43a9d`, `4e30c22897f197bac979951930d9144f80bca436`, `ee3f561685c53c08d554bdd3d74dd6c0dcbfb725`, `4241dac0ae80eab12bc2a4d11b3611ff21b0faf0`, `b3cdae32c78eebfa2993889879e925ac24a8a731`, `40aeb45a54bf3cdac9917008e505f0c4d88a632e`, `bf09387abb993d686135f9b00a1945e58c94f7ee`, `a936ef505ec112797ec4645d3961f229ba9f03eb`.
 - Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
+
+
+## Verification Case Read + Public Review Surface — 2026-09-28
+- Added/confirmed canonical `GET /api/v1/trust/verification-cases` read boundary for authenticated Workspace actors, backed by `VerificationRepository.listCasesForSubject` and `trust.verification.read` authorization.
+- Business Workspace Verification status can therefore read an actual verification-case state instead of depending on a placeholder.
+- Added canonical public Business review projection in Trust and included published, moderated reviews in `GET /api/v1/public/businesses/:businessId`.
+- Public Business review UI now displays only published reviews and rating evidence returned by canonical Trust; no client-side reputation score is inferred.
+- Added responsive styling for public review cards.
+- Implementation commits: `11a377178f43104c66ce6868222bfc0bef687953`, `5e293c43f9e0cfaccc3f8591cbba317f71e6d11b`, `9d2ba4729b5c9a35f1290538f3a3a8d3ee8b990e`, `a172b4133e8206845a63d4e45f73befe1de62f10`, `69cffcc4e66ad7b682650c3c86253710cd5e54da`.
+- Verification remains pending: TypeScript build, Trust API integration tests and browser/visual QA have not been executed in this slice.
