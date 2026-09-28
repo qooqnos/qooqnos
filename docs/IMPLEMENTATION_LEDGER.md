@@ -2114,3 +2114,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added responsive styling for the public review list and hero actions.
 - Implementation commits: `056d10e392f36fec1a6074e2ab325790fdb15329`, `4b70321e5192d8aa13b0409eb638dfa19b72c084`, `2fbb0bf36aff6f932d97411fee0dbf3adf926b83`, `f70bdbbc873b49d4ca1781ce1842f5e028fae3ed`, `1b85e7f93a5d7ad2ba50feda5c6e94aac8948a9e`, `990bbf366b3d549f11931bedc67fd66a257fdada`.
 - Verification remains pending: local clone/build was unavailable because the environment could not resolve GitHub; therefore no claim of fresh TypeScript build, API integration test or browser QA is made.
+
+
+## Business Verification Status Surface — 2026-09-28
+- Added canonical protected `GET /api/v1/trust/verification-cases?subjectType=business&subjectId=...` using the existing `trust.verification.read` permission.
+- Added VerificationRepository subject-scoped read and TrustService authorization wrapper; no verification evidence documents or private reviewer notes are exposed through this surface.
+- Business Workspace now renders the latest canonical VerificationCase status and policy/version alongside Publication.
+- Verification status is display-only in this Slice; creation/submission/approval remain Trust-owned commands and are not fabricated in the Business UI.
+- Implementation commits: `3b7843c2213dc8578ccaa4089ec55651acd1c033`, `889eabc1572003ed3555ec7b1ec73989ee3b4d10`, `fc8c01a6fb2d54f2415c6458f67f2561bb9fad5f`, `807db38234a95218e0aa5755acfe166fac0c7d43`.
+- Verification remains pending: local build could not be executed because the environment could not resolve GitHub; no fresh TypeScript/API/browser verification is claimed.
