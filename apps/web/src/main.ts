@@ -3107,11 +3107,11 @@ function renderBusinessProfile(): string {
     '</section>' +
     '<section class="phoenix-public-profile-grid">' +
       '<article class="glass-card phoenix-public-profile-main"><div class="card-section-heading"><div><span class="section-kicker">Identity</span><h2>هویت کسب‌وکار</h2></div></div><div id="public-business-identity" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
-      '<aside class="glass-card phoenix-public-trust-card"><span class="section-kicker">Trust & Publication</span><h2>اعتماد، قبل از نمایش عمومی</h2><p id="public-business-trust-copy">وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.</p><div id="public-business-trust-facts" class="phoenix-public-capability-list"></div><a class="button button-ghost" href="/trust" data-nav>مشاهده Trust</a></aside>
+      '<aside class="glass-card phoenix-public-trust-card"><span class="section-kicker">Trust & Publication</span><h2>اعتماد، قبل از نمایش عمومی</h2><p id="public-business-trust-copy">وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.</p><div id="public-business-trust-facts" class="phoenix-public-capability-list"></div><a class="button button-ghost" href="/trust" data-nav>مشاهده Trust</a></aside>' +
     '</section>' +
     '<section class="phoenix-public-profile-grid">' +
       '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">Contact</span><h2>راه‌های ارتباط</h2></div></div><div id="public-business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
-      '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div></div><div id="public-business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>—</p></div></div></article>
+      '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div></div><div id="public-business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>—</p></div></div></article>' +
     '</section>' +
     '<section class="glass-card phoenix-public-profile-footer"><span class="section-kicker">Canonical Boundary</span><strong>این صفحه Preview/management-facing است؛ انتشار واقعی فقط از مسیرهای canonical انجام می‌شود.</strong><p>تا وقتی mutation انتشار به این UI متصل نشده، وضعیت «منتشر» یا «در انتظار انتشار» جعل نمی‌شود.</p></section>' +
   '</div>';
