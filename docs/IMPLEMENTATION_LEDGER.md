@@ -2450,3 +2450,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - No domain state, authorization rule, duplicate persistence model or fake operational data was introduced.
 - Implementation commits: `3dc4191344d1d0a542f114edbbf9db0aca39f91f`, `94c455474af48fc17c02858e0cfd9cf30fa7b30c`, `10407ed8e5c5b4f0c154b5281ad478b72354aba5`, `c0f8a6a82650f92d466110ff303e8a9f9796a093`, `2cbc0a0b486dbfa22b8f0879aa93a97cc02652ed`, `b0b6f79694721735ab12717a93a7b4a7783bdbc5`.
 - Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
+
+## 2026-09-29 — Role-aware Vertical Module navigation
+- Extended the shared Business module navigation so every visible vertical module receives a presentation-only role-fit marker after canonical Context is loaded.
+- The module registry and existing `getVerticalModuleRoleFit` logic now drive subtle `primary/shared` emphasis across the module rail for Management, Sales, Specialist and Finance lenses.
+- Added accessible `aria-label` context and a lightweight visual marker; this does not grant, deny or infer authorization and never replaces backend permission enforcement.
+- Added responsive-safe styling in both frontend stylesheet surfaces.
+- Implementation commits: `e1dfed2cd62f978db00ca60e730a6a589a61e41e`, `d6fd3642e3b52d618931abe86c7fb514528b8063`, `40001ac04cec99ca0c9d4bc1b1c761532e7055bc`.
+- Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
