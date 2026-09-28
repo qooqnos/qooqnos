@@ -5786,3 +5786,22 @@ a {
   .phoenix-loop-learn { width:100%; justify-content:center; flex-wrap:wrap; border-radius:18px; }
   .phoenix-loop-learn small { width:100%; text-align:center; }
 }
+
+
+/* Phoenix social completion */
+.social-empty-state, .social-error-state { min-height: 220px; display: grid; place-items: center; text-align: center; padding: 38px; margin: 18px 0; }
+.social-empty-state h3, .social-error-state h3 { margin: 14px 0 6px; }
+.social-empty-state p, .social-error-state p { max-width: 620px; margin: 0 auto 18px; color: var(--muted); }
+.phoenix-feed-heading { align-items: end; }
+.phoenix-feed-heading > div { display: grid; gap: 4px; }
+.phoenix-feed-heading > div small { color: var(--muted); }
+.phoenix-feed-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.post-follow.selected, .post-follow-disabled { opacity: .82; }
+.post-follow.selected { border-color: var(--accent); color: var(--accent); }
+.social-action:disabled, .post-follow:disabled { opacity: .6; cursor: wait; }
+.phoenix-compare-tray { gap: 12px; }
+.compare-tray-hint { color: var(--muted); white-space: nowrap; font-size: 12px; }
+.social-activity-row p { margin: 4px 0; color: var(--muted); font-size: 12px; }
+.social-activity-modal { max-height: min(760px, 86vh); overflow: auto; }
+#discovery-pagination { display: flex; justify-content: center; margin: 20px 0 10px; }
+#discovery-pagination .button { min-width: 220px; }
