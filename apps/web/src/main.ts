@@ -416,7 +416,11 @@ function render(): void {
     void loadBusinessProfile();
     document.querySelector<HTMLElement>("#public-business-publication-action")?.addEventListener("click", () => void requestBusinessPublication());
   }
-  if (route.path.startsWith("/businesses/")) void loadBusinessPublicPage(route.path);
+  if (route.path.startsWith("/businesses/")) {
+    void loadBusinessPublicPage(route.path);
+    document.querySelector<HTMLButtonElement>("#public-business-follow")?.addEventListener("click", () => void togglePublicBusinessFollow(route.path));
+    document.querySelector<HTMLButtonElement>("#public-business-share")?.addEventListener("click", () => void sharePublicBusiness());
+  }
   if (route.path === "/trust") void loadTrustSignals();
   if (route.path === "/operations") void loadCases();
   if (route.path === "/seo") void loadSeoHealth();
@@ -3120,7 +3124,7 @@ function renderBusiness(): string {
 function renderBusinessPublic(): string {
   return '<div class="phoenix-public-business-page">' +
     '<section class="phoenix-public-business-hero">' +
-      '<div class="phoenix-public-business-hero-copy"><span class="phoenix-kicker">Phoenix Business</span><h1 id="public-business-page-name">کسب‌وکار</h1><p id="public-business-page-summary">در حال بارگذاری اطلاعات عمومی…</p><div id="public-business-page-meta" class="phoenix-public-business-meta"></div></div>' +
+      '<div class="phoenix-public-business-hero-copy"><span class="phoenix-kicker">Phoenix Business</span><h1 id="public-business-page-name">کسب‌وکار</h1><p id="public-business-page-summary">در حال بارگذاری اطلاعات عمومی…</p><div id="public-business-page-meta" class="phoenix-public-business-meta"></div><div class="phoenix-public-business-hero-actions"><button class="button button-primary" type="button" id="public-business-follow">دنبال کردن</button><button class="button button-ghost" type="button" id="public-business-share">اشتراک‌گذاری</button></div></div>' +
       '<div class="phoenix-public-business-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
     '</section>' +
     '<section class="phoenix-public-business-content">' +
@@ -3374,6 +3378,35 @@ async function loadBusinessProfile(): Promise<void> {
     identity.innerHTML='<div class="slot-empty"><span>!</span><p>'+escapeHtml(error instanceof Error ? error.message : "خواندن پروفایل ناموفق بود.")+'</p></div>';
     contacts.innerHTML='<span>راه‌های تماس در دسترس نیست.</span>';
     locations.innerHTML='<div class="slot-empty"><span>!</span><p>Locations در دسترس نیست.</p></div>';
+  }
+}
+async function togglePublicBusinessFollow(routePath: string): Promise<void> {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
+  if (!businessId) return;
+  const button = document.querySelector<HTMLButtonElement>("#public-business-follow");
+  if (button) { button.disabled = true; button.textContent = "در حال ثبت…"; }
+  try {
+    const followed = await persistSocialFollow({
+      id: businessId,
+      sourceType: "business",
+      sourceId: businessId,
+      title: document.querySelector<HTMLElement>("#public-business-page-name")?.textContent ?? "Business",
+      metadata: { businessId },
+    });
+    if (button) { button.disabled = false; button.textContent = followed ? "دنبال شد ✓" : "دنبال کردن"; }
+  } catch (error) {
+    if (button) { button.disabled = false; button.textContent = "دنبال کردن"; }
+    showToast(error instanceof Error ? error.message : "ثبت Follow ناموفق بود.");
+  }
+}
+
+async function sharePublicBusiness(): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    showToast("لینک پروفایل کپی شد.");
+  } catch {
+    showToast(window.location.href);
   }
 }
 async function loadBusinessPublicPage(routePath: string): Promise<void> {
