@@ -419,6 +419,7 @@ function render(): void {
   if (route.path.startsWith("/businesses/")) {
     void loadBusinessPublicPage(route.path);
     document.querySelector<HTMLButtonElement>("#public-business-follow")?.addEventListener("click", () => void togglePublicBusinessFollow(route.path));
+    document.querySelector<HTMLButtonElement>("#public-business-review")?.addEventListener("click", () => void openPublicBusinessReview(route.path));
     document.querySelector<HTMLButtonElement>("#public-business-share")?.addEventListener("click", () => void sharePublicBusiness());
   }
   if (route.path === "/trust") void loadTrustSignals();
@@ -3124,7 +3125,7 @@ function renderBusiness(): string {
 function renderBusinessPublic(): string {
   return '<div class="phoenix-public-business-page">' +
     '<section class="phoenix-public-business-hero">' +
-      '<div class="phoenix-public-business-hero-copy"><span class="phoenix-kicker">Phoenix Business</span><h1 id="public-business-page-name">کسب‌وکار</h1><p id="public-business-page-summary">در حال بارگذاری اطلاعات عمومی…</p><div id="public-business-page-meta" class="phoenix-public-business-meta"></div><div class="phoenix-public-business-hero-actions"><button class="button button-primary" type="button" id="public-business-follow">دنبال کردن</button><button class="button button-ghost" type="button" id="public-business-share">اشتراک‌گذاری</button></div></div>' +
+      '<div class="phoenix-public-business-hero-copy"><span class="phoenix-kicker">Phoenix Business</span><h1 id="public-business-page-name">کسب‌وکار</h1><p id="public-business-page-summary">در حال بارگذاری اطلاعات عمومی…</p><div id="public-business-page-meta" class="phoenix-public-business-meta"></div><div class="phoenix-public-business-hero-actions"><button class="button button-primary" type="button" id="public-business-follow">دنبال کردن</button><button class="button button-ghost" type="button" id="public-business-review">ثبت نظر</button><button class="button button-ghost" type="button" id="public-business-share">اشتراک‌گذاری</button></div></div>' +
       '<div class="phoenix-public-business-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
     '</section>' +
     '<section class="phoenix-public-business-content">' +
@@ -3379,6 +3380,32 @@ async function loadBusinessProfile(): Promise<void> {
     contacts.innerHTML='<span>راه‌های تماس در دسترس نیست.</span>';
     locations.innerHTML='<div class="slot-empty"><span>!</span><p>Locations در دسترس نیست.</p></div>';
   }
+}
+function openPublicBusinessReview(routePath: string): void {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  const customerId = localStorage.getItem(STORAGE.customer);
+  const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
+  if (!businessId) return;
+  if (!customerId) {
+    showToast("برای ثبت نظر، Customer context این حساب هنوز آماده نیست.");
+    return;
+  }
+  openSimpleFormDialog("نظر درباره کسب‌وکار", "Trust / Review", [
+    { id: "public-review-rating", label: "امتیاز (۱ تا ۵)", placeholder: "5", value: "5" },
+    { id: "public-review-content", label: "نظر", placeholder: "تجربه شما…", value: "" },
+  ], async (dialog) => {
+    const rating = Number(dialog.querySelector<HTMLInputElement>("#public-review-rating")?.value ?? "0");
+    const content = dialog.querySelector<HTMLInputElement>("#public-review-content")?.value.trim() ?? "";
+    if (!Number.isSafeInteger(rating) || rating < 1 || rating > 5) { showToast("امتیاز باید بین ۱ تا ۵ باشد."); return false; }
+    try {
+      await apiJson("/api/v1/trust/reviews", { method: "POST", body: { customerId, ratingValue: rating, ...(content ? { content } : {}), businessId } });
+      showToast("نظر برای بررسی Trust ثبت شد.");
+      return true;
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "ثبت نظر ناموفق بود.");
+      return false;
+    }
+  });
 }
 async function togglePublicBusinessFollow(routePath: string): Promise<void> {
   if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
