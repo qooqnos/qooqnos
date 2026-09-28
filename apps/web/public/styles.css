@@ -3315,3 +3315,156 @@ body::before {
   .phoenix-team-actions { flex-direction:column; }
   .phoenix-team-actions .button { width:100%; }
 }
+
+
+/* Workspace switcher + business public brand surface */
+.phoenix-workspace-modal {
+  overflow:hidden;
+  padding:0;
+}
+.phoenix-workspace-modal-hero {
+  display:grid;
+  grid-template-columns:54px 1fr;
+  gap:13px;
+  align-items:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at 80% 0%,rgba(255,161,91,.22),transparent 38%),
+    linear-gradient(145deg,color-mix(in srgb,var(--primary) 7%,var(--surface)),var(--surface));
+  border-bottom:1px solid var(--line);
+}
+.phoenix-workspace-modal-mark {
+  width:54px;
+  height:54px;
+  display:grid;
+  place-items:center;
+  padding:8px;
+  border-radius:17px;
+  background:linear-gradient(145deg,#ff7813,#ffbe7b);
+  box-shadow:0 12px 28px rgba(255,106,0,.16);
+}
+.phoenix-workspace-modal-mark img { width:100%;height:100%;object-fit:contain; }
+.phoenix-workspace-modal-hero h2 { margin:5px 0 0;font-size:20px;letter-spacing:-.035em; }
+.phoenix-workspace-modal-hero p { margin:4px 0 0;color:var(--muted);font-size:8px;line-height:1.7; }
+.phoenix-workspace-current {
+  display:grid;
+  gap:3px;
+  margin:14px 24px 8px;
+  padding:12px 13px;
+  border-radius:15px;
+  background:var(--surface-2);
+}
+.phoenix-workspace-current span { color:var(--faint);font-size:7px; }
+.phoenix-workspace-current strong { font-size:9px; }
+.phoenix-workspace-current small { color:var(--faint);font-size:7px;direction:ltr;text-align:start; }
+.phoenix-workspace-modal .workspace-option-list { padding:8px 24px 0; }
+.phoenix-workspace-option {
+  border-radius:16px;
+  min-height:58px;
+}
+.phoenix-workspace-option.active {
+  border-color:color-mix(in srgb,var(--primary) 22%,var(--line));
+  background:color-mix(in srgb,var(--primary) 7%,var(--surface));
+}
+.phoenix-workspace-option b { color:var(--primary);font-size:7px; }
+.phoenix-workspace-modal .connection-actions { padding:15px 24px 22px; }
+
+.phoenix-business-brand-preview {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:13px;
+  margin-top:13px;
+}
+.phoenix-brand-preview-card,
+.phoenix-brand-preview-copy {
+  overflow:hidden;
+  border-radius:26px;
+  box-shadow:0 18px 52px rgba(86,56,34,.055);
+}
+.phoenix-brand-preview-cover {
+  position:relative;
+  min-height:174px;
+  background:
+    radial-gradient(circle at 75% 25%,rgba(255,187,112,.36),transparent 28%),
+    linear-gradient(145deg,#2a1208,#652c0c 54%,#1a0b06);
+}
+.phoenix-brand-preview-mark {
+  position:absolute;
+  width:118px;
+  height:118px;
+  padding:14px;
+  inset-inline-start:24px;
+  bottom:-35px;
+  border-radius:31px;
+  border:5px solid var(--surface);
+  background:linear-gradient(145deg,#ff8737,#ffc67c);
+  box-shadow:0 18px 38px rgba(255,106,0,.20);
+}
+.phoenix-brand-preview-mark img { width:100%;height:100%;object-fit:contain; }
+.phoenix-brand-preview-body {
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:end;
+  padding:46px 21px 18px;
+}
+.phoenix-brand-preview-body h2 { margin:5px 0 2px;font-size:20px;letter-spacing:-.04em; }
+.phoenix-brand-preview-body p { margin:0;color:var(--faint);font-size:8px; }
+.phoenix-brand-preview-facts {
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  padding:0 21px 19px;
+}
+.phoenix-brand-preview-facts span {
+  padding:6px 8px;
+  border-radius:999px;
+  background:var(--surface-2);
+  color:var(--muted);
+  font-size:7px;
+}
+.phoenix-brand-preview-copy {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:25px;
+  background:
+    radial-gradient(circle at 85% 15%,rgba(255,151,76,.16),transparent 31%),
+    var(--surface);
+}
+.phoenix-brand-preview-copy h2 {
+  margin:8px 0 9px;
+  font-size:clamp(22px,3vw,34px);
+  line-height:1.35;
+  letter-spacing:-.045em;
+}
+.phoenix-brand-preview-copy p {
+  margin:0;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.9;
+}
+.phoenix-public-capability-list {
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:18px;
+}
+.phoenix-public-capability-list span {
+  padding:8px 10px;
+  border-radius:999px;
+  color:var(--primary);
+  background:color-mix(in srgb,var(--primary) 6%,var(--surface));
+  border:1px solid color-mix(in srgb,var(--primary) 11%,var(--line));
+  font-size:7px;
+}
+@media(max-width:760px){
+  .phoenix-business-brand-preview { grid-template-columns:1fr; }
+  .phoenix-brand-preview-cover { min-height:160px; }
+}
+@media(max-width:560px){
+  .phoenix-workspace-modal-hero { padding:18px; }
+  .phoenix-workspace-modal .workspace-option-list { padding-inline:18px; }
+  .phoenix-workspace-modal .connection-actions { padding-inline:18px; }
+  .phoenix-workspace-current { margin-inline:18px; }
+}
