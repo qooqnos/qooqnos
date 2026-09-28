@@ -122,8 +122,11 @@ function refreshSocialFeed(): void {
   renderCompareTray();
 }
 
-function socialTarget(item: DiscoveryResult): { targetType: "product" | "service"; targetId: string } | null {
-  const targetType = item.sourceType === "product" || item.sourceType === "service" ? item.sourceType : item.metadata && typeof item.metadata.offeringType === "string" && (item.metadata.offeringType === "product" || item.metadata.offeringType === "service") ? item.metadata.offeringType : undefined;
+function socialTarget(item: DiscoveryResult): { targetType: "product" | "service" | "business"; targetId: string } | null {
+  const metadataType = item.metadata && typeof item.metadata.offeringType === "string" ? item.metadata.offeringType : undefined;
+  const targetType = item.sourceType === "product" || item.sourceType === "service" || item.sourceType === "business"
+    ? item.sourceType
+    : metadataType === "product" || metadataType === "service" ? metadataType : undefined;
   const targetId = item.sourceId ?? item.id;
   return targetType && targetId ? { targetType, targetId } : null;
 }
