@@ -335,7 +335,7 @@ function syncThemeButtons(): void {
 function currentRoute(): Route {
   const normalized = normalizePath(location.pathname);
   const staticRoute = routes.find((route) => route.path === normalized);
-  const businessModule = parseBusinessModulePath(normalized);
+  const businessModule = parseBusinessModuleRequest(normalized);
   if (normalized.startsWith("/businesses/") && normalized.split("/").filter(Boolean).length === 2) {
     return {
       path: normalized,
@@ -345,8 +345,9 @@ function currentRoute(): Route {
     };
   }
   if (businessModule) {
+    const semanticPath = businessModulePath(businessModule.vertical, businessModule.module);
     return {
-      path: normalized,
+      path: semanticPath,
       label: businessModule.module,
       icon: "▦",
       render: () => renderBusinessModule(businessModule.vertical, businessModule.module),
@@ -655,6 +656,7 @@ function renderHeader(route: Route): string {
 }
 
 function renderSidebar(route: Route): string {
+  const sidebarActivePath = route.path.startsWith("/business/workspace/") ? "/business" : route.path;
   return `
     <aside class="sidebar">
       <div class="sidebar-top">
@@ -669,7 +671,7 @@ function renderSidebar(route: Route): string {
         ${routes
           .map(
             (item) => `
-              <a href="${item.path}" data-nav class="nav-item ${item.path === route.path ? "active" : ""}">
+              <a href="${item.path}" data-nav class="nav-item ${item.path === sidebarActivePath ? "active" : ""}">
                 <span class="nav-icon">${item.icon}</span><span>${item.label}</span>
               </a>`,
           )
@@ -3203,6 +3205,27 @@ function parseBusinessModulePath(path: string): { vertical: string; module: stri
   const slug = decodeURIComponent(parts[3] ?? "");
   const modules = getBusinessVerticalUi(vertical).modules;
   const module = modules.find((item) => businessModuleSlug(vertical, item) === slug);
+  return module ? { vertical, module } : null;
+}
+
+function parseBusinessModuleRequest(path: string): { vertical: string; module: string } | null {
+  const semantic = parseBusinessModulePath(path);
+  if (semantic) return semantic;
+  if (path !== "/business") return null;
+
+  const params = new URLSearchParams(location.search);
+  const requestedModule = params.get("module")?.trim();
+  if (!requestedModule) return null;
+
+  const requestedVertical = params.get("vertical")?.trim()
+    ?? localStorage.getItem(STORAGE.businessVertical)
+    ?? "default";
+  const vertical = resolveBusinessVerticalKey(requestedVertical);
+  const modules = getBusinessVerticalUi(vertical).modules;
+  const module = modules.includes(requestedModule)
+    ? requestedModule
+    : modules.find((candidate) => businessModuleSlug(vertical, candidate) === requestedModule);
+
   return module ? { vertical, module } : null;
 }
 
