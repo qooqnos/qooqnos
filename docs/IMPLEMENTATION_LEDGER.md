@@ -2458,3 +2458,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added responsive-safe styling in both frontend stylesheet surfaces.
 - Implementation commits: `e1dfed2cd62f978db00ca60e730a6a589a61e41e`, `d6fd3642e3b52d618931abe86c7fb514528b8063`, `40001ac04cec99ca0c9d4bc1b1c761532e7055bc`.
 - Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
+
+## 2026-09-29 — Phoenix Design System foundation completion
+- Elevated the frontend visual foundation into a single canonical token layer covering semantic colors, typography scale, spacing scale, radii, elevation, motion, focus treatment and responsive breakpoints.
+- Normalized shared primitives for buttons, cards, forms, tabs, pills/statuses, tables, lists, dropdowns, dialogs, alerts, empty/loading states and skeletons.
+- Hardened RTL-first behavior with logical properties, tabular numeric isolation, Persian-safe typography inheritance, keyboard-visible focus and forced-colors/reduced-motion handling.
+- Applied the canonical foundation to both frontend stylesheet surfaces (apps/web/styles.css and apps/web/public/styles.css) so legacy/public rendering does not drift visually.
+- Expanded apps/web/src/ui.ts with reusable uiIconButton, uiStatus, uiAlert and uiCard primitives.
+- No domain model, authorization rule or API source-of-truth was changed; this slice is visual/system infrastructure only.
+- Implementation commits: efb7687865e6cd53e40846d4e80a87c8d0067784, f053d3658aa13161392e16f890038e7b306aece1, de4b7c182c6fd82f99a0bf90b5ba059309b874fc.
+- Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
