@@ -497,7 +497,15 @@ async function hydrateCalendarCanvas(canvas: HTMLElement, businessId: string): P
           '<span>Resource ' + String(index + 1).padStart(2, "0") + '</span>' +
           '<div class="phoenix-vwf-live-lane">' +
             '<div class="phoenix-vwf-live-meta"><strong>' + escapeHtml(schedule.timezone) + '</strong><small>' + escapeHtml(schedule.resourceId ?? "بدون Resource") + '</small><em>' + String(slots.length) + ' slot</em></div>' +
-            (slots.length ? '<div class="phoenix-vwf-live-slots">' + slots.slice(0, 12).map((slot) => '<button type="button" class="phoenix-vwf-slot" data-vwf-slot-reference="' + escapeHtml(slot.slotReference) + '" title="' + escapeHtml(slot.status) + '"><span>' + escapeHtml(new Date(slot.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })) + '</span><small>' + String(Math.max(slot.remainingCapacity, 0)) + ' ظرفیت</small></button>').join("") + '</div>' : emptyState("در این بازه slot قابل رزرو برنگشت.", "Availability")) +
+            (slots.length ? '<div class="phoenix-vwf-live-slots">' + slots.slice(0, 12).map((slot) => {
+              const bookingParams = new URLSearchParams({
+                scheduleId: schedule.id,
+                from: slot.startsAt,
+                to: slot.endsAt,
+                duration: String(Math.max(Math.round((new Date(slot.endsAt).getTime() - new Date(slot.startsAt).getTime()) / 60000), 1)),
+              });
+              return '<a class="phoenix-vwf-slot" data-nav href="/booking?' + escapeHtml(bookingParams.toString()) + '" data-vwf-slot-reference="' + escapeHtml(slot.slotReference) + '" title="' + escapeHtml(slot.status) + '"><span>' + escapeHtml(new Date(slot.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })) + '</span><small>' + String(Math.max(slot.remainingCapacity, 0)) + ' ظرفیت · رزرو</small></a>';
+            }).join("") + '</div>' : emptyState("در این بازه slot قابل رزرو برنگشت.", "Availability")) +
           '</div></div>';
       } catch (error) {
         return '<div class="phoenix-vwf-calendar-lane" data-vwf-item><span>Resource ' + String(index + 1).padStart(2, "0") + '</span><div>' + emptyState(error instanceof Error ? error.message : "خواندن Slot ناموفق بود.", "Availability") + '</div></div>';
