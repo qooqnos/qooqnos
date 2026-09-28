@@ -145,6 +145,10 @@ function renderPeople(model: VerticalWorkflowCanvasModel): string {
       '<button type="button" class="button button-secondary" data-vwf-load-customer>خواندن Customer</button>' +
       '<span class="phoenix-vwf-local-note">Lookup فقط از Customer canonical می‌خواند؛ داده محلی ذخیره نمی‌شود.</span>' +
     '</div>' +
+    '<div class="phoenix-vwf-live-people" data-vwf-members-live>' +
+      '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Workspace Team</span><h3>اعضای Workspace</h3><p>فهرست اعضا مستقیماً از Workspace می‌آید؛ این Canvas نقش یا دسترسی جدیدی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
+      '<div class="phoenix-vwf-live-people-grid" data-vwf-member-items><div class="slot-loading">در حال خواندن اعضای واقعی…</div></div>' +
+    '</div>' +
     '<div class="phoenix-vwf-people-grid" data-vwf-people-items>' +
       model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-people-card" data-vwf-item><span class="section-kicker">People surface</span><h3>' + escapeHtml(item.title) + '</h3>' + emptyState(item.description, item.path ? item.path : "Capability") + (item.path ? '<a class="text-link" href="' + escapeHtml(item.path) + '" data-nav>باز کردن منبع ←</a>' : '') + '</article>').join("") +
     '</div>' +
@@ -251,10 +255,10 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     }));
 
     const filter = canvas.querySelector<HTMLInputElement>("[data-vwf-filter]");
-    const items = Array.from(canvas.querySelectorAll<HTMLElement>("[data-vwf-item]"));
     let emptyNode: HTMLElement | null = null;
     filter?.addEventListener("input", () => {
       const query = filter.value.trim().toLocaleLowerCase();
+      const items = Array.from(canvas.querySelectorAll<HTMLElement>("[data-vwf-item]"));
       let visible = 0;
       items.forEach((item) => {
         const matches = !query || (item.textContent ?? "").toLocaleLowerCase().includes(query);
@@ -323,6 +327,9 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     if (businessId && canvas.dataset.vwfLayout === "catalog") {
       void hydrateCatalogCanvas(canvas, businessId);
     }
+    if (canvas.dataset.vwfLayout === "people") {
+      void hydratePeopleCanvas(canvas);
+    }
     if (canvas.dataset.vwfLayout === "operations") {
       void hydrateOperationsCanvas(canvas);
     }
@@ -351,6 +358,52 @@ function displayMinorAmount(value: unknown, currency: unknown): string {
   if (!Number.isFinite(amount)) return "—";
   const normalized = amount / 100;
   return new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 2 }).format(normalized) + (currency ? " " + String(currency) : "");
+}
+
+type VerticalWorkflowWorkspaceMember = {
+  id: string;
+  userId: string;
+  status: string;
+  displayName?: string | null;
+  name?: string | null;
+};
+
+async function hydratePeopleCanvas(canvas: HTMLElement): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-member-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش اعضای واقعی، session و Workspace context لازم است.</div>';
+    return;
+  }
+  const workspaceId = localStorage.getItem("phoenix-workspace-id")?.trim();
+  if (!workspaceId) {
+    container.innerHTML = '<div class="phoenix-vwf-local-note">Workspace context پیدا نشد؛ فهرست اعضا قابل خواندن نیست.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="slot-loading">در حال خواندن اعضای واقعی Workspace…</div>';
+  try {
+    const response = await fetch("/api/v1/workspaces/" + encodeURIComponent(workspaceId) + "/members", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowWorkspaceMember[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Workspace members unavailable");
+    const members = Array.isArray(body?.data) ? body.data : [];
+    if (!members.length) {
+      container.innerHTML = emptyState("برای این Workspace عضو قابل نمایش پیدا نشد.", "Workspace");
+      return;
+    }
+    container.innerHTML = members.map((member) => {
+      const label = String(member.displayName ?? member.name ?? member.userId ?? member.id);
+      const status = String(member.status ?? "unknown");
+      return '<article class="phoenix-vwf-live-people-card" data-vwf-item>' +
+        '<div class="phoenix-vwf-live-people-top"><div><span class="section-kicker">Workspace member</span><h4>' + escapeHtml(label) + '</h4></div><span class="pill">' + escapeHtml(status) + '</span></div>' +
+        '<div class="phoenix-vwf-live-people-meta"><span>User</span><strong>' + escapeHtml(member.userId) + '</strong></div>' +
+        '<div class="phoenix-vwf-live-people-meta"><span>Member</span><strong>' + escapeHtml(member.id) + '</strong></div>' +
+        '<small>Role و Permission همچنان از Context/Authorization backend تعیین می‌شود.</small>' +
+      '</article>';
+    }).join("");
+  } catch (error) {
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن اعضای Workspace ناموفق بود.", "Workspace");
+  }
 }
 
 async function hydrateCustomerLookup(host: HTMLElement, customerId: string): Promise<void> {
