@@ -4419,3 +4419,88 @@ body::before {
   .phoenix-module-blueprint-grid{grid-template-columns:1fr}
   .phoenix-module-blueprint-card{min-height:132px}
 }
+
+
+/* Shared Vertical Workflow UI Framework */
+.phoenix-module-state-contract {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px;
+}
+.phoenix-module-state-contract > div {
+  display:grid;
+  gap:4px;
+  padding:11px 12px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:color-mix(in srgb,var(--surface-2) 72%,transparent);
+}
+.phoenix-module-state-contract span {
+  color:var(--faint);
+  font-size:7px;
+}
+.phoenix-module-state-contract strong {
+  font-size:8px;
+}
+.phoenix-module-state-contract-card {
+  padding:22px 24px;
+}
+.phoenix-module-state-contract-card .button {
+  margin-top:14px;
+}
+.phoenix-module-state-grid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+}
+.phoenix-module-state-item {
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  min-height:92px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--surface-2);
+}
+.phoenix-module-state-item strong {
+  display:block;
+  font-size:8px;
+}
+.phoenix-module-state-item p {
+  margin:5px 0 0;
+  color:var(--muted);
+  font-size:7px;
+  line-height:1.8;
+}
+.phoenix-module-state-dot {
+  width:8px;
+  height:8px;
+  flex:0 0 8px;
+  margin-top:2px;
+  border-radius:999px;
+  background:var(--faint);
+}
+.phoenix-module-state-item.state-connected .phoenix-module-state-dot {
+  background:var(--primary);
+}
+.phoenix-module-state-item.state-requires-input .phoenix-module-state-dot {
+  background:#d6973c;
+}
+.phoenix-module-state-item.state-readonly .phoenix-module-state-dot {
+  background:#7d8794;
+}
+.phoenix-module-state-item.state-unavailable .phoenix-module-state-dot {
+  background:#a65d59;
+}
+@media(max-width:850px){
+  .phoenix-module-state-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:700px){
+  .phoenix-module-state-contract { grid-template-columns:1fr; }
+}
+@media(max-width:520px){
+  .phoenix-module-state-contract-card { padding:18px; }
+  .phoenix-module-state-grid { grid-template-columns:1fr; }
+}
