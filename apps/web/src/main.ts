@@ -3044,6 +3044,32 @@ function getBusinessVerticalUi(value: unknown) {
   return BUSINESS_VERTICAL_UI[resolveBusinessVerticalKey(value)];
 }
 
+const BUSINESS_ROLE_ACTIONS: Record<string, readonly { readonly label: string; readonly path: string; readonly description: string }[]> = {
+  management: [
+    { label: "Business Profile", path: "/business/profile", description: "هویت، Trust و Publication" },
+    { label: "Team & Access", path: "/business?module=تیم", description: "Role و Permissionهای Workspace" },
+    { label: "Billing", path: "/billing", description: "Entitlement و مالی" },
+  ],
+  sales: [
+    { label: "Catalog", path: "/catalog", description: "محصول و خدمت" },
+    { label: "Customers", path: "/customer", description: "مشتری و رابطه" },
+    { label: "Transactions", path: "/transactions", description: "سفارش و معامله" },
+  ],
+  specialist: [
+    { label: "Booking", path: "/booking", description: "Schedule و رزرو" },
+    { label: "Customers", path: "/customer", description: "مراجعان / مشتریان" },
+    { label: "Services", path: "/catalog", description: "خدمات تخصصی" },
+  ],
+  finance: [
+    { label: "Billing", path: "/billing", description: "صورتحساب و Entitlement" },
+    { label: "Transactions", path: "/transactions", description: "جریان‌های تجاری" },
+  ],
+  generic: [
+    { label: "Business Profile", path: "/business/profile", description: "هویت و وضعیت انتشار" },
+    { label: "Catalog", path: "/catalog", description: "عرضه" },
+  ],
+};
+
 const BUSINESS_QUICK_ACTION_LINKS: Record<string, Record<string, string>> = {
   default: { "ایجاد محتوا": "/product-studio", "مدیریت عرضه": "/catalog", "بررسی معاملات": "/transactions" },
   clinic: { "افزودن خدمت": "/catalog", "تنظیم زمان‌بندی": "/booking", "مدیریت نوبت‌ها": "/booking" },
@@ -3150,6 +3176,11 @@ function renderBusiness(): string {
 
     '<section class="phoenix-business-board">' +
       (BUSINESS_VERTICAL_BOARD[ui.key] ?? BUSINESS_VERTICAL_BOARD.default).map((card) => '<a class="glass-card phoenix-business-board-card" href="' + escapeAttr(card.path ?? "/business") + '" data-nav><span class="section-kicker">' + escapeHtml(card.eyebrow) + '</span><h3>' + escapeHtml(card.title) + '</h3><p>' + escapeHtml(card.description) + '</p><span class="phoenix-board-arrow">→</span></a>').join("") +
+    '</section>' +
+
+    '<section class="phoenix-business-role-actions glass-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">Role Focus</span><h2 id="business-role-focus-title">مسیر نقش شما</h2></div><span id="business-role-focus-badge" class="pill">—</span></div>' +
+      '<div id="business-role-actions-grid" class="phoenix-business-role-actions-grid"><div class="slot-loading">در حال خواندن Role Lens…</div></div>' +
     '</section>' +
 
     '<section class="phoenix-business-metrics" id="business-vertical-metrics">' +
@@ -3318,6 +3349,9 @@ async function loadBusinessAccess(): Promise<void> {
     const headerRole = document.querySelector<HTMLElement>("#business-header-role");
     const roleTitle = document.querySelector<HTMLElement>("#business-role-title");
     const roleDescription = document.querySelector<HTMLElement>("#business-role-description");
+    const roleFocusTitle = document.querySelector<HTMLElement>("#business-role-focus-title");
+    const roleFocusBadge = document.querySelector<HTMLElement>("#business-role-focus-badge");
+    const roleActionsGrid = document.querySelector<HTMLElement>("#business-role-actions-grid");
     const permissionsHost = document.querySelector<HTMLElement>("#business-permissions");
     const teamList = document.querySelector<HTMLElement>("#business-team-list");
     const teamCount = document.querySelector<HTMLElement>("#business-team-count");
@@ -3352,6 +3386,11 @@ async function loadBusinessAccess(): Promise<void> {
     if (headerRole) headerRole.textContent = "نقش: " + roleText;
     if (roleTitle) roleTitle.textContent = roleLens.title;
     if (roleDescription) roleDescription.textContent = roleLens.description;
+    const roleKey = roleLens.title === "مدیریت Workspace" ? "management" : roleLens.title === "عملیات فروش" ? "sales" : roleLens.title === "عملیات تخصصی" ? "specialist" : roleLens.title === "عملیات مالی" ? "finance" : "generic";
+    const roleActions = BUSINESS_ROLE_ACTIONS[roleKey] ?? BUSINESS_ROLE_ACTIONS.generic;
+    if (roleFocusTitle) roleFocusTitle.textContent = roleLens.title;
+    if (roleFocusBadge) roleFocusBadge.textContent = roleText;
+    if (roleActionsGrid) roleActionsGrid.innerHTML = roleActions.map((item) => '<a class="phoenix-business-role-action" href="' + escapeAttr(item.path) + '" data-nav><strong>' + escapeHtml(item.label) + '</strong><span>' + escapeHtml(item.description) + '</span><b>→</b></a>').join("");
     if (permissionsHost) permissionsHost.innerHTML = permissions.length
       ? permissions.slice(0, 24).map((permission) => '<span class="phoenix-permission-chip">' + escapeHtml(permission) + '</span>').join("")
       : '<span class="permission-empty">Permission فعلی در context برنگشت.</span>';
