@@ -2468,3 +2468,4 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - No domain model, authorization rule or API source-of-truth was changed; this slice is visual/system infrastructure only.
 - Implementation commits: efb7687865e6cd53e40846d4e80a87c8d0067784, f053d3658aa13161392e16f890038e7b306aece1, de4b7c182c6fd82f99a0bf90b5ba059309b874fc.
 - Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
+- Follow-up source-format fix after the UI primitive expansion: commit cc5dff9ddbd2e7dddd3748df0ddce3ec946609c2.
