@@ -3049,6 +3049,15 @@ function renderBusiness(): string {
       '</aside>' +
     '</section>' +
 
+    '<section class="phoenix-business-brand-preview">' +
+      '<article class="glass-card phoenix-brand-preview-card">' +
+        '<div class="phoenix-brand-preview-cover"><div class="phoenix-brand-preview-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div></div>' +
+        '<div class="phoenix-brand-preview-body"><div><span class="section-kicker">Public Brand</span><h2 id="business-brand-preview-name">نام کسب‌وکار</h2><p id="business-brand-preview-type">نوع کسب‌وکار</p></div><span id="business-brand-preview-status" class="pill">—</span></div>' +
+        '<div class="phoenix-brand-preview-facts"><span>Profile</span><span>Catalog</span><span>Contact</span><span>Trust</span></div>' +
+      '</article>' +
+      '<article class="glass-card phoenix-brand-preview-copy"><span class="section-kicker">Public Profile</span><h2>کسب‌وکار تو باید برای مشتری هم به همان اندازه واضح باشد.</h2><p>این پیش‌نمایش فقط بر اساس داده‌های canonical Business ساخته می‌شود؛ اطلاعات خصوصی Workspace در سطح عمومی نمایش داده نمی‌شود.</p><div class="phoenix-public-capability-list"><span>هویت کسب‌وکار</span><span>محصول و خدمت</span><span>اعتماد</span><span>ارتباط</span></div></article>' +
+    '</section>' +
+
     '<section class="phoenix-business-public-preview glass-card">' +
       '<div class="card-section-heading"><div><span class="section-kicker">Customer Experience</span><h2>کاربر این کسب‌وکار را چگونه می‌بیند؟</h2></div><span class="pill success">Capability-driven</span></div>' +
       '<div id="business-customer-actions" class="phoenix-business-customer-actions">' + ui.customerActions.map((action) => '<span>' + action + '</span>').join("") + '</div>' +
@@ -3138,6 +3147,9 @@ async function loadBusinessAccess(): Promise<void> {
     const moduleGrid = document.querySelector<HTMLElement>("#business-module-grid");
     const quickActions = document.querySelector<HTMLElement>("#business-quick-actions");
     const customerActions = document.querySelector<HTMLElement>("#business-customer-actions");
+    const brandPreviewName = document.querySelector<HTMLElement>("#business-brand-preview-name");
+    const brandPreviewType = document.querySelector<HTMLElement>("#business-brand-preview-type");
+    const brandPreviewStatus = document.querySelector<HTMLElement>("#business-brand-preview-status");
     const headerRole = document.querySelector<HTMLElement>("#business-header-role");
     const roleTitle = document.querySelector<HTMLElement>("#business-role-title");
     const roleDescription = document.querySelector<HTMLElement>("#business-role-description");
@@ -3148,6 +3160,9 @@ async function loadBusinessAccess(): Promise<void> {
     if (verticalTitle) verticalTitle.textContent = vertical.label;
     if (verticalSubtitle) verticalSubtitle.textContent = vertical.subtitle;
     if (headerName) headerName.textContent = getRecordString(business, ["displayName","name"]) ?? "فضای کاری شما";
+    if (brandPreviewName) brandPreviewName.textContent = getRecordString(business, ["displayName","name"]) ?? "نام کسب‌وکار";
+    if (brandPreviewType) brandPreviewType.textContent = vertical.label;
+    if (brandPreviewStatus) { const publicationPreview = getRecordString(business, ["publicationStatus"]) ?? "unpublished"; brandPreviewStatus.textContent = publicationPreview === "published" ? "منتشر" : "پیش‌نویس"; brandPreviewStatus.className = publicationPreview === "published" ? "pill success" : "pill warning"; }
     if (headerStatus) { headerStatus.textContent = getRecordString(business, ["status"]) ?? "—"; headerStatus.className = getRecordString(business, ["status"]) === "active" ? "pill success" : "pill warning"; }
     if (nextAction) nextAction.textContent = vertical.actions[0] ?? "اقدام بعدی را شروع کن.";
     if (nextDetail) nextDetail.textContent = vertical.subtitle;
@@ -4312,7 +4327,7 @@ function markNotificationReadLocally(id: string): void {
   updateShellIndicators();
 }
 
-function openWorkspaceSwitcher(): void {
+async function openWorkspaceSwitcher(): Promise<void> {
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
     openConnectionPanel();
     return;
@@ -4320,28 +4335,37 @@ function openWorkspaceSwitcher(): void {
   const overlay = document.createElement("div");
   overlay.className = "workspace-overlay";
   const currentId = localStorage.getItem(STORAGE.workspace) ?? shellContext.workspaceId ?? "";
+  let roles: string[] = [];
+  try {
+    const context = await apiJson<{ roles?: string[]; permissions?: string[] }>("/api/v1/context");
+    roles = Array.isArray(context.roles) ? context.roles : [];
+  } catch {
+    roles = [];
+  }
+  const current = shellWorkspaces.find((workspace) => workspace.id === currentId);
+  const roleLabel = roles.length ? roles.join(" · ") : "نقش از context در دسترس نیست";
   const rows = shellWorkspaces.length
-    ? shellWorkspaces.map((workspace) => `
-        <button class="workspace-option ${workspace.id === currentId ? "active" : ""}" type="button" data-select-workspace="${escapeAttr(workspace.id)}">
-          <span class="workspace-option-icon">◆</span>
-          <span><strong>${escapeHtml(workspace.name)}</strong><small>${escapeHtml(workspace.id)}</small></span>
-          <b>${workspace.id === currentId ? "✓" : "→"}</b>
-        </button>`).join("")
+    ? shellWorkspaces.map((workspace) => {
+        const active = workspace.id === currentId;
+        return '<button class="workspace-option phoenix-workspace-option ' + (active ? "active" : "") + '" type="button" data-select-workspace="' + escapeAttr(workspace.id) + '">' +
+          '<span class="workspace-option-icon">' + (active ? "✓" : "◆") + '</span>' +
+          '<span><strong>' + escapeHtml(workspace.name) + '</strong><small>' + escapeHtml(workspace.status ?? "workspace") + '</small></span>' +
+          '<b>' + (active ? "فعال" : "ورود") + '</b>' +
+        '</button>';
+      }).join("")
     : '<div class="slot-empty"><span>◆</span><p>Workspace مجاز دیگری برای این حساب پیدا نشد.</p></div>';
-  overlay.innerHTML = `
-    <div class="connection-backdrop" data-close-workspace></div>
-    <section class="connection-modal glass-card workspace-modal" role="dialog" aria-modal="true" aria-labelledby="workspace-title">
-      <button class="connection-close" type="button" data-close-workspace aria-label="بستن">×</button>
-      <span class="eyebrow"><i></i> Workspace Switcher</span>
-      <h2 id="workspace-title">فضای کاری را انتخاب کنید</h2>
-      <p>فقط workspaceهایی که کاربر در آن‌ها Membership فعال دارد قابل انتخاب هستند.</p>
-      <div class="workspace-option-list">${rows}</div>
-      <div class="connection-actions">
-        <button class="button button-ghost" type="button" data-close-workspace>بستن</button>
-        <button class="button button-primary" type="button" data-refresh-shell>بروزرسانی</button>
-      </div>
-    </section>`;
+
+  overlay.innerHTML =
+    '<div class="connection-backdrop" data-close-workspace></div>' +
+    '<section class="connection-modal glass-card workspace-modal phoenix-workspace-modal" role="dialog" aria-modal="true" aria-labelledby="workspace-title">' +
+      '<button class="connection-close" type="button" data-close-workspace aria-label="بستن">×</button>' +
+      '<div class="phoenix-workspace-modal-hero"><span class="phoenix-workspace-modal-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></span><div><span class="section-kicker">Phoenix Workspace</span><h2 id="workspace-title">فضای کاری را انتخاب کنید</h2><p>' + escapeHtml(current?.name ?? "فضای کاری شما") + ' · ' + escapeHtml(roleLabel) + '</p></div></div>' +
+      '<div class="phoenix-workspace-current"><span>Workspace فعلی</span><strong>' + escapeHtml(current?.name ?? "نامشخص") + '</strong><small>' + escapeHtml(currentId || "—") + '</small></div>' +
+      '<div class="workspace-option-list">' + rows + '</div>' +
+      '<div class="connection-actions"><button class="button button-ghost" type="button" data-close-workspace>بستن</button><button class="button button-primary" type="button" data-refresh-shell>بروزرسانی</button></div>' +
+    '</section>';
   document.body.appendChild(overlay);
+
   overlay.querySelectorAll<HTMLElement>("[data-close-workspace]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
   overlay.querySelector<HTMLButtonElement>("[data-refresh-shell]")?.addEventListener("click", () => {
     void loadShellContext();
@@ -4357,6 +4381,7 @@ function openWorkspaceSwitcher(): void {
         const context = await apiJson<{ authenticated: boolean; workspaceId?: string }>("/api/v1/context");
         if (!context.authenticated || context.workspaceId !== next) throw new Error("Workspace context مجاز نیست.");
         overlay.remove();
+        await loadShellContext();
         render();
         showToast("Workspace تغییر کرد.");
       } catch (error) {
