@@ -3137,6 +3137,29 @@ const BUSINESS_VERTICAL_BOARD: Record<string, readonly { readonly eyebrow: strin
     { eyebrow: "Growth", title: "پیشنهادها", description: "Promotion policy در دامنه Promotion قرار دارد.", path: "/promotion" },
   ],
 };
+const BUSINESS_WORKFLOW_STAGE_MODULES: Record<string, Record<string, string>> = {
+  clinic: { "خدمت": "خدمات", "زمان‌بندی": "تقویم", "رزرو": "نوبت‌ها", "پیگیری": "پیام‌ها" },
+  retail: { "محصول": "محصولات", "انتشار": "محتوا", "موجودی": "موجودی", "سفارش": "سفارش‌ها" },
+  restaurant: { "منو": "منو", "میز / رزرو": "رزرو", "سفارش": "سفارش‌های امروز", "تحویل": "تحویل" },
+  salon: { "خدمت": "خدمات", "متخصص": "متخصصان", "زمان‌بندی": "زمان‌بندی", "رزرو": "امروز" },
+};
+
+function businessWorkflowStageHref(
+  vertical: string,
+  stage: string,
+  businessId: string,
+  originatingModule: string,
+): { href?: string; module?: string } {
+  const resolvedVertical = resolveBusinessVerticalKey(vertical);
+  const candidate = BUSINESS_WORKFLOW_STAGE_MODULES[resolvedVertical]?.[stage];
+  if (!candidate) return {};
+  if (!getBusinessVerticalUi(resolvedVertical).modules.includes(candidate)) return {};
+  return {
+    module: candidate,
+    href: businessModuleContextHref(businessModulePath(resolvedVertical, candidate), resolvedVertical, originatingModule, businessId),
+  };
+}
+
 const BUSINESS_VERTICAL_WORKFLOWS: Record<string, readonly string[]> = {
   default: ["Supply", "Discovery", "Connect", "Act"],
   clinic: ["خدمت", "زمان‌بندی", "رزرو", "پیگیری"],
@@ -3350,8 +3373,15 @@ function renderBusinessModule(vertical: string, module: string): string {
       '</div>' +
     '</section>' +
     '<section class="glass-card phoenix-business-workflow-card"><div class="card-section-heading"><div><span class="section-kicker">Vertical Workflow</span><h2>جریان کاری این نوع کسب‌وکار</h2></div><span class="pill">' + escapeHtml(ui.label) + '</span></div><div class="phoenix-workflow-rail">' +
-      workflow.map((step, index) => '<div class="phoenix-workflow-step"><span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + escapeHtml(step) + '</strong></div>').join("") +
-    '</div><p>این rail معماری مسیر را نشان می‌دهد؛ هیچ state نمایشی ساختگی جای state دامنه را نمی‌گیرد.</p></section>' +
+      workflow.map((step, index) => {
+        const stage = businessWorkflowStageHref(ui.key, step, businessId, module);
+        const current = stage.module === module ? " current" : "";
+        const content = '<span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + escapeHtml(step) + '</strong>';
+        return stage.href
+          ? '<a class="phoenix-workflow-step' + current + '" href="' + escapeAttr(stage.href) + '" data-nav>' + content + '<small>باز کردن ماژول ←</small></a>'
+          : '<div class="phoenix-workflow-step' + current + '">' + content + '</div>';
+      }).join("") +
+    '</div><p>این rail اکنون به ماژول‌های canonical Workspace متصل است؛ جابه‌جایی بین مراحل state موازی ایجاد نمی‌کند.</p></section>' +
     '<section class="glass-card phoenix-module-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>کارهای مرتبط</h2></div></div><div class="phoenix-business-quick-actions">' +
       actions.map((action) => {
         const target = (BUSINESS_QUICK_ACTION_LINKS[ui.key] ?? BUSINESS_QUICK_ACTION_LINKS.default)[action];
