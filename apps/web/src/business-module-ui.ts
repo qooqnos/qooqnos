@@ -83,7 +83,7 @@ const blueprint = (
   eyebrow,
   layout,
   interaction,
-  primaryAction,
+  ...(primaryAction ? { primaryAction } : {}),
   blocks,
   states: states(),
 });
@@ -389,8 +389,6 @@ const ROLE_LENS_BY_MODULE: Record<string, readonly VerticalRoleLensKey[]> = {
   "آشپزخانه": ["sales", "management"],
   "تحویل": ["sales", "management"],
   "گزارش": ["management", "finance"],
-  "متخصصان": ["specialist", "management"],
-  "مشتریان": ["sales", "specialist"],
   "ساعت کاری": ["management"],
   "پیشنهادها": ["sales", "management"],
 };
