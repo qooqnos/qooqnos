@@ -2965,60 +2965,106 @@ async function startCheckoutFlow(): Promise<void> {
     result.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "Checkout ناموفق بود.")}</p></div>`;
   }
 }
+const BUSINESS_VERTICAL_UI = {
+  default: {
+    key: "default", label: "کسب‌وکار عمومی", icon: "◆", subtitle: "Workspace قابل تنظیم بر اساس قابلیت‌های فعال.",
+    modules: ["نمای کلی", "پروفایل", "محتوا", "محصولات", "خدمات", "مشتریان", "پیام‌ها", "معاملات", "تیم", "گزارش‌ها"],
+    actions: ["ایجاد محتوا", "مدیریت عرضه", "بررسی معاملات"],
+    metrics: ["فعالیت امروز", "مشتریان", "محتوا", "معاملات"],
+    customerActions: ["مشاهده", "تماس", "پیام"]
+  },
+  clinic: {
+    key: "clinic", label: "مطب / کلینیک", icon: "✚", subtitle: "رزرو، خدمات، پزشکان، زمان‌بندی و ارتباط با مراجعان.",
+    modules: ["امروز", "نوبت‌ها", "تقویم", "پزشکان", "خدمات", "مراجعان", "ساعات کاری", "پیام‌ها", "پرداخت", "محتوا", "تیم"],
+    actions: ["افزودن خدمت", "تنظیم زمان‌بندی", "مدیریت نوبت‌ها"],
+    metrics: ["نوبت‌های امروز", "خدمات", "پزشکان", "پیام‌های جدید"],
+    customerActions: ["مشاهده خدمات", "رزرو", "تماس", "پیام"]
+  },
+  retail: {
+    key: "retail", label: "فروشگاه / خرده‌فروشی", icon: "▦", subtitle: "محصول، تنوع، موجودی، سفارش و مشتری در یک Workspace.",
+    modules: ["فروش امروز", "محصولات", "مدل‌ها و تنوع", "سایز و رنگ", "موجودی", "سفارش‌ها", "مرجوعی", "مشتریان", "تخفیف‌ها", "محتوا", "گزارش فروش"],
+    actions: ["افزودن محصول", "ثبت موجودی", "ساخت محتوای محصول"],
+    metrics: ["فروش امروز", "موجودی کم", "سفارش‌ها", "مشتریان"],
+    customerActions: ["مشاهده", "مقایسه", "ذخیره", "خرید فوری"]
+  },
+  restaurant: {
+    key: "restaurant", label: "رستوران", icon: "⌂", subtitle: "منو، سفارش، میز، رزرو، آشپزخانه و تحویل.",
+    modules: ["سفارش‌های امروز", "منو", "میزها", "رزرو", "آشپزخانه", "تحویل", "مشتریان", "تخفیف", "پرداخت", "گزارش"],
+    actions: ["مدیریت منو", "تنظیم میزها", "بررسی رزروها"],
+    metrics: ["سفارش‌های فعال", "رزروها", "میزهای باز", "تحویل‌ها"],
+    customerActions: ["مشاهده منو", "سفارش", "رزرو", "دریافت"]
+  },
+  salon: {
+    key: "salon", label: "سالن زیبایی", icon: "✦", subtitle: "خدمات، متخصصان، تقویم، ظرفیت و مشتریان.",
+    modules: ["وقت‌های امروز", "خدمات", "متخصصان", "تقویم", "مشتریان", "ظرفیت", "پرداخت", "پیشنهادها", "محتوا", "تیم"],
+    actions: ["افزودن خدمت", "تنظیم برنامه", "افزودن متخصص"],
+    metrics: ["وقت‌های امروز", "خدمات", "متخصصان", "مشتریان"],
+    customerActions: ["مشاهده خدمت", "انتخاب متخصص", "رزرو", "تماس"]
+  }
+} as const;
+
+type BusinessVerticalKey = keyof typeof BUSINESS_VERTICAL_UI;
+
+function resolveBusinessVerticalKey(value: unknown): BusinessVerticalKey {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (/(clinic|doctor|medical|مطب|کلینیک|پزشک)/.test(raw)) return "clinic";
+  if (/(shoe|retail|store|shop|فروشگاه|کفش|خرده)/.test(raw)) return "retail";
+  if (/(restaurant|cafe|food|رستوران|کافه|غذا)/.test(raw)) return "restaurant";
+  if (/(salon|beauty|hair|سالن|زیبایی|آرایش)/.test(raw)) return "salon";
+  return "default";
+}
+
+function getBusinessVerticalUi(value: unknown) {
+  return BUSINESS_VERTICAL_UI[resolveBusinessVerticalKey(value)];
+}
+
 function renderBusiness(): string {
   const businessId = localStorage.getItem(STORAGE.business) ?? "";
-  return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Business Workspace</span><h1>کسب‌وکارتان را <em>قابل کشف</em> کنید.</h1><p>پروفایل، مکان‌ها، ساعات، تماس‌ها و وضعیت انتشار مستقیماً از Business canonical خوانده می‌شوند.</p></div>
-      <div class="heading-actions">
-        <button class="button button-ghost" type="button" data-business-create>ساخت کسب‌وکار</button>
-        <button class="button button-ghost" type="button" data-business-refresh>بروزرسانی</button>
-        <a class="button button-primary" href="/product-studio" data-nav>ساخت محصول با AI <span>✦</span></a>
-      </div>
-    </section>
+  const ui = getBusinessVerticalUi("");
+  return '<div class="phoenix-business-page" data-business-vertical="' + ui.key + '">' +
+    '<section class="phoenix-business-hero">' +
+      '<div class="phoenix-business-hero-copy">' +
+        '<span class="phoenix-kicker">Business Workspace</span>' +
+        '<div class="phoenix-business-title-row"><span id="business-vertical-icon" class="phoenix-business-vertical-icon">' + ui.icon + '</span><div><h1 id="business-vertical-title">' + ui.label + '</h1><p id="business-vertical-subtitle">' + ui.subtitle + '</p></div></div>' +
+        '<div class="phoenix-business-identity-line"><span id="business-header-name">فضای کاری شما</span><span id="business-header-status" class="pill">در حال بررسی</span></div>' +
+      '</div>' +
+      '<div class="phoenix-business-hero-actions"><button class="button button-ghost" type="button" data-business-create>ساخت کسب‌وکار</button><button class="button button-ghost" type="button" data-business-refresh>بروزرسانی</button><a class="button button-primary" href="/product-studio" data-nav>✦ Seller AI</a></div>' +
+    '</section>' +
 
-    <section class="business-grid">
-      <article class="glass-card business-main">
-        <div class="card-section-heading"><div><span class="section-kicker">Profile</span><h2>پروفایل کسب‌وکار</h2></div><span id="business-management-status" class="pill">در حال بررسی</span></div>
-        <div id="business-profile-content" class="business-profile-content"><div class="slot-empty"><span>▦</span><p>${businessId ? "در حال خواندن پروفایل…" : "یک Business ID برای مدیریت این فضای کاری ثبت کنید."}</p></div></div>
-        <div class="business-management-form">
-          <input id="business-name-input" class="studio-input-line" placeholder="نام canonical" />
-          <input id="business-display-name-input" class="studio-input-line" placeholder="نام نمایشی" />
-          <input id="business-type-input" class="studio-input-line" placeholder="نوع کسب‌وکار" />
-          <input id="business-timezone-input" class="studio-input-line" placeholder="Timezone" />
-          <input id="business-currency-input" class="studio-input-line" placeholder="Currency" />
-          <button class="button button-primary" type="button" data-business-save>${businessId ? "ذخیره پروفایل" : "ابتدا Business بسازید"}</button>
-        </div>
-      </article>
+    '<section class="phoenix-business-attention">' +
+      '<article class="glass-card phoenix-business-assistant"><div class="phoenix-business-assistant-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div><div><span class="section-kicker">Phoenix پیشنهاد می‌دهد</span><strong id="business-next-action">اولین کار مهم امروزت را مشخص کن.</strong><p id="business-next-detail">ماژول‌های این Workspace بر اساس نوع کسب‌وکار ترکیب می‌شوند؛ مجوزها همچنان توسط backend تعیین می‌شوند.</p></div><button class="button button-primary" type="button" data-business-primary-action>شروع کن <span>←</span></button></article>' +
+      '<article class="glass-card phoenix-business-mini-status"><span class="section-kicker">Workspace</span><strong id="business-workspace-status">—</strong><small id="business-workspace-status-detail">—</small></article>' +
+    '</section>' +
 
-      <article class="glass-card ai-action-card">
-        <span class="ai-badge">AI COPILOT</span>
-        <h2>عرضه را سریع‌تر غنی کنید.</h2>
-        <p>Seller AI می‌تواند از متن و تصویر خام، پیش‌نویس محصول بسازد؛ Catalog و publication همچنان canonical باقی می‌مانند.</p>
-        <a class="button button-primary" href="/product-studio" data-nav>باز کردن Product Studio <span>→</span></a>
-      </article>
-    </section>
+    '<section class="phoenix-business-metrics" id="business-vertical-metrics">' +
+      ui.metrics.map((label, index) => '<article class="glass-card phoenix-business-metric"><span>' + label + '</span><strong id="business-metric-' + index + '">—</strong><small>اطلاعات canonical پس از اتصال</small></article>').join("") +
+    '</section>' +
 
-    <section class="business-detail-grid">
-      <article class="glass-card business-detail-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div><button class="button button-ghost" type="button" data-business-add-location>افزودن مکان</button></div>
-        <div id="business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>داده مکان بعد از اتصال نمایش داده می‌شود.</p></div></div>
-      </article>
-      <article class="glass-card business-detail-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Availability Context</span><h2>ساعات فعال</h2></div></div>
-        <div id="business-hours" class="business-hours-list"><div class="slot-empty"><span>◷</span><p>ساعات بعد از اتصال نمایش داده می‌شوند.</p></div></div>
-      </article>
-      <article class="glass-card business-detail-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Contacts</span><h2>راه‌های تماس</h2></div></div>
-        <div id="business-contacts" class="metadata-cloud"><span>—</span></div>
-      </article>
-      <article class="glass-card business-detail-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Publication</span><h2>وضعیت انتشار</h2></div><span id="business-publication-status" class="pill">—</span></div>
-        <div id="business-publication-detail" class="connection-state">—</div>
-      </article>
-    </section>
-  `;
+    '<section class="phoenix-business-layout">' +
+      '<article class="glass-card phoenix-business-modules-card"><div class="card-section-heading"><div><span class="section-kicker">Workspace Modules</span><h2>ابزارهای مخصوص این کسب‌وکار</h2></div><span id="business-module-count" class="pill">—</span></div><div id="business-module-grid" class="phoenix-business-module-grid">' + ui.modules.map((module) => '<button class="phoenix-business-module" type="button"><span>◈</span><strong>' + module + '</strong><small>باز کردن</small></button>').join("") + '</div></article>' +
+
+      '<aside class="phoenix-business-side">' +
+        '<article class="glass-card phoenix-business-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>اقدام‌های سریع</h2></div></div><div id="business-quick-actions" class="phoenix-business-quick-actions">' + ui.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action>' + action + ' <span>←</span></button>').join("") + '</div></article>' +
+        '<article class="glass-card ai-action-card"><span class="ai-badge">AI COPILOT</span><h2>عرضه را سریع‌تر آماده کن.</h2><p>از تصویر یا متن خام شروع کن؛ Seller AI پیش‌نویس می‌سازد و پذیرش نهایی همچنان دست کسب‌وکار می‌ماند.</p><a class="button button-primary" href="/product-studio" data-nav>باز کردن Product Studio <span>→</span></a></article>' +
+      '</aside>' +
+    '</section>' +
+
+    '<section class="phoenix-business-public-preview glass-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">Customer Experience</span><h2>کاربر این کسب‌وکار را چگونه می‌بیند؟</h2></div><span class="pill success">Capability-driven</span></div>' +
+      '<div id="business-customer-actions" class="phoenix-business-customer-actions">' + ui.customerActions.map((action) => '<span>' + action + '</span>').join("") + '</div>' +
+      '<p>این Actionها باید فقط وقتی نمایش داده شوند که Capability متناظر در منبع canonical فعال باشد.</p>' +
+    '</section>' +
+
+    '<section class="business-grid phoenix-business-management-grid">' +
+      '<article class="glass-card business-main"><div class="card-section-heading"><div><span class="section-kicker">Profile</span><h2>پروفایل کسب‌وکار</h2></div><span id="business-management-status" class="pill">در حال بررسی</span></div><div id="business-profile-content" class="business-profile-content"><div class="slot-empty"><span>▦</span><p>' + (businessId ? "در حال خواندن پروفایل…" : "یک Business ID برای مدیریت این فضای کاری ثبت کنید.") + '</p></div></div><div class="business-management-form"><input id="business-name-input" class="studio-input-line" placeholder="نام canonical" /><input id="business-display-name-input" class="studio-input-line" placeholder="نام نمایشی" /><input id="business-type-input" class="studio-input-line" placeholder="نوع کسب‌وکار" /><input id="business-timezone-input" class="studio-input-line" placeholder="Timezone" /><input id="business-currency-input" class="studio-input-line" placeholder="Currency" /><button class="button button-primary" type="button" data-business-save>' + (businessId ? "ذخیره پروفایل" : "ابتدا Business بسازید") + '</button></div></article>' +
+      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div><button class="button button-ghost" type="button" data-business-add-location>افزودن مکان</button></div><div id="business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>داده مکان بعد از اتصال نمایش داده می‌شود.</p></div></div></article>' +
+      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Availability</span><h2>ساعات فعال</h2></div></div><div id="business-hours" class="business-hours-list"><div class="slot-empty"><span>◷</span><p>ساعات بعد از اتصال نمایش داده می‌شوند.</p></div></div></article>' +
+      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Contacts</span><h2>راه‌های تماس</h2></div></div><div id="business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
+      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Publication</span><h2>وضعیت انتشار</h2></div><span id="business-publication-status" class="pill">—</span></div><div id="business-publication-detail" class="connection-state">—</div></article>' +
+    '</section>' +
+  '</div>';
 }
+
 
 
 async function loadBusinessAccess(): Promise<void> {
@@ -3052,6 +3098,35 @@ async function loadBusinessAccess(): Promise<void> {
       `/api/v1/businesses/${encodeURIComponent(businessId)}/management`,
     );
     const business = response.data.business;
+    const vertical = getBusinessVerticalUi(business.businessType);
+    const verticalRoot = document.querySelector<HTMLElement>(".phoenix-business-page");
+    if (verticalRoot) verticalRoot.dataset.businessVertical = vertical.key;
+    const verticalIcon = document.querySelector<HTMLElement>("#business-vertical-icon");
+    const verticalTitle = document.querySelector<HTMLElement>("#business-vertical-title");
+    const verticalSubtitle = document.querySelector<HTMLElement>("#business-vertical-subtitle");
+    const headerName = document.querySelector<HTMLElement>("#business-header-name");
+    const headerStatus = document.querySelector<HTMLElement>("#business-header-status");
+    const nextAction = document.querySelector<HTMLElement>("#business-next-action");
+    const nextDetail = document.querySelector<HTMLElement>("#business-next-detail");
+    const moduleCount = document.querySelector<HTMLElement>("#business-module-count");
+    const moduleGrid = document.querySelector<HTMLElement>("#business-module-grid");
+    const quickActions = document.querySelector<HTMLElement>("#business-quick-actions");
+    const customerActions = document.querySelector<HTMLElement>("#business-customer-actions");
+    if (verticalIcon) verticalIcon.textContent = vertical.icon;
+    if (verticalTitle) verticalTitle.textContent = vertical.label;
+    if (verticalSubtitle) verticalSubtitle.textContent = vertical.subtitle;
+    if (headerName) headerName.textContent = getRecordString(business, ["displayName","name"]) ?? "فضای کاری شما";
+    if (headerStatus) { headerStatus.textContent = getRecordString(business, ["status"]) ?? "—"; headerStatus.className = getRecordString(business, ["status"]) === "active" ? "pill success" : "pill warning"; }
+    if (nextAction) nextAction.textContent = vertical.actions[0] ?? "اقدام بعدی را شروع کن.";
+    if (nextDetail) nextDetail.textContent = vertical.subtitle;
+    if (moduleCount) moduleCount.textContent = String(vertical.modules.length) + " ماژول";
+    if (moduleGrid) moduleGrid.innerHTML = vertical.modules.map((module) => '<button class="phoenix-business-module" type="button"><span>◈</span><strong>' + escapeHtml(module) + '</strong><small>باز کردن</small></button>').join("");
+    if (quickActions) quickActions.innerHTML = vertical.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action>' + escapeHtml(action) + ' <span>←</span></button>').join("");
+    if (customerActions) customerActions.innerHTML = vertical.customerActions.map((action) => '<span>' + escapeHtml(action) + '</span>').join("");
+    for (let i = 0; i < vertical.metrics.length; i += 1) {
+      const metric = document.querySelector<HTMLElement>("#business-metric-" + i);
+      if (metric) metric.textContent = "—";
+    }
     const locationsData = response.data.locations ?? [];
     const hoursData = response.data.hours ?? [];
     const contactsData = response.data.contacts ?? [];
