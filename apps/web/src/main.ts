@@ -3315,7 +3315,7 @@ function renderBusinessModule(vertical: string, module: string): string {
   const ui = getBusinessVerticalUi(vertical);
   const info = businessModuleInfo(vertical, module);
   const presentation = BUSINESS_MODULE_PRESENTATIONS[ui.key]?.[module];
-  const businessId = localStorage.getItem(STORAGE.business) ?? "";
+  const businessId = new URLSearchParams(location.search).get("business")?.trim() || localStorage.getItem(STORAGE.business) || "";
   const moduleIndex = ui.modules.indexOf(module);
   const canonicalPath = info.path ? businessModuleContextHref(info.path, ui.key, module, businessId) : undefined;
   const relatedModules = ui.modules.filter((item) => item !== module).slice(0, 5);
@@ -3560,7 +3560,7 @@ function renderBusinessProfile(): string {
   '</div>';
 }
 async function loadBusinessModuleContext(): Promise<void> {
-  const businessId = localStorage.getItem(STORAGE.business);
+  const businessId = new URLSearchParams(location.search).get("business")?.trim() || localStorage.getItem(STORAGE.business);
   const businessNode = document.querySelector<HTMLElement>("#module-context-0");
   const verticalNode = document.querySelector<HTMLElement>("#module-context-1");
   const sourceNode = document.querySelector<HTMLElement>("#module-context-2");
