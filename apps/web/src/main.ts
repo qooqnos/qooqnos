@@ -4590,13 +4590,13 @@ function bindBusinessWorkspaceDynamicEvents(): void {
     };
   });
 
-  const actionLinks = BUSINESS_QUICK_ACTION_LINKS[vertical] ?? BUSINESS_QUICK_ACTION_LINKS.default;
+  const actionLinks = BUSINESS_QUICK_ACTION_LINKS[vertical] ?? BUSINESS_QUICK_ACTION_LINKS.default ?? {};
   document.querySelectorAll<HTMLButtonElement>("[data-business-quick-action]").forEach((button) => {
     button.onclick = () => {
       const action = button.dataset.businessQuickActionValue ?? button.textContent?.replace("←", "").trim() ?? "";
       const target = actionLinks[action];
       if (target) {
-        navigate(businessModuleContextHref(target, vertical, action, businessId));
+        navigate(businessModuleContextHref(target, vertical, action, businessId ?? undefined));
       } else {
         showToast(action + " در حال اتصال به workflow canonical است.");
       }
