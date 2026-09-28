@@ -2203,3 +2203,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - The framework preserves the architecture rule Business Type → Capability → Module Blueprint → Role/Permission → Canonical Workflow; unsupported capabilities remain explicit and do not receive fabricated data.
 - Implementation commits: 6b8cb2bf303bb03a1df2f93a1aa4a708d347ebc6, 9cff6d5ee471b5d40d93b272d2285bba1fe579b4, c7c5feb7bc25fe8d66b9f97c3ec24364c145dcd1, b6c41591966dc8a35c4f168678f60651fbbba3cb, 7ab1c314edd9d8a99b74bfc35183d1fcada2cccc.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed for this slice.
+
+## Vertical Workflow Navigation Hardening — 2026-09-28
+- Business Workspace module buttons now navigate to stable semantic `/business/workspace/<vertical>/<module>` routes instead of the legacy query-only form.
+- Quick Actions now preserve the active vertical and Business context when entering canonical surfaces.
+- The primary Business Workspace action now opens the first module in the active vertical workflow instead of showing a non-actionable toast.
+- Phoenix Command Palette now exposes the current vertical's Workspace modules as first-class navigation targets.
+- These changes reuse the shared Vertical Workflow UI Framework; no duplicate authorization model, domain state or fake metrics were added.
+- Implementation commits: 381708c2fee45b7a694d5db6596ee31c092fa8b0, 0e6123f8321e2299a5d86172349e99592c867bd7.
+- Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
