@@ -4066,6 +4066,10 @@ body::before {
   padding:3px 2px 5px;
   scrollbar-width:thin;
 }
+.phoenix-business-module-nav a{display:inline-flex;align-items:center;gap:5px}
+.phoenix-business-module-nav a small{font-size:6px;line-height:1;color:var(--faint);opacity:.7}
+.phoenix-business-module-nav a.role-primary small{color:var(--primary);opacity:1}
+.phoenix-business-module-nav a.role-primary{box-shadow:inset 0 -1px 0 color-mix(in srgb,var(--primary) 9%,transparent)}
 .phoenix-business-module-nav a {
   flex:0 0 auto;
   padding:9px 11px;
