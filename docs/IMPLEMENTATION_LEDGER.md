@@ -2056,3 +2056,16 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added responsive styling for the Trust Signal list.
 - Implementation commits: `37fc07ea8bf8247354435fc13841734e03bb406d`, `5b76138081df44d7dd1656422979272860a07df8`, `b9f696f736785581b03eb663931c0eb029845916`.
 - Verification remains pending: TypeScript build, Trust API integration test and browser/visual QA have not been executed in this slice.
+
+
+## Public Consumer Business Profile + Published Supply — 2026-09-28
+- Added canonical public Business projection read `GET /api/v1/public/businesses/:businessId` with no authentication requirement.
+- Public Business read only returns businesses whose canonical state is `status='active'` and `publication_status='published'`.
+- Added Business repository support for published public identity and Catalog repository support for published active Offerings with current active price projection.
+- Added dynamic consumer-facing `/businesses/:businessId` route with Phoenix public shell.
+- Public page renders published Business identity, business type, locale/currency and only published active Products/Services.
+- Product Offerings expose canonical Checkout action using the existing Commerce boundary; Service Offerings link into the existing Booking surface without inventing a second booking workflow.
+- Added direct Workspace → customer-facing public profile navigation alongside the existing management/preview surface.
+- Added responsive styling for the public Business experience.
+- Implementation commits: `31fe81e249cc458e55db844729a8018ce496805e`, `284e352518096ba940d9b326558d79df71c82f87`, `e1390e99818d7174015b16dc3fa8e4a0f63cb480`, `451cc2cd1e6925de36c8f122e1aff15a80e66c2b`, `024612029742f26dfae0db44cbdf28f6689b9c70`, `3ba14242e2200e3d23ddd737c0d8bf1a730f3507`, `9e3bb5041f15d6d9b173ebf6683f2892e130ee9e`, `1504c0e9d49da700b9de394ab2ae5e8088266abf`, `2d8c7f1a47d350500d528e5c224f84e3c7e658b9`.
+- Verification remains pending: TypeScript build, public API integration test and browser/visual QA have not been executed in this slice.
