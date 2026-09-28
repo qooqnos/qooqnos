@@ -2410,3 +2410,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added focused regression coverage for clinic, retail, restaurant and salon workflow definitions, stage mappings and fail-closed fallback behavior.
 - Implementation commits: `6dd16f82c00acdf49e70bfb1b7638698c919483c`, `d01fae734875319506e6e01461255c60a4399f80`, `7de23bfda97bc2db8960874076e3e3886f16fb9a`.
 - Verification remains pending: TypeScript build, test suite and browser/visual QA have not been executed in this environment.
+
+
+## 2026-09-28 — Shared Booking UI → canonical Slot Hold bridge
+- Extended the shared Booking surface so deep vertical Calendar links can carry Business and Resource context into /booking.
+- Booking now preserves optional Offering and Customer context, reads canonical Availability slot references, and exposes a real «گرفتن نوبت» action that calls POST /api/v1/booking/holds.
+- Hold creation uses a five-minute canonical hold expiry and displays the returned Hold ID/status/expiry; it does not fabricate or auto-finalize payment/booking because finalize requires a valid Offering/price/policy snapshot.
+- Added responsive Booking context and slot-card styling to both frontend stylesheet surfaces.
+- This improves the shared Clinic, Restaurant reservation and Salon appointment foundations without creating a second booking store.
+- Implementation commits: 2af6d0f8f7379ac942ad87ca4a4be7da7db2b2f2, bb92e0713b9214df7b56d741358927fc0bf377e4, 25746edc8691fd96cd0707b4a036abfcff842645, b312b3af3dc69c67e161f11afd9db22e365df3f2, 8a78bf06a118db69a5f7425b033aedede23bb03d.
+- Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
