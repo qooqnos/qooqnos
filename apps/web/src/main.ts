@@ -1,5 +1,5 @@
 import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui.js";
-import { getVerticalModuleBlueprint, type VerticalModuleBlueprint } from "./business-module-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleRoleFit, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
 import { bindVerticalWorkflowCanvas, renderVerticalWorkflowCanvas } from "./vertical-workflow-ui.js";
 type Theme = "dark" | "light";
 
@@ -3292,6 +3292,14 @@ function renderBusinessModule(vertical: string, module: string): string {
     '<section class="phoenix-module-context-strip">' +
       contextRows.map((row, index) => '<div><span>' + escapeHtml(row.label) + '</span><strong id="module-context-' + String(index) + '">' + escapeHtml(row.value) + '</strong></div>').join("") +
     '</section>' +
+    '<section class="glass-card phoenix-module-role-contract">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">Role-aware Composition</span><h2>تمرکز این ماژول برای نقش فعلی</h2></div><span id="module-role-fit-badge" class="pill">در انتظار Context</span></div>' +
+      '<div class="phoenix-module-role-contract-grid">' +
+        '<div><span>Role lens</span><strong id="module-role-title">در انتظار احراز</strong><small id="module-role-description">این فقط لایهٔ emphasis رابط است؛ مجوز همچنان توسط backend تعیین می‌شود.</small></div>' +
+        '<div><span>Module fit</span><strong id="module-role-fit">در انتظار Context</strong><small id="module-role-fit-detail">Blueprint بر اساس Business Type و Role lens ترکیب می‌شود.</small></div>' +
+        '<div><span>Backend rule</span><strong>Authorization authoritative</strong><small>UI visibility هیچ مجوز جدیدی ایجاد نمی‌کند.</small></div>' +
+      '</div>' +
+    '</section>' +
     '<section class="glass-card phoenix-module-blueprint">' +
       '<div class="card-section-heading"><div><span class="section-kicker">' + escapeHtml(blueprint.eyebrow) + '</span><h2>' + escapeHtml(blueprintLayoutLabels[blueprint.layout]) + '</h2></div><span class="pill">UI foundation</span></div>' +
       '<div class="phoenix-module-blueprint-grid">' +
@@ -3493,6 +3501,11 @@ async function loadBusinessModuleContext(): Promise<void> {
   const verticalNode = document.querySelector<HTMLElement>("#module-context-1");
   const sourceNode = document.querySelector<HTMLElement>("#module-context-2");
   const accessNode = document.querySelector<HTMLElement>("#module-context-3");
+  const roleTitleNode = document.querySelector<HTMLElement>("#module-role-title");
+  const roleDescriptionNode = document.querySelector<HTMLElement>("#module-role-description");
+  const roleFitNode = document.querySelector<HTMLElement>("#module-role-fit");
+  const roleFitBadgeNode = document.querySelector<HTMLElement>("#module-role-fit-badge");
+  const roleFitDetailNode = document.querySelector<HTMLElement>("#module-role-fit-detail");
   if (!businessNode || !verticalNode || !sourceNode || !accessNode) return;
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
     accessNode.textContent = "بدون session";
@@ -3516,6 +3529,21 @@ async function loadBusinessModuleContext(): Promise<void> {
     verticalNode.textContent = canonicalVertical.key === selectedVertical.key ? canonicalVertical.label : canonicalVertical.label + " · URL context: " + selectedVertical.label;
     sourceNode.textContent = "Business / " + (getRecordString(business, ["publicationStatus"]) ?? "unpublished");
     accessNode.textContent = Array.isArray(context.permissions) && context.permissions.length ? "Context permissions loaded" : "Backend authoritative";
+    const roles = Array.isArray(context.roles) ? context.roles : [];
+    const roleLens = resolveVerticalRoleLens(roles);
+    const moduleBlueprint = getVerticalModuleBlueprint(selectedVertical.key, dynamicModule?.module ?? new URLSearchParams(location.search).get("module") ?? "");
+    const roleFit = getVerticalModuleRoleFit(moduleBlueprint, roleLens.key);
+    if (roleTitleNode) roleTitleNode.textContent = roleLens.title;
+    if (roleDescriptionNode) roleDescriptionNode.textContent = roleLens.description;
+    if (roleFitNode) roleFitNode.textContent = roleFit === "primary" ? "Primary emphasis" : "Shared surface";
+    if (roleFitBadgeNode) {
+      roleFitBadgeNode.textContent = roleFit === "primary" ? "Focus aligned" : "Shared";
+      roleFitBadgeNode.className = roleFit === "primary" ? "pill success" : "pill";
+    }
+    if (roleFitDetailNode) {
+      const lenses = moduleBlueprint.roleLenses ?? ["generic"];
+      roleFitDetailNode.textContent = "Blueprint roles: " + lenses.join(" · ");
+    }
   } catch (error) {
     accessNode.textContent = error instanceof Error ? error.message : "Context خوانده نشد";
   }
