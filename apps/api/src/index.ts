@@ -562,6 +562,25 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   });
 
   router.register({
+    method: "GET",
+    path: "/api/v1/public/businesses/:businessId",
+    module: "business",
+    operation: "business.public.read",
+    requireAuthentication: false,
+    requireWorkspace: false,
+    handler: async ({ context, params, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const businessId = brandId<"EntityId">(requiredRouteParam(params, "businessId", context.requestId));
+      const businessRepository = new BusinessRepository(database);
+      const profile = await businessRepository.getPublishedPublicProfile(businessId);
+      if (!profile) throw new AppError({ code: "NOT_FOUND", message: "Published business not found.", requestId: context.requestId });
+      const rawLimit = Number(new URL(request.url).searchParams.get("limit") ?? "50");
+      const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 50;
+      const offers = await new CatalogRepository(database).listPublishedBusinessOfferings(businessId, new Date().toISOString(), limit);
+      return json({ data: { profile, offers } }, 200, context.requestId);
+    },
+  });
+  router.register({
     method: "POST",
     path: "/api/v1/businesses",
     module: "business",
