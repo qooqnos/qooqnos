@@ -3249,7 +3249,13 @@ async function loadBusinessAccess(): Promise<void> {
     const verificationCases = Array.isArray(verificationResponse.data) ? verificationResponse.data : [];
     const latestVerification = verificationCases[0];
     const vertical = getBusinessVerticalUi(business.businessType);
+    const requestedModule = new URLSearchParams(location.search).get("module")?.trim();
+    const previousVertical = localStorage.getItem(STORAGE.businessVertical);
     localStorage.setItem(STORAGE.businessVertical, vertical.key);
+    if (requestedModule && previousVertical && previousVertical !== vertical.key) {
+      render();
+      return;
+    }
     const verticalRoot = document.querySelector<HTMLElement>(".phoenix-business-page");
     if (verticalRoot) verticalRoot.dataset.businessVertical = vertical.key;
     const verticalIcon = document.querySelector<HTMLElement>("#business-vertical-icon");
