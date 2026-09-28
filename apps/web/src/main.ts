@@ -332,6 +332,14 @@ function syncThemeButtons(): void {
 function currentRoute(): Route {
   const normalized = normalizePath(location.pathname);
   const staticRoute = routes.find((route) => route.path === normalized);
+  if (normalized.startsWith("/businesses/") && normalized.split("/").filter(Boolean).length === 2) {
+    return {
+      path: normalized,
+      label: "پروفایل کسب‌وکار",
+      icon: "◆",
+      render: renderBusinessPublic,
+    };
+  }
   if (staticRoute || !initialSeoHydration) return staticRoute ?? routes[0]!;
   return {
     path: normalized,
