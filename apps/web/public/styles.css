@@ -4419,3 +4419,19 @@ body::before {
 .phoenix-vwf-slot span{font-size:8px;font-weight:700}
 .phoenix-vwf-slot small{font-size:6px;color:var(--muted)}
 @media (max-width:760px){.phoenix-vwf-live-slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Vertical Workflow UI Framework — live lookup surfaces */
+.phoenix-vwf-lookup-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px}
+.phoenix-vwf-lookup-row .studio-input-line{min-width:190px;max-width:300px}
+.phoenix-vwf-lookup-row .button{min-height:32px}
+.phoenix-vwf-live-detail{margin-top:10px;padding:15px;border:1px solid var(--line);border-radius:18px;background:var(--surface-2)}
+.phoenix-vwf-live-detail[hidden]{display:none}
+.phoenix-vwf-live-detail-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.phoenix-vwf-live-detail-head h3{margin:3px 0 4px;font-size:11px}
+.phoenix-vwf-live-detail-head p{margin:0;color:var(--faint);font-size:7px}
+.phoenix-vwf-live-detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.phoenix-vwf-live-detail-grid>div{display:grid;gap:4px;padding:10px 11px;border:1px solid var(--line);border-radius:13px;background:var(--surface)}
+.phoenix-vwf-live-detail-grid span{color:var(--faint);font-size:6px}
+.phoenix-vwf-live-detail-grid strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px}
+@media(max-width:720px){.phoenix-vwf-live-detail-grid{grid-template-columns:1fr}.phoenix-vwf-lookup-row .studio-input-line{flex:1;min-width:160px;max-width:none}}
