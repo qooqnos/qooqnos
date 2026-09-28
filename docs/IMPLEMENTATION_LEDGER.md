@@ -1978,3 +1978,15 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - No new recommendation engine, social persistence model or commerce truth was introduced.
 - Commits: `b0a10fd3f001f90b5b3cdc62ac34c7de9dc820a3`, `5821283eddedde084e77c4ac4eaa2b2a5819114e`, `002bb34246ac4071f6cdd73dce4270c28c79bb8f`.
 - Verification gate remains: web build/typecheck plus responsive/visual QA before production verification.
+
+
+## Phoenix Profile / Notifications / Transactions Visual Slice — 2026-09-28
+- Added customer-facing `/profile`, `/notifications` and `/transactions` routes and aligned them with the reference interface architecture.
+- Profile: Phoenix brand cover, identity/trust context, activity summary, progress/score placeholder that does not fabricate data, and protected internal-credit surface.
+- Notifications: dedicated calm notification center backed by `GET /api/v1/notifications`, with local read-state UI and truthful canonical delivery messaging.
+- Transactions: unified transaction hub for buy/sell/rent/exchange/auction/tender with executable links only where a canonical workflow exists; unsupported auction/tender flows are explicitly presented as not yet executable.
+- Transaction lookup reads canonical Commerce order state through `GET /api/v1/commerce/orders/:orderId` and renders canonical status/line snapshots without duplicating transaction truth.
+- Mobile navigation now follows the reference-oriented consumer structure: Home, Content, Transactions, Notifications, Profile.
+- Visual system uses the same Phoenix warm/orange brand language, rounded cards, soft depth and responsive behavior.
+- Implementation commits: `58732cdefe4b39514f37bb63da5ea85c565b5ba4`, `6140e9c4f69e52016c66d365893703aa578d4220`, `d8bc256cd1092d39e6139611a579f3122ffdfd67`, `1e6ed79546ad6a43a0f3410b3a94ee8a5d4679f9`.
+- Verification gate remains: web TypeScript build plus responsive/visual QA before production verification.
