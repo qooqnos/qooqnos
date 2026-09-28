@@ -3121,6 +3121,8 @@ function renderBusinessPublic(): string {
     '<section class="phoenix-public-business-content">' +
       '<article class="glass-card phoenix-public-business-identity"><div class="card-section-heading"><div><span class="section-kicker">Supply Identity</span><h2>هویت و عرضه</h2></div><span id="public-business-page-publication" class="pill success">published</span></div><div id="public-business-page-facts" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
       '<article class="glass-card phoenix-public-business-offers"><div class="card-section-heading"><div><span class="section-kicker">Products & Services</span><h2>محصولات و خدمات منتشرشده</h2></div><span id="public-business-page-offer-count" class="pill">—</span></div><div id="public-business-page-offers" class="phoenix-public-offer-grid"><div class="slot-loading">در حال خواندن عرضه‌ها…</div></div></article>' +
+      '<article class="glass-card phoenix-public-business-contact"><div class="card-section-heading"><div><span class="section-kicker">Contact</span><h2>راه‌های ارتباط</h2></div></div><div id="public-business-page-contacts" class="metadata-cloud"><span>—</span></div></article>' +
+      '<article class="glass-card phoenix-public-business-location"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div></div><div id="public-business-page-locations" class="business-location-list"><div class="slot-loading">—</div></div></article>' +
     '</section>' +
     '<section class="glass-card phoenix-public-business-bridge"><span class="section-kicker">Phoenix Connection Layer</span><h2>از شناخت کسب‌وکار تا اقدام، یک مسیر واحد.</h2><p>این صفحه فقط عرضه‌های منتشرشده را نشان می‌دهد؛ اقدام بعدی دوباره به مسیرهای canonical خرید یا رزرو واگذار می‌شود.</p><div class="phoenix-public-capability-list"><span>Published Supply</span><span>Decision</span><span>Connect</span><span>Act</span></div></section>' +
   '</div>';
@@ -3378,9 +3380,11 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
   const facts = document.querySelector<HTMLElement>("#public-business-page-facts");
   const offersHost = document.querySelector<HTMLElement>("#public-business-page-offers");
   const offerCount = document.querySelector<HTMLElement>("#public-business-page-offer-count");
-  if (!businessId || !name || !summary || !meta || !publication || !facts || !offersHost || !offerCount) return;
+  const contactsHost = document.querySelector<HTMLElement>("#public-business-page-contacts");
+  const locationsHost = document.querySelector<HTMLElement>("#public-business-page-locations");
+  if (!businessId || !name || !summary || !meta || !publication || !facts || !offersHost || !offerCount || !contactsHost || !locationsHost) return;
   try {
-    const response = await apiJson<{ data: { profile: { id: string; name: string; displayName: string; status: string; publicationStatus: string; businessType: string | null; primaryCategoryId: string | null; defaultLocale: string | null; timezone: string | null; defaultCurrency: string | null; updatedAt: string }; offers: Array<{ id: string; businessId: string; offeringType: "product" | "service"; title: string; description: string | null; productId: string | null; serviceId: string | null; priceAmountMinor: number | null; currency: string | null; pricingType: string | null }> } }>(
+    const response = await apiJson<{ data: { profile: { id: string; name: string; displayName: string; status: string; publicationStatus: string; businessType: string | null; primaryCategoryId: string | null; defaultLocale: string | null; timezone: string | null; defaultCurrency: string | null; updatedAt: string }; contacts: Array<{ contactType?: string; value?: string; isPrimary?: boolean }>; locations: Array<{ name?: string; locationType?: string; timezone?: string | null; address?: Record<string, unknown> | null }>; offers: Array<{ id: string; businessId: string; offeringType: "product" | "service"; title: string; description: string | null; productId: string | null; serviceId: string | null; priceAmountMinor: number | null; currency: string | null; pricingType: string | null }> } }>(
       "/api/v1/public/businesses/" + encodeURIComponent(businessId) + "?limit=50",
     );
     const profile = response.data.profile;
@@ -3392,6 +3396,12 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
       '<div><span>نوع کسب‌وکار</span><strong>' + escapeHtml(profile.businessType ?? "—") + '</strong></div>' +
       '<div><span>Locale</span><strong>' + escapeHtml(profile.defaultLocale ?? "—") + '</strong></div>' +
       '<div><span>ارز</span><strong>' + escapeHtml(profile.defaultCurrency ?? "—") + '</strong></div>';
+    contactsHost.innerHTML = response.data.contacts.length
+      ? response.data.contacts.map((contact) => '<span><b>' + escapeHtml(contact.contactType ?? "contact") + '</b> ' + escapeHtml(contact.value ?? "—") + '</span>').join("")
+      : '<span>راه ارتباط عمومی ثبت نشده است.</span>';
+    locationsHost.innerHTML = response.data.locations.length
+      ? response.data.locations.map((location) => '<div class="business-location-item"><div><strong>' + escapeHtml(location.name ?? "Location") + '</strong><small>' + escapeHtml(location.locationType ?? "—") + (location.timezone ? " · " + escapeHtml(location.timezone) : "") + '</small></div></div>').join("")
+      : '<div class="slot-empty"><span>⌖</span><p>مکان عمومی ثبت نشده است.</p></div>';
     offerCount.textContent = response.data.offers.length + " عرضه";
     if (!response.data.offers.length) {
       offersHost.innerHTML = '<div class="slot-empty"><span>◇</span><p>هنوز عرضه منتشرشده‌ای برای این کسب‌وکار در دسترس نیست.</p></div>';
