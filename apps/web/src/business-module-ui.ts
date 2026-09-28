@@ -407,6 +407,34 @@ function deriveRoleLenses(module: string, layout: VerticalModuleLayout): readonl
   return ["generic"];
 }
 
+
+/**
+ * Stable semantic route slugs for Workspace modules.
+ * Localized labels remain presentation-only; route identity must not change with copy/locale.
+ */
+export const VERTICAL_MODULE_SLUGS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  default: { "پروفایل": "profile", "محتوا": "content", "محصولات": "products", "خدمات": "services", "مشتریان": "customers", "پیام‌ها": "messages", "معاملات": "transactions", "تیم": "team", "گزارش‌ها": "reports" },
+  clinic: { "امروز": "today", "نوبت‌ها": "appointments", "تقویم": "calendar", "پزشکان": "providers", "خدمات": "services", "مراجعان": "patients", "ساعات کاری": "hours", "پیام‌ها": "messages", "پرداخت": "payments", "محتوا": "content", "تیم": "team" },
+  retail: { "فروش امروز": "sales", "محصولات": "products", "مدل‌ها و تنوع": "variants", "سایز و رنگ": "attributes", "موجودی": "inventory", "سفارش‌ها": "orders", "مرجوعی": "returns", "مشتریان": "customers", "تخفیف‌ها": "promotions", "محتوا": "content", "گزارش فروش": "reports" },
+  restaurant: { "سفارش‌های امروز": "orders", "منو": "menu", "میزها": "tables", "رزرو": "reservations", "آشپزخانه": "kitchen", "تحویل": "delivery", "مشتریان": "customers", "تخفیف": "promotions", "پرداخت": "payments", "گزارش": "reports" },
+  salon: { "وقت‌های امروز": "today", "خدمات": "services", "متخصصان": "specialists", "تقویم": "calendar", "مشتریان": "customers", "ظرفیت": "capacity", "پرداخت": "payments", "پیشنهادها": "promotions", "محتوا": "content", "تیم": "team" },
+};
+
+export function getVerticalModuleSlug(vertical: string, module: string): string {
+  const key = vertical.trim().toLowerCase();
+  return VERTICAL_MODULE_SLUGS[key]?.[module] ?? module;
+}
+
+export function getVerticalModuleForSlug(vertical: string, slug: string, modules: readonly string[]): string | null {
+  const normalizedSlug = slug.trim().toLowerCase();
+  return modules.find((module) => getVerticalModuleSlug(vertical, module).toLowerCase() === normalizedSlug) ?? null;
+}
+
+export function getVerticalModuleRoute(vertical: string, module: string): string {
+  const key = vertical.trim().toLowerCase();
+  return "/business/workspace/" + encodeURIComponent(key) + "/" + encodeURIComponent(getVerticalModuleSlug(key, module));
+}
+
 export function resolveVerticalRoleLens(roles: readonly string[]): { key: VerticalRoleLensKey; title: string; description: string } {
   const normalized = roles.map((role) => role.toLowerCase());
   if (normalized.some((role) => /owner|admin|manager/.test(role))) {
