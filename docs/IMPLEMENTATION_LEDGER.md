@@ -2402,3 +2402,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Kept the shared Vertical Workflow UI Framework routing-agnostic: context is injected by the Business Workspace layer; no domain state, authorization rule, duplicate persistence model or fake operational data was added.
 - Implementation commit: `44f7eea779b8bdd6caff560b7553f40ac4f0d9fa`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
+
+
+## 2026-09-28 — Vertical Workflow registry extraction
+- Extracted the shared vertical workflow definition into `apps/web/src/business-workflow-ui.ts` so the four supported verticals use one typed registry for workflow stages and stage-to-module mapping.
+- Removed duplicated workflow constants from the web entrypoint and kept Workspace routing as the adapter that turns a stage/module pair into a contextual canonical href.
+- Added focused regression coverage for clinic, retail, restaurant and salon workflow definitions, stage mappings and fail-closed fallback behavior.
+- Implementation commits: `6dd16f82c00acdf49e70bfb1b7638698c919483c`, `d01fae734875319506e6e01461255c60a4399f80`, `7de23bfda97bc2db8960874076e3e3886f16fb9a`.
+- Verification remains pending: TypeScript build, test suite and browser/visual QA have not been executed in this environment.
