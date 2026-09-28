@@ -3110,7 +3110,7 @@ function renderBusinessProfile(): string {
     '</section>' +
     '<section class="phoenix-public-profile-grid">' +
       '<article class="glass-card phoenix-public-profile-main"><div class="card-section-heading"><div><span class="section-kicker">Identity</span><h2>هویت کسب‌وکار</h2></div></div><div id="public-business-identity" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
-      '<aside class="glass-card phoenix-public-trust-card"><span class="section-kicker">Trust & Publication</span><h2>اعتماد، قبل از نمایش عمومی</h2><p id="public-business-trust-copy">وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.</p><div id="public-business-trust-facts" class="phoenix-public-capability-list"></div><div id="public-business-publication-action" class="phoenix-public-publication-action"></div><a class="button button-ghost" href="/trust" data-nav>مشاهده Trust</a></aside>' +
+      '<aside class="glass-card phoenix-public-trust-card"><span class="section-kicker">Trust & Publication</span><h2>اعتماد، قبل از نمایش عمومی</h2><p id="public-business-trust-copy">وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.</p><div id="public-business-trust-facts" class="phoenix-public-capability-list"></div><div id="public-business-trust-signals" class="phoenix-public-trust-signals"></div><div id="public-business-publication-action" class="phoenix-public-publication-action"></div><a class="button button-ghost" href="/trust" data-nav>مشاهده Trust</a></aside>' +
     '</section>' +
     '<section class="phoenix-public-profile-grid">' +
       '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">Contact</span><h2>راه‌های ارتباط</h2></div></div><div id="public-business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
@@ -3273,8 +3273,9 @@ async function loadBusinessProfile(): Promise<void> {
   const summary = document.querySelector<HTMLElement>("#public-business-summary");
   const trustCopy = document.querySelector<HTMLElement>("#public-business-trust-copy");
   const trustFacts = document.querySelector<HTMLElement>("#public-business-trust-facts");
+  const trustSignals = document.querySelector<HTMLElement>("#public-business-trust-signals");
   const publicationAction = document.querySelector<HTMLElement>("#public-business-publication-action");
-  if (!identity || !contacts || !locations || !publication || !type || !name || !summary || !trustCopy || !trustFacts || !publicationAction) return;
+  if (!identity || !contacts || !locations || !publication || !type || !name || !summary || !trustCopy || !trustFacts || !trustSignals || !publicationAction) return;
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
     identity.innerHTML='<div class="slot-empty"><span>↪</span><p>برای مشاهده Preview به session Workspace نیاز است.</p></div>';
     return;
@@ -3284,13 +3285,17 @@ async function loadBusinessProfile(): Promise<void> {
     return;
   }
   try {
-    const [response, context] = await Promise.all([
+    const [response, context, trustResponse] = await Promise.all([
       apiJson<{ data: { business: Record<string, unknown>; locations: Array<Record<string, unknown>>; hours: Array<Record<string, unknown>>; contacts: Array<Record<string, unknown>>; socialLinks: Array<Record<string, unknown>> } }>(
         "/api/v1/businesses/" + encodeURIComponent(businessId) + "/management",
       ),
       apiJson<{ permissions?: string[] }>("/api/v1/context").catch(() => ({ permissions: [] })),
+      apiJson<{ data: Array<{ signalType?: string; severity?: string; confidence?: number | null; status?: string }> }>(
+        "/api/v1/trust/signals?subjectType=business&subjectId=" + encodeURIComponent(businessId) + "&status=active&limit=20",
+      ).catch(() => ({ data: [] })),
     ]);
     const business=response.data.business;
+    const trustSignalItems = Array.isArray(trustResponse.data) ? trustResponse.data : [];
     const displayName=getRecordString(business,["displayName","name"])??"کسب‌وکار";
     const businessType=getRecordString(business,["businessType"])??"Business";
     const publicationValue=getRecordString(business,["publicationStatus"])??"unpublished";
@@ -3332,6 +3337,9 @@ async function loadBusinessProfile(): Promise<void> {
       trustCopy.textContent="Business هنوز published نیست؛ این صفحه فقط Preview امن و داخلی از اطلاعاتی است که canonical management برمی‌گرداند.";
       trustFacts.innerHTML='<span>Preview</span><span>Publication gate</span><span>Canonical status</span>';
     }
+    trustSignals.innerHTML = trustSignalItems.length
+      ? trustSignalItems.slice(0, 8).map((signal) => '<div class="phoenix-trust-signal-row"><span class="pill ' + (signal.severity === "high" || signal.severity === "critical" ? "warning" : "success") + '">' + escapeHtml(signal.severity ?? "info") + '</span><div><strong>' + escapeHtml(signal.signalType ?? "trust signal") + '</strong><small>' + escapeHtml(signal.status ?? "active") + (signal.confidence !== null && signal.confidence !== undefined ? " · " + Math.round(signal.confidence * 100) + "%" : "") + '</small></div></div>').join("")
+      : '<div class="phoenix-trust-signal-empty">در context فعلی Trust Signal عمومی فعالی برای این Business برنگشت.</div>';
   } catch(error) {
     identity.innerHTML='<div class="slot-empty"><span>!</span><p>'+escapeHtml(error instanceof Error ? error.message : "خواندن پروفایل ناموفق بود.")+'</p></div>';
     contacts.innerHTML='<span>راه‌های تماس در دسترس نیست.</span>';
