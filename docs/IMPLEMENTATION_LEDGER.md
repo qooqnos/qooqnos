@@ -2154,3 +2154,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added responsive Phoenix styling for the board cards.
 - Implementation commits: `346754d6d82900dc7d27bb5a9b2eacdffe40b83d`, `d361d11da2df76a24d7e3bc510ed01cd7aaf8eb3`, `4ff122574e26ec3beedc6113ffc21818bf202291`.
 - Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
+
+
+## Business Dynamic Interaction + Role Focus Hardening — 2026-09-28
+- Rebound dynamically replaced Business module and Quick Action controls after canonical Business hydration so asynchronously rendered buttons keep their navigation behavior.
+- Quick Actions now use a vertical-specific canonical link registry: clinic → Catalog/Booking, retail → Product Studio/Catalog, restaurant → Catalog/Booking/Business module, salon → Catalog/Booking/Specialist module.
+- Added a role-focused action rail to `/business` for management, sales, specialist/provider, finance and generic roles. These are composition/navigation hints only; backend permissions remain authoritative.
+- Added occupation-specific Today Board and role-focused actions without introducing fake KPI values or a second authorization model.
+- Fixed the Business metrics template string after the board insertion and preserved the dynamic Business module bindings.
+- Implementation commits: `52149e979b2d222d7cdc008fe924a88e964f338b`, `ee67727e586aaadbf04a5d7c6cf7c0a1cbd8d13b`, `346754d6d82900dc7d27bb5a9b2eacdffe40b83d`, `6bfca10e0c9c6baa22e4811564b5d759a51bb139`, `88e6f14c6a9935df4825e445527db1ebd5814c35`, `5c75ad0f40d9de96042cacb309b082a3c37e6738`.
+- Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
