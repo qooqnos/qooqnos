@@ -3661,3 +3661,13 @@ body::before {
   .phoenix-public-fact-grid { grid-template-columns:1fr; }
   .phoenix-brand-preview-cta { padding-inline:15px; }
 }
+
+
+/* Canonical business publication action */
+.phoenix-public-publication-action {
+  display:flex;
+  align-items:center;
+  min-height:38px;
+  margin:12px 0 10px;
+}
+.phoenix-public-publication-action .button { width:100%; }
