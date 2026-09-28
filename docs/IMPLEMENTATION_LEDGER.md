@@ -2350,3 +2350,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Implementation commits: `da01a44928aba90ebbaecea741f7b18d32e675e3`, `ac13b3a057eae0ffa42df451a0691e4c9698044a`, `a4edd9537c85f7c38606e064b6e1bbf4a9968cbc`, `0ecf84c081397bf12396b7310307818b1522a949`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
 
+## 2026-09-28 — Vertical Workflow route-contract hardening
+- Hardened the shared Business Workspace module route contract for the four supported verticals.
+- Completed the Salon semantic module slug registry for Today, Services, Specialists, Calendar, Customers, Capacity, Payments, Promotions, Content and Team so every visible module has a stable unique route.
+- Changed the generic module-slug fallback to preserve the module label as the canonical slug input instead of collapsing unsupported Persian labels into a shared `module` slug.
+- Removed duplicate-function syntax in the public business follow/share handlers that could make the web entrypoint fail TypeScript parsing.
+- No new domain state, authorization rule, duplicate source of truth or fake KPI was introduced.
+- Implementation commits: `173de576a642742123d98069354be809a2284631`, `b17e7e8121b55bf2308da863b27ceb7e0cdf4ea2`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after these commits.
