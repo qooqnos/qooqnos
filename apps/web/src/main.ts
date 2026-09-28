@@ -3066,6 +3066,9 @@ function renderBusinessModule(vertical: string, module: string): string {
       '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">' + escapeHtml(ui.label) + ' · Module</span><h1>' + escapeHtml(module) + '</h1><p>' + escapeHtml(info.description) + '</p><div class="phoenix-business-module-meta"><span>' + escapeHtml(info.label) + '</span><span>' + (moduleIndex >= 0 ? "ماژول " + String(moduleIndex + 1) : "Capability") + '</span><span>' + escapeHtml(info.status ?? "connected") + '</span></div></div>' +
       '<div class="phoenix-business-module-symbol">' + escapeHtml(ui.icon) + '</div>' +
     '</section>' +
+    '<nav class="phoenix-business-module-nav" aria-label="ماژول‌های Workspace">' +
+      ui.modules.map((item) => '<a class="' + (item === module ? "active" : "") + '" href="/business?module=' + encodeURIComponent(item) + '" data-nav>' + escapeHtml(item) + '</a>').join("") +
+    '</nav>' +
     '<section class="phoenix-business-module-grid-page">' +
       '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + escapeHtml(info.label) + '</h2><p>صفحه تخصصی فقط orchestration و navigation را انجام می‌دهد؛ داده و mutation از دامنه مالک خودش می‌آید.</p>' +
         (info.path ? '<a class="button button-primary" href="' + escapeAttr(info.path) + '" data-nav>باز کردن ' + escapeHtml(info.label) + ' <span>→</span></a>' : '<span class="pill">اتصال mutation هنوز ثبت نشده</span>') +
