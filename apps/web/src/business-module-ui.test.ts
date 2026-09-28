@@ -30,6 +30,18 @@ describe("Vertical Workflow UI module blueprints", () => {
     }
   });
 
+  it("keeps every supported vertical module on a unique semantic route slug", () => {
+    for (const [vertical, modules] of Object.entries(verticalModules)) {
+      const slugs = modules.map((module) => getVerticalModuleSlug(vertical, module));
+      expect(new Set(slugs).size).toBe(slugs.length);
+      for (const module of modules) {
+        const slug = getVerticalModuleSlug(vertical, module);
+        expect(getVerticalModuleForSlug(vertical, slug, modules)).toBe(module);
+        expect(getVerticalModuleRoute(vertical, module)).toBe("/business/workspace/" + vertical + "/" + slug);
+      }
+    }
+  });
+
   it("keeps the salon today module aligned with the canonical Workspace label", () => {
     const blueprint = getVerticalModuleBlueprint("salon", "وقت‌های امروز");
     expect(blueprint.layout).toBe("command");
