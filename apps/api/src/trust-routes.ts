@@ -12,6 +12,28 @@ export function registerTrustRoutes(
   authorization: AuthorizationRegistry | undefined,
 ): void {
   router.register({
+    method: "GET",
+    path: "/api/v1/trust/verification-cases",
+    module: "trust",
+    operation: "trust.verification.read",
+    permission: "trust.verification.read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const url = new URL(request.url);
+      const subjectType = requiredSubjectType(url.searchParams.get("subjectType"), context.requestId);
+      const subjectId = requiredId(url.searchParams.get("subjectId"), "subjectId", context.requestId);
+      const rawLimit = url.searchParams.get("limit");
+      const limit = rawLimit === null ? undefined : Number(rawLimit);
+      if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 1 || limit > 100)) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "limit must be an integer between 1 and 100.", requestId: context.requestId });
+      }
+      const data = await service.listVerificationCases(context, { subjectType, subjectId, ...(limit !== undefined ? { limit } : {}) });
+      return json({ data }, 200, context.requestId);
+    },
+  });
+  router.register({
     method: "POST",
     path: "/api/v1/trust/verification-cases",
     module: "trust",
