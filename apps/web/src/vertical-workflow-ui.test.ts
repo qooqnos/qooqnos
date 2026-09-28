@@ -36,6 +36,7 @@ describe("Vertical Workflow UI Canvas", () => {
       expect(html).toContain('data-vwf-vertical="clinic"');
       expect(html).toContain('data-vwf-module="' + module + '"');
       expect(html).toContain("Vertical Workflow UI Framework");
+      expect(html).toContain('data-vwf-action="refresh"');
     }
   });
 
