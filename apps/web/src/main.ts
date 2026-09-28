@@ -3112,6 +3112,19 @@ function renderBusiness(): string {
 
 
 
+function renderBusinessPublic(): string {
+  return '<div class="phoenix-public-business-page">' +
+    '<section class="phoenix-public-business-hero">' +
+      '<div class="phoenix-public-business-hero-copy"><span class="phoenix-kicker">Phoenix Business</span><h1 id="public-business-page-name">کسب‌وکار</h1><p id="public-business-page-summary">در حال بارگذاری اطلاعات عمومی…</p><div id="public-business-page-meta" class="phoenix-public-business-meta"></div></div>' +
+      '<div class="phoenix-public-business-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
+    '</section>' +
+    '<section class="phoenix-public-business-content">' +
+      '<article class="glass-card phoenix-public-business-identity"><div class="card-section-heading"><div><span class="section-kicker">Supply Identity</span><h2>هویت و عرضه</h2></div><span id="public-business-page-publication" class="pill success">published</span></div><div id="public-business-page-facts" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
+      '<article class="glass-card phoenix-public-business-offers"><div class="card-section-heading"><div><span class="section-kicker">Products & Services</span><h2>محصولات و خدمات منتشرشده</h2></div><span id="public-business-page-offer-count" class="pill">—</span></div><div id="public-business-page-offers" class="phoenix-public-offer-grid"><div class="slot-loading">در حال خواندن عرضه‌ها…</div></div></article>' +
+    '</section>' +
+    '<section class="glass-card phoenix-public-business-bridge"><span class="section-kicker">Phoenix Connection Layer</span><h2>از شناخت کسب‌وکار تا اقدام، یک مسیر واحد.</h2><p>این صفحه فقط عرضه‌های منتشرشده را نشان می‌دهد؛ اقدام بعدی دوباره به مسیرهای canonical خرید یا رزرو واگذار می‌شود.</p><div class="phoenix-public-capability-list"><span>Published Supply</span><span>Decision</span><span>Connect</span><span>Act</span></div></section>' +
+  '</div>';
+}
 function renderBusinessProfile(): string {
   return '<div class="phoenix-business-profile-page">' +
     '<section class="phoenix-business-profile-hero">' +
@@ -3354,6 +3367,57 @@ async function loadBusinessProfile(): Promise<void> {
     identity.innerHTML='<div class="slot-empty"><span>!</span><p>'+escapeHtml(error instanceof Error ? error.message : "خواندن پروفایل ناموفق بود.")+'</p></div>';
     contacts.innerHTML='<span>راه‌های تماس در دسترس نیست.</span>';
     locations.innerHTML='<div class="slot-empty"><span>!</span><p>Locations در دسترس نیست.</p></div>';
+  }
+}
+async function loadBusinessPublicPage(routePath: string): Promise<void> {
+  const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
+  const name = document.querySelector<HTMLElement>("#public-business-page-name");
+  const summary = document.querySelector<HTMLElement>("#public-business-page-summary");
+  const meta = document.querySelector<HTMLElement>("#public-business-page-meta");
+  const publication = document.querySelector<HTMLElement>("#public-business-page-publication");
+  const facts = document.querySelector<HTMLElement>("#public-business-page-facts");
+  const offersHost = document.querySelector<HTMLElement>("#public-business-page-offers");
+  const offerCount = document.querySelector<HTMLElement>("#public-business-page-offer-count");
+  if (!businessId || !name || !summary || !meta || !publication || !facts || !offersHost || !offerCount) return;
+  try {
+    const response = await apiJson<{ data: { profile: { id: string; name: string; displayName: string; status: string; publicationStatus: string; businessType: string | null; primaryCategoryId: string | null; defaultLocale: string | null; timezone: string | null; defaultCurrency: string | null; updatedAt: string }; offers: Array<{ id: string; businessId: string; offeringType: "product" | "service"; title: string; description: string | null; productId: string | null; serviceId: string | null; priceAmountMinor: number | null; currency: string | null; pricingType: string | null }> } }>(
+      "/api/v1/public/businesses/" + encodeURIComponent(businessId) + "?limit=50",
+    );
+    const profile = response.data.profile;
+    name.textContent = profile.displayName || profile.name;
+    summary.textContent = "اطلاعات منتشرشده و عرضه‌های فعال " + (profile.businessType ? "در حوزه " + profile.businessType : "این کسب‌وکار") + ".";
+    publication.textContent = profile.publicationStatus;
+    meta.innerHTML = [profile.businessType, profile.defaultLocale, profile.timezone, profile.defaultCurrency].filter(Boolean).map((value) => '<span>' + escapeHtml(String(value)) + '</span>').join("");
+    facts.innerHTML = '<div><span>نام رسمی</span><strong>' + escapeHtml(profile.name) + '</strong></div>' +
+      '<div><span>نوع کسب‌وکار</span><strong>' + escapeHtml(profile.businessType ?? "—") + '</strong></div>' +
+      '<div><span>Locale</span><strong>' + escapeHtml(profile.defaultLocale ?? "—") + '</strong></div>' +
+      '<div><span>ارز</span><strong>' + escapeHtml(profile.defaultCurrency ?? "—") + '</strong></div>';
+    offerCount.textContent = response.data.offers.length + " عرضه";
+    if (!response.data.offers.length) {
+      offersHost.innerHTML = '<div class="slot-empty"><span>◇</span><p>هنوز عرضه منتشرشده‌ای برای این کسب‌وکار در دسترس نیست.</p></div>';
+      return;
+    }
+    offersHost.innerHTML = response.data.offers.map((offer) => {
+      const price = offer.priceAmountMinor !== null && offer.currency ? formatPublicMoney(offer.priceAmountMinor, offer.currency) : "قیمت پس از انتخاب";
+      const action = offer.offeringType === "product"
+        ? '<a class="button button-primary" href="/checkout?entity=' + encodeURIComponent(offer.id) + '&type=offering" data-nav>خرید فوری ↗</a>'
+        : '<a class="button button-secondary" href="/booking?offering=' + encodeURIComponent(offer.id) + '" data-nav>رزرو ↗</a>';
+      return '<article class="phoenix-public-offer-card"><div class="phoenix-public-offer-icon">' + (offer.offeringType === "product" ? "▦" : "◷") + '</div><div class="phoenix-public-offer-body"><span class="section-kicker">' + escapeHtml(offer.offeringType === "product" ? "Product" : "Service") + '</span><h3>' + escapeHtml(offer.title) + '</h3><p>' + escapeHtml(offer.description ?? "توضیح تکمیلی برای این عرضه ثبت نشده است.") + '</p><strong>' + escapeHtml(price) + '</strong></div><div class="phoenix-public-offer-action">' + action + '</div></article>';
+    }).join("");
+  } catch (error) {
+    summary.textContent = error instanceof Error ? error.message : "پروفایل عمومی در دسترس نیست.";
+    facts.innerHTML = '<div class="slot-empty"><span>!</span><p>خواندن Business عمومی ناموفق بود.</p></div>';
+    offersHost.innerHTML = "";
+  }
+}
+
+function formatPublicMoney(amountMinor: number, currency: string): string {
+  try {
+    const formatter = new Intl.NumberFormat("fa-IR", { style: "currency", currency });
+    const fractionDigits = formatter.resolvedOptions().maximumFractionDigits;
+    return formatter.format(amountMinor / (10 ** fractionDigits));
+  } catch {
+    return String(amountMinor) + " " + currency;
   }
 }
 function compactId(value?: string): string {
