@@ -4543,6 +4543,19 @@ body::before {
 .phoenix-vwf-filter-row{display:flex;align-items:center;gap:8px;margin-top:10px}
 .phoenix-vwf-filter-row .studio-input-line{max-width:370px}
 .phoenix-vwf-local-note{color:var(--faint);font-size:7px}
+.phoenix-vwf-live-supply{grid-column:1/-1;padding:15px;border:1px solid var(--line);border-radius:20px;background:var(--surface-1);box-shadow:var(--shadow-soft,0 10px 28px rgba(0,0,0,.06))}
+.phoenix-vwf-live-supply-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:12px}
+.phoenix-vwf-live-supply-head h3{margin:3px 0 4px;font-size:11px}
+.phoenix-vwf-live-supply-head p{margin:0;color:var(--muted);font-size:7px;line-height:1.8}
+.phoenix-vwf-live-supply-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.phoenix-vwf-live-supply-card{padding:13px;border:1px solid var(--line);border-radius:16px;background:var(--surface-2)}
+.phoenix-vwf-live-supply-type{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.phoenix-vwf-live-supply-card h4{margin:10px 0 5px;font-size:10px}
+.phoenix-vwf-live-supply-card p{margin:0 0 10px;color:var(--muted);font-size:7px;line-height:1.8;min-height:28px}
+.phoenix-vwf-live-supply-meta{display:flex;justify-content:space-between;gap:8px;padding-top:7px;margin-top:7px;border-top:1px solid var(--line);font-size:6px;color:var(--muted)}
+.phoenix-vwf-live-supply-meta strong{font-size:7px;color:var(--text)}
+@media (max-width:900px){.phoenix-vwf-live-supply-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.phoenix-vwf-live-supply-head{flex-direction:column}.phoenix-vwf-live-supply-grid{grid-template-columns:1fr}}
 .phoenix-vwf-supply-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:10px}
 .phoenix-vwf-supply-card{display:grid;grid-template-columns:auto 1fr;gap:10px;min-height:155px;padding:15px;border:1px solid var(--line);border-radius:18px;background:var(--surface-2)}
 .phoenix-vwf-supply-card strong{display:block;font-size:9px}
