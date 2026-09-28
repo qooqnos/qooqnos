@@ -4254,6 +4254,9 @@ body::before {
 }
 
 
+.phoenix-vwf-header-actions{display:flex;align-items:center;gap:7px;justify-content:flex-end;flex-wrap:wrap}
+.phoenix-vwf-header-actions .button{min-height:34px;padding:7px 10px;font-size:7px}
+.phoenix-vwf-header-actions .button:disabled{opacity:.6;cursor:wait}
 .phoenix-vwf-view-state{padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--faint);font-size:7px;white-space:nowrap}
 .phoenix-vwf-local-empty{margin-top:9px;padding:11px 13px;border:1px dashed var(--line-strong);border-radius:13px;background:color-mix(in srgb,var(--surface) 48%,transparent);color:var(--muted);font-size:7px}
 .phoenix-vwf-action-note{margin-top:9px}
