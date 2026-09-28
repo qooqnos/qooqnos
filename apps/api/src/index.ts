@@ -647,6 +647,28 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   });
 
   router.register({
+    method: "POST",
+    path: "/api/v1/businesses/:businessId/submit",
+    module: "business",
+    operation: "business.publication.request",
+    permission: "business.publish",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const businessId = brandId<"EntityId">(requiredRouteParam(params, "businessId", context.requestId));
+      const service = new BusinessService({
+        repository: new BusinessRepository(database),
+        authorization: createAuthorizationService(new AuthorizationRepository(database), authorization),
+        id: () => brandId<"EntityId">(crypto.randomUUID()),
+        now: () => new Date().toISOString(),
+      });
+      const data = await service.requestPublication(context, businessId);
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "PATCH",
     path: "/api/v1/businesses/:businessId",
     module: "business",
