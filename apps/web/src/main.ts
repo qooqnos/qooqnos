@@ -418,6 +418,10 @@ function render(): void {
   void loadShellContext();
   if (route.path === "/") bindHomeEvents();
   if (route.path === "/account") void loadAccountState();
+  if (route.path === "/booking") {
+    const bookingSchedule = new URLSearchParams(location.search).get("scheduleId")?.trim();
+    if (bookingSchedule) void loadBookingSlots();
+  }
   if (route.path === "/notifications") void loadNotificationsPage();
   if (route.path === "/profile") void loadProfilePage();
   if (route.path === "/transactions") void loadTransactionsPage();
@@ -874,6 +878,14 @@ function toDateTimeLocal(value: Date): string {
 }
 
 function renderBooking(): string {
+  const params = new URLSearchParams(location.search);
+  const scheduleId = params.get("scheduleId")?.trim() ?? "";
+  const from = params.get("from")?.trim() ?? "";
+  const to = params.get("to")?.trim() ?? "";
+  const duration = Number(params.get("duration") ?? "60");
+  const safeDuration = Number.isFinite(duration) && duration > 0 ? Math.trunc(duration) : 60;
+  const fromLocal = from ? toDateTimeLocal(new Date(from)) : toDateTimeLocal(new Date());
+  const toLocal = to ? toDateTimeLocal(new Date(to)) : toDateTimeLocal(new Date(Date.now() + 86400000));
   return `
     <section class="page-heading">
       <div><span class="eyebrow"><i></i> Booking / Availability</span><h1>زمان مناسب را پیدا کنید.</h1><p>Availability از سرویس canonical رزرو خوانده می‌شود.</p></div>
@@ -881,13 +893,13 @@ function renderBooking(): string {
     <section class="section-block">
       <article class="glass-card booking-panel">
         <div class="booking-fields">
-          <label class="field-label">Schedule ID<input id="booking-schedule" class="studio-input-line" placeholder="Schedule ID" /></label>
-          <label class="field-label">From<input id="booking-from" class="studio-input-line" type="datetime-local" value="${toDateTimeLocal(new Date())}" /></label>
-          <label class="field-label">To<input id="booking-to" class="studio-input-line" type="datetime-local" value="${toDateTimeLocal(new Date(Date.now() + 86400000))}" /></label>
-          <label class="field-label">Duration (minutes)<input id="booking-duration" class="studio-input-line" type="number" min="1" value="60" /></label>
+          <label class="field-label">Schedule ID<input id="booking-schedule" class="studio-input-line" placeholder="Schedule ID" value="${escapeAttr(scheduleId)}" /></label>
+          <label class="field-label">From<input id="booking-from" class="studio-input-line" type="datetime-local" value="${escapeAttr(fromLocal)}" /></label>
+          <label class="field-label">To<input id="booking-to" class="studio-input-line" type="datetime-local" value="${escapeAttr(toLocal)}" /></label>
+          <label class="field-label">Duration (minutes)<input id="booking-duration" class="studio-input-line" type="number" min="1" value="${String(safeDuration)}" /></label>
         </div>
         <button class="button button-primary" type="button" data-load-slots>خواندن Availability</button>
-        <div id="booking-slots-result" class="slot-empty"><span>◷</span><p>Schedule را وارد کنید.</p></div>
+        <div id="booking-slots-result" class="slot-empty"><span>◷</span><p>${scheduleId ? "در حال اتصال به Availability…" : "Schedule را وارد کنید."}</p></div>
       </article>
     </section>
   `;
