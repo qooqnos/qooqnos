@@ -2328,3 +2328,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - 🟡 Runtime/build/browser verification remains to be executed in the environment.
 
 Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas renderer).
+
+
+## 2026-09-28 — Vertical Workflow routing hardening & surface completion
+- Hardened Business Workspace module routing so legacy `/business?module=...` links resolve into the canonical semantic module route `/business/workspace/:vertical/:module`.
+- The active Business section remains highlighted in the global sidebar while a deep vertical module is open.
+- Added complete surface mappings for remaining Restaurant modules (promotions, payments, reporting) and Salon modules (capacity, content, team) so they no longer fall through to generic capability placeholders.
+- These mappings preserve the shared architecture: Business Type → Module → shared Vertical Workflow Canvas → canonical domain source.
+- No duplicate domain state, fake metrics or UI-level authorization was introduced.
+- Implementation commits: `5f78527c95b3412e79ecb80e82b24f41c5c68943`, `b5dc91904ab867920cc0911dca03ee3d90340170`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
