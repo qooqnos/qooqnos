@@ -333,12 +333,21 @@ function syncThemeButtons(): void {
 function currentRoute(): Route {
   const normalized = normalizePath(location.pathname);
   const staticRoute = routes.find((route) => route.path === normalized);
+  const businessModule = parseBusinessModulePath(normalized);
   if (normalized.startsWith("/businesses/") && normalized.split("/").filter(Boolean).length === 2) {
     return {
       path: normalized,
       label: "پروفایل کسب‌وکار",
       icon: "◆",
       render: renderBusinessPublic,
+    };
+  }
+  if (businessModule) {
+    return {
+      path: normalized,
+      label: businessModule.module,
+      icon: "▦",
+      render: () => renderBusinessModule(businessModule.vertical, businessModule.module),
     };
   }
   if (staticRoute || !initialSeoHydration) return staticRoute ?? routes[0]!;
@@ -360,7 +369,8 @@ function navigate(path: string): void {
   const targetPath = normalizePath(url.pathname);
   const targetUrl = targetPath + url.search + url.hash;
   const currentUrl = normalizePath(location.pathname) + location.search + location.hash;
-  if (targetPath !== normalizePath(location.pathname) && !routes.some((route) => route.path === targetPath)) {
+  const isKnownDynamicBusinessPath = Boolean(parseBusinessModulePath(targetPath)) || targetPath.startsWith("/businesses/");
+  if (targetPath !== normalizePath(location.pathname) && !routes.some((route) => route.path === targetPath) && !isKnownDynamicBusinessPath) {
     window.location.assign(targetUrl);
     return;
   }
@@ -3131,6 +3141,33 @@ function businessModuleInfo(vertical: string, module: string): { readonly label:
   return BUSINESS_MODULE_LINKS[vertical]?.[module] ?? BUSINESS_MODULE_LINKS.default?.[module] ?? { label: module, status: "capability", description: "این ماژول در ترکیب Capabilityهای Workspace قرار می‌گیرد." };
 }
 
+const BUSINESS_MODULE_SLUGS: Record<string, Record<string, string>> = {
+  default: { "پروفایل": "profile", "محتوا": "content", "محصولات": "products", "خدمات": "services", "مشتریان": "customers", "پیام‌ها": "messages", "معاملات": "transactions", "تیم": "team", "گزارش‌ها": "reports" },
+  clinic: { "امروز": "today", "نوبت‌ها": "appointments", "تقویم": "calendar", "پزشکان": "providers", "خدمات": "services", "مراجعان": "patients", "ساعات کاری": "hours", "پیام‌ها": "messages", "پرداخت": "payments", "محتوا": "content", "تیم": "team" },
+  retail: { "فروش امروز": "sales", "محصولات": "products", "مدل‌ها و تنوع": "variants", "سایز و رنگ": "attributes", "موجودی": "inventory", "سفارش‌ها": "orders", "مرجوعی": "returns", "مشتریان": "customers", "تخفیف‌ها": "promotions", "محتوا": "content", "گزارش فروش": "reports" },
+  restaurant: { "سفارش‌های امروز": "orders", "منو": "menu", "میزها": "tables", "رزرو": "reservations", "آشپزخانه": "kitchen", "تحویل": "delivery", "مشتریان": "customers", "تخفیف": "promotions", "پرداخت": "payments", "گزارش": "reports" },
+  salon: { "امروز": "today", "خدمات": "services", "متخصصان": "specialists", "زمان‌بندی": "schedule", "مشتریان": "customers", "پرداخت": "payments", "پیشنهادها": "promotions" },
+};
+
+function businessModuleSlug(vertical: string, module: string): string {
+  const key = resolveBusinessVerticalKey(vertical);
+  return BUSINESS_MODULE_SLUGS[key]?.[module] ?? module.toLowerCase().replace(/\\s+/g, "-").replace(/[^a-z0-9-]+/gi, "-").replace(/^-+|-+$/g, "") || "module";
+}
+
+function businessModulePath(vertical: string, module: string): string {
+  return "/business/workspace/" + encodeURIComponent(resolveBusinessVerticalKey(vertical)) + "/" + encodeURIComponent(businessModuleSlug(vertical, module));
+}
+
+function parseBusinessModulePath(path: string): { vertical: string; module: string } | null {
+  const parts = path.split("/").filter(Boolean);
+  if (parts.length !== 4 || parts[0] !== "business" || parts[1] !== "workspace") return null;
+  const vertical = resolveBusinessVerticalKey(parts[2]);
+  const slug = decodeURIComponent(parts[3] ?? "");
+  const modules = getBusinessVerticalUi(vertical).modules;
+  const module = modules.find((item) => businessModuleSlug(vertical, item) === slug);
+  return module ? { vertical, module } : null;
+}
+
 function businessModuleContextHref(path: string, vertical: string, module: string, businessId?: string): string {
   const target = new URL(path, window.location.origin);
   if (businessId) target.searchParams.set("business", businessId);
@@ -3219,7 +3256,7 @@ function renderBusinessModule(vertical: string, module: string): string {
       '<div class="phoenix-business-module-symbol">' + escapeHtml(ui.icon) + '</div>' +
     '</section>' +
     '<nav class="phoenix-business-module-nav" aria-label="ماژول‌های Workspace">' +
-      ui.modules.map((item) => '<a class="' + (item === module ? "active" : "") + '" href="/business?vertical=' + encodeURIComponent(ui.key) + '&module=' + encodeURIComponent(item) + '" data-nav>' + escapeHtml(item) + '</a>').join("") +
+      ui.modules.map((item) => '<a class="' + (item === module ? "active" : "") + '" href="' + escapeAttr(businessModulePath(ui.key, item)) + '" data-nav>' + escapeHtml(item) + '</a>').join("") +
     '</nav>' +
     '<section class="phoenix-module-context-strip">' +
       contextRows.map((row, index) => '<div><span>' + escapeHtml(row.label) + '</span><strong id="module-context-' + String(index) + '">' + escapeHtml(row.value) + '</strong></div>').join("") +
@@ -3262,7 +3299,7 @@ function renderBusinessModule(vertical: string, module: string): string {
       }).join("") +
     '</div></section>' +
     '<section class="glass-card phoenix-module-related-card"><div class="card-section-heading"><div><span class="section-kicker">Workspace Map</span><h2>ماژول‌های اطراف</h2></div></div><div class="phoenix-module-related-list">' +
-      relatedModules.map((item) => '<a href="/business?vertical=' + encodeURIComponent(ui.key) + '&module=' + encodeURIComponent(item) + '" data-nav><span>' + escapeHtml(item) + '</span><b>→</b></a>').join("") +
+      relatedModules.map((item) => '<a href="' + escapeAttr(businessModulePath(ui.key, item)) + '" data-nav><span>' + escapeHtml(item) + '</span><b>→</b></a>').join("") +
     '</div></section>' +
   '</div>';
 }
@@ -3271,7 +3308,11 @@ function renderBusiness(): string {
   const params = new URLSearchParams(location.search);
   const vertical = params.get("vertical")?.trim() || localStorage.getItem(STORAGE.businessVertical) || "default";
   const requestedModule = params.get("module")?.trim();
-  if (requestedModule) return renderBusinessModule(vertical, requestedModule);
+  if (requestedModule) {
+    const ui = getBusinessVerticalUi(vertical);
+    const resolvedModule = ui.modules.includes(requestedModule) ? requestedModule : undefined;
+    if (resolvedModule) return renderBusinessModule(vertical, resolvedModule);
+  }
   const ui = getBusinessVerticalUi(vertical);
   return '<div class="phoenix-business-page" data-business-vertical="' + ui.key + '">' +
     '<section class="phoenix-business-hero">' +
