@@ -571,6 +571,19 @@ export class TrustReviewRepository extends Repository {
     return this.getReview(context, id);
   }
 
+  async listPublishedBusinessReviews(businessId: EntityId, limit = 20): Promise<readonly Pick<ReviewRecord, "id" | "customerId" | "ratingValue" | "content" | "publishedAt" | "createdAt">[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 50);
+    return this.database.all<Pick<ReviewRecord, "id" | "customerId" | "ratingValue" | "content" | "publishedAt" | "createdAt">>(
+      `SELECT id, customer_id AS customerId, rating_value AS ratingValue, content, published_at AS publishedAt, created_at AS createdAt
+         FROM reviews
+        WHERE business_id = ? AND status = 'published' AND moderation_state = 'approved'
+          AND content IS NOT NULL AND TRIM(content) <> ''
+        ORDER BY published_at DESC, id DESC
+        LIMIT ?`,
+      businessId,
+      safeLimit,
+    );
+  }
   async getReview(context: RequestContext, id: EntityId): Promise<ReviewRecord> {
     const row = await this.database.first<ReviewRecord>(
       "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, customer_id AS customerId, rating_value AS ratingValue, content, moderation_state AS moderationState, status, interaction_reference AS interactionReference, locale, published_at AS publishedAt, policy_version AS policyVersion, content_version AS contentVersion, business_id AS businessId, offering_id AS offeringId, product_id AS productId, created_at AS createdAt, updated_at AS updatedAt FROM reviews WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
