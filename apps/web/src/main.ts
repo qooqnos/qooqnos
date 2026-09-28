@@ -3116,6 +3116,7 @@ function renderBusiness(): string {
       '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Availability</span><h2>ساعات فعال</h2></div></div><div id="business-hours" class="business-hours-list"><div class="slot-empty"><span>◷</span><p>ساعات بعد از اتصال نمایش داده می‌شوند.</p></div></div></article>' +
       '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Contacts</span><h2>راه‌های تماس</h2></div></div><div id="business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
       '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Publication</span><h2>وضعیت انتشار</h2></div><span id="business-publication-status" class="pill">—</span></div><div id="business-publication-detail" class="connection-state">—</div></article>' +
+      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Verification</span><h2>وضعیت احراز</h2></div><span id="business-verification-status" class="pill">—</span></div><div id="business-verification-detail" class="connection-state">در حال خواندن Verification…</div></article>' +
     '</section>' +
   '</div>';
 }
@@ -3163,7 +3164,9 @@ async function loadBusinessAccess(): Promise<void> {
   const contacts = document.querySelector<HTMLElement>("#business-contacts");
   const publication = document.querySelector<HTMLElement>("#business-publication-status");
   const publicationDetail = document.querySelector<HTMLElement>("#business-publication-detail");
-  if (!status || !profile || !locations || !hours || !contacts || !publication || !publicationDetail) return;
+  const verificationStatus = document.querySelector<HTMLElement>("#business-verification-status");
+  const verificationDetail = document.querySelector<HTMLElement>("#business-verification-detail");
+  if (!status || !profile || !locations || !hours || !contacts || !publication || !publicationDetail || !verificationStatus || !verificationDetail) return;
   const businessId = localStorage.getItem(STORAGE.business);
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
     status.textContent = "بدون session";
@@ -3182,7 +3185,7 @@ async function loadBusinessAccess(): Promise<void> {
   locations.innerHTML = '<div class="slot-loading">در حال خواندن Locations…</div>';
   hours.innerHTML = '<div class="slot-loading">در حال خواندن Hours…</div>';
   try {
-    const [response, context, membersResponse] = await Promise.all([
+    const [response, context, membersResponse, verificationResponse] = await Promise.all([
       apiJson<{ data: { business: Record<string, unknown>; locations: Array<Record<string, unknown>>; hours: Array<Record<string, unknown>>; contacts: Array<Record<string, unknown>>; socialLinks: Array<Record<string, unknown>> } }>(
         `/api/v1/businesses/${encodeURIComponent(businessId)}/management`,
       ),
@@ -3190,8 +3193,13 @@ async function loadBusinessAccess(): Promise<void> {
       shellContext.workspaceId
         ? apiJson<{ data: Array<{ id: string; userId: string; status: string }> }>(`/api/v1/workspaces/${encodeURIComponent(shellContext.workspaceId)}/members`).catch(() => ({ data: [] }))
         : Promise.resolve({ data: [] }),
+      apiJson<{ data: Array<{ id: string; status: string; policyId: string; policyVersion: string }> }>(
+        `/api/v1/trust/verification-cases?subjectType=business&subjectId=${encodeURIComponent(businessId)}&limit=10`,
+      ).catch(() => ({ data: [] })),
     ]);
     const business = response.data.business;
+    const verificationCases = Array.isArray(verificationResponse.data) ? verificationResponse.data : [];
+    const latestVerification = verificationCases[0];
     const vertical = getBusinessVerticalUi(business.businessType);
     const verticalRoot = document.querySelector<HTMLElement>(".phoenix-business-page");
     if (verticalRoot) verticalRoot.dataset.businessVertical = vertical.key;
@@ -3286,6 +3294,15 @@ async function loadBusinessAccess(): Promise<void> {
     publication.textContent=publicationValue;
     publication.className=publicationValue==="published"?"pill success":"pill warning";
     publicationDetail.textContent=publicationValue==="published"?"این کسب‌وکار منتشر است.":"انتشار هنوز از policy canonical عبور نکرده است.";
+    if (latestVerification) {
+      verificationStatus.textContent=latestVerification.status;
+      verificationStatus.className=latestVerification.status==="approved"?"pill success":latestVerification.status==="rejected"||latestVerification.status==="expired"?"pill warning":"pill";
+      verificationDetail.textContent=latestVerification.policyId+" · v"+latestVerification.policyVersion;
+    } else {
+      verificationStatus.textContent="شروع نشده";
+      verificationStatus.className="pill warning";
+      verificationDetail.textContent="Verification Case برای این Business پیدا نشد یا Permission خواندن در دسترس نیست.";
+    }
     status.textContent="Connected";
     status.className="pill success";
   } catch (error) {
