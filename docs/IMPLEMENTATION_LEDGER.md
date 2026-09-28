@@ -2078,3 +2078,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - No private Workspace-only location/contact records are exposed by the public projection.
 - Implementation commits: `ba6ebc7299a7d5dfecc3f71b285df0e93d44b3a9`, `698f0179e9ca7d3c3edfa1db521e38cf2c73778d`, `2f917edec1aed0510c8387db6d941b47a090abd2`.
 - Verification remains pending: TypeScript build, API integration test and browser/visual QA have not been executed in this slice.
+
+
+## Public Business Navigation from Social Commerce — 2026-09-28
+- Social feed cards now route `sourceType=business` to the public `/businesses/:businessId` profile instead of treating a Business as a Product.
+- Service cards route to the existing Booking boundary with the canonical offering reference in the URL; the Booking surface remains authoritative for availability.
+- Product cards continue through the canonical Commerce Checkout boundary.
+- Added this routing without adding a frontend commerce/discovery source of truth.
+- Implementation commit: `61b52a694a1e3499167a5ba1ed9773c172f2c901`.
+- Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
