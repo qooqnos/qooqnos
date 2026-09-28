@@ -50,6 +50,27 @@ describe("shared vertical workflow registry", () => {
     expect(context.next).toBeUndefined();
   });
 
+
+
+  it("keeps every workflow stage anchored to an existing semantic module", () => {
+    const supported: Record<string, string[]> = {
+      clinic: ["امروز", "نوبت‌ها", "تقویم", "پزشکان", "خدمات", "مراجعان", "ساعات کاری", "پیام‌ها", "پرداخت", "محتوا", "تیم"],
+      retail: ["فروش امروز", "محصولات", "مدل‌ها و تنوع", "سایز و رنگ", "موجودی", "سفارش‌ها", "مرجوعی", "مشتریان", "تخفیف‌ها", "محتوا", "گزارش فروش"],
+      restaurant: ["سفارش‌های امروز", "منو", "میزها", "رزرو", "آشپزخانه", "تحویل", "مشتریان", "تخفیف", "پرداخت", "گزارش"],
+      salon: ["وقت‌های امروز", "خدمات", "متخصصان", "تقویم", "مشتریان", "ظرفیت", "پرداخت", "پیشنهادها", "محتوا", "تیم"],
+    };
+    for (const vertical of Object.keys(supported)) {
+      const modules = supported[vertical] ?? [];
+      for (const stage of getVerticalWorkflowSteps(vertical)) {
+        const module = getVerticalWorkflowStageModule(vertical, stage);
+        expect(module).toBeTruthy();
+        expect(modules).toContain(module);
+        const context = getVerticalWorkflowStageContext(vertical, module!);
+        expect(context.stage).toBe(stage);
+        expect(context.module).toBe(module);
+      }
+    }
+  });
   it("fails closed for unsupported vertical stages", () => {
     expect(getVerticalWorkflowStageModule("clinic", "مرحله ناشناخته")).toBeUndefined();
     expect(getVerticalWorkflowSteps("unknown")).toEqual(["Supply", "Discovery", "Connect", "Act"]);
