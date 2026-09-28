@@ -2967,31 +2967,59 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
       publicAction + '</div></div></article>';
   }).join("");
 }
+function isComparableProduct(item: DiscoveryResult): boolean {
+  return (item.sourceType ?? "product") === "product" && Boolean(item.sourceId ?? item.id);
+}
+
 function getCompareItems(): DiscoveryResult[] {
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem("phoenix-compare-items") ?? "[]");
-    return Array.isArray(parsed) ? parsed.filter((item): item is DiscoveryResult => Boolean(item) && typeof item === "object") : [];
+    const items = Array.isArray(parsed) ? parsed.filter((item): item is DiscoveryResult => Boolean(item) && typeof item === "object") : [];
+    return items.filter(isComparableProduct).slice(0, 4);
   } catch { return []; }
 }
 
 function saveCompareItems(items: DiscoveryResult[]): void {
-  localStorage.setItem("phoenix-compare-items", JSON.stringify(items.slice(-4)));
+  localStorage.setItem("phoenix-compare-items", JSON.stringify(items.filter(isComparableProduct).slice(-4)));
 }
 
 function toggleCompare(item: DiscoveryResult): void {
+  if (!isComparableProduct(item)) { showToast("فقط محصولات قابل مقایسه هستند."); return; }
   const key = item.id ?? item.sourceId ?? "";
-  if (!key) return;
   const current = getCompareItems();
   const exists = current.some((entry) => (entry.id ?? entry.sourceId) === key);
   if (exists) saveCompareItems(current.filter((entry) => (entry.id ?? entry.sourceId) !== key));
   else if (current.length < 4) saveCompareItems([...current, item]);
-  else showToast("حداکثر ۴ محصول برای مقایسه انتخاب می‌شود.");
+  else showToast("مقایسه حداکثر ۴ محصول را پشتیبانی می‌کند.");
 }
 
 function toggleCompareByKey(key: string): void {
   const item = activeDiscoveryItems.find((entry) => (entry.id ?? entry.sourceId) === key);
   if (item) toggleCompare(item);
 }
+
+function renderCompareTray(): void {
+  const host = document.querySelector<HTMLElement>("#phoenix-compare-tray");
+  if (!host) return;
+  const items = getCompareItems();
+  if (items.length < 2) {
+    host.innerHTML = items.length === 1
+      ? '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items"><span>' + escapeHtml(items[0]?.title ?? items[0]?.name ?? "محصول") + '</span></div><span class="compare-tray-hint">یک محصول دیگر انتخاب کن.</span></div>'
+      : "";
+    return;
+  }
+  host.innerHTML = '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items">' +
+    items.map((item) => '<span>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '<button type="button" data-remove-compare="' + escapeAttr(item.id ?? item.sourceId ?? "") + '" aria-label="حذف از مقایسه">×</button></span>').join("") +
+    '</div><button class="button button-primary" type="button" data-open-compare>⚖ مقایسه ' + items.length + ' محصول</button></div>';
+  host.querySelectorAll<HTMLButtonElement>("[data-remove-compare]").forEach((button) => button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleCompareByKey(button.dataset.removeCompare ?? "");
+    renderCompareTray();
+    refreshSocialFeed();
+  }));
+  host.querySelector<HTMLButtonElement>("[data-open-compare]")?.addEventListener("click", () => navigate("/compare"));
+}
+
 
 function renderCompare(): string {
   const items = getCompareItems();
@@ -4443,7 +4471,8 @@ document.addEventListener("click", (event) => {
 
 function bindDiscoveryResultEvents(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-discovery-index]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", (event) => {
+      if ((event.target as Element | null)?.closest("button[data-compare],button[data-like],button[data-save],button[data-follow],button[data-comment]")) return;
       const index = Number(button.dataset.discoveryIndex);
       const item = Number.isInteger(index) ? activeDiscoveryItems[index] : undefined;
       if (item) openDiscoveryResultPanel(item);
@@ -4453,31 +4482,43 @@ function bindDiscoveryResultEvents(): void {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       toggleCompareByKey(button.dataset.compare ?? "");
-      const results = document.querySelector<HTMLElement>("#discovery-results");
-      if (results) results.innerHTML = renderSocialPosts(activeDiscoveryItems);
-      bindDiscoveryResultEvents();
-      renderCompareTray();
+      refreshSocialFeed();
     });
   });
   document.querySelectorAll<HTMLButtonElement>("[data-follow],[data-like],[data-save],[data-comment]").forEach((button) => {
     button.addEventListener("click", async (event) => {
       event.stopPropagation();
-      const index = Number(button.closest(".phoenix-post-card")?.querySelector<HTMLElement>("[data-discovery-index]")?.dataset.discoveryIndex ?? "-1");
+      const card = button.closest<HTMLElement>(".phoenix-post-card");
+      const index = Number(card?.querySelector<HTMLElement>("[data-discovery-index]")?.dataset.discoveryIndex ?? "-1");
       const item = Number.isInteger(index) ? activeDiscoveryItems[index] : undefined;
       if (!item) return;
+      const original = button.innerHTML;
+      button.disabled = true;
       try {
-        if (button.dataset.follow !== undefined) await persistSocialFollow(item);
-        else if (button.dataset.like !== undefined) await persistSocialAction("like", item);
-        else if (button.dataset.save !== undefined) await persistSocialAction("save", item);
-        else await persistSocialComment(item);
-        const action = button.dataset.follow !== undefined ? "دنبال کردن" : button.dataset.like !== undefined ? "پسندیدن" : button.dataset.save !== undefined ? "ذخیره کردن" : "نظر";
-        showToast(action + " در Social Engagement ثبت شد.");
+        let active = false;
+        if (button.dataset.follow !== undefined) active = await persistSocialFollow(item);
+        else if (button.dataset.like !== undefined) active = await persistSocialAction("like", item);
+        else if (button.dataset.save !== undefined) active = await persistSocialAction("save", item);
+        else {
+          await persistSocialComment(item);
+          active = true;
+        }
+        if (button.dataset.comment === undefined) {
+          showToast(active ? "تعامل اجتماعی ثبت شد." : "تعامل اجتماعی برداشته شد.");
+          refreshSocialFeed();
+        } else if (active) {
+          showToast("نظر برای moderation ثبت شد.");
+        }
       } catch (error) {
+        button.innerHTML = original;
         showToast(error instanceof Error ? error.message : "ثبت تعامل اجتماعی ممکن نشد.");
+      } finally {
+        button.disabled = false;
       }
     });
   });
 }
+
 
 function openCommandPalette(): void {
   const existing = document.querySelector(".command-overlay");
@@ -4739,48 +4780,64 @@ function handleGlobalShortcut(event: KeyboardEvent): void {
   }
 }
 
-async function runDiscovery(): Promise<void> {
+async function runDiscovery(reset = true): Promise<void> {
   const input = document.querySelector<HTMLInputElement>("#discover-query");
   const resultHost = document.querySelector<HTMLDivElement>("#discovery-results");
   const meta = document.querySelector<HTMLElement>("#results-meta");
   const title = document.querySelector<HTMLElement>("#results-title");
+  const pagination = document.querySelector<HTMLElement>("#discovery-pagination");
   if (!input || !resultHost || !meta) return;
+  if (discoveryBusy) return;
 
+  const paramsUrl = new URLSearchParams(location.search);
+  const tab = paramsUrl.get("tab") ?? "for-you";
   const query = input.value.trim();
-  if (title) {
-    const preview = query.length > 48 ? query.slice(0, 48) + "…" : query;
-    title.textContent = preview ? `نتایج برای «${preview}»` : "پیشنهادهای امروز";
-  }
-  if (!query) {
-    showToast("یک نیاز یا عبارت جست‌وجو وارد کن.");
-    input.focus();
+
+  if (reset) discoveryOffset = 0;
+  if (tab !== "following" && !query && tab === "for-you") {
+    resultHost.innerHTML = '<div class="social-empty-state glass-card"><div class="draft-orb">✦</div><h3>نیازت را بنویس.</h3><p>Discovery با متن طبیعی، عرضه‌های canonical را پیدا می‌کند.</p></div>';
+    meta.textContent = "منتظر نیاز";
+    if (pagination) pagination.innerHTML = "";
     return;
   }
 
-  resultHost.innerHTML = renderSkeletonCards(3);
+  if (title) title.textContent = query ? "نتایج برای «" + (query.length > 48 ? escapeHtml(query.slice(0, 48) + "…") : escapeHtml(query)) + "»" : tab === "following" ? "عرضه‌های دنبال‌شده" : "اکسپلور";
+  if (reset) resultHost.innerHTML = renderSkeletonCards(3);
   meta.textContent = "در حال تحلیل…";
+  discoveryBusy = true;
 
   try {
-    const params = new URLSearchParams({ q: query, limit: "9" });
-    const data = await apiJson<{ data: DiscoveryResult[] }>(`/api/v1/discovery/search?${params.toString()}`);
-    const items = Array.isArray(data.data) ? data.data : [];
-    if (items.length === 0) {
-      resultHost.innerHTML = renderSocialPosts(demoBusinesses);
-      meta.textContent = "نمونه جایگزین؛ داده‌ای از API برنگشت";
-      showToast("نتیجه‌ای از Discovery برنگشت؛ نتایج نمونه نمایش داده شدند.");
-      bindDiscoveryResultEvents();
-      return;
+    const pageSize = 9;
+    let data: DiscoveryResult[];
+    if (tab === "following") {
+      const response = await apiJson<{ data: DiscoveryResult[]; pagination?: { count?: number } }>("/api/v1/discovery/following?limit=" + pageSize + "&offset=" + discoveryOffset);
+      data = Array.isArray(response.data) ? response.data : [];
+    } else {
+      const searchParams = new URLSearchParams({ limit: String(pageSize), offset: String(discoveryOffset) });
+      if (query) searchParams.set("q", query);
+      const response = await apiJson<{ data: DiscoveryResult[]; pagination?: { count?: number } }>("/api/v1/discovery/search?" + searchParams.toString());
+      data = Array.isArray(response.data) ? response.data : [];
     }
-    resultHost.innerHTML = renderSocialPosts(items);
-    meta.textContent = `${items.length} نتیجه`;
+
+    discoveryHasMore = data.length === pageSize;
+    const nextItems = reset ? data : [...activeDiscoveryItems, ...data];
+    resultHost.innerHTML = renderSocialPosts(nextItems);
+    meta.textContent = nextItems.length + (discoveryHasMore ? "+" : "") + " نتیجه";
+    discoveryOffset += data.length;
+    if (pagination) pagination.innerHTML = discoveryHasMore ? '<button class="button button-ghost" type="button" data-load-more-discovery>نمایش موارد بیشتر <span>↓</span></button>' : "";
     bindDiscoveryResultEvents();
+    renderCompareTray();
   } catch (error) {
-    resultHost.innerHTML = renderSocialPosts(demoBusinesses);
-    meta.textContent = "Demo mode";
-    showToast(error instanceof Error ? error.message : "اتصال به Discovery برقرار نشد؛ حالت نمایشی فعال شد.");
-    bindDiscoveryResultEvents();
+    if (reset) {
+      resultHost.innerHTML = '<div class="social-error-state glass-card"><div class="draft-orb">!</div><h3>Discovery در دسترس نیست.</h3><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Discovery ناموفق بود.") + '</p><button class="button button-ghost" type="button" data-run-discovery>تلاش دوباره</button></div>';
+    }
+    meta.textContent = "خطا";
+    if (pagination) pagination.innerHTML = "";
+  } finally {
+    discoveryBusy = false;
   }
 }
+
 
 function renderSkeletonCards(count: number): string {
   return Array.from({ length: count }, () => '<article class="result-card skeleton-card"><div class="skeleton skeleton-art"></div><div class="result-content"><div class="skeleton line short"></div><div class="skeleton line long"></div><div class="skeleton line medium"></div><div class="skeleton line short"></div></div></article>').join("");
