@@ -2358,3 +2358,10 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - No new domain state, authorization rule, duplicate source of truth or fake KPI was introduced.
 - Implementation commits: `173de576a642742123d98069354be809a2284631`, `b17e7e8121b55bf2308da863b27ceb7e0cdf4ea2`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after these commits.
+
+## 2026-09-28 — Vertical Workflow deep-link context hardening
+- Fixed the shared Vertical Workflow Canvas links so People, Commerce, Operations and Communication surfaces all resolve through the Workspace-provided contextual href instead of dropping Business/vertical/module context.
+- Fixed deep semantic module routes to consume the `?business=` query when present, with local Workspace Business ID as fallback. This makes shared module URLs more portable without creating a second Business state.
+- The canonical architecture remains unchanged: Business Type → Module Blueprint → shared Canvas → canonical domain; authorization stays backend-authoritative.
+- Implementation commits: `d34318d23ae3c534f53f1c4a8e05bd149c53cdc1`, `cbae0f9295525070f68b2de3ff3adaf0c43d69fb`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
