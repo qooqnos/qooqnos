@@ -2027,3 +2027,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added responsive styling for workspace selection, business brand preview and team management.
 - Implementation commits: `5eda15e74e14252b81c54f2d29c5bdcac2d579b2`, `e8dc5b6fb22ff2e93b32de3ecaa96a5d2f82768d`, `de8a6ecbad85d362ce4503773851065cd3624eb4`, `ca201965224c98e18868db993dc8e7f4d16b6398`, `d3055fbbbff1f6aeb32c9f204302224ff1c3ea37`, `2b85e28bd4288954e21edcfaa9952a911036f521`.
 - Verification gate remains: web TypeScript build plus responsive/visual QA before production verification.
+
+
+## Business Public Profile Preview — 2026-09-28
+- Added authenticated `/business/profile` route as the Business public-profile preview surface.
+- Preview reads the canonical Business management projection (`GET /api/v1/businesses/:businessId/management`) and renders identity, business type, publication state, contacts and locations.
+- Added explicit Trust & Publication boundary: the page does not fabricate a publish/submit action while canonical publication mutation is not connected to this UI.
+- Added navigation from the Business Workspace brand preview to `/business/profile` and back to Workspace.
+- Added responsive Phoenix-branded styling for the profile preview.
+- Implementation commits: `e64af29c1e978e898f37190a90701f1bc892402a`, `d9e52be5f8df33c4e8112f79e7e2c96fda586084`, `0b2cbc498e388fd2b9a042681741d82da6aaab4d`, `6e0f631aa5a7d17b7b1d8656a5c24acdfed75eca`.
+- Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
