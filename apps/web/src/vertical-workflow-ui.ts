@@ -247,11 +247,31 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
     '</nav>' +
     '<div class="phoenix-vwf-header">' +
       '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>' + escapeHtml(copy.label) + ' canvas</h2><p>' + escapeHtml(copy.description) + '</p></div>' +
-      '<div class="phoenix-vwf-header-actions"><span class="pill">Shared component</span><button type="button" class="button button-ghost" data-vwf-action="refresh" aria-label="تازه‌سازی داده‌های این Canvas">↻ تازه‌سازی</button></div>' +
+      '<div class="phoenix-vwf-header-actions"><span class="pill">Shared component</span><span class="pill" data-vwf-state-label data-vwf-state="requires-input">نیازمند Context</span><button type="button" class="button button-ghost" data-vwf-action="refresh" aria-label="تازه‌سازی داده‌های این Canvas">↻ تازه‌سازی</button></div>' +
     '</div>' +
     '<div data-vwf-content>' + renderLayout(model.blueprint.layout, model) + '</div>' +
     '<div class="phoenix-vwf-contract"><span>state</span><strong>canonical-only</strong><span>layout</span><strong>' + escapeHtml(model.blueprint.layout) + '</strong><span>interaction</span><strong>' + escapeHtml(model.blueprint.interaction) + '</strong></div>' +
   '</section>';
+}
+
+type VerticalWorkflowCanvasState = "connected" | "requires-input" | "readonly" | "unavailable";
+
+function setCanvasState(canvas: HTMLElement, state: VerticalWorkflowCanvasState, label?: string): void {
+  const node = canvas.querySelector<HTMLElement>("[data-vwf-state-label]");
+  if (!node) return;
+  const labels: Record<VerticalWorkflowCanvasState, string> = {
+    connected: "متصل",
+    "requires-input": "نیازمند Context",
+    readonly: "فقط خواندنی",
+    unavailable: "در دسترس نیست",
+  };
+  node.dataset.vwfState = state;
+  node.textContent = label ?? labels[state];
+  node.className = state === "connected"
+    ? "pill success"
+    : state === "readonly"
+      ? "pill"
+      : "pill warning";
 }
 
 export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
@@ -422,11 +442,13 @@ async function hydratePeopleCanvas(canvas: HTMLElement): Promise<void> {
   if (!container) return;
   const headers = vwfAuthHeaders();
   if (!headers) {
+    setCanvasState(canvas, "requires-input");
     container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش اعضای واقعی، session و Workspace context لازم است.</div>';
     return;
   }
   const workspaceId = localStorage.getItem("phoenix-workspace-id")?.trim();
   if (!workspaceId) {
+    setCanvasState(canvas, "requires-input");
     container.innerHTML = '<div class="phoenix-vwf-local-note">Workspace context پیدا نشد؛ فهرست اعضا قابل خواندن نیست.</div>';
     return;
   }
@@ -437,6 +459,7 @@ async function hydratePeopleCanvas(canvas: HTMLElement): Promise<void> {
     if (!response.ok) throw new Error(body?.error?.message ?? "Workspace members unavailable");
     const members = Array.isArray(body?.data) ? body.data : [];
     if (!members.length) {
+      setCanvasState(canvas, "connected");
       container.innerHTML = emptyState("برای این Workspace عضو قابل نمایش پیدا نشد.", "Workspace");
       return;
     }
@@ -450,7 +473,9 @@ async function hydratePeopleCanvas(canvas: HTMLElement): Promise<void> {
         '<small>Role و Permission همچنان از Context/Authorization backend تعیین می‌شود.</small>' +
       '</article>';
     }).join("");
+    setCanvasState(canvas, "connected");
   } catch (error) {
+    setCanvasState(canvas, "unavailable");
     container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن اعضای Workspace ناموفق بود.", "Workspace");
   }
 }
@@ -533,6 +558,7 @@ async function hydrateCatalogCanvas(canvas: HTMLElement, businessId: string): Pr
   const token = sessionStorage.getItem("phoenix-access-token");
   const workspace = localStorage.getItem("phoenix-workspace-id");
   if (!token || !workspace) {
+    setCanvasState(canvas, "requires-input");
     container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش عرضه‌های واقعی، session و Workspace context لازم است.</div>';
     return;
   }
@@ -544,6 +570,7 @@ async function hydrateCatalogCanvas(canvas: HTMLElement, businessId: string): Pr
     if (!response.ok) throw new Error(body?.error?.message ?? "Catalog offerings unavailable");
     const offers = Array.isArray(body?.data) ? body.data : [];
     if (!offers.length) {
+      setCanvasState(canvas, "connected");
       container.innerHTML = emptyState("برای این Business هنوز Offering ثبت‌شده‌ای پیدا نشد.", "Catalog");
       return;
     }
@@ -558,7 +585,9 @@ async function hydrateCatalogCanvas(canvas: HTMLElement, businessId: string): Pr
         '<div class="phoenix-vwf-live-supply-meta"><span>Offering</span><strong>' + escapeHtml(offer.id) + '</strong></div>' +
       '</article>';
     }).join("");
+    setCanvasState(canvas, "connected");
   } catch (error) {
+    setCanvasState(canvas, "unavailable");
     container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Catalog ناموفق بود.", "Catalog");
   }
 }
@@ -578,6 +607,7 @@ async function hydrateOperationsCanvas(canvas: HTMLElement): Promise<void> {
   if (!container) return;
   const headers = vwfAuthHeaders();
   if (!headers) {
+    setCanvasState(canvas, "requires-input");
     container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش Caseهای واقعی، session و Workspace context لازم است.</div>';
     return;
   }
@@ -588,6 +618,7 @@ async function hydrateOperationsCanvas(canvas: HTMLElement): Promise<void> {
     if (!response.ok) throw new Error(body?.error?.message ?? "Case list unavailable");
     const cases = Array.isArray(body?.data) ? body.data : [];
     if (!cases.length) {
+      setCanvasState(canvas, "connected");
       container.innerHTML = emptyState("برای این Workspace هنوز Case قابل نمایش پیدا نشد.", "Case Support");
       return;
     }
@@ -600,7 +631,9 @@ async function hydrateOperationsCanvas(canvas: HTMLElement): Promise<void> {
         '<a class="text-link" href="/operations" data-nav>باز کردن عملیات ←</a>' +
       '</article>';
     }).join("");
+    setCanvasState(canvas, "connected");
   } catch (error) {
+    setCanvasState(canvas, "unavailable");
     container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Case ناموفق بود.", "Case Support");
   }
 }
@@ -619,6 +652,7 @@ async function hydrateCommunicationCanvas(canvas: HTMLElement): Promise<void> {
   if (!container) return;
   const headers = vwfAuthHeaders();
   if (!headers) {
+    setCanvasState(canvas, "requires-input");
     container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش رویدادهای ارتباطی، session و Workspace context لازم است.</div>';
     return;
   }
@@ -629,6 +663,7 @@ async function hydrateCommunicationCanvas(canvas: HTMLElement): Promise<void> {
     if (!response.ok) throw new Error(body?.error?.message ?? "Communication notifications unavailable");
     const items = Array.isArray(body?.data) ? body.data : [];
     if (!items.length) {
+      setCanvasState(canvas, "connected");
       container.innerHTML = emptyState("برای این Actor هنوز اعلان ارتباطی برنگشته است.", "Communication");
       return;
     }
@@ -641,7 +676,9 @@ async function hydrateCommunicationCanvas(canvas: HTMLElement): Promise<void> {
         '<p>' + escapeHtml((item.channel ?? "in_app") + " · " + (item.priority ?? "normal")) + '</p><small>' + escapeHtml(createdLabel) + '</small></div>' +
       '</article>';
     }).join("");
+    setCanvasState(canvas, "connected");
   } catch (error) {
+    setCanvasState(canvas, "unavailable");
     container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن اعلان‌های ارتباطی ناموفق بود.", "Communication");
   }
 }
@@ -670,6 +707,7 @@ async function hydrateCalendarCanvas(canvas: HTMLElement, businessId: string): P
   const token = sessionStorage.getItem("phoenix-access-token");
   const workspace = localStorage.getItem("phoenix-workspace-id");
   if (!token || !workspace) {
+    setCanvasState(canvas, "requires-input");
     lanes.innerHTML = '<div class="phoenix-vwf-local-note">برای hydrate شدن Availability، session و Workspace context لازم است.</div>';
     return;
   }
@@ -683,11 +721,13 @@ async function hydrateCalendarCanvas(canvas: HTMLElement, businessId: string): P
     if (!response.ok) throw new Error(body?.error?.message ?? "Availability schedules unavailable");
     const schedules = Array.isArray(body?.data) ? body.data : [];
     if (!schedules.length) {
+      setCanvasState(canvas, "connected");
       lanes.innerHTML = emptyState("برای این Business هنوز schedule فعال/ثبت‌شده‌ای در Availability پیدا نشد.", "Booking");
       return;
     }
     const active = schedules.filter((item) => item.status === "active").slice(0, 4);
     if (!active.length) {
+      setCanvasState(canvas, "connected");
       lanes.innerHTML = emptyState("Schedule ثبت شده است، اما هیچ Schedule فعالی برای نمایش پیدا نشد.", "Availability");
       return;
     }
@@ -724,7 +764,9 @@ async function hydrateCalendarCanvas(canvas: HTMLElement, businessId: string): P
       }
     }));
     lanes.innerHTML = laneResults.join("");
+    setCanvasState(canvas, "connected");
   } catch (error) {
+    setCanvasState(canvas, "unavailable");
     lanes.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Availability ناموفق بود.", "Availability");
   }
 }
