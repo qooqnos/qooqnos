@@ -2489,7 +2489,7 @@ function bindSocialHeaderEvents(): void {
 }
 function renderSocialHeader(active: "feed" | "following" | "explore"): string {
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
-    '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark">ق</span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
+    '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
     '<nav class="phoenix-social-tabs" aria-label="ناوبری اجتماعی">' +
     '<a href="/discover" data-nav class="' + (active === "feed" ? "active" : "") + '">برای تو</a>' +
     '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">دنبال‌شده‌ها</a>' +
@@ -2513,11 +2513,13 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
     const locality = escapeHtml(item.locality ?? item.city ?? "در شبکه ققنوس");
     const key = item.id ?? item.sourceId ?? "";
     const compared = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key && Boolean(key));
+    const price = item.price ? Number(item.price).toLocaleString("fa-IR") + " " + escapeHtml(item.currency ?? "تومان") : "قیمت را بپرس";
+    const typeLabel = item.sourceType === "service" ? "خدمت" : "محصول";
     return '<article class="phoenix-post-card">' +
-      '<header class="phoenix-post-author"><span class="phoenix-avatar">' + ["ق","س","ب"][index % 3] + '</span><div><strong>' + (index % 2 ? "استودیو سرو" : "فروشنده ققنوس") + '</strong><small>' + locality + ' · ' + (index % 2 ? "Business" : "Seller") + '</small></div><button type="button" class="post-follow" data-follow="' + escapeAttr(key) + '">دنبال کردن</button></header>' +
-      '<button type="button" class="phoenix-post-media" data-discovery-index="' + index + '" aria-label="' + title + '"><span>' + (index % 2 ? "خدمت" : "محصول") + '</span></button>' +
-      '<div class="phoenix-post-body"><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + (item.price ? Number(item.price).toLocaleString("fa-IR") + " " + escapeHtml(item.currency ?? "تومان") : "برای قیمت بپرس") + '</div>' +
-      '<div class="phoenix-post-actions"><button type="button" data-like="' + escapeAttr(key) + '">♡</button><button type="button" data-comment="' + escapeAttr(key) + '">💬</button><button type="button" data-save="' + escapeAttr(key) + '">🔖</button><button type="button" data-compare="' + escapeAttr(key) + '" class="' + (compared ? "selected" : "") + '">⚖ ' + (compared ? "انتخاب شد" : "مقایسه") + '</button><a class="button button-primary post-buy" href="/checkout?product=' + encodeURIComponent(key) + '" data-nav>خرید آنی</a></div></div></article>';
+      '<header class="phoenix-post-author"><span class="phoenix-avatar phoenix-avatar-image">' + (index % 2 ? "س" : "ق") + '</span><div><strong>' + (index % 2 ? "استودیو سرو" : "فروشنده ققنوس") + '</strong><small>' + locality + ' · ' + (index % 2 ? "Business" : "Seller") + '</small></div><button type="button" class="post-follow" data-follow="' + escapeAttr(key) + '">دنبال کردن</button></header>' +
+      '<button type="button" class="phoenix-post-media media-'+(index%3)+'" data-discovery-index="' + index + '" aria-label="' + title + '"><span class="post-media-badge">' + typeLabel + '</span><strong>' + title + '</strong><small>مشاهده جزئیات و تصمیم</small></button>' +
+      '<div class="phoenix-post-body"><div class="phoenix-post-meta"><span class="phoenix-post-type">' + typeLabel + '</span><span>⌖ ' + locality + '</span></div><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + price + '</div>' +
+      '<div class="phoenix-post-actions"><button type="button" class="social-action" data-like="' + escapeAttr(key) + '">♡ <span>پسندیدن</span></button><button type="button" class="social-action" data-comment="' + escapeAttr(key) + '">◌ <span>نظر</span></button><button type="button" class="social-action" data-save="' + escapeAttr(key) + '">⌑ <span>ذخیره</span></button><button type="button" class="social-action '+(compared ? "selected" : "")+'" data-compare="' + escapeAttr(key) + '">⚖ <span>' + (compared ? "انتخاب شد" : "مقایسه") + '</span></button><a class="button button-primary post-buy" href="/checkout?product=' + encodeURIComponent(key) + '" data-nav>خرید آنی <span>←</span></a></div></div></article>';
   }).join("");
 }
 
@@ -2586,8 +2588,12 @@ function renderDiscover(): string {
   const tab = params.get("tab") ?? "for-you";
   const title = tab === "following" ? "چیزهایی که دنبال می‌کنی." : tab === "explore" ? "چیزهایی که احتمالاً به کارت می‌آیند." : "برای تو، بر اساس نیاز و علاقه‌ات.";
   return '<div class="phoenix-social-page">' +
-    '<section class="phoenix-social-intro"><div><span class="phoenix-kicker">Phoenix ' + (tab === "explore" ? "Explore" : tab === "following" ? "Following" : "Feed") + '</span><h1>' + title + '</h1><p>محصول و خدمت را مثل محتوای اجتماعی کشف کن؛ بعد مقایسه، تصمیم و اقدام را همان‌جا انجام بده.</p></div><button class="button button-primary" type="button" data-open-create-post>＋ پست محصول / خدمت</button></section>' +
-    '<section class="phoenix-social-search glass-card"><span>⌕</span><input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="چه چیزی می‌خواهی پیدا کنی؟" /><button class="button button-primary" type="button" data-run-discovery>کشف کن</button></section>' +
+    '<section class="phoenix-social-hero">' +
+      '<div class="phoenix-social-intro"><span class="phoenix-kicker">Phoenix ' + (tab === "explore" ? "Explore" : tab === "following" ? "Following" : "Feed") + '</span><h1>' + title + '</h1><p>ققنوس محتوا را فقط برای دیدن نشان نمی‌دهد؛ هر کارت باید تو را به تصمیم، مقایسه یا اقدام نزدیک‌تر کند.</p></div>' +
+      '<div class="phoenix-social-hero-card"><img src="/phoenix-mark.svg?v=1" alt="" aria-hidden="true" /><div><strong>از نیازت شروع کن</strong><small>محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا تصمیم بگیر.</small></div><button class="button button-primary" type="button" data-open-create-post>＋ ایجاد</button></div>' +
+    '</section>' +
+    '<section class="phoenix-social-search glass-card"><span class="phoenix-search-icon">⌕</span><input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="چه چیزی می‌خواهی پیدا کنی؟ مثلاً «کفش دویدن تا ۵ میلیون»" /><button class="button button-primary" type="button" data-run-discovery>کشف کن <span>←</span></button></section>' +
+    '<div class="phoenix-feed-heading"><div><span class="phoenix-kicker">Supply</span><strong>پیشنهادهای ققنوس</strong></div><a href="/compare" data-nav>مقایسه <span>→</span></a></div>' +
     '<div id="discovery-results" class="phoenix-social-feed">' + renderSocialPosts(demoBusinesses) + '</div><div id="phoenix-compare-tray"></div></div>';
 }
 
