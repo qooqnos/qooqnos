@@ -15,6 +15,10 @@ export interface TrustServiceOptions {
 export class TrustService {
   constructor(private readonly options: TrustServiceOptions) {}
 
+  async listVerificationCases(context: RequestContext, input: { readonly subjectType: "business"|"user"|"professional_credential"|"location"|"ownership_claim"|"other"; readonly subjectId: EntityId; readonly limit?: number }) {
+    await this.options.authorization.assert({context,permission:"trust.verification.read",requireAuthentication:true,requireWorkspace:false});
+    return this.options.verification.listCasesForSubject(context, input);
+  }
   async createVerificationCase(context: RequestContext, input: {
     readonly businessId?: EntityId;
     readonly subjectType: "business"|"user"|"professional_credential"|"location"|"ownership_claim"|"other";
