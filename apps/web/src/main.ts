@@ -627,12 +627,16 @@ function renderPublicHeader(): string {
 
 function renderHeader(route: Route): string {
   return `
-    <header class="app-header">
+    <header class="app-header" data-shell-header>
       <div class="header-inner container-wide">
-        <a class="brand" href="/" data-nav>
-          <span class="brand-mark" aria-hidden="true">ق</span>
+        <a class="brand" href="/" data-nav aria-label="بازگشت به خانه ققنوس">
+          <span class="brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=1" alt="" /></span>
           <span class="brand-copy"><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
         </a>
+        <div class="header-context" aria-live="polite">
+          <span class="header-context-kicker">Phoenix</span>
+          <strong>${escapeHtml(route.label)}</strong>
+        </div>
         <div class="header-center">
           <div class="command-palette" role="button" tabindex="0" data-focus-search aria-label="جست‌وجوی سراسری">
             <span class="command-icon">⌕</span>
@@ -644,9 +648,9 @@ function renderHeader(route: Route): string {
           <button class="icon-button notification-button" type="button" data-notification-toggle aria-label="اعلان‌ها" aria-haspopup="dialog">
             <span aria-hidden="true">♢</span><b id="notification-count" class="notification-count" hidden>0</b>
           </button>
-          <button class="profile-chip workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog">
+          <button class="profile-chip workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="انتخاب فضای کاری">
             <span class="avatar">ق</span>
-            <span class="profile-copy"><strong id="shell-workspace-name">فضای شما</strong><small>${route.label}</small></span>
+            <span class="profile-copy"><strong id="shell-workspace-name">فضای شما</strong><small>${escapeHtml(route.label)}</small></span>
             <span class="chevron">⌄</span>
           </button>
           <button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button>
@@ -657,50 +661,63 @@ function renderHeader(route: Route): string {
 }
 
 function renderSidebar(route: Route): string {
-  const sidebarActivePath = route.path.startsWith("/business/workspace/") ? "/business" : route.path;
+  const sidebarActivePath = route.path.startsWith("/business/workspace/")
+    || route.path.startsWith("/business/workflow/")
+    ? "/business"
+    : route.path;
   return `
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="پوسته برنامه ققنوس">
       <div class="sidebar-top">
         <button class="workspace-card workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="انتخاب فضای کاری">
           <div class="workspace-icon">◆</div>
-          <div><strong id="sidebar-workspace-name">ققنوس</strong><span id="sidebar-workspace-status">فضای کاری من</span></div>
-          <span class="status-live"></span>
+          <div class="workspace-card-copy"><strong id="sidebar-workspace-name">ققنوس</strong><span id="sidebar-workspace-status">فضای کاری من</span></div>
+          <span class="status-live" aria-label="فعال"></span>
         </button>
       </div>
-      <nav class="side-nav" aria-label="ناوبری برنامه">
-        <div class="nav-label">محصول</div>
-        ${routes
-          .map(
-            (item) => `
-              <a href="${item.path}" data-nav class="nav-item ${item.path === sidebarActivePath ? "active" : ""}">
-                <span class="nav-icon">${item.icon}</span><span>${item.label}</span>
-              </a>`,
-          )
-          .join("")}
-        <div class="nav-label nav-spaced">مدیریت</div>
-        <a class="nav-item ${route.path === "/booking" ? "active" : ""}" href="/booking" data-nav><span class="nav-icon">◷</span><span>رزروها</span></a>
-        <button class="nav-item disabled" type="button" data-coming-soon="ارتباطات"><span class="nav-icon">◌</span><span>ارتباطات</span><em>به‌زودی</em></button>
-        <button class="nav-item disabled" type="button" data-coming-soon="گزارش‌ها"><span class="nav-icon">↗</span><span>گزارش‌ها</span><em>به‌زودی</em></button>
-      </nav>
+      <div class="side-nav-scroll">
+        <nav class="side-nav" aria-label="ناوبری برنامه">
+          <div class="nav-label">محصول</div>
+          ${routes
+            .map(
+              (item) => `
+                <a href="${item.path}" data-nav class="nav-item ${item.path === sidebarActivePath ? "active" : ""}" ${item.path === sidebarActivePath ? 'aria-current="page"' : ""}>
+                  <span class="nav-icon" aria-hidden="true">${item.icon}</span><span class="nav-copy">${item.label}</span>
+                </a>`,
+            )
+            .join("")}
+          <div class="nav-label nav-spaced">مدیریت</div>
+          <a class="nav-item ${route.path === "/booking" ? "active" : ""}" href="/booking" data-nav ${route.path === "/booking" ? 'aria-current="page"' : ""}><span class="nav-icon" aria-hidden="true">◷</span><span class="nav-copy">رزروها</span></a>
+          <button class="nav-item disabled" type="button" data-coming-soon="ارتباطات"><span class="nav-icon" aria-hidden="true">◌</span><span class="nav-copy">ارتباطات</span><em>به‌زودی</em></button>
+          <button class="nav-item disabled" type="button" data-coming-soon="گزارش‌ها"><span class="nav-icon" aria-hidden="true">↗</span><span class="nav-copy">گزارش‌ها</span><em>به‌زودی</em></button>
+        </nav>
+      </div>
       <div class="sidebar-bottom">
         <div class="ai-mini-card">
-          <div class="ai-orb">✦</div>
+          <div class="ai-orb" aria-hidden="true">✦</div>
           <div><strong>هوش ققنوس</strong><span>آماده برای کمک</span></div>
         </div>
-        <button class="nav-item muted" type="button" data-toast="مرکز راهنما به‌زودی فعال می‌شود."><span class="nav-icon">?</span><span>راهنما</span></button>
+        <button class="nav-item muted" type="button" data-toast="مرکز راهنما به‌زودی فعال می‌شود."><span class="nav-icon" aria-hidden="true">?</span><span class="nav-copy">راهنما</span></button>
       </div>
     </aside>
   `;
 }
 
 function renderMobileNav(route: Route): string {
-  const mobilePaths = ["/", "/product-studio", "/transactions", "/notifications", "/profile"];
-  const items = mobilePaths
-    .map((path) => routes.find((item) => item.path === path))
-    .filter((item): item is Route => Boolean(item));
+  const mobileItems = [
+    { path: "/", label: "خانه", icon: "⌂" },
+    { path: "/product-studio", label: "محتوا", icon: "✦" },
+    { path: "/transactions", label: "معاملات", icon: "↔" },
+    { path: "/notifications", label: "اعلان‌ها", icon: "♢" },
+    { path: "/profile", label: "پروفایل", icon: "◉" },
+  ];
   return `
-    <nav class="mobile-nav" aria-label="ناوبری موبایل">
-      ${items.map((item) => `<a href="${item.path}" data-nav class="${item.path === route.path ? "active" : ""}"><span>${item.icon}</span><small>${item.label}</small></a>`).join("")}
+    <nav class="mobile-nav" aria-label="ناوبری اصلی موبایل">
+      ${mobileItems.map((item) => {
+        const active = item.path === route.path;
+        return `<a href="${item.path}" data-nav class="${active ? "active" : ""}" ${active ? 'aria-current="page"' : ""}>
+          <span class="mobile-nav-icon" aria-hidden="true">${item.icon}</span><small>${item.label}</small>
+        </a>`;
+      }).join("")}
     </nav>
   `;
 }
