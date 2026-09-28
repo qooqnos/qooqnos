@@ -6,10 +6,10 @@ import {
 } from "./business-module-ui";
 
 const verticalModules: Record<string, string[]> = {
-  clinic: ["امروز", "نوبت‌ها", "پزشکان", "مراجعان", "پرداخت"],
-  retail: ["محصولات", "مدل‌ها و تنوع", "موجودی", "سفارش‌ها", "مرجوعی"],
-  restaurant: ["منو", "میزها", "رزروها", "آشپزخانه", "تحویل"],
-  salon: ["خدمات", "متخصصان", "تقویم", "ظرفیت", "پیشنهادها"],
+  clinic: ["امروز", "نوبت‌ها", "تقویم", "پزشکان", "خدمات", "مراجعان", "ساعات کاری", "پیام‌ها", "پرداخت", "محتوا", "تیم"],
+  retail: ["فروش امروز", "محصولات", "مدل‌ها و تنوع", "سایز و رنگ", "موجودی", "سفارش‌ها", "مرجوعی", "مشتریان", "تخفیف‌ها", "محتوا", "گزارش فروش"],
+  restaurant: ["سفارش‌های امروز", "منو", "میزها", "رزرو", "آشپزخانه", "تحویل", "مشتریان", "تخفیف", "پرداخت", "گزارش"],
+  salon: ["وقت‌های امروز", "خدمات", "متخصصان", "تقویم", "مشتریان", "ظرفیت", "پرداخت", "پیشنهادها", "محتوا", "تیم"],
 };
 
 describe("Vertical Workflow UI module blueprints", () => {
@@ -25,6 +25,12 @@ describe("Vertical Workflow UI module blueprints", () => {
         expect(blueprint.roleLenses?.length).toBeGreaterThan(0);
       }
     }
+  });
+
+  it("keeps the salon today module aligned with the canonical Workspace label", () => {
+    const blueprint = getVerticalModuleBlueprint("salon", "وقت‌های امروز");
+    expect(blueprint.layout).toBe("command");
+    expect(blueprint.primaryAction?.path).toBe("/booking");
   });
 
   it("keeps unsupported UI modules descriptive instead of inventing domain structure", () => {
