@@ -2069,3 +2069,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added responsive styling for the public Business experience.
 - Implementation commits: `31fe81e249cc458e55db844729a8018ce496805e`, `284e352518096ba940d9b326558d79df71c82f87`, `e1390e99818d7174015b16dc3fa8e4a0f63cb480`, `451cc2cd1e6925de36c8f122e1aff15a80e66c2b`, `024612029742f26dfae0db44cbdf28f6689b9c70`, `3ba14242e2200e3d23ddd737c0d8bf1a730f3507`, `9e3bb5041f15d6d9b173ebf6683f2892e130ee9e`, `1504c0e9d49da700b9de394ab2ae5e8088266abf`, `2d8c7f1a47d350500d528e5c224f84e3c7e658b9`.
 - Verification remains pending: TypeScript build, public API integration test and browser/visual QA have not been executed in this slice.
+
+
+## Public Business Contact / Location Projection — 2026-09-28
+- Extended `GET /api/v1/public/businesses/:businessId` with public active Contact and Location projections.
+- Public location projection parses canonical address/geo metadata but only emits active locations for an already published active Business.
+- Customer-facing `/businesses/:businessId` now renders contact channels and public locations alongside published supply.
+- No private Workspace-only location/contact records are exposed by the public projection.
+- Implementation commits: `ba6ebc7299a7d5dfecc3f71b285df0e93d44b3a9`, `698f0179e9ca7d3c3edfa1db521e38cf2c73778d`, `2f917edec1aed0510c8387db6d941b47a090abd2`.
+- Verification remains pending: TypeScript build, API integration test and browser/visual QA have not been executed in this slice.
