@@ -4109,3 +4109,35 @@ body::before {
 @media(max-width:430px){
   .phoenix-workflow-rail { grid-template-columns:1fr; }
 }
+
+
+/* Public business reviews */
+.phoenix-public-business-reviews {
+  padding:24px;
+}
+.phoenix-public-review-list {
+  display:grid;
+  gap:8px;
+  margin-top:16px;
+}
+.phoenix-public-review-card {
+  padding:13px;
+  border-radius:17px;
+  border:1px solid var(--line);
+  background:var(--surface-2);
+}
+.phoenix-public-review-rating {
+  color:#f49a2f;
+  letter-spacing:2px;
+  font-size:10px;
+}
+.phoenix-public-review-card p {
+  margin:8px 0 5px;
+  color:var(--muted);
+  font-size:8px;
+  line-height:1.85;
+}
+.phoenix-public-review-card small {
+  color:var(--faint);
+  font-size:7px;
+}
