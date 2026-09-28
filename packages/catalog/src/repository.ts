@@ -50,6 +50,18 @@ export interface OfferingRecord {
   readonly updatedAt: string;
 }
 
+export interface PublicBusinessOfferingRecord {
+  readonly id: EntityId;
+  readonly businessId: EntityId;
+  readonly offeringType: OfferingType;
+  readonly title: string;
+  readonly description: string | null;
+  readonly productId: EntityId | null;
+  readonly serviceId: EntityId | null;
+  readonly priceAmountMinor: number | null;
+  readonly currency: string | null;
+  readonly pricingType: string | null;
+}
 export interface CreateProductInput {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -259,6 +271,29 @@ export class CatalogRepository extends Repository {
     return result;
   }
 
+  async listPublishedBusinessOfferings(businessId: EntityId, now: string, limit = 50): Promise<readonly PublicBusinessOfferingRecord[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
+    return this.database.all<PublicBusinessOfferingRecord>(
+      `SELECT o.id, o.business_id AS businessId, o.offering_type AS offeringType,
+              o.title, o.description, o.product_id AS productId, o.service_id AS serviceId,
+              pr.amount_minor AS priceAmountMinor, pr.currency, pr.pricing_type AS pricingType
+         FROM offerings o
+         INNER JOIN businesses b ON b.id = o.business_id
+         LEFT JOIN prices pr
+           ON pr.offering_id = o.id
+          AND pr.status = 'active'
+          AND pr.effective_from <= ?
+          AND (pr.effective_to IS NULL OR pr.effective_to > ?)
+        WHERE o.business_id = ?
+          AND b.status = 'active'
+          AND b.publication_status = 'published'
+          AND o.status = 'active'
+          AND o.publication_status = 'published'
+        ORDER BY o.updated_at DESC, o.id DESC
+        LIMIT ?`,
+      now, now, businessId, safeLimit,
+    );
+  }
   async getOffering(context: RequestContext, id: EntityId): Promise<OfferingRecord | null> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
