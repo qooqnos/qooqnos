@@ -2365,3 +2365,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The canonical architecture remains unchanged: Business Type → Module Blueprint → shared Canvas → canonical domain; authorization stays backend-authoritative.
 - Implementation commits: `d34318d23ae3c534f53f1c4a8e05bd149c53cdc1`, `cbae0f9295525070f68b2de3ff3adaf0c43d69fb`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
+
+
+## 2026-09-28 — Vertical Workflow module contract consistency
+- Aligned Salon's visible Workspace module label `وقت‌های امروز` with the shared vertical blueprint, semantic slug registry, presentation mapping and workflow-stage routing.
+- This fixes a real framework-level mismatch where Salon could render the module in the Workspace but the shared blueprint lookup could fall back to the generic Capability surface, and the workflow rail could fail to resolve its Today/Booking stage.
+- Expanded `business-module-ui.test.ts` to assert blueprint coverage for every visible module across Clinic, Retail, Restaurant and Salon, including the corrected Salon Today module.
+- No new domain state, authorization rule, duplicate store or fake metric was introduced.
+- Implementation commits: `48ce734741173867d452aa6bd4e2d837aba17cb1`, `390affd1a6b032868b49cd74aa42ad095886b122`, `c33e0e479f3048dafac44fab055ba0fa20a57234`.
+- Verification remains pending: TypeScript build, test suite and browser/visual QA have not been executed after this slice.
