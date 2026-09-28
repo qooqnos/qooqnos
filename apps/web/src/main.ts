@@ -883,6 +883,10 @@ function toDateTimeLocal(value: Date): string {
 function renderBooking(): string {
   const params = new URLSearchParams(location.search);
   const scheduleId = params.get("scheduleId")?.trim() ?? "";
+  const businessId = params.get("businessId")?.trim() || localStorage.getItem(STORAGE.business) || "";
+  const offeringId = params.get("offering")?.trim() || params.get("offeringId")?.trim() || "";
+  const customerId = params.get("customerId")?.trim() || localStorage.getItem(STORAGE.customer) || "";
+  const resourceId = params.get("resourceId")?.trim() || "";
   const from = params.get("from")?.trim() ?? "";
   const to = params.get("to")?.trim() ?? "";
   const duration = Number(params.get("duration") ?? "60");
@@ -891,22 +895,42 @@ function renderBooking(): string {
   const toLocal = to ? toDateTimeLocal(new Date(to)) : toDateTimeLocal(new Date(Date.now() + 86400000));
   return `
     <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Booking / Availability</span><h1>زمان مناسب را پیدا کنید.</h1><p>Availability از سرویس canonical رزرو خوانده می‌شود.</p></div>
+      <div><span class="eyebrow"><i></i> Booking / Availability</span><h1>زمان مناسب را پیدا کنید.</h1><p>Availability از سرویس canonical رزرو خوانده می‌شود؛ انتخاب slot از همین صفحه به Hold canonical متصل می‌شود.</p></div>
     </section>
     <section class="section-block">
       <article class="glass-card booking-panel">
+        <div class="booking-context-strip">
+          <div><span>Business</span><strong>${escapeHtml(businessId || "—")}</strong></div>
+          <div><span>Offering</span><strong>${escapeHtml(offeringId || "برای مسیر رزرو مشخص نشده")}</strong></div>
+          <div><span>Customer</span><strong>${escapeHtml(customerId || "از context حساب")}</strong></div>
+          <div><span>Resource</span><strong>${escapeHtml(resourceId || "از Availability")}</strong></div>
+        </div>
         <div class="booking-fields">
           <label class="field-label">Schedule ID<input id="booking-schedule" class="studio-input-line" placeholder="Schedule ID" value="${escapeAttr(scheduleId)}" /></label>
+          <label class="field-label">Business ID<input id="booking-business" class="studio-input-line" placeholder="Business ID" value="${escapeAttr(businessId)}" /></label>
+          <label class="field-label">Offering ID<input id="booking-offering" class="studio-input-line" placeholder="Offering ID (برای finalize)" value="${escapeAttr(offeringId)}" /></label>
+          <label class="field-label">Customer ID<input id="booking-customer" class="studio-input-line" placeholder="Customer ID" value="${escapeAttr(customerId)}" /></label>
           <label class="field-label">From<input id="booking-from" class="studio-input-line" type="datetime-local" value="${escapeAttr(fromLocal)}" /></label>
           <label class="field-label">To<input id="booking-to" class="studio-input-line" type="datetime-local" value="${escapeAttr(toLocal)}" /></label>
           <label class="field-label">Duration (minutes)<input id="booking-duration" class="studio-input-line" type="number" min="1" value="${String(safeDuration)}" /></label>
+          <label class="field-label">Resource ID<input id="booking-resource" class="studio-input-line" placeholder="Resource ID (اختیاری)" value="${escapeAttr(resourceId)}" /></label>
         </div>
         <button class="button button-primary" type="button" data-load-slots>خواندن Availability</button>
+        <div id="booking-hold-result" class="booking-hold-result" aria-live="polite"></div>
         <div id="booking-slots-result" class="slot-empty"><span>◷</span><p>${scheduleId ? "در حال اتصال به Availability…" : "Schedule را وارد کنید."}</p></div>
       </article>
     </section>
   `;
 }
+
+type BookingSlotView = {
+  slotReference?: string;
+  startsAt?: string;
+  endsAt?: string;
+  remainingCapacity?: number;
+  available?: boolean;
+  status?: string;
+};
 
 async function loadBookingSlots(): Promise<void> {
   const scheduleId = document.querySelector<HTMLInputElement>("#booking-schedule")?.value.trim() ?? "";
@@ -920,15 +944,58 @@ async function loadBookingSlots(): Promise<void> {
     return;
   }
   if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  host.innerHTML = '<div class="slot-loading">در حال خواندن Availability…</div>';
   try {
-    const response = await apiJson<{ data: { startsAt?: string; endsAt?: string; available?: boolean }[] }>(
+    const response = await apiJson<{ data: BookingSlotView[] }>(
       "/api/v1/availability/schedules/" + encodeURIComponent(scheduleId) + "/slots?from=" + encodeURIComponent(new Date(from).toISOString()) + "&to=" + encodeURIComponent(new Date(to).toISOString()) + "&durationSeconds=" + String(Math.trunc(durationSeconds)),
     );
     host.innerHTML = response.data.length
-      ? response.data.map((slot) => `<div class="metadata-cloud"><span>${escapeHtml(slot.startsAt ?? "—")}</span><span>${escapeHtml(slot.endsAt ?? "—")}</span><span>${slot.available === false ? "پر" : "قابل رزرو"}</span></div>`).join("")
+      ? '<div class="booking-slot-grid">' + response.data.map((slot) => {
+          const disabled = slot.available === false || slot.status === "full" || (slot.remainingCapacity !== undefined && slot.remainingCapacity <= 0) || !slot.slotReference;
+          const reference = slot.slotReference ?? "";
+          return '<article class="booking-slot-card">' +
+            '<div class="booking-slot-card-meta"><span>' + escapeHtml(slot.status ?? "available") + '</span>' + (slot.remainingCapacity !== undefined ? '<span>' + String(Math.max(slot.remainingCapacity, 0)) + ' ظرفیت</span>' : '') + '</div>' +
+            '<strong>' + escapeHtml(slot.startsAt ?? "—") + '</strong><small>' + escapeHtml(slot.endsAt ?? "—") + '</small>' +
+            (disabled ? '<span class="pill warning">قابل رزرو نیست</span>' : '<button class="button button-primary booking-slot-action" type="button" data-book-slot="' + escapeAttr(reference) + '">گرفتن نوبت</button>') +
+            '</article>';
+        }).join("") + '</div>'
       : '<div class="slot-empty"><span>◌</span><p>در این بازه slot قابل‌نمایشی پیدا نشد.</p></div>';
+    host.querySelectorAll<HTMLButtonElement>("[data-book-slot]").forEach((button) => {
+      button.addEventListener("click", () => void createBookingHold(button.dataset.bookSlot ?? "", button));
+    });
   } catch (error) {
     host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن Availability ناموفق بود.")}</p></div>`;
+  }
+}
+
+async function createBookingHold(slotReference: string, button: HTMLButtonElement): Promise<void> {
+  const businessId = document.querySelector<HTMLInputElement>("#booking-business")?.value.trim() || localStorage.getItem(STORAGE.business) || "";
+  const resourceId = document.querySelector<HTMLInputElement>("#booking-resource")?.value.trim() || "";
+  const result = document.querySelector<HTMLElement>("#booking-hold-result");
+  if (!result) return;
+  if (!businessId || !slotReference) {
+    result.innerHTML = '<div class="connection-state error">Business ID و slot reference برای Hold لازم است.</div>';
+    return;
+  }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
+  button.disabled = true;
+  button.textContent = "در حال رزرو موقت…";
+  result.innerHTML = '<div class="connection-state">در حال ایجاد Hold canonical…</div>';
+  try {
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    const response = await apiJson<{ data: { id: string; status: string; expiresAt: string; slotReference: string } }>("/api/v1/booking/holds", {
+      method: "POST",
+      body: { businessId, slotReference, ...(resourceId ? { resourceId } : {}), expiresAt },
+    });
+    result.innerHTML = '<div class="connection-state success"><strong>Slot موقتاً نگه داشته شد.</strong><span>Hold: ' + escapeHtml(response.data.id) + '</span><span>وضعیت: ' + escapeHtml(response.data.status) + '</span><span>انقضا: ' + escapeHtml(response.data.expiresAt) + '</span><p>مرحله finalize به اطلاعات معتبر Offering/price snapshot وابسته است و تا قبل از دریافت آن خودکار اجرا نمی‌شود.</p></div>';
+    button.textContent = "Hold ایجاد شد ✓";
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = "گرفتن نوبت";
+    result.innerHTML = '<div class="connection-state error">' + escapeHtml(error instanceof Error ? error.message : "ایجاد Hold ناموفق بود.") + '</div>';
   }
 }
 
