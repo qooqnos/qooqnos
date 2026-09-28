@@ -264,9 +264,12 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
       });
     });
 
-    if (canvas.dataset.vwfLayout === "calendar") {
-      const businessId = canvas.dataset.vwfBusinessId?.trim();
-      if (businessId) void hydrateCalendarCanvas(canvas, businessId);
+    const businessId = canvas.dataset.vwfBusinessId?.trim();
+    if (businessId && canvas.dataset.vwfLayout === "calendar") {
+      void hydrateCalendarCanvas(canvas, businessId);
+    }
+    if (businessId && canvas.dataset.vwfLayout === "catalog") {
+      void hydrateCatalogCanvas(canvas, businessId);
     }
   });
 }
