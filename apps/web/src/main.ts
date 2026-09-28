@@ -612,10 +612,11 @@ function renderPublicHeader(): string {
           <span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
         </a>
         <nav class="phoenix-public-nav" aria-label="ناوبری اصلی">
-          <a href="/discover" data-nav>کشف</a>
           <a href="#phoenix-loop">چگونه کار می‌کند؟</a>
+          <a href="/discover" data-nav>کشف</a>
           <a href="/business" data-nav>برای کسب‌وکارها</a>
         </nav>
+        <a class="button button-primary phoenix-header-cta" href="#phoenix-demand-form">نیازت را بگو <span>←</span></a>
         <div class="phoenix-public-actions">
           <button type="button" class="button button-ghost" data-open-connection>ورود</button>
           <button type="button" class="icon-button" data-theme-toggle aria-label="تغییر پوسته">◐</button>
@@ -767,11 +768,25 @@ function renderHome(): string {
         </div>
       </section>
 
+      <section class="phoenix-section phoenix-experience-map" aria-labelledby="phoenix-experience-title">
+        <div class="phoenix-section-heading centered">
+          <span class="phoenix-kicker">Phoenix Experience</span>
+          <h2 id="phoenix-experience-title">از «چه می‌خواهم؟» تا «حالا چه کنم؟»</h2>
+          <p>صفحه اصلی نقطه شروع تصمیم مشتری است؛ عملیات مدیریت در مسیرهای اختصاصی باقی می‌ماند.</p>
+        </div>
+        <div class="phoenix-experience-grid">
+          <article><span>۱</span><strong>نیازت را می‌گویی</strong><p>با زبان طبیعی؛ بدون اجبار به شناخت دسته‌بندی.</p></article>
+          <article><span>۲</span><strong>نیاز ساختاربندی می‌شود</strong><p>محدودیت‌ها و چیزهای مهم برای تصمیم مشخص می‌شوند.</p></article>
+          <article><span>۳</span><strong>کشف و تطبیق ادامه پیدا می‌کند</strong><p>نتیجه واقعی از داده‌های canonical ققنوس می‌آید.</p></article>
+          <article><span>۴</span><strong>تصمیم و اقدام</strong><p>مقایسه، ارتباط، رزرو، خرید یا مسیر مناسب بعدی.</p></article>
+        </div>
+      </section>
+
       <section class="phoenix-section phoenix-live-demo">
         <div class="phoenix-section-heading">
-          <span class="phoenix-kicker">یک تجربه واقعی</span>
-          <h2>ققنوس فقط جستجو نمی‌کند.</h2>
-          <p>اول می‌فهمد چه چیزی برایت مهم است، بعد گزینه‌هایی را پیدا می‌کند که با نیازت ارتباط دارند.</p>
+          <span class="phoenix-kicker">Matching Demo · نمونه نمایشی</span>
+          <h2>ببین «فهم نیاز» چگونه تصمیم را شکل می‌دهد.</h2>
+          <p>این بخش یک نمونه آموزشی ثابت است؛ نتیجه زنده، امتیاز یا رتبه تولیدی نیست.</p>
         </div>
         <div class="phoenix-demo-grid">
           <article class="phoenix-demo-request">
@@ -785,7 +800,12 @@ function renderHome(): string {
             </div>
             <div class="phoenix-demo-result">
               <div class="phoenix-demo-result-icon">✦</div>
-              <div><strong>گزینه‌های متناسب</strong><small>بر اساس نیاز، بودجه و ویژگی‌های مهم انتخاب شده‌اند.</small></div>
+              <div><strong>دلیل ارتباط باید قابل توضیح باشد</strong><small>ققنوس نباید بدون پشتوانه، امتیاز یا رتبه ساختگی به کاربر نشان دهد.</small></div>
+            </div>
+            <div class="phoenix-demo-reasons">
+              <div><b>01</b><strong>نیاز را دقیق‌تر می‌کند</strong><small>بودجه، مناسبت و کاربرد از متن جدا می‌شوند.</small></div>
+              <div><b>02</b><strong>گزینه‌های ناسازگار را کنار می‌گذارد</strong><small>هر پیشنهاد باید به بخشی از نیاز متصل باشد.</small></div>
+              <div><b>03</b><strong>انتخاب را برای کاربر نگه می‌دارد</strong><small>ققنوس تصمیم را به جای کاربر تحمیل نمی‌کند.</small></div>
             </div>
           </article>
         </div>
@@ -804,6 +824,7 @@ function renderHome(): string {
           <div><b>05</b><strong>متصل می‌کند</strong><small>Connect</small></div><span>←</span>
           <div><b>06</b><strong>اقدام را ممکن می‌کند</strong><small>Act</small></div>
         </div>
+        <div class="phoenix-loop-learn"><span>07</span><strong>Learn</strong><small>نتیجه تعامل و اقدام دوباره بخشی از چرخه یادگیری محصول می‌شود.</small></div>
       </section>
 
       <section class="phoenix-section">
@@ -817,6 +838,19 @@ function renderHome(): string {
           <button type="button" data-phoenix-example="یک هدیه کاربردی برای پدرم با بودجه متوسط پیدا کن"><strong>🛍 محصول</strong><span>«برای تولد یک هدیه مناسب می‌خواهم...»</span></button>
           <button type="button" data-phoenix-example="یک متخصص مناسب برای نیاز من پیدا کن"><strong>✦ خدمت</strong><span>«یک متخصص خوب برای این کار می‌خواهم...»</span></button>
           <button type="button" data-phoenix-example="به من کمک کن بین چند گزینه مناسب انتخاب کنم"><strong>◈ تصمیم</strong><span>«بین چند گزینه نمی‌دانم کدام را انتخاب کنم...»</span></button>
+        </div>
+      </section>
+
+      <section class="phoenix-section phoenix-trust-section" aria-labelledby="phoenix-trust-title">
+        <div class="phoenix-section-heading centered">
+          <span class="phoenix-kicker">Decision Guardrails</span>
+          <h2 id="phoenix-trust-title">هوشمندی، بدون ساختن واقعیت جعلی.</h2>
+          <p>نمونه نمایشی از داده واقعی جدا می‌ماند و مسیرهای عملیاتی به منبع canonical خودشان متصل می‌شوند.</p>
+        </div>
+        <div class="phoenix-trust-grid">
+          <article><span>✓</span><strong>بدون امتیاز ساختگی</strong><p>رتبه یا دلیل تطبیق بدون پشتوانه به کاربر نمایش داده نمی‌شود.</p></article>
+          <article><span>✓</span><strong>شرح‌پذیری</strong><p>ارتباط هر گزینه باید تا حد ممکن به بخشی از نیاز وصل باشد.</p></article>
+          <article><span>✓</span><strong>انتخاب با کاربر</strong><p>ققنوس مسیر تصمیم را ساده می‌کند؛ تصمیم نهایی با کاربر است.</p></article>
         </div>
       </section>
 
@@ -864,10 +898,15 @@ function renderHome(): string {
 }
 
 function bindHomeEvents(): void {
+  const draftKey = "phoenix-home-demand-draft";
+  const primaryInput = document.querySelector<HTMLTextAreaElement>("#phoenix-demand-input");
+  const savedDraft = sessionStorage.getItem(draftKey);
+  if (primaryInput && savedDraft && !primaryInput.value) primaryInput.value = savedDraft;
   const submit = (input: HTMLTextAreaElement | null): void => {
     const query = input?.value.trim() ?? "";
     if (!query) { input?.focus(); showToast("اول نیازت را بنویس."); return; }
-    window.location.assign("/discover?q=" + encodeURIComponent(query));
+    sessionStorage.setItem(draftKey, query.slice(0, 800));
+    navigate("/discover?q=" + encodeURIComponent(query));
   };
   document.querySelector<HTMLFormElement>("#phoenix-demand-form")?.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -879,10 +918,22 @@ function bindHomeEvents(): void {
   });
   const syncCount = (input: HTMLTextAreaElement | null, counterId: string): void => {
     const counter = document.querySelector<HTMLElement>("#" + counterId);
-    if (counter) counter.textContent = String(input?.value.trim().length ?? 0);
+    if (counter) counter.textContent = `${String(input?.value.trim().length ?? 0)} / 800`;
   };
-  const primaryInput = document.querySelector<HTMLTextAreaElement>("#phoenix-demand-input");
-  primaryInput?.addEventListener("input", () => syncCount(primaryInput, "phoenix-demand-count"));
+  primaryInput?.addEventListener("input", () => {
+    if (primaryInput.value.length > 800) primaryInput.value = primaryInput.value.slice(0, 800);
+    sessionStorage.setItem(draftKey, primaryInput.value);
+    syncCount(primaryInput, "phoenix-demand-count");
+  });
+  if (primaryInput) primaryInput.maxLength = 800;
+  if (primaryInput?.value) syncCount(primaryInput, "phoenix-demand-count");
+  document.querySelector<HTMLElement>(".phoenix-home")?.addEventListener("keydown", (event) => {
+    if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+    const target = event.target as HTMLElement | null;
+    if (target && ["INPUT", "TEXTAREA", "BUTTON", "A", "SELECT"].includes(target.tagName)) return;
+    event.preventDefault();
+    primaryInput?.focus();
+  });
   document.querySelectorAll<HTMLButtonElement>("[data-phoenix-example]").forEach((button) => {
     button.addEventListener("click", () => {
       const value = button.dataset.phoenixExample ?? "";
