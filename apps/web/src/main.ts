@@ -2742,7 +2742,7 @@ function renderCompare(): string {
   return '<div class="phoenix-compare-page"><div class="phoenix-section-heading"><span class="phoenix-kicker">Compare</span><h1>مقایسه محصولات</h1><p>ویژگی‌های موجود را کنار هم ببین؛ ققنوس اطلاعاتی را که منبع canonical ندارد حدس نمی‌زند.</p></div>' +
     '<div class="phoenix-compare-table"><div class="compare-row compare-head"><span>ویژگی</span>' + items.map((item) => '<strong>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '</strong>').join("") + '</div>' +
     rows.map(([label, getter]) => '<div class="compare-row"><span>' + label + '</span>' + items.map((item) => '<span>' + escapeHtml(String((getter as (item: DiscoveryResult) => unknown)(item))) + '</span>').join("") + '</div>').join("") +
-    '</div><div class="phoenix-compare-actions"><a class="button button-primary" href="/checkout?product=' + encodeURIComponent(items[0].id ?? items[0].sourceId ?? "") + '" data-nav>خرید آنی</a><a class="button button-ghost" href="/discover" data-nav>ادامه کشف</a><button class="button button-ghost" type="button" data-clear-compare>پاک کردن مقایسه</button></div></div>';
+    '</div><div class="phoenix-compare-actions"><a class="button button-primary" href="/checkout?product=' + encodeURIComponent(items[0]?.id ?? items[0]?.sourceId ?? "") + '" data-nav>خرید آنی</a><a class="button button-ghost" href="/discover" data-nav>ادامه کشف</a><button class="button button-ghost" type="button" data-clear-compare>پاک کردن مقایسه</button></div></div>';
 }
 
 function renderDiscover(): string {
@@ -3150,7 +3150,7 @@ async function loadBusinessAccess(): Promise<void> {
       apiJson<{ data: { business: Record<string, unknown>; locations: Array<Record<string, unknown>>; hours: Array<Record<string, unknown>>; contacts: Array<Record<string, unknown>>; socialLinks: Array<Record<string, unknown>> } }>(
         `/api/v1/businesses/${encodeURIComponent(businessId)}/management`,
       ),
-      apiJson<{ authenticated?: boolean; actorId?: string; roles?: string[]; permissions?: string[]; workspaceId?: string }>("/api/v1/context").catch(() => ({ authenticated: false, roles: [], permissions: [] })),
+      apiJson<{ authenticated?: boolean; actorId?: string; roles?: string[]; permissions?: string[]; workspaceId?: string }>("/api/v1/context").catch(() => ({ authenticated: false, actorId: undefined, roles: [] as string[], permissions: [] as string[], workspaceId: undefined })),
       shellContext.workspaceId
         ? apiJson<{ data: Array<{ id: string; userId: string; status: string }> }>(`/api/v1/workspaces/${encodeURIComponent(shellContext.workspaceId)}/members`).catch(() => ({ data: [] }))
         : Promise.resolve({ data: [] }),
@@ -3289,7 +3289,7 @@ async function loadBusinessProfile(): Promise<void> {
       apiJson<{ data: { business: Record<string, unknown>; locations: Array<Record<string, unknown>>; hours: Array<Record<string, unknown>>; contacts: Array<Record<string, unknown>>; socialLinks: Array<Record<string, unknown>> } }>(
         "/api/v1/businesses/" + encodeURIComponent(businessId) + "/management",
       ),
-      apiJson<{ permissions?: string[] }>("/api/v1/context").catch(() => ({ permissions: [] })),
+      apiJson<{ authenticated?: boolean; actorId?: string; roles?: string[]; permissions?: string[]; workspaceId?: string }>("/api/v1/context").catch(() => ({ authenticated: false, actorId: undefined, roles: [] as string[], permissions: [] as string[], workspaceId: undefined })),
       apiJson<{ data: Array<{ signalType?: string; severity?: string; confidence?: number | null; status?: string }> }>(
         "/api/v1/trust/signals?subjectType=business&subjectId=" + encodeURIComponent(businessId) + "&status=active&limit=20",
       ).catch(() => ({ data: [] })),
