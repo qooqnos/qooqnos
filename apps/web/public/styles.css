@@ -4322,6 +4322,13 @@ body::before {
 
 
 /* Shared Vertical Workflow UI Framework — Canvas */
+.phoenix-vwf-view-state{padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--faint);font-size:7px;white-space:nowrap}
+.phoenix-vwf-local-empty{margin-top:9px;padding:11px 13px;border:1px dashed var(--line-strong);border-radius:13px;background:color-mix(in srgb,var(--surface) 48%,transparent);color:var(--muted);font-size:7px}
+.phoenix-vwf-action-note{margin-top:9px}
+.phoenix-vwf-canvas [hidden]{display:none!important}
+.phoenix-vwf-command-primary .button{margin-top:12px}
+.phoenix-vwf-people-card .text-link,.phoenix-vwf-commerce-card .text-link,.phoenix-vwf-kanban-column .text-link,.phoenix-vwf-inbox .text-link{display:inline-block;margin-top:9px}
+
 .phoenix-vwf-canvas{padding:22px 24px;overflow:hidden}
 .phoenix-vwf-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
 .phoenix-vwf-header h2{margin:6px 0 5px;font-size:19px;letter-spacing:-.035em}
