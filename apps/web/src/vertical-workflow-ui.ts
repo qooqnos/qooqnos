@@ -1,4 +1,5 @@
 import type { VerticalModuleBlueprint, VerticalModuleLayout } from "./business-module-ui.js";
+import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
 export type VerticalWorkflowCanvasModel = {
   readonly vertical: string;
@@ -51,6 +52,14 @@ const layoutCopy: Record<VerticalModuleLayout, { label: string; description: str
     description: "سطح ارتباط؛ گفتگو و notification از Communication boundary خوانده می‌شوند.",
   },
 };
+
+function workflowModuleHref(model: VerticalWorkflowCanvasModel, module: string): string {
+  const params = new URLSearchParams();
+  params.set("vertical", model.vertical);
+  params.set("module", module);
+  if (model.businessId) params.set("business", model.businessId);
+  return "/business?" + params.toString();
+}
 
 function contextualHref(model: VerticalWorkflowCanvasModel, path?: string): string {
   if (!path) return "";
@@ -225,6 +234,17 @@ function renderLayout(layout: VerticalModuleLayout, model: VerticalWorkflowCanva
 export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel): string {
   const copy = layoutCopy[model.blueprint.layout];
   return '<section class="glass-card phoenix-vwf-canvas" data-vwf-root data-vwf-layout="' + escapeHtml(model.blueprint.layout) + '" data-vwf-active-view="overview" data-vwf-business-id="' + escapeHtml(model.businessId ?? "") + '" data-vwf-vertical="' + escapeHtml(model.vertical) + '" data-vwf-module="' + escapeHtml(model.module) + '">' +
+    '<nav class="phoenix-vwf-stage-rail" aria-label="مراحل Workflow">' +
+      getVerticalWorkflowSteps(model.vertical).map((stage, index) => {
+        const stageModule = getVerticalWorkflowStageModule(model.vertical, stage);
+        const active = stageModule === model.module;
+        const href = stageModule ? workflowModuleHref(model, stageModule) : "";
+        const content = '<span class="phoenix-vwf-stage-number">' + String(index + 1).padStart(2, "0") + '</span><span class="phoenix-vwf-stage-copy"><strong>' + escapeHtml(stage) + '</strong><small>' + escapeHtml(stageModule ?? "Capability") + '</small></span>';
+        return href
+          ? '<a class="phoenix-vwf-stage' + (active ? " active" : "") + '" href="' + escapeHtml(href) + '" data-nav aria-current="' + (active ? "step" : "false") + '">' + content + '</a>'
+          : '<div class="phoenix-vwf-stage' + (active ? " active" : "") + '">' + content + '</div>';
+      }).join('<span class="phoenix-vwf-stage-connector" aria-hidden="true">→</span>') +
+    '</nav>' +
     '<div class="phoenix-vwf-header">' +
       '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>' + escapeHtml(copy.label) + ' canvas</h2><p>' + escapeHtml(copy.description) + '</p></div>' +
       '<div class="phoenix-vwf-header-actions"><span class="pill">Shared component</span><button type="button" class="button button-ghost" data-vwf-action="refresh" aria-label="تازه‌سازی داده‌های این Canvas">↻ تازه‌سازی</button></div>' +
