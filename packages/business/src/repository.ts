@@ -70,6 +70,15 @@ export interface BusinessPublicContactRecord {
   readonly isPrimary: boolean;
 }
 
+export interface PublicBusinessLocationRecord {
+  readonly id: EntityId;
+  readonly businessId: EntityId;
+  readonly name: string;
+  readonly locationType: "physical" | "virtual" | "service_area";
+  readonly timezone: string | null;
+  readonly address: Readonly<Record<string, unknown>> | null;
+  readonly geoPoint: { readonly latitude: number; readonly longitude: number } | null;
+}
 export interface BusinessSocialLinkRecord {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -128,6 +137,38 @@ export class BusinessRepository extends Repository {
        LIMIT 1`,
       id,
     );
+  }
+  async listPublishedPublicContacts(businessId: EntityId): Promise<readonly BusinessPublicContactRecord[]> {
+    return this.database.all<BusinessPublicContactRecord>(
+      `SELECT c.id, c.business_id AS businessId, c.location_id AS locationId,
+              c.contact_type AS contactType, c.value, c.is_primary AS isPrimary
+         FROM business_contacts c
+         INNER JOIN businesses b ON b.id = c.business_id
+        WHERE c.business_id = ? AND b.status = 'active' AND b.publication_status = 'published'
+          AND c.visibility = 'public' AND c.status = 'active'
+        ORDER BY c.is_primary DESC, c.contact_type ASC, c.id ASC`,
+      businessId,
+    );
+  }
+
+  async listPublishedPublicLocations(businessId: EntityId): Promise<readonly PublicBusinessLocationRecord[]> {
+    const rows = await this.database.all<{ id: EntityId; businessId: EntityId; name: string; locationType: PublicBusinessLocationRecord["locationType"]; timezone: string | null; addressJson: string | null; geoPointJson: string | null }>(
+      `SELECT l.id, l.business_id AS businessId, l.name, l.location_type AS locationType,
+              l.timezone, l.address_json AS addressJson, l.geo_point_json AS geoPointJson
+         FROM locations l
+         INNER JOIN businesses b ON b.id = l.business_id
+        WHERE l.business_id = ? AND l.status = 'active'
+          AND b.status = 'active' AND b.publication_status = 'published'
+        ORDER BY l.id ASC`,
+      businessId,
+    );
+    return rows.map((row) => {
+      let address: Readonly<Record<string, unknown>> | null = null;
+      let geoPoint: PublicBusinessLocationRecord["geoPoint"] = null;
+      if (row.addressJson) { try { const parsed: unknown = JSON.parse(row.addressJson); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) address = parsed as Readonly<Record<string, unknown>>; } catch { address = null; } }
+      if (row.geoPointJson) { try { const parsed: unknown = JSON.parse(row.geoPointJson); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) { const value = parsed as Record<string, unknown>; if (typeof value.latitude === "number" && typeof value.longitude === "number" && Number.isFinite(value.latitude) && Number.isFinite(value.longitude)) geoPoint = { latitude: value.latitude, longitude: value.longitude }; } } catch { geoPoint = null; } }
+      return { id: row.id, businessId: row.businessId, name: row.name, locationType: row.locationType, timezone: row.timezone, address, geoPoint };
+    });
   }
   async get(context: RequestContext, id: EntityId): Promise<BusinessRecord | null> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
