@@ -4332,3 +4332,90 @@ body::before {
   .phoenix-module-related-card { padding: 18px; }
   .phoenix-module-surface-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Shared occupation module blueprint */
+.phoenix-module-blueprint{
+  padding:22px 24px;
+  overflow:hidden;
+}
+.phoenix-module-blueprint-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+  margin-top:14px;
+}
+.phoenix-module-blueprint-card{
+  position:relative;
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:10px;
+  min-height:150px;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:19px;
+  background:
+    linear-gradient(180deg,color-mix(in srgb,var(--surface) 90%,transparent),var(--surface-2));
+}
+.phoenix-module-blueprint-index{
+  display:grid;
+  place-items:center;
+  width:31px;
+  height:31px;
+  border-radius:11px;
+  color:var(--primary);
+  background:color-mix(in srgb,var(--primary) 9%,var(--surface));
+  border:1px solid color-mix(in srgb,var(--primary) 18%,var(--line));
+  font-size:7px;
+  font-variant-numeric:tabular-nums;
+}
+.phoenix-module-blueprint-card strong{
+  display:block;
+  font-size:10px;
+  letter-spacing:-.02em;
+}
+.phoenix-module-blueprint-card p{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:7px;
+  line-height:1.9;
+}
+.phoenix-module-blueprint-card>a{
+  grid-column:2;
+  align-self:end;
+  justify-self:start;
+  margin-top:8px;
+  color:var(--primary);
+  text-decoration:none;
+  font-size:7px;
+}
+.phoenix-module-blueprint-card>.pill{
+  grid-column:2;
+  align-self:end;
+  justify-self:start;
+  margin-top:8px;
+}
+.phoenix-module-blueprint-footer{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:11px;
+  padding-top:11px;
+  border-top:1px solid var(--line);
+  color:var(--faint);
+  font-size:6px;
+}
+.phoenix-module-blueprint-footer span{
+  padding:5px 7px;
+  border-radius:999px;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+}
+@media(max-width:900px){
+  .phoenix-module-blueprint-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:620px){
+  .phoenix-module-blueprint{padding:18px}
+  .phoenix-module-blueprint-grid{grid-template-columns:1fr}
+  .phoenix-module-blueprint-card{min-height:132px}
+}
