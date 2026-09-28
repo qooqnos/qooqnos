@@ -3044,6 +3044,14 @@ function getBusinessVerticalUi(value: unknown) {
   return BUSINESS_VERTICAL_UI[resolveBusinessVerticalKey(value)];
 }
 
+const BUSINESS_QUICK_ACTION_LINKS: Record<string, Record<string, string>> = {
+  default: { "ایجاد محتوا": "/product-studio", "مدیریت عرضه": "/catalog", "بررسی معاملات": "/transactions" },
+  clinic: { "افزودن خدمت": "/catalog", "تنظیم زمان‌بندی": "/booking", "مدیریت نوبت‌ها": "/booking" },
+  retail: { "افزودن محصول": "/product-studio", "ثبت موجودی": "/catalog", "ساخت محتوای محصول": "/product-studio" },
+  restaurant: { "مدیریت منو": "/catalog", "تنظیم میزها": "/business?module=میزها", "بررسی رزروها": "/booking" },
+  salon: { "افزودن خدمت": "/catalog", "تنظیم برنامه": "/booking", "افزودن متخصص": "/business?module=متخصصان" },
+};
+
 const BUSINESS_VERTICAL_BOARD: Record<string, readonly { readonly eyebrow: string; readonly title: string; readonly description: string; readonly path?: string }[]> = {
   default: [
     { eyebrow: "Today", title: "عمل اصلی Workspace", description: "ماژول‌های فعال را بر اساس Capability این Business دنبال کن.", path: "/business?module=محصولات" },
@@ -3152,7 +3160,7 @@ function renderBusiness(): string {
       '<article class="glass-card phoenix-business-modules-card"><div class="card-section-heading"><div><span class="section-kicker">Workspace Modules</span><h2>ابزارهای مخصوص این کسب‌وکار</h2></div><span id="business-module-count" class="pill">—</span></div><div id="business-module-grid" class="phoenix-business-module-grid">' + ui.modules.map((module) => '<button class="phoenix-business-module" type="button" data-business-module="' + escapeAttr(module) + '"><span>◈</span><strong>' + module + '</strong><small>باز کردن</small></button>').join("") + '</div></article>' +
 
       '<aside class="phoenix-business-side">' +
-        '<article class="glass-card phoenix-business-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>اقدام‌های سریع</h2></div></div><div id="business-quick-actions" class="phoenix-business-quick-actions">' + ui.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action>' + action + ' <span>←</span></button>').join("") + '</div></article>' +
+        '<article class="glass-card phoenix-business-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>اقدام‌های سریع</h2></div></div><div id="business-quick-actions" class="phoenix-business-quick-actions">' + ui.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action data-business-quick-action-value="' + escapeAttr(action) + '">' + action + ' <span>←</span></button>').join("") + '</div></article>' +
         '<article class="glass-card ai-action-card"><span class="ai-badge">AI COPILOT</span><h2>عرضه را سریع‌تر آماده کن.</h2><p>از تصویر یا متن خام شروع کن؛ Seller AI پیش‌نویس می‌سازد و پذیرش نهایی همچنان دست کسب‌وکار می‌ماند.</p><a class="button button-primary" href="/product-studio" data-nav>باز کردن Product Studio <span>→</span></a></article>' +
       '</aside>' +
     '</section>' +
@@ -3324,9 +3332,10 @@ async function loadBusinessAccess(): Promise<void> {
     if (nextAction) nextAction.textContent = vertical.actions[0] ?? "اقدام بعدی را شروع کن.";
     if (nextDetail) nextDetail.textContent = vertical.subtitle;
     if (moduleCount) moduleCount.textContent = String(vertical.modules.length) + " ماژول";
-    if (moduleGrid) moduleGrid.innerHTML = vertical.modules.map((module) => '<button class="phoenix-business-module" type="button"><span>◈</span><strong>' + escapeHtml(module) + '</strong><small>باز کردن</small></button>').join("");
-    if (quickActions) quickActions.innerHTML = vertical.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action>' + escapeHtml(action) + ' <span>←</span></button>').join("");
+    if (moduleGrid) moduleGrid.innerHTML = vertical.modules.map((module) => '<button class="phoenix-business-module" type="button" data-business-module="' + escapeAttr(module) + '"><span>◈</span><strong>' + escapeHtml(module) + '</strong><small>باز کردن</small></button>').join("");
+    if (quickActions) quickActions.innerHTML = vertical.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action data-business-quick-action-value="' + escapeAttr(action) + '">' + escapeHtml(action) + ' <span>←</span></button>').join("");
     if (customerActions) customerActions.innerHTML = vertical.customerActions.map((action) => '<span>' + escapeHtml(action) + '</span>').join("");
+    bindBusinessWorkspaceDynamicEvents();
     const roles = Array.isArray(context.roles) ? context.roles : [];
     const permissions = Array.isArray(context.permissions) ? context.permissions : [];
     const roleText = roles.length ? roles.join(" · ") : "نقش مشخص نشده";
@@ -3950,6 +3959,25 @@ function openCommandPalette(): void {
   window.requestAnimationFrame(() => input?.focus());
 }
 
+function bindBusinessWorkspaceDynamicEvents(): void {
+  document.querySelectorAll<HTMLButtonElement>(".phoenix-business-module").forEach((button) => {
+    button.onclick = () => {
+      const module = button.dataset.businessModule;
+      if (module) navigate("/business?module=" + encodeURIComponent(module));
+    };
+  });
+  const vertical = localStorage.getItem(STORAGE.businessVertical) ?? "default";
+  const actionLinks = BUSINESS_QUICK_ACTION_LINKS[vertical] ?? BUSINESS_QUICK_ACTION_LINKS.default;
+  document.querySelectorAll<HTMLButtonElement>("[data-business-quick-action]").forEach((button) => {
+    button.onclick = () => {
+      const action = button.dataset.businessQuickActionValue ?? button.textContent?.replace("←", "").trim() ?? "";
+      const target = actionLinks[action];
+      if (target) navigate(target);
+      else showToast(action + " در حال اتصال به workflow canonical است.");
+    };
+  });
+}
+
 function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLElement>("[data-nav]").forEach((element) => {
     element.addEventListener("click", (event) => {
@@ -3987,11 +4015,7 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-business-save]")?.addEventListener("click", () => { void saveBusinessProfile(); });
   document.querySelector<HTMLButtonElement>("[data-business-add-location]")?.addEventListener("click", openBusinessLocationPanel);
   document.querySelectorAll<HTMLButtonElement>("[data-business-type-choice]").forEach((button) => button.addEventListener("click", () => { const input = document.querySelector<HTMLInputElement>("#business-type-input"); const value = button.dataset.businessTypeChoice ?? ""; if (input) input.value = value; showToast("نوع کسب‌وکار «" + (button.textContent ?? value) + "» انتخاب شد."); }));
-  document.querySelectorAll<HTMLButtonElement>("[data-business-quick-action]").forEach((button) => button.addEventListener("click", () => showToast(button.textContent?.replace("←", "").trim() + " از Workspace تخصصی ققنوس باز می‌شود؛ اتصال workflow این ماژول در حال تکمیل است.")));
-  document.querySelectorAll<HTMLButtonElement>(".phoenix-business-module").forEach((button) => button.addEventListener("click", () => {
-    const module = button.dataset.businessModule;
-    if (module) navigate("/business?module=" + encodeURIComponent(module));
-  }));
+  bindBusinessWorkspaceDynamicEvents();
   document.querySelectorAll<HTMLButtonElement>("[data-business-module-action]").forEach((button) => button.addEventListener("click", () => showToast((button.dataset.businessModuleAction ?? "Action") + " از workflow canonical ادامه پیدا می‌کند.")));
   document.querySelector<HTMLButtonElement>("[data-business-primary-action]")?.addEventListener("click", () => { const action = document.querySelector("#business-next-action")?.textContent?.trim() ?? "اقدام بعدی"; showToast(action + " آماده است؛ ابتدا وضعیت Workspace و Capabilityهای فعال را بررسی می‌کنیم."); });
   document.querySelector<HTMLButtonElement>("[data-team-management]")?.addEventListener("click", openBusinessTeamPanel);
