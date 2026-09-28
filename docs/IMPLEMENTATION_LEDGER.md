@@ -2016,3 +2016,14 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added shared Phoenix visual styling for role cards, permission chips, member rows and responsive mobile behavior.
 - Commits: `5fe78a63ebe7bf2fc78201442a66d819286e683f`, `d66dcef6857fec940543b349bb15d0d2a2bf1365`, `8e1c935ac08e6b2af8fdb87814d51c193c1ee6ae`.
 - Verification gate remains: web TypeScript build plus responsive/visual QA before production verification.
+
+
+## Phoenix Workspace Switcher / Business Brand / Team Management UX — 2026-09-28
+- Refined the Workspace Switcher into a Phoenix-branded contextual modal with current workspace, active state, available workspaces and effective role summary from canonical context.
+- Preserved server-side workspace validation; UI never treats a local workspace selection as authorization.
+- Added a Business Public Brand preview surface to `/business`, using canonical Business name/display name, business type composition and publication status without leaking private workspace information.
+- Added a read-only Team Management panel showing current workspace, current roles, member status and effective permissions from canonical Identity/Access boundaries.
+- The Team Management UI explicitly remains read-only until canonical mutation routes for invitation/role/membership changes are connected; no fake invite/role success is shown.
+- Added responsive styling for workspace selection, business brand preview and team management.
+- Implementation commits: `5eda15e74e14252b81c54f2d29c5bdcac2d579b2`, `e8dc5b6fb22ff2e93b32de3ecaa96a5d2f82768d`, `de8a6ecbad85d362ce4503773851065cd3624eb4`, `ca201965224c98e18868db993dc8e7f4d16b6398`, `d3055fbbbff1f6aeb32c9f204302224ff1c3ea37`, `2b85e28bd4288954e21edcfaa9952a911036f521`.
+- Verification gate remains: web TypeScript build plus responsive/visual QA before production verification.
