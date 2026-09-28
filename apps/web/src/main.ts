@@ -1,6 +1,7 @@
 import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui.js";
 import { getVerticalModuleBlueprint, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
 import { bindVerticalWorkflowCanvas, renderVerticalWorkflowCanvas } from "./vertical-workflow-ui.js";
+import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 type Theme = "dark" | "light";
 
 type Route = {
@@ -3139,13 +3140,6 @@ const BUSINESS_VERTICAL_BOARD: Record<string, readonly { readonly eyebrow: strin
     { eyebrow: "Growth", title: "پیشنهادها", description: "Promotion policy در دامنه Promotion قرار دارد.", path: "/promotion" },
   ],
 };
-const BUSINESS_WORKFLOW_STAGE_MODULES: Record<string, Record<string, string>> = {
-  clinic: { "خدمت": "خدمات", "زمان‌بندی": "تقویم", "رزرو": "نوبت‌ها", "پیگیری": "پیام‌ها" },
-  retail: { "محصول": "محصولات", "انتشار": "محتوا", "موجودی": "موجودی", "سفارش": "سفارش‌ها" },
-  restaurant: { "منو": "منو", "میز / رزرو": "رزرو", "سفارش": "سفارش‌های امروز", "تحویل": "تحویل" },
-  salon: { "خدمت": "خدمات", "متخصص": "متخصصان", "زمان‌بندی": "تقویم", "رزرو": "وقت‌های امروز" },
-};
-
 function businessWorkflowStageHref(
   vertical: string,
   stage: string,
@@ -3153,7 +3147,7 @@ function businessWorkflowStageHref(
   originatingModule: string,
 ): { href?: string; module?: string } {
   const resolvedVertical = resolveBusinessVerticalKey(vertical);
-  const candidate = BUSINESS_WORKFLOW_STAGE_MODULES[resolvedVertical]?.[stage];
+  const candidate = getVerticalWorkflowStageModule(resolvedVertical, stage);
   if (!candidate) return {};
   if (!getBusinessVerticalUi(resolvedVertical).modules.includes(candidate)) return {};
   return {
@@ -3162,13 +3156,6 @@ function businessWorkflowStageHref(
   };
 }
 
-const BUSINESS_VERTICAL_WORKFLOWS: Record<string, readonly string[]> = {
-  default: ["Supply", "Discovery", "Connect", "Act"],
-  clinic: ["خدمت", "زمان‌بندی", "رزرو", "پیگیری"],
-  retail: ["محصول", "انتشار", "موجودی", "سفارش"],
-  restaurant: ["منو", "میز / رزرو", "سفارش", "تحویل"],
-  salon: ["خدمت", "متخصص", "زمان‌بندی", "رزرو"],
-};
 const BUSINESS_MODULE_LINKS: Record<string, Record<string, { readonly label: string; readonly path?: string; readonly status?: string; readonly description: string }>> = {
   default: { "پروفایل": { label: "پروفایل کسب‌وکار", path: "/business/profile", description: "هویت و وضعیت انتشار Business." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "ساخت عرضه و محتوای marketplace-ready." }, "محصولات": { label: "کاتالوگ", path: "/catalog", description: "مدیریت عرضه‌های Catalog." }, "خدمات": { label: "کاتالوگ", path: "/catalog", description: "مدیریت خدمات و offeringها." }, "مشتریان": { label: "مشتریان", path: "/customer", description: "رابط Customer و تاریخچه رابطه." }, "پیام‌ها": { label: "ارتباطات", path: "/communication", description: "پیام‌ها و ارتباط با مشتری." }, "معاملات": { label: "معاملات", path: "/transactions", description: "خرید، فروش، اجاره و جریان‌های تجاری." }, "تیم": { label: "تیم", status: "read-only", description: "اعضا، Role و Permissionهای Workspace." } },
   clinic: { "امروز": { label: "رزرو", path: "/booking", description: "نمای امروز و جریان رزرو canonical." }, "نوبت‌ها": { label: "رزرو", path: "/booking", description: "Availability و رزرو نوبت." }, "تقویم": { label: "رزرو", path: "/booking", description: "Availability و زمان‌بندی." }, "پزشکان": { label: "تیم", status: "capability", description: "Provider/Specialist در Team و Access." }, "خدمات": { label: "کاتالوگ", path: "/catalog", description: "خدمات قابل ارائه توسط کلینیک." }, "مراجعان": { label: "مشتریان", path: "/customer", description: "Customer relationship و سابقه تعامل." }, "ساعات کاری": { label: "Business", path: "/business", description: "Location و Hours canonical." }, "پیام‌ها": { label: "ارتباطات", path: "/communication", description: "ارتباط با مراجعان." }, "پرداخت": { label: "مالی", path: "/billing", description: "Billing و entitlement." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "محتوا و معرفی خدمات." }, "تیم": { label: "تیم", status: "read-only", description: "Role/Access تیم درمان و پشتیبانی." } },
@@ -3313,7 +3300,7 @@ function renderBusinessModule(vertical: string, module: string): string {
   const relatedModules = ui.modules.filter((item) => item !== module).slice(0, 5);
   const surfaces = presentation?.surfaces ?? (info.path ? [{ label: info.label, path: info.path, description: info.description }] : []);
   const actions = ui.actions.slice(0, 3);
-  const workflow = BUSINESS_VERTICAL_WORKFLOWS[ui.key] ?? BUSINESS_VERTICAL_WORKFLOWS.default;
+  const workflow = getVerticalWorkflowSteps(ui.key);
   const moduleStatus = info.status ?? presentation?.stateLabel ?? "connected";
   const blueprint: VerticalModuleBlueprint = getVerticalModuleBlueprint(ui.key, module);
   const workflowCanvas = renderVerticalWorkflowCanvas({
