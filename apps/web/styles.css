@@ -3161,3 +3161,21 @@ body::before {
   .phoenix-business-module-grid { grid-template-columns:1fr 1fr; }
   .phoenix-business-management-grid .business-main { grid-column:auto; }
 }
+
+
+.phoenix-business-type-picker { display:grid; gap:7px; }
+.phoenix-business-type-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.phoenix-business-type-chips button {
+  min-height:30px;
+  padding:0 10px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--surface);
+  color:var(--muted);
+  font-size:7px;
+}
+.phoenix-business-type-chips button:hover {
+  color:var(--primary);
+  border-color:color-mix(in srgb,var(--primary) 18%,var(--line));
+  background:color-mix(in srgb,var(--primary) 6%,var(--surface));
+}
