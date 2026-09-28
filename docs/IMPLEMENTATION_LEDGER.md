@@ -2105,3 +2105,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Review submission remains subject to the backend Trust authorization and moderation lifecycle.
 - Implementation commit: `fbd605f1093f556921ad5ba364b7f198c38cc675`.
 - Verification remains pending: TypeScript build, Trust integration test and browser/visual QA have not been executed in this slice.
+
+
+## Public Business Trust / Engagement Completion — 2026-09-28
+- Public Business profile now includes canonical published customer reviews from Trust, restricted to reviews whose canonical status is `published` and moderation state is `approved`.
+- Public Business hero now exposes Follow, Review and Share actions; Follow reuses the existing Social Engagement business-follow command, Review reuses canonical Trust Review creation, and Share remains a browser-level navigation aid.
+- Corrected async declarations for the public Business Follow/Share handlers before further UI changes.
+- Added responsive styling for the public review list and hero actions.
+- Implementation commits: `056d10e392f36fec1a6074e2ab325790fdb15329`, `4b70321e5192d8aa13b0409eb638dfa19b72c084`, `2fbb0bf36aff6f932d97411fee0dbf3adf926b83`, `f70bdbbc873b49d4ca1781ce1842f5e028fae3ed`, `1b85e7f93a5d7ad2ba50feda5c6e94aac8948a9e`, `990bbf366b3d549f11931bedc67fd66a257fdada`.
+- Verification remains pending: local clone/build was unavailable because the environment could not resolve GitHub; therefore no claim of fresh TypeScript build, API integration test or browser QA is made.
