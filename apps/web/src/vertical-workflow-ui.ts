@@ -129,15 +129,17 @@ function renderPeople(model: VerticalWorkflowCanvasModel): string {
     '</div>' +
     viewState("اعضا / افراد") +
     '</div>' +
-    '<div class="phoenix-vwf-filter-row">' +
+    '<div class="phoenix-vwf-filter-row phoenix-vwf-lookup-row">' +
       '<input class="studio-input-line" data-vwf-filter placeholder="جستجوی نمایشی…" aria-label="جستجو" />' +
-      '<span class="phoenix-vwf-local-note">فقط روی محتوای همین Canvas اعمال می‌شود.</span>' +
+      '<input class="studio-input-line" data-vwf-customer-id placeholder="Customer ID برای مشاهده context…" aria-label="شناسه مشتری" />' +
+      '<button type="button" class="button button-secondary" data-vwf-load-customer>خواندن Customer</button>' +
+      '<span class="phoenix-vwf-local-note">Lookup فقط از Customer canonical می‌خواند؛ داده محلی ذخیره نمی‌شود.</span>' +
     '</div>' +
-    '<div class="phoenix-vwf-people-grid">' +
+    '<div class="phoenix-vwf-people-grid" data-vwf-people-items>' +
       model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-people-card" data-vwf-item><span class="section-kicker">People surface</span><h3>' + escapeHtml(item.title) + '</h3>' + emptyState(item.description, item.path ? item.path : "Capability") + (item.path ? '<a class="text-link" href="' + escapeHtml(item.path) + '" data-nav>باز کردن منبع ←</a>' : '') + '</article>').join("") +
-    '</div>';
+    '</div>' +
+    '<div class="phoenix-vwf-live-detail" data-vwf-customer-detail hidden></div>';
 }
-
 function renderCommerce(model: VerticalWorkflowCanvasModel): string {
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="Commerce views">' +
@@ -147,12 +149,17 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
     '</div>' +
     viewState("همه") +
     '</div>' +
+    '<div class="phoenix-vwf-lookup-row">' +
+      '<input class="studio-input-line" data-vwf-order-id placeholder="Order ID برای مشاهده وضعیت…" aria-label="شناسه سفارش" />' +
+      '<button type="button" class="button button-secondary" data-vwf-load-order>خواندن Order</button>' +
+      '<span class="phoenix-vwf-local-note">Order state مستقیماً از Commerce خوانده می‌شود؛ این Canvas منبع دوم نمی‌سازد.</span>' +
+    '</div>' +
     '<div class="phoenix-vwf-commerce-grid">' +
       model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-commerce-card" data-vwf-item><span class="section-kicker">Commerce surface</span><h3>' + escapeHtml(item.title) + '</h3>' + emptyState(item.description, item.path ?? "Commerce") + (item.path ? '<a class="text-link" href="' + escapeHtml(item.path) + '" data-nav>باز کردن منبع ←</a>' : '') + '</article>').join("") +
     '</div>' +
-    '<div class="phoenix-vwf-status-rail"><span>Order</span><i></i><span>Billing</span><i></i><span>Fulfillment</span></div>';
+    '<div class="phoenix-vwf-status-rail"><span>Order</span><i></i><span>Billing</span><i></i><span>Fulfillment</span></div>' +
+    '<div class="phoenix-vwf-live-detail" data-vwf-order-detail hidden></div>';
 }
-
 function renderOperations(model: VerticalWorkflowCanvasModel): string {
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="Operations views">' +
@@ -264,6 +271,32 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
       });
     });
 
+    const customerLookup = canvas.querySelector<HTMLInputElement>("[data-vwf-customer-id]");
+    const customerDetail = canvas.querySelector<HTMLElement>("[data-vwf-customer-detail]");
+    canvas.querySelector<HTMLButtonElement>("[data-vwf-load-customer]")?.addEventListener("click", () => {
+      const customerId = customerLookup?.value.trim();
+      if (!customerDetail) return;
+      if (!customerId) {
+        customerDetail.hidden = false;
+        customerDetail.innerHTML = '<div class="phoenix-vwf-local-note">Customer ID وارد نشده است.</div>';
+        return;
+      }
+      void hydrateCustomerLookup(customerDetail, customerId);
+    });
+
+    const orderLookup = canvas.querySelector<HTMLInputElement>("[data-vwf-order-id]");
+    const orderDetail = canvas.querySelector<HTMLElement>("[data-vwf-order-detail]");
+    canvas.querySelector<HTMLButtonElement>("[data-vwf-load-order]")?.addEventListener("click", () => {
+      const orderId = orderLookup?.value.trim();
+      if (!orderDetail) return;
+      if (!orderId) {
+        orderDetail.hidden = false;
+        orderDetail.innerHTML = '<div class="phoenix-vwf-local-note">Order ID وارد نشده است.</div>';
+        return;
+      }
+      void hydrateOrderLookup(orderDetail, orderId);
+    });
+
     const businessId = canvas.dataset.vwfBusinessId?.trim();
     if (businessId && canvas.dataset.vwfLayout === "calendar") {
       void hydrateCalendarCanvas(canvas, businessId);
@@ -274,6 +307,84 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
   });
 }
 
+
+type VerticalWorkflowEntityRecord = Record<string, unknown>;
+
+function vwfAuthHeaders(): Headers | null {
+  const token = sessionStorage.getItem("phoenix-access-token");
+  const workspace = localStorage.getItem("phoenix-workspace-id");
+  if (!token || !workspace) return null;
+  return new Headers({
+    Accept: "application/json",
+    Authorization: "Bearer " + token,
+    "x-workspace-id": workspace,
+  });
+}
+
+function displayMinorAmount(value: unknown, currency: unknown): string {
+  const amount = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(amount)) return "—";
+  const normalized = amount / 100;
+  return new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 2 }).format(normalized) + (currency ? " " + String(currency) : "");
+}
+
+async function hydrateCustomerLookup(host: HTMLElement, customerId: string): Promise<void> {
+  const headers = vwfAuthHeaders();
+  host.hidden = false;
+  if (!headers) {
+    host.innerHTML = '<div class="phoenix-vwf-local-note">برای خواندن Customer، session و Workspace context لازم است.</div>';
+    return;
+  }
+  host.innerHTML = '<div class="slot-loading">در حال خواندن Customer canonical…</div>';
+  try {
+    const response = await fetch("/api/v1/customers/" + encodeURIComponent(customerId) + "/profile", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowEntityRecord; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Customer profile unavailable");
+    const profile = body?.data ?? {};
+    const displayName = String(profile.displayName ?? profile.fullName ?? profile.name ?? customerId);
+    const email = profile.email ? String(profile.email) : "—";
+    const phone = profile.phone ? String(profile.phone) : "—";
+    const locale = profile.locale ? String(profile.locale) : "—";
+    host.innerHTML =
+      '<div class="phoenix-vwf-live-detail-head"><div><span class="section-kicker">Canonical Customer</span><h3>' + escapeHtml(displayName) + '</h3><p>' + escapeHtml(customerId) + '</p></div><span class="pill success">live</span></div>' +
+      '<div class="phoenix-vwf-live-detail-grid">' +
+        '<div><span>Email</span><strong>' + escapeHtml(email) + '</strong></div>' +
+        '<div><span>Phone</span><strong>' + escapeHtml(phone) + '</strong></div>' +
+        '<div><span>Locale</span><strong>' + escapeHtml(locale) + '</strong></div>' +
+      '</div>';
+  } catch (error) {
+    host.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Customer ناموفق بود.", "Customer");
+  }
+}
+
+async function hydrateOrderLookup(host: HTMLElement, orderId: string): Promise<void> {
+  const headers = vwfAuthHeaders();
+  host.hidden = false;
+  if (!headers) {
+    host.innerHTML = '<div class="phoenix-vwf-local-note">برای خواندن Order، session و Workspace context لازم است.</div>';
+    return;
+  }
+  host.innerHTML = '<div class="slot-loading">در حال خواندن Order canonical…</div>';
+  try {
+    const response = await fetch("/api/v1/commerce/orders/" + encodeURIComponent(orderId), { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowEntityRecord; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Order unavailable");
+    const order = body?.data ?? {};
+    const status = String(order.status ?? "—");
+    const businessId = String(order.businessId ?? "—");
+    const customerId = String(order.customerId ?? "—");
+    const total = displayMinorAmount(order.grandTotalMinor, order.currency);
+    host.innerHTML =
+      '<div class="phoenix-vwf-live-detail-head"><div><span class="section-kicker">Canonical Order</span><h3>' + escapeHtml(orderId) + '</h3><p>Commerce source of truth</p></div><span class="pill">' + escapeHtml(status) + '</span></div>' +
+      '<div class="phoenix-vwf-live-detail-grid">' +
+        '<div><span>Business</span><strong>' + escapeHtml(businessId) + '</strong></div>' +
+        '<div><span>Customer</span><strong>' + escapeHtml(customerId) + '</strong></div>' +
+        '<div><span>Grand total</span><strong>' + escapeHtml(total) + '</strong></div>' +
+      '</div>';
+  } catch (error) {
+    host.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Order ناموفق بود.", "Commerce");
+  }
+}
 
 type VerticalWorkflowOffering = {
   id: string;
