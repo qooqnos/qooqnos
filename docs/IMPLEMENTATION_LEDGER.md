@@ -2296,3 +2296,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - The UI remains descriptive only: visibility/emphasis never grants permission, and backend authorization remains authoritative.
 - Implementation commits: `e534cc07b802dd3e300dcb2aa64868883dd29c0e`, `db9e31fb2cec500b3e550bff097749319e7f8db8`, `d380d541bab0c06b0695050e675a79e2c3a1c975`, `3f52feb78bb608d339d959b4b190039a6390123f`, `ae2b27a442fbdab4bd174cdf3b0c0516703aa2a4`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
+
+
+## 2026-09-28 — Vertical Workflow Operations & Communication hydration
+- Extended the shared Vertical Workflow UI Framework so the Operations canvas reads real Case Support records through `GET /api/v1/cases?limit=12`.
+- Added a canonical Communication read surface using the existing `GET /api/v1/notifications?limit=12` boundary; the shared canvas does not pretend that notification data is a conversation store.
+- Both adapters use authenticated Workspace context, truthful loading/empty/error states, and remain read-only.
+- Clinic, retail, restaurant and salon inherit these surfaces automatically because Operations and Communication are shared framework layouts, not separate occupation implementations.
+- No duplicate case/order/message state or fake operational metrics were added.
+- Implementation commits: `35d95365cd88e986ecade5ba0bca27b540f558f9`, `70f4c809957b966db5bd4d845f3d7e8ec0572376`, `7f7b26ce1c7a4a1d407123773e8033b273ce45ab`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed for this slice.
