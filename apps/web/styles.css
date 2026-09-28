@@ -4089,6 +4089,15 @@ body::before {
   border-radius:16px;
   background:var(--surface-2);
   border:1px solid var(--line);
+  color:var(--text);
+  text-decoration:none;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.phoenix-workflow-step[href]:hover {
+  transform:translateY(-1px);
+  border-color:color-mix(in srgb,var(--primary) 22%,var(--line));
+  background:color-mix(in srgb,var(--primary) 5%,var(--surface-2));
+  box-shadow:0 12px 28px rgba(86,56,34,.06);
 }
 .phoenix-workflow-step span {
   color:var(--primary);
@@ -4097,6 +4106,14 @@ body::before {
 }
 .phoenix-workflow-step strong {
   font-size:8px;
+}
+.phoenix-workflow-step small {
+  color:var(--faint);
+  font-size:6px;
+}
+.phoenix-workflow-step.current {
+  border-color:color-mix(in srgb,var(--primary) 28%,var(--line));
+  background:color-mix(in srgb,var(--primary) 7%,var(--surface-2));
 }
 .phoenix-business-workflow-card p {
   margin:11px 0 0;
