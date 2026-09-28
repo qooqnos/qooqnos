@@ -3044,6 +3044,37 @@ function getBusinessVerticalUi(value: unknown) {
   return BUSINESS_VERTICAL_UI[resolveBusinessVerticalKey(value)];
 }
 
+const BUSINESS_VERTICAL_BOARD: Record<string, readonly { readonly eyebrow: string; readonly title: string; readonly description: string; readonly path?: string }[]> = {
+  default: [
+    { eyebrow: "Today", title: "عمل اصلی Workspace", description: "ماژول‌های فعال را بر اساس Capability این Business دنبال کن.", path: "/business?module=محصولات" },
+    { eyebrow: "Supply", title: "عرضه را آماده کن", description: "از Product Studio یا Catalog شروع کن.", path: "/product-studio" },
+    { eyebrow: "Connect", title: "مشتری و ارتباط", description: "Customer و Communication را از منابع canonical باز کن.", path: "/customer" },
+  ],
+  clinic: [
+    { eyebrow: "Today", title: "نوبت‌های امروز", description: "Availability و رزرو را از Booking canonical بررسی کن.", path: "/booking" },
+    { eyebrow: "Care", title: "خدمات و پزشکان", description: "خدمات از Catalog و Provider access از Team کنترل می‌شود.", path: "/business?module=پزشکان" },
+    { eyebrow: "Relationship", title: "مراجعان", description: "Customer profile و تاریخچه رابطه را از Customer باز کن.", path: "/customer" },
+    { eyebrow: "Trust", title: "احراز کسب‌وکار", description: "Verification و Publication قبل از نمایش عمومی.", path: "/business/profile" },
+  ],
+  retail: [
+    { eyebrow: "Today", title: "فروش و سفارش", description: "وضعیت transaction و order از Commerce خوانده می‌شود.", path: "/transactions" },
+    { eyebrow: "Supply", title: "محصولات و تنوع", description: "Product، Variant و listing در Catalog/Studio مدیریت می‌شوند.", path: "/catalog" },
+    { eyebrow: "Stock", title: "موجودی", description: "موجودی فقط از Inventory/Catalog canonical نمایش داده می‌شود.", path: "/business?module=موجودی" },
+    { eyebrow: "Growth", title: "تخفیف و محتوا", description: "Promotion و Seller AI برای رشد عرضه.", path: "/promotion" },
+  ],
+  restaurant: [
+    { eyebrow: "Today", title: "سفارش‌های امروز", description: "جریان سفارش از Commerce/Transactions دنبال می‌شود.", path: "/transactions" },
+    { eyebrow: "Reservation", title: "رزرو میز", description: "Availability و رزرو تحت Booking قرار دارد.", path: "/booking" },
+    { eyebrow: "Supply", title: "منو", description: "عرضه‌های منو در Catalog نگهداری می‌شوند.", path: "/catalog" },
+    { eyebrow: "Fulfillment", title: "آشپزخانه و تحویل", description: "عملیات و fulfillment از Operations پیگیری می‌شود.", path: "/operations" },
+  ],
+  salon: [
+    { eyebrow: "Today", title: "نوبت‌های امروز", description: "Availability و appointment workflow از Booking می‌آید.", path: "/booking" },
+    { eyebrow: "People", title: "متخصصان", description: "Provider access از Team/Workspace کنترل می‌شود.", path: "/business?module=متخصصان" },
+    { eyebrow: "Supply", title: "خدمات", description: "Service supply از Catalog مدیریت می‌شود.", path: "/catalog" },
+    { eyebrow: "Growth", title: "پیشنهادها", description: "Promotion policy در دامنه Promotion قرار دارد.", path: "/promotion" },
+  ],
+};
 const BUSINESS_VERTICAL_WORKFLOWS: Record<string, readonly string[]> = {
   default: ["Supply", "Discovery", "Connect", "Act"],
   clinic: ["خدمت", "زمان‌بندی", "رزرو", "پیگیری"],
@@ -3109,7 +3140,11 @@ function renderBusiness(): string {
       '<article class="glass-card phoenix-business-mini-status"><span class="section-kicker">Workspace</span><strong id="business-workspace-status">—</strong><small id="business-workspace-status-detail">—</small></article>' +
     '</section>' +
 
-    '<section class="phoenix-business-metrics" id="business-vertical-metrics">' +
+    '<section class="phoenix-business-board">' +
+      (BUSINESS_VERTICAL_BOARD[ui.key] ?? BUSINESS_VERTICAL_BOARD.default).map((card) => '<a class="glass-card phoenix-business-board-card" href="' + escapeAttr(card.path ?? "/business") + '" data-nav><span class="section-kicker">' + escapeHtml(card.eyebrow) + '</span><h3>' + escapeHtml(card.title) + '</h3><p>' + escapeHtml(card.description) + '</p><span class="phoenix-board-arrow">→</span></a>').join("") +
+    '</section>' +
+
+    '<section class="phoenix-business-metrics" id="business-vertical-metrics"> +
       ui.metrics.map((label, index) => '<article class="glass-card phoenix-business-metric"><span>' + label + '</span><strong id="business-metric-' + index + '">—</strong><small>اطلاعات canonical پس از اتصال</small></article>').join("") +
     '</section>' +
 
