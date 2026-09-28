@@ -125,6 +125,21 @@ export class AvailabilityRepository extends Repository {
     );
   }
 
+  async listSchedules(
+    context: RequestContext,
+    businessId: EntityId,
+    limit = 50,
+  ): Promise<readonly ScheduleRecord[]> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
+    return this.database.all<ScheduleRecord>(
+      "SELECT s.id, s.business_id AS businessId, s.location_id AS locationId, s.resource_id AS resourceId, s.timezone, s.recurrence_definition AS recurrenceDefinition, s.booking_horizon_minutes AS bookingHorizonMinutes, s.lead_time_minutes AS leadTimeMinutes, s.buffer_before_seconds AS bufferBeforeSeconds, s.buffer_after_seconds AS bufferAfterSeconds, s.status, s.version, s.created_at AS createdAt, s.updated_at AS updatedAt FROM schedules s INNER JOIN businesses b ON b.id = s.business_id WHERE s.business_id = ? AND b.organization_id = ? AND b.workspace_id = ? ORDER BY s.status ASC, s.updated_at DESC, s.id ASC LIMIT ?",
+      businessId,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      this.requireWorkspace({ workspaceId: context.workspaceId }),
+      safeLimit,
+    );
+  }
+
 
   async getAvailabilityContext(
     context: RequestContext,
