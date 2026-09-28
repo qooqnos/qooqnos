@@ -2499,3 +2499,9 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Compare is constrained to 2–4 products, rejects non-product entries, derives optional comparison attributes only from existing metadata, and links each selected product to canonical Checkout.
 - Activity now renders readable labels and target context from canonical Social Engagement outbox events.
 - Verification status: code changes landed; full local `typecheck`, `build`, `lint`, tests and browser visual QA still require execution in repository/CI environment.
+
+## 2026-09-29 — Vertical Workflow stage/module contract guard
+- Added a regression test in `apps/web/src/business-workflow-ui.test.ts` that verifies every supported Clinic/Retail/Restaurant/Salon workflow stage resolves to an existing Workspace module and preserves its stage context.
+- This protects the shared Vertical Workflow UI Framework from silent drift between the workflow registry and the per-vertical module registry.
+- No domain state, authorization rule, second source of truth, or frontend mutation was introduced.
+- Implementation commit: `ba17f350ee0a146a7a47f71698a56c54d1fd545b`.
