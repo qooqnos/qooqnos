@@ -3151,7 +3151,7 @@ const BUSINESS_MODULE_SLUGS: Record<string, Record<string, string>> = {
 
 function businessModuleSlug(vertical: string, module: string): string {
   const key = resolveBusinessVerticalKey(vertical);
-  return BUSINESS_MODULE_SLUGS[key]?.[module] ?? module.toLowerCase().replace(/\\s+/g, "-").replace(/[^a-z0-9-]+/gi, "-").replace(/^-+|-+$/g, "") || "module";
+  return BUSINESS_MODULE_SLUGS[key]?.[module] ?? module.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]+/gi, "-").replace(/^-+|-+$/g, "") || "module";
 }
 
 function businessModulePath(vertical: string, module: string): string {
