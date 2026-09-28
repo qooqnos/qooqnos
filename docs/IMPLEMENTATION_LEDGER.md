@@ -2175,3 +2175,11 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Fixed the Business metrics template string after the board insertion and preserved the dynamic Business module bindings.
 - Implementation commits: `52149e979b2d222d7cdc008fe924a88e964f338b`, `ee67727e586aaadbf04a5d7c6cf7c0a1cbd8d13b`, `346754d6d82900dc7d27bb5a9b2eacdffe40b83d`, `6bfca10e0c9c6baa22e4811564b5d759a51bb139`, `88e6f14c6a9935df4825e445527db1ebd5814c35`, `5c75ad0f40d9de96042cacb309b082a3c37e6738`.
 - Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
+
+
+### 2026-09-28 — Vertical Workspace Module Canvas
+- Deepened the occupation-specific Business Workspace module layer without introducing a parallel domain source of truth.
+- `/business?vertical=<key>&module=<name>` now accepts explicit vertical context for direct navigation instead of relying only on local storage.
+- Module pages now include a context strip, canonical command actions, connected-surface map, reusable workspace canvas, vertical workflow rail, quick actions, and adjacent-module map.
+- Unsupported capabilities remain explicitly marked; no fake metrics or duplicate domain state were introduced.
+- Verification: implementation committed; production/browser visual QA and TypeScript build were not run in this step.
