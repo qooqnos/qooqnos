@@ -21,6 +21,17 @@ Deployment asset repair: `0420fada`, `5c0b8e4`, `d948572`, `3e8d6f0` — synchro
 
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
 
+### Deep vertical Workspace UI workbench — 2026-09-28
+
+- 🟢 Business Workspace module surfaces were deepened into a reusable vertical workbench for clinic, retail, restaurant and salon.
+- 🟢 Each vertical module now has an explicit presentation contract: canonical state label, boundary description, connected domain surfaces and related Workspace modules.
+- 🟢 Canonical links preserve Business ID, vertical and originating module context instead of creating per-occupation duplicate applications.
+- 🟢 Module quick actions now navigate to canonical domain surfaces rather than showing non-persistent UI-only actions.
+- 🟢 Unsupported vertical capabilities remain explicitly marked as capability/backend-authoritative instead of fabricating metrics, provider data, tables, inventory or clinical records.
+- 🟡 Runtime/build/browser verification for this slice is still pending.
+
+Implementation commits: `2481fed` (vertical module workbench), `433af5b` (module workbench styling).
+
 ## 1. Capability status
 
 | Capability | Status | Canonical source |
