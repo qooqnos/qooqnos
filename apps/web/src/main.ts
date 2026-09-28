@@ -2687,12 +2687,17 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
     const key = item.id ?? item.sourceId ?? "";
     const compared = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key && Boolean(key));
     const price = item.price ? Number(item.price).toLocaleString("fa-IR") + " " + escapeHtml(item.currency ?? "تومان") : "قیمت را بپرس";
-    const typeLabel = item.sourceType === "service" ? "خدمت" : "محصول";
+    const typeLabel = item.sourceType === "service" ? "خدمت" : item.sourceType === "business" ? "کسب‌وکار" : "محصول";
+    const publicAction = item.sourceType === "business"
+      ? '<a class="button button-primary post-buy" href="/businesses/' + encodeURIComponent(item.sourceId ?? item.id) + '" data-nav>مشاهده کسب‌وکار <span>←</span></a>'
+      : item.sourceType === "service"
+        ? '<a class="button button-primary post-buy" href="/booking?offering=' + encodeURIComponent(item.sourceId ?? item.id) + '" data-nav>بررسی رزرو <span>←</span></a>'
+        : '<a class="button button-primary post-buy" href="/checkout?product=' + encodeURIComponent(item.id ?? item.sourceId ?? "") + '" data-nav>خرید آنی <span>←</span></a>';
     return '<article class="phoenix-post-card">' +
       '<header class="phoenix-post-author"><span class="phoenix-avatar phoenix-avatar-image">' + (index % 2 ? "س" : "ق") + '</span><div><strong>' + (index % 2 ? "استودیو سرو" : "فروشنده ققنوس") + '</strong><small>' + locality + ' · ' + (index % 2 ? "Business" : "Seller") + '</small></div><button type="button" class="post-follow" data-follow="' + escapeAttr(key) + '">دنبال کردن</button></header>' +
       '<button type="button" class="phoenix-post-media media-'+(index%3)+'" data-discovery-index="' + index + '" aria-label="' + title + '"><span class="post-media-badge">' + typeLabel + '</span><strong>' + title + '</strong><small>مشاهده جزئیات و تصمیم</small></button>' +
       '<div class="phoenix-post-body"><div class="phoenix-post-meta"><span class="phoenix-post-type">' + typeLabel + '</span><span>⌖ ' + locality + '</span></div><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + price + '</div>' +
-      '<div class="phoenix-post-actions"><button type="button" class="social-action" data-like="' + escapeAttr(key) + '">♡ <span>پسندیدن</span></button><button type="button" class="social-action" data-comment="' + escapeAttr(key) + '">◌ <span>نظر</span></button><button type="button" class="social-action" data-save="' + escapeAttr(key) + '">⌑ <span>ذخیره</span></button><button type="button" class="social-action '+(compared ? "selected" : "")+'" data-compare="' + escapeAttr(key) + '">⚖ <span>' + (compared ? "انتخاب شد" : "مقایسه") + '</span></button><a class="button button-primary post-buy" href="/checkout?product=' + encodeURIComponent(key) + '" data-nav>خرید آنی <span>←</span></a></div></div></article>';
+      '<div class="phoenix-post-actions"><button type="button" class="social-action" data-like="' + escapeAttr(key) + '">♡ <span>پسندیدن</span></button><button type="button" class="social-action" data-comment="' + escapeAttr(key) + '">◌ <span>نظر</span></button><button type="button" class="social-action" data-save="' + escapeAttr(key) + '">⌑ <span>ذخیره</span></button><button type="button" class="social-action '+(compared ? "selected" : "")+'" data-compare="' + escapeAttr(key) + '">⚖ <span>' + (compared ? "انتخاب شد" : "مقایسه") + '</span></button>' + publicAction + '</div></div></article>';
   }).join("");
 }
 
