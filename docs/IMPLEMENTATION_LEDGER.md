@@ -2420,3 +2420,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - This improves the shared Clinic, Restaurant reservation and Salon appointment foundations without creating a second booking store.
 - Implementation commits: 2af6d0f8f7379ac942ad87ca4a4be7da7db2b2f2, bb92e0713b9214df7b56d741358927fc0bf377e4, 25746edc8691fd96cd0707b4a036abfcff842645, b312b3af3dc69c67e161f11afd9db22e365df3f2, 8a78bf06a118db69a5f7425b033aedede23bb03d.
 - Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
+
+
+## 2026-09-29 — Shared Vertical Workflow stage rail
+- Extended `apps/web/src/vertical-workflow-ui.ts` with a reusable workflow-stage rail derived from the canonical `business-workflow-ui.ts` definitions.
+- Each vertical now exposes its workflow stages directly inside every module Canvas; the active stage is highlighted and navigates back into the same Workspace context.
+- Added responsive styles to both `apps/web/styles.css` and `apps/web/public/styles.css`.
+- No new domain state or authorization was introduced; the rail is navigation/composition only.
+- Verification: not run in this step.
