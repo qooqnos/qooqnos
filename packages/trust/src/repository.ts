@@ -61,6 +61,14 @@ export interface TrustSignalRecord {
   readonly updatedAt: string;
 }
 
+export interface PublicBusinessReviewRecord {
+  readonly id: EntityId;
+  readonly businessId: EntityId;
+  readonly ratingValue: number;
+  readonly content: string | null;
+  readonly locale: string | null;
+  readonly publishedAt: string | null;
+}
 export interface TrustAbuseInput {
   readonly sourceType: "review_risk_signal" | "review_report";
   readonly sourceId: EntityId;
