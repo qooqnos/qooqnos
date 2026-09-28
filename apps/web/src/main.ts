@@ -3772,7 +3772,8 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
-  document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);\n  document.querySelectorAll<HTMLButtonElement>("[data-open-create-post]").forEach((button) => button.addEventListener("click", openCreatePostPanel));
+  document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);
+  document.querySelectorAll<HTMLButtonElement>("[data-open-create-post]").forEach((button) => button.addEventListener("click", openCreatePostPanel));
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
     if (event.key === "Enter") runDiscovery();
   });
