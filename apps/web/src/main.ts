@@ -3245,6 +3245,8 @@ function renderBusinessModule(vertical: string, module: string): string {
   const actions = ui.actions.slice(0, 3);
   const workflow = BUSINESS_VERTICAL_WORKFLOWS[ui.key] ?? BUSINESS_VERTICAL_WORKFLOWS.default;
   const moduleStatus = info.status ?? presentation?.stateLabel ?? "connected";
+  const blueprint: VerticalModuleBlueprint = getVerticalModuleBlueprint(ui.key, module);
+  const blueprintLayoutLabels: Record<VerticalModuleBlueprint["layout"], string> = { command: "Command Center", calendar: "Timeline / Capacity", catalog: "Supply Canvas", people: "People / Relationship", commerce: "Commerce Control", operations: "Operations Board", communication: "Communication Workspace" };
   const contextRows = [
     { label: "Business", value: businessId ? compactId(businessId) : "هنوز انتخاب نشده" },
     { label: "Vertical", value: ui.label },
@@ -3261,6 +3263,16 @@ function renderBusinessModule(vertical: string, module: string): string {
     '</nav>' +
     '<section class="phoenix-module-context-strip">' +
       contextRows.map((row, index) => '<div><span>' + escapeHtml(row.label) + '</span><strong id="module-context-' + String(index) + '">' + escapeHtml(row.value) + '</strong></div>').join("") +
+    '</section>' +
+    '<section class="glass-card phoenix-module-blueprint">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + escapeHtml(blueprint.eyebrow) + '</span><h2>' + escapeHtml(blueprintLayoutLabels[blueprint.layout]) + '</h2></div><span class="pill">UI foundation</span></div>' +
+      '<div class="phoenix-module-blueprint-grid">' +
+        blueprint.blocks.map((block) => {
+          const href = block.path ? businessModuleContextHref(block.path, ui.key, module, businessId) : "";
+          return '<article class="phoenix-module-blueprint-card"><span class="phoenix-module-blueprint-index">' + escapeHtml(block.label) + '</span><div><strong>' + escapeHtml(block.title) + '</strong><p>' + escapeHtml(block.description) + '</p></div>' + (href ? '<a href="' + escapeAttr(href) + '" data-nav>باز کردن منبع ←</a>' : '<span class="pill">Backend / endpoint لازم است</span>') + '</article>';
+        }).join("") +
+      '</div>' +
+      '<div class="phoenix-module-blueprint-footer"><span>Vertical: ' + escapeHtml(ui.key) + '</span><span>Module: ' + escapeHtml(module) + '</span><span>' + String(blueprint.blocks.length) + ' foundation blocks</span></div>' +
     '</section>' +
     '<section class="phoenix-business-module-grid-page">' +
       '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + escapeHtml(info.label) + '</h2><p>این سطح یک UI تخصصی برای Workspace است؛ source of truth، permission و mutation همچنان در دامنه canonical باقی می‌مانند.</p>' +
