@@ -30,6 +30,16 @@ This ledger is the continuity record for future coding agents. Completed or supe
 
 Implementation commits: `6cd8e6d` (workflow navigation), `5cc8164` (source CSS), `78e8288` (public CSS asset).
 
+### Vertical Workflow Canvas refresh contract — 2026-09-28
+
+- 🟢 Every shared Vertical Workflow Canvas now exposes a truthful refresh action in the shared header.
+- 🟢 Refresh re-reads canonical data for Calendar/Availability, Catalog supply, Workspace People, Operations Cases and Communication notifications; it does not create or mutate a parallel UI data store.
+- 🟢 Refresh is disabled while the canonical read is in flight and is styled responsively in both source and served web stylesheets.
+- 🟢 The shared canvas test matrix now verifies the refresh control exists across all supported layout classes.
+- 🟡 TypeScript build, browser/visual QA and production deployment verification remain pending.
+
+Implementation commits: `dffe62c` (canvas refresh), `926621f` (coverage test), `da2e789` / `ab5697` (source/served CSS).
+
 ### Deep vertical Workspace UI workbench — 2026-09-28
 
 - 🟢 Business Workspace module surfaces were deepened into a reusable vertical workbench for clinic, retail, restaurant and salon.
