@@ -3026,7 +3026,7 @@ function renderBusiness(): string {
       '<div class="phoenix-business-hero-copy">' +
         '<span class="phoenix-kicker">Business Workspace</span>' +
         '<div class="phoenix-business-title-row"><span id="business-vertical-icon" class="phoenix-business-vertical-icon">' + ui.icon + '</span><div><h1 id="business-vertical-title">' + ui.label + '</h1><p id="business-vertical-subtitle">' + ui.subtitle + '</p></div></div>' +
-        '<div class="phoenix-business-identity-line"><span id="business-header-name">فضای کاری شما</span><span id="business-header-status" class="pill">در حال بررسی</span></div>' +
+        '<div class="phoenix-business-identity-line"><span id="business-header-name">فضای کاری شما</span><span id="business-header-status" class="pill">در حال بررسی</span><span id="business-header-role" class="pill">نقش: —</span></div>' +
       '</div>' +
       '<div class="phoenix-business-hero-actions"><button class="button button-ghost" type="button" data-business-create>ساخت کسب‌وکار</button><button class="button button-ghost" type="button" data-business-refresh>بروزرسانی</button><a class="button button-primary" href="/product-studio" data-nav>✦ Seller AI</a></div>' +
     '</section>' +
@@ -3053,6 +3053,26 @@ function renderBusiness(): string {
       '<div class="card-section-heading"><div><span class="section-kicker">Customer Experience</span><h2>کاربر این کسب‌وکار را چگونه می‌بیند؟</h2></div><span class="pill success">Capability-driven</span></div>' +
       '<div id="business-customer-actions" class="phoenix-business-customer-actions">' + ui.customerActions.map((action) => '<span>' + action + '</span>').join("") + '</div>' +
       '<p>این Actionها باید فقط وقتی نمایش داده شوند که Capability متناظر در منبع canonical فعال باشد.</p>' +
+    '</section>' +
+
+    '<section class="phoenix-business-team-section">' +
+      '<article class="glass-card phoenix-team-card">' +
+        '<div class="card-section-heading"><div><span class="section-kicker">Team & Access</span><h2>تیم و نقش‌ها</h2></div><span id="business-team-count" class="pill">—</span></div>' +
+        '<div class="phoenix-role-lens" id="business-role-lens"><span class="section-kicker">Role Lens</span><strong id="business-role-title">—</strong><p id="business-role-description">نقش و مجوزهای فعلی از context canonical خوانده می‌شوند.</p></div>' +
+        '<div class="phoenix-permission-cloud" id="business-permissions"><span>در حال خواندن مجوزها…</span></div>' +
+        '<div class="phoenix-team-list" id="business-team-list"><div class="slot-loading">در حال خواندن اعضای Workspace…</div></div>' +
+        '<div class="phoenix-team-actions"><button class="button button-ghost" type="button" data-workspace-toggle>تغییر Workspace</button><button class="button button-primary" type="button" data-team-management>مدیریت تیم</button></div>' +
+      '</article>' +
+      '<article class="glass-card phoenix-role-guide">' +
+        '<span class="section-kicker">Role-based Workspace</span><h2>هر نقش، مسیر خودش را دارد.</h2>' +
+        '<div class="phoenix-role-guide-list">' +
+          '<div><b>Owner / Admin</b><span>مدیریت، مالی، تیم، گزارش و تنظیمات</span></div>' +
+          '<div><b>Sales</b><span>مشتریان، محصولات، پیام‌ها و معاملات</span></div>' +
+          '<div><b>Specialist</b><span>خدمات، برنامه، رزرو و پروفایل تخصصی</span></div>' +
+          '<div><b>Finance</b><span>پرداخت‌ها، تراکنش‌ها و گزارش مالی</span></div>' +
+        '</div>' +
+        '<p>این راهنما صرفاً composition رابط است؛ مجوز واقعی را backend تعیین می‌کند.</p>' +
+      '</article>' +
     '</section>' +
 
     '<section class="business-grid phoenix-business-management-grid">' +
@@ -3094,9 +3114,15 @@ async function loadBusinessAccess(): Promise<void> {
   locations.innerHTML = '<div class="slot-loading">در حال خواندن Locations…</div>';
   hours.innerHTML = '<div class="slot-loading">در حال خواندن Hours…</div>';
   try {
-    const response = await apiJson<{ data: { business: Record<string, unknown>; locations: Array<Record<string, unknown>>; hours: Array<Record<string, unknown>>; contacts: Array<Record<string, unknown>>; socialLinks: Array<Record<string, unknown>> } }>(
-      `/api/v1/businesses/${encodeURIComponent(businessId)}/management`,
-    );
+    const [response, context, membersResponse] = await Promise.all([
+      apiJson<{ data: { business: Record<string, unknown>; locations: Array<Record<string, unknown>>; hours: Array<Record<string, unknown>>; contacts: Array<Record<string, unknown>>; socialLinks: Array<Record<string, unknown>> } }>(
+        `/api/v1/businesses/${encodeURIComponent(businessId)}/management`,
+      ),
+      apiJson<{ authenticated?: boolean; actorId?: string; roles?: string[]; permissions?: string[]; workspaceId?: string }>("/api/v1/context").catch(() => ({ authenticated: false, roles: [], permissions: [] })),
+      shellContext.workspaceId
+        ? apiJson<{ data: Array<{ id: string; userId: string; status: string }> }>(`/api/v1/workspaces/${encodeURIComponent(shellContext.workspaceId)}/members`).catch(() => ({ data: [] }))
+        : Promise.resolve({ data: [] }),
+    ]);
     const business = response.data.business;
     const vertical = getBusinessVerticalUi(business.businessType);
     const verticalRoot = document.querySelector<HTMLElement>(".phoenix-business-page");
@@ -3112,6 +3138,12 @@ async function loadBusinessAccess(): Promise<void> {
     const moduleGrid = document.querySelector<HTMLElement>("#business-module-grid");
     const quickActions = document.querySelector<HTMLElement>("#business-quick-actions");
     const customerActions = document.querySelector<HTMLElement>("#business-customer-actions");
+    const headerRole = document.querySelector<HTMLElement>("#business-header-role");
+    const roleTitle = document.querySelector<HTMLElement>("#business-role-title");
+    const roleDescription = document.querySelector<HTMLElement>("#business-role-description");
+    const permissionsHost = document.querySelector<HTMLElement>("#business-permissions");
+    const teamList = document.querySelector<HTMLElement>("#business-team-list");
+    const teamCount = document.querySelector<HTMLElement>("#business-team-count");
     if (verticalIcon) verticalIcon.textContent = vertical.icon;
     if (verticalTitle) verticalTitle.textContent = vertical.label;
     if (verticalSubtitle) verticalSubtitle.textContent = vertical.subtitle;
@@ -3123,6 +3155,30 @@ async function loadBusinessAccess(): Promise<void> {
     if (moduleGrid) moduleGrid.innerHTML = vertical.modules.map((module) => '<button class="phoenix-business-module" type="button"><span>◈</span><strong>' + escapeHtml(module) + '</strong><small>باز کردن</small></button>').join("");
     if (quickActions) quickActions.innerHTML = vertical.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action>' + escapeHtml(action) + ' <span>←</span></button>').join("");
     if (customerActions) customerActions.innerHTML = vertical.customerActions.map((action) => '<span>' + escapeHtml(action) + '</span>').join("");
+    const roles = Array.isArray(context.roles) ? context.roles : [];
+    const permissions = Array.isArray(context.permissions) ? context.permissions : [];
+    const roleText = roles.length ? roles.join(" · ") : "نقش مشخص نشده";
+    const lowerRoles = roles.map((role) => role.toLowerCase());
+    const roleLens = lowerRoles.some((role) => /owner|admin|manager/.test(role))
+      ? { title: "مدیریت Workspace", description: "نمای کلی، تیم، مالی، گزارش و تنظیمات برای نقش مدیریتی در اولویت قرار می‌گیرند." }
+      : lowerRoles.some((role) => /sales|seller/.test(role))
+        ? { title: "عملیات فروش", description: "مشتریان، محصولات، پیام‌ها و معاملات در اولویت این نقش هستند." }
+        : lowerRoles.some((role) => /doctor|specialist|provider/.test(role))
+          ? { title: "عملیات تخصصی", description: "خدمات، برنامه، رزرو و پروفایل تخصصی در اولویت این نقش هستند." }
+          : lowerRoles.some((role) => /finance|account/.test(role))
+            ? { title: "عملیات مالی", description: "پرداخت‌ها، تراکنش‌ها و گزارش‌های مالی در اولویت این نقش هستند." }
+            : { title: "Workspace عمومی", description: "ماژول‌ها براساس Business Type و Capabilityهای فعال ترکیب می‌شوند." };
+    if (headerRole) headerRole.textContent = "نقش: " + roleText;
+    if (roleTitle) roleTitle.textContent = roleLens.title;
+    if (roleDescription) roleDescription.textContent = roleLens.description;
+    if (permissionsHost) permissionsHost.innerHTML = permissions.length
+      ? permissions.slice(0, 24).map((permission) => '<span class="phoenix-permission-chip">' + escapeHtml(permission) + '</span>').join("")
+      : '<span class="permission-empty">Permission فعلی در context برنگشت.</span>';
+    const teamItems = Array.isArray(membersResponse.data) ? membersResponse.data : [];
+    if (teamCount) teamCount.textContent = String(teamItems.length) + " عضو";
+    if (teamList) teamList.innerHTML = teamItems.length
+      ? teamItems.map((member) => '<div class="phoenix-team-row"><span class="phoenix-team-avatar">' + escapeHtml((member.userId || "U").slice(0,1).toUpperCase()) + '</span><div><strong>' + escapeHtml(member.userId) + '</strong><small>' + escapeHtml(member.status) + (member.userId === context.actorId ? " · شما" : "") + '</small></div><span class="pill ' + (member.status === "active" ? "success" : "warning") + '">' + escapeHtml(member.status) + '</span></div>').join("")
+      : '<div class="slot-empty"><span>◎</span><p>عضو دیگری در Workspace پیدا نشد یا دسترسی خواندن اعضا فراهم نیست.</p></div>';
     for (let i = 0; i < vertical.metrics.length; i += 1) {
       const metric = document.querySelector<HTMLElement>("#business-metric-" + i);
       if (metric) metric.textContent = "—";
@@ -3516,6 +3572,7 @@ function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-business-quick-action]").forEach((button) => button.addEventListener("click", () => showToast(button.textContent?.replace("←", "").trim() + " از Workspace تخصصی ققنوس باز می‌شود؛ اتصال workflow این ماژول در حال تکمیل است.")));
   document.querySelectorAll<HTMLButtonElement>(".phoenix-business-module").forEach((button) => button.addEventListener("click", () => showToast("ماژول «" + (button.querySelector("strong")?.textContent ?? "این بخش") + "» بر اساس Capabilityهای این کسب‌وکار مدیریت می‌شود.")));
   document.querySelector<HTMLButtonElement>("[data-business-primary-action]")?.addEventListener("click", () => { const action = document.querySelector("#business-next-action")?.textContent?.trim() ?? "اقدام بعدی"; showToast(action + " آماده است؛ ابتدا وضعیت Workspace و Capabilityهای فعال را بررسی می‌کنیم."); });
+  document.querySelector<HTMLButtonElement>("[data-team-management]")?.addEventListener("click", () => showToast("مدیریت نقش‌ها و عضویت‌ها از Access/Identity canonical می‌آید؛ UI فعلاً نمایشی و read-only است."));
   document.querySelector<HTMLButtonElement>("[data-profile-refresh]")?.addEventListener("click", () => { void loadProfilePage(); });
   document.querySelectorAll<HTMLButtonElement>("[data-refresh-notifications]").forEach((button) => button.addEventListener("click", () => { void loadNotificationsPage(); }));
   document.querySelector<HTMLButtonElement>("[data-refresh-account]")?.addEventListener("click", loadAccountState);
