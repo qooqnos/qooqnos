@@ -265,6 +265,7 @@ const routes: Route[] = [
   { path: "/discover", label: "کشف", icon: "⌕", render: renderDiscover },
   { path: "/compare", label: "مقایسه", icon: "⚖", render: renderCompare },
   { path: "/business", label: "کسب‌وکار", icon: "▦", render: renderBusiness },
+  { path: "/business/profile", label: "پروفایل کسب‌وکار", icon: "◉", render: renderBusinessProfile },
   { path: "/product-studio", label: "استودیو محصول", icon: "✦", render: renderProductStudio },
   { path: "/transactions", label: "معاملات", icon: "↔", render: renderTransactions },
   { path: "/notifications", label: "اعلان‌ها", icon: "♢", render: renderNotifications },
@@ -402,6 +403,7 @@ function render(): void {
   if (route.path === "/communication") void loadCommunicationState();
   if (route.path === "/billing") void loadBillingState();
   if (route.path === "/business") void loadBusinessAccess();
+  if (route.path === "/business/profile") void loadBusinessProfile();
   if (route.path === "/trust") void loadTrustSignals();
   if (route.path === "/operations") void loadCases();
   if (route.path === "/seo") void loadSeoHealth();
@@ -3053,6 +3055,7 @@ function renderBusiness(): string {
       '<article class="glass-card phoenix-brand-preview-card">' +
         '<div class="phoenix-brand-preview-cover"><div class="phoenix-brand-preview-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div></div>' +
         '<div class="phoenix-brand-preview-body"><div><span class="section-kicker">Public Brand</span><h2 id="business-brand-preview-name">نام کسب‌وکار</h2><p id="business-brand-preview-type">نوع کسب‌وکار</p></div><span id="business-brand-preview-status" class="pill">—</span></div>' +
+        '<div class="phoenix-brand-preview-cta"><a class="button button-secondary" href="/business/profile" data-nav>باز کردن پروفایل عمومی ↗</a></div>' +
         '<div class="phoenix-brand-preview-facts"><span>Profile</span><span>Catalog</span><span>Contact</span><span>Trust</span></div>' +
       '</article>' +
       '<article class="glass-card phoenix-brand-preview-copy"><span class="section-kicker">Public Profile</span><h2>کسب‌وکار تو باید برای مشتری هم به همان اندازه واضح باشد.</h2><p>این پیش‌نمایش فقط بر اساس داده‌های canonical Business ساخته می‌شود؛ اطلاعات خصوصی Workspace در سطح عمومی نمایش داده نمی‌شود.</p><div class="phoenix-public-capability-list"><span>هویت کسب‌وکار</span><span>محصول و خدمت</span><span>اعتماد</span><span>ارتباط</span></div></article>' +
@@ -3096,6 +3099,23 @@ function renderBusiness(): string {
 
 
 
+function renderBusinessProfile(): string {
+  return '<div class="phoenix-business-profile-page">' +
+    '<section class="phoenix-business-profile-hero">' +
+      '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">Public Business Profile</span><h1 id="public-business-name">پروفایل کسب‌وکار</h1><p id="public-business-summary">پروفایل عمومی از داده‌های canonical Business ساخته می‌شود.</p><div class="phoenix-business-profile-status-row"><span id="public-business-publication" class="pill">—</span><span id="public-business-type" class="pill">—</span></div></div>' +
+      '<div class="phoenix-public-profile-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
+    '</section>' +
+    '<section class="phoenix-public-profile-grid">' +
+      '<article class="glass-card phoenix-public-profile-main"><div class="card-section-heading"><div><span class="section-kicker">Identity</span><h2>هویت کسب‌وکار</h2></div></div><div id="public-business-identity" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
+      '<aside class="glass-card phoenix-public-trust-card"><span class="section-kicker">Trust & Publication</span><h2>اعتماد، قبل از نمایش عمومی</h2><p id="public-business-trust-copy">وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.</p><div id="public-business-trust-facts" class="phoenix-public-capability-list"></div><a class="button button-ghost" href="/trust" data-nav>مشاهده Trust</a></aside>
+    '</section>' +
+    '<section class="phoenix-public-profile-grid">' +
+      '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">Contact</span><h2>راه‌های ارتباط</h2></div></div><div id="public-business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
+      '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div></div><div id="public-business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>—</p></div></div></article>
+    '</section>' +
+    '<section class="glass-card phoenix-public-profile-footer"><span class="section-kicker">Canonical Boundary</span><strong>این صفحه Preview/management-facing است؛ انتشار واقعی فقط از مسیرهای canonical انجام می‌شود.</strong><p>تا وقتی mutation انتشار به این UI متصل نشده، وضعیت «منتشر» یا «در انتظار انتشار» جعل نمی‌شود.</p></section>' +
+  '</div>';
+}
 async function loadBusinessAccess(): Promise<void> {
   const status = document.querySelector<HTMLElement>("#business-management-status");
   const profile = document.querySelector<HTMLElement>("#business-profile-content");
@@ -3239,6 +3259,65 @@ async function loadBusinessAccess(): Promise<void> {
   }
 }
 
+async function loadBusinessProfile(): Promise<void> {
+  const businessId = localStorage.getItem(STORAGE.business);
+  const identity = document.querySelector<HTMLElement>("#public-business-identity");
+  const contacts = document.querySelector<HTMLElement>("#public-business-contacts");
+  const locations = document.querySelector<HTMLElement>("#public-business-locations");
+  const publication = document.querySelector<HTMLElement>("#public-business-publication");
+  const type = document.querySelector<HTMLElement>("#public-business-type");
+  const name = document.querySelector<HTMLElement>("#public-business-name");
+  const summary = document.querySelector<HTMLElement>("#public-business-summary");
+  const trustCopy = document.querySelector<HTMLElement>("#public-business-trust-copy");
+  const trustFacts = document.querySelector<HTMLElement>("#public-business-trust-facts");
+  if (!identity || !contacts || !locations || !publication || !type || !name || !summary || !trustCopy || !trustFacts) return;
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    identity.innerHTML='<div class="slot-empty"><span>↪</span><p>برای مشاهده Preview به session Workspace نیاز است.</p></div>';
+    return;
+  }
+  if (!businessId) {
+    identity.innerHTML='<div class="slot-empty"><span>▦</span><p>Business ID ثبت نشده است.</p></div>';
+    return;
+  }
+  try {
+    const response = await apiJson<{ data: { business: Record<string, unknown>; locations: Array<Record<string, unknown>>; hours: Array<Record<string, unknown>>; contacts: Array<Record<string, unknown>>; socialLinks: Array<Record<string, unknown>> } }>(
+      "/api/v1/businesses/" + encodeURIComponent(businessId) + "/management",
+    );
+    const business=response.data.business;
+    const displayName=getRecordString(business,["displayName","name"])??"کسب‌وکار";
+    const businessType=getRecordString(business,["businessType"])??"Business";
+    const publicationValue=getRecordString(business,["publicationStatus"])??"unpublished";
+    name.textContent=displayName;
+    summary.textContent=getRecordString(business,["description","summary"])??"پروفایل عمومی بر اساس داده‌های canonical Business.";
+    type.textContent=businessType;
+    publication.textContent=publicationValue;
+    publication.className=publicationValue==="published"?"pill success":"pill warning";
+    identity.innerHTML=
+      '<div><span>نام رسمی</span><strong>'+escapeHtml(getRecordString(business,["name"])??"—")+'</strong></div>' +
+      '<div><span>نام نمایشی</span><strong>'+escapeHtml(displayName)+'</strong></div>' +
+      '<div><span>وضعیت</span><strong>'+escapeHtml(getRecordString(business,["status"])??"—")+'</strong></div>' +
+      '<div><span>Locale</span><strong>'+escapeHtml(getRecordString(business,["defaultLocale"])??"—")+'</strong></div>' +
+      '<div><span>Timezone</span><strong>'+escapeHtml(getRecordString(business,["timezone"])??"—")+'</strong></div>' +
+      '<div><span>Currency</span><strong>'+escapeHtml(getRecordString(business,["defaultCurrency"])??"—")+'</strong></div>';
+    contacts.innerHTML=response.data.contacts.length
+      ? response.data.contacts.map((item)=>'<span><b>'+escapeHtml(getRecordString(item,["contactType"])??"contact")+'</b> '+escapeHtml(getRecordString(item,["value"])??"—")+'</span>').join("")
+      : '<span>راه ارتباط عمومی ثبت نشده است.</span>';
+    locations.innerHTML=response.data.locations.length
+      ? response.data.locations.map((item)=>'<div class="business-location-item"><div><strong>'+escapeHtml(getRecordString(item,["name"])??"Location")+'</strong><small>'+escapeHtml(getRecordString(item,["locationType"])??"—")+' · '+escapeHtml(getRecordString(item,["timezone"])??"—")+'</small></div><span class="pill '+(getRecordString(item,["status"])==="active"?"success":"warning")+'">'+escapeHtml(getRecordString(item,["status"])??"—")+'</span></div>').join("")
+      : '<div class="slot-empty"><span>⌖</span><p>مکان عمومی ثبت نشده است.</p></div>';
+    if(publicationValue==="published"){
+      trustCopy.textContent="Business در وضعیت انتشار عمومی قرار دارد؛ جزئیات حساس Workspace در این Preview نمایش داده نمی‌شود.";
+      trustFacts.innerHTML='<span>Published</span><span>Public identity</span><span>Canonical Business</span>';
+    } else {
+      trustCopy.textContent="Business هنوز published نیست؛ این صفحه فقط Preview امن و داخلی از اطلاعاتی است که canonical management برمی‌گرداند.";
+      trustFacts.innerHTML='<span>Preview</span><span>Publication gate</span><span>Canonical status</span>';
+    }
+  } catch(error) {
+    identity.innerHTML='<div class="slot-empty"><span>!</span><p>'+escapeHtml(error instanceof Error ? error.message : "خواندن پروفایل ناموفق بود.")+'</p></div>';
+    contacts.innerHTML='<span>راه‌های تماس در دسترس نیست.</span>';
+    locations.innerHTML='<div class="slot-empty"><span>!</span><p>Locations در دسترس نیست.</p></div>';
+  }
+}
 function compactId(value?: string): string {
   if (!value) return "—";
   return value.length > 12 ? value.slice(0, 6) + "…" + value.slice(-4) : value;
