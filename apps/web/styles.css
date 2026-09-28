@@ -4235,3 +4235,83 @@ body::before {
 @media(max-width:700px){
   .phoenix-business-role-actions-grid { grid-template-columns:1fr; }
 }
+
+
+/* Deep vertical module workbench */
+.phoenix-module-state-description {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.9;
+}
+.phoenix-module-surfaces-card,
+.phoenix-module-related-card {
+  padding: 22px 24px;
+}
+.phoenix-module-surface-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 14px;
+}
+.phoenix-module-surface {
+  position: relative;
+  display: grid;
+  gap: 5px;
+  min-height: 96px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.phoenix-module-surface:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb,var(--primary) 20%,var(--line));
+  box-shadow: 0 16px 36px rgba(86,56,34,.07);
+}
+.phoenix-module-surface strong { font-size: 9px; }
+.phoenix-module-surface span { max-width: 220px; color: var(--muted); font-size: 7px; line-height: 1.75; }
+.phoenix-module-surface b {
+  position: absolute;
+  inset-inline-end: 13px;
+  inset-block-end: 11px;
+  color: var(--primary);
+  font-size: 13px;
+}
+.phoenix-module-surface.disabled {
+  opacity: .68;
+}
+.phoenix-module-related-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 13px;
+}
+.phoenix-module-related-list a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 7px;
+}
+.phoenix-module-related-list a:hover {
+  border-color: color-mix(in srgb,var(--primary) 20%,var(--line));
+  color: var(--primary);
+}
+.phoenix-module-related-list b { color: var(--primary); }
+@media(max-width:800px){
+  .phoenix-module-surface-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media(max-width:520px){
+  .phoenix-module-surfaces-card,
+  .phoenix-module-related-card { padding: 18px; }
+  .phoenix-module-surface-grid { grid-template-columns: 1fr; }
+}
