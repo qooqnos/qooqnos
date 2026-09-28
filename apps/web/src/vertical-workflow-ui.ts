@@ -390,6 +390,9 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     });
 
     const businessId = canvas.dataset.vwfBusinessId?.trim();
+    if (canvas.dataset.vwfLayout === "command") {
+      setCanvasState(canvas, businessId ? "readonly" : "requires-input");
+    }
     if (businessId && canvas.dataset.vwfLayout === "calendar") {
       void hydrateCalendarCanvas(canvas, businessId);
     }
