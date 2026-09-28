@@ -1949,3 +1949,14 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Defines shared tokens, components, responsive/RTL/accessibility rules, state contracts, AI side-effect confirmation, trust/privacy boundaries and anti-patterns.
 - Documentation commit: `51167a1e73034f82b1766e9d5423b17e766cf5ef`.
 - Implementation status: architecture/documentation complete; visual implementation should proceed in the coding order defined by the document. Build/runtime/visual verification remains a separate gate.
+
+
+## Phoenix Reference UI Visual Implementation Slice — 2026-09-28
+- Added the first implementation slice of the reference-aligned Phoenix visual system.
+- Added `apps/web/public/phoenix-mark.svg` as the reusable Phoenix brand/assistant mark asset.
+- Updated `apps/web/src/main.ts` Home hero to use a dedicated Phoenix brand stage with the mark and visible Understand → Decide → Match progression.
+- Updated shared light/dark semantic tokens in `apps/web/styles.css` and `apps/web/public/styles.css` from the previous blue/purple system to the warm cream/orange Phoenix language defined by the reference.
+- Added reference-aligned visual overrides for Home, CTA pills, cards, floating recommendation nodes, assistant surfaces, soft shadows, rounded geometry, mobile behavior and brand surfaces.
+- Preserved existing canonical interactions and backend boundaries; this slice changes presentation/composition rather than introducing new domain truth.
+- Implementation commits: `ebc4e594fde2e7406c5f0a7a9eef07899a2cc6b9`, `72a36fa6b3b95cc01cc59e8cfb4cbba15e5a030d`, `43a000894652b9c77d048b02e1e4b5b187f7c649`, `898663513fc1634742c5ff768e7f79dd6b913858`.
+- Verification gate: run web TypeScript build, full repository verification and visual checks at mobile/tablet/desktop before marking the slice production-verified.
