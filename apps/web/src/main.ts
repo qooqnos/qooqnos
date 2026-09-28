@@ -951,7 +951,7 @@ async function loadBookingSlots(): Promise<void> {
     );
     host.innerHTML = response.data.length
       ? '<div class="booking-slot-grid">' + response.data.map((slot) => {
-          const disabled = slot.available === false || slot.status === "full" || (slot.remainingCapacity !== undefined && slot.remainingCapacity <= 0) || !slot.slotReference;
+          const disabled = slot.available === false || (slot.status !== undefined && slot.status !== "available") || (slot.remainingCapacity !== undefined && slot.remainingCapacity <= 0) || !slot.slotReference;
           const reference = slot.slotReference ?? "";
           return '<article class="booking-slot-card">' +
             '<div class="booking-slot-card-meta"><span>' + escapeHtml(slot.status ?? "available") + '</span>' + (slot.remainingCapacity !== undefined ? '<span>' + String(Math.max(slot.remainingCapacity, 0)) + ' ظرفیت</span>' : '') + '</div>' +
