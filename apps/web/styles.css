@@ -4560,6 +4560,16 @@ body::before {
 .phoenix-vwf-filter-row{display:flex;align-items:center;gap:8px;margin-top:10px}
 .phoenix-vwf-filter-row .studio-input-line{max-width:370px}
 .phoenix-vwf-local-note{color:var(--faint);font-size:7px}
+.phoenix-vwf-live-people{grid-column:1/-1;margin-top:10px;padding:15px;border:1px solid var(--line);border-radius:20px;background:var(--surface-1);box-shadow:var(--shadow-soft,0 10px 28px rgba(0,0,0,.06))}
+.phoenix-vwf-live-people-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.phoenix-vwf-live-people-card{display:grid;gap:7px;min-height:120px;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface-2)}
+.phoenix-vwf-live-people-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.phoenix-vwf-live-people-top h4{margin:3px 0 0;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.phoenix-vwf-live-people-meta{display:flex;justify-content:space-between;gap:8px;padding-top:7px;margin-top:2px;border-top:1px solid var(--line);font-size:6px;color:var(--muted)}
+.phoenix-vwf-live-people-meta strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:7px}
+.phoenix-vwf-live-people-card>small{margin-top:auto;color:var(--faint);font-size:6px;line-height:1.7}
+@media(max-width:900px){.phoenix-vwf-live-people-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.phoenix-vwf-live-people-grid{grid-template-columns:1fr}}
 .phoenix-vwf-live-supply{grid-column:1/-1;padding:15px;border:1px solid var(--line);border-radius:20px;background:var(--surface-1);box-shadow:var(--shadow-soft,0 10px 28px rgba(0,0,0,.06))}
 .phoenix-vwf-live-supply-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:12px}
 .phoenix-vwf-live-supply-head h3{margin:3px 0 4px;font-size:11px}
