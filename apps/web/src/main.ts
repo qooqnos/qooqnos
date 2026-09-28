@@ -32,6 +32,7 @@ const STORAGE = {
   workspace: "phoenix-workspace-id",
   accessToken: "phoenix-access-token",
   business: "phoenix-business-id",
+  businessVertical: "phoenix-business-vertical",
   customer: "phoenix-customer-id",
 };
 
@@ -3043,9 +3044,43 @@ function getBusinessVerticalUi(value: unknown) {
   return BUSINESS_VERTICAL_UI[resolveBusinessVerticalKey(value)];
 }
 
+const BUSINESS_MODULE_LINKS: Record<string, Record<string, { readonly label: string; readonly path?: string; readonly status?: string; readonly description: string }>> = {
+  default: { "پروفایل": { label: "پروفایل کسب‌وکار", path: "/business/profile", description: "هویت و وضعیت انتشار Business." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "ساخت عرضه و محتوای marketplace-ready." }, "محصولات": { label: "کاتالوگ", path: "/catalog", description: "مدیریت عرضه‌های Catalog." }, "خدمات": { label: "کاتالوگ", path: "/catalog", description: "مدیریت خدمات و offeringها." }, "مشتریان": { label: "مشتریان", path: "/customer", description: "رابط Customer و تاریخچه رابطه." }, "پیام‌ها": { label: "ارتباطات", path: "/communication", description: "پیام‌ها و ارتباط با مشتری." }, "معاملات": { label: "معاملات", path: "/transactions", description: "خرید، فروش، اجاره و جریان‌های تجاری." }, "تیم": { label: "تیم", status: "read-only", description: "اعضا، Role و Permissionهای Workspace." } },
+  clinic: { "امروز": { label: "رزرو", path: "/booking", description: "نمای امروز و جریان رزرو canonical." }, "نوبت‌ها": { label: "رزرو", path: "/booking", description: "Availability و رزرو نوبت." }, "تقویم": { label: "رزرو", path: "/booking", description: "Availability و زمان‌بندی." }, "پزشکان": { label: "تیم", status: "capability", description: "Provider/Specialist در Team و Access." }, "خدمات": { label: "کاتالوگ", path: "/catalog", description: "خدمات قابل ارائه توسط کلینیک." }, "مراجعان": { label: "مشتریان", path: "/customer", description: "Customer relationship و سابقه تعامل." }, "ساعات کاری": { label: "Business", path: "/business", description: "Location و Hours canonical." }, "پیام‌ها": { label: "ارتباطات", path: "/communication", description: "ارتباط با مراجعان." }, "پرداخت": { label: "مالی", path: "/billing", description: "Billing و entitlement." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "محتوا و معرفی خدمات." }, "تیم": { label: "تیم", status: "read-only", description: "Role/Access تیم درمان و پشتیبانی." } },
+  retail: { "فروش امروز": { label: "معاملات", path: "/transactions", description: "جریان سفارش و معامله." }, "محصولات": { label: "کاتالوگ", path: "/catalog", description: "Product و Offering canonical." }, "مدل‌ها و تنوع": { label: "کاتالوگ", path: "/catalog", description: "Product/Variant در Catalog." }, "سایز و رنگ": { label: "کاتالوگ", path: "/catalog", description: "Variant attributes canonical." }, "موجودی": { label: "کاتالوگ", path: "/catalog", description: "موجودی از Inventory canonical خوانده می‌شود." }, "سفارش‌ها": { label: "معاملات", path: "/transactions", description: "Order و Commerce." }, "مرجوعی": { label: "معاملات", path: "/transactions", description: "چرخه transaction/return در boundary تجاری." }, "مشتریان": { label: "مشتریان", path: "/customer", description: "Customer relationship." }, "تخفیف‌ها": { label: "Promotion", path: "/promotion", description: "Promotion policy و eligibility." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "Seller AI برای listing." }, "گزارش فروش": { label: "معاملات", path: "/transactions", description: "وضعیت transactionها." } },
+  restaurant: { "سفارش‌های امروز": { label: "معاملات", path: "/transactions", description: "جریان سفارش و transaction." }, "منو": { label: "کاتالوگ", path: "/catalog", description: "Menu/service supply در Catalog." }, "میزها": { label: "Business", path: "/business", description: "Location و عملیات پایه." }, "رزرو": { label: "رزرو", path: "/booking", description: "Availability و رزرو." }, "آشپزخانه": { label: "عملیات", path: "/operations", description: "Case/fulfillment operations." }, "تحویل": { label: "عملیات", path: "/operations", description: "Fulfillment و delivery." }, "مشتریان": { label: "مشتریان", path: "/customer", description: "Customer relationship." },
+  salon: { "امروز": { label: "رزرو", path: "/booking", description: "نمای رزرو و availability." }, "خدمات": { label: "کاتالوگ", path: "/catalog", description: "Service catalog." }, "متخصصان": { label: "تیم", status: "read-only", description: "Specialist role و access." }, "زمان‌بندی": { label: "رزرو", path: "/booking", description: "Schedule و availability." }, "مشتریان": { label: "مشتریان", path: "/customer", description: "Customer relationship." }, "پرداخت": { label: "مالی", path: "/billing", description: "Billing و commercial entitlements." }, "پیشنهادها": { label: "Promotion", path: "/promotion", description: "Promotion policy." } },
+};
+
+function businessModuleInfo(vertical: string, module: string): { readonly label: string; readonly path?: string; readonly status?: string; readonly description: string } {
+  return BUSINESS_MODULE_LINKS[vertical]?.[module] ?? BUSINESS_MODULE_LINKS.default?.[module] ?? { label: module, status: "capability", description: "این ماژول در ترکیب Capabilityهای Workspace قرار می‌گیرد." };
+}
+
+function renderBusinessModule(vertical: string, module: string): string {
+  const ui = getBusinessVerticalUi(vertical);
+  const info = businessModuleInfo(vertical, module);
+  const moduleIndex = ui.modules.indexOf(module);
+  const actions = ui.actions.slice(0, 3);
+  return '<div class="phoenix-business-module-page">' +
+    '<section class="phoenix-business-module-hero">' +
+      '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">' + escapeHtml(ui.label) + ' · Module</span><h1>' + escapeHtml(module) + '</h1><p>' + escapeHtml(info.description) + '</p><div class="phoenix-business-module-meta"><span>' + escapeHtml(info.label) + '</span><span>' + (moduleIndex >= 0 ? "ماژول " + String(moduleIndex + 1) : "Capability") + '</span><span>' + escapeHtml(info.status ?? "connected") + '</span></div></div>' +
+      '<div class="phoenix-business-module-symbol">' + escapeHtml(ui.icon) + '</div>' +
+    '</section>' +
+    '<section class="phoenix-business-module-grid-page">' +
+      '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + escapeHtml(info.label) + '</h2><p>صفحه تخصصی فقط orchestration و navigation را انجام می‌دهد؛ داده و mutation از دامنه مالک خودش می‌آید.</p>' +
+        (info.path ? '<a class="button button-primary" href="' + escapeAttr(info.path) + '" data-nav>باز کردن ' + escapeHtml(info.label) + ' <span>→</span></a>' : '<span class="pill">اتصال mutation هنوز ثبت نشده</span>') +
+      '</article>' +
+      '<article class="glass-card phoenix-module-state-card"><span class="section-kicker">Capability State</span><h2>موقعیت این ماژول در Workspace</h2><div class="phoenix-module-state-row"><span>Vertical</span><strong>' + escapeHtml(ui.key) + '</strong></div><div class="phoenix-module-state-row"><span>Module</span><strong>' + escapeHtml(module) + '</strong></div><div class="phoenix-module-state-row"><span>Access</span><strong>Backend authoritative</strong></div></article>' +
+    '</section>' +
+    '<section class="glass-card phoenix-module-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>کارهای مرتبط</h2></div></div><div class="phoenix-business-quick-actions">' + actions.map((action) => '<button type="button" class="button button-secondary" data-business-module-action="' + escapeAttr(action) + '">' + escapeHtml(action) + ' <span>←</span></button>').join("") + '</div><p>این Actionها فقط به workflowهای canonical وصل می‌شوند؛ اجرای مستقیم از این صفحه state موازی ایجاد نمی‌کند.</p></section>' +
+  '</div>';
+}
 function renderBusiness(): string {
   const businessId = localStorage.getItem(STORAGE.business) ?? "";
-  const ui = getBusinessVerticalUi("");
+  const vertical = localStorage.getItem(STORAGE.businessVertical) ?? "default";
+  const requestedModule = new URLSearchParams(location.search).get("module")?.trim();
+  if (requestedModule) return renderBusinessModule(vertical, requestedModule);
+  const ui = getBusinessVerticalUi(vertical);
   return '<div class="phoenix-business-page" data-business-vertical="' + ui.key + '">' +
     '<section class="phoenix-business-hero">' +
       '<div class="phoenix-business-hero-copy">' +
@@ -3066,7 +3101,7 @@ function renderBusiness(): string {
     '</section>' +
 
     '<section class="phoenix-business-layout">' +
-      '<article class="glass-card phoenix-business-modules-card"><div class="card-section-heading"><div><span class="section-kicker">Workspace Modules</span><h2>ابزارهای مخصوص این کسب‌وکار</h2></div><span id="business-module-count" class="pill">—</span></div><div id="business-module-grid" class="phoenix-business-module-grid">' + ui.modules.map((module) => '<button class="phoenix-business-module" type="button"><span>◈</span><strong>' + module + '</strong><small>باز کردن</small></button>').join("") + '</div></article>' +
+      '<article class="glass-card phoenix-business-modules-card"><div class="card-section-heading"><div><span class="section-kicker">Workspace Modules</span><h2>ابزارهای مخصوص این کسب‌وکار</h2></div><span id="business-module-count" class="pill">—</span></div><div id="business-module-grid" class="phoenix-business-module-grid">' + ui.modules.map((module) => '<button class="phoenix-business-module" type="button" data-business-module="' + escapeAttr(module) + '"><span>◈</span><strong>' + module + '</strong><small>باز کردن</small></button>').join("") + '</div></article>' +
 
       '<aside class="phoenix-business-side">' +
         '<article class="glass-card phoenix-business-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>اقدام‌های سریع</h2></div></div><div id="business-quick-actions" class="phoenix-business-quick-actions">' + ui.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action>' + action + ' <span>←</span></button>').join("") + '</div></article>' +
@@ -3201,6 +3236,7 @@ async function loadBusinessAccess(): Promise<void> {
     const verificationCases = Array.isArray(verificationResponse.data) ? verificationResponse.data : [];
     const latestVerification = verificationCases[0];
     const vertical = getBusinessVerticalUi(business.businessType);
+    localStorage.setItem(STORAGE.businessVertical, vertical.key);
     const verticalRoot = document.querySelector<HTMLElement>(".phoenix-business-page");
     if (verticalRoot) verticalRoot.dataset.businessVertical = vertical.key;
     const verticalIcon = document.querySelector<HTMLElement>("#business-vertical-icon");
@@ -3898,7 +3934,11 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-business-add-location]")?.addEventListener("click", openBusinessLocationPanel);
   document.querySelectorAll<HTMLButtonElement>("[data-business-type-choice]").forEach((button) => button.addEventListener("click", () => { const input = document.querySelector<HTMLInputElement>("#business-type-input"); const value = button.dataset.businessTypeChoice ?? ""; if (input) input.value = value; showToast("نوع کسب‌وکار «" + (button.textContent ?? value) + "» انتخاب شد."); }));
   document.querySelectorAll<HTMLButtonElement>("[data-business-quick-action]").forEach((button) => button.addEventListener("click", () => showToast(button.textContent?.replace("←", "").trim() + " از Workspace تخصصی ققنوس باز می‌شود؛ اتصال workflow این ماژول در حال تکمیل است.")));
-  document.querySelectorAll<HTMLButtonElement>(".phoenix-business-module").forEach((button) => button.addEventListener("click", () => showToast("ماژول «" + (button.querySelector("strong")?.textContent ?? "این بخش") + "» بر اساس Capabilityهای این کسب‌وکار مدیریت می‌شود.")));
+  document.querySelectorAll<HTMLButtonElement>(".phoenix-business-module").forEach((button) => button.addEventListener("click", () => {
+    const module = button.dataset.businessModule;
+    if (module) navigate("/business?module=" + encodeURIComponent(module));
+  }));
+  document.querySelectorAll<HTMLButtonElement>("[data-business-module-action]").forEach((button) => button.addEventListener("click", () => showToast((button.dataset.businessModuleAction ?? "Action") + " از workflow canonical ادامه پیدا می‌کند.")));
   document.querySelector<HTMLButtonElement>("[data-business-primary-action]")?.addEventListener("click", () => { const action = document.querySelector("#business-next-action")?.textContent?.trim() ?? "اقدام بعدی"; showToast(action + " آماده است؛ ابتدا وضعیت Workspace و Capabilityهای فعال را بررسی می‌کنیم."); });
   document.querySelector<HTMLButtonElement>("[data-team-management]")?.addEventListener("click", openBusinessTeamPanel);
   document.querySelector<HTMLButtonElement>("[data-profile-refresh]")?.addEventListener("click", () => { void loadProfilePage(); });
