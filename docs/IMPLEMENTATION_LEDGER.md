@@ -2277,3 +2277,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - This turns the shared calendar Canvas into a real read-only workflow bridge without creating booking state or duplicating Availability data in the frontend.
 - Implementation commits: `2f3f34cd6291432af8cb54d2bb4da83ba68a64fd`, `dffe095366f808cc3268e0051ae98a4a18ee59fc`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
+
+
+## Vertical Workflow Role-aware Composition Contract — 2026-09-28
+- Extended `apps/web/src/business-module-ui.ts` with a shared Role Lens contract for vertical modules: management, sales, specialist, finance and generic.
+- Added role-fit metadata to every resolved module blueprint without hard-coding authorization into the UI.
+- Added `resolveVerticalRoleLens()` and `getVerticalModuleRoleFit()` so the same Business Type → Module Blueprint → Role Lens composition can be reused across clinic, retail, restaurant and salon.
+- Business module pages now expose the current role emphasis, module fit and backend-authoritative access rule as a shared UI contract.
+- The UI remains descriptive only: visibility/emphasis never grants permission, and backend authorization remains authoritative.
+- Implementation commits: `e534cc07b802dd3e300dcb2aa64868883dd29c0e`, `db9e31fb2cec500b3e550bff097749319e7f8db8`, `d380d541bab0c06b0695050e675a79e2c3a1c975`, `3f52feb78bb608d339d959b4b190039a6390123f`, `ae2b27a442fbdab4bd174cdf3b0c0516703aa2a4`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
