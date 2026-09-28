@@ -3273,6 +3273,18 @@ function renderBusinessModule(vertical: string, module: string): string {
         }).join("") +
       '</div>' +
       '<div class="phoenix-module-blueprint-footer"><span>Vertical: ' + escapeHtml(ui.key) + '</span><span>Module: ' + escapeHtml(module) + '</span><span>' + String(blueprint.blocks.length) + ' foundation blocks</span></div>' +
+      '<div class="phoenix-module-state-contract">' +
+        '<div><span>Interaction mode</span><strong>' + escapeHtml(blueprint.interaction) + '</strong></div>' +
+        '<div><span>Primary action</span><strong>' + escapeHtml(blueprint.primaryAction?.label ?? "منبع canonical") + '</strong></div>' +
+        '<div><span>State contract</span><strong>' + String(blueprint.states.length) + ' حالت استاندارد</strong></div>' +
+      '</div>' +
+    '</section>' +
+    '<section class="glass-card phoenix-module-state-contract-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">UI State Contract</span><h2>رفتار استاندارد همه ماژول‌ها</h2></div><span class="pill">Shared Framework</span></div>' +
+      '<div class="phoenix-module-state-grid">' +
+        blueprint.states.map((item) => '<article class="phoenix-module-state-item state-' + escapeAttr(item.key) + '"><span class="phoenix-module-state-dot"></span><div><strong>' + escapeHtml(item.label) + '</strong><p>' + escapeHtml(item.description) + '</p></div></article>').join("") +
+      '</div>' +
+      (blueprint.primaryAction ? '<a class="button button-primary" href="' + escapeAttr(businessModuleContextHref(blueprint.primaryAction.path, ui.key, module, businessId)) + '" data-nav>' + escapeHtml(blueprint.primaryAction.label) + ' <span>→</span></a>' : '') +
     '</section>' +
     '<section class="phoenix-business-module-grid-page">' +
       '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + escapeHtml(info.label) + '</h2><p>این سطح یک UI تخصصی برای Workspace است؛ source of truth، permission و mutation همچنان در دامنه canonical باقی می‌مانند.</p>' +
