@@ -2309,3 +2309,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 
 - Added responsive breakpoints for the live Operations/Communication surfaces so the shared canvas collapses from 3 columns to 2 and then 1 column on smaller screens. Styling remains mirrored across the two web stylesheet surfaces.
 - Responsive commits: `f398e0d11dbab721558fc64d5fafb1b511f2e98a`, `df8945225731253ee55ab03b7b6a8006836e8085`.
+
+## 2026-09-28 — Vertical Workflow context-preserving navigation
+- Hardened the shared Vertical Workflow UI Framework so its canonical action and surface links preserve the active Business/Workspace context.
+- Added an optional contextual href resolver to `VerticalWorkflowCanvasModel`; the canvas remains routing-policy agnostic while the Workspace layer supplies the resolver.
+- Business module pages now pass `businessModuleContextHref()` into the shared Canvas, so links from Command, Calendar, Supply, People, Commerce, Operations and Communication surfaces retain Business ID, vertical and originating-module context.
+- This prevents the shared canvas from silently dropping Workspace context when moving into canonical domains such as Booking, Catalog, Customer, Transactions, Operations and Communication.
+- No domain state, authorization rule, duplicate store or frontend mutation was introduced.
+- Implementation commits: `6fd88a9099c2d5c6ffa8da85b0596b868bf2feba`, `b0b1335fb54ef175c5ac214df9b65b41c499e6c6`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
