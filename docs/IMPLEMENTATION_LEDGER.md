@@ -1968,3 +1968,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Business operational surfaces retain higher information density while preserving the same Phoenix brand language.
 - Commits: `4315a0a39e29e5b00624f51cc071a0f3345f24f0`, `0c5680d0c523db6f4a1477041472d34093150c2f`.
 - Verification gate remains: web build/typecheck plus responsive/visual QA before production verification.
+
+
+## Phoenix Discovery / Social Commerce Visual Slice — 2026-09-28
+- Refined Discovery/Explore/Following into the warm Phoenix visual language defined by the reference: assistant-led hero, cream surfaces, orange action states, rounded cards, soft depth and focused content density.
+- Updated Social Commerce post cards with stronger visual media blocks, publisher identity, action chips, price emphasis, primary transaction CTA and responsive mobile layout.
+- Updated Compare surface with clearer canonical fact table, persistent comparison tray styling and mobile-safe overflow behavior.
+- Reused the canonical Phoenix mark asset in the Social Commerce shell.
+- No new recommendation engine, social persistence model or commerce truth was introduced.
+- Commits: `b0a10fd3f001f90b5b3cdc62ac34c7de9dc820a3`, `5821283eddedde084e77c4ac4eaa2b2a5819114e`, `002bb34246ac4071f6cdd73dce4270c28c79bb8f`.
+- Verification gate remains: web build/typecheck plus responsive/visual QA before production verification.
