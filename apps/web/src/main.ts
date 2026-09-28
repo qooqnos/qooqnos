@@ -425,9 +425,9 @@ function render(): void {
   if (route.path === "/communication") void loadCommunicationState();
   if (route.path === "/billing") void loadBillingState();
   if (parseBusinessModulePath(route.path)) bindVerticalWorkflowCanvas(appRoot);
-  if (route.path === "/business") {
-    if (new URLSearchParams(location.search).get("module")) void loadBusinessModuleContext();
-    else void loadBusinessAccess();
+  if (route.path === "/business" || parseBusinessModulePath(route.path)) {
+    if (route.path === "/business" && !new URLSearchParams(location.search).get("module")) void loadBusinessAccess();
+    else void loadBusinessModuleContext();
   }
   if (route.path === "/business/profile") {
     void loadBusinessProfile();
@@ -3485,7 +3485,8 @@ async function loadBusinessModuleContext(): Promise<void> {
     ]);
     const business = businessResponse.data.business;
     const canonicalVertical = getBusinessVerticalUi(getRecordString(business, ["businessType"]));
-    const selectedVertical = getBusinessVerticalUi(new URLSearchParams(location.search).get("vertical") ?? canonicalVertical.key);
+    const dynamicModule = parseBusinessModulePath(location.pathname);
+    const selectedVertical = getBusinessVerticalUi(new URLSearchParams(location.search).get("vertical") ?? dynamicModule?.vertical ?? canonicalVertical.key);
     businessNode.textContent = getRecordString(business, ["displayName", "name"]) ?? compactId(businessId);
     verticalNode.textContent = canonicalVertical.key === selectedVertical.key ? canonicalVertical.label : canonicalVertical.label + " · URL context: " + selectedVertical.label;
     sourceNode.textContent = "Business / " + (getRecordString(business, ["publicationStatus"]) ?? "unpublished");
