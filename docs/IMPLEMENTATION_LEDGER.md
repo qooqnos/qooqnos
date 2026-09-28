@@ -2183,3 +2183,5 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Module pages now include a context strip, canonical command actions, connected-surface map, reusable workspace canvas, vertical workflow rail, quick actions, and adjacent-module map.
 - Unsupported capabilities remain explicitly marked; no fake metrics or duplicate domain state were introduced.
 - Verification: implementation committed; production/browser visual QA and TypeScript build were not run in this step.
+
+- Added non-blocking canonical context hydration for deep module pages: Business identity, resolved vertical, publication state, and context-permission state are refreshed from existing Business/Context endpoints when available.
