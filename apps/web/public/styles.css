@@ -3671,3 +3671,35 @@ body::before {
   margin:12px 0 10px;
 }
 .phoenix-public-publication-action .button { width:100%; }
+
+
+/* Business Trust signals */
+.phoenix-public-trust-signals {
+  display:grid;
+  gap:6px;
+  margin:4px 0 12px;
+  max-height:210px;
+  overflow:auto;
+}
+.phoenix-trust-signal-row {
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:8px;
+  align-items:center;
+  padding:8px 9px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--surface-2);
+}
+.phoenix-trust-signal-row strong,
+.phoenix-trust-signal-row small { display:block; }
+.phoenix-trust-signal-row strong { font-size:8px; }
+.phoenix-trust-signal-row small { margin-top:2px;color:var(--faint);font-size:7px; }
+.phoenix-trust-signal-empty {
+  padding:10px 11px;
+  border-radius:12px;
+  background:var(--surface-2);
+  color:var(--faint);
+  font-size:7px;
+  line-height:1.8;
+}
