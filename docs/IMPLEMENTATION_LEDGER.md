@@ -2241,3 +2241,14 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - No new source of truth, authorization model, KPI or domain mutation was introduced; this only hardens runtime context for the shared Vertical Workflow UI Framework.
 - Implementation commit: bd6197a62ee13c320a67303d53b4ec3a37b2b95d.
 - Verification remains pending: TypeScript build and browser/visual QA have not been executed after this change.
+
+
+## Vertical Workflow Canonical Availability Hydration — 2026-09-28
+- Extended the shared Vertical Workflow UI Framework from structural UI composition into its first canonical live-data adapter.
+- Added workspace-scoped GET /api/v1/availability/schedules?businessId=... using the existing Booking/Availability repository and availability.read permission.
+- Vertical calendar canvases now read real Business schedules and the next 24 hours of canonical availability slots when a Business context and authenticated Workspace session are available.
+- Live schedule lanes are limited to a small UI-safe window and remain read-only; slot buttons are visual availability surfaces and do not create booking state.
+- No parallel schedule/slot model, fake capacity, or frontend source of truth was introduced.
+- Added repository coverage for the business schedule listing boundary.
+- Implementation commits: 6562f3b86370fb40853076963aa8f7c308a10e7d, 9145ceee69369df506e307f1a68c951ce535ddb3, 7a3e460769bcf8603c9b1ba64150e4c88d16db79, 88f6096c73a3a13675fdc885078554735d39c5fe, 30f627123dd9e4268c62dc45a7b7a32e28f4696a, a38265e285f0172a1192b396c1db2347f25bf746, aee606c6906bba65337a9bc23ba7dc04804bcab3.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed for this slice.
