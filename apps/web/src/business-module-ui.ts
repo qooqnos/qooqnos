@@ -378,7 +378,6 @@ const ROLE_LENS_BY_MODULE: Record<string, readonly VerticalRoleLensKey[]> = {
   "مدل‌ها و تنوع": ["sales"],
   "سایز و رنگ": ["sales"],
   "موجودی": ["sales", "management"],
-  "سفروش": ["sales"],
   "سفارش‌ها": ["sales", "finance", "management"],
   "مرجوعی": ["sales", "finance"],
   "تخفیف‌ها": ["sales", "management"],
