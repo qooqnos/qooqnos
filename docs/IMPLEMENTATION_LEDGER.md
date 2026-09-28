@@ -2185,3 +2185,10 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Verification: implementation committed; production/browser visual QA and TypeScript build were not run in this step.
 
 - Added non-blocking canonical context hydration for deep module pages: Business identity, resolved vertical, publication state, and context-permission state are refreshed from existing Business/Context endpoints when available.
+- Promoted Business module pages to stable semantic routes: `/business/workspace/<vertical>/<module>` for clinic, retail, restaurant, salon and default compositions.
+- Kept the legacy `/business?vertical=...&module=...` form as a compatible entry path while module navigation and adjacent-module links emit the stable workspace URLs.
+- Updated SPA navigation to recognize these dynamic Business workspace paths without forcing a full document reload.
+- Module slugs are registry-owned, preventing Persian labels from becoming route contracts and allowing later localized labels without changing URL identity.
+- Implementation commit: `573386d9fd6ca1467efb2757ec69f4e7a27fc094`.
+- Verification remains pending: TypeScript build and browser/visual QA were not executed in this slice.
+
