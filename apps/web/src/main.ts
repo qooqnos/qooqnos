@@ -3174,7 +3174,7 @@ const BUSINESS_MODULE_LINKS: Record<string, Record<string, { readonly label: str
   clinic: { "امروز": { label: "رزرو", path: "/booking", description: "نمای امروز و جریان رزرو canonical." }, "نوبت‌ها": { label: "رزرو", path: "/booking", description: "Availability و رزرو نوبت." }, "تقویم": { label: "رزرو", path: "/booking", description: "Availability و زمان‌بندی." }, "پزشکان": { label: "تیم", status: "capability", description: "Provider/Specialist در Team و Access." }, "خدمات": { label: "کاتالوگ", path: "/catalog", description: "خدمات قابل ارائه توسط کلینیک." }, "مراجعان": { label: "مشتریان", path: "/customer", description: "Customer relationship و سابقه تعامل." }, "ساعات کاری": { label: "Business", path: "/business", description: "Location و Hours canonical." }, "پیام‌ها": { label: "ارتباطات", path: "/communication", description: "ارتباط با مراجعان." }, "پرداخت": { label: "مالی", path: "/billing", description: "Billing و entitlement." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "محتوا و معرفی خدمات." }, "تیم": { label: "تیم", status: "read-only", description: "Role/Access تیم درمان و پشتیبانی." } },
   retail: { "فروش امروز": { label: "معاملات", path: "/transactions", description: "جریان سفارش و معامله." }, "محصولات": { label: "کاتالوگ", path: "/catalog", description: "Product و Offering canonical." }, "مدل‌ها و تنوع": { label: "کاتالوگ", path: "/catalog", description: "Product/Variant در Catalog." }, "سایز و رنگ": { label: "کاتالوگ", path: "/catalog", description: "Variant attributes canonical." }, "موجودی": { label: "کاتالوگ", path: "/catalog", description: "موجودی از Inventory canonical خوانده می‌شود." }, "سفارش‌ها": { label: "معاملات", path: "/transactions", description: "Order و Commerce." }, "مرجوعی": { label: "معاملات", path: "/transactions", description: "چرخه transaction/return در boundary تجاری." }, "مشتریان": { label: "مشتریان", path: "/customer", description: "Customer relationship." }, "تخفیف‌ها": { label: "Promotion", path: "/promotion", description: "Promotion policy و eligibility." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "Seller AI برای listing." }, "گزارش فروش": { label: "معاملات", path: "/transactions", description: "وضعیت transactionها." } },
   restaurant: { "سفارش‌های امروز": { label: "معاملات", path: "/transactions", description: "جریان سفارش و transaction." }, "منو": { label: "کاتالوگ", path: "/catalog", description: "Menu/service supply در Catalog." }, "میزها": { label: "Business", path: "/business", description: "Location و عملیات پایه." }, "رزرو": { label: "رزرو", path: "/booking", description: "Availability و رزرو." }, "آشپزخانه": { label: "عملیات", path: "/operations", description: "Case/fulfillment operations." }, "تحویل": { label: "عملیات", path: "/operations", description: "Fulfillment و delivery." }, "مشتریان": { label: "مشتریان", path: "/customer", description: "Customer relationship." }, "تخفیف": { label: "Promotion", path: "/promotion", description: "Promotion policy و eligibility." }, "پرداخت": { label: "مالی", path: "/billing", description: "Billing و پرداخت‌های canonical." }, "گزارش": { label: "معاملات", path: "/transactions", description: "گزارش بر مبنای transaction/commerce canonical." } },
-  salon: { "امروز": { label: "رزرو", path: "/booking", description: "نمای رزرو و availability." }, "خدمات": { label: "کاتالوگ", path: "/catalog", description: "Service catalog." }, "متخصصان": { label: "تیم", status: "read-only", description: "Specialist role و access." }, "زمان‌بندی": { label: "رزرو", path: "/booking", description: "Schedule و availability." }, "مشتریان": { label: "مشتریان", path: "/customer", description: "Customer relationship." }, "ظرفیت": { label: "رزرو", path: "/booking", description: "Availability و ظرفیت متخصص/خدمت." }, "پرداخت": { label: "مالی", path: "/billing", description: "Billing و commercial entitlements." }, "پیشنهادها": { label: "Promotion", path: "/promotion", description: "Promotion policy." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "محتوا و Seller AI." }, "تیم": { label: "تیم", status: "read-only", description: "Role و Permissionهای Workspace." } },
+  salon: { "امروز": { label: "رزرو", path: "/booking", description: "نمای رزرو و availability." }, "خدمات": { label: "کاتالوگ", path: "/catalog", description: "Service catalog." }, "متخصصان": { label: "تیم", status: "read-only", description: "Specialist role و access." }, "تقویم": { label: "رزرو", path: "/booking", description: "Calendar و availability." }, "مشتریان": { label: "مشتریان", path: "/customer", description: "Customer relationship." }, "ظرفیت": { label: "رزرو", path: "/booking", description: "Availability و ظرفیت متخصص/خدمت." }, "پرداخت": { label: "مالی", path: "/billing", description: "Billing و commercial entitlements." }, "پیشنهادها": { label: "Promotion", path: "/promotion", description: "Promotion policy." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "محتوا و Seller AI." }, "تیم": { label: "تیم", status: "read-only", description: "Role و Permissionهای Workspace." } },
 };
 
 function businessModuleInfo(vertical: string, module: string): { readonly label: string; readonly path?: string; readonly status?: string; readonly description: string } {
@@ -3186,12 +3186,12 @@ const BUSINESS_MODULE_SLUGS: Record<string, Record<string, string>> = {
   clinic: { "امروز": "today", "نوبت‌ها": "appointments", "تقویم": "calendar", "پزشکان": "providers", "خدمات": "services", "مراجعان": "patients", "ساعات کاری": "hours", "پیام‌ها": "messages", "پرداخت": "payments", "محتوا": "content", "تیم": "team" },
   retail: { "فروش امروز": "sales", "محصولات": "products", "مدل‌ها و تنوع": "variants", "سایز و رنگ": "attributes", "موجودی": "inventory", "سفارش‌ها": "orders", "مرجوعی": "returns", "مشتریان": "customers", "تخفیف‌ها": "promotions", "محتوا": "content", "گزارش فروش": "reports" },
   restaurant: { "سفارش‌های امروز": "orders", "منو": "menu", "میزها": "tables", "رزرو": "reservations", "آشپزخانه": "kitchen", "تحویل": "delivery", "مشتریان": "customers", "تخفیف": "promotions", "پرداخت": "payments", "گزارش": "reports" },
-  salon: { "امروز": "today", "خدمات": "services", "متخصصان": "specialists", "زمان‌بندی": "schedule", "مشتریان": "customers", "پرداخت": "payments", "پیشنهادها": "promotions" },
+  salon: { "امروز": "today", "خدمات": "services", "متخصصان": "specialists", "تقویم": "calendar", "مشتریان": "customers", "ظرفیت": "capacity", "پرداخت": "payments", "پیشنهادها": "promotions", "محتوا": "content", "تیم": "team" },
 };
 
 function businessModuleSlug(vertical: string, module: string): string {
   const key = resolveBusinessVerticalKey(vertical);
-  return BUSINESS_MODULE_SLUGS[key]?.[module] ?? module.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]+/gi, "-").replace(/^-+|-+$/g, "") || "module";
+  return BUSINESS_MODULE_SLUGS[key]?.[module] ?? encodeURIComponent(module);
 }
 
 function businessModulePath(vertical: string, module: string): string {
@@ -3897,7 +3897,7 @@ function openPublicBusinessReview(routePath: string): void {
     }
   });
 }
-async async function togglePublicBusinessFollow(routePath: string): Promise<void> {
+async function togglePublicBusinessFollow(routePath: string): Promise<void> {
   if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
   const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
   if (!businessId) return;
@@ -3918,7 +3918,7 @@ async async function togglePublicBusinessFollow(routePath: string): Promise<void
   }
 }
 
-async async function sharePublicBusiness(): Promise<void> {
+async function sharePublicBusiness(): Promise<void> {
   try {
     await navigator.clipboard.writeText(window.location.href);
     showToast("لینک پروفایل کپی شد.");
