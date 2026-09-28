@@ -3508,8 +3508,6 @@ const BUSINESS_MODULE_PRESENTATIONS: Record<string, Record<string, BusinessModul
     "پیشنهادها": { eyebrow: "Promotions", stateLabel: "Promotion canonical", stateDescription: "Promotion policy و eligibility از Promotion می‌آید.", surfaces: [{ label: "Promotion", path: "/promotion", description: "پیشنهادها" }] },
     "محتوا": { eyebrow: "Content", stateLabel: "Studio canonical", stateDescription: "معرفی خدمات و محتوا از Product Studio تغذیه می‌شود.", surfaces: [{ label: "Product Studio", path: "/product-studio", description: "Seller AI" }, { label: "Catalog", path: "/catalog", description: "Supply" }] },
     "تیم": { eyebrow: "Team & Access", stateLabel: "Backend authoritative", stateDescription: "Role/Permission از Workspace/Context می‌آید.", surfaces: [{ label: "Team", path: "/business?module=تیم", description: "Workspace team" }, { label: "Account", path: "/account", description: "Runtime context" }] },
-    "ظرفیت": { eyebrow: "Capacity", stateLabel: "Availability canonical", stateDescription: "ظرفیت فقط از schedule و slotهای واقعی نمایش داده می‌شود.", surfaces: [{ label: "Booking", path: "/booking", description: "Availability" }, { label: "Services", path: "/catalog", description: "مدت خدمات" }] },
-    "محتوا": { eyebrow: "Service Content", stateLabel: "Studio canonical", stateDescription: "محتوای معرفی خدمت از Product Studio و Catalog تغذیه می‌شود.", surfaces: [{ label: "Product Studio", path: "/product-studio", description: "Seller AI" }, { label: "Catalog", path: "/catalog", description: "Supply" }] },
   },
 };
 
