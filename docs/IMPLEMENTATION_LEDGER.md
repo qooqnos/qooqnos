@@ -21,6 +21,15 @@ Deployment asset repair: `0420fada`, `5c0b8e4`, `d948572`, `3e8d6f0` — synchro
 
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
 
+### Vertical workflow rail navigation — 2026-09-28
+
+- 🟢 The shared Vertical Workflow UI rail now connects each supported stage to the corresponding semantic Workspace module route for clinic, retail, restaurant and salon.
+- 🟢 The current module is visually marked, and each linked stage preserves Business, vertical and originating-module context.
+- 🟢 This is navigation composition only; no second domain state, authorization model or fake workflow data was introduced.
+- 🟡 TypeScript build, browser/visual QA and production deployment verification remain pending for this slice.
+
+Implementation commits: `6cd8e6d` (workflow navigation), `5cc8164` (source CSS), `78e8288` (public CSS asset).
+
 ### Deep vertical Workspace UI workbench — 2026-09-28
 
 - 🟢 Business Workspace module surfaces were deepened into a reusable vertical workbench for clinic, retail, restaurant and salon.
