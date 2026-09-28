@@ -29,7 +29,7 @@ This ledger is the continuity record for future coding agents. Completed or supe
 - 🟢 The UI test matrix covers representative clinic, retail, restaurant and salon semantic routes plus an invalid-slug guard.
 - 🟡 TypeScript build, browser/visual QA and production deployment verification remain pending for this slice.
 
-Implementation commits: `ca710143` (shared registry), `fabae262` (SPA routing adoption), `d66dddb` (test coverage).
+Implementation commits: `ca710143` (shared registry), `fabae262` (SPA routing adoption), `d66dddb` (initial test coverage), `1bf2d6a` (route uniqueness/round-trip coverage).
 
 ### Vertical workflow rail navigation — 2026-09-28
 
