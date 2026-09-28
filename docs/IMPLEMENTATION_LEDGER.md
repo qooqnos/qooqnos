@@ -2145,3 +2145,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added responsive styling for public review cards.
 - Implementation commits: `11a377178f43104c66ce6868222bfc0bef687953`, `5e293c43f9e0cfaccc3f8591cbba317f71e6d11b`, `9d2ba4729b5c9a35f1290538f3a3a8d3ee8b990e`, `a172b4133e8206845a63d4e45f73befe1de62f10`, `69cffcc4e66ad7b682650c3c86253710cd5e54da`.
 - Verification remains pending: TypeScript build, Trust API integration tests and browser/visual QA have not been executed in this slice.
+
+
+## Occupation-specific Business Today Board — 2026-09-28
+- Added a vertical-specific Today/Operations board to the Business Workspace home for clinic, retail, restaurant and salon compositions.
+- Board cards are descriptive/capability-aware and route into existing canonical domain surfaces such as Booking, Catalog, Transactions, Operations, Promotion, Customer and Business Trust; no fake KPI values are introduced.
+- Clinic board emphasizes appointments, provider/access, customer relationship and verification; retail emphasizes sales/orders, catalog/variants, inventory and growth; restaurant emphasizes orders, reservations, menu and fulfillment; salon emphasizes appointments, specialists, services and promotions.
+- Added responsive Phoenix styling for the board cards.
+- Implementation commits: `346754d6d82900dc7d27bb5a9b2eacdffe40b83d`, `d361d11da2df76a24d7e3bc510ed01cd7aaf8eb3`, `4ff122574e26ec3beedc6113ffc21818bf202291`.
+- Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
