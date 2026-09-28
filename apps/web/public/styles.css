@@ -3178,3 +3178,140 @@ body::before {
   border-color:color-mix(in srgb,var(--primary) 18%,var(--line));
   background:color-mix(in srgb,var(--primary) 6%,var(--surface));
 }
+
+
+/* Business role / team / access lens */
+#business-header-role {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phoenix-business-team-section {
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:13px;
+  margin-top:13px;
+}
+.phoenix-team-card,
+.phoenix-role-guide {
+  padding:21px;
+  border-radius:25px;
+  box-shadow:0 18px 52px rgba(86,56,34,.055);
+}
+.phoenix-role-lens {
+  display:grid;
+  gap:3px;
+  margin-top:15px;
+  padding:14px;
+  border-radius:17px;
+  background:
+    linear-gradient(145deg,color-mix(in srgb,var(--primary) 7%,var(--surface)),var(--surface));
+  border:1px solid color-mix(in srgb,var(--primary) 12%,var(--line));
+}
+.phoenix-role-lens strong { font-size:12px; }
+.phoenix-role-lens p {
+  margin:3px 0 0;
+  color:var(--muted);
+  font-size:8px;
+  line-height:1.75;
+}
+.phoenix-permission-cloud {
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:10px;
+  min-height:29px;
+}
+.phoenix-permission-chip {
+  padding:6px 8px;
+  border-radius:999px;
+  color:var(--primary);
+  background:color-mix(in srgb,var(--primary) 6%,var(--surface));
+  border:1px solid color-mix(in srgb,var(--primary) 11%,var(--line));
+  font-size:7px;
+  direction:ltr;
+}
+.phoenix-team-list {
+  display:grid;
+  gap:7px;
+  margin-top:13px;
+  max-height:280px;
+  overflow:auto;
+}
+.phoenix-team-row {
+  display:grid;
+  grid-template-columns:34px 1fr auto;
+  gap:9px;
+  align-items:center;
+  padding:9px 10px;
+  border-radius:14px;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+}
+.phoenix-team-avatar {
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  color:#fff;
+  background:linear-gradient(145deg,#ff7b16,#ffb566);
+  font-size:10px;
+  font-weight:900;
+}
+.phoenix-team-row strong,
+.phoenix-team-row small { display:block; }
+.phoenix-team-row strong { font-size:8px; }
+.phoenix-team-row small {
+  margin-top:3px;
+  color:var(--faint);
+  font-size:7px;
+  direction:ltr;
+  text-align:start;
+}
+.phoenix-team-actions {
+  display:flex;
+  justify-content:flex-end;
+  gap:7px;
+  margin-top:13px;
+}
+.phoenix-role-guide {
+  background:
+    radial-gradient(circle at 90% 6%,rgba(255,157,82,.14),transparent 28%),
+    var(--surface);
+}
+.phoenix-role-guide h2 {
+  margin:7px 0 14px;
+  font-size:19px;
+  letter-spacing:-.035em;
+}
+.phoenix-role-guide-list {
+  display:grid;
+  gap:8px;
+}
+.phoenix-role-guide-list > div {
+  display:grid;
+  gap:3px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--surface-2);
+}
+.phoenix-role-guide-list b { color:var(--primary); font-size:8px; }
+.phoenix-role-guide-list span { color:var(--muted); font-size:8px; line-height:1.65; }
+.phoenix-role-guide > p {
+  margin:12px 0 0;
+  color:var(--faint);
+  font-size:7px;
+  line-height:1.8;
+}
+@media(max-width:900px){
+  .phoenix-business-team-section { grid-template-columns:1fr; }
+}
+@media(max-width:640px){
+  .phoenix-business-team-section { gap:8px; }
+  .phoenix-team-card,
+  .phoenix-role-guide { padding:16px; }
+  .phoenix-team-actions { flex-direction:column; }
+  .phoenix-team-actions .button { width:100%; }
+}
