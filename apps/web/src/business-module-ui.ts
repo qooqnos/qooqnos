@@ -13,6 +13,13 @@ export type VerticalModuleState =
   | "readonly"
   | "unavailable";
 
+export type VerticalRoleLensKey =
+  | "management"
+  | "sales"
+  | "specialist"
+  | "finance"
+  | "generic";
+
 export type VerticalModuleBlueprintBlock = {
   readonly label: string;
   readonly title: string;
@@ -30,6 +37,11 @@ export type VerticalModuleBlueprint = {
   readonly eyebrow: string;
   readonly layout: VerticalModuleLayout;
   readonly interaction: "command" | "browse" | "configure" | "review";
+  /**
+   * UI emphasis only. This is never an authorization decision.
+   * The backend remains the source of truth for access and mutation.
+   */
+  readonly roleLenses?: readonly VerticalRoleLensKey[];
   readonly primaryAction?: {
     readonly label: string;
     readonly path: string;
@@ -347,9 +359,83 @@ const verticalSpecific: Record<string, Record<string, VerticalModuleBlueprint>> 
   salon,
 };
 
+const ROLE_LENS_BY_MODULE: Record<string, readonly VerticalRoleLensKey[]> = {
+  "امروز": ["management", "sales", "specialist"],
+  "خدمات": ["sales", "specialist"],
+  "محصولات": ["sales"],
+  "پزشکان": ["specialist", "management"],
+  "متخصصان": ["specialist", "management"],
+  "مراجعان": ["specialist", "sales"],
+  "مشتریان": ["sales", "specialist"],
+  "نوبت‌ها": ["specialist"],
+  "تقویم": ["specialist", "management"],
+  "ساعات کاری": ["management"],
+  "زمان‌بندی": ["specialist", "management"],
+  "ظرفیت": ["specialist", "management"],
+  "پرداخت": ["finance", "management"],
+  "محتوا": ["sales", "management"],
+  "تیم": ["management"],
+  "مدل‌ها و تنوع": ["sales"],
+  "سایز و رنگ": ["sales"],
+  "موجودی": ["sales", "management"],
+  "سفروش": ["sales"],
+  "سفارش‌ها": ["sales", "finance", "management"],
+  "مرجوعی": ["sales", "finance"],
+  "تخفیف‌ها": ["sales", "management"],
+  "گزارش فروش": ["sales", "finance", "management"],
+  "سفارش‌های امروز": ["sales", "management"],
+  "منو": ["sales", "management"],
+  "میزها": ["sales", "management"],
+  "رزروها": ["sales", "management"],
+  "آشپزخانه": ["sales", "management"],
+  "تحویل": ["sales", "management"],
+  "گزارش": ["management", "finance"],
+  "متخصصان": ["specialist", "management"],
+  "مشتریان": ["sales", "specialist"],
+  "ساعت کاری": ["management"],
+  "پیشنهادها": ["sales", "management"],
+};
+
+function deriveRoleLenses(module: string, layout: VerticalModuleLayout): readonly VerticalRoleLensKey[] {
+  const explicit = ROLE_LENS_BY_MODULE[module];
+  if (explicit) return explicit;
+  if (layout === "calendar") return ["specialist", "management"];
+  if (layout === "catalog") return ["sales", "specialist"];
+  if (layout === "commerce") return ["sales", "finance", "management"];
+  if (layout === "people") return ["sales", "specialist", "management"];
+  if (layout === "operations") return ["sales", "management"];
+  if (layout === "communication") return ["sales", "specialist"];
+  return ["generic"];
+}
+
+export function resolveVerticalRoleLens(roles: readonly string[]): { key: VerticalRoleLensKey; title: string; description: string } {
+  const normalized = roles.map((role) => role.toLowerCase());
+  if (normalized.some((role) => /owner|admin|manager/.test(role))) {
+    return { key: "management", title: "مدیریت Workspace", description: "نمای کلی، تیم، مالی، گزارش و تنظیمات در اولویت این نقش قرار می‌گیرند." };
+  }
+  if (normalized.some((role) => /sales|seller/.test(role))) {
+    return { key: "sales", title: "عملیات فروش", description: "مشتریان، عرضه، پیام‌ها و معاملات در اولویت این نقش قرار می‌گیرند." };
+  }
+  if (normalized.some((role) => /doctor|specialist|provider/.test(role))) {
+    return { key: "specialist", title: "عملیات تخصصی", description: "خدمات، برنامه، رزرو و زمینه تخصصی در اولویت این نقش قرار می‌گیرند." };
+  }
+  if (normalized.some((role) => /finance|account/.test(role))) {
+    return { key: "finance", title: "عملیات مالی", description: "پرداخت‌ها، تراکنش‌ها و گزارش‌های مالی در اولویت این نقش قرار می‌گیرند." };
+  }
+  return { key: "generic", title: "Workspace عمومی", description: "ماژول‌ها بر اساس Business Type و Capabilityهای فعال ترکیب می‌شوند." };
+}
+
+export function getVerticalModuleRoleFit(
+  blueprint: VerticalModuleBlueprint,
+  roleKey: VerticalRoleLensKey,
+): "primary" | "shared" {
+  const lenses = blueprint.roleLenses ?? ["generic"];
+  return lenses.includes(roleKey) || roleKey === "generic" ? "primary" : "shared";
+}
+
 export function getVerticalModuleBlueprint(vertical: string, module: string): VerticalModuleBlueprint {
   const v = vertical.trim().toLowerCase();
-  return (
+  const selected =
     verticalSpecific[v]?.[module] ??
     shared[module] ??
     blueprint(
@@ -361,6 +447,6 @@ export function getVerticalModuleBlueprint(vertical: string, module: string): Ve
         block("02", "Workspace context", "این سطح فقط context شغلی را نگه می‌دارد."),
         block("03", "Next action", "اقدام اجرایی باید از command/API canonical عبور کند."),
       ],
-    )
-  );
+    );
+  return { ...selected, roleLenses: selected.roleLenses ?? deriveRoleLenses(module, selected.layout) };
 }
