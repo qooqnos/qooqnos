@@ -4149,11 +4149,24 @@ function openCommandPalette(): void {
     return;
   }
 
-  const items = routes.map((route) => ({
+  const baseItems = routes.map((route) => ({
     path: route.path,
     label: route.label,
     icon: route.icon,
   }));
+  const vertical = resolveBusinessVerticalKey(
+    localStorage.getItem(STORAGE.businessVertical) ?? "default",
+  );
+  const businessId = localStorage.getItem(STORAGE.business);
+  const verticalModules = getBusinessVerticalUi(vertical).modules.map((module) => ({
+    path: businessModuleContextHref(businessModulePath(vertical, module), vertical, module, businessId),
+    label: getBusinessVerticalUi(vertical).label + " · " + module,
+    icon: getBusinessVerticalUi(vertical).icon,
+  }));
+  const items = [
+    ...baseItems,
+    ...verticalModules.filter((item) => !baseItems.some((base) => base.path === item.path)),
+  ];
   const overlay = document.createElement("div");
   overlay.className = "command-overlay";
   overlay.innerHTML = `
