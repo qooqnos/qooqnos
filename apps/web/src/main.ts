@@ -3068,7 +3068,7 @@ function renderBusiness(): string {
       '<article class="glass-card phoenix-brand-preview-card">' +
         '<div class="phoenix-brand-preview-cover"><div class="phoenix-brand-preview-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div></div>' +
         '<div class="phoenix-brand-preview-body"><div><span class="section-kicker">Public Brand</span><h2 id="business-brand-preview-name">نام کسب‌وکار</h2><p id="business-brand-preview-type">نوع کسب‌وکار</p></div><span id="business-brand-preview-status" class="pill">—</span></div>' +
-        '<div class="phoenix-brand-preview-cta"><a class="button button-secondary" href="/business/profile" data-nav>باز کردن پروفایل عمومی ↗</a></div>' +
+        '<div class="phoenix-brand-preview-cta"><a class="button button-secondary" href="/business/profile" data-nav>مدیریت و Preview ↗</a>' + (businessId ? '<a class="button button-primary" href="/businesses/' + encodeURIComponent(businessId) + '" data-nav>نمای مشتری ↗</a>' : '') + '</div>' +
         '<div class="phoenix-brand-preview-facts"><span>Profile</span><span>Catalog</span><span>Contact</span><span>Trust</span></div>' +
       '</article>' +
       '<article class="glass-card phoenix-brand-preview-copy"><span class="section-kicker">Public Profile</span><h2>کسب‌وکار تو باید برای مشتری هم به همان اندازه واضح باشد.</h2><p>این پیش‌نمایش فقط بر اساس داده‌های canonical Business ساخته می‌شود؛ اطلاعات خصوصی Workspace در سطح عمومی نمایش داده نمی‌شود.</p><div class="phoenix-public-capability-list"><span>هویت کسب‌وکار</span><span>محصول و خدمت</span><span>اعتماد</span><span>ارتباط</span></div></article>' +
