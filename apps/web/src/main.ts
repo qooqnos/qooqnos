@@ -3185,8 +3185,21 @@ function parseBusinessModulePath(path: string): { vertical: string; module: stri
 
 function businessModuleContextHref(path: string, vertical: string, module: string, businessId?: string): string {
   const target = new URL(path, window.location.origin);
+  const resolvedVertical = resolveBusinessVerticalKey(vertical);
+
+  // The Workspace routing contract prefers stable semantic module URLs.
+  // Older blueprint entries may still point to /business?module=...; normalize
+  // those links here so no new navigation leaks the legacy query-only form.
+  if (target.pathname === "/business" && target.searchParams.get("module")) {
+    const requestedModule = target.searchParams.get("module")?.trim();
+    if (requestedModule && getBusinessVerticalUi(resolvedVertical).modules.includes(requestedModule)) {
+      target.pathname = businessModulePath(resolvedVertical, requestedModule);
+      target.search = "";
+    }
+  }
+
   if (businessId) target.searchParams.set("business", businessId);
-  target.searchParams.set("vertical", resolveBusinessVerticalKey(vertical));
+  target.searchParams.set("vertical", resolvedVertical);
   target.searchParams.set("fromModule", module);
   return target.pathname + target.search + target.hash;
 }
