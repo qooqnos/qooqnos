@@ -74,8 +74,8 @@ describe("Vertical Workflow UI module blueprints", () => {
     expect(getVerticalModuleSlug("clinic", "نوبت‌ها")).toBe("appointments");
     expect(getVerticalModuleSlug("retail", "سایز و رنگ")).toBe("attributes");
     expect(getVerticalModuleRoute("restaurant", "آشپزخانه")).toBe("/business/workspace/restaurant/kitchen");
-    expect(getVerticalModuleForSlug("salon", "specialists", verticalModules.salon)).toBe("متخصصان");
-    expect(getVerticalModuleForSlug("salon", "نامعتبر", verticalModules.salon)).toBeNull();
+    expect(getVerticalModuleForSlug("salon", "specialists", (verticalModules.salon ?? []))).toBe("متخصصان");
+    expect(getVerticalModuleForSlug("salon", "نامعتبر", (verticalModules.salon ?? []))).toBeNull();
   });
 
 });
