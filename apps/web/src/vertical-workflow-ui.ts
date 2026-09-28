@@ -4,6 +4,7 @@ export type VerticalWorkflowCanvasModel = {
   readonly vertical: string;
   readonly module: string;
   readonly blueprint: VerticalModuleBlueprint;
+  readonly businessId?: string;
 };
 
 function escapeHtml(value: string): string {
@@ -90,11 +91,10 @@ function renderCalendar(model: VerticalWorkflowCanvasModel): string {
     '<button type="button" class="button button-ghost" data-vwf-action="today">امروز</button>' +
     '</div>' +
     '<div class="phoenix-vwf-calendar-head"><span>بازه زمانی</span><span>Resource lanes</span><span>Availability</span></div>' +
-    '<div class="phoenix-vwf-calendar-grid">' +
+    '<div class="phoenix-vwf-calendar-grid" data-vwf-calendar-live>' +
       '<div class="phoenix-vwf-calendar-axis"><span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span><span>18:00</span></div>' +
-      '<div class="phoenix-vwf-calendar-lanes">' +
-        '<div class="phoenix-vwf-calendar-lane" data-vwf-item><span>Resource 01</span><div>' + emptyState((first?.title ?? "Availability") + " · slotهای واقعی پس از خواندن منبع canonical hydrate می‌شوند.", "Availability") + '</div></div>' +
-        '<div class="phoenix-vwf-calendar-lane" data-vwf-item><span>Resource 02</span><div>' + emptyState("ظرفیت این resource از backend authoritative hydrate می‌شود.", "Booking") + '</div></div>' +
+      '<div class="phoenix-vwf-calendar-lanes" data-vwf-calendar-lanes>' +
+        '<div class="phoenix-vwf-calendar-lane" data-vwf-item><span>Availability</span><div>' + emptyState((first?.title ?? "Availability") + " · برای این Canvas هنوز schedule واقعی hydrate نشده است.", "Availability") + '</div></div>' +
       '</div>' +
     '</div>';
 }
@@ -191,7 +191,7 @@ function renderLayout(layout: VerticalModuleLayout, model: VerticalWorkflowCanva
 
 export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel): string {
   const copy = layoutCopy[model.blueprint.layout];
-  return '<section class="glass-card phoenix-vwf-canvas" data-vwf-root data-vwf-layout="' + escapeHtml(model.blueprint.layout) + '" data-vwf-active-view="overview">' +
+  return '<section class="glass-card phoenix-vwf-canvas" data-vwf-root data-vwf-layout="' + escapeHtml(model.blueprint.layout) + '" data-vwf-active-view="overview" data-vwf-business-id="' + escapeHtml(model.businessId ?? "") + '" data-vwf-vertical="' + escapeHtml(model.vertical) + '" data-vwf-module="' + escapeHtml(model.module) + '">' +
     '<div class="phoenix-vwf-header">' +
       '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>' + escapeHtml(copy.label) + ' canvas</h2><p>' + escapeHtml(copy.description) + '</p></div>' +
       '<span class="pill">Shared component</span>' +
@@ -260,5 +260,84 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
         }
       });
     });
+
+    if (canvas.dataset.vwfLayout === "calendar") {
+      const businessId = canvas.dataset.vwfBusinessId?.trim();
+      if (businessId) void hydrateCalendarCanvas(canvas, businessId);
+    }
   });
+}
+
+
+type VerticalWorkflowSchedule = {
+  id: string;
+  businessId: string;
+  locationId?: string | null;
+  resourceId?: string | null;
+  timezone: string;
+  status: string;
+};
+
+type VerticalWorkflowSlot = {
+  slotReference: string;
+  startsAt: string;
+  endsAt: string;
+  timezone: string;
+  remainingCapacity: number;
+  status: string;
+};
+
+async function hydrateCalendarCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
+  const lanes = canvas.querySelector<HTMLElement>("[data-vwf-calendar-lanes]");
+  if (!lanes) return;
+  const token = sessionStorage.getItem("phoenix-access-token");
+  const workspace = localStorage.getItem("phoenix-workspace-id");
+  if (!token || !workspace) {
+    lanes.innerHTML = '<div class="phoenix-vwf-local-note">برای hydrate شدن Availability، session و Workspace context لازم است.</div>';
+    return;
+  }
+  const headers = new Headers({ Accept: "application/json", Authorization: "Bearer " + token, "x-workspace-id": workspace });
+  const from = new Date();
+  const to = new Date(from.getTime() + 24 * 60 * 60 * 1000);
+  lanes.innerHTML = '<div class="slot-loading">در حال خواندن Schedule و Slotهای واقعی…</div>';
+  try {
+    const response = await fetch("/api/v1/availability/schedules?businessId=" + encodeURIComponent(businessId) + "&limit=6", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowSchedule[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Availability schedules unavailable");
+    const schedules = Array.isArray(body?.data) ? body.data : [];
+    if (!schedules.length) {
+      lanes.innerHTML = emptyState("برای این Business هنوز schedule فعال/ثبت‌شده‌ای در Availability پیدا نشد.", "Booking");
+      return;
+    }
+    const active = schedules.filter((item) => item.status === "active").slice(0, 4);
+    if (!active.length) {
+      lanes.innerHTML = emptyState("Schedule ثبت شده است، اما هیچ Schedule فعالی برای نمایش پیدا نشد.", "Availability");
+      return;
+    }
+    const laneResults = await Promise.all(active.map(async (schedule, index) => {
+      const params = new URLSearchParams({
+        from: from.toISOString(),
+        to: to.toISOString(),
+        durationSeconds: "1800",
+      });
+      if (schedule.resourceId) params.set("resourceId", schedule.resourceId);
+      try {
+        const slotResponse = await fetch("/api/v1/availability/schedules/" + encodeURIComponent(schedule.id) + "/slots?" + params.toString(), { headers });
+        const slotBody = await slotResponse.json().catch(() => null) as { data?: VerticalWorkflowSlot[]; error?: { message?: string } } | null;
+        if (!slotResponse.ok) throw new Error(slotBody?.error?.message ?? "Slots unavailable");
+        const slots = Array.isArray(slotBody?.data) ? slotBody.data : [];
+        return '<div class="phoenix-vwf-calendar-lane" data-vwf-item>' +
+          '<span>Resource ' + String(index + 1).padStart(2, "0") + '</span>' +
+          '<div class="phoenix-vwf-live-lane">' +
+            '<div class="phoenix-vwf-live-meta"><strong>' + escapeHtml(schedule.timezone) + '</strong><small>' + escapeHtml(schedule.resourceId ?? "بدون Resource") + '</small><em>' + String(slots.length) + ' slot</em></div>' +
+            (slots.length ? '<div class="phoenix-vwf-live-slots">' + slots.slice(0, 12).map((slot) => '<button type="button" class="phoenix-vwf-slot" data-vwf-slot-reference="' + escapeHtml(slot.slotReference) + '" title="' + escapeHtml(slot.status) + '"><span>' + escapeHtml(new Date(slot.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })) + '</span><small>' + String(Math.max(slot.remainingCapacity, 0)) + ' ظرفیت</small></button>').join("") + '</div>' : emptyState("در این بازه slot قابل رزرو برنگشت.", "Availability")) +
+          '</div></div>';
+      } catch (error) {
+        return '<div class="phoenix-vwf-calendar-lane" data-vwf-item><span>Resource ' + String(index + 1).padStart(2, "0") + '</span><div>' + emptyState(error instanceof Error ? error.message : "خواندن Slot ناموفق بود.", "Availability") + '</div></div>';
+      }
+    }));
+    lanes.innerHTML = laneResults.join("");
+  } catch (error) {
+    lanes.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Availability ناموفق بود.", "Availability");
+  }
 }
