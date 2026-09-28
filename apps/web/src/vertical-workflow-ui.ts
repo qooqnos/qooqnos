@@ -165,8 +165,13 @@ function renderOperations(model: VerticalWorkflowCanvasModel): string {
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="Operations views">' +
       '<button type="button" class="active" aria-selected="true" data-vwf-tab="board">Board</button>' +
       '<button type="button" aria-selected="false" data-vwf-tab="list">List</button>' +
-      '</div>' +
+      '<button type="button" aria-selected="false" data-vwf-tab="attention">نیازمند اقدام</button>' +
+    '</div>' +
     viewState("Board") +
+    '</div>' +
+    '<div class="phoenix-vwf-live-operations" data-vwf-case-live>' +
+      '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Operations</span><h3>صف عملیات</h3><p>Case state مستقیماً از Case Support خوانده می‌شود.</p></div><span class="pill">live when connected</span></div>' +
+      '<div class="phoenix-vwf-live-case-grid" data-vwf-case-items><div class="slot-loading">در حال خواندن Caseهای واقعی…</div></div>' +
     '</div>' +
     '<div class="phoenix-vwf-kanban">' +
       model.blueprint.blocks.map((item, index) => '<article class="phoenix-vwf-kanban-column" data-vwf-item><div class="phoenix-vwf-kanban-title"><strong>' + escapeHtml(item.title) + '</strong><span class="pill">' + String(index + 1).padStart(2, "0") + '</span></div>' + emptyState(item.description, item.path ?? "Operations") + (item.path ? '<a class="text-link" href="' + escapeHtml(item.path) + '" data-nav>باز کردن منبع ←</a>' : '') + '</article>').join("") +
@@ -181,6 +186,10 @@ function renderCommunication(model: VerticalWorkflowCanvasModel): string {
       '<button type="button" aria-selected="false" data-vwf-tab="compose">Compose</button>' +
     '</div>' +
     viewState("Inbox") +
+    '</div>' +
+    '<div class="phoenix-vwf-communication-live" data-vwf-notification-live>' +
+      '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Communication</span><h3>رویدادهای ارتباطی</h3><p>فهرست اعلان‌های معتبر از Communication خوانده می‌شود؛ این Canvas گفتگو را جعل نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
+      '<div class="phoenix-vwf-live-notification-list" data-vwf-notification-items><div class="slot-loading">در حال خواندن اعلان‌های واقعی…</div></div>' +
     '</div>' +
     '<div class="phoenix-vwf-inbox">' +
       model.blueprint.blocks.map((item) => '<section data-vwf-item><span class="section-kicker">Communication surface</span><h3>' + escapeHtml(item.title) + '</h3>' + emptyState(item.description, item.path ?? "Communication") + (item.path ? '<a class="text-link" href="' + escapeHtml(item.path) + '" data-nav>باز کردن منبع ←</a>' : '') + '</section>').join("") +
@@ -303,6 +312,12 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     }
     if (businessId && canvas.dataset.vwfLayout === "catalog") {
       void hydrateCatalogCanvas(canvas, businessId);
+    }
+    if (canvas.dataset.vwfLayout === "operations") {
+      void hydrateOperationsCanvas(canvas);
+    }
+    if (canvas.dataset.vwfLayout === "communication") {
+      void hydrateCommunicationCanvas(canvas);
     }
   });
 }
@@ -433,6 +448,89 @@ async function hydrateCatalogCanvas(canvas: HTMLElement, businessId: string): Pr
     }).join("");
   } catch (error) {
     container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Catalog ناموفق بود.", "Catalog");
+  }
+}
+
+type VerticalWorkflowCase = {
+  id: string;
+  status: string;
+  priority: string;
+  severity: string;
+  subjectType: string;
+  subjectId: string;
+  version?: number;
+};
+
+async function hydrateOperationsCanvas(canvas: HTMLElement): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-case-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش Caseهای واقعی، session و Workspace context لازم است.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="slot-loading">در حال خواندن Caseهای واقعی…</div>';
+  try {
+    const response = await fetch("/api/v1/cases?limit=12", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowCase[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Case list unavailable");
+    const cases = Array.isArray(body?.data) ? body.data : [];
+    if (!cases.length) {
+      container.innerHTML = emptyState("برای این Workspace هنوز Case قابل نمایش پیدا نشد.", "Case Support");
+      return;
+    }
+    container.innerHTML = cases.map((item) => {
+      const terminal = item.status === "resolved" || item.status === "closed";
+      return '<article class="phoenix-vwf-live-case-card">' +
+        '<div class="phoenix-vwf-live-case-top"><strong>' + escapeHtml(item.id) + '</strong><span class="pill ' + (terminal ? "success" : "") + '">' + escapeHtml(item.status) + '</span></div>' +
+        '<p>' + escapeHtml(item.subjectType + " · " + item.subjectId) + '</p>' +
+        '<div class="phoenix-vwf-live-case-meta"><span>Priority <b>' + escapeHtml(item.priority) + '</b></span><span>Severity <b>' + escapeHtml(item.severity) + '</b></span>' + (item.version !== undefined ? '<span>v' + String(item.version) + '</span>' : "") + '</div>' +
+        '<a class="text-link" href="/operations" data-nav>باز کردن عملیات ←</a>' +
+      '</article>';
+    }).join("");
+  } catch (error) {
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Case ناموفق بود.", "Case Support");
+  }
+}
+
+type VerticalWorkflowNotification = {
+  id: string;
+  intent?: string;
+  channel?: string;
+  priority?: string;
+  status?: string;
+  createdAt?: string;
+};
+
+async function hydrateCommunicationCanvas(canvas: HTMLElement): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-notification-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش رویدادهای ارتباطی، session و Workspace context لازم است.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="slot-loading">در حال خواندن اعلان‌های واقعی…</div>';
+  try {
+    const response = await fetch("/api/v1/notifications?limit=12", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowNotification[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Communication notifications unavailable");
+    const items = Array.isArray(body?.data) ? body.data : [];
+    if (!items.length) {
+      container.innerHTML = emptyState("برای این Actor هنوز اعلان ارتباطی برنگشته است.", "Communication");
+      return;
+    }
+    container.innerHTML = items.map((item) => {
+      const createdAt = item.createdAt ? new Date(item.createdAt) : null;
+      const createdLabel = createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" }) : "—";
+      return '<article class="phoenix-vwf-live-notification">' +
+        '<div class="phoenix-vwf-live-notification-icon">◇</div>' +
+        '<div class="phoenix-vwf-live-notification-copy"><div class="phoenix-vwf-live-notification-top"><strong>' + escapeHtml(item.intent ?? "communication") + '</strong><span class="pill">' + escapeHtml(item.status ?? "—") + '</span></div>' +
+        '<p>' + escapeHtml((item.channel ?? "in_app") + " · " + (item.priority ?? "normal")) + '</p><small>' + escapeHtml(createdLabel) + '</small></div>' +
+      '</article>';
+    }).join("");
+  } catch (error) {
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن اعلان‌های ارتباطی ناموفق بود.", "Communication");
   }
 }
 
