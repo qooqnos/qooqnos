@@ -61,6 +61,10 @@ export class CatalogService {
     return this.options.repository.createProductVariant(context, { ...command, id: this.options.id(), now: this.options.now() });
   }
 
+  async listBusinessOfferings(context: RequestContext, businessId: EntityId, limit = 50): Promise<readonly OfferingRecord[]> {
+    return this.options.repository.listBusinessOfferings(context, businessId, limit);
+  }
+
   async createOffering(context: RequestContext, command: Omit<CreateOfferingInput, "id" | "now">): Promise<OfferingRecord> {
     await this.authorize(context, "catalog.offering.create");
     validateText(command.title, "title");
