@@ -4141,3 +4141,53 @@ body::before {
   color:var(--faint);
   font-size:7px;
 }
+
+
+/* Occupation-specific business today board */
+.phoenix-business-board {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+  margin:15px 0;
+}
+.phoenix-business-board-card {
+  position:relative;
+  display:block;
+  min-height:160px;
+  padding:19px;
+  overflow:hidden;
+  text-decoration:none;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.phoenix-business-board-card:hover {
+  transform:translateY(-2px);
+  box-shadow:0 18px 45px rgba(86,56,34,.08);
+  border-color:color-mix(in srgb,var(--primary) 18%,var(--line));
+}
+.phoenix-business-board-card h3 {
+  margin:8px 0 7px;
+  color:var(--text);
+  font-size:15px;
+  letter-spacing:-.035em;
+}
+.phoenix-business-board-card p {
+  margin:0;
+  max-width:260px;
+  color:var(--muted);
+  font-size:8px;
+  line-height:1.85;
+}
+.phoenix-board-arrow {
+  position:absolute;
+  inset-inline-end:17px;
+  inset-block-end:14px;
+  color:var(--primary);
+  font-size:15px;
+}
+@media(max-width:900px){
+  .phoenix-business-board { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:520px){
+  .phoenix-business-board { grid-template-columns:1fr; }
+  .phoenix-business-board-card { min-height:135px; }
+}
