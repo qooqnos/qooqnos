@@ -48,6 +48,19 @@ export interface BusinessHoursRecord {
   readonly updatedAt: string;
 }
 
+export interface PublicBusinessProfileRecord {
+  readonly id: EntityId;
+  readonly name: string;
+  readonly displayName: string;
+  readonly status: BusinessStatus;
+  readonly publicationStatus: PublicationStatus;
+  readonly businessType: string | null;
+  readonly primaryCategoryId: string | null;
+  readonly defaultLocale: string | null;
+  readonly timezone: string | null;
+  readonly defaultCurrency: string | null;
+  readonly updatedAt: string;
+}
 export interface BusinessPublicContactRecord {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -104,6 +117,18 @@ export class BusinessRepository extends Repository {
     this.commands = commands;
   }
 
+  async getPublishedPublicProfile(id: EntityId): Promise<PublicBusinessProfileRecord | null> {
+    return this.database.first<PublicBusinessProfileRecord>(
+      `SELECT id, name, display_name AS displayName, status,
+              publication_status AS publicationStatus, business_type AS businessType,
+              primary_category_id AS primaryCategoryId, default_locale AS defaultLocale,
+              timezone, default_currency AS defaultCurrency, updated_at AS updatedAt
+       FROM businesses
+       WHERE id = ? AND status = 'active' AND publication_status = 'published'
+       LIMIT 1`,
+      id,
+    );
+  }
   async get(context: RequestContext, id: EntityId): Promise<BusinessRecord | null> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
