@@ -559,7 +559,7 @@ function renderPublicHeader(): string {
     <header class="phoenix-public-header">
       <div class="phoenix-public-header-inner container-wide">
         <a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس">
-          <span class="brand-mark" aria-hidden="true">ق</span>
+          <span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=1" alt="" /></span>
           <span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
         </a>
         <nav class="phoenix-public-nav" aria-label="ناوبری اصلی">
@@ -683,16 +683,19 @@ function renderHome(): string {
             <button type="button" data-phoenix-example="بین چند گزینه مناسب کمکم کن انتخاب کنم">برای انتخاب کمکم کن</button>
           </div>
         </div>
-        <div class="phoenix-home-visual" aria-label="چرخه تصمیم‌گیری ققنوس">
-          <div class="phoenix-orbit-ring ring-one"></div>
-          <div class="phoenix-orbit-ring ring-two"></div>
-          <div class="phoenix-orbit-core">
-            <span class="phoenix-core-spark">✦</span>
+        <div class="phoenix-home-visual" aria-label="هویت بصری و دستیار هوشمند ققنوس">
+          <article class="phoenix-brand-stage">
+            <div class="phoenix-brand-stage-glow"></div>
+            <span class="phoenix-brand-stage-kicker">دستیار هوشمند ققنوس</span>
+            <img class="phoenix-hero-mark" src="/phoenix-mark.svg?v=1" alt="" aria-hidden="true" />
             <strong>ققنوس</strong>
-            <small>Understand · Decide · Match</small>
-          </div>
+            <span class="phoenix-brand-stage-tagline">مسیرت را بفهم. انتخابت را ساده کن.</span>
+            <div class="phoenix-brand-stage-actions">
+              <span>Understand</span><i>→</i><span>Decide</span><i>→</i><span>Match</span>
+            </div>
+          </article>
           <div class="phoenix-floating-node node-demand"><b>نیاز</b><span>Understand</span></div>
-          <div class="phoenix-floating-node node-match"><b>تطبیق</b><span>Match</span></div>
+          <div class="phoenix-floating-node node-match"><b>پیشنهاد</b><span>Decide</span></div>
           <div class="phoenix-floating-node node-connect"><b>اتصال</b><span>Connect</span></div>
         </div>
       </section>
@@ -786,7 +789,7 @@ function renderHome(): string {
         </form>
       </section>
       <footer class="phoenix-home-footer">
-        <div><a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark" aria-hidden="true">ق</span><span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span></a><p>لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار.</p></div>
+        <div><a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=1" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span></a><p>لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار.</p></div>
         <nav aria-label="پیوندهای پایانی"><a href="/discover" data-nav>کشف</a><a href="/business" data-nav>برای کسب‌وکارها</a><a href="/product-studio" data-nav>استودیو محصول</a></nav>
       </footer>
     </div>
