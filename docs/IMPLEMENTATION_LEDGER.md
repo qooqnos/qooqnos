@@ -2481,3 +2481,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - No domain state, authorization logic, persistence model or API source-of-truth was changed.
 - Implementation commits: `a7d51c194db6dea5f1853147b2a0c011af107353`, `fbf3688ce469979e7b3342fdef588537e08efacd`, `8cbe962ee504f36d6076d898df89b2f4cf0d7c0c`, `a44143c308f0414bc35f72305f830408e2de72b3`, `6e4d40eb95ebc8e6f5e173d0f164ea0be6ff5e4c`.
 - Verification status: source retrieval/structural checks completed; TypeScript build, full test suite and browser/device visual QA were not executable in this environment. GitHub combined status currently reports no checks for these commits.
+
+### Homepage / Ask Phoenix / Matching Experience completion — 2026-09-29
+- 🟢 Homepage `/` strengthened as the decision/matching entry point while preserving the non-dashboard boundary.
+- 🟢 Ask Phoenix now stays in the SPA navigation path, persists the active draft in session storage, uses an 800-character guardrail, and keeps the existing canonical Discovery destination.
+- 🟢 Added an explicit Phoenix Experience map and a visible Learn stage to make the product loop legible.
+- 🟢 Reframed the matching demo as a clearly labelled static example and added decision-rationale/guardrail UI without fabricating production matching scores or rankings.
+- 🟢 Added responsive Homepage completion styles for the new sections.
+- Verification: code changes applied; build/runtime/browser verification pending.
