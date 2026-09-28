@@ -30,6 +30,20 @@ export class SocialEngagementRepository extends Repository {
     );
   }
 
+  async state(context: RequestContext, limit = 200): Promise<{ follows: SocialFollowRecord[]; engagements: SocialEngagementRecord[] }> {
+    const actor = this.requireActor(context);
+    const safeLimit = Math.min(Math.max(limit, 1), 200);
+    const follows = await this.database.all<SocialFollowRecord>(
+      "SELECT id,actor_user_id AS actorUserId,target_type AS targetType,target_id AS targetId,organization_id AS organizationId,workspace_id AS workspaceId,status,created_at AS createdAt,updated_at AS updatedAt FROM social_follows WHERE actor_user_id=? AND status='active' ORDER BY updated_at DESC LIMIT " + safeLimit,
+      actor,
+    );
+    const engagements = await this.database.all<SocialEngagementRecord>(
+      "SELECT id,actor_user_id AS actorUserId,target_type AS targetType,target_id AS targetId,engagement_type AS engagementType,organization_id AS organizationId,workspace_id AS workspaceId,status,created_at AS createdAt,updated_at AS updatedAt FROM social_engagements WHERE actor_user_id=? AND status='active' ORDER BY updated_at DESC LIMIT " + safeLimit,
+      actor,
+    );
+    return { follows, engagements };
+  }
+
   async getFollow(context:RequestContext,id:EntityId):Promise<SocialFollowRecord>{const actor=this.requireActor(context);const r=await this.database.first<SocialFollowRecord>("SELECT id,actor_user_id AS actorUserId,target_type AS targetType,target_id AS targetId,organization_id AS organizationId,workspace_id AS workspaceId,status,created_at AS createdAt,updated_at AS updatedAt FROM social_follows WHERE id=? LIMIT 1",id);if(!r)throw new DatabaseError("Social follow not found");if(r.actorUserId!==actor)throw new DatabaseError("Social follow is not owned by the authenticated actor");return r;}
   async getEngagement(context:RequestContext,id:EntityId):Promise<SocialEngagementRecord>{const actor=this.requireActor(context);const r=await this.database.first<SocialEngagementRecord>("SELECT id,actor_user_id AS actorUserId,target_type AS targetType,target_id AS targetId,engagement_type AS engagementType,organization_id AS organizationId,workspace_id AS workspaceId,status,created_at AS createdAt,updated_at AS updatedAt FROM social_engagements WHERE id=? LIMIT 1",id);if(!r)throw new DatabaseError("Social engagement not found");if(r.actorUserId!==actor)throw new DatabaseError("Social engagement is not owned by the authenticated actor");return r;}
   async getComment(context:RequestContext,id:EntityId):Promise<SocialCommentRecord>{const actor=this.requireActor(context);const r=await this.database.first<SocialCommentRecord>("SELECT id,actor_user_id AS actorUserId,target_type AS targetType,target_id AS targetId,organization_id AS organizationId,workspace_id AS workspaceId,body,moderation_status AS moderationStatus,idempotency_key AS idempotencyKey,created_at AS createdAt,updated_at AS updatedAt FROM social_comments WHERE id=? LIMIT 1",id);if(!r)throw new DatabaseError("Social comment not found");if(r.actorUserId!==actor)throw new DatabaseError("Social comment is not owned by the authenticated actor");return r;}
