@@ -4211,21 +4211,39 @@ function openCommandPalette(): void {
 }
 
 function bindBusinessWorkspaceDynamicEvents(): void {
+  const page = document.querySelector<HTMLElement>(".phoenix-business-page");
+  const vertical = resolveBusinessVerticalKey(
+    page?.dataset.businessVertical ?? localStorage.getItem(STORAGE.businessVertical) ?? "default",
+  );
+  const businessId = localStorage.getItem(STORAGE.business);
+
   document.querySelectorAll<HTMLButtonElement>(".phoenix-business-module").forEach((button) => {
     button.onclick = () => {
-      const module = button.dataset.businessModule;
-      if (module) navigate("/business?module=" + encodeURIComponent(module));
+      const module = button.dataset.businessModule?.trim();
+      if (!module) return;
+      navigate(businessModuleContextHref(businessModulePath(vertical, module), vertical, module, businessId));
     };
   });
-  const vertical = localStorage.getItem(STORAGE.businessVertical) ?? "default";
+
   const actionLinks = BUSINESS_QUICK_ACTION_LINKS[vertical] ?? BUSINESS_QUICK_ACTION_LINKS.default;
   document.querySelectorAll<HTMLButtonElement>("[data-business-quick-action]").forEach((button) => {
     button.onclick = () => {
       const action = button.dataset.businessQuickActionValue ?? button.textContent?.replace("←", "").trim() ?? "";
       const target = actionLinks[action];
-      if (target) navigate(target);
-      else showToast(action + " در حال اتصال به workflow canonical است.");
+      if (target) {
+        navigate(businessModuleContextHref(target, vertical, action, businessId));
+      } else {
+        showToast(action + " در حال اتصال به workflow canonical است.");
+      }
     };
+  });
+
+  const primaryAction = document.querySelector<HTMLButtonElement>("[data-business-primary-action]");
+  primaryAction?.addEventListener("click", () => {
+    const ui = getBusinessVerticalUi(vertical);
+    const module = ui.modules[0];
+    if (!module) return;
+    navigate(businessModuleContextHref(businessModulePath(vertical, module), vertical, module, businessId));
   });
 }
 
@@ -4268,7 +4286,7 @@ function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-business-type-choice]").forEach((button) => button.addEventListener("click", () => { const input = document.querySelector<HTMLInputElement>("#business-type-input"); const value = button.dataset.businessTypeChoice ?? ""; if (input) input.value = value; showToast("نوع کسب‌وکار «" + (button.textContent ?? value) + "» انتخاب شد."); }));
   bindBusinessWorkspaceDynamicEvents();
   document.querySelectorAll<HTMLButtonElement>("[data-business-module-action]").forEach((button) => button.addEventListener("click", () => showToast((button.dataset.businessModuleAction ?? "Action") + " از workflow canonical ادامه پیدا می‌کند.")));
-  document.querySelector<HTMLButtonElement>("[data-business-primary-action]")?.addEventListener("click", () => { const action = document.querySelector("#business-next-action")?.textContent?.trim() ?? "اقدام بعدی"; showToast(action + " آماده است؛ ابتدا وضعیت Workspace و Capabilityهای فعال را بررسی می‌کنیم."); });
+  // Primary Business Workspace navigation is bound in bindBusinessWorkspaceDynamicEvents().
   document.querySelector<HTMLButtonElement>("[data-team-management]")?.addEventListener("click", openBusinessTeamPanel);
   document.querySelector<HTMLButtonElement>("[data-profile-refresh]")?.addEventListener("click", () => { void loadProfilePage(); });
   document.querySelectorAll<HTMLButtonElement>("[data-refresh-notifications]").forEach((button) => button.addEventListener("click", () => { void loadNotificationsPage(); }));
