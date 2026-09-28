@@ -1,4 +1,5 @@
 import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui.js";
+import { getVerticalModuleBlueprint, type VerticalModuleBlueprint } from "./business-module-ui.js";
 type Theme = "dark" | "light";
 
 type Route = {
