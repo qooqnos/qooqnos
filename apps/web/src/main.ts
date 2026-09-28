@@ -484,10 +484,13 @@ function render(): void {
   syncThemeButtons();
   if (route.path === "/discover" || route.path === "/compare") bindSocialHeaderEvents();
   if (route.path === "/discover") {
-    const initialDiscoveryQuery = new URLSearchParams(location.search).get("q")?.trim() ?? "";
-    if (initialDiscoveryQuery) void runDiscovery();
+    const params = new URLSearchParams(location.search);
+    const initialDiscoveryQuery = params.get("q")?.trim() ?? "";
+    const socialTab = params.get("tab") ?? "for-you";
+    if (initialDiscoveryQuery || socialTab === "explore" || socialTab === "following") void runDiscovery();
     bindDiscoveryResultEvents();
     renderCompareTray();
+    void loadSocialState();
   }
   if (route.path === "/compare") {
     document.querySelector<HTMLButtonElement>("[data-clear-compare]")?.addEventListener("click", () => { localStorage.removeItem("phoenix-compare-items"); render(); });
@@ -4730,8 +4733,11 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLInputElement>("#billing-business")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
   document.querySelector<HTMLInputElement>("#billing-customer")?.addEventListener("keydown", (event) => { if (event.key === "Enter") void loadBillingInvoices(); });
 
-  document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", runDiscovery);
+  document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", () => void runDiscovery(true));
   document.querySelectorAll<HTMLButtonElement>("[data-open-create-post]").forEach((button) => button.addEventListener("click", openCreatePostPanel));
+  document.querySelectorAll<HTMLButtonElement>("[data-social-state-refresh]").forEach((button) => button.addEventListener("click", () => void loadSocialState()));
+  document.querySelectorAll<HTMLButtonElement>("[data-load-more-discovery]").forEach((button) => button.addEventListener("click", () => void runDiscovery(false)));
+  document.querySelectorAll<HTMLButtonElement>("[data-focus-discover]").forEach((button) => button.addEventListener("click", () => document.querySelector<HTMLInputElement>("#discover-query")?.focus()));
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
     if (event.key === "Enter") runDiscovery();
   });
