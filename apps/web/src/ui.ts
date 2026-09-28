@@ -60,7 +60,9 @@ export function uiSkeleton(lines = 3): string {
 
 function escapeUi(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char] ?? char);
-}\n\nexport function uiIconButton(label: string, options: { icon: string; data?: string; disabled?: boolean }): string {
+}
+
+export function uiIconButton(label: string, options: { icon: string; data?: string; disabled?: boolean }): string {
   const disabled = options.disabled ? " disabled" : "";
   const data = options.data ? " " + options.data : "";
   return `<button class="button ds-button-icon" type="button" aria-label="${escapeUi(label)}"${disabled}${data}>${escapeUi(options.icon)}</button>`;
@@ -77,4 +79,4 @@ export function uiAlert(title: string, message: string, tone: "success" | "warni
 export function uiCard(content: string, options: { interactive?: boolean; padded?: boolean; className?: string } = {}): string {
   const classes = ["ds-card", options.interactive ? "ds-card-interactive" : "", options.padded === false ? "" : "ds-card-pad", options.className ?? ""].filter(Boolean).join(" ");
   return `<article class="${classes}">${content}</article>`;
-}\n
+}
