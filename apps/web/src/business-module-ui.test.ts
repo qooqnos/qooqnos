@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   getVerticalModuleBlueprint,
+  getVerticalModuleForSlug,
   getVerticalModuleRoleFit,
+  getVerticalModuleRoute,
+  getVerticalModuleSlug,
   resolveVerticalRoleLens,
 } from "./business-module-ui";
 
@@ -55,4 +58,12 @@ describe("Vertical Workflow UI module blueprints", () => {
     expect(getVerticalModuleRoleFit(blueprint, "specialist")).toBe("primary");
     expect(getVerticalModuleRoleFit(blueprint, "finance")).toBe("shared");
   });
+  it("keeps semantic module identity stable across localized labels", () => {
+    expect(getVerticalModuleSlug("clinic", "نوبت‌ها")).toBe("appointments");
+    expect(getVerticalModuleSlug("retail", "سایز و رنگ")).toBe("attributes");
+    expect(getVerticalModuleRoute("restaurant", "آشپزخانه")).toBe("/business/workspace/restaurant/kitchen");
+    expect(getVerticalModuleForSlug("salon", "specialists", verticalModules.salon)).toBe("متخصصان");
+    expect(getVerticalModuleForSlug("salon", "نامعتبر", verticalModules.salon)).toBeNull();
+  });
+
 });
