@@ -2192,3 +2192,14 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Implementation commit: `573386d9fd6ca1467efb2757ec69f4e7a27fc094`.
 - Verification remains pending: TypeScript build and browser/visual QA were not executed in this slice.
 
+
+
+## Vertical Workflow UI Framework Completion Slice — 2026-09-28
+- Promoted the occupation-specific module layer from a shared visual shell to a reusable blueprint framework covering clinic, retail, restaurant and salon.
+- apps/web/src/business-module-ui.ts now owns vertical-aware module blueprints for the major modules shown in the reference architecture, including clinic appointments/providers/patients/hours/payments, retail products/variants/attributes/inventory/orders/returns/promotions/reporting, restaurant menu/tables/reservations/kitchen/delivery/payments/reporting, and salon services/specialists/calendar/capacity/payments/promotions/team.
+- Each blueprint now declares layout, interaction mode, optional primary canonical action, three foundation blocks, and a shared state contract: connected, requires-input, readonly, unavailable.
+- Business module pages now surface this shared state contract in the UI, making loading/input/read-only/unavailable behavior part of the framework rather than ad-hoc per-page copy.
+- Styling was added to both apps/web/styles.css and apps/web/public/styles.css for the shared state contract and responsive behavior.
+- The framework preserves the architecture rule Business Type → Capability → Module Blueprint → Role/Permission → Canonical Workflow; unsupported capabilities remain explicit and do not receive fabricated data.
+- Implementation commits: 6b8cb2bf303bb03a1df2f93a1aa4a708d347ebc6, 9cff6d5ee471b5d40d93b272d2285bba1fe579b4, c7c5feb7bc25fe8d66b9f97c3ec24364c145dcd1, b6c41591966dc8a35c4f168678f60651fbbba3cb, 7ab1c314edd9d8a99b74bfc35183d1fcada2cccc.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed for this slice.
