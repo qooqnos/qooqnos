@@ -2259,3 +2259,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added responsive live supply cards and truthful empty/loading/error states.
 - This slice covers the shared Supply Canvas used by clinic, retail, restaurant and salon modules; it does not invent product/service data.
 - Verification: automated build/typecheck not run in this step; changes require CI/runtime verification.
+
+
+## 2026-09-28 — Vertical Workflow people & commerce lookup surfaces
+- Extended the shared Vertical Workflow UI Framework so the common People canvas can explicitly look up a selected canonical Customer profile through `GET /api/v1/customers/:customerId/profile` when a valid Customer ID is supplied.
+- Extended the common Commerce canvas with an explicit canonical Order lookup through `GET /api/v1/commerce/orders/:orderId`, rendering status, business, customer and grand-total context without creating a second order store.
+- Added shared authenticated/workspace request handling, truthful missing-session/error states, and responsive UI styling for these lookup surfaces.
+- The lookups are read-only orchestration surfaces; no domain mutation or fabricated metrics were added.
+- This strengthens the same framework for clinic, retail, restaurant and salon because People/Commerce are shared layouts rather than occupation-specific implementations.
+- Implementation commits: `470dbd26ff486ad93fe9c1f342a5e92272b653fe`, `7a1c674c61c7ba4d4481614e4701e9269ed5df80`, `8769b36f694ad1e282ec05aa7c2c72d03b42659c`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
