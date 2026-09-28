@@ -2087,3 +2087,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added this routing without adding a frontend commerce/discovery source of truth.
 - Implementation commit: `61b52a694a1e3499167a5ba1ed9773c172f2c901`.
 - Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
+
+
+## Public Business Social / Contact Actions — 2026-09-28
+- Added Follow and Share actions to the customer-facing `/businesses/:businessId` Business page.
+- Follow uses the existing canonical Social Engagement `POST/DELETE /api/v1/social/follows` boundary; the UI does not create local follow state as a second source of truth.
+- Share copies the current public Business URL through the browser share surface/clipboard without introducing server state.
+- Public phone/email/website contacts are now actionable with `tel:`, `mailto:` and HTTPS links derived from the canonical contact type/value.
+- Implementation commits: `a1ae19c50b1b168aa226ce0bc0346f17553d1083`, `d6abbc3563fa555223d15c30a69cd6f55f1fb012`, `94c623f799e074c3b300e9746cdc7ba0930ae205`, `8b98f88a55d1caa9457613876377d81ba52f1e1d`.
+- Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
