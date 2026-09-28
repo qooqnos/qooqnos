@@ -2318,3 +2318,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - No domain state, authorization rule, duplicate store or frontend mutation was introduced.
 - Implementation commits: `6fd88a9099c2d5c6ffa8da85b0596b868bf2feba`, `b0b1335fb54ef175c5ac214df9b65b41c499e6c6`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
+
+### Vertical Workflow UI framework regression coverage — 2026-09-28
+
+- 🟢 Added unit coverage for the shared vertical module blueprint registry across clinic, retail, restaurant and salon.
+- 🟢 Added renderer coverage for all seven shared Canvas layouts: command, calendar, catalog, people, commerce, operations and communication.
+- 🟢 Tests verify the fail-closed fallback blueprint and role-lens behavior without treating UI emphasis as authorization.
+- 🟢 Tests verify HTML attribute escaping for vertical/module/business context.
+- 🟡 Runtime/build/browser verification remains to be executed in the environment.
+
+Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas renderer).
