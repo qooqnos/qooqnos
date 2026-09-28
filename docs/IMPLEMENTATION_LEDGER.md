@@ -2306,3 +2306,6 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - No duplicate case/order/message state or fake operational metrics were added.
 - Implementation commits: `35d95365cd88e986ecade5ba0bca27b540f558f9`, `70f4c809957b966db5bd4d845f3d7e8ec0572376`, `7f7b26ce1c7a4a1d407123773e8033b273ce45ab`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed for this slice.
+
+- Added responsive breakpoints for the live Operations/Communication surfaces so the shared canvas collapses from 3 columns to 2 and then 1 column on smaller screens. Styling remains mirrored across the two web stylesheet surfaces.
+- Responsive commits: `f398e0d11dbab721558fc64d5fafb1b511f2e98a`, `df8945225731253ee55ab03b7b6a8006836e8085`.
