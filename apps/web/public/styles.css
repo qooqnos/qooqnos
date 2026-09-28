@@ -4042,3 +4042,29 @@ body::before {
   .phoenix-module-state-card,
   .phoenix-module-actions-card { padding:18px; }
 }
+
+
+.phoenix-business-module-nav {
+  display:flex;
+  gap:6px;
+  overflow:auto;
+  padding:3px 2px 5px;
+  scrollbar-width:thin;
+}
+.phoenix-business-module-nav a {
+  flex:0 0 auto;
+  padding:9px 11px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  color:var(--muted);
+  background:var(--surface);
+  text-decoration:none;
+  font-size:7px;
+  transition:all .18s ease;
+}
+.phoenix-business-module-nav a:hover,
+.phoenix-business-module-nav a.active {
+  color:var(--primary);
+  border-color:color-mix(in srgb,var(--primary) 22%,var(--line));
+  background:color-mix(in srgb,var(--primary) 7%,var(--surface));
+}
