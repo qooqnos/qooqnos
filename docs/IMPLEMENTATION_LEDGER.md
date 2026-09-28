@@ -2428,3 +2428,15 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added responsive styles to both `apps/web/styles.css` and `apps/web/public/styles.css`.
 - No new domain state or authorization was introduced; the rail is navigation/composition only.
 - Verification: not run in this step.
+
+
+## 2026-09-29 — Shared Vertical Workflow state signaling
+- Extended the shared Vertical Workflow Canvas with a truthful, reusable UI state indicator for canonical data surfaces.
+- Calendar, Catalog/Supply, People, Operations and Communication canvases now move the shared state pill between:
+  - requires-input when session/Workspace context is missing;
+  - connected when the canonical endpoint responds, including a truthful empty dataset;
+  - unavailable when the canonical surface cannot be hydrated.
+- The state indicator is presentation-only and does not replace backend authorization or domain state.
+- Added regression assertions for the Canvas state contract and stable data-vwf-state attributes.
+- Implementation commits: 3e897a1c707967768a532119bef31fc4746cae34, 146ec3a9f9c49ab3ccb3ae24f4e67e7fe87bf076.
+- Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
