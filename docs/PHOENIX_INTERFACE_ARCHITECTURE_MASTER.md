@@ -754,3 +754,24 @@ This interface specification preserves those concepts and adds the implementatio
 Business occupation modules use stable semantic routes of the form `/business/workspace/<vertical>/<module>`. The vertical is a capability composition key (`clinic`, `retail`, `restaurant`, `salon`, or `default`); the module segment is a registry-owned stable slug, not a localized label. Legacy query navigation `/business?vertical=...&module=...` remains accepted as an entry point, but new module navigation should emit the stable path.
 
 The route identifies presentation context only. Domain ownership, authorization, source-of-truth and mutations remain in the canonical Business, Catalog, Booking, Customer, Commerce, Communication, Billing, Promotion, Trust and Operations boundaries. A module page must never infer permissions from route visibility and must not create a parallel domain store.
+
+
+## 43. Vertical Workflow UI Framework — Canonical Contract
+
+The business workspace uses one shared Vertical Workflow UI Framework across clinic, retail, restaurant and salon. A vertical module is a presentation/composition layer over an existing domain capability; it is not a second backend model.
+
+Each module definition provides:
+
+- layout class: command, calendar, catalog, people, commerce, operations or communication;
+- interaction mode: command, browse, configure or review;
+- three foundation blocks that identify the module context, its canonical source and its connected surfaces;
+- a primary canonical action when one exists;
+- a shared UI state contract: connected, requires-input, readonly, unavailable.
+
+The four verticals reuse the same shell, navigation and state language while composing different module blueprints. Unsupported capabilities remain explicit and do not receive fabricated metrics, mock records or parallel state.
+
+Canonical vertical composition remains:
+
+Business Type → Capability → Module Blueprint → Role/Permission → Canonical Workflow
+
+The module page therefore answers four UI questions before showing operational data: what is this surface, what source owns its truth, what action can the user take, and what states can the UI honestly represent.
