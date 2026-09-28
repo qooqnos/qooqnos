@@ -2212,3 +2212,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - These changes reuse the shared Vertical Workflow UI Framework; no duplicate authorization model, domain state or fake metrics were added.
 - Implementation commits: 381708c2fee45b7a694d5db6596ee31c092fa8b0, 0e6123f8321e2299a5d86172349e99592c867bd7.
 - Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
+
+
+## Vertical Workflow UI Canvas — 2026-09-28
+- Added a reusable `apps/web/src/vertical-workflow-ui.ts` renderer/binder for the seven shared vertical layouts: command, calendar, catalog, people, commerce, operations and communication.
+- The Canvas provides shared toolbar/tabs, empty/loading-safe surfaces, canonical-source labels, local-only UI filters, calendar lanes, supply cards, people/relationship slots, commerce status rails, operations columns and communication split views.
+- No fabricated KPI, order, appointment, patient, inventory or conversation data is generated. The Canvas is explicitly designed to hydrate from existing canonical domains later.
+- Wired the Canvas into every stable Business Workspace module route and mirrored its responsive styling in both `apps/web/styles.css` and `apps/web/public/styles.css`.
+- Navigation/state interactions are intentionally UI-local and do not mutate domain state; canonical actions continue to route to the existing domain pages.
+- Implementation commits: `8c2cf1d13a1005a6ba3ccef7cddde1b8a1af63d7`, `66a0ad08a02385184ac530d43ab4903e973e8679`, `4db251ffe1597b6eb6e5b013b2b9010576265cd0`, `390f40f20a61b6c0d3f95278a35ef5750cc8a6f4`, `a11e5947ed4fdbfd6b95af662896ad8307ef668b`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed in this slice.
