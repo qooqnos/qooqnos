@@ -3202,14 +3202,25 @@ function renderBusinessModule(vertical: string, module: string): string {
   const relatedModules = ui.modules.filter((item) => item !== module).slice(0, 5);
   const surfaces = presentation?.surfaces ?? (info.path ? [{ label: info.label, path: info.path, description: info.description }] : []);
   const actions = ui.actions.slice(0, 3);
+  const workflow = BUSINESS_VERTICAL_WORKFLOWS[ui.key] ?? BUSINESS_VERTICAL_WORKFLOWS.default;
+  const moduleStatus = info.status ?? presentation?.stateLabel ?? "connected";
+  const contextRows = [
+    { label: "Business", value: businessId ? compactId(businessId) : "هنوز انتخاب نشده" },
+    { label: "Vertical", value: ui.label },
+    { label: "Source of truth", value: presentation?.stateLabel ?? info.label },
+    { label: "Access", value: "Backend authoritative" },
+  ];
   return '<div class="phoenix-business-module-page">' +
     '<section class="phoenix-business-module-hero">' +
       '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">' + escapeHtml(ui.label) + ' · Module</span><h1>' + escapeHtml(module) + '</h1><p>' + escapeHtml(info.description) + '</p><div class="phoenix-business-module-meta"><span>' + escapeHtml(presentation?.eyebrow ?? info.label) + '</span><span>' + (moduleIndex >= 0 ? "ماژول " + String(moduleIndex + 1) : "Capability") + '</span><span>' + escapeHtml(info.status ?? presentation?.stateLabel ?? "connected") + '</span></div></div>' +
       '<div class="phoenix-business-module-symbol">' + escapeHtml(ui.icon) + '</div>' +
     '</section>' +
     '<nav class="phoenix-business-module-nav" aria-label="ماژول‌های Workspace">' +
-      ui.modules.map((item) => '<a class="' + (item === module ? "active" : "") + '" href="/business?module=' + encodeURIComponent(item) + '" data-nav>' + escapeHtml(item) + '</a>').join("") +
+      ui.modules.map((item) => '<a class="' + (item === module ? "active" : "") + '" href="/business?vertical=' + encodeURIComponent(ui.key) + '&module=' + encodeURIComponent(item) + '" data-nav>' + escapeHtml(item) + '</a>').join("") +
     '</nav>' +
+    '<section class="phoenix-module-context-strip">' +
+      contextRows.map((row) => '<div><span>' + escapeHtml(row.label) + '</span><strong>' + escapeHtml(row.value) + '</strong></div>').join("") +
+    '</section>' +
     '<section class="phoenix-business-module-grid-page">' +
       '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + escapeHtml(info.label) + '</h2><p>این سطح یک UI تخصصی برای Workspace است؛ source of truth، permission و mutation همچنان در دامنه canonical باقی می‌مانند.</p>' +
         (canonicalPath ? '<a class="button button-primary" href="' + escapeAttr(canonicalPath) + '" data-nav>باز کردن ' + escapeHtml(info.label) + ' <span>→</span></a>' : '<span class="pill">endpoint مستقل این قابلیت هنوز ثبت نشده</span>') +
@@ -3224,8 +3235,20 @@ function renderBusinessModule(vertical: string, module: string): string {
           : '<div class="phoenix-module-surface disabled"><strong>' + escapeHtml(surface.label) + '</strong><span>' + escapeHtml(surface.description) + '</span><b>—</b></div>';
       }).join("") : '<div class="slot-empty"><span>◈</span><p>سطح canonical متصل برای این Capability ثبت نشده است.</p></div>') +
     '</div></section>' +
+    '<section class="glass-card phoenix-module-workbench-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">Workspace Canvas</span><h2>ساختار عملیاتی این صفحه</h2></div><span class="pill">' + escapeHtml(ui.label) + '</span></div>' +
+      '<div class="phoenix-module-workbench-grid">' +
+        '<article><span class="section-kicker">01 · Context</span><strong>هویت و دسترسی</strong><p>Business، نقش و Capability قبل از هر اقدام مشخص می‌شوند.</p><a href="/business/profile" data-nav>مشاهده Context ←</a></article>' +
+        '<article><span class="section-kicker">02 · Canonical</span><strong>' + escapeHtml(info.label) + '</strong><p>' + escapeHtml(info.description) + '</p>' +
+          (canonicalPath ? '<a href="' + escapeAttr(canonicalPath) + '" data-nav>ورود به منبع اصلی ←</a>' : '<span class="pill">منبع مستقل هنوز ثبت نشده</span>') +
+        '</article>' +
+        '<article><span class="section-kicker">03 · Connected</span><strong>سطوح متصل</strong><p>این صفحه داده را دوباره ذخیره نمی‌کند؛ فقط مسیرهای canonical را در کانتکست شغلی نمایش می‌دهد.</p><div class="phoenix-module-compact-links">' +
+          surfaces.slice(0, 4).map((surface) => surface.path ? '<a href="' + escapeAttr(businessModuleContextHref(surface.path, ui.key, module, businessId)) + '" data-nav>' + escapeHtml(surface.label) + '</a>' : '<span>' + escapeHtml(surface.label) + '</span>').join("") +
+        '</div></article>' +
+      '</div>' +
+    '</section>' +
     '<section class="glass-card phoenix-business-workflow-card"><div class="card-section-heading"><div><span class="section-kicker">Vertical Workflow</span><h2>جریان کاری این نوع کسب‌وکار</h2></div><span class="pill">' + escapeHtml(ui.label) + '</span></div><div class="phoenix-workflow-rail">' +
-      (BUSINESS_VERTICAL_WORKFLOWS[ui.key] ?? BUSINESS_VERTICAL_WORKFLOWS.default).map((step, index) => '<div class="phoenix-workflow-step"><span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + escapeHtml(step) + '</strong></div>').join("") +
+      workflow.map((step, index) => '<div class="phoenix-workflow-step"><span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + escapeHtml(step) + '</strong></div>').join("") +
     '</div><p>این rail معماری مسیر را نشان می‌دهد؛ هیچ state نمایشی ساختگی جای state دامنه را نمی‌گیرد.</p></section>' +
     '<section class="glass-card phoenix-module-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>کارهای مرتبط</h2></div></div><div class="phoenix-business-quick-actions">' +
       actions.map((action) => {
@@ -3236,14 +3259,15 @@ function renderBusinessModule(vertical: string, module: string): string {
       }).join("") +
     '</div></section>' +
     '<section class="glass-card phoenix-module-related-card"><div class="card-section-heading"><div><span class="section-kicker">Workspace Map</span><h2>ماژول‌های اطراف</h2></div></div><div class="phoenix-module-related-list">' +
-      relatedModules.map((item) => '<a href="/business?module=' + encodeURIComponent(item) + '" data-nav><span>' + escapeHtml(item) + '</span><b>→</b></a>').join("") +
+      relatedModules.map((item) => '<a href="/business?vertical=' + encodeURIComponent(ui.key) + '&module=' + encodeURIComponent(item) + '" data-nav><span>' + escapeHtml(item) + '</span><b>→</b></a>').join("") +
     '</div></section>' +
   '</div>';
 }
 function renderBusiness(): string {
   const businessId = localStorage.getItem(STORAGE.business) ?? "";
-  const vertical = localStorage.getItem(STORAGE.businessVertical) ?? "default";
-  const requestedModule = new URLSearchParams(location.search).get("module")?.trim();
+  const params = new URLSearchParams(location.search);
+  const vertical = params.get("vertical")?.trim() || localStorage.getItem(STORAGE.businessVertical) || "default";
+  const requestedModule = params.get("module")?.trim();
   if (requestedModule) return renderBusinessModule(vertical, requestedModule);
   const ui = getBusinessVerticalUi(vertical);
   return '<div class="phoenix-business-page" data-business-vertical="' + ui.key + '">' +
