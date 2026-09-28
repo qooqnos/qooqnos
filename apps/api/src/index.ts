@@ -9,6 +9,7 @@ import { createAuthorizationService } from "@qooqnos/runtime";
 import { createSellerProductService, processSellerProductAIRuntimeWork } from "./ai-composition";
 import { validateSellerProductOutput, validateSellerProductSafety } from "./ai-validation";
 import { BillingRepository, BillingService } from "@qooqnos/billing";
+import { TrustReviewRepository } from "@qooqnos/trust";
 import { ApiRouter } from "./router";
 import { createRequestContext } from "./context";
 import { html, json } from "./http";
@@ -576,12 +577,13 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
       if (!profile) throw new AppError({ code: "NOT_FOUND", message: "Published business not found.", requestId: context.requestId });
       const rawLimit = Number(new URL(request.url).searchParams.get("limit") ?? "50");
       const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 50;
-      const [contacts, locations, offers] = await Promise.all([
+      const [contacts, locations, offers, reviews] = await Promise.all([
         businessRepository.listPublishedPublicContacts(businessId),
         businessRepository.listPublishedPublicLocations(businessId),
         new CatalogRepository(database).listPublishedBusinessOfferings(businessId, new Date().toISOString(), limit),
+        new TrustReviewRepository(database).listPublishedBusinessReviews(businessId, 20),
       ]);
-      return json({ data: { profile, contacts, locations, offers } }, 200, context.requestId);
+      return json({ data: { profile, contacts, locations, offers, reviews } }, 200, context.requestId);
     },
   });
   router.register({
