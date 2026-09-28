@@ -21,6 +21,16 @@ Deployment asset repair: `0420fada`, `5c0b8e4`, `d948572`, `3e8d6f0` — synchro
 
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
 
+### Vertical Workflow module identity registry — 2026-09-28
+
+- 🟢 Stable semantic module slugs are now owned by the shared `apps/web/src/business-module-ui.ts` registry rather than duplicated inside `main.ts`.
+- 🟢 The registry resolves both directions: localized module label → stable slug and stable slug → supported module label.
+- 🟢 Workspace route generation now uses the shared registry, keeping route identity independent from presentation copy and locale.
+- 🟢 The UI test matrix covers representative clinic, retail, restaurant and salon semantic routes plus an invalid-slug guard.
+- 🟡 TypeScript build, browser/visual QA and production deployment verification remain pending for this slice.
+
+Implementation commits: `ca710143` (shared registry), `fabae262` (SPA routing adoption), `d66dddb` (test coverage).
+
 ### Vertical workflow rail navigation — 2026-09-28
 
 - 🟢 The shared Vertical Workflow UI rail now connects each supported stage to the corresponding semantic Workspace module route for clinic, retail, restaurant and salon.
