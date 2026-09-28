@@ -2338,3 +2338,15 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - No duplicate domain state, fake metrics or UI-level authorization was introduced.
 - Implementation commits: `5f78527c95b3412e79ecb80e82b24f41c5c68943`, `b5dc91904ab867920cc0911dca03ee3d90340170`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
+
+## 2026-09-28 — Vertical Workflow People live surface
+- Extended the shared People layout of `apps/web/src/vertical-workflow-ui.ts` with a canonical Workspace Team live surface.
+- The People canvas now reads authenticated Workspace members from `GET /api/v1/workspaces/:workspaceId/members` and renders truthful loading, empty and error states.
+- Member identity/status is shown from the Workspace source only; the UI does not invent role membership or permission grants. Role/Permission authority remains Context/Authorization backend.
+- Strengthened the shared local filter so dynamically hydrated `data-vwf-item` records participate in filtering instead of being captured only at initial render.
+- Added responsive styling for the live People surface in both web stylesheet surfaces.
+- Added renderer regression coverage for the People live-member surface.
+- This slice is inherited automatically by clinic, retail, restaurant and salon modules using the shared People layout.
+- Implementation commits: `da01a44928aba90ebbaecea741f7b18d32e675e3`, `ac13b3a057eae0ffa42df451a0691e4c9698044a`, `a4edd9537c85f7c38606e064b6e1bbf4a9968cbc`, `0ecf84c081397bf12396b7310307818b1522a949`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
+
