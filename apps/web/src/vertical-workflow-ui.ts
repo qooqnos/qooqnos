@@ -177,24 +177,6 @@ function renderCommunication(model: VerticalWorkflowCanvasModel): string {
     '</div>';
 }
 
-function modelBlocks(prefix: string, description: string, source: string): string {
-  return Array.from({ length: 3 }, (_, index) =>
-    '<article class="phoenix-vwf-supply-card"><span class="phoenix-module-blueprint-index">0' + String(index + 1) + '</span><div><strong>' + escapeHtml(prefix) + ' surface ' + String(index + 1) + '</strong><p>' + escapeHtml(description) + '</p><span class="phoenix-vwf-source-chip">' + escapeHtml(source) + '</span></div></article>',
-  ).join("");
-}
-
-function peopleSlot(title: string, source: string): string {
-  return '<article class="phoenix-vwf-people-card"><span class="section-kicker">People surface</span><h3>' + escapeHtml(title) + '</h3>' + emptyState("ردیف واقعی بعد از اتصال منبع اصلی این قابلیت نمایش داده می‌شود.", source) + '</article>';
-}
-
-function commerceSlot(title: string, source: string): string {
-  return '<article class="phoenix-vwf-commerce-card"><span class="section-kicker">Commerce surface</span><h3>' + escapeHtml(title) + '</h3>' + emptyState("state واقعی بدون کپی کردن Order/Billing/Operations در این Canvas hydrate می‌شود.", source) + '</article>';
-}
-
-function kanbanColumn(title: string, source: string): string {
-  return '<article class="phoenix-vwf-kanban-column"><div class="phoenix-vwf-kanban-title"><strong>' + escapeHtml(title) + '</strong><span class="pill">' + escapeHtml(source) + '</span></div>' + emptyState("Case یا task واقعی از Operations در این ستون قرار می‌گیرد.", "Operations") + '</article>';
-}
-
 function renderLayout(layout: VerticalModuleLayout, model: VerticalWorkflowCanvasModel): string {
   switch (layout) {
     case "command": return renderCommand(model);
