@@ -70,6 +70,57 @@ let shellNotifications: NotificationView[] = [];
 let shellContext: { actorId?: string; tenantId?: string; workspaceId?: string } = {};
 let shellLoadInFlight = false;
 const socialActionIds = new Map<string, string>();
+const socialState = {
+  follows: new Map<string, string>(),
+  engagements: new Map<string, string>(),
+};
+let discoveryOffset = 0;
+let discoveryHasMore = false;
+let discoveryBusy = false;
+
+function socialKey(targetType: string, targetId: string): string {
+  return targetType + ":" + targetId;
+}
+
+function discoveryKey(item: DiscoveryResult): string {
+  return socialKey(item.sourceType ?? "product", item.sourceId ?? item.id ?? "");
+}
+
+function isSocialActive(action: "follow" | "like" | "save", item: DiscoveryResult): boolean {
+  const target = action === "follow"
+    ? (item.metadata && typeof item.metadata.businessId === "string"
+      ? { targetType: "business" as const, targetId: item.metadata.businessId }
+      : item.sourceType === "business"
+        ? { targetType: "business" as const, targetId: item.sourceId ?? item.id ?? "" }
+        : null)
+    : socialTarget(item);
+  if (!target?.targetId) return false;
+  return action === "follow"
+    ? socialState.follows.has(socialKey(target.targetType, target.targetId))
+    : socialState.engagements.has(action + ":" + socialKey(target.targetType, target.targetId));
+}
+
+async function loadSocialState(): Promise<void> {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) return;
+  try {
+    const result = await apiJson<{ data: { follows?: Array<{ id: string; targetType: string; targetId: string }>; engagements?: Array<{ id: string; targetType: string; targetId: string; engagementType: string }> } }>("/api/v1/social/state?limit=200");
+    socialState.follows.clear();
+    socialState.engagements.clear();
+    for (const follow of result.data.follows ?? []) socialState.follows.set(socialKey(follow.targetType, follow.targetId), follow.id);
+    for (const engagement of result.data.engagements ?? []) socialState.engagements.set(engagement.engagementType + ":" + socialKey(engagement.targetType, engagement.targetId), engagement.id);
+    refreshSocialFeed();
+  } catch {
+    // Read state is progressive enhancement; feed remains usable without it.
+  }
+}
+
+function refreshSocialFeed(): void {
+  const host = document.querySelector<HTMLElement>("#discovery-results");
+  if (!host || !activeDiscoveryItems.length) return;
+  host.innerHTML = renderSocialPosts(activeDiscoveryItems);
+  bindDiscoveryResultEvents();
+  renderCompareTray();
+}
 
 function socialTarget(item: DiscoveryResult): { targetType: "product" | "service"; targetId: string } | null {
   const targetType = item.sourceType === "product" || item.sourceType === "service" ? item.sourceType : item.metadata && typeof item.metadata.offeringType === "string" && (item.metadata.offeringType === "product" || item.metadata.offeringType === "service") ? item.metadata.offeringType : undefined;
@@ -78,28 +129,46 @@ function socialTarget(item: DiscoveryResult): { targetType: "product" | "service
 }
 
 async function loadSocialActivity(): Promise<unknown[]> {
-  const result = await apiJson<{ data: unknown[] }>("/api/v1/social/activity?limit=20");
+  const result = await apiJson<{ data: unknown[] }>("/api/v1/social/activity?limit=50");
   return Array.isArray(result.data) ? result.data : [];
 }
 
+function socialActivityLabel(eventType: string): string {
+  const labels: Record<string,string> = {
+    "social.follow.created": "کسب‌وکاری را دنبال کردی",
+    "social.follow.removed": "دنبال‌کردن یک کسب‌وکار را برداشتی",
+    "social.like.created": "یک مورد را پسندیدی",
+    "social.like.removed": "پسندیدن یک مورد را برداشتی",
+    "social.save.created": "یک مورد را ذخیره کردی",
+    "social.save.removed": "ذخیره یک مورد را برداشتی",
+    "social.comment.created": "برای یک مورد نظر ثبت کردی",
+    "social.comment.removed": "نظر خودت را حذف کردی",
+  };
+  return labels[eventType] ?? "یک فعالیت اجتماعی ثبت شد";
+}
+
 async function openSocialActivity(): Promise<void> {
-  if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    openConnectionPanel();
-    return;
-  }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
   try {
     const items = await loadSocialActivity();
     const overlay = document.createElement("div");
     overlay.className = "notification-overlay";
     const rows = items.length ? items.map((item) => {
       const event = item && typeof item === "object" ? item as Record<string, unknown> : {};
-      const type = String(event.eventType ?? "social.event");
+      const eventType = String(event.eventType ?? "social.event");
+      let payload: Record<string, unknown> = {};
+      if (typeof event.payloadJson === "string") {
+        try { const parsed = JSON.parse(event.payloadJson); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) payload = parsed as Record<string, unknown>; } catch { /* ignore malformed history */ }
+      }
+      const targetType = String(payload.targetType ?? event.aggregateType ?? "—");
+      const targetId = String(payload.targetId ?? event.aggregateId ?? "—");
       const occurredAt = String(event.occurredAt ?? "");
-      return '<article class="notification-item"><div class="notification-item-icon">♡</div><div class="notification-item-copy"><div class="notification-item-top"><strong>' + escapeHtml(type) + '</strong></div><small>' + escapeHtml(occurredAt) + '</small></div></article>';
-    }).join("") : '<div class="slot-empty"><span>♡</span><p>هنوز فعالیت اجتماعی ثبت نشده است.</p></div>';
-    overlay.innerHTML = '<div class="connection-backdrop" data-close-social-activity></div><section class="connection-modal glass-card notification-modal" role="dialog" aria-modal="true" aria-labelledby="social-activity-title"><button class="connection-close" type="button" data-close-social-activity aria-label="بستن">×</button><span class="eyebrow"><i></i> Social Activity</span><h2 id="social-activity-title">فعالیت‌های اجتماعی</h2><p>این فهرست از رویدادهای canonical Social Engagement خوانده می‌شود.</p><div class="notification-list">' + rows + '</div></section>';
+      return '<article class="notification-item social-activity-row"><div class="notification-item-icon">✦</div><div class="notification-item-copy"><div class="notification-item-top"><strong>' + escapeHtml(socialActivityLabel(eventType)) + '</strong></div><p>' + escapeHtml(targetType + " · " + targetId) + '</p><small>' + escapeHtml(formatDate(occurredAt)) + '</small></div></article>';
+    }).join("") : '<div class="slot-empty"><span>✦</span><p>هنوز فعالیت اجتماعی ثبت نشده است.</p></div>';
+    overlay.innerHTML = '<div class="connection-backdrop" data-close-social-activity></div><section class="connection-modal glass-card notification-modal social-activity-modal" role="dialog" aria-modal="true" aria-labelledby="social-activity-title"><button class="connection-close" type="button" data-close-social-activity aria-label="بستن">×</button><div class="card-section-heading"><div><span class="section-kicker">Social Activity</span><h2 id="social-activity-title">فعالیت‌های اجتماعی</h2></div><button class="button button-ghost" type="button" data-social-activity-refresh>بروزرسانی</button></div><p>فقط رویدادهای ثبت‌شده در Social Engagement در این فهرست نمایش داده می‌شوند.</p><div class="notification-list">' + rows + '</div></section>';
     document.body.appendChild(overlay);
     overlay.querySelectorAll<HTMLElement>("[data-close-social-activity]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
+    overlay.querySelector<HTMLButtonElement>("[data-social-activity-refresh]")?.addEventListener("click", () => { overlay.remove(); void openSocialActivity(); });
   } catch (error) {
     showToast(error instanceof Error ? error.message : "خواندن فعالیت‌های اجتماعی ممکن نشد.");
   }
@@ -108,30 +177,34 @@ async function openSocialActivity(): Promise<void> {
 async function persistSocialAction(action: "like" | "save", item: DiscoveryResult): Promise<boolean> {
   const target = socialTarget(item);
   if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
-  const key = action + ":" + target.targetType + ":" + target.targetId;
-  const existingId = socialActionIds.get(key);
+  const key = action + ":" + socialKey(target.targetType, target.targetId);
+  const existingId = socialState.engagements.get(key) ?? socialActionIds.get(key);
   if (existingId) {
     await apiJson("/api/v1/social/" + (action === "like" ? "likes" : "saves") + "/" + encodeURIComponent(existingId), { method: "DELETE" });
     socialActionIds.delete(key);
+    socialState.engagements.delete(key);
     return false;
   }
   const result = await apiJson<{ data: { id: string } }>("/api/v1/social/" + (action === "like" ? "likes" : "saves"), { method: "POST", body: target });
   socialActionIds.set(key, result.data.id);
+  socialState.engagements.set(key, result.data.id);
   return true;
 }
 
 async function persistSocialFollow(item: DiscoveryResult): Promise<boolean> {
-  const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : undefined;
-  if (!businessId) throw new Error("شناسه کسب‌وکار این پروفایل هنوز canonical نشده است.");
-  const key = "follow:business:" + businessId;
-  const existingId = socialActionIds.get(key);
+  const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : item.sourceType === "business" ? item.sourceId ?? item.id : undefined;
+  if (!businessId) throw new Error("شناسه کسب‌وکار این محتوا هنوز canonical نشده است.");
+  const key = socialKey("business", businessId);
+  const existingId = socialState.follows.get(key) ?? socialActionIds.get("follow:" + key);
   if (existingId) {
     await apiJson("/api/v1/social/follows/" + encodeURIComponent(existingId), { method: "DELETE" });
-    socialActionIds.delete(key);
+    socialActionIds.delete("follow:" + key);
+    socialState.follows.delete(key);
     return false;
   }
   const result = await apiJson<{ data: { id: string } }>("/api/v1/social/follows", { method: "POST", body: { targetType: "business", targetId: businessId } });
-  socialActionIds.set(key, result.data.id);
+  socialActionIds.set("follow:" + key, result.data.id);
+  socialState.follows.set(key, result.data.id);
   return true;
 }
 
@@ -142,7 +215,6 @@ async function persistSocialComment(item: DiscoveryResult): Promise<void> {
   if (!body?.trim()) return;
   await apiJson("/api/v1/social/comments", { method: "POST", body: { ...target, body: body.trim(), idempotencyKey: crypto.randomUUID() } });
 }
-
 
 type PublicSeoHydration = {
   metadata: {
