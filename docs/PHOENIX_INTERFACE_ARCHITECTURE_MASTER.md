@@ -749,3 +749,8 @@ The product proposal states that Phoenix should simplify complex work, suggest t
 The proposal also defines individual Home, My Content, Profile, Notifications and Transactions; organization/business management; consumer search/suggestion/review/negotiation/payment/result; multiple transaction types; trust/security/privacy; and staged product development.
 
 This interface specification preserves those concepts and adds the implementation-level visual architecture needed to code them consistently.
+
+## Business Workspace Module Routing Contract — 2026-09-28
+Business occupation modules use stable semantic routes of the form `/business/workspace/<vertical>/<module>`. The vertical is a capability composition key (`clinic`, `retail`, `restaurant`, `salon`, or `default`); the module segment is a registry-owned stable slug, not a localized label. Legacy query navigation `/business?vertical=...&module=...` remains accepted as an entry point, but new module navigation should emit the stable path.
+
+The route identifies presentation context only. Domain ownership, authorization, source-of-truth and mutations remain in the canonical Business, Catalog, Booking, Customer, Commerce, Communication, Billing, Promotion, Trust and Operations boundaries. A module page must never infer permissions from route visibility and must not create a parallel domain store.
