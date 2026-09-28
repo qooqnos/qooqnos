@@ -3370,7 +3370,8 @@ function businessWorkflowStageHref(
   const resolvedVertical = resolveBusinessVerticalKey(vertical);
   const candidate = getVerticalWorkflowStageModule(resolvedVertical, stage);
   if (!candidate) return {};
-  if (!getBusinessVerticalUi(resolvedVertical).modules.includes(candidate)) return {};
+  const modules: readonly string[] = getBusinessVerticalUi(resolvedVertical).modules;
+  if (!modules.includes(candidate)) return {};
   return {
     module: candidate,
     href: businessModuleContextHref(businessModulePath(resolvedVertical, candidate), resolvedVertical, originatingModule, businessId),
@@ -3421,7 +3422,7 @@ function parseBusinessModuleRequest(path: string): { vertical: string; module: s
     ?? localStorage.getItem(STORAGE.businessVertical)
     ?? "default";
   const vertical = resolveBusinessVerticalKey(requestedVertical);
-  const modules = getBusinessVerticalUi(vertical).modules;
+  const modules: readonly string[] = getBusinessVerticalUi(vertical).modules;
   const module = modules.includes(requestedModule)
     ? requestedModule
     : getVerticalModuleForSlug(vertical, requestedModule, modules);
@@ -3432,13 +3433,14 @@ function parseBusinessModuleRequest(path: string): { vertical: string; module: s
 function businessModuleContextHref(path: string, vertical: string, module: string, businessId?: string): string {
   const target = new URL(path, window.location.origin);
   const resolvedVertical = resolveBusinessVerticalKey(vertical);
+  const modules: readonly string[] = getBusinessVerticalUi(resolvedVertical).modules;
 
   // The Workspace routing contract prefers stable semantic module URLs.
   // Older blueprint entries may still point to /business?module=...; normalize
   // those links here so no new navigation leaks the legacy query-only form.
   if (target.pathname === "/business" && target.searchParams.get("module")) {
     const requestedModule = target.searchParams.get("module")?.trim();
-    if (requestedModule && getBusinessVerticalUi(resolvedVertical).modules.includes(requestedModule)) {
+    if (requestedModule && modules.includes(requestedModule)) {
       target.pathname = businessModulePath(resolvedVertical, requestedModule);
       target.search = "";
     }
@@ -3516,7 +3518,7 @@ function renderBusinessModule(vertical: string, module: string): string {
   const info = businessModuleInfo(vertical, module);
   const presentation = BUSINESS_MODULE_PRESENTATIONS[ui.key]?.[module];
   const businessId = new URLSearchParams(location.search).get("business")?.trim() || localStorage.getItem(STORAGE.business) || "";
-  const moduleIndex = ui.modules.indexOf(module);
+  const moduleIndex = (ui.modules as readonly string[]).indexOf(module);
   const canonicalPath = info.path ? businessModuleContextHref(info.path, ui.key, module, businessId) : undefined;
   const relatedModules = ui.modules.filter((item) => item !== module).slice(0, 5);
   const surfaces = presentation?.surfaces ?? (info.path ? [{ label: info.label, path: info.path, description: info.description }] : []);
@@ -3618,7 +3620,8 @@ function renderBusinessModule(vertical: string, module: string): string {
     '</div><p>این rail اکنون به ماژول‌های canonical Workspace متصل است؛ جابه‌جایی بین مراحل state موازی ایجاد نمی‌کند.</p></section>' +
     '<section class="glass-card phoenix-module-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>کارهای مرتبط</h2></div></div><div class="phoenix-business-quick-actions">' +
       actions.map((action) => {
-        const target = (BUSINESS_QUICK_ACTION_LINKS[ui.key] ?? BUSINESS_QUICK_ACTION_LINKS.default)[action];
+        const quickActionLinks = BUSINESS_QUICK_ACTION_LINKS[ui.key] ?? BUSINESS_QUICK_ACTION_LINKS.default ?? {};
+        const target = quickActionLinks[action];
         return target
           ? '<a class="button button-secondary" href="' + escapeAttr(businessModuleContextHref(target, ui.key, module, businessId)) + '" data-nav>' + escapeHtml(action) + ' <span>←</span></a>'
           : '<span class="pill">' + escapeHtml(action) + '</span>';
@@ -3636,7 +3639,7 @@ function renderBusiness(): string {
   const requestedModule = params.get("module")?.trim();
   if (requestedModule) {
     const ui = getBusinessVerticalUi(vertical);
-    const resolvedModule = ui.modules.includes(requestedModule) ? requestedModule : undefined;
+    const resolvedModule = (ui.modules as readonly string[]).includes(requestedModule) ? requestedModule : undefined;
     if (resolvedModule) return renderBusinessModule(vertical, resolvedModule);
   }
   const ui = getBusinessVerticalUi(vertical);
@@ -3656,7 +3659,7 @@ function renderBusiness(): string {
     '</section>' +
 
     '<section class="phoenix-business-board">' +
-      (BUSINESS_VERTICAL_BOARD[ui.key] ?? BUSINESS_VERTICAL_BOARD.default).map((card) => '<a class="glass-card phoenix-business-board-card" href="' + escapeAttr(card.path ?? "/business") + '" data-nav><span class="section-kicker">' + escapeHtml(card.eyebrow) + '</span><h3>' + escapeHtml(card.title) + '</h3><p>' + escapeHtml(card.description) + '</p><span class="phoenix-board-arrow">→</span></a>').join("") +
+      (BUSINESS_VERTICAL_BOARD[ui.key] ?? BUSINESS_VERTICAL_BOARD.default ?? []).map((card) => '<a class="glass-card phoenix-business-board-card" href="' + escapeAttr(card.path ?? "/business") + '" data-nav><span class="section-kicker">' + escapeHtml(card.eyebrow) + '</span><h3>' + escapeHtml(card.title) + '</h3><p>' + escapeHtml(card.description) + '</p><span class="phoenix-board-arrow">→</span></a>').join("") +
     '</section>' +
 
     '<section class="phoenix-business-role-actions glass-card">' +
@@ -3937,7 +3940,7 @@ async function loadBusinessAccess(): Promise<void> {
     if (roleTitle) roleTitle.textContent = roleLens.title;
     if (roleDescription) roleDescription.textContent = roleLens.description;
     const roleKey = roleLens.title === "مدیریت Workspace" ? "management" : roleLens.title === "عملیات فروش" ? "sales" : roleLens.title === "عملیات تخصصی" ? "specialist" : roleLens.title === "عملیات مالی" ? "finance" : "generic";
-    const roleActions = BUSINESS_ROLE_ACTIONS[roleKey] ?? BUSINESS_ROLE_ACTIONS.generic;
+    const roleActions = BUSINESS_ROLE_ACTIONS[roleKey] ?? BUSINESS_ROLE_ACTIONS.generic ?? [];
     if (roleFocusTitle) roleFocusTitle.textContent = roleLens.title;
     if (roleFocusBadge) roleFocusBadge.textContent = roleText;
     if (roleActionsGrid) roleActionsGrid.innerHTML = roleActions.map((item) => '<a class="phoenix-business-role-action" href="' + escapeAttr(item.path) + '" data-nav><strong>' + escapeHtml(item.label) + '</strong><span>' + escapeHtml(item.description) + '</span><b>→</b></a>').join("");
@@ -4208,7 +4211,7 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
 function formatPublicMoney(amountMinor: number, currency: string): string {
   try {
     const formatter = new Intl.NumberFormat("fa-IR", { style: "currency", currency });
-    const fractionDigits = formatter.resolvedOptions().maximumFractionDigits;
+    const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 0;
     return formatter.format(amountMinor / (10 ** fractionDigits));
   } catch {
     return String(amountMinor) + " " + currency;
@@ -4510,7 +4513,7 @@ function openCommandPalette(): void {
   );
   const businessId = localStorage.getItem(STORAGE.business);
   const verticalModules = getBusinessVerticalUi(vertical).modules.map((module) => ({
-    path: businessModuleContextHref(businessModulePath(vertical, module), vertical, module, businessId),
+    path: businessModuleContextHref(businessModulePath(vertical, module), vertical, module, businessId ?? undefined),
     label: getBusinessVerticalUi(vertical).label + " · " + module,
     icon: getBusinessVerticalUi(vertical).icon,
   }));
@@ -4585,7 +4588,7 @@ function bindBusinessWorkspaceDynamicEvents(): void {
     button.onclick = () => {
       const module = button.dataset.businessModule?.trim();
       if (!module) return;
-      navigate(businessModuleContextHref(businessModulePath(vertical, module), vertical, module, businessId));
+      navigate(businessModuleContextHref(businessModulePath(vertical, module), vertical, module, businessId ?? undefined));
     };
   });
 
@@ -4607,7 +4610,7 @@ function bindBusinessWorkspaceDynamicEvents(): void {
     const ui = getBusinessVerticalUi(vertical);
     const module = ui.modules[0];
     if (!module) return;
-    navigate(businessModuleContextHref(businessModulePath(vertical, module), vertical, module, businessId));
+    navigate(businessModuleContextHref(businessModulePath(vertical, module), vertical, module, businessId ?? undefined));
   });
 }
 
