@@ -3390,7 +3390,7 @@ function renderBusinessModule(vertical: string, module: string): string {
       '<div class="phoenix-business-module-symbol">' + escapeHtml(ui.icon) + '</div>' +
     '</section>' +
     '<nav class="phoenix-business-module-nav" aria-label="ماژول‌های Workspace">' +
-      ui.modules.map((item) => { const href = businessModuleContextHref(businessModulePath(ui.key, item), ui.key, module, businessId); return '<a class="' + (item === module ? "active" : "") + '" href="' + escapeAttr(href) + '" data-nav>' + escapeHtml(item) + '</a>'; }).join("") +
+      ui.modules.map((item) => { const href = businessModuleContextHref(businessModulePath(ui.key, item), ui.key, module, businessId); return '<a class="' + (item === module ? "active" : "") + '" href="' + escapeAttr(href) + '" data-nav data-module-role-fit="' + escapeAttr(item) + '" data-module-key="' + escapeAttr(item) + '"><span>' + escapeHtml(item) + '</span><small data-module-role-marker aria-hidden="true"></small></a>'; }).join("") +
     '</nav>' +
     '<section class="phoenix-module-context-strip">' +
       contextRows.map((row, index) => '<div><span>' + escapeHtml(row.label) + '</span><strong id="module-context-' + String(index) + '">' + escapeHtml(row.value) + '</strong></div>').join("") +
@@ -3641,6 +3641,22 @@ async function loadBusinessModuleContext(): Promise<void> {
     accessNode.textContent = Array.isArray(context.permissions) && context.permissions.length ? "Context permissions loaded" : "Backend authoritative";
     const roles = Array.isArray(context.roles) ? context.roles : [];
     const roleLens = resolveVerticalRoleLens(roles);
+    const navModules = document.querySelectorAll<HTMLElement>("[data-module-role-fit][data-module-key]");
+    navModules.forEach((link) => {
+      const moduleKey = link.dataset.moduleKey ?? "";
+      if (!moduleKey) return;
+      const blueprint = getVerticalModuleBlueprint(selectedVertical.key, moduleKey);
+      const fit = getVerticalModuleRoleFit(blueprint, roleLens.key);
+      link.dataset.roleFit = fit;
+      link.classList.toggle("role-primary", fit === "primary");
+      link.classList.toggle("role-shared", fit === "shared");
+      const marker = link.querySelector<HTMLElement>("[data-module-role-marker]");
+      if (marker) {
+        marker.textContent = fit === "primary" ? "●" : "○";
+        marker.title = fit === "primary" ? "تمرکز این نقش" : "سطح مشترک";
+      }
+      link.setAttribute("aria-label", moduleKey + " — " + (fit === "primary" ? "تمرکز این نقش" : "سطح مشترک"));
+    });
     const moduleBlueprint = getVerticalModuleBlueprint(selectedVertical.key, dynamicModule?.module ?? new URLSearchParams(location.search).get("module") ?? "");
     const roleFit = getVerticalModuleRoleFit(moduleBlueprint, roleLens.key);
     if (roleTitleNode) roleTitleNode.textContent = roleLens.title;
