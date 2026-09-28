@@ -3152,7 +3152,7 @@ function renderBusiness(): string {
       (BUSINESS_VERTICAL_BOARD[ui.key] ?? BUSINESS_VERTICAL_BOARD.default).map((card) => '<a class="glass-card phoenix-business-board-card" href="' + escapeAttr(card.path ?? "/business") + '" data-nav><span class="section-kicker">' + escapeHtml(card.eyebrow) + '</span><h3>' + escapeHtml(card.title) + '</h3><p>' + escapeHtml(card.description) + '</p><span class="phoenix-board-arrow">→</span></a>').join("") +
     '</section>' +
 
-    '<section class="phoenix-business-metrics" id="business-vertical-metrics"> +
+    '<section class="phoenix-business-metrics" id="business-vertical-metrics">' +
       ui.metrics.map((label, index) => '<article class="glass-card phoenix-business-metric"><span>' + label + '</span><strong id="business-metric-' + index + '">—</strong><small>اطلاعات canonical پس از اتصال</small></article>').join("") +
     '</section>' +
 
