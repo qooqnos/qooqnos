@@ -436,6 +436,24 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   });
 
   router.register({
+    method: "GET",
+    path: "/api/v1/catalog/businesses/:businessId/offers",
+    module: "catalog",
+    operation: "catalog.offering.list",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const businessId = brandId<"EntityId">(requiredRouteParam(params, "businessId", context.requestId));
+      const rawLimit = Number(new URL(request.url).searchParams.get("limit") ?? "50");
+      const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 50;
+      const service = getCatalogService(database, authorization);
+      const data = await service.listBusinessOfferings(context, businessId, limit);
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "POST",
     path: "/api/v1/catalog/offers",
     module: "catalog",
