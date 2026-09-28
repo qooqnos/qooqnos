@@ -2269,3 +2269,11 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - This strengthens the same framework for clinic, retail, restaurant and salon because People/Commerce are shared layouts rather than occupation-specific implementations.
 - Implementation commits: `470dbd26ff486ad93fe9c1f342a5e92272b653fe`, `7a1c674c61c7ba4d4481614e4701e9269ed5df80`, `8769b36f694ad1e282ec05aa7c2c72d03b42659c`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
+
+
+## 2026-09-28 — Vertical availability → Booking context bridge
+- Live availability slots in the shared calendar Canvas now link into the canonical `/booking` surface with schedule ID, slot start/end and duration context.
+- The Booking page now consumes those query parameters, pre-fills its canonical availability inputs, and automatically reads slots when a valid schedule context is present.
+- This turns the shared calendar Canvas into a real read-only workflow bridge without creating booking state or duplicating Availability data in the frontend.
+- Implementation commits: `2f3f34cd6291432af8cb54d2bb4da83ba68a64fd`, `dffe095366f808cc3268e0051ae98a4a18ee59fc`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
