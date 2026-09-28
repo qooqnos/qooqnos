@@ -2410,6 +2410,158 @@ async function addCustomerPreference(): Promise<void> {
   }
 }
 
+
+function renderProfile(): string {
+  return '<div class="phoenix-profile-page">' +
+    '<section class="phoenix-profile-cover">' +
+      '<div class="phoenix-profile-cover-art"></div>' +
+      '<div class="phoenix-profile-identity">' +
+        '<div class="phoenix-profile-avatar"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
+        '<div class="phoenix-profile-name"><span class="phoenix-kicker">Profile</span><h1 id="profile-name">کاربر ققنوس</h1><p id="profile-subtitle">هویت شخصی · در حال خواندن context</p></div>' +
+        '<button class="button button-primary" type="button" data-profile-refresh>بروزرسانی</button>' +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-profile-grid">' +
+      '<article class="glass-card phoenix-profile-card phoenix-profile-trust"><div class="card-section-heading"><div><span class="section-kicker">Identity & Trust</span><h2>هویت و اعتماد</h2></div><span id="profile-trust-status" class="pill">—</span></div><div class="phoenix-profile-facts" id="profile-facts"><div><span>Actor</span><strong>—</strong></div><div><span>Tenant</span><strong>—</strong></div><div><span>Workspace</span><strong>—</strong></div></div></article>' +
+      '<article class="glass-card phoenix-profile-card"><div class="card-section-heading"><div><span class="section-kicker">Progress</span><h2>رشد و رتبه</h2></div><span class="pill warning">داده کافی نیست</span></div><div class="phoenix-profile-progress"><div class="phoenix-progress-ring"><span>—</span></div><div><strong>امتیاز و رتبه</strong><p>این مقادیر فقط پس از اتصال به منبع canonical نمایش داده می‌شوند.</p></div></div></article>' +
+      '<article class="glass-card phoenix-profile-card"><div class="card-section-heading"><div><span class="section-kicker">Activity</span><h2>فعالیت من</h2></div><a class="text-link" href="/notifications" data-nav>اعلان‌ها ←</a></div><div class="phoenix-profile-activity" id="profile-activity"><div class="phoenix-profile-activity-row"><span>اعلان‌های خوانده‌نشده</span><strong>—</strong></div><div class="phoenix-profile-activity-row"><span>رویدادهای اجتماعی</span><strong>—</strong></div><div class="phoenix-profile-activity-row"><span>معاملات</span><strong>—</strong></div></div></article>' +
+      '<article class="glass-card phoenix-profile-card phoenix-profile-credit"><div class="card-section-heading"><div><span class="section-kicker">Internal Credit</span><h2>اعتبار داخلی</h2></div><span class="pill">محافظت‌شده</span></div><div class="phoenix-credit-lock"><span>◈</span><div><strong>اطلاعات اعتباری</strong><p>فقط داده‌ای نمایش داده می‌شود که از منبع مالی canonical و با مجوز لازم برگردد.</p></div></div></article>' +
+    '</section>' +
+  '</div>';
+}
+
+async function loadProfilePage(): Promise<void> {
+  const name = document.querySelector<HTMLElement>("#profile-name");
+  const subtitle = document.querySelector<HTMLElement>("#profile-subtitle");
+  const trust = document.querySelector<HTMLElement>("#profile-trust-status");
+  const facts = document.querySelector<HTMLElement>("#profile-facts");
+  const activity = document.querySelector<HTMLElement>("#profile-activity");
+  const refresh = document.querySelector<HTMLButtonElement>("[data-profile-refresh]");
+  if (refresh) refresh.onclick = () => { void loadProfilePage(); };
+  if (!name || !subtitle || !trust || !facts || !activity) return;
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    trust.textContent = "ورود لازم است";
+    trust.className = "pill warning";
+    subtitle.textContent = "برای نمایش هویت و فعالیت، ابتدا وارد شوید.";
+    return;
+  }
+  try {
+    const [context, notifications] = await Promise.all([
+      apiJson<{ authenticated: boolean; actorId?: string; tenantId?: string; workspaceId?: string }>("/api/v1/context"),
+      apiJson<{ data: NotificationView[] }>("/api/v1/notifications?limit=30"),
+    ]);
+    const items = Array.isArray(notifications.data) ? notifications.data : [];
+    const unread = items.filter((item) => !getReadNotificationIds().has(item.id)).length;
+    name.textContent = "کاربر ققنوس";
+    subtitle.textContent = context.workspaceId ? "عضو فضای کاری · " + compactId(context.workspaceId) : "حساب شخصی ققنوس";
+    trust.textContent = context.authenticated ? "متصل" : "احراز نشده";
+    trust.className = context.authenticated ? "pill success" : "pill warning";
+    facts.innerHTML = '<div><span>Actor</span><strong>' + escapeHtml(context.actorId ?? "—") + '</strong></div>' +
+      '<div><span>Tenant</span><strong>' + escapeHtml(context.tenantId ?? "—") + '</strong></div>' +
+      '<div><span>Workspace</span><strong>' + escapeHtml(context.workspaceId ?? "—") + '</strong></div>';
+    activity.innerHTML = '<div class="phoenix-profile-activity-row"><span>اعلان‌های خوانده‌نشده</span><strong>' + String(unread) + '</strong></div>' +
+      '<div class="phoenix-profile-activity-row"><span>رویدادهای اجتماعی</span><strong>از فعالیت canonical خوانده می‌شود</strong></div>' +
+      '<div class="phoenix-profile-activity-row"><span>معاملات</span><strong>از Commerce canonical خوانده می‌شود</strong></div>';
+  } catch (error) {
+    trust.textContent = "خطا";
+    trust.className = "pill warning";
+    subtitle.textContent = error instanceof Error ? error.message : "خواندن پروفایل ناموفق بود.";
+  }
+}
+
+function renderNotifications(): string {
+  return '<div class="phoenix-notifications-page">' +
+    '<section class="page-heading"><div><span class="eyebrow"><i></i> Notification Center</span><h1>چیزهایی که لازم است <em>بدانی.</em></h1><p>پیام‌ها، پیشنهادهای ققنوس و تغییر وضعیت معامله را در یک فضای آرام و قابل‌فهم ببین.</p></div><button class="button button-primary" type="button" data-refresh-notifications>بروزرسانی</button></section>' +
+    '<section class="phoenix-notification-tabs" aria-label="دسته اعلان‌ها"><button class="active" type="button">همه</button><button type="button">مهم</button><button type="button">پیام‌ها</button><button type="button">معاملات</button></section>' +
+    '<section class="glass-card phoenix-notifications-card"><div class="phoenix-notifications-heading"><div><span class="section-kicker">Live</span><h2>اعلان‌های شما</h2></div><span id="notifications-page-count" class="pill">—</span></div><div id="notifications-page-list" class="notification-list"><div class="slot-loading">در حال بارگذاری…</div></div></section>' +
+  '</div>';
+}
+
+async function loadNotificationsPage(): Promise<void> {
+  const host = document.querySelector<HTMLElement>("#notifications-page-list");
+  const count = document.querySelector<HTMLElement>("#notifications-page-count");
+  const refresh = document.querySelector<HTMLButtonElement>("[data-refresh-notifications]");
+  if (refresh) refresh.onclick = () => { void loadNotificationsPage(); };
+  if (!host || !count) return;
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    host.innerHTML = '<div class="slot-empty"><span>♢</span><p>برای دیدن اعلان‌ها باید وارد شوید.</p></div>';
+    count.textContent = "ورود";
+    return;
+  }
+  try {
+    const response = await apiJson<{ data: NotificationView[] }>("/api/v1/notifications?limit=50");
+    const items = Array.isArray(response.data) ? response.data : [];
+    const readIds = getReadNotificationIds();
+    const renderRows = () => {
+      const currentRead = getReadNotificationIds();
+      host.innerHTML = items.length ? items.map((item) => '<article class="notification-item ' + (currentRead.has(item.id) ? "read" : "unread") + '">' +
+        '<div class="notification-item-icon">' + (item.channel === "in_app" ? "♢" : "◌") + '</div>' +
+        '<div class="notification-item-copy"><div class="notification-item-top"><strong>' + escapeHtml(item.intent ?? "notification") + '</strong><span>' + escapeHtml(item.priority ?? "normal") + '</span></div><p>' + escapeHtml(notificationSummary(item)) + '</p><small>' + escapeHtml(formatDate(item.createdAt)) + ' · ' + escapeHtml(item.status ?? "created") + '</small></div>' +
+        '<button class="notification-read" type="button" data-page-mark-read="' + escapeAttr(item.id) + '">' + (currentRead.has(item.id) ? "خوانده شد" : "خواندم") + '</button>' +
+      '</article>').join("") : '<div class="slot-empty"><span>♢</span><p>اعلان جدیدی برای این حساب ثبت نشده است.</p></div>';
+      count.textContent = items.filter((item) => !currentRead.has(item.id)).length + " خوانده‌نشده";
+      host.querySelectorAll<HTMLButtonElement>("[data-page-mark-read]").forEach((button) => button.addEventListener("click", () => {
+        const id = button.dataset.pageMarkRead;
+        if (!id) return;
+        markNotificationReadLocally(id);
+        renderRows();
+      }));
+    };
+    void readIds;
+    renderRows();
+  } catch (error) {
+    host.innerHTML = '<div class="slot-empty"><span>!</span><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن اعلان‌ها ناموفق بود.") + '</p></div>';
+    count.textContent = "خطا";
+  }
+}
+
+function renderTransactions(): string {
+  return '<div class="phoenix-transactions-page">' +
+    '<section class="page-heading"><div><span class="eyebrow"><i></i> Transactions</span><h1>هر معامله، یک <em>مسیر روشن.</em></h1><p>خرید، فروش، اجاره، معاوضه، مزایده و مناقصه در یک زبان واحد؛ جزئیات هر جریان از قابلیت canonical همان حوزه می‌آید.</p></div></section>' +
+    '<section class="phoenix-transaction-types">' +
+      '<a class="glass-card phoenix-transaction-type" href="/discover?q=' + encodeURIComponent("خرید") + '" data-nav><span>🛒</span><strong>خرید</strong><small>نیاز → جستجو → مقایسه → پرداخت</small></a>' +
+      '<a class="glass-card phoenix-transaction-type" href="/product-studio" data-nav><span>↗</span><strong>فروش</strong><small>عرضه → معرفی → مذاکره → تکمیل</small></a>' +
+      '<a class="glass-card phoenix-transaction-type" href="/discover?q=' + encodeURIComponent("اجاره") + '" data-nav><span>⌂</span><strong>اجاره</strong><small>درخواست → بررسی شرایط → انتخاب</small></a>' +
+      '<a class="glass-card phoenix-transaction-type" href="/discover?q=' + encodeURIComponent("معاوضه") + '" data-nav><span>⇄</span><strong>معاوضه</strong><small>دارایی A + دارایی B → توافق</small></a>' +
+      '<button class="glass-card phoenix-transaction-type" type="button" data-toast="جریان مزایده هنوز UI اجرایی مستقل ندارد؛ این قابلیت بعد از فعال شدن canonical workflow نمایش داده می‌شود."><span>⌁</span><strong>مزایده</strong><small>تعریف مورد → پیشنهادها → انتخاب برنده</small></button>' +
+      '<button class="glass-card phoenix-transaction-type" type="button" data-toast="جریان مناقصه هنوز UI اجرایی مستقل ندارد؛ این قابلیت بعد از فعال شدن canonical workflow نمایش داده می‌شود."><span>▥</span><strong>مناقصه</strong><small>تعریف نیاز → پیشنهادها → ارزیابی</small></button>' +
+    '</section>' +
+    '<section class="phoenix-order-lookup"><article class="glass-card phoenix-order-lookup-card"><div class="card-section-heading"><div><span class="section-kicker">Commerce</span><h2>پیگیری یک سفارش / معامله</h2></div><span id="transaction-status" class="pill">آماده</span></div><div class="phoenix-order-lookup-form"><input id="transaction-order-id" class="studio-input-line" placeholder="Order ID" /><button class="button button-primary" type="button" data-transaction-load>مشاهده وضعیت <span>←</span></button></div><div id="transaction-order-result" class="phoenix-transaction-result"><div class="slot-empty"><span>↔</span><p>Order ID را وارد کنید تا وضعیت canonical Commerce نمایش داده شود.</p></div></div></article></section>' +
+  '</div>';
+}
+
+async function loadTransactionsPage(): Promise<void> {
+  const button = document.querySelector<HTMLButtonElement>("[data-transaction-load]");
+  const input = document.querySelector<HTMLInputElement>("#transaction-order-id");
+  const host = document.querySelector<HTMLElement>("#transaction-order-result");
+  const status = document.querySelector<HTMLElement>("#transaction-status");
+  if (!button || !input || !host || !status) return;
+  const queryOrder = new URLSearchParams(location.search).get("order") ?? "";
+  if (queryOrder) input.value = queryOrder;
+  button.addEventListener("click", async () => {
+    const orderId = input.value.trim();
+    if (!orderId) { showToast("Order ID لازم است."); return; }
+    if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+    status.textContent = "در حال خواندن";
+    status.className = "pill";
+    host.innerHTML = '<div class="slot-loading">در حال خواندن Commerce…</div>';
+    try {
+      const response = await apiJson<{ data: { order: Record<string, unknown>; lines: Array<Record<string, unknown>> } }>("/api/v1/commerce/orders/" + encodeURIComponent(orderId));
+      const order = response.data.order;
+      const lines = response.data.lines ?? [];
+      status.textContent = String(order.status ?? "unknown");
+      status.className = order.status === "completed" ? "pill success" : "pill warning";
+      host.innerHTML = '<div class="phoenix-order-head"><div><span>Order</span><strong>' + escapeHtml(String(order.id ?? orderId)) + '</strong></div><span class="pill">' + escapeHtml(String(order.status ?? "unknown")) + '</span></div>' +
+        '<div class="phoenix-order-facts"><div><span>Currency</span><strong>' + escapeHtml(String(order.currency ?? "—")) + '</strong></div><div><span>Subtotal</span><strong>' + escapeHtml(String(order.subtotalMinor ?? "—")) + '</strong></div><div><span>Total</span><strong>' + escapeHtml(String(order.grandTotalMinor ?? "—")) + '</strong></div><div><span>Created</span><strong>' + escapeHtml(formatDate(String(order.createdAt ?? ""))) + '</strong></div></div>' +
+        '<div class="phoenix-order-lines">' + (lines.length ? lines.map((line) => '<div><strong>' + escapeHtml(String(line.descriptionSnapshot ?? line.resourceId ?? "آیتم سفارش")) + '</strong><span>' + escapeHtml(String(line.quantity ?? "—")) + ' × ' + escapeHtml(String(line.unitPriceMinorSnapshot ?? "—")) + '</span></div>').join("") : '<div class="slot-empty"><span>◌</span><p>خطی برای این سفارش ثبت نشده است.</p></div>') + '</div>';
+    } catch (error) {
+      status.textContent = "یافت نشد";
+      status.className = "pill warning";
+      host.innerHTML = '<div class="slot-empty"><span>!</span><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن سفارش ناموفق بود.") + '</p></div>';
+    }
+  });
+}
+
 function renderAccount(): string {
   return `
     <section class="page-heading">
