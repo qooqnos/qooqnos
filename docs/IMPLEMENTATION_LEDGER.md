@@ -2222,3 +2222,15 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Navigation/state interactions are intentionally UI-local and do not mutate domain state; canonical actions continue to route to the existing domain pages.
 - Implementation commits: `8c2cf1d13a1005a6ba3ccef7cddde1b8a1af63d7`, `66a0ad08a02385184ac530d43ab4903e973e8679`, `4db251ffe1597b6eb6e5b013b2b9010576265cd0`, `390f40f20a61b6c0d3f95278a35ef5750cc8a6f4`, `a11e5947ed4fdbfd6b95af662896ad8307ef668b`.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed in this slice.
+
+
+## Vertical Workflow Canvas Interaction Hardening — 2026-09-28
+- Strengthened the shared Vertical Workflow UI Canvas instead of creating per-occupation implementations.
+- Command, calendar, catalog, people, commerce, operations and communication layouts now consume the module blueprint blocks directly, so the Canvas reflects the declared module contract rather than generic placeholder cards.
+- Added accessible tab selection state (aria-selected) and a visible local view-state indicator.
+- Added local-only filtering for Canvas surfaces with a truthful empty result state; filtering never mutates or becomes a source of domain truth.
+- Primary Canvas actions now point to the declared canonical route when one exists.
+- Preserved the canonical-only rule: the Canvas does not fabricate appointments, orders, inventory, customers, payments, conversations or capacity.
+- Added responsive styling for the new view state and local filter feedback in both web stylesheet surfaces.
+- Implementation commits: 2edf083da06c4ed9a07679db7964fcd6413d8355, 27f473abac579837ab9e0e3a8940f46558f4a545, 675307aec794f83cc3abe05c6ef89ee461477c07, 52e50bac464b596575a4508bce731307b80c25fc.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed for this slice.
