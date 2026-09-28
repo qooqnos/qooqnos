@@ -266,7 +266,10 @@ const routes: Route[] = [
   { path: "/compare", label: "مقایسه", icon: "⚖", render: renderCompare },
   { path: "/business", label: "کسب‌وکار", icon: "▦", render: renderBusiness },
   { path: "/product-studio", label: "استودیو محصول", icon: "✦", render: renderProductStudio },
-  { path: "/account", label: "حساب", icon: "◉", render: renderAccount },
+  { path: "/transactions", label: "معاملات", icon: "↔", render: renderTransactions },
+  { path: "/notifications", label: "اعلان‌ها", icon: "♢", render: renderNotifications },
+  { path: "/profile", label: "پروفایل", icon: "◉", render: renderProfile },
+  { path: "/account", label: "حساب", icon: "◎", render: renderAccount },
   { path: "/booking", label: "رزرو", icon: "◷", render: renderBooking },
   { path: "/checkout", label: "خرید", icon: "◫", render: renderCheckout },
   { path: "/customer", label: "مشتری", icon: "♙", render: renderCustomer },
@@ -392,6 +395,9 @@ function render(): void {
   void loadShellContext();
   if (route.path === "/") bindHomeEvents();
   if (route.path === "/account") void loadAccountState();
+  if (route.path === "/notifications") void loadNotificationsPage();
+  if (route.path === "/profile") void loadProfilePage();
+  if (route.path === "/transactions") void loadTransactionsPage();
   if (route.path === "/customer") void loadCustomerState();
   if (route.path === "/communication") void loadCommunicationState();
   if (route.path === "/billing") void loadBillingState();
@@ -644,7 +650,7 @@ function renderSidebar(route: Route): string {
 }
 
 function renderMobileNav(route: Route): string {
-  const mobilePaths = ["/", "/discover", "/business", "/product-studio", "/account"];
+  const mobilePaths = ["/", "/product-studio", "/transactions", "/notifications", "/profile"];
   const items = mobilePaths
     .map((path) => routes.find((item) => item.path === path))
     .filter((item): item is Route => Boolean(item));
