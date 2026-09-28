@@ -3587,7 +3587,7 @@ function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-business-quick-action]").forEach((button) => button.addEventListener("click", () => showToast(button.textContent?.replace("←", "").trim() + " از Workspace تخصصی ققنوس باز می‌شود؛ اتصال workflow این ماژول در حال تکمیل است.")));
   document.querySelectorAll<HTMLButtonElement>(".phoenix-business-module").forEach((button) => button.addEventListener("click", () => showToast("ماژول «" + (button.querySelector("strong")?.textContent ?? "این بخش") + "» بر اساس Capabilityهای این کسب‌وکار مدیریت می‌شود.")));
   document.querySelector<HTMLButtonElement>("[data-business-primary-action]")?.addEventListener("click", () => { const action = document.querySelector("#business-next-action")?.textContent?.trim() ?? "اقدام بعدی"; showToast(action + " آماده است؛ ابتدا وضعیت Workspace و Capabilityهای فعال را بررسی می‌کنیم."); });
-  document.querySelector<HTMLButtonElement>("[data-team-management]")?.addEventListener("click", () => showToast("مدیریت نقش‌ها و عضویت‌ها از Access/Identity canonical می‌آید؛ UI فعلاً نمایشی و read-only است."));
+  document.querySelector<HTMLButtonElement>("[data-team-management]")?.addEventListener("click", openBusinessTeamPanel);
   document.querySelector<HTMLButtonElement>("[data-profile-refresh]")?.addEventListener("click", () => { void loadProfilePage(); });
   document.querySelectorAll<HTMLButtonElement>("[data-refresh-notifications]").forEach((button) => button.addEventListener("click", () => { void loadNotificationsPage(); }));
   document.querySelector<HTMLButtonElement>("[data-refresh-account]")?.addEventListener("click", loadAccountState);
@@ -4390,6 +4390,48 @@ async function openWorkspaceSwitcher(): Promise<void> {
       }
     });
   });
+}
+
+function openBusinessTeamPanel(): void {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
+  const overlay = document.createElement("div");
+  overlay.className = "business-team-overlay";
+  overlay.innerHTML = '<div class="connection-backdrop" data-close-team></div>' +
+    '<section class="connection-modal glass-card phoenix-team-modal" role="dialog" aria-modal="true" aria-labelledby="team-management-title">' +
+      '<button class="connection-close" type="button" data-close-team aria-label="بستن">×</button>' +
+      '<div class="phoenix-team-modal-head"><span class="phoenix-workspace-modal-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></span><div><span class="section-kicker">Team Management</span><h2 id="team-management-title">مدیریت تیم</h2><p>اعضا، نقش مؤثر و Permissionهای context فعلی را یکجا ببینید.</p></div></div>' +
+      '<div id="team-management-body"><div class="slot-loading">در حال خواندن تیم…</div></div>' +
+      '<div class="connection-actions"><button class="button button-ghost" type="button" data-close-team>بستن</button><button class="button button-primary" type="button" data-team-refresh>بروزرسانی</button></div>' +
+    '</section>';
+  document.body.appendChild(overlay);
+  const body = overlay.querySelector<HTMLElement>("#team-management-body");
+  const load = async () => {
+    if (!body) return;
+    body.innerHTML = '<div class="slot-loading">در حال خواندن Team / Access…</div>';
+    try {
+      const workspaceId = localStorage.getItem(STORAGE.workspace) ?? shellContext.workspaceId ?? "";
+      const [context, members] = await Promise.all([
+        apiJson<{ actorId?: string; roles?: string[]; permissions?: string[]; workspaceId?: string }>("/api/v1/context"),
+        workspaceId ? apiJson<{ data: Array<{ id: string; userId: string; status: string }> }>("/api/v1/workspaces/" + encodeURIComponent(workspaceId) + "/members") : Promise.resolve({ data: [] }),
+      ]);
+      const items = Array.isArray(members.data) ? members.data : [];
+      const roles = Array.isArray(context.roles) ? context.roles : [];
+      const permissions = Array.isArray(context.permissions) ? context.permissions : [];
+      body.innerHTML =
+        '<div class="phoenix-team-management-summary"><div><span>Workspace</span><strong>' + escapeHtml(workspaceId || "—") + '</strong></div><div><span>نقش شما</span><strong>' + escapeHtml(roles.join(" · ") || "—") + '</strong></div><div><span>اعضا</span><strong>' + String(items.length) + '</strong></div></div>' +
+        '<div class="phoenix-team-management-list">' + (items.length ? items.map((member) => '<div class="phoenix-team-management-row"><span class="phoenix-team-avatar">' + escapeHtml((member.userId || "U").slice(0,1).toUpperCase()) + '</span><div><strong>' + escapeHtml(member.userId) + '</strong><small>' + escapeHtml(member.status) + (member.userId === context.actorId ? " · شما" : "") + '</small></div><span class="pill ' + (member.status === "active" ? "success" : "warning") + '">' + escapeHtml(member.status) + '</span></div>').join("") : '<div class="slot-empty"><span>◎</span><p>عضوی برای این Workspace پیدا نشد.</p></div>') + '</div>' +
+        '<div class="phoenix-team-permission-summary"><span class="section-kicker">Effective Permissions</span><div>' + (permissions.length ? permissions.slice(0,20).map((permission) => '<span class="phoenix-permission-chip">' + escapeHtml(permission) + '</span>').join("") : '<span class="permission-empty">Permissionی برنگشت.</span>') + '</div></div>' +
+        '<div class="phoenix-team-readonly-note">تغییر نقش، دعوت و تعلیق عضو در این Slice عمداً read-only است؛ UI تا زمانی که mutationهای canonical متصل نشده‌اند، نتیجه جعلی نشان نمی‌دهد.</div>';
+    } catch (error) {
+      body.innerHTML = '<div class="slot-empty"><span>!</span><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن تیم ناموفق بود.") + '</p></div>';
+    }
+  };
+  overlay.querySelectorAll<HTMLElement>("[data-close-team]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
+  overlay.querySelector<HTMLButtonElement>("[data-team-refresh]")?.addEventListener("click", () => { void load(); });
+  void load();
 }
 
 function openNotificationCenter(): void {
