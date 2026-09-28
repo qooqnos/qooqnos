@@ -3407,7 +3407,7 @@ function openPublicBusinessReview(routePath: string): void {
     }
   });
 }
-async function togglePublicBusinessFollow(routePath: string): Promise<void> {
+async async function togglePublicBusinessFollow(routePath: string): Promise<void> {
   if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
   const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
   if (!businessId) return;
@@ -3428,7 +3428,7 @@ async function togglePublicBusinessFollow(routePath: string): Promise<void> {
   }
 }
 
-async function sharePublicBusiness(): Promise<void> {
+async async function sharePublicBusiness(): Promise<void> {
   try {
     await navigator.clipboard.writeText(window.location.href);
     showToast("لینک پروفایل کپی شد.");
