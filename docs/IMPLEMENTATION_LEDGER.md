@@ -2037,3 +2037,13 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added responsive Phoenix-branded styling for the profile preview.
 - Implementation commits: `e64af29c1e978e898f37190a90701f1bc892402a`, `d9e52be5f8df33c4e8112f79e7e2c96fda586084`, `0b2cbc498e388fd2b9a042681741d82da6aaab4d`, `6e0f631aa5a7d17b7b1d8656a5c24acdfed75eca`.
 - Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
+
+
+## Business Publication Request Boundary — 2026-09-28
+- Exposed the existing canonical BusinessService `requestPublication()` through `POST /api/v1/businesses/:businessId/submit`.
+- Route requires authentication, workspace context and the canonical `business.publish` permission; the service only accepts active businesses and transitions non-published businesses to `pending`.
+- The repository already records publication transitions through audit events and `business.publication.changed.v1` outbox events, so the UI does not create a second publication state.
+- Connected `/business/profile` to the canonical publication request action. The UI distinguishes published, pending, blocked, permission-unavailable and requestable states.
+- The UI does not mark a business as published; only the canonical backend state is displayed after refresh.
+- Implementation commits: `b3db51d1ce90ee6a33ddd0d8d08e4af15fbb8d93`, `93f4dd2f4036a3dfd4321ed49c94e59c58e381fd`, `33211f4437c042f2165c83cde4254d37b4b95545`, `75388627840a32fef9da4a5dffeca52f93677073`.
+- Verification remains pending: TypeScript build, API integration test and browser/visual QA have not been executed in this slice.
