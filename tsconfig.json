@@ -85,6 +85,9 @@
     },
     {
       "path": "./apps/web"
+    },
+    {
+      "path": "./packages/social-engagement"
     }
   ],
   "files": []
