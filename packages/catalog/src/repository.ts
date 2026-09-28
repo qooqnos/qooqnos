@@ -271,6 +271,26 @@ export class CatalogRepository extends Repository {
     return result;
   }
 
+  async listBusinessOfferings(context: RequestContext, businessId: EntityId, limit = 50): Promise<readonly OfferingRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
+    return this.database.all<OfferingRecord>(
+      `SELECT o.id, o.business_id AS businessId, o.offering_type AS offeringType,
+              o.title, o.description, o.service_id AS serviceId, o.product_id AS productId,
+              o.status, o.publication_status AS publicationStatus,
+              o.created_at AS createdAt, o.updated_at AS updatedAt
+         FROM offerings o
+         INNER JOIN businesses b ON b.id = o.business_id
+        WHERE o.business_id = ?
+          AND b.organization_id = ?
+          AND b.workspace_id = ?
+        ORDER BY o.updated_at DESC, o.id DESC
+        LIMIT ?`,
+      businessId, organizationId, workspaceId, safeLimit,
+    );
+  }
+
   async listPublishedBusinessOfferings(businessId: EntityId, now: string, limit = 50): Promise<readonly PublicBusinessOfferingRecord[]> {
     const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
     return this.database.all<PublicBusinessOfferingRecord>(
