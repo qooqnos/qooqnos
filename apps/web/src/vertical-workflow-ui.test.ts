@@ -39,6 +39,22 @@ describe("Vertical Workflow UI Canvas", () => {
     }
   });
 
+  it("renders the people canvas with a canonical workspace-member hydration surface", () => {
+    const blueprint = getVerticalModuleBlueprint("clinic", "پزشکان");
+    const model: VerticalWorkflowCanvasModel = {
+      vertical: "clinic",
+      module: "پزشکان",
+      businessId: "business-test",
+      blueprint,
+    };
+
+    const html = renderVerticalWorkflowCanvas(model);
+    expect(html).toContain('data-vwf-layout="people"');
+    expect(html).toContain('data-vwf-members-live');
+    expect(html).toContain('data-vwf-member-items');
+    expect(html).toContain("Canonical Workspace Team");
+  });
+
   it("escapes contextual identifiers before placing them into HTML attributes", () => {
     const blueprint = getVerticalModuleBlueprint("retail", "محصولات");
     const model: VerticalWorkflowCanvasModel = {
