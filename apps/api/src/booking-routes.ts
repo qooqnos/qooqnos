@@ -13,6 +13,26 @@ export function registerBookingRoutes(
 ): void {
   router.register({
     method: "GET",
+    path: "/api/v1/availability/schedules",
+    module: "booking",
+    operation: "availability.schedules.read",
+    permission: "availability.read",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const url = new URL(request.url);
+      const businessId = requiredId(url.searchParams.get("businessId"), "businessId", context.requestId);
+      const rawLimit = Number(url.searchParams.get("limit") ?? "50");
+      const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 50;
+      const repository = new AvailabilityRepository(database);
+      const schedules = await repository.listSchedules(context, businessId, limit);
+      return json({ data: schedules }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/availability/schedules/:scheduleId/slots",
     module: "booking",
     operation: "availability.read",
