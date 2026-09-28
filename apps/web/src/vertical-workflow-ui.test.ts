@@ -42,6 +42,23 @@ describe("Vertical Workflow UI Canvas", () => {
     }
   });
 
+    it("renders shared previous/next stage navigation and stage metadata", () => {
+      const blueprint = getVerticalModuleBlueprint("clinic", "نوبت‌ها");
+      const model: VerticalWorkflowCanvasModel = {
+        vertical: "clinic",
+        module: "نوبت‌ها",
+        businessId: "business-test",
+        blueprint,
+      };
+
+      const html = renderVerticalWorkflowCanvas(model);
+      expect(html).toContain('data-vwf-stage-index="2"');
+      expect(html).toContain('data-vwf-stage-total="4"');
+      expect(html).toContain("زمان‌بندی");
+      expect(html).toContain("پیگیری");
+      expect(html).toContain("رزرو");
+    });
+
   it("renders the people canvas with a canonical workspace-member hydration surface", () => {
     const blueprint = getVerticalModuleBlueprint("clinic", "پزشکان");
     const model: VerticalWorkflowCanvasModel = {
