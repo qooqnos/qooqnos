@@ -2234,3 +2234,10 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added responsive styling for the new view state and local filter feedback in both web stylesheet surfaces.
 - Implementation commits: 2edf083da06c4ed9a07679db7964fcd6413d8355, 27f473abac579837ab9e0e3a8940f46558f4a545, 675307aec794f83cc3abe05c6ef89ee461477c07, 52e50bac464b596575a4508bce731307b80c25fc.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed for this slice.
+
+## Dynamic Vertical Workspace Context Hydration — 2026-09-28
+- Dynamic module routes under `/business/workspace/<vertical>/<module>` now hydrate the same authenticated Business/Context metadata used by query-based module entry.
+- The loader resolves the active vertical from the URL module path when no explicit query vertical is supplied, preventing a stale local vertical from overriding the route contract.
+- No new source of truth, authorization model, KPI or domain mutation was introduced; this only hardens runtime context for the shared Vertical Workflow UI Framework.
+- Implementation commit: bd6197a62ee13c320a67303d53b4ec3a37b2b95d.
+- Verification remains pending: TypeScript build and browser/visual QA have not been executed after this change.
