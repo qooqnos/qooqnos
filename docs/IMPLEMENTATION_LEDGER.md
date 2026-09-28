@@ -2123,3 +2123,15 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Verification status is display-only in this Slice; creation/submission/approval remain Trust-owned commands and are not fabricated in the Business UI.
 - Implementation commits: `3b7843c2213dc8578ccaa4089ec55651acd1c033`, `889eabc1572003ed3555ec7b1ec73989ee3b4d10`, `fc8c01a6fb2d54f2415c6458f67f2561bb9fad5f`, `807db38234a95218e0aa5755acfe166fac0c7d43`.
 - Verification remains pending: local build could not be executed because the environment could not resolve GitHub; no fresh TypeScript/API/browser verification is claimed.
+
+
+## Occupation-driven Business Module Pages — 2026-09-28
+- Converted Business Workspace module buttons from presentation-only to contextual module pages using the existing `/business?module=...` boundary, avoiding route duplication for every occupation.
+- Added a canonical module-link registry for default, clinic, retail, restaurant and salon compositions. Links point to existing owning-domain surfaces such as Catalog, Booking, Customer, Communication, Billing, Transactions, Promotion, Trust and Product Studio; unsupported mutations remain explicitly read-only/capability states.
+- Added a contextual horizontal module navigation rail so operators can move between occupation modules without losing the Workspace shell.
+- Added vertical workflow rails: clinic `خدمت → زمان‌بندی → رزرو → پیگیری`, retail `محصول → انتشار → موجودی → سفارش`, restaurant `منو → میز / رزرو → سفارش → تحویل`, salon `خدمت → متخصص → زمان‌بندی → رزرو`.
+- Business vertical is hydrated from canonical Business data into `STORAGE.businessVertical`; direct module links re-render after canonical vertical hydration when necessary.
+- Added responsive styling for module pages, module navigation and vertical workflow rails.
+- Replaced previous module-click placeholder toasts with actual navigation into the contextual Business module page.
+- Implementation commits: `bf676bd37845a9787d97e10df73ed9c00b6894f6`, `4ec6c67a2c4479a966ddba36321b1913bcacf3e4`, `9c4f705d769bb3f456f94db4942cfde9bda43a9d`, `4e30c22897f197bac979951930d9144f80bca436`, `ee3f561685c53c08d554bdd3d74dd6c0dcbfb725`, `4241dac0ae80eab12bc2a4d11b3611ff21b0faf0`, `b3cdae32c78eebfa2993889879e925ac24a8a731`, `40aeb45a54bf3cdac9917008e505f0c4d88a632e`, `bf09387abb993d686135f9b00a1945e58c94f7ee`, `a936ef505ec112797ec4645d3961f229ba9f03eb`.
+- Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
