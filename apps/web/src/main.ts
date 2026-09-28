@@ -1,5 +1,5 @@
 import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui.js";
-import { getVerticalModuleBlueprint, getVerticalModuleRoleFit, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
 import { bindVerticalWorkflowCanvas, renderVerticalWorkflowCanvas } from "./vertical-workflow-ui.js";
 type Theme = "dark" | "light";
 
@@ -3181,30 +3181,22 @@ function businessModuleInfo(vertical: string, module: string): { readonly label:
   return BUSINESS_MODULE_LINKS[vertical]?.[module] ?? BUSINESS_MODULE_LINKS.default?.[module] ?? { label: module, status: "capability", description: "این ماژول در ترکیب Capabilityهای Workspace قرار می‌گیرد." };
 }
 
-const BUSINESS_MODULE_SLUGS: Record<string, Record<string, string>> = {
-  default: { "پروفایل": "profile", "محتوا": "content", "محصولات": "products", "خدمات": "services", "مشتریان": "customers", "پیام‌ها": "messages", "معاملات": "transactions", "تیم": "team", "گزارش‌ها": "reports" },
-  clinic: { "امروز": "today", "نوبت‌ها": "appointments", "تقویم": "calendar", "پزشکان": "providers", "خدمات": "services", "مراجعان": "patients", "ساعات کاری": "hours", "پیام‌ها": "messages", "پرداخت": "payments", "محتوا": "content", "تیم": "team" },
-  retail: { "فروش امروز": "sales", "محصولات": "products", "مدل‌ها و تنوع": "variants", "سایز و رنگ": "attributes", "موجودی": "inventory", "سفارش‌ها": "orders", "مرجوعی": "returns", "مشتریان": "customers", "تخفیف‌ها": "promotions", "محتوا": "content", "گزارش فروش": "reports" },
-  restaurant: { "سفارش‌های امروز": "orders", "منو": "menu", "میزها": "tables", "رزرو": "reservations", "آشپزخانه": "kitchen", "تحویل": "delivery", "مشتریان": "customers", "تخفیف": "promotions", "پرداخت": "payments", "گزارش": "reports" },
-  salon: { "وقت‌های امروز": "today", "خدمات": "services", "متخصصان": "specialists", "تقویم": "calendar", "مشتریان": "customers", "ظرفیت": "capacity", "پرداخت": "payments", "پیشنهادها": "promotions", "محتوا": "content", "تیم": "team" },
-};
-
 function businessModuleSlug(vertical: string, module: string): string {
-  const key = resolveBusinessVerticalKey(vertical);
-  return BUSINESS_MODULE_SLUGS[key]?.[module] ?? module;
+  return getVerticalModuleRoute(vertical, module).split("/").pop() ?? module;
 }
 
 function businessModulePath(vertical: string, module: string): string {
-  return "/business/workspace/" + encodeURIComponent(resolveBusinessVerticalKey(vertical)) + "/" + encodeURIComponent(businessModuleSlug(vertical, module));
+  return getVerticalModuleRoute(resolveBusinessVerticalKey(vertical), module);
 }
 
 function parseBusinessModulePath(path: string): { vertical: string; module: string } | null {
   const parts = path.split("/").filter(Boolean);
   if (parts.length !== 4 || parts[0] !== "business" || parts[1] !== "workspace") return null;
+  let slug = "";
+  try { slug = decodeURIComponent(parts[3] ?? ""); } catch { return null; }
   const vertical = resolveBusinessVerticalKey(parts[2]);
-  const slug = decodeURIComponent(parts[3] ?? "");
   const modules = getBusinessVerticalUi(vertical).modules;
-  const module = modules.find((item) => businessModuleSlug(vertical, item) === slug);
+  const module = getVerticalModuleForSlug(vertical, slug, modules);
   return module ? { vertical, module } : null;
 }
 
@@ -3224,7 +3216,7 @@ function parseBusinessModuleRequest(path: string): { vertical: string; module: s
   const modules = getBusinessVerticalUi(vertical).modules;
   const module = modules.includes(requestedModule)
     ? requestedModule
-    : modules.find((candidate) => businessModuleSlug(vertical, candidate) === requestedModule);
+    : getVerticalModuleForSlug(vertical, requestedModule, modules);
 
   return module ? { vertical, module } : null;
 }
