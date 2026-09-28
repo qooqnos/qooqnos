@@ -2047,3 +2047,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - The UI does not mark a business as published; only the canonical backend state is displayed after refresh.
 - Implementation commits: `b3db51d1ce90ee6a33ddd0d8d08e4af15fbb8d93`, `93f4dd2f4036a3dfd4321ed49c94e59c58e381fd`, `33211f4437c042f2165c83cde4254d37b4b95545`, `75388627840a32fef9da4a5dffeca52f93677073`.
 - Verification remains pending: TypeScript build, API integration test and browser/visual QA have not been executed in this slice.
+
+
+## Business Trust Signal Surface — 2026-09-28
+- `/business/profile` now reads canonical active Trust Signals for the current Business through `GET /api/v1/trust/signals?subjectType=business&subjectId=...&status=active`.
+- Trust signals are displayed as observed signal type, severity, status and confidence where supplied; the UI does not infer a score, reputation rank or verification verdict.
+- Trust reads are fail-soft so a missing `trust.reputation.read` permission does not fabricate trust data or block the rest of the profile surface.
+- Added responsive styling for the Trust Signal list.
+- Implementation commits: `37fc07ea8bf8247354435fc13841734e03bb406d`, `5b76138081df44d7dd1656422979272860a07df8`, `b9f696f736785581b03eb663931c0eb029845916`.
+- Verification remains pending: TypeScript build, Trust API integration test and browser/visual QA have not been executed in this slice.
