@@ -403,7 +403,10 @@ function render(): void {
   if (route.path === "/communication") void loadCommunicationState();
   if (route.path === "/billing") void loadBillingState();
   if (route.path === "/business") void loadBusinessAccess();
-  if (route.path === "/business/profile") void loadBusinessProfile();
+  if (route.path === "/business/profile") {
+    void loadBusinessProfile();
+    document.querySelector<HTMLElement>("#public-business-publication-action")?.addEventListener("click", () => void requestBusinessPublication());
+  }
   if (route.path === "/trust") void loadTrustSignals();
   if (route.path === "/operations") void loadCases();
   if (route.path === "/seo") void loadSeoHealth();
@@ -3107,7 +3110,7 @@ function renderBusinessProfile(): string {
     '</section>' +
     '<section class="phoenix-public-profile-grid">' +
       '<article class="glass-card phoenix-public-profile-main"><div class="card-section-heading"><div><span class="section-kicker">Identity</span><h2>هویت کسب‌وکار</h2></div></div><div id="public-business-identity" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
-      '<aside class="glass-card phoenix-public-trust-card"><span class="section-kicker">Trust & Publication</span><h2>اعتماد، قبل از نمایش عمومی</h2><p id="public-business-trust-copy">وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.</p><div id="public-business-trust-facts" class="phoenix-public-capability-list"></div><a class="button button-ghost" href="/trust" data-nav>مشاهده Trust</a></aside>' +
+      '<aside class="glass-card phoenix-public-trust-card"><span class="section-kicker">Trust & Publication</span><h2>اعتماد، قبل از نمایش عمومی</h2><p id="public-business-trust-copy">وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.</p><div id="public-business-trust-facts" class="phoenix-public-capability-list"></div><div id="public-business-publication-action" class="phoenix-public-publication-action"></div><a class="button button-ghost" href="/trust" data-nav>مشاهده Trust</a></aside>' +
     '</section>' +
     '<section class="phoenix-public-profile-grid">' +
       '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">Contact</span><h2>راه‌های ارتباط</h2></div></div><div id="public-business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
@@ -3270,7 +3273,8 @@ async function loadBusinessProfile(): Promise<void> {
   const summary = document.querySelector<HTMLElement>("#public-business-summary");
   const trustCopy = document.querySelector<HTMLElement>("#public-business-trust-copy");
   const trustFacts = document.querySelector<HTMLElement>("#public-business-trust-facts");
-  if (!identity || !contacts || !locations || !publication || !type || !name || !summary || !trustCopy || !trustFacts) return;
+  const publicationAction = document.querySelector<HTMLElement>("#public-business-publication-action");
+  if (!identity || !contacts || !locations || !publication || !type || !name || !summary || !trustCopy || !trustFacts || !publicationAction) return;
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
     identity.innerHTML='<div class="slot-empty"><span>↪</span><p>برای مشاهده Preview به session Workspace نیاز است.</p></div>';
     return;
@@ -3280,9 +3284,12 @@ async function loadBusinessProfile(): Promise<void> {
     return;
   }
   try {
-    const response = await apiJson<{ data: { business: Record<string, unknown>; locations: Array<Record<string, unknown>>; hours: Array<Record<string, unknown>>; contacts: Array<Record<string, unknown>>; socialLinks: Array<Record<string, unknown>> } }>(
-      "/api/v1/businesses/" + encodeURIComponent(businessId) + "/management",
-    );
+    const [response, context] = await Promise.all([
+      apiJson<{ data: { business: Record<string, unknown>; locations: Array<Record<string, unknown>>; hours: Array<Record<string, unknown>>; contacts: Array<Record<string, unknown>>; socialLinks: Array<Record<string, unknown>> } }>(
+        "/api/v1/businesses/" + encodeURIComponent(businessId) + "/management",
+      ),
+      apiJson<{ permissions?: string[] }>("/api/v1/context").catch(() => ({ permissions: [] })),
+    ]);
     const business=response.data.business;
     const displayName=getRecordString(business,["displayName","name"])??"کسب‌وکار";
     const businessType=getRecordString(business,["businessType"])??"Business";
@@ -3292,6 +3299,19 @@ async function loadBusinessProfile(): Promise<void> {
     type.textContent=businessType;
     publication.textContent=publicationValue;
     publication.className=publicationValue==="published"?"pill success":"pill warning";
+    const canPublish = Array.isArray(context.permissions) && context.permissions.includes("business.publish");
+    if (publicationValue === "published") {
+      publicationAction.innerHTML = '<span class="pill success">انتشار عمومی فعال است</span>';
+    } else if (publicationValue === "pending") {
+      publicationAction.innerHTML = '<span class="pill warning">در انتظار بررسی / سیاست انتشار</span>';
+    } else if (publicationValue === "blocked") {
+      publicationAction.innerHTML = (canPublish ? '<span class="pill warning">انتشار مسدود است</span>' : '<span class="pill warning">انتشار مسدود است</span>');
+    } else if (canPublish) {
+      publicationAction.innerHTML = '<button class="button button-primary" type="button" data-request-business-publication>درخواست انتشار</button>';
+      publicationAction.querySelector<HTMLButtonElement>("[data-request-business-publication]")?.addEventListener("click", () => void requestBusinessPublication());
+    } else {
+      publicationAction.innerHTML = '<span class="pill">مجوز درخواست انتشار در context فعلی موجود نیست</span>';
+    }
     identity.innerHTML=
       '<div><span>نام رسمی</span><strong>'+escapeHtml(getRecordString(business,["name"])??"—")+'</strong></div>' +
       '<div><span>نام نمایشی</span><strong>'+escapeHtml(displayName)+'</strong></div>' +
@@ -3321,6 +3341,32 @@ async function loadBusinessProfile(): Promise<void> {
 function compactId(value?: string): string {
   if (!value) return "—";
   return value.length > 12 ? value.slice(0, 6) + "…" + value.slice(-4) : value;
+}
+
+async function requestBusinessPublication(): Promise<void> {
+  const businessId = localStorage.getItem(STORAGE.business);
+  if (!businessId) {
+    showToast("Business ID لازم است.");
+    return;
+  }
+  const button = document.querySelector<HTMLButtonElement>("[data-request-business-publication]");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "در حال ارسال…";
+  }
+  try {
+    await apiJson("/api/v1/businesses/" + encodeURIComponent(businessId) + "/submit", { method: "POST" });
+    showToast("درخواست انتشار ثبت شد و وارد وضعیت canonical شد.");
+    await loadBusinessProfile();
+    const businessPage = location.pathname === "/business";
+    if (businessPage) await loadBusinessAccess();
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "درخواست انتشار ناموفق بود.");
+    if (button) {
+      button.disabled = false;
+      button.textContent = "درخواست انتشار";
+    }
+  }
 }
 
 async function saveBusinessProfile(): Promise<void> {
