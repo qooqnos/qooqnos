@@ -312,7 +312,7 @@ const restaurant: Record<string, VerticalModuleBlueprint> = {
 };
 
 const salon: Record<string, VerticalModuleBlueprint> = {
-  "امروز": blueprint("Salon Today Command", "command", "command", [
+  "وقت‌های امروز": blueprint("Salon Today Command", "command", "command", [
     block("01", "Appointments", "وقت‌های امروز از Booking.", "/booking"),
     block("02", "Specialists", "منابع انسانی از Team.", "/business?module=تیم"),
     block("03", "Customers", "مشتریان از Customer.", "/customer"),
@@ -360,7 +360,7 @@ const verticalSpecific: Record<string, Record<string, VerticalModuleBlueprint>> 
 };
 
 const ROLE_LENS_BY_MODULE: Record<string, readonly VerticalRoleLensKey[]> = {
-  "امروز": ["management", "sales", "specialist"],
+  "وقت‌های امروز": ["management", "sales", "specialist"],
   "خدمات": ["sales", "specialist"],
   "محصولات": ["sales"],
   "پزشکان": ["specialist", "management"],
