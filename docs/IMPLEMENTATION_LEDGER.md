@@ -2096,3 +2096,12 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Public phone/email/website contacts are now actionable with `tel:`, `mailto:` and HTTPS links derived from the canonical contact type/value.
 - Implementation commits: `a1ae19c50b1b168aa226ce0bc0346f17553d1083`, `d6abbc3563fa555223d15c30a69cd6f55f1fb012`, `94c623f799e074c3b300e9746cdc7ba0930ae205`, `8b98f88a55d1caa9457613876377d81ba52f1e1d`.
 - Verification remains pending: TypeScript build and browser/visual QA have not been executed in this slice.
+
+
+## Public Business Review Action — 2026-09-28
+- Added `ثبت نظر` to the customer-facing Business page.
+- The action uses the existing canonical `POST /api/v1/trust/reviews` route with `customerId`, `businessId`, rating and optional text; no review persistence is created in the frontend.
+- If the authenticated session has no Customer context, the UI truthfully blocks submission instead of inventing a customer identity.
+- Review submission remains subject to the backend Trust authorization and moderation lifecycle.
+- Implementation commit: `fbd605f1093f556921ad5ba364b7f198c38cc675`.
+- Verification remains pending: TypeScript build, Trust integration test and browser/visual QA have not been executed in this slice.
