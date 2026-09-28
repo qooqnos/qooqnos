@@ -2002,3 +2002,6 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added truthful interaction feedback for not-yet-wired vertical module actions instead of inventing domain behavior.
 - Commits: `3f8f669c9297e500e054962a75e7e34f788e6977`, `458484584bc5303725645d636a1199693d841c8c`, `880187439e131c7b5906a529f392fa0ae705b373`, `d24bc3b8d490aa940710582385d7654ffd326667`.
 - Verification gate remains: web TypeScript build plus responsive/visual QA before production verification.
+
+- Added quick vertical presets to the Business profile editor (clinic, retail, restaurant, salon) so the occupation composition can be selected consistently without changing canonical business persistence semantics.
+- Commits: `9a013a71a9cf0661285d2e04972b80a9842b5528`, `df7e90a0834f8bc2ef810569734c0210ccf80bf9`, `481d8284e759a4f7e97d57f013a466b2a8b4c6c2`.
