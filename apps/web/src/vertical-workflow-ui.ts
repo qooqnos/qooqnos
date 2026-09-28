@@ -5,6 +5,11 @@ export type VerticalWorkflowCanvasModel = {
   readonly module: string;
   readonly blueprint: VerticalModuleBlueprint;
   readonly businessId?: string;
+  /**
+   * Resolve a canonical surface link inside the current Workspace context.
+   * The caller owns routing policy; the canvas only renders the resolved href.
+   */
+  readonly contextualHref?: (path: string) => string;
 };
 
 function escapeHtml(value: string): string {
@@ -47,6 +52,11 @@ const layoutCopy: Record<VerticalModuleLayout, { label: string; description: str
   },
 };
 
+function contextualHref(model: VerticalWorkflowCanvasModel, path?: string): string {
+  if (!path) return "";
+  return model.contextualHref ? model.contextualHref(path) : path;
+}
+
 function emptyState(message: string, eyebrow = "Canonical data"): string {
   return '<div class="phoenix-vwf-empty"><span class="phoenix-vwf-empty-mark">◌</span><strong>داده نمایشی در این سطح ساخته نمی‌شود</strong><p>' +
     escapeHtml(message) +
@@ -59,7 +69,7 @@ function viewState(label: string): string {
 
 function renderCommand(model: VerticalWorkflowCanvasModel): string {
   const action = model.blueprint.primaryAction
-    ? '<a class="button button-primary" href="' + escapeHtml(model.blueprint.primaryAction.path) + '" data-nav>' + escapeHtml(model.blueprint.primaryAction.label) + ' →</a>'
+    ? '<a class="button button-primary" href="' + escapeHtml(contextualHref(model, model.blueprint.primaryAction.path)) + '" data-nav>' + escapeHtml(model.blueprint.primaryAction.label) + ' →</a>'
     : '<span class="pill">منبع canonical</span>';
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="Command views">' +
@@ -117,7 +127,7 @@ function renderCatalog(model: VerticalWorkflowCanvasModel): string {
         '<div class="phoenix-vwf-live-supply-head"><div><span class="section-kicker">Canonical supply</span><h3>عرضه‌های این کسب‌وکار</h3><p>فقط Offeringهای متعلق به همین Business و Workspace در این بخش hydrate می‌شوند.</p></div><span class="pill">live when connected</span></div>' +
         '<div class="phoenix-vwf-live-supply-grid" data-vwf-catalog-items><div class="slot-loading">در حال آماده‌سازی منبع Catalog…</div></div>' +
       </div>' +
-      model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-supply-card" data-vwf-item><span class="phoenix-module-blueprint-index">' + escapeHtml(item.label) + '</span><div><strong>' + escapeHtml(item.title) + '</strong><p>' + escapeHtml(item.description) + '</p>' + (item.path ? '<a class="text-link" href="' + escapeHtml(item.path) + '" data-nav>باز کردن منبع ←</a>' : '<span class="phoenix-vwf-source-chip">canonical source</span>') + '</div></article>').join("") +
+      model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-supply-card" data-vwf-item><span class="phoenix-module-blueprint-index">' + escapeHtml(item.label) + '</span><div><strong>' + escapeHtml(item.title) + '</strong><p>' + escapeHtml(item.description) + '</p>' + (item.path ? '<a class="text-link" href="' + escapeHtml(contextualHref(model, item.path)) + '" data-nav>باز کردن منبع ←</a>' : '<span class="phoenix-vwf-source-chip">canonical source</span>') + '</div></article>').join("") +
     '</div>';
 }
 function renderPeople(model: VerticalWorkflowCanvasModel): string {
