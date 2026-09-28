@@ -5688,3 +5688,70 @@ a {
     animation-iteration-count: 1 !important;
   }
 }
+
+
+/* Public shell parity — home/header remain usable without the app sidebar */
+.phoenix-public-header {
+  position: sticky;
+  top: 0;
+  z-index: 320;
+  min-height: var(--shell-header-h);
+  padding-top: env(safe-area-inset-top);
+  box-sizing: content-box;
+  backdrop-filter: blur(20px) saturate(125%);
+  -webkit-backdrop-filter: blur(20px) saturate(125%);
+}
+
+.phoenix-public-header-inner {
+  min-height: var(--shell-header-h);
+}
+
+@media (max-width: 900px) {
+  .phoenix-public-nav { gap: 18px; }
+  .phoenix-public-header-inner { width: min(100% - 28px, 1420px); }
+}
+
+@media (max-width: 700px) {
+  .phoenix-public-header-inner {
+    min-height: 58px;
+    gap: 10px;
+  }
+
+  .phoenix-public-nav {
+    display: none;
+  }
+
+  .phoenix-public-actions .button {
+    min-height: 38px;
+    padding-inline: 13px;
+  }
+
+  .phoenix-public-actions .icon-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .phoenix-public-brand strong { font-size: 15px; }
+}
+
+@media (max-width: 420px) {
+  .phoenix-public-actions .button {
+    padding-inline: 10px;
+    font-size: 9px;
+  }
+
+  .phoenix-public-actions {
+    gap: 5px;
+  }
+}
+
+/* Keep home and public pages clear of fixed social/mobile chrome. */
+.home-shell .page-content,
+.public-business-shell .page-content {
+  padding-bottom: 0;
+}
+
+.home-shell .app-body,
+.public-business-shell .app-body {
+  min-height: 0;
+}
