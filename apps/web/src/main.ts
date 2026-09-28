@@ -3435,7 +3435,13 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
       '<div><span>Locale</span><strong>' + escapeHtml(profile.defaultLocale ?? "—") + '</strong></div>' +
       '<div><span>ارز</span><strong>' + escapeHtml(profile.defaultCurrency ?? "—") + '</strong></div>';
     contactsHost.innerHTML = response.data.contacts.length
-      ? response.data.contacts.map((contact) => '<span><b>' + escapeHtml(contact.contactType ?? "contact") + '</b> ' + escapeHtml(contact.value ?? "—") + '</span>').join("")
+      ? response.data.contacts.map((contact) => {
+          const type = contact.contactType ?? "contact";
+          const value = contact.value ?? "—";
+          const href = type === "phone" ? "tel:" + encodeURIComponent(value) : type === "email" ? "mailto:" + encodeURIComponent(value) : type === "website" ? (value.startsWith("http://") || value.startsWith("https://") ? value : "https://" + value) : "";
+          const content = href ? '<a href="' + escapeAttr(href) + '" target="_blank" rel="noopener noreferrer"><b>' + escapeHtml(type) + '</b> ' + escapeHtml(value) + '</a>' : '<span><b>' + escapeHtml(type) + '</b> ' + escapeHtml(value) + '</span>';
+          return content;
+        }).join("")
       : '<span>راه ارتباط عمومی ثبت نشده است.</span>';
     locationsHost.innerHTML = response.data.locations.length
       ? response.data.locations.map((location) => '<div class="business-location-item"><div><strong>' + escapeHtml(location.name ?? "Location") + '</strong><small>' + escapeHtml(location.locationType ?? "—") + (location.timezone ? " · " + escapeHtml(location.timezone) : "") + '</small></div></div>').join("")
