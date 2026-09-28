@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui";
+import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton, uiAlert } from "./ui";
 
 describe("Phoenix shared UI primitives", () => {
   it("renders accessible button/input/select/tab primitives", () => {
@@ -15,5 +15,11 @@ describe("Phoenix shared UI primitives", () => {
     expect(uiDialog("dialog", "Title", "<p>Body</p>")).toContain('aria-modal="true"');
     expect(uiEmpty("!", "Empty", "No items")).toContain("No items");
     expect(uiSkeleton(2)).toContain("skeleton line");
+  });
+
+  it("announces urgent alerts assertively and informational ones politely", () => {
+    expect(uiAlert("Failed", "Try again", "danger")).toContain('role="alert"');
+    expect(uiAlert("Heads up", "Check input", "warning")).toContain('role="alert"');
+    expect(uiAlert("Saved", "Done", "success")).toContain('role="status"');
   });
 });

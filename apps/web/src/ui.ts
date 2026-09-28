@@ -1,3 +1,5 @@
+import { installModalAccessibility } from "./a11y.js";
+
 export type UiButtonVariant = "primary" | "ghost" | "danger";
 
 export function uiButton(label: string, options: {
@@ -73,10 +75,15 @@ export function uiStatus(label: string, tone: "success" | "warning" | "danger" |
 }
 
 export function uiAlert(title: string, message: string, tone: "success" | "warning" | "danger" | "info" = "info"): string {
-  return `<div class="ds-alert ds-alert-${tone}" role="status"><div><strong>${escapeUi(title)}</strong><p class="ds-caption">${escapeUi(message)}</p></div></div>`;
+  const role = tone === "danger" || tone === "warning" ? "alert" : "status";
+  return `<div class="ds-alert ds-alert-${tone}" role="${role}"><div><strong>${escapeUi(title)}</strong><p class="ds-caption">${escapeUi(message)}</p></div></div>`;
 }
 
 export function uiCard(content: string, options: { interactive?: boolean; padded?: boolean; className?: string } = {}): string {
   const classes = ["ds-card", options.interactive ? "ds-card-interactive" : "", options.padded === false ? "" : "ds-card-pad", options.className ?? ""].filter(Boolean).join(" ");
   return `<article class="${classes}">${content}</article>`;
 }
+
+// Every modal dialog in the shell gets Escape, focus trapping and focus restore.
+// Guarded so the primitives stay importable in non-DOM environments (unit tests).
+if (typeof document !== "undefined") installModalAccessibility(document);
