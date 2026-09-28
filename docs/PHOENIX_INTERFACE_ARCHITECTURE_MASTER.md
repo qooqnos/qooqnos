@@ -775,3 +775,16 @@ Canonical vertical composition remains:
 Business Type → Capability → Module Blueprint → Role/Permission → Canonical Workflow
 
 The module page therefore answers four UI questions before showing operational data: what is this surface, what source owns its truth, what action can the user take, and what states can the UI honestly represent.
+
+
+## 64. Vertical Workflow Canvas Interaction Contract
+The shared Vertical Workflow UI Framework exposes a reusable Canvas for vertical modules. Each Canvas is selected by the module blueprint layout and must remain domain-agnostic.
+
+The Canvas interaction contract is:
+- tabs are UI state only and expose their active state accessibly through aria-selected;
+- local filters operate only on rendered Canvas surfaces and never change canonical data;
+- primary actions navigate to the declared canonical domain route;
+- unavailable or not-yet-connected data uses an explicit empty state instead of invented records;
+- the Canvas may compose command, calendar, supply, people, commerce, operations or communication patterns without creating separate persistence or authorization models.
+
+The visual invariant remains: one Phoenix shell, one state language, one canonical domain source per capability, many vertical compositions.
