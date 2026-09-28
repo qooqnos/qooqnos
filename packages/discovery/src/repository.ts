@@ -282,6 +282,33 @@ export class DiscoveryRepository extends Repository {
     return rows.map(toRecord);
   }
 
+  async searchFollowing(context: RequestContext, limit = 20, offset = 0): Promise<SearchDocumentRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const safeLimit = normalizeLimit(limit);
+    const safeOffset = normalizeOffset(offset);
+    const rows = await this.database.all<SearchDocumentRow>(
+      `SELECT sd.id, sd.organization_id AS organizationId, sd.workspace_id AS workspaceId,
+              sd.source_type AS sourceType, sd.source_id AS sourceId,
+              sd.document_version AS documentVersion, sd.title, sd.body,
+              sd.metadata_json AS metadataJson, sd.eligibility,
+              sd.created_at AS createdAt, sd.updated_at AS updatedAt
+       FROM search_documents sd
+       INNER JOIN social_follows sf
+         ON sf.target_type = 'business'
+        AND sf.target_id = json_extract(sd.metadata_json, '$.businessId')
+        AND sf.actor_user_id = ?
+        AND sf.status = 'active'
+        AND sf.organization_id = ?
+        AND sf.workspace_id = ?
+       WHERE sd.organization_id = ? AND sd.workspace_id = ? AND sd.eligibility = 'eligible'
+       ORDER BY sf.updated_at DESC, sd.updated_at DESC, sd.id ASC
+       LIMIT ? OFFSET ?`,
+      context.actorId, organizationId, workspaceId, organizationId, workspaceId, safeLimit, safeOffset,
+    );
+    return rows.map(toRecord);
+  }
+
   async upsert(input: UpsertSearchDocumentInput): Promise<SearchDocumentRecord> {
     const organizationId = this.requireOrganization({ organizationId: input.context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: input.context.workspaceId });
