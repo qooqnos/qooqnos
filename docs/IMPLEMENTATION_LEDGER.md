@@ -2394,3 +2394,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - No new domain state, authorization rule, duplicate store or fake metric was introduced.
 - Implementation commits: `48ce734741173867d452aa6bd4e2d837aba17cb1`, `390affd1a6b032868b49cd74aa42ad095886b122`, `c33e0e479f3048dafac44fab055ba0fa20a57234`.
 - Verification remains pending: TypeScript build, test suite and browser/visual QA have not been executed after this slice.
+
+
+## 2026-09-28 — Vertical Workflow navigation continuity
+- Hardened deep vertical module navigation so switching between modules preserves the active Business ID, vertical and originating-module context instead of resetting to a generic module URL.
+- Hardened SPA browser back/forward handling so semantic vertical routes (`/business/workspace/:vertical/:module`) and public business routes render in-place instead of triggering a full reload.
+- Kept the shared Vertical Workflow UI Framework routing-agnostic: context is injected by the Business Workspace layer; no domain state, authorization rule, duplicate persistence model or fake operational data was added.
+- Implementation commit: `44f7eea779b8bdd6caff560b7553f40ac4f0d9fa`.
+- Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed after this slice.
