@@ -3044,6 +3044,13 @@ function getBusinessVerticalUi(value: unknown) {
   return BUSINESS_VERTICAL_UI[resolveBusinessVerticalKey(value)];
 }
 
+const BUSINESS_VERTICAL_WORKFLOWS: Record<string, readonly string[]> = {
+  default: ["Supply", "Discovery", "Connect", "Act"],
+  clinic: ["خدمت", "زمان‌بندی", "رزرو", "پیگیری"],
+  retail: ["محصول", "انتشار", "موجودی", "سفارش"],
+  restaurant: ["منو", "میز / رزرو", "سفارش", "تحویل"],
+  salon: ["خدمت", "متخصص", "زمان‌بندی", "رزرو"],
+};
 const BUSINESS_MODULE_LINKS: Record<string, Record<string, { readonly label: string; readonly path?: string; readonly status?: string; readonly description: string }>> = {
   default: { "پروفایل": { label: "پروفایل کسب‌وکار", path: "/business/profile", description: "هویت و وضعیت انتشار Business." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "ساخت عرضه و محتوای marketplace-ready." }, "محصولات": { label: "کاتالوگ", path: "/catalog", description: "مدیریت عرضه‌های Catalog." }, "خدمات": { label: "کاتالوگ", path: "/catalog", description: "مدیریت خدمات و offeringها." }, "مشتریان": { label: "مشتریان", path: "/customer", description: "رابط Customer و تاریخچه رابطه." }, "پیام‌ها": { label: "ارتباطات", path: "/communication", description: "پیام‌ها و ارتباط با مشتری." }, "معاملات": { label: "معاملات", path: "/transactions", description: "خرید، فروش، اجاره و جریان‌های تجاری." }, "تیم": { label: "تیم", status: "read-only", description: "اعضا، Role و Permissionهای Workspace." } },
   clinic: { "امروز": { label: "رزرو", path: "/booking", description: "نمای امروز و جریان رزرو canonical." }, "نوبت‌ها": { label: "رزرو", path: "/booking", description: "Availability و رزرو نوبت." }, "تقویم": { label: "رزرو", path: "/booking", description: "Availability و زمان‌بندی." }, "پزشکان": { label: "تیم", status: "capability", description: "Provider/Specialist در Team و Access." }, "خدمات": { label: "کاتالوگ", path: "/catalog", description: "خدمات قابل ارائه توسط کلینیک." }, "مراجعان": { label: "مشتریان", path: "/customer", description: "Customer relationship و سابقه تعامل." }, "ساعات کاری": { label: "Business", path: "/business", description: "Location و Hours canonical." }, "پیام‌ها": { label: "ارتباطات", path: "/communication", description: "ارتباط با مراجعان." }, "پرداخت": { label: "مالی", path: "/billing", description: "Billing و entitlement." }, "محتوا": { label: "Product Studio", path: "/product-studio", description: "محتوا و معرفی خدمات." }, "تیم": { label: "تیم", status: "read-only", description: "Role/Access تیم درمان و پشتیبانی." } },
@@ -3075,6 +3082,9 @@ function renderBusinessModule(vertical: string, module: string): string {
       '</article>' +
       '<article class="glass-card phoenix-module-state-card"><span class="section-kicker">Capability State</span><h2>موقعیت این ماژول در Workspace</h2><div class="phoenix-module-state-row"><span>Vertical</span><strong>' + escapeHtml(ui.key) + '</strong></div><div class="phoenix-module-state-row"><span>Module</span><strong>' + escapeHtml(module) + '</strong></div><div class="phoenix-module-state-row"><span>Access</span><strong>Backend authoritative</strong></div></article>' +
     '</section>' +
+    '<section class="glass-card phoenix-business-workflow-card"><div class="card-section-heading"><div><span class="section-kicker">Vertical Workflow</span><h2>جریان کاری این نوع کسب‌وکار</h2></div></div><div class="phoenix-workflow-rail">' +
+      (BUSINESS_VERTICAL_WORKFLOWS[ui.key] ?? BUSINESS_VERTICAL_WORKFLOWS.default).map((step, index) => '<div class="phoenix-workflow-step"><span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + escapeHtml(step) + '</strong></div>').join("") +
+    '</div><p>این rail برای درک مسیر کاری است؛ state واقعی هر مرحله از domain canonical خوانده می‌شود.</p></section>' +
     '<section class="glass-card phoenix-module-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>کارهای مرتبط</h2></div></div><div class="phoenix-business-quick-actions">' + actions.map((action) => '<button type="button" class="button button-secondary" data-business-module-action="' + escapeAttr(action) + '">' + escapeHtml(action) + ' <span>←</span></button>').join("") + '</div><p>این Actionها فقط به workflowهای canonical وصل می‌شوند؛ اجرای مستقیم از این صفحه state موازی ایجاد نمی‌کند.</p></section>' +
   '</div>';
 }
