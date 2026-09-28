@@ -18,6 +18,28 @@ function context(): RequestContext {
 }
 
 describe("AvailabilityRepository", () => {
+  it("lists business schedules through the workspace-scoped repository boundary", async () => {
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new AvailabilityRepository(new D1Database(raw));
+
+    const schedules = await repository.listSchedules(
+      context(),
+      brandId<"EntityId">("business-1"),
+      200,
+    );
+
+    expect(schedules).toEqual([]);
+  });
+
   it("requires schedule reads to stay inside the tenant workspace", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
