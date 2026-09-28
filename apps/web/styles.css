@@ -3869,3 +3869,18 @@ body::before {
   .phoenix-public-business-offers,
   .phoenix-public-business-bridge { padding:18px; }
 }
+
+
+/* Public business social actions */
+.phoenix-public-business-hero-actions {
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:18px;
+}
+.phoenix-public-business-hero-actions .button { min-width:112px; }
+.phoenix-public-business-hero-actions .button-ghost {
+  color:#fff8f0;
+  border-color:rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06);
+}
