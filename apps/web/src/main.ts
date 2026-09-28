@@ -3336,7 +3336,7 @@ function renderBusinessModule(vertical: string, module: string): string {
       '<div class="phoenix-business-module-symbol">' + escapeHtml(ui.icon) + '</div>' +
     '</section>' +
     '<nav class="phoenix-business-module-nav" aria-label="ماژول‌های Workspace">' +
-      ui.modules.map((item) => '<a class="' + (item === module ? "active" : "") + '" href="' + escapeAttr(businessModulePath(ui.key, item)) + '" data-nav>' + escapeHtml(item) + '</a>').join("") +
+      ui.modules.map((item) => { const href = businessModuleContextHref(businessModulePath(ui.key, item), ui.key, module, businessId); return '<a class="' + (item === module ? "active" : "") + '" href="' + escapeAttr(href) + '" data-nav>' + escapeHtml(item) + '</a>'; }).join("") +
     '</nav>' +
     '<section class="phoenix-module-context-strip">' +
       contextRows.map((row, index) => '<div><span>' + escapeHtml(row.label) + '</span><strong id="module-context-' + String(index) + '">' + escapeHtml(row.value) + '</strong></div>').join("") +
@@ -3417,7 +3417,7 @@ function renderBusinessModule(vertical: string, module: string): string {
       }).join("") +
     '</div></section>' +
     '<section class="glass-card phoenix-module-related-card"><div class="card-section-heading"><div><span class="section-kicker">Workspace Map</span><h2>ماژول‌های اطراف</h2></div></div><div class="phoenix-module-related-list">' +
-      relatedModules.map((item) => '<a href="' + escapeAttr(businessModulePath(ui.key, item)) + '" data-nav><span>' + escapeHtml(item) + '</span><b>→</b></a>').join("") +
+      relatedModules.map((item) => { const href = businessModuleContextHref(businessModulePath(ui.key, item), ui.key, module, businessId); return '<a href="' + escapeAttr(href) + '" data-nav><span>' + escapeHtml(item) + '</span><b>→</b></a>'; }).join("") +
     '</div></section>' +
   '</div>';
 }
@@ -5457,7 +5457,10 @@ function escapeHtml(value: string): string {
 
 window.addEventListener("popstate", () => {
   const target = normalizePath(location.pathname);
-  if (!routes.some((route) => route.path === target)) {
+  const isKnownRoute = routes.some((route) => route.path === target);
+  const isBusinessModule = Boolean(parseBusinessModulePath(target));
+  const isPublicBusiness = target.startsWith("/businesses/") && target.split("/").filter(Boolean).length === 2;
+  if (!isKnownRoute && !isBusinessModule && !isPublicBusiness && !initialSeoHydration) {
     window.location.reload();
     return;
   }
