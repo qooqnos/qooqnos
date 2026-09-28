@@ -412,7 +412,10 @@ function render(): void {
   if (route.path === "/customer") void loadCustomerState();
   if (route.path === "/communication") void loadCommunicationState();
   if (route.path === "/billing") void loadBillingState();
-  if (route.path === "/business") void loadBusinessAccess();
+  if (route.path === "/business") {
+    if (new URLSearchParams(location.search).get("module")) void loadBusinessModuleContext();
+    else void loadBusinessAccess();
+  }
   if (route.path === "/business/profile") {
     void loadBusinessProfile();
     document.querySelector<HTMLElement>("#public-business-publication-action")?.addEventListener("click", () => void requestBusinessPublication());
@@ -3219,7 +3222,7 @@ function renderBusinessModule(vertical: string, module: string): string {
       ui.modules.map((item) => '<a class="' + (item === module ? "active" : "") + '" href="/business?vertical=' + encodeURIComponent(ui.key) + '&module=' + encodeURIComponent(item) + '" data-nav>' + escapeHtml(item) + '</a>').join("") +
     '</nav>' +
     '<section class="phoenix-module-context-strip">' +
-      contextRows.map((row) => '<div><span>' + escapeHtml(row.label) + '</span><strong>' + escapeHtml(row.value) + '</strong></div>').join("") +
+      contextRows.map((row, index) => '<div><span>' + escapeHtml(row.label) + '</span><strong id="module-context-' + String(index) + '">' + escapeHtml(row.value) + '</strong></div>').join("") +
     '</section>' +
     '<section class="phoenix-business-module-grid-page">' +
       '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + escapeHtml(info.label) + '</h2><p>این سطح یک UI تخصصی برای Workspace است؛ source of truth، permission و mutation همچنان در دامنه canonical باقی می‌مانند.</p>' +
@@ -3388,6 +3391,38 @@ function renderBusinessProfile(): string {
     '</section>' +
     '<section class="glass-card phoenix-public-profile-footer"><span class="section-kicker">Canonical Boundary</span><strong>این صفحه Preview/management-facing است؛ انتشار واقعی فقط از مسیرهای canonical انجام می‌شود.</strong><p>تا وقتی mutation انتشار به این UI متصل نشده، وضعیت «منتشر» یا «در انتظار انتشار» جعل نمی‌شود.</p></section>' +
   '</div>';
+}
+async function loadBusinessModuleContext(): Promise<void> {
+  const businessId = localStorage.getItem(STORAGE.business);
+  const businessNode = document.querySelector<HTMLElement>("#module-context-0");
+  const verticalNode = document.querySelector<HTMLElement>("#module-context-1");
+  const sourceNode = document.querySelector<HTMLElement>("#module-context-2");
+  const accessNode = document.querySelector<HTMLElement>("#module-context-3");
+  if (!businessNode || !verticalNode || !sourceNode || !accessNode) return;
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    accessNode.textContent = "بدون session";
+    return;
+  }
+  if (!businessId) {
+    businessNode.textContent = "Business لازم است";
+    accessNode.textContent = "نیازمند Workspace context";
+    return;
+  }
+  try {
+    const [businessResponse, context] = await Promise.all([
+      apiJson<{ data: { business: Record<string, unknown> } }>("/api/v1/businesses/" + encodeURIComponent(businessId) + "/management"),
+      apiJson<{ roles?: string[]; permissions?: string[]; workspaceId?: string; authenticated?: boolean }>("/api/v1/context"),
+    ]);
+    const business = businessResponse.data.business;
+    const canonicalVertical = getBusinessVerticalUi(getRecordString(business, ["businessType"]));
+    const selectedVertical = getBusinessVerticalUi(new URLSearchParams(location.search).get("vertical") ?? canonicalVertical.key);
+    businessNode.textContent = getRecordString(business, ["displayName", "name"]) ?? compactId(businessId);
+    verticalNode.textContent = canonicalVertical.key === selectedVertical.key ? canonicalVertical.label : canonicalVertical.label + " · URL context: " + selectedVertical.label;
+    sourceNode.textContent = "Business / " + (getRecordString(business, ["publicationStatus"]) ?? "unpublished");
+    accessNode.textContent = Array.isArray(context.permissions) && context.permissions.length ? "Context permissions loaded" : "Backend authoritative";
+  } catch (error) {
+    accessNode.textContent = error instanceof Error ? error.message : "Context خوانده نشد";
+  }
 }
 async function loadBusinessAccess(): Promise<void> {
   const status = document.querySelector<HTMLElement>("#business-management-status");
