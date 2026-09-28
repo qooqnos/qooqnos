@@ -3128,29 +3128,116 @@ function businessModuleInfo(vertical: string, module: string): { readonly label:
   return BUSINESS_MODULE_LINKS[vertical]?.[module] ?? BUSINESS_MODULE_LINKS.default?.[module] ?? { label: module, status: "capability", description: "این ماژول در ترکیب Capabilityهای Workspace قرار می‌گیرد." };
 }
 
+function businessModuleContextHref(path: string, vertical: string, module: string, businessId?: string): string {
+  const target = new URL(path, window.location.origin);
+  if (businessId) target.searchParams.set("business", businessId);
+  target.searchParams.set("vertical", resolveBusinessVerticalKey(vertical));
+  target.searchParams.set("fromModule", module);
+  return target.pathname + target.search + target.hash;
+}
+
+type BusinessModulePresentation = {
+  readonly eyebrow: string;
+  readonly stateLabel: string;
+  readonly stateDescription: string;
+  readonly surfaces: readonly { readonly label: string; readonly path?: string; readonly description: string }[];
+};
+
+const BUSINESS_MODULE_PRESENTATIONS: Record<string, Record<string, BusinessModulePresentation>> = {
+  clinic: {
+    "امروز": { eyebrow: "Today Command Center", stateLabel: "Today surface", stateDescription: "نمای نقطه شروع روز برای نوبت‌ها و کارهای جاری؛ داده واقعی از Booking می‌آید.", surfaces: [{ label: "رزرو", path: "/booking", description: "Availability و appointment workflow" }, { label: "مراجعان", path: "/customer", description: "Customer relationship" }, { label: "پیام‌ها", path: "/communication", description: "ارتباطات" }] },
+    "نوبت‌ها": { eyebrow: "Appointments", stateLabel: "Booking canonical", stateDescription: "این صفحه UI orchestration نوبت است و وضعیت نهایی را از Booking می‌خواند.", surfaces: [{ label: "Booking", path: "/booking", description: "مشاهده availability و رزرو" }, { label: "Customers", path: "/customer", description: "مراجعان" }, { label: "Services", path: "/catalog", description: "خدمات قابل رزرو" }] },
+    "تقویم": { eyebrow: "Schedule", stateLabel: "Availability canonical", stateDescription: "تقویم این Workspace نمایی از ظرفیت و زمان‌بندی canonical است؛ state محلی ساخته نمی‌شود.", surfaces: [{ label: "Availability", path: "/booking", description: "Slotهای قابل استفاده" }, { label: "Business Hours", path: "/business", description: "ساعات و مکان" }] },
+    "پزشکان": { eyebrow: "Providers", stateLabel: "Capability / Team", stateDescription: "پزشکان و متخصصان موجودیت مستقل UI نیستند؛ عضویت، Role و دسترسی از Workspace/Team کنترل می‌شود.", surfaces: [{ label: "Team", path: "/business?module=تیم", description: "Role و Access" }, { label: "Services", path: "/catalog", description: "خدمات" }] },
+    "خدمات": { eyebrow: "Clinical Services", stateLabel: "Catalog canonical", stateDescription: "Service supply در Catalog نگهداری می‌شود و این صفحه فقط context تخصصی را حفظ می‌کند.", surfaces: [{ label: "Catalog", path: "/catalog", description: "مدیریت offeringهای خدمت" }, { label: "Booking", path: "/booking", description: "مسیر رزرو" }] },
+    "مراجعان": { eyebrow: "Patients / Customers", stateLabel: "Customer canonical", stateDescription: "این Workspace از Customer boundary برای رابطه با مراجع استفاده می‌کند؛ پرونده درمانی جداگانه ایجاد نمی‌کنیم.", surfaces: [{ label: "Customer", path: "/customer", description: "رابط مشتری" }, { label: "Communication", path: "/communication", description: "ارتباط" }] },
+    "ساعات کاری": { eyebrow: "Business Availability", stateLabel: "Business canonical", stateDescription: "مکان و ساعت کاری از Business canonical می‌آید.", surfaces: [{ label: "Business", path: "/business", description: "مدیریت Workspace" }, { label: "Booking", path: "/booking", description: "اثر ساعات بر رزرو" }] },
+    "پیام‌ها": { eyebrow: "Care Communication", stateLabel: "Communication canonical", stateDescription: "پیام‌ها و notificationها از Communication boundary می‌آیند.", surfaces: [{ label: "Communication", path: "/communication", description: "ارسال و دریافت" }, { label: "Customers", path: "/customer", description: "زمینه مشتری" }] },
+    "پرداخت": { eyebrow: "Payments", stateLabel: "Billing canonical", stateDescription: "داده مالی از Billing/Commerce خوانده می‌شود و این UI دفتر مالی دوم نمی‌سازد.", surfaces: [{ label: "Billing", path: "/billing", description: "صورتحساب و entitlement" }, { label: "Transactions", path: "/transactions", description: "معامله و سفارش" }] },
+    "تیم": { eyebrow: "Team & Access", stateLabel: "Backend authoritative", stateDescription: "لیست اعضا و دسترسی‌ها از Workspace/Context می‌آید؛ mutationهای نقش هنوز در همین سطح ساخته نمی‌شوند.", surfaces: [{ label: "Team Management", path: "/business", description: "مدیریت تیم فعلی" }, { label: "Account Context", path: "/account", description: "context و permissionها" }] },
+  },
+  retail: {
+    "فروش امروز": { eyebrow: "Sales Command Center", stateLabel: "Commerce canonical", stateDescription: "وضعیت فروش و سفارش از Commerce/Transactions خوانده می‌شود.", surfaces: [{ label: "Transactions", path: "/transactions", description: "پیگیری سفارش" }, { label: "Customers", path: "/customer", description: "رابط مشتری" }] },
+    "محصولات": { eyebrow: "Product Workspace", stateLabel: "Catalog canonical", stateDescription: "محصول و offering از Catalog نگهداری می‌شود؛ Product Studio برای ساخت عرضه در دسترس است.", surfaces: [{ label: "Catalog", path: "/catalog", description: "محصول و offering" }, { label: "Product Studio", path: "/product-studio", description: "Seller AI" }] },
+    "مدل‌ها و تنوع": { eyebrow: "Variants", stateLabel: "Catalog canonical", stateDescription: "مدل و تنوع در همان مدل canonical محصول مدیریت می‌شوند.", surfaces: [{ label: "Catalog", path: "/catalog", description: "Variant context" }, { label: "Product Studio", path: "/product-studio", description: "تولید listing" }] },
+    "سایز و رنگ": { eyebrow: "Variant Attributes", stateLabel: "Catalog canonical", stateDescription: "سایز، رنگ و attributeها بخشی از variant model هستند؛ UI موازی ساخته نمی‌شود.", surfaces: [{ label: "Catalog", path: "/catalog", description: "مدیریت variant" }] },
+    "موجودی": { eyebrow: "Inventory", stateLabel: "Inventory / Catalog boundary", stateDescription: "موجودی فقط وقتی مقدار واقعی نشان می‌دهد که endpoint canonical آن فعال باشد.", surfaces: [{ label: "Catalog", path: "/catalog", description: "منبع عرضه" }, { label: "Transactions", path: "/transactions", description: "اثر موجودی در سفارش" }] },
+    "سفارش‌ها": { eyebrow: "Orders", stateLabel: "Commerce canonical", stateDescription: "Order state از Commerce می‌آید و transaction در Workspace کپی نمی‌شود.", surfaces: [{ label: "Transactions", path: "/transactions", description: "Order lookup" }, { label: "Operations", path: "/operations", description: "Fulfillment" }] },
+    "مرجوعی": { eyebrow: "Returns", stateLabel: "Commerce boundary", stateDescription: "چرخه مرجوعی زیر transaction/fulfillment قرار می‌گیرد؛ UI دوم برای order state ایجاد نمی‌شود.", surfaces: [{ label: "Transactions", path: "/transactions", description: "Order context" }, { label: "Operations", path: "/operations", description: "Fulfillment cases" }] },
+    "مشتریان": { eyebrow: "Customers", stateLabel: "Customer canonical", stateDescription: "رابط مشتری از Customer domain می‌آید.", surfaces: [{ label: "Customers", path: "/customer", description: "مدیریت رابطه" }, { label: "Communication", path: "/communication", description: "ارتباط" }] },
+    "تخفیف‌ها": { eyebrow: "Promotions", stateLabel: "Promotion canonical", stateDescription: "قواعد promotion و eligibility در دامنه Promotion باقی می‌ماند.", surfaces: [{ label: "Promotion", path: "/promotion", description: "ساخت و ارزیابی promotion" }] },
+    "محتوا": { eyebrow: "Seller AI", stateLabel: "Studio canonical", stateDescription: "محتوای محصول از Product Studio/Seller AI ساخته می‌شود.", surfaces: [{ label: "Product Studio", path: "/product-studio", description: "تولید listing" }, { label: "Catalog", path: "/catalog", description: "عرضه canonical" }] },
+    "گزارش فروش": { eyebrow: "Sales Reporting", stateLabel: "Transaction source", stateDescription: "گزارش این سطح باید از داده transaction/commerce تغذیه شود؛ عدد ساختگی نمایش نمی‌دهیم.", surfaces: [{ label: "Transactions", path: "/transactions", description: "داده سفارش" }] },
+  },
+  restaurant: {
+    "سفارش‌های امروز": { eyebrow: "Restaurant Command Center", stateLabel: "Commerce canonical", stateDescription: "جریان سفارش از Commerce/Transactions دنبال می‌شود.", surfaces: [{ label: "Transactions", path: "/transactions", description: "وضعیت سفارش" }, { label: "Operations", path: "/operations", description: "پیگیری fulfillment" }] },
+    "منو": { eyebrow: "Menu", stateLabel: "Catalog canonical", stateDescription: "منو به‌عنوان supply در Catalog مدیریت می‌شود.", surfaces: [{ label: "Catalog", path: "/catalog", description: "عرضه منو" }, { label: "Promotion", path: "/promotion", description: "پیشنهادها" }] },
+    "میزها": { eyebrow: "Tables", stateLabel: "Business capability", stateDescription: "میز و مکان از Business capability می‌آید؛ endpoint مستقل میز در این UI ادعا نمی‌شود.", surfaces: [{ label: "Business", path: "/business", description: "Workspace و مکان" }, { label: "Booking", path: "/booking", description: "رزرو" }] },
+    "رزرو": { eyebrow: "Reservations", stateLabel: "Booking canonical", stateDescription: "رزرو تحت Availability/Booking قرار دارد.", surfaces: [{ label: "Booking", path: "/booking", description: "رزرو" }, { label: "Customers", path: "/customer", description: "رابط مهمان" }] },
+    "آشپزخانه": { eyebrow: "Kitchen Operations", stateLabel: "Operations canonical", stateDescription: "عملیات و fulfillment از Operations پیگیری می‌شود.", surfaces: [{ label: "Operations", path: "/operations", description: "Cases و fulfillment" }, { label: "Transactions", path: "/transactions", description: "Order context" }] },
+    "تحویل": { eyebrow: "Delivery", stateLabel: "Fulfillment canonical", stateDescription: "تحویل در boundary عملیات/fulfillment قرار دارد.", surfaces: [{ label: "Operations", path: "/operations", description: "Fulfillment" }, { label: "Transactions", path: "/transactions", description: "Order" }] },
+    "مشتریان": { eyebrow: "Guests / Customers", stateLabel: "Customer canonical", stateDescription: "رابط با مشتری از Customer domain می‌آید.", surfaces: [{ label: "Customers", path: "/customer", description: "رابط" }, { label: "Communication", path: "/communication", description: "ارتباط" }] },
+  },
+  salon: {
+    "امروز": { eyebrow: "Today Command Center", stateLabel: "Booking canonical", stateDescription: "وقت‌های امروز از Booking/Availability تغذیه می‌شوند.", surfaces: [{ label: "Booking", path: "/booking", description: "وقت‌ها" }, { label: "Customers", path: "/customer", description: "مشتریان" }] },
+    "خدمات": { eyebrow: "Services", stateLabel: "Catalog canonical", stateDescription: "خدمت در Catalog نگهداری می‌شود.", surfaces: [{ label: "Catalog", path: "/catalog", description: "Service supply" }, { label: "Booking", path: "/booking", description: "رزرو" }] },
+    "متخصصان": { eyebrow: "Specialists", stateLabel: "Capability / Team", stateDescription: "متخصصان در سطح Team/Role تعریف می‌شوند؛ mutation جداگانه ساخته نمی‌شود.", surfaces: [{ label: "Team", path: "/business?module=تیم", description: "Role و Access" }, { label: "Booking", path: "/booking", description: "Schedule context" }] },
+    "تقویم": { eyebrow: "Calendar", stateLabel: "Availability canonical", stateDescription: "تقویم باید از availability واقعی خوانده شود.", surfaces: [{ label: "Booking", path: "/booking", description: "Slotها" }, { label: "Business", path: "/business", description: "Workspace" }] },
+    "مشتریان": { eyebrow: "Customers", stateLabel: "Customer canonical", stateDescription: "مشتریان از Customer boundary می‌آیند.", surfaces: [{ label: "Customers", path: "/customer", description: "رابط" }, { label: "Communication", path: "/communication", description: "ارتباط" }] },
+    "ظرفیت": { eyebrow: "Capacity", stateLabel: "Availability boundary", stateDescription: "ظرفیت عددی ساختگی نیست؛ تا زمانی که source canonical فعال باشد، فقط state اتصال نمایش می‌دهیم.", surfaces: [{ label: "Booking", path: "/booking", description: "Availability" }] },
+    "پرداخت": { eyebrow: "Payments", stateLabel: "Billing canonical", stateDescription: "پرداخت از Billing/Commerce پیگیری می‌شود.", surfaces: [{ label: "Billing", path: "/billing", description: "Billing" }, { label: "Transactions", path: "/transactions", description: "Transactions" }] },
+    "پیشنهادها": { eyebrow: "Promotions", stateLabel: "Promotion canonical", stateDescription: "Promotion policy و eligibility از Promotion می‌آید.", surfaces: [{ label: "Promotion", path: "/promotion", description: "پیشنهادها" }] },
+    "محتوا": { eyebrow: "Content", stateLabel: "Studio canonical", stateDescription: "معرفی خدمات و محتوا از Product Studio تغذیه می‌شود.", surfaces: [{ label: "Product Studio", path: "/product-studio", description: "Seller AI" }, { label: "Catalog", path: "/catalog", description: "Supply" }] },
+    "تیم": { eyebrow: "Team & Access", stateLabel: "Backend authoritative", stateDescription: "Role/Permission از Workspace/Context می‌آید.", surfaces: [{ label: "Team", path: "/business?module=تیم", description: "Workspace team" }, { label: "Account", path: "/account", description: "Runtime context" }] },
+  },
+};
+
 function renderBusinessModule(vertical: string, module: string): string {
   const ui = getBusinessVerticalUi(vertical);
   const info = businessModuleInfo(vertical, module);
+  const presentation = BUSINESS_MODULE_PRESENTATIONS[ui.key]?.[module];
+  const businessId = localStorage.getItem(STORAGE.business) ?? "";
   const moduleIndex = ui.modules.indexOf(module);
+  const canonicalPath = info.path ? businessModuleContextHref(info.path, ui.key, module, businessId) : undefined;
+  const relatedModules = ui.modules.filter((item) => item !== module).slice(0, 5);
+  const surfaces = presentation?.surfaces ?? (info.path ? [{ label: info.label, path: info.path, description: info.description }] : []);
   const actions = ui.actions.slice(0, 3);
   return '<div class="phoenix-business-module-page">' +
     '<section class="phoenix-business-module-hero">' +
-      '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">' + escapeHtml(ui.label) + ' · Module</span><h1>' + escapeHtml(module) + '</h1><p>' + escapeHtml(info.description) + '</p><div class="phoenix-business-module-meta"><span>' + escapeHtml(info.label) + '</span><span>' + (moduleIndex >= 0 ? "ماژول " + String(moduleIndex + 1) : "Capability") + '</span><span>' + escapeHtml(info.status ?? "connected") + '</span></div></div>' +
+      '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">' + escapeHtml(ui.label) + ' · Module</span><h1>' + escapeHtml(module) + '</h1><p>' + escapeHtml(info.description) + '</p><div class="phoenix-business-module-meta"><span>' + escapeHtml(presentation?.eyebrow ?? info.label) + '</span><span>' + (moduleIndex >= 0 ? "ماژول " + String(moduleIndex + 1) : "Capability") + '</span><span>' + escapeHtml(info.status ?? presentation?.stateLabel ?? "connected") + '</span></div></div>' +
       '<div class="phoenix-business-module-symbol">' + escapeHtml(ui.icon) + '</div>' +
     '</section>' +
     '<nav class="phoenix-business-module-nav" aria-label="ماژول‌های Workspace">' +
       ui.modules.map((item) => '<a class="' + (item === module ? "active" : "") + '" href="/business?module=' + encodeURIComponent(item) + '" data-nav>' + escapeHtml(item) + '</a>').join("") +
     '</nav>' +
     '<section class="phoenix-business-module-grid-page">' +
-      '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + escapeHtml(info.label) + '</h2><p>صفحه تخصصی فقط orchestration و navigation را انجام می‌دهد؛ داده و mutation از دامنه مالک خودش می‌آید.</p>' +
-        (info.path ? '<a class="button button-primary" href="' + escapeAttr(info.path) + '" data-nav>باز کردن ' + escapeHtml(info.label) + ' <span>→</span></a>' : '<span class="pill">اتصال mutation هنوز ثبت نشده</span>') +
+      '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + escapeHtml(info.label) + '</h2><p>این سطح یک UI تخصصی برای Workspace است؛ source of truth، permission و mutation همچنان در دامنه canonical باقی می‌مانند.</p>' +
+        (canonicalPath ? '<a class="button button-primary" href="' + escapeAttr(canonicalPath) + '" data-nav>باز کردن ' + escapeHtml(info.label) + ' <span>→</span></a>' : '<span class="pill">endpoint مستقل این قابلیت هنوز ثبت نشده</span>') +
       '</article>' +
-      '<article class="glass-card phoenix-module-state-card"><span class="section-kicker">Capability State</span><h2>موقعیت این ماژول در Workspace</h2><div class="phoenix-module-state-row"><span>Vertical</span><strong>' + escapeHtml(ui.key) + '</strong></div><div class="phoenix-module-state-row"><span>Module</span><strong>' + escapeHtml(module) + '</strong></div><div class="phoenix-module-state-row"><span>Access</span><strong>Backend authoritative</strong></div></article>' +
+      '<article class="glass-card phoenix-module-state-card"><span class="section-kicker">Capability State</span><h2>' + escapeHtml(presentation?.stateLabel ?? "Workspace boundary") + '</h2><p class="phoenix-module-state-description">' + escapeHtml(presentation?.stateDescription ?? "وضعیت این قابلیت از backend authoritative تعیین می‌شود.") + '</p><div class="phoenix-module-state-row"><span>Vertical</span><strong>' + escapeHtml(ui.key) + '</strong></div><div class="phoenix-module-state-row"><span>Module</span><strong>' + escapeHtml(module) + '</strong></div><div class="phoenix-module-state-row"><span>Access</span><strong>Backend authoritative</strong></div></article>' +
     '</section>' +
-    '<section class="glass-card phoenix-business-workflow-card"><div class="card-section-heading"><div><span class="section-kicker">Vertical Workflow</span><h2>جریان کاری این نوع کسب‌وکار</h2></div></div><div class="phoenix-workflow-rail">' +
+    '<section class="glass-card phoenix-module-surfaces-card"><div class="card-section-heading"><div><span class="section-kicker">Connected Surfaces</span><h2>سطوح مرتبط این ماژول</h2></div><span class="pill">' + String(surfaces.length) + ' مسیر</span></div><div class="phoenix-module-surface-grid">' +
+      (surfaces.length ? surfaces.map((surface) => {
+        const href = surface.path ? businessModuleContextHref(surface.path, ui.key, module, businessId) : "";
+        return surface.path
+          ? '<a class="phoenix-module-surface" href="' + escapeAttr(href) + '" data-nav><strong>' + escapeHtml(surface.label) + '</strong><span>' + escapeHtml(surface.description) + '</span><b>→</b></a>'
+          : '<div class="phoenix-module-surface disabled"><strong>' + escapeHtml(surface.label) + '</strong><span>' + escapeHtml(surface.description) + '</span><b>—</b></div>';
+      }).join("") : '<div class="slot-empty"><span>◈</span><p>سطح canonical متصل برای این Capability ثبت نشده است.</p></div>') +
+    '</div></section>' +
+    '<section class="glass-card phoenix-business-workflow-card"><div class="card-section-heading"><div><span class="section-kicker">Vertical Workflow</span><h2>جریان کاری این نوع کسب‌وکار</h2></div><span class="pill">' + escapeHtml(ui.label) + '</span></div><div class="phoenix-workflow-rail">' +
       (BUSINESS_VERTICAL_WORKFLOWS[ui.key] ?? BUSINESS_VERTICAL_WORKFLOWS.default).map((step, index) => '<div class="phoenix-workflow-step"><span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + escapeHtml(step) + '</strong></div>').join("") +
-    '</div><p>این rail برای درک مسیر کاری است؛ state واقعی هر مرحله از domain canonical خوانده می‌شود.</p></section>' +
-    '<section class="glass-card phoenix-module-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>کارهای مرتبط</h2></div></div><div class="phoenix-business-quick-actions">' + actions.map((action) => '<button type="button" class="button button-secondary" data-business-module-action="' + escapeAttr(action) + '">' + escapeHtml(action) + ' <span>←</span></button>').join("") + '</div><p>این Actionها فقط به workflowهای canonical وصل می‌شوند؛ اجرای مستقیم از این صفحه state موازی ایجاد نمی‌کند.</p></section>' +
+    '</div><p>این rail معماری مسیر را نشان می‌دهد؛ هیچ state نمایشی ساختگی جای state دامنه را نمی‌گیرد.</p></section>' +
+    '<section class="glass-card phoenix-module-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>کارهای مرتبط</h2></div></div><div class="phoenix-business-quick-actions">' +
+      actions.map((action) => {
+        const target = (BUSINESS_QUICK_ACTION_LINKS[ui.key] ?? BUSINESS_QUICK_ACTION_LINKS.default)[action];
+        return target
+          ? '<a class="button button-secondary" href="' + escapeAttr(businessModuleContextHref(target, ui.key, module, businessId)) + '" data-nav>' + escapeHtml(action) + ' <span>←</span></a>'
+          : '<span class="pill">' + escapeHtml(action) + '</span>';
+      }).join("") +
+    '</div></section>' +
+    '<section class="glass-card phoenix-module-related-card"><div class="card-section-heading"><div><span class="section-kicker">Workspace Map</span><h2>ماژول‌های اطراف</h2></div></div><div class="phoenix-module-related-list">' +
+      relatedModules.map((item) => '<a href="/business?module=' + encodeURIComponent(item) + '" data-nav><span>' + escapeHtml(item) + '</span><b>→</b></a>').join("") +
+    '</div></section>' +
   '</div>';
 }
 function renderBusiness(): string {
