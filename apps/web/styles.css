@@ -4696,3 +4696,66 @@ body::before {
 .phoenix-module-role-contract-grid strong{font-size:9px;color:var(--text)}
 .phoenix-module-role-contract-grid small{font-size:7px;line-height:1.7;color:var(--muted)}
 @media(max-width:760px){.phoenix-module-role-contract-grid{grid-template-columns:1fr}}
+
+
+/* Shared Vertical Workflow stage rail */
+.phoenix-vwf-stage-rail{
+  display:flex;
+  align-items:stretch;
+  gap:8px;
+  margin:0 0 16px;
+  padding:8px;
+  overflow-x:auto;
+  scrollbar-width:thin;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:var(--surface-2);
+}
+.phoenix-vwf-stage{
+  min-width:150px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px 13px;
+  border:1px solid transparent;
+  border-radius:15px;
+  background:transparent;
+  color:var(--text);
+  text-decoration:none;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease;
+}
+.phoenix-vwf-stage:hover{transform:translateY(-1px);border-color:var(--line-strong);background:var(--surface)}
+.phoenix-vwf-stage.active{
+  border-color:rgba(242,111,56,.35);
+  background:linear-gradient(180deg,rgba(242,111,56,.11),rgba(242,111,56,.04));
+  box-shadow:0 8px 22px rgba(24,18,14,.06);
+}
+.phoenix-vwf-stage-number{
+  width:30px;height:30px;flex:0 0 30px;
+  display:grid;place-items:center;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--surface);
+  color:var(--faint);
+  font-size:11px;font-weight:800;
+}
+.phoenix-vwf-stage.active .phoenix-vwf-stage-number{
+  border-color:rgba(242,111,56,.4);
+  color:var(--accent);
+}
+.phoenix-vwf-stage-copy{display:grid;gap:3px;min-width:0}
+.phoenix-vwf-stage-copy strong{font-size:11px;line-height:1.35}
+.phoenix-vwf-stage-copy small{color:var(--faint);font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phoenix-vwf-stage-connector{
+  flex:0 0 auto;
+  align-self:center;
+  color:var(--faint);
+  opacity:.65;
+  font-size:14px;
+}
+@media (max-width:760px){
+  .phoenix-vwf-stage-rail{margin-inline:-4px;padding:6px;border-radius:16px}
+  .phoenix-vwf-stage{min-width:132px;padding:10px}
+  .phoenix-vwf-stage-number{width:27px;height:27px;flex-basis:27px}
+  .phoenix-vwf-stage-copy strong{font-size:10px}
+}
