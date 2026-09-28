@@ -4192,3 +4192,46 @@ body::before {
   .phoenix-business-board { grid-template-columns:1fr; }
   .phoenix-business-board-card { min-height:135px; }
 }
+
+
+/* Role-focused Business Workspace actions */
+.phoenix-business-role-actions {
+  padding:21px 23px;
+  margin:15px 0;
+}
+.phoenix-business-role-actions-grid {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:14px;
+}
+.phoenix-business-role-action {
+  position:relative;
+  display:grid;
+  gap:5px;
+  padding:13px;
+  min-height:88px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  color:var(--text);
+  background:var(--surface-2);
+  text-decoration:none;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.phoenix-business-role-action:hover {
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--primary) 18%,var(--line));
+  box-shadow:0 14px 34px rgba(86,56,34,.07);
+}
+.phoenix-business-role-action strong { font-size:9px; }
+.phoenix-business-role-action span { color:var(--muted);font-size:7px;line-height:1.7;max-width:200px; }
+.phoenix-business-role-action b {
+  position:absolute;
+  inset-inline-end:12px;
+  inset-block-end:10px;
+  color:var(--primary);
+  font-size:13px;
+}
+@media(max-width:700px){
+  .phoenix-business-role-actions-grid { grid-template-columns:1fr; }
+}
