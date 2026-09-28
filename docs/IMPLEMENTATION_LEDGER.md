@@ -2469,3 +2469,15 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Implementation commits: efb7687865e6cd53e40846d4e80a87c8d0067784, f053d3658aa13161392e16f890038e7b306aece1, de4b7c182c6fd82f99a0bf90b5ba059309b874fc.
 - Verification remains pending: TypeScript build, full test suite and browser/visual QA have not been executed after this slice.
 - Follow-up source-format fix after the UI primitive expansion: commit cc5dff9ddbd2e7dddd3748df0ddce3ec946609c2.
+
+
+## 2026-09-29 — Application Shell / Navigation / Responsive contract completion
+- Hardened the shared app shell across desktop, tablet and mobile in `apps/web/src/main.ts`.
+- Header now has a stable Phoenix brand surface, route context, global command affordance, notification control, workspace control and theme control with explicit accessible labels.
+- Sidebar navigation now has a scroll-safe navigation region, canonical active-state/`aria-current` signaling, workflow-to-Workspace active mapping, compact tablet presentation and preserved AI/help footer surfaces.
+- Mobile primary navigation was normalized to five equal destinations: خانه، محتوا، معاملات، اعلان‌ها، پروفایل; the previous four-column CSS mismatch was removed.
+- Added safe-area-aware fixed mobile navigation, touch-safe controls, sticky header geometry, tablet compact sidebar mode, mobile content clearance, reduced-motion behavior and public-header mobile parity.
+- Responsive contract is mirrored in both `apps/web/styles.css` and `apps/web/public/styles.css` to prevent visual drift between runtime surfaces.
+- No domain state, authorization logic, persistence model or API source-of-truth was changed.
+- Implementation commits: `a7d51c194db6dea5f1853147b2a0c011af107353`, `fbf3688ce469979e7b3342fdef588537e08efacd`, `8cbe962ee504f36d6076d898df89b2f4cf0d7c0c`, `a44143c308f0414bc35f72305f830408e2de72b3`, `6e4d40eb95ebc8e6f5e173d0f164ea0be6ff5e4c`.
+- Verification status: source retrieval/structural checks completed; TypeScript build, full test suite and browser/device visual QA were not executable in this environment. GitHub combined status currently reports no checks for these commits.
