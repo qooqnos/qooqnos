@@ -1990,3 +1990,15 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Visual system uses the same Phoenix warm/orange brand language, rounded cards, soft depth and responsive behavior.
 - Implementation commits: `58732cdefe4b39514f37bb63da5ea85c565b5ba4`, `6140e9c4f69e52016c66d365893703aa578d4220`, `d8bc256cd1092d39e6139611a579f3122ffdfd67`, `1e6ed79546ad6a43a0f3410b3a94ee8a5d4679f9`.
 - Verification gate remains: web TypeScript build plus responsive/visual QA before production verification.
+
+
+## Capability-Driven Business Workspace Vertical UI — 2026-09-28
+- Reworked `/business` from a generic dashboard composition into a Phoenix Business Workspace shell with occupation-driven module composition.
+- Added an explicit UI registry in `apps/web/src/main.ts` for default, clinic, retail, restaurant and salon business compositions.
+- Registry drives vertical label, visual icon, subtitle, workspace modules, quick actions, customer-facing actions and metric slots. This is presentation composition only; server-side authorization and runtime capability registry remain authoritative.
+- Business data now resolves `businessType` into the visual composition and updates the Workspace header/status, module grid and customer-action preview after canonical Business data loads.
+- Added Phoenix assistant attention card, vertical metrics, Workspace Modules, Quick Actions, customer-experience preview and preserved canonical business profile/location/hours/contact/publication management.
+- Added visual calibration in the same warm Phoenix system for Business Workspace, including rounded operational cards, orange accent states, assistant surfaces and responsive mobile composition.
+- Added truthful interaction feedback for not-yet-wired vertical module actions instead of inventing domain behavior.
+- Commits: `3f8f669c9297e500e054962a75e7e34f788e6977`, `458484584bc5303725645d636a1199693d841c8c`, `880187439e131c7b5906a529f392fa0ae705b373`, `d24bc3b8d490aa940710582385d7654ffd326667`.
+- Verification gate remains: web TypeScript build plus responsive/visual QA before production verification.
