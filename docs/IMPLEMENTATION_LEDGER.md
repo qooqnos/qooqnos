@@ -2252,3 +2252,10 @@ Residual external gates remain intentionally evidence-bound: Google Search Conso
 - Added repository coverage for the business schedule listing boundary.
 - Implementation commits: 6562f3b86370fb40853076963aa8f7c308a10e7d, 9145ceee69369df506e307f1a68c951ce535ddb3, 7a3e460769bcf8603c9b1ba64150e4c88d16db79, 88f6096c73a3a13675fdc885078554735d39c5fe, 30f627123dd9e4268c62dc45a7b7a32e28f4696a, a38265e285f0172a1192b396c1db2347f25bf746, aee606c6906bba65337a9bc23ba7dc04804bcab3.
 - Verification remains pending: TypeScript build, API integration tests and browser/visual QA have not been executed for this slice.
+## 2026-09-28 — Vertical Workflow UI catalog hydration
+- Extended Catalog repository/service with a workspace-scoped listBusinessOfferings() query for the existing Offering source of truth.
+- Added authenticated workspace route GET /api/v1/catalog/businesses/:businessId/offers with tenant/workspace isolation; no UI-owned catalog state is introduced.
+- Extended the shared Vertical Workflow UI Framework catalog canvas to hydrate real Offerings for the active Business/Workspace.
+- Added responsive live supply cards and truthful empty/loading/error states.
+- This slice covers the shared Supply Canvas used by clinic, retail, restaurant and salon modules; it does not invent product/service data.
+- Verification: automated build/typecheck not run in this step; changes require CI/runtime verification.
