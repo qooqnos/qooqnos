@@ -356,29 +356,72 @@ function getInitialLanguage(): Language {
 }
 
 
-function applyLanguageToUi(): void {
-  const language = getInitialLanguage();
-  defaultI18n.setLanguage(language);
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+function applyLanguageToNode(root: Node, language: Language): void {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const nodes: Text[] = [];
   let node: Node | null;
   while ((node = walker.nextNode())) nodes.push(node as Text);
+
   nodes.forEach((textNode) => {
     const value = textNode.nodeValue ?? "";
     if (!value.trim()) return;
     const translated = translateUiText(value, language);
     if (translated !== value) textNode.nodeValue = translated;
   });
-  document.querySelectorAll<HTMLElement>("[placeholder], [aria-label], [title]").forEach((element) => {
+
+  if (root instanceof Element && root.matches("[placeholder], [aria-label], [title]")) {
     (["placeholder", "aria-label", "title"] as const).forEach((attribute) => {
-      const value = element.getAttribute(attribute);
+      const value = root.getAttribute(attribute);
       if (!value) return;
       const translated = translateUiText(value, language);
-      if (translated !== value) element.setAttribute(attribute, translated);
+      if (translated !== value) root.setAttribute(attribute, translated);
     });
-  });
+  }
+
+  if (root instanceof Element || root instanceof Document) {
+    root.querySelectorAll<HTMLElement>("[placeholder], [aria-label], [title]").forEach((element) => {
+      (["placeholder", "aria-label", "title"] as const).forEach((attribute) => {
+        const value = element.getAttribute(attribute);
+        if (!value) return;
+        const translated = translateUiText(value, language);
+        if (translated !== value) element.setAttribute(attribute, translated);
+      });
+    });
+  }
+}
+
+function applyLanguageToUi(): void {
+  const language = getInitialLanguage();
+  defaultI18n.setLanguage(language);
+  applyLanguageToNode(document.body, language);
   document.querySelectorAll<HTMLElement>("[data-language-current]").forEach((node) => {
     node.textContent = languageLabel(language);
+  });
+}
+
+let languageObserverInstalled = false;
+function installLanguageObserver(): void {
+  if (languageObserverInstalled || !appRoot) return;
+  languageObserverInstalled = true;
+  const observer = new MutationObserver((mutations) => {
+    const language = getInitialLanguage();
+    defaultI18n.setLanguage(language);
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach((addedNode) => {
+        if (addedNode.nodeType === Node.ELEMENT_NODE || addedNode.nodeType === Node.TEXT_NODE) {
+          applyLanguageToNode(addedNode, language);
+        }
+      });
+    }
+    document.querySelectorAll<HTMLElement>("[data-language-current]").forEach((node) => {
+      if (node.textContent !== languageLabel(language)) node.textContent = languageLabel(language);
+    });
+  });
+  observer.observe(appRoot, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ["placeholder", "aria-label", "title"],
   });
 }
 
@@ -506,6 +549,7 @@ function render(): void {
   bindGlobalEvents();
   syncThemeButtons();
   applyLanguageToUi();
+  installLanguageObserver();
   if (route.path === "/discover") {
     const params = new URLSearchParams(location.search);
     const initialDiscoveryQuery = params.get("q")?.trim() ?? "";
