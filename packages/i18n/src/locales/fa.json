@@ -753,5 +753,30 @@
     "readingVerification": "در حال خواندن Verification…",
     "verticalDefaultLabel": "کسب‌وکار عمومی",
     "verticalDefaultSubtitle": "Workspace قابل تنظیم بر اساس قابلیت‌های فعال."
+  },
+  "businessSurface": {
+    "loadingPublicData": "در حال بارگذاری اطلاعات عمومی…",
+    "follow": "دنبال کردن",
+    "submitReview": "ثبت نظر",
+    "share": "اشتراک‌گذاری",
+    "published": "منتشرشده",
+    "supplyIdentity": "هویت عرضه",
+    "productsAndServices": "محصولات و خدمات",
+    "publishedOffers": "محصولات و خدمات منتشرشده",
+    "contact": "ارتباط",
+    "locations": "مکان‌ها",
+    "customerExperiences": "تجربه‌های منتشرشده مشتریان",
+    "publishedSupplyOnly": "این صفحه فقط عرضه‌های منتشرشده را نشان می‌دهد؛ اقدام بعدی دوباره به مسیرهای canonical خرید یا رزرو واگذار می‌شود.",
+    "unifiedPath": "از شناخت کسب‌وکار تا اقدام، یک مسیر واحد.",
+    "publicIdentity": "هویت کسب‌وکار",
+    "trust": "اعتماد",
+    "communication": "ارتباط",
+    "publicBusinessProfile": "پروفایل عمومی کسب‌وکار",
+    "publicProfileDescription": "پروفایل عمومی از داده‌های canonical Business ساخته می‌شود.",
+    "workspace": "Workspace",
+    "identity": "هویت",
+    "trustBeforePublic": "اعتماد، قبل از نمایش عمومی",
+    "trustSource": "وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.",
+    "viewTrust": "مشاهده اعتماد"
   }
 }
