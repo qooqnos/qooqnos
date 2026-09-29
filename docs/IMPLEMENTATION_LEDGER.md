@@ -2536,3 +2536,9 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added regression coverage for the Canvas role contract and mirrored responsive styling in `apps/web/styles.css` and `apps/web/public/styles.css`.
 - Implementation commits: `5ca9b3be13f42eb998a57c1b2868f61e917dcd69`, `3c475645e5c24eebc9e3f0c15cbd9e951f58693b`, `6e34c1208090a47fb49489db91bc0a2a3615053e`, `fedeb35d623129f6adfede083c5ee808461d093c`, `df4e0ebf26b82831d98c844ecfa6baec1be9d96b`.
 - Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
+
+## Vertical Workflow UI Contract Hardening — 2026-09-29
+- Added invariant tests around the shared Vertical Workflow UI Framework.
+- Tests cover all four current business verticals (clinic, retail, restaurant, salon), stage→module mapping, canonical blueprint completeness/states, stable semantic module routes, and role-emphasis behavior remaining presentation-only.
+- Existing framework remains the shared UI composition layer: workflow stages, module blueprints, responsive canvas layouts, canonical data hydration, missing-context states, and backend-authoritative role emphasis are not duplicated per vertical.
+- No production metrics or domain state are fabricated by the test contract.
