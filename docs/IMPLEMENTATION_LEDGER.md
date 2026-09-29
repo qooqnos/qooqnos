@@ -1,3 +1,13 @@
+## 2026-09-29 — Canonical Vertical Module UI contract
+
+- 🟢 Added `getVerticalModuleUiContract()` to the shared `business-module-ui` registry as the single presentation contract for vertical/module identity.
+- 🟢 The contract now centralizes semantic slug, route, resolved blueprint, capability dependencies and role-lens metadata for Clinic, Retail, Restaurant and Salon.
+- 🟢 Business module rendering and the shared Vertical Workflow Canvas now consume this contract instead of independently resolving blueprint/route metadata.
+- 🟢 Added regression coverage across every supported vertical/module pair to prevent route, blueprint and capability metadata drift.
+- 🟡 TypeScript build, full tests, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: `4a9a3aa5`, `9eb95d5b`, `8178af3a`, `df1ee3f6`.
+
 ## 2026-09-29 — Shared Vertical Workflow stage progress semantics
 
 - 🟢 The shared Vertical Workflow rail now exposes one canonical stage-state contract: `completed`, `current`, and `upcoming`.
