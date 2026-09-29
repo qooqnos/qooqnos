@@ -4327,6 +4327,15 @@ body::before {
 @media(max-width:900px){.phoenix-module-context-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.phoenix-module-workbench-grid{grid-template-columns:1fr}}
 @media(max-width:520px){.phoenix-module-context-strip{grid-template-columns:1fr}.phoenix-module-context-strip>div{padding:9px 10px}.phoenix-module-workbench-card{padding:18px}}
 
+/* Vertical module capability contract */
+.phoenix-module-capability-contract{padding:20px 22px}
+.phoenix-module-capability-contract .card-section-heading p{margin:5px 0 0;color:var(--muted);font-size:7px;line-height:1.8}
+.phoenix-module-capability-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.phoenix-module-capability-grid>div{display:grid;gap:6px;min-width:0;padding:14px;border:1px solid var(--line);border-radius:17px;background:var(--surface-2)}
+.phoenix-module-capability-grid>div>span{color:var(--faint);font-size:7px}
+.phoenix-module-capability-grid .metadata-cloud{margin:0}
+@media(max-width:650px){.phoenix-module-capability-grid{grid-template-columns:1fr}}
+
 /* Deep vertical module workbench */
 .phoenix-module-state-description {
   margin: 0 0 12px;
