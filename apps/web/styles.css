@@ -5957,3 +5957,17 @@ a {
 .phoenix-vwf-live-resource-meta strong{color:inherit}
 .phoenix-vwf-live-resource-meta code{direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:720px){.phoenix-vwf-live-resources{padding:14px}.phoenix-vwf-live-resources-grid{grid-template-columns:1fr}}
+
+
+/* Vertical Workflow shared fulfillment lookup */
+.phoenix-vwf-live-fulfillment{margin-top:18px;padding:18px;border:1px solid var(--border-subtle,rgba(0,0,0,.08));border-radius:22px;background:var(--surface-soft,rgba(255,255,255,.55));}
+.phoenix-vwf-fulfillment-lookup{display:flex;gap:10px;align-items:center;margin-top:14px;}
+.phoenix-vwf-fulfillment-lookup .studio-input-line{flex:1;min-width:0;}
+.phoenix-vwf-fulfillment-card{margin-top:14px;padding:16px;border-radius:18px;border:1px solid var(--border-subtle,rgba(0,0,0,.08));background:var(--surface,rgba(255,255,255,.7));}
+.phoenix-vwf-fulfillment-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+.phoenix-vwf-fulfillment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.phoenix-vwf-fulfillment-grid>div{display:grid;gap:4px;padding:12px;border-radius:14px;background:var(--surface-soft,rgba(0,0,0,.03));}
+.phoenix-vwf-fulfillment-grid span{font-size:11px;opacity:.65;}
+.phoenix-vwf-fulfillment-grid strong{font-size:13px;overflow-wrap:anywhere;}
+@media (max-width:760px){.phoenix-vwf-fulfillment-lookup{flex-direction:column;align-items:stretch}.phoenix-vwf-fulfillment-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.phoenix-vwf-fulfillment-grid{grid-template-columns:1fr}}
