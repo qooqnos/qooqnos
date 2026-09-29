@@ -364,7 +364,6 @@ const UI_TRANSLATIONS: Record<Language, Record<string, string>> = {
     "با نیازت شروع کن، نه با کلمه کلیدی": "Start with your need, not a keyword",
     "هرچه برای تصمیم مهم است بنویس؛ ققنوس مسیر کشف را باز می‌کند.": "Write what matters for your decision; Phoenix opens the discovery path.",
     "نمایش بیشتر": "Show more",
-    "برای کسب‌وکارها": "For businesses",
     "کسب‌وکار جدید بسازید": "Create a new business",
     "انتخاب زبان": "Choose language",
     "تغییر پوسته": "Change theme"
