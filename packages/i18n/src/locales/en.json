@@ -552,7 +552,9 @@
     "business_clinicType": "Clinic",
     "business_storeType": "Store",
     "business_restaurantType": "Restaurant",
-    "business_salonType": "Salon"
+    "business_salonType": "Salon",
+    "workspaceContextRequired": "Workspace context required",
+    "loadingEllipsis": "Loading…"
   },
   "canonical": {
     "identity": {
