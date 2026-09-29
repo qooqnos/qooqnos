@@ -5980,3 +5980,14 @@ a {
 @media (prefers-reduced-motion:reduce){
   .phoenix-vwf-module-link{transition:none}
 }
+
+/* Vertical Workflow — canonical retail variant surfaces */
+.phoenix-vwf-live-variants{margin:18px 0;padding:18px;border:1px solid var(--line,rgba(38,32,24,.1));border-radius:24px;background:var(--surface,rgba(255,255,255,.72));}
+.phoenix-vwf-live-variants-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.phoenix-vwf-live-variant-card{padding:16px;border:1px solid var(--line,rgba(38,32,24,.08));border-radius:18px;background:var(--card,rgba(255,255,255,.72));min-width:0}
+.phoenix-vwf-live-variant-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.phoenix-vwf-live-variant-card h4{margin:0 0 7px;font-size:15px}
+.phoenix-vwf-live-variant-card p{margin:0 0 10px;color:var(--muted,#777);font-size:12px;overflow-wrap:anywhere}
+.phoenix-vwf-live-variant-attributes{padding:10px 12px;border-radius:14px;background:rgba(246,142,55,.07);color:var(--text,#241f1a);font-size:12px;line-height:1.8;overflow-wrap:anywhere}
+@media(max-width:900px){.phoenix-vwf-live-variants-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.phoenix-vwf-live-variants{padding:14px;border-radius:20px}.phoenix-vwf-live-variants-grid{grid-template-columns:1fr}.phoenix-vwf-live-variant-card{padding:14px}}
