@@ -263,6 +263,60 @@ This dictionary is the authoritative vocabulary for Phoenix. New code, schema, A
 
 **UsageMetric** — canonical definition of a billable/trackable usage dimension.
 
+### Fulfillment
+
+**FulfillmentOrder** — canonical execution obligation originating from an authoritative commercial or booking commitment.
+
+**FulfillmentItem** — executable fulfillment obligation for one source line/item.
+
+**FulfillmentPlan** — versioned execution plan for a FulfillmentOrder.
+
+**FulfillmentTask** — atomic operational work unit within fulfillment execution.
+
+**FulfillmentAssignment** — authorized assignment of a fulfillment task to an actor.
+
+**Shipment** — physical execution aggregate for a fulfillment item.
+
+**ShipmentPackage** — physical package/container within a Shipment.
+
+**TrackingEvent** — immutable normalized evidence from a carrier or operational source.
+
+### Promotion
+
+**Promotion** — incentive policy and lifecycle definition owned by Promotion.
+
+**PromotionVersion** — immutable version of a Promotion policy.
+
+**Benefit** — canonical incentive/value delivered by a Promotion.
+
+**Rule** — condition used by Promotion policy evaluation.
+
+**Scope** — domain boundary to which a Promotion applies.
+
+**StackPolicy** — policy controlling whether Promotion incentives may be combined.
+
+**Qualification** — evaluation record determining whether an actor/context qualifies for a Promotion.
+
+**Offer** — promotion-generated customer-facing incentive instance.
+
+**Reservation** — temporary reservation of a promotion Offer before redemption; it is not settlement.
+
+**Redemption** — record that a promotion Offer was consumed.
+
+**UsageCounter** — derived/operational usage measurement that never replaces redemption history.
+
+**Campaign** — orchestration aggregate grouping Promotion activity and audience/measurement configuration.
+
+**CampaignAudience** — audience definition for a Campaign.
+
+**CampaignPromotionLink** — explicit Campaign-to-Promotion relationship.
+
+**CampaignExperiment** — controlled Campaign experiment variant.
+
+**CampaignMeasurement** — measurement record owned by Analytics for Campaign evaluation.
+
+**AbuseSignal** — signal used by Promotion policy/abuse controls.
+
 ### Media / Integration / Platform
 
 **MediaAsset** — canonical stored media object and metadata.
