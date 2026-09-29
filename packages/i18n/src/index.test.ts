@@ -20,6 +20,7 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("Tell Phoenix what you need", "fa")).toBe("نیازت را بگو");
     expect(translateUiText("أخبر ققنوس بما تحتاج", "en")).toBe("Tell Phoenix what you need");
     expect(translateUiText("شروع کن و هرچه برای تصمیم مهم است بنویس", "en")).toBe("شروع کن و هرچه برای تصمیم مهم است بنویس");
+    expect(translateUiText("کسب‌وکار مناسب برای من", "en")).toBe("کسب‌وکار مناسب برای من");
     expect(translateUiText("متن ناشناخته", "en")).toBe("متن ناشناخته");
   });
 
