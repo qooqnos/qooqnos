@@ -663,6 +663,35 @@
       "action": "Action",
       "sourceOfTruth": "Source of Truth",
       "projection": "Derived Projection"
+    },
+    "fulfillment": {
+      "fulfillmentOrder": "Fulfillment Order",
+      "fulfillmentItem": "Fulfillment Item",
+      "fulfillmentPlan": "Fulfillment Plan",
+      "fulfillmentTask": "Fulfillment Task",
+      "fulfillmentAssignment": "Fulfillment Assignment",
+      "shipment": "Shipment",
+      "shipmentPackage": "Shipment Package",
+      "trackingEvent": "Tracking Event"
+    },
+    "promotion": {
+      "promotion": "Promotion",
+      "promotionVersion": "Promotion Version",
+      "benefit": "Benefit",
+      "rule": "Rule",
+      "scope": "Scope",
+      "stackPolicy": "Stack Policy",
+      "qualification": "Qualification",
+      "offer": "Offer",
+      "reservation": "Reservation",
+      "redemption": "Redemption",
+      "usageCounter": "Usage Counter",
+      "campaign": "Campaign",
+      "campaignAudience": "Campaign Audience",
+      "campaignPromotionLink": "Campaign Promotion Link",
+      "campaignExperiment": "Campaign Experiment",
+      "campaignMeasurement": "Campaign Measurement",
+      "abuseSignal": "Abuse Signal"
     }
   }
 }
