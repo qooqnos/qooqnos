@@ -18,14 +18,10 @@ type Route = {
 const ROUTE_CANONICAL_TERM_KEYS: Readonly<Record<string, string>> = {
   "/business": "canonical.business.business",
   "/business/profile": "canonical.business.businessProfile",
-  "/catalog": "canonical.catalog.offering",
   "/booking": "canonical.booking.booking",
   "/customer": "canonical.customer.customer",
-  "/transactions": "canonical.commerce.order",
   "/notifications": "canonical.communication.notification",
   "/communication": "canonical.communication.conversation",
-  "/billing": "canonical.billing.billingAccount",
-  "/operations": "canonical.fulfillment.fulfillmentOrder",
   "/promotion": "canonical.promotion.promotion",
 };
 
