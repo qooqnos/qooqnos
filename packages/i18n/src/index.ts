@@ -117,10 +117,6 @@ const indexLanguage = (language: SupportedLanguage, canonicalOnly: boolean): voi
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, true);
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, false);
 
-const translationSources = [...textKeyIndex.entries()]
-  .filter(([source]) => source.length >= 3)
-  .sort((a, b) => b[0].length - a[0].length);
-
 export function translateUiText(
   value: string,
   locale: Locale,
