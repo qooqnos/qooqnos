@@ -60,6 +60,7 @@ export type VerticalModuleBlueprint = {
   };
   readonly blocks: readonly VerticalModuleBlueprintBlock[];
   readonly states: readonly VerticalModuleBlueprintState[];
+  readonly capabilityContract: VerticalModuleCapabilityContract;
 };
 
 /**
@@ -542,5 +543,9 @@ export function getVerticalModuleBlueprint(vertical: string, module: string): Ve
         block("03", "Next action", "اقدام اجرایی باید از command/API canonical عبور کند."),
       ],
     );
-  return {\n    ...selected,\n    roleLenses: selected.roleLenses ?? deriveRoleLenses(module, selected.layout),\n    capabilityContract: selected.capabilityContract ?? getVerticalModuleCapabilityContract(module),\n  };
+  return {
+    ...selected,
+    roleLenses: selected.roleLenses ?? deriveRoleLenses(module, selected.layout),
+    capabilityContract: selected.capabilityContract ?? getVerticalModuleCapabilityContract(module),
+  };
 }
