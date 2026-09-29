@@ -1,4 +1,4 @@
-import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleRoleFit, getVerticalModuleRoute, getVerticalModuleUiContract, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
 import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
 type VerticalWorkflowEntityRecord = Record<string, unknown>;
@@ -56,7 +56,7 @@ const layoutCopy: Record<VerticalModuleLayout, { label: string; description: str
 };
 
 function workflowModuleHref(model: VerticalWorkflowCanvasModel, module: string): string {
-  const route = getVerticalModuleRoute(model.vertical, module);
+  const route = getVerticalModuleUiContract(model.vertical, module).route;
   const params = new URLSearchParams();
   if (model.businessId) params.set("business", model.businessId);
   params.set("fromModule", model.module);
@@ -287,8 +287,9 @@ export function renderVerticalWorkflowOverview(model: VerticalWorkflowOverviewMo
   const steps = getVerticalWorkflowSteps(model.vertical);
   const stageItems = steps.map((stage, index) => {
     const module = getVerticalWorkflowStageModule(model.vertical, stage) ?? stage;
-    const blueprint = getVerticalModuleBlueprint(model.vertical, module);
-    const route = getVerticalModuleRoute(model.vertical, module);
+    const moduleContract = getVerticalModuleUiContract(model.vertical, module);
+    const blueprint = moduleContract.blueprint;
+    const route = moduleContract.route;
     const params = new URLSearchParams();
     if (model.businessId) params.set("business", model.businessId);
     params.set("from", "workspace");
