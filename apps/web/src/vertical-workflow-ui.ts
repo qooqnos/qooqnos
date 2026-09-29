@@ -420,6 +420,65 @@ export function bindVerticalWorkflowOverview(root: ParentNode = document): void 
     });
 }
 
+function renderWorkflowHandoff(
+  model: VerticalWorkflowCanvasModel,
+  stageContext: ReturnType<typeof getVerticalWorkflowStageContext>,
+): string {
+  const currentContract = getVerticalModuleUiContract(model.vertical, model.module);
+  const previousModule = stageContext.previous?.module;
+  const nextModule = stageContext.next?.module;
+  const previousHref = previousModule ? workflowModuleHref(model, previousModule) : "";
+  const nextHref = nextModule ? workflowModuleHref(model, nextModule) : "";
+  const primaryLabel = currentContract.blueprint.primaryAction?.label ?? currentContract.blueprint.blocks[0]?.title ?? "جریان canonical";
+
+  const cell = (
+    tone: "input" | "current" | "next",
+    eyebrow: string,
+    title: string,
+    description: string,
+    href?: string,
+  ): string =>
+    '<article class="phoenix-vwf-handoff-card handoff-' + tone + '">' +
+      '<div class="phoenix-vwf-handoff-top"><span class="phoenix-vwf-handoff-index">' + (tone === "input" ? "01" : tone === "current" ? "02" : "03") + '</span><span class="pill">' + escapeHtml(eyebrow) + '</span></div>' +
+      '<strong>' + escapeHtml(title) + '</strong>' +
+      '<p>' + escapeHtml(description) + '</p>' +
+      (href ? '<a class="text-link" href="' + escapeHtml(href) + '" data-nav>باز کردن ←</a>' : '<span class="phoenix-vwf-handoff-muted">' + (tone === "input" ? "شروع Workflow" : "پایان Workflow") + '</span>') +
+    '</article>';
+
+  return '<section class="phoenix-vwf-handoff" data-vwf-handoff>' +
+    '<div class="phoenix-vwf-handoff-head">' +
+      '<div><span class="section-kicker">Workflow Handoff Contract</span><h3>ورودی، مرحله فعلی و خروجی بعدی</h3><p>این rail برای هر چهار Vertical یکسان است؛ فقط stage و module تغییر می‌کند. state اجرایی همچنان از domain canonical می‌آید.</p></div>' +
+      '<span class="phoenix-vwf-handoff-position">' + (stageContext.index >= 0 ? String(stageContext.index + 1) + " / " + String(stageContext.total) : "—") + '</span>' +
+    '</div>' +
+    '<div class="phoenix-vwf-handoff-grid">' +
+      cell(
+        "input",
+        stageContext.previous ? "Previous stage" : "Workflow entry",
+        stageContext.previous?.module ?? "ورودی این Workflow",
+        stageContext.previous
+          ? "Context این مرحله از «" + stageContext.previous.stage + "» و ماژول «" + stageContext.previous.module + "» وارد می‌شود."
+          : "اولین مرحله بدون نیاز به stage قبلی؛ داده اولیه باید از منبع canonical همین Business وارد شود.",
+        previousHref,
+      ) +
+      cell(
+        "current",
+        "Current stage",
+        model.module,
+        "تمرکز فعلی: " + primaryLabel + "؛ این صفحه orchestration است و source of truth موازی نمی‌سازد.",
+      ) +
+      cell(
+        "next",
+        stageContext.next ? "Next stage" : "Workflow end",
+        stageContext.next?.module ?? "پایان Workflow",
+        stageContext.next
+          ? "خروجی این مرحله باید به stage «" + stageContext.next.stage + "» تحویل شود؛ لینک بعدی context فعلی را حفظ می‌کند."
+          : "این آخرین مرحله تعریف‌شده در Workflow است؛ ادامه فقط از command canonical دامنه انجام می‌شود.",
+        nextHref,
+      ) +
+    '</div>' +
+  '</section>';
+}
+
 export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel): string {
   const copy = layoutCopy[model.blueprint.layout];
   const stageContext = getVerticalWorkflowStageContext(model.vertical, model.module);
