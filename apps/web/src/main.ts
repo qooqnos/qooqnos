@@ -351,8 +351,7 @@ function getInitialTheme(): Theme {
 }
 
 function getInitialLanguage(): Language {
-  return readPersistedLocale(localStorage)
-    ?? getLocaleFromPreference(navigator.language, "fa");
+  return readPersistedLocale(localStorage) ?? "fa";
 }
 
 
