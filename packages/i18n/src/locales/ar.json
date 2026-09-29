@@ -989,6 +989,17 @@
     "view": "عرض",
     "viewBusiness": "عرض النشاط التجاري",
     "checkBooking": "مراجعة الحجز",
-    "instantBuy": "شراء فوري"
+    "instantBuy": "شراء فوري",
+    "noNeedTitle": "اكتب احتياجك.",
+    "noNeedDescription": "يجد الاستكشاف العروض canonical من اللغة الطبيعية.",
+    "waitingForNeed": "بانتظار احتياجك",
+    "resultsFor": "نتائج «{{query}}»",
+    "followingResults": "العروض التي تتابعها",
+    "exploreResults": "الاستكشاف",
+    "analyzing": "جارٍ التحليل…",
+    "resultCount": "{{count}} نتيجة",
+    "loadMore": "عرض المزيد",
+    "error": "خطأ",
+    "retry": "حاول مرة أخرى"
   }
 }
