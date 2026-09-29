@@ -917,6 +917,8 @@
     "cancel": "Cancel",
     "continue": "Continue",
     "examplePlaceholder": "For example, “running shoes up to 5 million”",
-    "createOfferingPlaceholder": "For example: handmade wooden desk, suitable for a small room…"
+    "createOfferingPlaceholder": "For example: handmade wooden desk, suitable for a small room…",
+    "label": "Discovery",
+    "forYou": "For you"
   }
 }
