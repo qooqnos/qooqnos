@@ -494,6 +494,19 @@ export class CommerceRepository extends Repository {
     );
   }
 
+  async listOrders(context: RequestContext, businessId: EntityId, limit = 20): Promise<readonly OrderRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 50);
+    return this.database.all<OrderRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, customer_id AS customerId, match_request_id AS matchRequestId, match_candidate_id AS matchCandidateId, price_snapshot_id AS priceSnapshotId, status, currency, subtotal_minor AS subtotalMinor, adjustment_total_minor AS adjustmentTotalMinor, tax_total_minor AS taxTotalMinor, fee_total_minor AS feeTotalMinor, grand_total_minor AS grandTotalMinor, payment_status_ref AS paymentStatusRef, fulfillment_status_ref AS fulfillmentStatusRef, source_channel AS sourceChannel, policy_version AS policyVersion, idempotency_key AS idempotencyKey, correlation_id AS correlationId, created_at AS createdAt, updated_at AS updatedAt, confirmed_at AS confirmedAt, completed_at AS completedAt FROM commerce_orders WHERE organization_id = ? AND workspace_id = ? AND business_id = ? ORDER BY created_at DESC LIMIT ?",
+      organizationId,
+      workspaceId,
+      businessId,
+      safeLimit,
+    );
+  }
+
   async addOrderLine(context: RequestContext, input: AddOrderLineInput): Promise<OrderLineRecord> {
     const order = await this.getOrder(context, input.orderId);
     if (!order) throw new DatabaseError("Commerce order not found");
