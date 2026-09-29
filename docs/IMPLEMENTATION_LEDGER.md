@@ -2710,3 +2710,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Verification: static registry cross-check confirms zero registered modules missing a capability contract; full TypeScript build, full test suite and browser/device visual QA remain pending.
 
 - Added focused regression assertions for the Retail `فروش امروز` and Salon `وقت‌های امروز` capability contracts in `business-module-ui.test.ts`. Test commit: `4d1774b0e88f685a6a97b46ccbd6352768192125`.
+
+## 2026-09-29 — Shared Vertical Workspace module switcher
+- Added a reusable module switcher to every Vertical Workflow Canvas in `apps/web/src/vertical-workflow-ui.ts`.
+- The switcher is derived from the canonical `VERTICAL_MODULE_SLUGS` registry, highlights the current module and navigates all other modules through stable semantic `/business/workspace/<vertical>/<module>` routes while preserving Business/origin context.
+- This creates one navigation primitive shared by Clinic, Retail, Restaurant and Salon instead of per-vertical module menus.
+- Added regression coverage for all four supported verticals and mirrored responsive/reduced-motion styling in both frontend stylesheet surfaces.
+- No domain state, authorization rule, duplicate persistence model or fake operational data was introduced.
+- Implementation commits: `346c5aa9e17dfb3d16eefa23136537bd8049fe7f`, `92ed4c2e0c9b829a94053e648d80b3e600a15832`, `12a7806c9ca37914d41674f43dd7175c2a1c3315`, `8b6d81f836fbcf686fd30417c9299274021d6251`.
+- Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
