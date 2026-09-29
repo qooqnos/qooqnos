@@ -1,4 +1,4 @@
-import { getVerticalModuleBlueprint, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
 import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
 type VerticalWorkflowEntityRecord = Record<string, unknown>;
@@ -294,11 +294,12 @@ export function renderVerticalWorkflowOverview(model: VerticalWorkflowOverviewMo
     params.set("from", "workspace");
     const rawHref = route + "?" + params.toString();
     const href = model.contextualHref ? model.contextualHref(rawHref) : rawHref;
-    return '<a class="phoenix-vwf-overview-stage" data-nav href="' + escapeHtml(href) + '">' +
+    return '<a class="phoenix-vwf-overview-stage" data-vwf-overview-stage data-vwf-overview-stage-module="' + escapeHtml(module) + '" data-vwf-overview-stage-index="' + String(index) + '" data-nav href="' + escapeHtml(href) + '">' +
       '<div class="phoenix-vwf-overview-stage-top"><span class="phoenix-vwf-overview-index">' + String(index + 1).padStart(2, "0") + '</span><span class="pill">' + escapeHtml(blueprint.layout) + '</span></div>' +
       '<strong>' + escapeHtml(stage) + '</strong>' +
       '<span class="phoenix-vwf-overview-module">' + escapeHtml(module) + '</span>' +
       '<small>' + escapeHtml(blueprint.eyebrow) + '</small>' +
+      '<span class="phoenix-vwf-overview-access" data-vwf-overview-access>در انتظار Context</span>' +
       '<b aria-hidden="true">→</b>' +
     '</a>';
   }).join("");
@@ -318,6 +319,71 @@ export function renderVerticalWorkflowOverview(model: VerticalWorkflowOverviewMo
       '<span>Backend authoritative</span><i></i><span>Role-aware emphasis</span><i></i><span>Canonical-only state</span><i></i><span>Responsive / RTL</span>' +
     '</div>' +
   '</section>';
+}
+
+export function bindVerticalWorkflowOverview(root: ParentNode = document): void {
+  const overview = root.querySelector<HTMLElement>("[data-vwf-overview]");
+  if (!overview) return;
+
+  const stageNodes = Array.from(overview.querySelectorAll<HTMLElement>("[data-vwf-overview-stage]"));
+  if (!stageNodes.length) return;
+
+  const setStatus = (node: HTMLElement, label: string, state: "ready" | "warning" | "context"): void => {
+    const marker = node.querySelector<HTMLElement>("[data-vwf-overview-access]");
+    if (!marker) return;
+    marker.textContent = label;
+    marker.dataset.vwfOverviewAccess = state;
+  };
+
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    stageNodes.forEach((node) => setStatus(node, "نیازمند Context", "context"));
+    return;
+  }
+
+  const vertical = overview.dataset.vwfOverviewVertical ?? "default";
+  void fetch("/api/v1/context", { headers })
+    .then(async (response) => {
+      const body = await response.json().catch(() => null) as { roles?: string[]; permissions?: string[]; error?: { message?: string } } | null;
+      if (!response.ok) throw new Error(body?.error?.message ?? "Context unavailable");
+      return body ?? {};
+    })
+    .then((context) => {
+      const roles = Array.isArray(context.roles) ? context.roles : [];
+      const permissions = Array.isArray(context.permissions) ? context.permissions : [];
+      const lens = resolveVerticalRoleLens(roles);
+
+      stageNodes.forEach((node) => {
+        const module = node.dataset.vwfOverviewStageModule ?? "";
+        if (!module) {
+          setStatus(node, "Capability", "context");
+          return;
+        }
+
+        const blueprint = getVerticalModuleBlueprint(vertical, module);
+        const fit = getVerticalModuleRoleFit(blueprint, lens.key);
+        const contract = getVerticalModuleCapabilityContract(module);
+        const required = contract.requiredPermissions;
+        const missing = required.filter((permission) => !permissions.includes(permission));
+
+        node.dataset.vwfOverviewRoleFit = fit;
+        node.dataset.vwfOverviewPermissionState = required.length === 0 ? "undeclared" : missing.length === 0 ? "present" : "missing";
+
+        if (!required.length) {
+          setStatus(node, fit === "primary" ? "تمرکز نقش · Backend policy" : "مشترک · Backend policy", "context");
+          return;
+        }
+        if (!missing.length) {
+          setStatus(node, fit === "primary" ? "تمرکز نقش · آماده" : "مشترک · آماده", "ready");
+          return;
+        }
+        setStatus(node, fit === "primary" ? "تمرکز نقش · Permission ناقص" : "مشترک · Permission ناقص", "warning");
+      });
+    })
+    .catch((error) => {
+      const label = error instanceof Error ? error.message : "Context خوانده نشد";
+      stageNodes.forEach((node) => setStatus(node, label, "warning"));
+    });
 }
 
 export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel): string {
