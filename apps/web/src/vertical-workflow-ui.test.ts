@@ -75,6 +75,8 @@ describe("Vertical Workflow UI Canvas", () => {
     expect(html).toContain('data-vwf-members-live');
     expect(html).toContain('data-vwf-member-items');
     expect(html).toContain("Canonical Workspace Team");
+    expect(html).toContain('data-vwf-customer-history');
+    expect(html).toContain('data-vwf-customer-history-items');
   });
 
   it("renders a role-aware emphasis contract on every shared canvas", () => {
