@@ -1,4 +1,4 @@
-import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleRoleFit, getVerticalModuleRoute, getVerticalModuleUiContract, resolveVerticalRoleLens, VERTICAL_MODULE_SLUGS, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleRoleFit, getVerticalModuleUiContract, resolveVerticalRoleLens, VERTICAL_MODULE_SLUGS, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
 import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
 type VerticalWorkflowEntityRecord = Record<string, unknown>;
