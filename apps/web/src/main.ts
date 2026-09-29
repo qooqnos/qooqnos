@@ -450,20 +450,24 @@ function canonicalUi(key: string): string {
   return translateCanonicalTerm(key, getInitialLanguage());
 }
 
-function pageUi(namespace: "businessPage" | "businessSurface" | "discoveryPage", key: string): string {
-  return defaultI18n.t(namespace + "." + key);
+function pageUi(
+  namespace: "businessPage" | "businessSurface" | "discoveryPage",
+  key: string,
+  variables?: Readonly<Record<string, string>>,
+): string {
+  return defaultI18n.t(namespace + "." + key, variables);
 }
 
-function businessUi(key: string): string {
-  return pageUi("businessPage", key);
+function businessUi(key: string, variables?: Readonly<Record<string, string>>): string {
+  return pageUi("businessPage", key, variables);
 }
 
-function businessSurfaceUi(key: string): string {
-  return pageUi("businessSurface", key);
+function businessSurfaceUi(key: string, variables?: Readonly<Record<string, string>>): string {
+  return pageUi("businessSurface", key, variables);
 }
 
-function discoveryUi(key: string): string {
-  return pageUi("discoveryPage", key);
+function discoveryUi(key: string, variables?: Readonly<Record<string, string>>): string {
+  return pageUi("discoveryPage", key, variables);
 }
 
 function localizedUi(value: string): string {
