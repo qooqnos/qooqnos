@@ -530,7 +530,25 @@
     "business_roleCustomers": "العملاء",
     "business_roleContent": "المحتوى",
     "business_roleTransactions": "المعاملات",
-    "business_quickActions": "إجراءات سريعة"
+    "business_quickActions": "إجراءات سريعة",
+    "vertical_todayActivity": "نشاط اليوم",
+    "vertical_clinicSubtitle": "الحجوزات والخدمات والأطباء والجدولة والتواصل مع المراجعين.",
+    "vertical_newMessages": "رسائل جديدة",
+    "vertical_viewServices": "عرض الخدمات",
+    "vertical_retailLabel": "متجر التجزئة",
+    "vertical_retailSubtitle": "المنتجات والمتغيرات والمخزون والطلبات والعملاء في مساحة عمل واحدة.",
+    "vertical_lowInventory": "مخزون منخفض",
+    "vertical_instantPurchase": "شراء فوري",
+    "vertical_restaurantSubtitle": "القائمة والطلبات والطاولات والحجوزات والمطبخ والتوصيل.",
+    "vertical_activeOrders": "الطلبات النشطة",
+    "vertical_openTables": "الطاولات المفتوحة",
+    "vertical_deliveries": "عمليات التسليم",
+    "vertical_viewMenu": "عرض القائمة",
+    "vertical_receive": "استلام",
+    "vertical_salonLabel": "صالون تجميل",
+    "vertical_salonSubtitle": "الخدمات والمتخصصون والتقويم والسعة والعملاء.",
+    "vertical_viewService": "عرض الخدمة",
+    "vertical_chooseSpecialist": "اختيار متخصص"
   },
   "canonical": {
     "identity": {
