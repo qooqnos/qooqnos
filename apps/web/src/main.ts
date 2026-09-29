@@ -3232,6 +3232,7 @@ async function startCheckoutFlow(): Promise<void> {
     result.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "Checkout ناموفق بود.")}</p></div>`;
   }
 }
+import { BUSINESS_VERTICAL_UI, getBusinessVerticalUi, resolveBusinessVerticalKey, type BusinessVerticalKey } from "./business-vertical-ui.js";
 const BUSINESS_VERTICAL_UI = {
   default: {
     key: "default", label: "کسب‌وکار عمومی", icon: "◆", subtitle: "Workspace قابل تنظیم بر اساس قابلیت‌های فعال.",
