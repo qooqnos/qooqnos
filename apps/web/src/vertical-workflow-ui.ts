@@ -106,7 +106,10 @@ function renderCommand(model: VerticalWorkflowCanvasModel): string {
 
 function renderCalendar(model: VerticalWorkflowCanvasModel): string {
   const first = model.blueprint.blocks[0];
-  return '<div class="phoenix-vwf-toolbar">' +
+  const bookingLookup = ["نوبت‌ها", "رزرو", "وقت‌های امروز"].includes(model.module)
+    ? renderBookingLookupSurface()
+    : "";
+  return bookingLookup + '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای تقویم">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="day">روز</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="week">هفته</button>' +
@@ -215,6 +218,17 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
     '<div class="phoenix-vwf-status-rail"><span>Order</span><i></i><span>Billing</span><i></i><span>Fulfillment</span></div>' +
     '<div class="phoenix-vwf-live-detail" data-vwf-order-detail hidden></div>';
 }
+function renderBookingLookupSurface(): string {
+  return '<div class="phoenix-vwf-live-booking" data-vwf-booking-live>' +
+    '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Booking</span><h3>جزئیات نوبت</h3><p>Appointment state مستقیماً از Booking خوانده می‌شود؛ این Canvas نوبت موازی ایجاد نمی‌کند.</p></div><span class="pill">read-only</span></div>' +
+    '<div class="phoenix-vwf-booking-lookup">' +
+      '<input class="studio-input-line" data-vwf-booking-id placeholder="Booking ID" aria-label="شناسه نوبت" autocomplete="off" />' +
+      '<button type="button" class="button button-secondary" data-vwf-load-booking>خواندن نوبت</button>' +
+    '</div>' +
+    '<div class="phoenix-vwf-live-detail" data-vwf-booking-detail hidden></div>' +
+  '</div>';
+}
+
 function renderFulfillmentLookupSurface(): string {
   return '<div class="phoenix-vwf-live-fulfillment" data-vwf-fulfillment-live>' +
     '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Fulfillment</span><h3>وضعیت اجرای سفارش / خدمت</h3><p>برای دیدن وضعیت اجرایی، شناسه Fulfillment را وارد کنید؛ این Canvas فقط داده خواندنی canonical را نمایش می‌دهد.</p></div><span class="pill">read-only</span></div>' +
@@ -832,6 +846,19 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
       void hydrateCustomerLookup(customerDetail, customerId);
     });
 
+    const bookingLookup = canvas.querySelector<HTMLInputElement>("[data-vwf-booking-id]");
+    const bookingDetail = canvas.querySelector<HTMLElement>("[data-vwf-booking-detail]");
+    canvas.querySelector<HTMLButtonElement>("[data-vwf-load-booking]")?.addEventListener("click", () => {
+      const bookingId = bookingLookup?.value.trim();
+      if (!bookingDetail) return;
+      if (!bookingId) {
+        bookingDetail.hidden = false;
+        bookingDetail.innerHTML = '<div class="phoenix-vwf-local-note">Booking ID وارد نشده است.</div>';
+        return;
+      }
+      void hydrateBookingLookup(bookingDetail, bookingId);
+    });
+
     const fulfillmentLookup = canvas.querySelector<HTMLInputElement>("[data-vwf-fulfillment-id]");
     const fulfillmentDetail = canvas.querySelector<HTMLElement>("[data-vwf-fulfillment-detail]");
     canvas.querySelector<HTMLButtonElement>("[data-vwf-load-fulfillment]")?.addEventListener("click", () => {
@@ -1136,6 +1163,50 @@ async function hydrateFulfillmentLookup(detail: HTMLElement, fulfillmentId: stri
       '</div></div>';
   } catch (error) {
     detail.innerHTML = '<div class="phoenix-vwf-empty"><span class="phoenix-vwf-empty-mark">!</span><strong>Fulfillment خوانده نشد</strong><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Fulfillment ناموفق بود.") + '</p><small>Fulfillment API · read-only</small></div>';
+  }
+}
+
+async function hydrateBookingLookup(host: HTMLElement, bookingId: string): Promise<void> {
+  const headers = vwfAuthHeaders();
+  host.hidden = false;
+  if (!headers) {
+    host.innerHTML = '<div class="phoenix-vwf-local-note">برای خواندن Booking، session و Workspace context لازم است.</div>';
+    return;
+  }
+  host.innerHTML = '<div class="slot-loading">در حال خواندن Booking canonical…</div>';
+  try {
+    const response = await fetch("/api/v1/booking/" + encodeURIComponent(bookingId), { headers });
+    const body = await response.json().catch(() => null) as {
+      data?: {
+        booking?: VerticalWorkflowEntityRecord;
+        items?: unknown[];
+        history?: unknown[];
+      };
+      error?: { message?: string };
+    } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Booking unavailable");
+    const booking = body?.data?.booking ?? {};
+    const items = Array.isArray(body?.data?.items) ? body.data.items : [];
+    const history = Array.isArray(body?.data?.history) ? body.data.history : [];
+    const status = String(booking.status ?? "—");
+    const businessId = String(booking.businessId ?? "—");
+    const customerId = String(booking.customerId ?? "—");
+    const offeringId = String(booking.offeringId ?? "—");
+    const startsAt = String(booking.startsAt ?? "—");
+    const endsAt = String(booking.endsAt ?? "—");
+    host.innerHTML =
+      '<div class="phoenix-vwf-live-detail-head"><div><span class="section-kicker">Canonical Booking</span><h3>' + escapeHtml(bookingId) + '</h3><p>Booking source of truth</p></div><span class="pill">' + escapeHtml(status) + '</span></div>' +
+      '<div class="phoenix-vwf-live-detail-grid">' +
+        '<div><span>Business</span><strong>' + escapeHtml(businessId) + '</strong></div>' +
+        '<div><span>Customer</span><strong>' + escapeHtml(customerId) + '</strong></div>' +
+        '<div><span>Offering</span><strong>' + escapeHtml(offeringId) + '</strong></div>' +
+        '<div><span>شروع</span><strong>' + escapeHtml(startsAt) + '</strong></div>' +
+        '<div><span>پایان</span><strong>' + escapeHtml(endsAt) + '</strong></div>' +
+        '<div><span>اقلام</span><strong>' + String(items.length) + '</strong></div>' +
+        '<div><span>تاریخچه وضعیت</span><strong>' + String(history.length) + '</strong></div>' +
+      '</div>';
+  } catch (error) {
+    host.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Booking ناموفق بود.", "Booking");
   }
 }
 
