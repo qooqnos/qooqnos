@@ -2582,3 +2582,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added a separate `businessWorkspaceContextHref()` helper for shell-originated links so `fromModule` is not fabricated when there is no active module.
 - No domain state, authorization rule, duplicate store or frontend mutation was introduced.
 - Implementation commit: `9f3f89beddf7af579c4732e05bd88e3574aeee3f`.
+## 2026-09-29 — Service booking bridge now resolves Business schedules
+- Hardened the existing service-offering → Booking UI bridge without adding a new booking domain endpoint or local scheduling store.
+- `/booking` now accepts both `businessId` and the canonical Workspace-style `business` query context.
+- When a service offering arrives without a schedule, the page can read the Business's active Availability schedules from the existing canonical endpoint and let the user choose one before loading real slots.
+- The selected Schedule/Resource feeds the existing canonical slot lookup and Hold flow.
+- Added responsive UI styling for the shared schedule picker in both web style entry points.
+- No booking mutation, authorization rule, or domain source-of-truth was changed.
+- Implementation commits: `3d612bd8ced89bcc8802fcbef0a578155c1574df`, `b09d3e897be5c8b19a3d799c4b98874067dd8324`, `3e2ce81ea4499c8eb756297eeb1b71ac472b32f3`.
