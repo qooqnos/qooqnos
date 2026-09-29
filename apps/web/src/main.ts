@@ -451,7 +451,7 @@ function canonicalUi(key: string): string {
 }
 
 function pageUi(
-  namespace: "businessPage" | "businessSurface" | "discoveryPage",
+  namespace: "businessPage" | "businessSurface" | "discoveryPage" | "productStudio",
   key: string,
   variables?: Readonly<Record<string, string>>,
 ): string {
@@ -472,6 +472,10 @@ function businessPageLabel(key: string, variables?: Readonly<Record<string, stri
 
 function discoveryUi(key: string, variables?: Readonly<Record<string, string>>): string {
   return pageUi("discoveryPage", key, variables);
+}
+
+function productStudioUi(key: string, variables?: Readonly<Record<string, string>>): string {
+  return pageUi("productStudio", key, variables);
 }
 
 function localizedUi(value: string): string {
@@ -4703,47 +4707,54 @@ function openSimpleFormDialog(title:string,kicker:string,fields:Array<{id:string
 }
 
 function renderProductStudio(): string {
+  const ps = (key: string, variables?: Readonly<Record<string, string>>): string => escapeHtml(productStudioUi(key, variables));
+  const psTitle = (key: string): string => productStudioUi(key);
+
   return `
     <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Seller AI Studio</span><h1>محصول را بده؛ <em>بقیه‌اش با ققنوس.</em></h1><p>متن خام، تصویر یا توضیح آزاد را به یک پیش‌نویس محصول قابل بازبینی تبدیل کن.</p></div>
-      <span class="billing-note">هر اجرای AI مصرف‌محور است.</span>
+      <div><span class="eyebrow"><i></i> ${ps("eyebrow")}</span><h1>${psTitle("heroTitle")} <em>${psTitle("heroEmphasis")}</em></h1><p>${ps("heroDescription")}</p></div>
+      <span class="billing-note">${ps("billingNote")}</span>
     </section>
 
     <section class="studio-grid">
       <article class="glass-card studio-input">
-        <div class="studio-tabs"><button class="studio-tab active" type="button">ورودی</button><button class="studio-tab" type="button">تصویر</button></div>
+        <div class="studio-tabs"><button class="studio-tab active" type="button">${ps("inputTab")}</button><button class="studio-tab" type="button">${ps("imageTab")}</button></div>
         <div class="studio-meta-fields">
           <div>
-            <label class="field-label" for="studio-business">شناسه کسب‌وکار</label>
-            <input id="studio-business" class="studio-input-line" type="text" autocomplete="off" placeholder="Business ID" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
+            <label class="field-label" for="studio-business">${ps("businessId")}</label>
+            <input id="studio-business" class="studio-input-line" type="text" autocomplete="off" placeholder="${escapeAttr(productStudioUi("businessId") )}" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
           </div>
           <div>
-            <label class="field-label" for="studio-workspace">Workspace ID</label>
-            <input id="studio-workspace" class="studio-input-line" type="text" autocomplete="off" placeholder="Workspace ID" value="${escapeAttr(localStorage.getItem(STORAGE.workspace) ?? "")}" />
+            <label class="field-label" for="studio-workspace">${ps("workspaceId")}</label>
+            <input id="studio-workspace" class="studio-input-line" type="text" autocomplete="off" placeholder="${escapeAttr(productStudioUi("workspaceId"))}" value="${escapeAttr(localStorage.getItem(STORAGE.workspace) ?? "")}" />
           </div>
         </div>
-        <label class="field-label" for="studio-text">توضیح محصول</label>
-        <textarea id="studio-text" rows="7" placeholder="مثلاً: کفش چرمی دست‌دوز، رنگ قهوه‌ای، مناسب استفاده روزمره..."></textarea>
+        <label class="field-label" for="studio-text">${ps("productDescription")}</label>
+        <textarea id="studio-text" rows="7" placeholder="${escapeAttr(productStudioUi("productPlaceholder"))}"></textarea>
         <label class="media-dropzone" for="studio-file">
           <input id="studio-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic" />
           <span class="media-drop-icon">＋</span>
-          <span><strong>عکس محصول را اینجا اضافه کنید</strong><small>JPG / PNG / WebP · حداکثر 10MB</small></span>
-          <span id="studio-file-name" class="media-file-name">بدون تصویر</span>
+          <span><strong>${ps("addProductPhoto")}</strong><small>${ps("imageFormats")}</small></span>
+          <span id="studio-file-name" class="media-file-name">${ps("noImage")}</span>
         </label>
         <div class="studio-actions">
-          <span class="field-hint">ورودی می‌تواند ناقص باشد؛ ققنوس سؤال‌های ضروری را مشخص می‌کند.</span>
-          <button class="button button-primary" type="button" data-generate-draft>ساخت پیش‌نویس <span>✦</span></button>
+          <span class="field-hint">${ps("inputHint")}</span>
+          <button class="button button-primary" type="button" data-generate-draft>${ps("buildDraft")} <span>✦</span></button>
         </div>
       </article>
 
       <article class="glass-card studio-preview">
-        <div class="preview-top"><span class="section-kicker">پیش‌نمایش زنده</span><span class="pill" id="studio-status">آماده</span></div>
-        <div id="studio-draft" class="draft-empty"><div class="draft-orb">✦</div><strong>هنوز پیش‌نویسی ساخته نشده</strong><p>یک ورودی کوتاه بنویس و اجازه بده ققنوس ساختار، متن و فیلدهای لازم را پیشنهاد کند.</p></div>
+        <div class="preview-top"><span class="section-kicker">${ps("livePreview")}</span><span class="pill" id="studio-status">${ps("ready")}</span></div>
+        <div id="studio-draft" class="draft-empty"><div class="draft-orb">✦</div><strong>${ps("draftEmptyTitle")}</strong><p>${ps("draftEmptyDescription")}</p></div>
       </article>
     </section>
 
     <section class="studio-flow">
-      ${["ورودی فروشنده","درک و استخراج","غنی‌سازی","بازبینی","انتشار"].map((step,i)=>`<div class="studio-step ${i===0 ? "active" : ""}"><span>0${i+1}</span><div><strong>${step}</strong><small>${["خام و آزاد","ساختارمند کردن داده","پیشنهاد بهتر","کنترل انسانی","ورود به Catalog"][i]}</small></div></div>`).join("")}
+      ${[
+        ["step1","step1Desc"],["step2","step2Desc"],["step3","step3Desc"],["step4","step4Desc"],["step5","step5Desc"],
+      ].map(([title,desc],i)=>
+        `<div class="studio-step ${i===0 ? "active" : ""}"><span>0${i+1}</span><div><strong>${ps(title)}</strong><small>${ps(desc)}</small></div></div>`
+      ).join("")}
     </section>
   `;
 }
