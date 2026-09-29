@@ -576,7 +576,8 @@
     "noConnectedHoursData": "Hours appear after connection.",
     "changeWorkspace": "Change Workspace",
     "manageTeam": "Manage team",
-    "roleGuideDescription": "This guide only controls interface composition; real authorization remains controlled by the backend."
+    "roleGuideDescription": "This guide only controls interface composition; real authorization remains controlled by the backend.",
+    "boardDefaultSupply": "Prepare supply"
   },
   "canonical": {
     "identity": {
@@ -856,7 +857,9 @@
     "connectedSurfaces": "Connected Surfaces",
     "backendAccess": "Backend authoritative",
     "capabilityDriven": "Capability-driven",
-    "uiFoundation": "UI foundation"
+    "uiFoundation": "UI foundation",
+    "timezone": "Timezone",
+    "currency": "Currency"
   },
   "businessSurface": {
     "loadingPublicData": "Loading public information…",
