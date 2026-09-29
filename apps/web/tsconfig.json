@@ -3,7 +3,17 @@
   "compilerOptions": {
     "outDir": "public/dist",
     "rootDir": "src",
-    "lib": ["ES2022", "DOM"]
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "paths": {
+      "@qooqnos/i18n": [
+        "packages/i18n/dist/index.d.ts"
+      ]
+    }
   },
-  "include": ["src/**/*.ts"]
+  "include": [
+    "src/**/*.ts"
+  ]
 }
