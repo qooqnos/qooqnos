@@ -989,6 +989,17 @@
     "view": "View",
     "viewBusiness": "View business",
     "checkBooking": "Check booking",
-    "instantBuy": "Buy now"
+    "instantBuy": "Buy now",
+    "noNeedTitle": "Write your need.",
+    "noNeedDescription": "Discovery finds canonical offerings from natural language.",
+    "waitingForNeed": "Waiting for your need",
+    "resultsFor": "Results for “{{query}}”",
+    "followingResults": "Followed offerings",
+    "exploreResults": "Explore",
+    "analyzing": "Analyzing…",
+    "resultCount": "{{count}} results",
+    "loadMore": "Show more",
+    "error": "Error",
+    "retry": "Try again"
   }
 }
