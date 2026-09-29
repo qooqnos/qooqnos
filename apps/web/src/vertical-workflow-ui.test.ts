@@ -84,6 +84,22 @@ describe("Vertical Workflow UI Canvas", () => {
     expect(getVerticalWorkflowOfferingActionLabel("product")).toBe("شروع خرید");
   });
 
+  it("renders the command canvas with a canonical Business context hydration surface", () => {
+    const blueprint = getVerticalModuleBlueprint("clinic", "امروز");
+    const model: VerticalWorkflowCanvasModel = {
+      vertical: "clinic",
+      module: "امروز",
+      businessId: "business-test",
+      blueprint,
+    };
+
+    const html = renderVerticalWorkflowCanvas(model);
+    expect(html).toContain('data-vwf-business-live');
+    expect(html).toContain('data-vwf-command-live-content');
+    expect(html).toContain("Canonical Business Context");
+    expect(html).toContain("Business management");
+  });
+
   it("renders the people canvas with a canonical workspace-member hydration surface", () => {
     const blueprint = getVerticalModuleBlueprint("clinic", "پزشکان");
     const model: VerticalWorkflowCanvasModel = {
