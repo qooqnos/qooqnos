@@ -899,7 +899,10 @@
     "roleFinanceDescription": "المدفوعات والمعاملات والتقارير المالية ذات أولوية لهذا الدور.",
     "roleGenericTitle": "مساحة العمل العامة",
     "roleGenericDescription": "تُركّب الوحدات حسب نوع Business والقدرات المفعّلة.",
-    "unreadMe": " · أنت"
+    "unreadMe": " · أنت",
+    "nameField": "الاسم",
+    "statusField": "الحالة",
+    "localeField": "اللغة الافتراضية"
   },
   "businessSurface": {
     "loadingPublicData": "جارٍ تحميل المعلومات العامة…",
