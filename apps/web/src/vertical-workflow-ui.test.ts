@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  getVerticalWorkflowOfferingActionHref,
+  getVerticalWorkflowOfferingActionLabel,
   renderVerticalWorkflowCanvas,
   type VerticalWorkflowCanvasModel,
 } from "./vertical-workflow-ui";
@@ -73,21 +75,13 @@ describe("Vertical Workflow UI Canvas", () => {
       expect(html).toContain("/business/workspace/clinic/calendar?business=business-test&fromModule=%D9%86%D9%88%D8%A8%D8%AA%E2%80%8C%D9%87%D8%A7");
     });
 
-  it("renders canonical actions for live supply cards", () => {
-    const blueprint = getVerticalModuleBlueprint("clinic", "خدمات");
-    const model: VerticalWorkflowCanvasModel = {
-      vertical: "clinic",
-      module: "خدمات",
-      businessId: "business-test",
-      blueprint,
-    };
-
-    const html = renderVerticalWorkflowCanvas(model);
-    expect(html).toContain('data-vwf-catalog-items');
-    expect(html).toContain('href="/booking?offering=');
-    expect(html).toContain("رزرو خدمت");
-    expect(html).toContain('/checkout?entity=');
-    expect(html).toContain("شروع خرید");
+  it("centralizes canonical live supply actions", () => {
+    expect(getVerticalWorkflowOfferingActionHref("service", "offering-service", "business-test"))
+      .toBe("/booking?offering=offering-service&business=business-test");
+    expect(getVerticalWorkflowOfferingActionHref("product", "offering-product", "business-test"))
+      .toBe("/checkout?entity=offering-product&type=offering");
+    expect(getVerticalWorkflowOfferingActionLabel("service")).toBe("رزرو خدمت");
+    expect(getVerticalWorkflowOfferingActionLabel("product")).toBe("شروع خرید");
   });
 
   it("renders the people canvas with a canonical workspace-member hydration surface", () => {
