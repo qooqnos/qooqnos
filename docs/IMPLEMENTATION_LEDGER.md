@@ -1,3 +1,13 @@
+## 2026-09-29 — Shared Vertical Workflow stage progress semantics
+
+- 🟢 The shared Vertical Workflow rail now exposes one canonical stage-state contract: `completed`, `current`, and `upcoming`.
+- 🟢 State is derived only from the active workflow stage index; no local business progress or domain status is inferred.
+- 🟢 The current stage keeps `aria-current="step"`; each stage also exposes `data-vwf-stage-state` for shared styling and future analytics/UI instrumentation.
+- 🟢 Added regression coverage and synchronized authored/served stylesheets.
+- 🟡 TypeScript build, full tests, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: `8ef53c61` (stage semantics), `15fde978` (tests), `09849410` / `b66dd831` (styles).
+
 ## 2026-09-29 — Shared Vertical Workflow calendar tab semantics
 
 - 🟢 The shared Calendar layout now uses the same semantic `role=tab`, `aria-selected` and roving-tabindex contract as the other Vertical Workflow layouts.
