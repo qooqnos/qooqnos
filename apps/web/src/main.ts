@@ -310,6 +310,7 @@ const routes: Route[] = [
   { path: "/", label: "خانه", icon: "⌂", render: renderHome },
   { path: "/discover", label: "کشف", icon: "⌕", render: renderDiscover },
   { path: "/compare", label: "مقایسه", icon: "⚖", render: renderCompare },
+  { path: "/activity", label: "فعالیت", icon: "✦", render: renderActivity },
   { path: "/business", label: "کسب‌وکار", icon: "▦", render: renderBusiness },
   { path: "/business/profile", label: "پروفایل کسب‌وکار", icon: "◉", render: renderBusinessProfile },
   { path: "/product-studio", label: "استودیو محصول", icon: "✦", render: renderProductStudio },
@@ -434,11 +435,11 @@ function render(): void {
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/";
-  const isSocial = route.path === "/discover" || route.path === "/compare";
+  const isSocial = route.path === "/discover" || route.path === "/compare" || route.path === "/activity";
   const isPublicBusiness = route.path.startsWith("/businesses/");
   appRoot.innerHTML = `
     <div class="app-shell ${isHome ? "home-shell" : ""} ${isSocial ? "social-shell" : ""} ${isPublicBusiness ? "public-business-shell" : ""}">
-      ${isHome || isPublicBusiness ? renderPublicHeader() : isSocial ? renderSocialHeader(route.path === "/discover" ? (new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : new URLSearchParams(location.search).get("tab") === "following" ? "following" : "feed") : "feed") : renderHeader(route)}
+      ${isHome || isPublicBusiness ? renderPublicHeader() : isSocial ? renderSocialHeader(route.path === "/activity" ? "activity" : route.path === "/discover" ? (new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : new URLSearchParams(location.search).get("tab") === "following" ? "following" : "feed") : "feed") : renderHeader(route)}
       <div class="app-body">
         ${isHome || isSocial || isPublicBusiness ? "" : renderSidebar(route)}
         <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : isPublicBusiness ? "public-business-page-content" : ""}">${page}</main>
@@ -462,6 +463,7 @@ function render(): void {
   if (route.path === "/compare") {
     document.querySelector<HTMLButtonElement>("[data-clear-compare]")?.addEventListener("click", () => { localStorage.removeItem("phoenix-compare-items"); render(); });
   }
+  if (route.path === "/activity") void loadActivityPage();
   void loadShellContext();
   if (route.path === "/") bindHomeEvents();
   if (route.path === "/account") void loadAccountState();
@@ -630,6 +632,7 @@ function clearHydratedSeoSurface(route: Route): void {
 
   const labels: Record<string, { title: string; description: string }> = {
     "/discover": { title: "کشف | ققنوس", description: "کشف عرضه و گزینه‌های مرتبط در ققنوس." },
+    "/activity": { title: "فعالیت | ققنوس", description: "فعالیت اجتماعی ثبت‌شده در ققنوس." },
     "/business": { title: "کسب‌وکار | ققنوس", description: "فضای مدیریت کسب‌وکار و عرضه در ققنوس." },
     "/product-studio": { title: "استودیو محصول | ققنوس", description: "ساخت و غنی‌سازی محصول با Seller AI در ققنوس." },
     "/catalog": { title: "کاتالوگ | ققنوس", description: "مدیریت موجودیت‌های canonical محصول در ققنوس." },
@@ -2952,22 +2955,22 @@ function bindSocialHeaderEvents(): void {
     localStorage.setItem(STORAGE.theme, next);
   }));
 }
-function renderSocialHeader(active: "feed" | "following" | "explore"): string {
+function renderSocialHeader(active: "feed" | "following" | "explore" | "activity"): string {
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
     '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
     '<nav class="phoenix-social-tabs" aria-label="ناوبری اجتماعی">' +
     '<a href="/discover" data-nav class="' + (active === "feed" ? "active" : "") + '">برای تو</a>' +
     '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">دنبال‌شده‌ها</a>' +
-    '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a></nav>' +
-    '<button class="phoenix-social-activity-button" type="button" data-open-social-activity>فعالیت</button>' +
+    '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a>' +
+    '<a href="/activity" data-nav class="' + (active === "activity" ? "active" : "") + '">فعالیت</a></nav>' +
     '<div class="phoenix-social-actions"><button class="icon-button" type="button" data-open-create-post aria-label="پست جدید">＋</button><button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button></div>' +
     '</div></header>';
 }
 
 function renderSocialMobileNav(): string {
   return '<nav class="phoenix-social-mobile-nav" aria-label="ناوبری اجتماعی موبایل">' +
-    '<a href="/discover" data-nav>⌂<small>برای تو</small></a><a href="/discover?tab=explore" data-nav>⌕<small>اکسپلور</small></a>' +
-    '<button type="button" data-open-create-post aria-label="پست جدید">＋</button><a href="/discover?tab=following" data-nav>♡<small>دنبال‌شده</small></a><a href="/account" data-nav>◉<small>پروفایل</small></a></nav>';
+    '<a href="/discover" data-nav>⌂<small>خانه</small></a><a href="/discover?tab=explore" data-nav>⌕<small>اکسپلور</small></a>' +
+    '<button type="button" data-open-create-post aria-label="ایجاد">＋</button><a href="/activity" data-nav>✦<small>فعالیت</small></a><a href="/profile" data-nav>◉<small>پروفایل</small></a></nav>';
 }
 
 function renderSocialPosts(items: DiscoveryResult[]): string {
@@ -2992,10 +2995,11 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
     const authorName = item.metadata && typeof item.metadata.businessName === "string" ? item.metadata.businessName : sourceType === "business" ? titleRaw : "فروشنده ققنوس";
     const canFollow = Boolean(item.metadata && typeof item.metadata.businessId === "string") || sourceType === "business";
     const followLabel = followed ? "دنبال می‌کنی" : "دنبال کردن";
+    const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
     const publicAction = sourceType === "business"
       ? '<a class="button button-primary post-buy" href="/businesses/' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>مشاهده کسب‌وکار <span>←</span></a>'
       : sourceType === "service"
-        ? '<a class="button button-primary post-buy" href="/booking?offering=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>بررسی رزرو <span>←</span></a>'
+        ? '<a class="button button-primary post-buy" href="/booking?offering=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + (businessId ? '&businessId=' + encodeURIComponent(businessId) : '') + '" data-nav>بررسی رزرو <span>←</span></a>'
         : '<a class="button button-primary post-buy" href="/checkout?product=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>خرید آنی <span>←</span></a>';
     const followButton = canFollow
       ? '<button type="button" class="post-follow' + (followed ? ' selected' : '') + '" data-follow="' + escapeAttr(key) + '">' + followLabel + '</button>'
@@ -3008,7 +3012,9 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
       '<button type="button" class="social-action' + (liked ? ' selected' : '') + '" data-like="' + escapeAttr(key) + '">♡ <span>' + (liked ? "پسندیده شد" : "پسندیدن") + '</span></button>' +
       '<button type="button" class="social-action" data-comment="' + escapeAttr(key) + '">◌ <span>نظر</span></button>' +
       '<button type="button" class="social-action' + (saved ? ' selected' : '') + '" data-save="' + escapeAttr(key) + '">⌑ <span>' + (saved ? "ذخیره شد" : "ذخیره") + '</span></button>' +
+      '<button type="button" class="social-action" data-share="' + escapeAttr(key) + '">↗ <span>اشتراک</span></button>' +
       (sourceType === "product" ? '<button type="button" class="social-action ' + (compared ? "selected" : "") + '" data-compare="' + escapeAttr(key) + '">⚖ <span>' + (compared ? "انتخاب شد" : "مقایسه") + '</span></button>' : '') +
+      (sourceType === "service" ? '<button type="button" class="social-action" data-open-view="' + escapeAttr(key) + '">◉ <span>مشاهده</span></button>' : '') +
       publicAction + '</div></div></article>';
   }).join("");
 }
@@ -3043,6 +3049,38 @@ function toggleCompareByKey(key: string): void {
   if (item) toggleCompare(item);
 }
 
+async function shareSocialItem(item: DiscoveryResult): Promise<void> {
+  const title = item.title ?? item.displayName ?? item.name ?? "مورد ققنوس";
+  const type = item.sourceType ?? String(item.metadata?.offeringType ?? "product");
+  const id = item.sourceId ?? item.id ?? "";
+  const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
+  const url = type === "business" && id
+    ? new URL("/businesses/" + encodeURIComponent(id), location.origin).toString()
+    : type === "service" && id
+      ? new URL("/booking?offering=" + encodeURIComponent(id) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : ""), location.origin).toString()
+      : id
+        ? new URL("/checkout?product=" + encodeURIComponent(id), location.origin).toString()
+        : location.href;
+  const payload = { title, text: "این گزینه را در ققنوس ببین.", url };
+  try {
+    if (navigator.share) {
+      await navigator.share(payload);
+      showToast("صفحه برای اشتراک‌گذاری آماده شد.");
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    showToast("لینک ققنوس کپی شد.");
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") return;
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("لینک ققنوس کپی شد.");
+    } catch {
+      showToast("اشتراک‌گذاری این مورد در مرورگر فعلی ممکن نیست.");
+    }
+  }
+}
+
 function renderCompareTray(): void {
   const host = document.querySelector<HTMLElement>("#phoenix-compare-tray");
   if (!host) return;
@@ -3065,6 +3103,77 @@ function renderCompareTray(): void {
   host.querySelector<HTMLButtonElement>("[data-open-compare]")?.addEventListener("click", () => navigate("/compare"));
 }
 
+
+function renderActivity(): string {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><span class="phoenix-kicker">Activity</span><h1>فعالیت‌های ققنوس</h1><p>برای دیدن Follow، Like، Save و Commentهای ثبت‌شده، ابتدا به حساب متصل شوید.</p></section><div class="glass-card phoenix-activity-gate"><div class="draft-orb">✦</div><h2>فعالیت شخصی شما</h2><p>این سطح فقط رویدادهای واقعی Social Engagement را نمایش می‌دهد.</p><button class="button button-primary" type="button" data-activity-connect>اتصال حساب</button></div></div>';
+  }
+  return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><div><span class="phoenix-kicker">Activity</span><h1>ردپای اجتماعی تو در ققنوس</h1><p>رویدادها مستقیماً از Social Engagement خوانده می‌شوند؛ این صفحه timeline جداگانه‌ای در مرورگر نمی‌سازد.</p></div><div class="heading-actions"><button class="button button-ghost" type="button" data-activity-refresh>↻ بروزرسانی</button><a class="button button-primary" href="/discover" data-nav>ادامه کشف ←</a></div></section><section class="phoenix-activity-layout"><article class="glass-card phoenix-activity-card"><div class="card-section-heading"><div><span class="section-kicker">Canonical Social Events</span><h2>آخرین فعالیت‌ها</h2></div><span id="activity-status" class="pill">در حال آماده‌سازی</span></div><div id="activity-list" class="phoenix-activity-list"><div class="slot-loading">در حال خواندن فعالیت‌های واقعی…</div></div></article><aside class="glass-card phoenix-activity-side"><span class="section-kicker">Your loop</span><h2>دنبال کن، ذخیره کن، مقایسه کن.</h2><p>فعالیت‌های اجتماعی در کنار Discovery و Compare برای تصمیم‌گیری پیوسته استفاده می‌شوند؛ ranking و recommendation همچنان در backend canonical باقی می‌مانند.</p><a class="button button-ghost" href="/compare" data-nav>مقایسه‌های انتخاب‌شده</a></aside></section></div>';
+}
+
+async function loadActivityPage(): Promise<void> {
+  const connect = document.querySelector<HTMLButtonElement>("[data-activity-connect]");
+  if (connect) {
+    connect.addEventListener("click", () => openConnectionPanel());
+    return;
+  }
+  const host = document.querySelector<HTMLElement>("#activity-list");
+  const status = document.querySelector<HTMLElement>("#activity-status");
+  const refresh = document.querySelector<HTMLButtonElement>("[data-activity-refresh]");
+  if (!host || !status) return;
+
+  const renderRows = (items: unknown[]): void => {
+    if (!items.length) {
+      host.innerHTML = '<div class="social-empty-state"><div class="draft-orb">✦</div><h3>هنوز فعالیتی ثبت نشده است.</h3><p>از Discover یک کسب‌وکار را دنبال کن یا یک محصول را Like/Save کن تا رویداد واقعی اینجا دیده شود.</p><a class="button button-ghost" href="/discover?tab=explore" data-nav>رفتن به اکسپلور</a></div>';
+      status.textContent = "خالی";
+      status.className = "pill";
+      return;
+    }
+    host.innerHTML = items.map((item) => {
+      const event = item && typeof item === "object" ? item as Record<string, unknown> : {};
+      const eventType = String(event.eventType ?? "social.event");
+      let payload: Record<string, unknown> = {};
+      const rawPayload = event.payloadJson ?? event.payload;
+      if (typeof rawPayload === "string") {
+        try { const parsed = JSON.parse(rawPayload); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) payload = parsed as Record<string, unknown>; } catch { /* ignore */ }
+      } else if (rawPayload && typeof rawPayload === "object" && !Array.isArray(rawPayload)) {
+        payload = rawPayload as Record<string, unknown>;
+      }
+      const targetType = String(payload.targetType ?? event.aggregateType ?? "");
+      const targetId = String(payload.targetId ?? event.aggregateId ?? "");
+      const occurredAt = String(event.occurredAt ?? event.createdAt ?? "");
+      const targetLabel = targetType && targetId ? targetType + " · " + targetId : "رویداد اجتماعی ققنوس";
+      const targetHref = targetType === "business" && targetId
+        ? "/businesses/" + encodeURIComponent(targetId)
+        : targetType === "service" && targetId
+          ? "/booking?offering=" + encodeURIComponent(targetId)
+          : targetType === "product" && targetId
+            ? "/checkout?product=" + encodeURIComponent(targetId)
+            : "";
+      return '<article class="phoenix-activity-row"><div class="phoenix-activity-icon">✦</div><div class="phoenix-activity-copy"><strong>' + escapeHtml(socialActivityLabel(eventType)) + '</strong><p>' + escapeHtml(targetLabel) + '</p><small>' + escapeHtml(formatDate(occurredAt)) + '</small></div>' + (targetHref ? '<a class="button button-ghost" href="' + escapeAttr(targetHref) + '" data-nav>باز کردن</a>' : '') + '</article>';
+    }).join("");
+    status.textContent = String(items.length) + " رویداد";
+    status.className = "pill success";
+  };
+
+  const load = async (): Promise<void> => {
+    host.innerHTML = '<div class="slot-loading">در حال همگام‌سازی Social Activity…</div>';
+    status.textContent = "در حال خواندن";
+    status.className = "pill";
+    try {
+      const items = await loadSocialActivity();
+      renderRows(items);
+    } catch (error) {
+      status.textContent = "خطا";
+      status.className = "pill warning";
+      host.innerHTML = '<div class="social-error-state"><div class="draft-orb">!</div><h3>Activity در دسترس نیست.</h3><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Activity ناموفق بود.") + '</p><button class="button button-ghost" type="button" data-activity-retry>تلاش دوباره</button></div>';
+      host.querySelector<HTMLButtonElement>("[data-activity-retry]")?.addEventListener("click", () => void load());
+    }
+  };
+
+  refresh?.addEventListener("click", () => void load());
+  await load();
+}
 
 function renderCompare(): string {
   const items = getCompareItems();
@@ -4486,7 +4595,7 @@ document.addEventListener("click", (event) => {
 function bindDiscoveryResultEvents(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-discovery-index]").forEach((button) => {
     button.addEventListener("click", (event) => {
-      if ((event.target as Element | null)?.closest("button[data-compare],button[data-like],button[data-save],button[data-follow],button[data-comment]")) return;
+      if ((event.target as Element | null)?.closest("button[data-compare],button[data-like],button[data-save],button[data-follow],button[data-comment],button[data-share],button[data-open-view]")) return;
       const index = Number(button.dataset.discoveryIndex);
       const item = Number.isInteger(index) ? activeDiscoveryItems[index] : undefined;
       if (item) openDiscoveryResultPanel(item);
@@ -4499,7 +4608,7 @@ function bindDiscoveryResultEvents(): void {
       refreshSocialFeed();
     });
   });
-  document.querySelectorAll<HTMLButtonElement>("[data-follow],[data-like],[data-save],[data-comment]").forEach((button) => {
+  document.querySelectorAll<HTMLButtonElement>("[data-follow],[data-like],[data-save],[data-comment],[data-share],[data-open-view]").forEach((button) => {
     button.addEventListener("click", async (event) => {
       event.stopPropagation();
       const card = button.closest<HTMLElement>(".phoenix-post-card");
@@ -4513,11 +4622,22 @@ function bindDiscoveryResultEvents(): void {
         if (button.dataset.follow !== undefined) active = await persistSocialFollow(item);
         else if (button.dataset.like !== undefined) active = await persistSocialAction("like", item);
         else if (button.dataset.save !== undefined) active = await persistSocialAction("save", item);
-        else {
+        else if (button.dataset.share !== undefined) {
+          await shareSocialItem(item);
+          active = true;
+        } else if (button.dataset.openView !== undefined) {
+          const type = item.sourceType ?? String(item.metadata?.offeringType ?? "product");
+          const id = item.sourceId ?? item.id ?? "";
+          const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
+          if (type === "service") navigate("/booking?offering=" + encodeURIComponent(id) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : ""));
+          else if (type === "business") navigate("/businesses/" + encodeURIComponent(id));
+          else navigate("/checkout?product=" + encodeURIComponent(id));
+          active = true;
+        } else {
           await persistSocialComment(item);
           active = true;
         }
-        if (button.dataset.comment === undefined) {
+        if (button.dataset.comment === undefined && button.dataset.share === undefined && button.dataset.openView === undefined) {
           showToast(active ? "تعامل اجتماعی ثبت شد." : "تعامل اجتماعی برداشته شد.");
           refreshSocialFeed();
         } else if (active) {
