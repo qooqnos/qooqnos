@@ -399,34 +399,6 @@ function languageLabel(language: Language): string {
 }
 
 
-function applyLanguageToUi(): void {
-  const language = getInitialLanguage();
-  defaultI18n.setLanguage(language);
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  const nodes: Text[] = [];
-  let node: Node | null;
-  while ((node = walker.nextNode())) nodes.push(node as Text);
-
-  nodes.forEach((textNode) => {
-    const value = textNode.nodeValue ?? "";
-    if (!value.trim()) return;
-    const translated = translateUiText(value, language);
-    if (translated !== value) textNode.nodeValue = translated;
-  });
-
-  document.querySelectorAll<HTMLElement>("[placeholder], [aria-label], [title]").forEach((element) => {
-    (["placeholder", "aria-label", "title"] as const).forEach((attribute) => {
-      const value = element.getAttribute(attribute);
-      if (!value) return;
-      const translated = translateUiText(value, language);
-      if (translated !== value) element.setAttribute(attribute, translated);
-    });
-  });
-
-  document.querySelectorAll<HTMLElement>("[data-language-current]").forEach((node) => {
-    node.textContent = languageLabel(language);
-  });
-}
 
 function setLanguage(language: Language): void {
   const next = getLocaleFromPreference(language, "fa");
