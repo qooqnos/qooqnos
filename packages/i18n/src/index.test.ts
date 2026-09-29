@@ -56,7 +56,8 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("توضیح محصول", "en")).toBe("Product description");
     expect(translateUiText("Business and Product", "fa")).toBe("کسب‌وکار and محصول");
     expect(translateUiText("هویت کسب‌وکار و اعتماد", "en")).toBe("Business identity and Trust");
-    expect(translateUiText("محصول و خدمت", "ar")).toBe("المنتج والخدمة");
+    expect(translateUiText("و", "en")).toBe("and");
+    expect(translateUiText("محصول و خدمت", "ar")).toBe("المنتجات والخدمات");
   });
 
   it("translates the Business Workspace dictionary as a complete UI surface", () => {
