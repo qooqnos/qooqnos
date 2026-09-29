@@ -395,6 +395,10 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
         if (action === "refresh") {
           button.disabled = true;
           const finish = () => { button.disabled = false; };
+          if (layout === "command" && businessId) {
+            void hydrateCommandCanvas(canvas, businessId).finally(finish);
+            return;
+          }
           if (layout === "calendar" && businessId) {
             void hydrateCalendarCanvas(canvas, businessId).finally(finish);
             return;
