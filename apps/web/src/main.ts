@@ -445,6 +445,7 @@ function render(): void {
     const bookingSchedule = bookingParams.get("scheduleId")?.trim();
     const bookingBusiness = bookingParams.get("businessId")?.trim() || bookingParams.get("business")?.trim();
     const bookingOffering = bookingParams.get("offering")?.trim() || bookingParams.get("offeringId")?.trim();
+    if (bookingOffering) void loadBookingOfferingContext();
     if (bookingSchedule) void loadBookingSlots();
     else if (bookingBusiness && bookingOffering) void loadBusinessBookingSchedules();
   }
@@ -999,6 +1000,11 @@ function renderBooking(): string {
           <div><span>Customer</span><strong>${escapeHtml(customerId || "از context حساب")}</strong></div>
           <div><span>Resource</span><strong>${escapeHtml(resourceId || "از Availability")}</strong></div>
         </div>
+        <div id="booking-offering-context" class="booking-offering-context" aria-live="polite">
+          ${offeringId
+            ? '<div class="slot-loading booking-offering-loading">در حال خواندن اطلاعات خدمت از Business منتشرشده…</div>'
+            : '<div class="booking-offering-empty">ابتدا یک Service/Offering را انتخاب کنید؛ سپس Availability مناسب همین Business را می‌بینید.</div>'}
+        </div>
         <div class="booking-fields">
           <label class="field-label">Schedule ID<input id="booking-schedule" class="studio-input-line" placeholder="Schedule ID" value="${escapeAttr(scheduleId)}" /></label>
           <label class="field-label">Business ID<input id="booking-business" class="studio-input-line" placeholder="Business ID" value="${escapeAttr(businessId)}" /></label>
@@ -1030,6 +1036,16 @@ type BookingSlotView = {
   status?: string;
 };
 
+type BookingOfferingPreview = {
+  id: string;
+  businessId: string;
+  offeringType: "product" | "service";
+  title: string;
+  description?: string | null;
+  serviceId?: string | null;
+  productId?: string | null;
+};
+
 type BookingScheduleView = {
   id: string;
   businessId: string;
@@ -1038,6 +1054,55 @@ type BookingScheduleView = {
   timezone?: string | null;
   status?: string;
 };
+
+async function loadBookingOfferingContext(): Promise<void> {
+  const offeringId =
+    document.querySelector<HTMLInputElement>("#booking-offering")?.value.trim()
+    || new URLSearchParams(location.search).get("offering")?.trim()
+    || new URLSearchParams(location.search).get("offeringId")?.trim()
+    || "";
+  const businessId =
+    document.querySelector<HTMLInputElement>("#booking-business")?.value.trim()
+    || new URLSearchParams(location.search).get("business")?.trim()
+    || new URLSearchParams(location.search).get("businessId")?.trim()
+    || localStorage.getItem(STORAGE.business)
+    || "";
+  const host = document.querySelector<HTMLElement>("#booking-offering-context");
+  if (!host || !offeringId) return;
+  if (!businessId) {
+    host.innerHTML = '<div class="booking-offering-empty"><strong>Business context لازم است.</strong><span>برای رزرو خدمت، این Offering باید به یک Business مشخص متصل باشد.</span></div>';
+    return;
+  }
+
+  host.innerHTML = '<div class="slot-loading booking-offering-loading">در حال خواندن عرضه منتشرشده…</div>';
+  try {
+    const response = await fetch("/api/v1/public/businesses/" + encodeURIComponent(businessId), { headers: { Accept: "application/json" } });
+    const body = await response.json().catch(() => null) as {
+      offers?: BookingOfferingPreview[];
+      error?: { message?: string };
+    } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Public Business supply unavailable");
+    const offers = Array.isArray(body?.offers) ? body.offers : [];
+    const offer = offers.find((item) => item.id === offeringId);
+    if (!offer) {
+      host.innerHTML = '<div class="booking-offering-empty"><strong>این Offering در عرضه عمومی این کسب‌وکار پیدا نشد.</strong><span>شناسه انتخاب‌شده: ' + escapeHtml(offeringId) + ' · مسیر رزرو همچنان از Availability canonical پیروی می‌کند.</span></div>';
+      return;
+    }
+
+    const kind = offer.offeringType === "service" ? "خدمت" : "محصول";
+    host.innerHTML =
+      '<div class="booking-offering-card">' +
+        '<div class="booking-offering-card-main"><span class="section-kicker">Canonical Public Offering</span><h3>' + escapeHtml(offer.title) + '</h3><p>' + escapeHtml(offer.description ?? "توضیح منتشرشده‌ای برای این عرضه ثبت نشده است.") + '</p></div>' +
+        '<div class="booking-offering-card-meta">' +
+          '<span class="pill success">' + kind + '</span>' +
+          '<span>Offering: <strong>' + escapeHtml(offer.id) + '</strong></span>' +
+          (offer.serviceId ? '<span>Service: <strong>' + escapeHtml(offer.serviceId) + '</strong></span>' : '') +
+        '</div>' +
+      '</div>';
+  } catch (error) {
+    host.innerHTML = '<div class="booking-offering-empty"><strong>اطلاعات Offering فعلاً قابل خواندن نیست.</strong><span>' + escapeHtml(error instanceof Error ? error.message : "Public Business supply unavailable") + '</span></div>';
+  }
+}
 
 async function loadBusinessBookingSchedules(): Promise<void> {
   const businessId =
