@@ -606,6 +606,7 @@ function render(): void {
     if (initialDiscoveryQuery || socialTab === "explore" || socialTab === "following") void runDiscovery();
     bindDiscoveryResultEvents();
     renderCompareTray();
+    renderShortlist();
     void loadSocialState();
   }
   if (route.path === "/compare") {
@@ -3430,7 +3431,7 @@ function renderDiscover(): string {
       '<div class="phoenix-social-hero-card"><img src="/phoenix-mark.svg?v=1" alt="" aria-hidden="true" /><div><strong>' + localizedUi("تصمیم را از نیاز شروع کن") + '</strong><small>' + localizedUi("محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.") + '</small></div><button class="button button-primary" type="button" data-open-create-post>＋ ' + discoveryUi("createOffering") + '</button></div>' +
     '</section>' +
     '<section class="phoenix-social-search glass-card"><span class="phoenix-search-icon">⌕</span><input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="' + escapeAttr(discoveryUi("examplePlaceholder")) + '" /><button class="button button-primary" type="button" data-run-discovery>' + discoveryUi("discoverButton") + ' <span>←</span></button></section>' +
-    '<div class="phoenix-feed-heading"><div><span class="phoenix-kicker">' + discoveryUi("discoverButton") + '</span><strong id="results-title">' + escapeHtml(initialQuery ? discoveryUi("searchResults") : tab === "following" ? discoveryUi("following") : tab === "explore" ? discoveryUi("explore") : discoveryUi("discoverableSuggestions")) + '</strong><small id="results-meta">' + discoveryUi("ready") + '</small></div><div class="phoenix-feed-actions"><a href="/compare" data-nav>' + localizedUi("مقایسه") + ' <span>→</span></a><button type="button" class="button button-ghost" data-social-state-refresh>↻ ' + discoveryUi("sync") + '</button></div></div>' +
+    '<div class="phoenix-feed-heading"><div><span class="phoenix-kicker">' + discoveryUi("discoverButton") + '</span><strong id="results-title">' + escapeHtml(initialQuery ? discoveryUi("searchResults") : tab === "following" ? discoveryUi("following") : tab === "explore" ? discoveryUi("explore") : discoveryUi("discoverableSuggestions")) + '</strong><small id="results-meta">' + discoveryUi("ready") + '</small></div><div class="phoenix-feed-actions"><a href="/compare" data-nav>' + localizedUi("مقایسه") + ' <span>→</span></a><span id="shortlist-count" class="pill" aria-label="فهرست انتخابی">0</span><button type="button" class="button button-ghost" data-social-state-refresh>↻ ' + discoveryUi("sync") + '</button></div></div>' +
     '<div id="discovery-results" class="phoenix-social-feed">' + (initialQuery ? '<div class="slot-loading">' + discoveryUi("preparing") + '</div>' : '<div class="social-empty-state glass-card"><div class="draft-orb">✦</div><h3>' + discoveryUi("startWithNeedTitle") + '</h3><p>' + discoveryUi("writeSentence") + '</p><div class="connection-actions"><button class="button button-primary" type="button" data-focus-discover>' + discoveryUi("startSearch") + '</button><a class="button button-ghost" href="/discover?tab=explore" data-nav>' + discoveryUi("explore") + '</a></div></div>') + '</div>' +
     '<div id="phoenix-compare-tray"></div><div id="discovery-pagination"></div></div>';
 }
