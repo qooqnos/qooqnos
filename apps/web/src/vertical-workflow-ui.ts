@@ -1,4 +1,4 @@
-import { getVerticalModuleRoleFit, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleRoleFit, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
 import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
 export type VerticalWorkflowCanvasModel = {
@@ -299,7 +299,7 @@ async function hydrateCanvasRoleLens(canvas: HTMLElement): Promise<void> {
     const vertical = canvas.dataset.vwfVertical ?? "default";
     const module = canvas.dataset.vwfModule ?? "";
     // Resolve role fit without granting any authorization.
-    const moduleBlueprint = (await import("./business-module-ui.js")).getVerticalModuleBlueprint(vertical, module);
+    const moduleBlueprint = getVerticalModuleBlueprint(vertical, module);
     const fit = getVerticalModuleRoleFit(moduleBlueprint, lens.key);
     const fitLabel = fit === "primary" ? "تمرکز این نقش" : "سطح مشترک";
 
