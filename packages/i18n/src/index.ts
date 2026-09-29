@@ -138,11 +138,7 @@ export function translateUiText(
     }
   }
 
-  if (!candidate) return value;
-
-  const [source, key] = candidate;
-  const translated = translations[locale][key] ?? translations.fa[key];
-  return translated ? value.split(source).join(translated) : value;
+  return value;
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
