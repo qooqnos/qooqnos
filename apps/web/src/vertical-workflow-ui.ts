@@ -403,11 +403,14 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
       getVerticalWorkflowSteps(model.vertical).map((stage, index) => {
         const stageModule = getVerticalWorkflowStageModule(model.vertical, stage);
         const active = stageModule === model.module;
+        const completed = stageContext.index >= 0 && index < stageContext.index;
+        const upcoming = stageContext.index >= 0 && index > stageContext.index;
+        const stateClass = active ? " active" : completed ? " completed" : upcoming ? " upcoming" : "";
         const href = stageModule ? workflowModuleHref(model, stageModule) : "";
         const content = '<span class="phoenix-vwf-stage-number">' + String(index + 1).padStart(2, "0") + '</span><span class="phoenix-vwf-stage-copy"><strong>' + escapeHtml(stage) + '</strong><small>' + escapeHtml(stageModule ?? "Capability") + '</small></span>';
         return href
-          ? '<a class="phoenix-vwf-stage' + (active ? " active" : "") + '" href="' + escapeHtml(href) + '" data-nav aria-current="' + (active ? "step" : "false") + '">' + content + '</a>'
-          : '<div class="phoenix-vwf-stage' + (active ? " active" : "") + '">' + content + '</div>';
+          ? '<a class="phoenix-vwf-stage' + stateClass + '" href="' + escapeHtml(href) + '" data-nav aria-current="' + (active ? "step" : "false") + '" data-vwf-stage-state="' + (active ? "current" : completed ? "completed" : "upcoming") + '">' + content + '</a>'
+          : '<div class="phoenix-vwf-stage' + stateClass + '" data-vwf-stage-state="' + (active ? "current" : completed ? "completed" : "upcoming") + '">' + content + '</div>';
       }).join('<span class="phoenix-vwf-stage-connector" aria-hidden="true">→</span>') +
     '</nav>' +
     '<div class="phoenix-vwf-stage-context">' +
