@@ -7,6 +7,7 @@ import {
   getVerticalModuleRoute,
   getVerticalModuleSlug,
   resolveVerticalRoleLens,
+  resolveVerticalModuleAlias,
 } from "./business-module-ui";
 
 const verticalModules: Record<string, string[]> = {
@@ -41,6 +42,14 @@ describe("Vertical Workflow UI module blueprints", () => {
         expect(getVerticalModuleRoute(vertical, module)).toBe("/business/workspace/" + vertical + "/" + slug);
       }
     }
+  });
+
+  it("resolves stable semantic business aliases into the active vertical module", () => {
+    expect(resolveVerticalModuleAlias("clinic", "bookings")).toBe("نوبت‌ها");
+    expect(resolveVerticalModuleAlias("retail", "products")).toBe("محصولات");
+    expect(resolveVerticalModuleAlias("restaurant", "orders")).toBe("سفارش‌های امروز");
+    expect(resolveVerticalModuleAlias("salon", "bookings")).toBe("وقت‌های امروز");
+    expect(resolveVerticalModuleAlias("clinic", "inventory")).toBeNull();
   });
 
   it("applies declared capability contracts to supported modules", () => {
