@@ -917,6 +917,8 @@
     "cancel": "انصراف",
     "continue": "ادامه",
     "examplePlaceholder": "مثلاً «کفش دویدن تا ۵ میلیون»",
-    "createOfferingPlaceholder": "مثلاً: میز کار چوبی دست‌ساز، مناسب اتاق کوچک…"
+    "createOfferingPlaceholder": "مثلاً: میز کار چوبی دست‌ساز، مناسب اتاق کوچک…",
+    "label": "کشف",
+    "forYou": "برای تو"
   }
 }
