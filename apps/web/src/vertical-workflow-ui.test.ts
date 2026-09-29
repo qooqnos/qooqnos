@@ -248,6 +248,27 @@ describe("Vertical Workflow overview", () => {
   });
 
 
+  it("renders the shared canonical Commerce Order surface for order-oriented modules", () => {
+    for (const [vertical, module] of [
+      ["retail", "فروش امروز"],
+      ["retail", "سفارش‌ها"],
+      ["restaurant", "سفارش‌های امروز"],
+    ] as const) {
+      const blueprint = getVerticalModuleBlueprint(vertical, module);
+      const html = renderVerticalWorkflowCanvas({
+        vertical,
+        module,
+        businessId: "business-test",
+        blueprint,
+      });
+      expect(html).toContain('data-vwf-layout="commerce"');
+      expect(html).toContain('data-vwf-orders-live');
+      expect(html).toContain('data-vwf-order-items');
+      expect(html).toContain("Canonical Commerce Orders");
+      expect(html).toContain("سفارش‌های این کسب‌وکار");
+    }
+  });
+
   it("renders the shared canonical Billing surface for payment modules", () => {
     for (const vertical of ["clinic", "restaurant", "salon"]) {
       const blueprint = getVerticalModuleBlueprint(vertical, "پرداخت");
