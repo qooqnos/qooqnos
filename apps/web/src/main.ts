@@ -4289,8 +4289,16 @@ async function loadBusinessAccess(): Promise<void> {
     if (headerName) headerName.textContent = getRecordString(business, ["displayName","name"]) ?? uiText("فضای کاری شما");
     if (brandPreviewName) brandPreviewName.textContent = getRecordString(business, ["displayName","name"]) ?? businessUi("businessName");
     if (brandPreviewType) brandPreviewType.textContent = uiText(vertical.label);
-    if (brandPreviewStatus) { const publicationPreview = getRecordString(business, ["publicationStatus"]) ?? "unpublished"; brandPreviewStatus.textContent = publicationPreview === "published" ? "منتشر" : "پیش‌نویس"; brandPreviewStatus.className = publicationPreview === "published" ? "pill success" : "pill warning"; }
-    if (headerStatus) { headerStatus.textContent = getRecordString(business, ["status"]) ?? "—"; headerStatus.className = getRecordString(business, ["status"]) === "active" ? "pill success" : "pill warning"; }
+    if (brandPreviewStatus) {
+      const publicationPreview = getRecordString(business, ["publicationStatus"]) ?? "unpublished";
+      brandPreviewStatus.textContent = defaultI18n.t(publicationPreview === "published" ? "status.published" : "status.draft");
+      brandPreviewStatus.className = publicationPreview === "published" ? "pill success" : "pill warning";
+    }
+    if (headerStatus) {
+      const statusValue = getRecordString(business, ["status"]) ?? "";
+      headerStatus.textContent = statusValue ? defaultI18n.t("status." + statusValue) : "—";
+      headerStatus.className = statusValue === "active" ? "pill success" : "pill warning";
+    }
     if (nextAction) nextAction.textContent = vertical.actions[0] ? uiText(vertical.actions[0]) : businessUi("nextActionDefault");
     if (nextDetail) nextDetail.textContent = uiText(vertical.subtitle);
     if (moduleCount) moduleCount.textContent = businessUi("moduleCount", { count: String(vertical.modules.length) });
@@ -4303,18 +4311,18 @@ async function loadBusinessAccess(): Promise<void> {
     const roleText = roles.length ? roles.join(" · ") : businessUi("unknownRole");
     const lowerRoles = roles.map((role) => role.toLowerCase());
     const roleLens = lowerRoles.some((role) => /owner|admin|manager/.test(role))
-      ? { title: "مدیریت Workspace", description: "نمای کلی، تیم، مالی، گزارش و تنظیمات برای نقش مدیریتی در اولویت قرار می‌گیرند." }
+      ? { key: "management", title: businessUi("roleManagementTitle"), description: businessUi("roleManagementDescription") }
       : lowerRoles.some((role) => /sales|seller/.test(role))
-        ? { title: "عملیات فروش", description: "مشتریان، محصولات، پیام‌ها و معاملات در اولویت این نقش هستند." }
+        ? { key: "sales", title: businessUi("roleSalesTitle"), description: businessUi("roleSalesDescription") }
         : lowerRoles.some((role) => /doctor|specialist|provider/.test(role))
-          ? { title: "عملیات تخصصی", description: "خدمات، برنامه، رزرو و پروفایل تخصصی در اولویت این نقش هستند." }
+          ? { key: "specialist", title: businessUi("roleSpecialistTitle"), description: businessUi("roleSpecialistDescription") }
           : lowerRoles.some((role) => /finance|account/.test(role))
-            ? { title: "عملیات مالی", description: "پرداخت‌ها، تراکنش‌ها و گزارش‌های مالی در اولویت این نقش هستند." }
-            : { title: "Workspace عمومی", description: "ماژول‌ها براساس Business Type و Capabilityهای فعال ترکیب می‌شوند." };
+            ? { key: "finance", title: businessUi("roleFinanceTitle"), description: businessUi("roleFinanceDescription") }
+            : { key: "generic", title: businessUi("roleGenericTitle"), description: businessUi("roleGenericDescription") };
     if (headerRole) headerRole.textContent = businessUi("rolePrefix") + " " + roleText;
     if (roleTitle) roleTitle.textContent = uiText(roleLens.title);
     if (roleDescription) roleDescription.textContent = uiText(roleLens.description);
-    const roleKey = roleLens.title === "مدیریت Workspace" ? "management" : roleLens.title === "عملیات فروش" ? "sales" : roleLens.title === "عملیات تخصصی" ? "specialist" : roleLens.title === "عملیات مالی" ? "finance" : "generic";
+    const roleKey = roleLens.key;
     const roleActions = BUSINESS_ROLE_ACTIONS[roleKey] ?? BUSINESS_ROLE_ACTIONS.generic ?? [];
     if (roleFocusTitle) roleFocusTitle.textContent = uiText(roleLens.title);
     if (roleFocusBadge) roleFocusBadge.textContent = roleText;
@@ -4329,7 +4337,7 @@ async function loadBusinessAccess(): Promise<void> {
     if (teamCount) teamCount.textContent = businessUi("memberCount", { count: String(teamItems.length) });
     if (teamList) teamList.innerHTML = teamItems.length
       ? teamItems.map((member) => '<div class="phoenix-team-row"><span class="phoenix-team-avatar">' + escapeHtml((member.userId || "U").slice(0,1).toUpperCase()) + '</span><div><strong>' + escapeHtml(member.userId) + '</strong><small>' + uiText(member.status) + (member.userId === context.actorId ? businessUi("unreadMe") : "") + '</small></div><span class="pill ' + (member.status === "active" ? "success" : "warning") + '">' + escapeHtml(member.status) + '</span></div>').join("")
-      : '<div class="slot-empty"><span>◎</span><p>عضو دیگری در Workspace پیدا نشد یا دسترسی خواندن اعضا فراهم نیست.</p></div>';
+      : '<div class="slot-empty"><span>◎</span><p>' + escapeHtml(businessUi("noMembers")) + '</p></div>';
     for (let i = 0; i < vertical.metrics.length; i += 1) {
       const metric = document.querySelector<HTMLElement>("#business-metric-" + i);
       if (metric) metric.textContent = "—";
@@ -4339,12 +4347,12 @@ async function loadBusinessAccess(): Promise<void> {
     const contactsData = response.data.contacts ?? [];
     profile.innerHTML = `
       <div class="business-profile-grid">
-        <div><span>نام</span><strong>${escapeHtml(getRecordString(business, ["name"]) ?? "—")}</strong></div>
-        <div><span>نام نمایشی</span><strong>${escapeHtml(getRecordString(business, ["displayName"]) ?? "—")}</strong></div>
-        <div><span>وضعیت</span><strong>${escapeHtml(getRecordString(business, ["status"]) ?? "—")}</strong></div>
-        <div><span>Locale</span><strong>${escapeHtml(getRecordString(business, ["defaultLocale"]) ?? "—")}</strong></div>
-        <div><span>Timezone</span><strong>${escapeHtml(getRecordString(business, ["timezone"]) ?? "—")}</strong></div>
-        <div><span>Currency</span><strong>${escapeHtml(getRecordString(business, ["defaultCurrency"]) ?? "—")}</strong></div>
+        <div><span>${escapeHtml(businessUi("nameField"))}</span><strong>${escapeHtml(getRecordString(business, ["name"]) ?? "—")}</strong></div>
+        <div><span>${escapeHtml(businessUi("displayName"))}</span><strong>${escapeHtml(getRecordString(business, ["displayName"]) ?? "—")}</strong></div>
+        <div><span>${escapeHtml(businessUi("statusField"))}</span><strong>${escapeHtml(defaultI18n.t("status." + (getRecordString(business, ["status"]) ?? "unknown")))}</strong></div>
+        <div><span>${escapeHtml(businessUi("localeField"))}</span><strong>${escapeHtml(getRecordString(business, ["defaultLocale"]) ?? "—")}</strong></div>
+        <div><span>${escapeHtml(businessUi("timezone"))}</span><strong>${escapeHtml(getRecordString(business, ["timezone"]) ?? "—")}</strong></div>
+        <div><span>${escapeHtml(businessUi("currency"))}</span><strong>${escapeHtml(getRecordString(business, ["defaultCurrency"]) ?? "—")}</strong></div>
       </div>`;
     const setInput=(selector:string,key:string)=>{const input=document.querySelector<HTMLInputElement>(selector); if(input) input.value=getRecordString(business,[key])??"";};
     setInput("#business-name-input","name");
@@ -4356,15 +4364,15 @@ async function loadBusinessAccess(): Promise<void> {
       <div class="business-location-item">
         <div><strong>${escapeHtml(getRecordString(item,["name"])??businessUi("locations"))}</strong><small>${escapeHtml(getRecordString(item,["locationType"])??"—")} · ${escapeHtml(getRecordString(item,["timezone"])??"—")}</small></div>
         <span class="pill ${getRecordString(item,["status"])==="active"?"success": "warning"}">${escapeHtml(getRecordString(item,["status"])??"—")}</span>
-      </div>`).join("") : '<div class="slot-empty"><span>⌖</span><p>هنوز مکانی ثبت نشده است.</p></div>';
-    hours.innerHTML = hoursData.length ? hoursData.map((item)=>`<div class="business-hour-item"><span>${escapeHtml(String(item.dayOfWeek ?? "—"))}</span><strong>${escapeHtml(String(item.opens ?? "—"))} — ${escapeHtml(String(item.closes ?? "—"))}</strong><small>${escapeHtml(String(item.timezone ?? "—"))}</small></div>`).join("") : '<div class="slot-empty"><span>◷</span><p>ساعت فعالی ثبت نشده است.</p></div>';
+      </div>`).join("") : '<div class="slot-empty"><span>⌖</span><p>' + escapeHtml(businessUi("noLocation")) + '</p></div>';
+    hours.innerHTML = hoursData.length ? hoursData.map((item)=>`<div class="business-hour-item"><span>${escapeHtml(String(item.dayOfWeek ?? "—"))}</span><strong>${escapeHtml(String(item.opens ?? "—"))} — ${escapeHtml(String(item.closes ?? "—"))}</strong><small>${escapeHtml(String(item.timezone ?? "—"))}</small></div>`).join("") : '<div class="slot-empty"><span>◷</span><p>' + escapeHtml(businessUi("noHours")) + '</p></div>';
     contacts.innerHTML = contactsData.length ? contactsData.map((item)=>`<span><b>${escapeHtml(getRecordString(item,["contactType"])??"contact")}</b> ${escapeHtml(getRecordString(item,["value"])??"—")}</span>`).join("") : '<span>' + escapeHtml(businessUi("noPublicContact")) + '</span>';
     const publicationValue=getRecordString(business,["publicationStatus"])??"unpublished";
-    publication.textContent=publicationValue;
+    publication.textContent=defaultI18n.t(publicationValue === "published" ? "status.published" : publicationValue === "draft" ? "status.draft" : "businessPage.publicationStatus");
     publication.className=publicationValue==="published"?"pill success":"pill warning";
     publicationDetail.textContent=publicationValue==="published"?businessUi("publishedBusiness"):businessUi("publicationBlocked");
     if (latestVerification) {
-      verificationStatus.textContent=latestVerification.status;
+      verificationStatus.textContent=defaultI18n.t("status." + latestVerification.status);
       verificationStatus.className=latestVerification.status==="approved"?"pill success":latestVerification.status==="rejected"||latestVerification.status==="expired"?"pill warning":"pill";
       verificationDetail.textContent=latestVerification.policyId+" · v"+latestVerification.policyVersion;
     } else {
