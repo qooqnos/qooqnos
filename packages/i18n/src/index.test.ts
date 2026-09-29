@@ -29,6 +29,13 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("ماژول‌های این Workspace بر اساس نوع کسب‌وکار ترکیب می‌شوند؛ مجوزها همچنان توسط backend تعیین می‌شوند.", "en")).toBe("Workspace modules are composed by business type; permissions remain controlled by the backend.");
   });
 
+  it("resolves duplicate Persian labels to the semantic page namespace when available", () => {
+    expect(translateUiText("کسب‌وکار عمومی", "en")).toBe("General business");
+    expect(translateUiText("ساخت کسب‌وکار", "en")).toBe("Create business");
+    expect(translateUiText("اقدام‌های سریع", "en")).toBe("Quick actions");
+    expect(translateUiText("مکان‌ها", "en")).toBe("Locations");
+  });
+
   it("uses the canonical domain vocabulary as the terminology source", () => {
     expect(translations.fa["canonical.business.business"]).toBe("کسب‌وکار");
     expect(translations.fa["canonical.catalog.offering"]).toBe("عرضه");
