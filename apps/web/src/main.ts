@@ -4,7 +4,7 @@ import { getVerticalModuleBlueprint, getVerticalModuleForSlug, getVerticalModule
 import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 import { resolveVerticalModuleAlias } from "./business-module-ui.js";
-import { defaultI18n, getDirection, getLocaleFromPreference, LOCALE_STORAGE_KEY, persistLocale, readPersistedLocale, type SupportedLanguage } from "@qooqnos/i18n";
+import { defaultI18n, getDirection, getLocaleFromPreference, LOCALE_STORAGE_KEY, persistLocale, readPersistedLocale, translateUiText, type SupportedLanguage } from "@qooqnos/i18n";
 type Theme = "dark" | "light";
 type Language = SupportedLanguage;
 
@@ -355,37 +355,6 @@ function getInitialLanguage(): Language {
     ?? getLocaleFromPreference(navigator.language, "fa");
 }
 
-function translateUiValue(value: string, language: Language): string {
-  const source = value.trim();
-  if (!source) return value;
-  const known = Object.entries({
-    "نیازت را بگو": "ui.tellNeed",
-    "برای کسب‌وکارها": "ui.forBusinesses",
-    "چگونه کار می‌کند؟": "ui.howItWorks",
-    "هر چی می‌خوای بگو، تا ققنوس برات پیداش کنه": "ui.askAnything",
-    "تصمیم را از نیاز شروع کن": "ui.startWithNeed",
-    "محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.": "ui.findAndAct",
-    "با نیازت شروع کن، نه با کلمه کلیدی": "ui.notKeyword",
-    "هرچه برای تصمیم مهم است بنویس؛ ققنوس مسیر کشف را باز می‌کند.": "ui.decisionContext",
-    "نمایش بیشتر": "ui.showMore",
-    "کسب‌وکار جدید بسازید": "ui.newBusiness",
-    "انتخاب زبان": "ui.chooseLanguage",
-    "تغییر پوسته": "ui.changeTheme",
-    "فعال کردن پوسته تاریک": "ui.themeDark",
-    "فعال کردن پوسته روشن": "ui.themeLight",
-    "مثلاً برای جمعه شب یک رستوران آرام برای ۴ نفر می‌خواهم، نزدیک مرکز شهر و با قیمت متوسط...": "ui.askPlaceholder",
-    "پروفایل کسب‌وکار": "ui.businessProfile",
-    "اعلان‌ها": "ui.notifications",
-    "پروفایل": "ui.profile",
-    "حساب": "ui.account"
-  } as const);
-  const key = Object.fromEntries(known.map(([text, key]) => [text, key]))[source];
-  if (!key) return value;
-  const translated = defaultI18n.t(key);
-  const leading = value.match(/^\s*/u)?.[0] ?? "";
-  const trailing = value.match(/\s*$/u)?.[0] ?? "";
-  return leading + translated + trailing;
-}
 
 let languageObserverInstalled = false;
 
@@ -409,14 +378,14 @@ function applyLanguageToUi(): void {
   nodes.forEach((textNode) => {
     const value = textNode.nodeValue ?? "";
     if (!value.trim()) return;
-    const translated = translateUiValue(value, language);
+    const translated = translateUiText(value, language);
     if (translated !== value) textNode.nodeValue = translated;
   });
   document.querySelectorAll<HTMLElement>("[placeholder], [aria-label], [title]").forEach((element) => {
     (["placeholder", "aria-label", "title"] as const).forEach((attribute) => {
       const value = element.getAttribute(attribute);
       if (!value) return;
-      const translated = translateUiValue(value, language);
+      const translated = translateUiText(value, language);
       if (translated !== value) element.setAttribute(attribute, translated);
     });
   });
