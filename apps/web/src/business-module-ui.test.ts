@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getVerticalModuleBlueprint,
+  getVerticalModuleUiContract,
   getVerticalModuleForSlug,
   getVerticalModuleRoleFit,
   getVerticalModuleRoute,
@@ -88,6 +89,21 @@ describe("Vertical Workflow UI module blueprints", () => {
     expect(getVerticalModuleRoleFit(blueprint, "specialist")).toBe("primary");
     expect(getVerticalModuleRoleFit(blueprint, "finance")).toBe("shared");
   });
+  it("exposes one canonical UI contract for every supported module", () => {
+    for (const [vertical, modules] of Object.entries(verticalModules)) {
+      for (const module of modules) {
+        const contract = getVerticalModuleUiContract(vertical, module);
+        expect(contract.vertical).toBe(vertical);
+        expect(contract.module).toBe(module);
+        expect(contract.slug).toBe(getVerticalModuleSlug(vertical, module));
+        expect(contract.route).toBe(getVerticalModuleRoute(vertical, module));
+        expect(contract.blueprint).toBe(getVerticalModuleBlueprint(vertical, module));
+        expect(contract.capabilityContract).toBe(contract.blueprint.capabilityContract);
+        expect(contract.roleLenses).toEqual(contract.blueprint.roleLenses);
+      }
+    }
+  });
+
   it("keeps semantic module identity stable across localized labels", () => {
     expect(getVerticalModuleSlug("clinic", "نوبت‌ها")).toBe("appointments");
     expect(getVerticalModuleSlug("retail", "سایز و رنگ")).toBe("attributes");
