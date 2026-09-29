@@ -390,7 +390,7 @@ function navigate(path: string): void {
   const targetPath = normalizePath(url.pathname);
   const targetUrl = targetPath + url.search + url.hash;
   const currentUrl = normalizePath(location.pathname) + location.search + location.hash;
-  const isKnownDynamicBusinessPath = Boolean(parseBusinessModulePath(targetPath) || parseBusinessModuleAliasPath(targetPath)) || targetPath.startsWith("/businesses/");
+  const isKnownDynamicBusinessPath = Boolean(parseBusinessModulePath(targetPath) || parseBusinessModuleAliasPath(targetPath, url.search)) || targetPath.startsWith("/businesses/");
   if (targetPath !== normalizePath(location.pathname) && !routes.some((route) => route.path === targetPath) && !isKnownDynamicBusinessPath) {
     window.location.assign(targetUrl);
     return;
@@ -3492,13 +3492,13 @@ function parseBusinessModulePath(path: string): { vertical: string; module: stri
   return module ? { vertical, module } : null;
 }
 
-function parseBusinessModuleAliasPath(path: string): { vertical: string; module: string } | null {
+function parseBusinessModuleAliasPath(path: string, search = location.search): { vertical: string; module: string } | null {
   const parts = path.split("/").filter(Boolean);
   if (parts.length !== 2 || parts[0] !== "business") return null;
   const alias = parts[1];
   if (!alias || alias === "profile") return null;
 
-  const params = new URLSearchParams(location.search);
+  const params = new URLSearchParams(search);
   const requestedVertical = params.get("vertical")?.trim()
     ?? localStorage.getItem(STORAGE.businessVertical)
     ?? "default";
