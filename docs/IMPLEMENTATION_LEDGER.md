@@ -2757,3 +2757,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added regression coverage for Clinic appointments, Restaurant reservations and Salon today modules.
 - Implementation commits: a2f78a5916893e78baced9228877d7a1d9ecb150, 6c8f95839100e04732ee9c9644a030e4903b5377, styles bd730117abe42208e14a4e3c756e36318dc22f99 and eb568965a611c2be094c19b8c9df72a979a67c26.
 - Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
+
+## 2026-09-29 — Semantic Vertical Module Route Aliases
+
+- 🟢 Added a shared semantic alias registry for Business vertical modules (products, services, customers, team, orders, inventory, bookings, appointments, reservations, menu, tables, kitchen, delivery, specialists, providers, payments, promotions, reports, and related aliases).
+- 🟢 Stable aliases such as `/business/products`, `/business/team`, `/business/bookings`, `/business/inventory` and `/business/menu` now resolve into the existing shared Vertical Workflow module canvas using the active/canonical vertical context.
+- 🟢 Aliases do not introduce a second page architecture or persistence boundary; they are routing sugar over the existing `/business/workspace/{vertical}/{module}` contract.
+- 🟢 Added regression coverage for clinic, retail, restaurant and salon alias resolution.
+- 🟡 Build/test/browser verification for this slice remains pending in the current environment.
