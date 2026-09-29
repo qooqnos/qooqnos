@@ -753,5 +753,30 @@
     "readingVerification": "جارٍ قراءة Verification…",
     "verticalDefaultLabel": "نشاط تجاري عام",
     "verticalDefaultSubtitle": "مساحة عمل قابلة للتهيئة وفق القدرات المفعّلة."
+  },
+  "businessSurface": {
+    "loadingPublicData": "جارٍ تحميل المعلومات العامة…",
+    "follow": "متابعة",
+    "submitReview": "إضافة مراجعة",
+    "share": "مشاركة",
+    "published": "منشور",
+    "supplyIdentity": "هوية العرض",
+    "productsAndServices": "المنتجات والخدمات",
+    "publishedOffers": "المنتجات والخدمات المنشورة",
+    "contact": "اتصال",
+    "locations": "المواقع",
+    "customerExperiences": "تجارب العملاء المنشورة",
+    "publishedSupplyOnly": "تعرض هذه الصفحة العرض المنشور فقط؛ ويُعاد توجيه الإجراء التالي إلى مسارات الشراء أو الحجز الموثوقة.",
+    "unifiedPath": "من فهم النشاط التجاري إلى اتخاذ الإجراء، مسار واحد.",
+    "publicIdentity": "هوية النشاط التجاري",
+    "trust": "الثقة",
+    "communication": "التواصل",
+    "publicBusinessProfile": "الملف العام للنشاط التجاري",
+    "publicProfileDescription": "يُبنى الملف العام من بيانات Business الموثوقة.",
+    "workspace": "مساحة العمل",
+    "identity": "الهوية",
+    "trustBeforePublic": "الثقة قبل العرض العام",
+    "trustSource": "تُقرأ حالة النشر والثقة من المصدر الموثوق.",
+    "viewTrust": "عرض الثقة"
   }
 }
