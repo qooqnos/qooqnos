@@ -2730,3 +2730,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - No domain state, authorization rule, duplicate persistence model or fake operational data was introduced.
 - Implementation commits: `346c5aa9e17dfb3d16eefa23136537bd8049fe7f`, `92ed4c2e0c9b829a94053e648d80b3e600a15832`, `12a7806c9ca37914d41674f43dd7175c2a1c3315`, `8b6d81f836fbcf686fd30417c9299274021d6251`.
 - Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
+
+
+## 2026-09-29 — Shared Vertical Workflow handoff rail
+- Extended the shared Vertical Workflow UI Framework with a reusable Workflow Handoff Contract on every vertical module canvas.
+- Each Canvas now exposes the same three-part handoff model: previous/input stage, current stage and next/output stage, with stable semantic links that preserve Business and module context.
+- The rail is presentation/orchestration only; it does not introduce a second workflow state store, mutate domain state or replace backend authorization.
+- Added regression coverage for the shared handoff markup and mirrored responsive styling in both frontend stylesheet surfaces.
+- Implementation commits: `26827f588ec0ad0a57c58704e4601f9549d60dbd`, `1eea1c3f5bf5ba857d13e5cd434b1f9a8922665e`, styles `421d97084b0a6f835823e6822b1e1b97aa799ec0`, `767ff2e4aeea0ebd208ebb063383d5a5a9685e71`, test `b6f4e5cece456519eadd992084da0bdb8cff167a`.
+- Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
+
