@@ -36,6 +36,16 @@ describe("Business Vertical UI registry", () => {
     }
   });
 
+  it("declares capability contracts for every vertical module", () => {
+    for (const vertical of verticals) {
+      for (const module of BUSINESS_VERTICAL_UI[vertical].modules) {
+        const contract = getVerticalModuleCapabilityContract(module);
+        expect(contract.source).toBe("runtime-registry-contract");
+        expect(contract.requiredCapabilities.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it("keeps workflow stages mapped to modules in the same vertical registry", () => {
     for (const vertical of verticals) {
       const definition = getVerticalWorkflowDefinition(vertical);
