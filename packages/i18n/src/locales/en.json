@@ -753,5 +753,30 @@
     "readingVerification": "Reading Verification…",
     "verticalDefaultLabel": "General business",
     "verticalDefaultSubtitle": "A Workspace composed from enabled capabilities."
+  },
+  "businessSurface": {
+    "loadingPublicData": "Loading public information…",
+    "follow": "Follow",
+    "submitReview": "Leave a review",
+    "share": "Share",
+    "published": "Published",
+    "supplyIdentity": "Supply identity",
+    "productsAndServices": "Products and services",
+    "publishedOffers": "Published products and services",
+    "contact": "Contact",
+    "locations": "Locations",
+    "customerExperiences": "Published customer experiences",
+    "publishedSupplyOnly": "This page shows published supply only; the next action is handed back to the canonical purchase or booking flows.",
+    "unifiedPath": "From understanding a business to taking action, one path.",
+    "publicIdentity": "Business identity",
+    "trust": "Trust",
+    "communication": "Communication",
+    "publicBusinessProfile": "Public business profile",
+    "publicProfileDescription": "The public profile is built from canonical Business data.",
+    "workspace": "Workspace",
+    "identity": "Identity",
+    "trustBeforePublic": "Trust before public display",
+    "trustSource": "Publication and trust status are read from the canonical source.",
+    "viewTrust": "View trust"
   }
 }
