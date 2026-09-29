@@ -65,6 +65,10 @@ export class CatalogService {
     return this.options.repository.listBusinessOfferings(context, businessId, limit);
   }
 
+  async listBusinessProductVariants(context: RequestContext, businessId: EntityId, limit = 100) {
+    return this.options.repository.listBusinessProductVariants(context, businessId, limit);
+  }
+
   async listBusinessInventory(context: RequestContext, businessId: EntityId, limit = 100) {
     return this.options.repository.listBusinessInventory(context, businessId, limit);
   }
