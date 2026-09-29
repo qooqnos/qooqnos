@@ -2765,3 +2765,5 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - 🟢 Aliases do not introduce a second page architecture or persistence boundary; they are routing sugar over the existing `/business/workspace/{vertical}/{module}` contract.
 - 🟢 Added regression coverage for clinic, retail, restaurant and salon alias resolution.
 - 🟡 Build/test/browser verification for this slice remains pending in the current environment.
+
+- 🟢 Fixed SPA alias navigation to resolve the target URL's `vertical` query instead of the current page's vertical before deciding whether to keep navigation client-side.
