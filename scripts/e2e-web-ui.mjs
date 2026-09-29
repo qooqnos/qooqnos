@@ -141,7 +141,7 @@ await page.locator("#phoenix-demand-input").fill("یک کسب‌وکار منا�
 await page.locator("#phoenix-demand-form [type=submit]").click();
 await page.waitForURL(/\/discover\?q=/);
 assert.equal(await page.locator("#discover-query").inputValue(), "یک کسب‌وکار مناسب نزدیک من می‌خواهم");
-await page.getByText("موجودیت واقعی تست").waitFor();
+await page.getByRole("heading", { name: "موجودیت واقعی تست" }).waitFor();
 
 const initialTheme = await page.locator("html").getAttribute("data-theme");
 await page.locator("[data-theme-toggle]").click();
@@ -186,7 +186,7 @@ await page.waitForTimeout(50);
 assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
 await page.locator("#discover-query").fill("یک کسب‌وکار نزدیک برای رزرو");
 await page.locator("[data-run-discovery]").click();
-await page.getByText("موجودیت واقعی تست").waitFor();
+await page.getByRole("heading", { name: "موجودیت واقعی تست" }).waitFor();
 await page.locator("[data-discovery-index='0']").click();
 await page.locator("[data-toggle-shortlist]").click();
 await page.locator("[data-close-discovery]").first().click();
