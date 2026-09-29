@@ -55,7 +55,7 @@ describe("Vertical Workflow UI Canvas", () => {
     }
   });
 
-    it("renders shared previous/next stage navigation and stage metadata", () => {
+  it("renders shared previous/next stage navigation and stage metadata", () => {
       const blueprint = getVerticalModuleBlueprint("clinic", "نوبت‌ها");
       const model: VerticalWorkflowCanvasModel = {
         vertical: "clinic",
@@ -156,15 +156,14 @@ describe("Vertical Workflow contract", () => {
     }
   });
 
-  it("treats role emphasis as presentation, not authorization", async () => {
-    const moduleUi = await import("./business-module-ui");
+  it("treats role emphasis as presentation, not authorization", () => {
     const management = resolveVerticalRoleLens(["owner"]);
-    const specialist = moduleUi.resolveVerticalRoleLens(["specialist"]);
+    const specialist = resolveVerticalRoleLens(["specialist"]);
     const blueprint = getVerticalModuleBlueprint("clinic", "تقویم");
 
     expect(management.key).toBe("management");
     expect(specialist.key).toBe("specialist");
     expect(["primary", "shared"]).toContain(getVerticalModuleRoleFit(blueprint, management.key));
-    expect(["primary", "shared"]).toContain(moduleUi.getVerticalModuleRoleFit(blueprint, specialist.key));
+    expect(["primary", "shared"]).toContain(getVerticalModuleRoleFit(blueprint, specialist.key));
   });
 });
