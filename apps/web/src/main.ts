@@ -1,7 +1,7 @@
 import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui.js";
 import { BUSINESS_VERTICAL_UI, getBusinessVerticalUi, resolveBusinessVerticalKey, type BusinessVerticalKey } from "./business-vertical-ui.js";
 import { getVerticalModuleBlueprint, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
-import { bindVerticalWorkflowCanvas, renderVerticalWorkflowCanvas } from "./vertical-workflow-ui.js";
+import { bindVerticalWorkflowCanvas, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 type Theme = "dark" | "light";
 
@@ -3745,6 +3745,11 @@ function renderBusiness(): string {
       }).join("") +
     '</section>' +
 
+    renderVerticalWorkflowOverview({
+      vertical: ui.key,
+      businessId: businessId || undefined,
+      contextualHref: (path) => businessWorkspaceContextHref(path, ui.key, businessId || undefined),
+    }) +
     '<section class="phoenix-business-role-actions glass-card">' +
       '<div class="card-section-heading"><div><span class="section-kicker">Role Focus</span><h2 id="business-role-focus-title">مسیر نقش شما</h2></div><span id="business-role-focus-badge" class="pill">—</span></div>' +
       '<div id="business-role-actions-grid" class="phoenix-business-role-actions-grid"><div class="slot-loading">در حال خواندن Role Lens…</div></div>' +
