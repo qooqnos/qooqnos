@@ -577,7 +577,8 @@
     "changeWorkspace": "Change Workspace",
     "manageTeam": "Manage team",
     "roleGuideDescription": "This guide only controls interface composition; real authorization remains controlled by the backend.",
-    "boardDefaultSupply": "Prepare supply"
+    "boardDefaultSupply": "Prepare supply",
+    "workspaceStatusMine": "My workspace"
   },
   "canonical": {
     "identity": {
@@ -927,7 +928,10 @@
     "identity": "Identity",
     "trustBeforePublic": "Trust before public display",
     "trustSource": "Publication and trust status are read from the canonical source.",
-    "viewTrust": "View trust"
+    "viewTrust": "View trust",
+    "canonicalBoundaryTitle": "Canonical boundary",
+    "canonicalBoundaryDescription": "This page is preview and management-facing; real publication happens only through canonical paths.",
+    "publicationMutationGuard": "Until publication mutation is connected to this UI, publication state is never fabricated."
   },
   "discoveryPage": {
     "forYouTitle": "For you, based on your need.",
