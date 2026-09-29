@@ -148,6 +148,11 @@ const blueprint = (
   ...(primaryAction ? { primaryAction } : {}),
   blocks,
   states: states(),
+  capabilityContract: {
+    requiredCapabilities: [],
+    requiredPermissions: [],
+    source: "runtime-registry-contract",
+  },
 });
 
 const shared: Record<string, VerticalModuleBlueprint> = {
