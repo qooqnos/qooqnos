@@ -80,14 +80,33 @@ export class I18nManager {
 
 export const defaultI18n = new I18nManager("fa");
 
+export type CanonicalTermKey = string;
+export const canonicalTerms: Record<SupportedLanguage, Readonly<Record<string, string>>> = {
+  fa: Object.fromEntries(Object.entries(translations.fa).filter(([key]) => key.startsWith("canonical."))),
+  en: Object.fromEntries(Object.entries(translations.en).filter(([key]) => key.startsWith("canonical."))),
+  ar: Object.fromEntries(Object.entries(translations.ar).filter(([key]) => key.startsWith("canonical."))),
+};
+
+export function translateCanonicalTerm(
+  key: CanonicalTermKey,
+  locale: Locale,
+): string {
+  return canonicalTerms[locale][key] ?? canonicalTerms.fa[key] ?? key;
+}
+
 const textKeyIndex = new Map<string, string>();
-for (const language of ["fa", "en", "ar"] as const) {
+const indexLanguage = (language: SupportedLanguage, canonicalOnly: boolean): void => {
   for (const [key, text] of Object.entries(translations[language])) {
+    if (canonicalOnly !== key.startsWith("canonical.")) continue;
     const normalized = text.trim();
     if (!normalized || textKeyIndex.has(normalized)) continue;
     textKeyIndex.set(normalized, key);
   }
-}
+};
+
+// Canonical domain terms always win over legacy/UI convenience labels when a text is ambiguous.
+for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, true);
+for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, false);
 
 const translationSources = [...textKeyIndex.entries()]
   .filter(([source]) => source.length >= 3)
