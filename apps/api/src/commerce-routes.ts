@@ -172,6 +172,28 @@ export function registerCommerceRoutes(
 
   router.register({
     method: "GET",
+    path: "/api/v1/commerce/orders",
+    module: "commerce",
+    operation: "commerce.order.list",
+    permission: "commerce.order.get",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const repository = createRepository(database, context.requestId);
+      const url = new URL(request.url);
+      const businessId = url.searchParams.get("businessId")?.trim();
+      if (!businessId) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "businessId query parameter is required.", requestId: context.requestId });
+      }
+      const requestedLimit = Number(url.searchParams.get("limit") ?? "20");
+      const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(Math.trunc(requestedLimit), 1), 50) : 20;
+      const orders = await repository.listOrders(context, brandId<"EntityId">(businessId), limit);
+      return json({ data: orders }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/commerce/orders/:orderId",
     module: "commerce",
     operation: "commerce.order.get",
