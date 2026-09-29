@@ -44,6 +44,17 @@ Deployment asset repair: `0420fada`, `5c0b8e4`, `d948572`, `3e8d6f0` — synchro
 
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
 
+### 2026-09-29 — Vertical Workflow live Supply action bridge
+
+- 🟢 Shared Supply Canvas cards now expose canonical next actions for every vertical that uses the Catalog layout.
+- 🟢 Service Offerings link into the existing Booking boundary with the canonical Offering and Business context.
+- 🟢 Product Offerings link into the existing Commerce Checkout boundary as an Offering resource; no alternate cart/checkout state is created in the Vertical Workflow layer.
+- 🟢 Action URL/label resolution is centralized in `apps/web/src/vertical-workflow-ui.ts` and covered by focused unit tests.
+- 🟢 Responsive styling was added to both authored and served web stylesheets for the live supply action row.
+- 🟡 TypeScript build, full tests, browser/device visual QA and production deployment verification remain to be observed after this slice.
+
+Implementation commits: `ac481c4e`, `fdbd1e20`, `404a6a06`, `696f3915`, `08586046`.
+
 ### UI infrastructure hardening — 2026-09-29
 
 - 🟢 Reviewed the latest vertical-workflow changes before continuing; the shared semantic module registry, vertical workflow rail/canvas, role-fit composition, canonical Catalog/People/Calendar/Operations/Communication hydration and semantic Workspace module routes were retained as the existing foundation. No parallel vertical page system was introduced.
