@@ -50,6 +50,17 @@ export interface OfferingRecord {
   readonly updatedAt: string;
 }
 
+export interface BusinessProductVariantRecord {
+  readonly id: EntityId;
+  readonly productId: EntityId;
+  readonly productName: string;
+  readonly sku: string | null;
+  readonly attributes: Readonly<Record<string, unknown>> | null;
+  readonly status: CatalogStatus;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export interface BusinessInventoryRecord {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -307,6 +318,82 @@ export class CatalogRepository extends Repository {
         LIMIT ?`,
       businessId, organizationId, workspaceId, safeLimit,
     );
+  }
+
+  async listBusinessProductVariants(
+    context: RequestContext,
+    businessId: EntityId,
+    limit = 100,
+  ): Promise<readonly BusinessProductVariantRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
+    const rows = await this.database.all<{
+      id: EntityId;
+      productId: EntityId;
+      productName: string;
+      sku: string | null;
+      status: CatalogStatus;
+      createdAt: string;
+      updatedAt: string;
+    }>(
+      `SELECT pv.id, pv.product_id AS productId, p.name AS productName, pv.sku,
+              pv.status, pv.created_at AS createdAt, pv.updated_at AS updatedAt
+       FROM product_variants pv
+       INNER JOIN products p ON p.id = pv.product_id
+       INNER JOIN businesses b ON b.id = p.business_id
+       WHERE p.business_id = ?
+         AND b.organization_id = ?
+         AND b.workspace_id = ?
+         AND p.status != 'archived'
+         AND pv.status != 'archived'
+       ORDER BY pv.updated_at DESC, pv.id DESC
+       LIMIT ?`,
+      businessId,
+      organizationId,
+      workspaceId,
+      safeLimit,
+    );
+
+    const attributes = new CatalogAttributeValueRepository(this.database);
+    const result: BusinessProductVariantRecord[] = [];
+    for (const row of rows) {
+      const values = await attributes.listForTarget(context, "product_variant", row.id);
+      const mapped: Record<string, unknown> = {};
+      for (const value of values) {
+        const definition = await this.database.first<{ canonicalKey: string }>(
+          "SELECT canonical_key AS canonicalKey FROM attribute_definitions WHERE id = ? LIMIT 1",
+          value.attributeDefinitionId,
+        );
+        if (!definition) continue;
+        if (value.scalar) mapped[definition.canonicalKey] = value.scalar.value;
+        else if (value.optionId) {
+          const option = await this.database.first<{ canonicalValue: string }>(
+            "SELECT canonical_value AS canonicalValue FROM attribute_options WHERE id = ? LIMIT 1",
+            value.optionId,
+          );
+          if (option) mapped[definition.canonicalKey] = option.canonicalValue;
+        } else if (value.multiEnumOptionIds.length) {
+          const placeholders = value.multiEnumOptionIds.map(() => "?").join(", ");
+          const options = await this.database.all<{ canonicalValue: string }>(
+            "SELECT canonical_value AS canonicalValue FROM attribute_options WHERE id IN (" + placeholders + ") ORDER BY canonical_value ASC",
+            ...value.multiEnumOptionIds,
+          );
+          mapped[definition.canonicalKey] = options.map((option) => option.canonicalValue);
+        }
+      }
+      result.push({
+        id: row.id,
+        productId: row.productId,
+        productName: row.productName,
+        sku: row.sku,
+        attributes: Object.keys(mapped).length ? mapped : null,
+        status: row.status,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      });
+    }
+    return result;
   }
 
   async listBusinessInventory(
