@@ -161,7 +161,11 @@ function renderPeople(model: VerticalWorkflowCanvasModel): string {
     '<div class="phoenix-vwf-people-grid" data-vwf-people-items>' +
       model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-people-card" data-vwf-item><span class="section-kicker">People surface</span><h3>' + escapeHtml(item.title) + '</h3>' + emptyState(item.description, item.path ? item.path : "Capability") + (item.path ? '<a class="text-link" href="' + escapeHtml(contextualHref(model, item.path)) + '" data-nav>باز کردن منبع ←</a>' : '') + '</article>').join("") +
     '</div>' +
-    '<div class="phoenix-vwf-live-detail" data-vwf-customer-detail hidden></div>';
+    '<div class="phoenix-vwf-live-detail" data-vwf-customer-detail hidden></div>' +
+    '<section class="phoenix-vwf-customer-history" data-vwf-customer-history hidden>' +
+      '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical CRM Timeline</span><h3>تاریخچه رابطه</h3><p>رویدادهای Customer فقط از projection canonical خوانده می‌شوند.</p></div><span class="pill">read-only</span></div>' +
+      '<div class="phoenix-vwf-customer-history-list" data-vwf-customer-history-items></div>' +
+    '</section>';
 }
 function renderCommerce(model: VerticalWorkflowCanvasModel): string {
   return '<div class="phoenix-vwf-toolbar">' +
@@ -548,20 +552,33 @@ async function hydratePeopleCanvas(canvas: HTMLElement): Promise<void> {
 async function hydrateCustomerLookup(host: HTMLElement, customerId: string): Promise<void> {
   const headers = vwfAuthHeaders();
   host.hidden = false;
+  const historySection = host.parentElement?.querySelector<HTMLElement>("[data-vwf-customer-history]");
+  const historyItems = historySection?.querySelector<HTMLElement>("[data-vwf-customer-history-items]");
+  if (historySection) historySection.hidden = false;
   if (!headers) {
     host.innerHTML = '<div class="phoenix-vwf-local-note">برای خواندن Customer، session و Workspace context لازم است.</div>';
+    if (historyItems) historyItems.innerHTML = '<div class="phoenix-vwf-local-note">برای خواندن Timeline، session و Workspace context لازم است.</div>';
     return;
   }
-  host.innerHTML = '<div class="slot-loading">در حال خواندن Customer canonical…</div>';
+  host.innerHTML = '<div class="slot-loading">در حال خواندن Customer و CRM Timeline canonical…</div>';
+  if (historyItems) historyItems.innerHTML = '<div class="slot-loading">در حال خواندن تاریخچه رابطه…</div>';
+
   try {
-    const response = await fetch("/api/v1/customers/" + encodeURIComponent(customerId) + "/profile", { headers });
-    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowEntityRecord; error?: { message?: string } } | null;
-    if (!response.ok) throw new Error(body?.error?.message ?? "Customer profile unavailable");
-    const profile = body?.data ?? {};
+    const [profileResponse, historyResponse] = await Promise.all([
+      fetch("/api/v1/customers/" + encodeURIComponent(customerId) + "/profile", { headers }),
+      fetch("/api/v1/customers/" + encodeURIComponent(customerId) + "/history?limit=12", { headers }),
+    ]);
+
+    const profileBody = await profileResponse.json().catch(() => null) as { data?: VerticalWorkflowEntityRecord; error?: { message?: string } } | null;
+    const historyBody = await historyResponse.json().catch(() => null) as { data?: Array<Record<string, unknown>>; error?: { message?: string } } | null;
+
+    if (!profileResponse.ok) throw new Error(profileBody?.error?.message ?? "Customer profile unavailable");
+    const profile = profileBody?.data ?? {};
     const displayName = String(profile.displayName ?? profile.fullName ?? profile.name ?? customerId);
     const email = profile.email ? String(profile.email) : "—";
     const phone = profile.phone ? String(profile.phone) : "—";
     const locale = profile.locale ? String(profile.locale) : "—";
+
     host.innerHTML =
       '<div class="phoenix-vwf-live-detail-head"><div><span class="section-kicker">Canonical Customer</span><h3>' + escapeHtml(displayName) + '</h3><p>' + escapeHtml(customerId) + '</p></div><span class="pill success">live</span></div>' +
       '<div class="phoenix-vwf-live-detail-grid">' +
@@ -569,8 +586,37 @@ async function hydrateCustomerLookup(host: HTMLElement, customerId: string): Pro
         '<div><span>Phone</span><strong>' + escapeHtml(phone) + '</strong></div>' +
         '<div><span>Locale</span><strong>' + escapeHtml(locale) + '</strong></div>' +
       '</div>';
+
+    if (!historyItems) return;
+    if (!historyResponse.ok) {
+      historyItems.innerHTML = emptyState(historyBody?.error?.message ?? "خواندن CRM Timeline ناموفق بود.", "CRM Timeline");
+      return;
+    }
+    const history = Array.isArray(historyBody?.data) ? historyBody.data : [];
+    if (!history.length) {
+      historyItems.innerHTML = emptyState("برای این Customer هنوز رویداد قابل نمایش در Timeline ثبت نشده است.", "CRM Timeline");
+      return;
+    }
+    historyItems.innerHTML = history.map((event) => {
+      const eventType = String(event.eventType ?? "crm.event");
+      const sourceModule = String(event.sourceModule ?? "customer");
+      const occurredAtRaw = String(event.occurredAt ?? event.receivedAt ?? "");
+      const date = occurredAtRaw ? new Date(occurredAtRaw) : null;
+      const occurredAt = date && !Number.isNaN(date.getTime())
+        ? date.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" })
+        : "—";
+      const payload = event.payload && typeof event.payload === "object" && !Array.isArray(event.payload)
+        ? Object.entries(event.payload as Record<string, unknown>).slice(0, 2).map(([key, value]) => escapeHtml(key) + ": " + escapeHtml(String(value))).join(" · ")
+        : "";
+      return '<article class="phoenix-vwf-customer-history-item" data-vwf-item>' +
+        '<div class="phoenix-vwf-customer-history-icon">◇</div>' +
+        '<div><div class="phoenix-vwf-customer-history-top"><strong>' + escapeHtml(eventType) + '</strong><span class="pill">' + escapeHtml(sourceModule) + '</span></div>' +
+        '<small>' + escapeHtml(occurredAt) + '</small>' + (payload ? '<p>' + payload + '</p>' : "") + '</div>' +
+      '</article>';
+    }).join("");
   } catch (error) {
     host.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Customer ناموفق بود.", "Customer");
+    if (historyItems) historyItems.innerHTML = emptyState("Timeline به‌دلیل خطای Customer قابل خواندن نیست.", "CRM Timeline");
   }
 }
 
