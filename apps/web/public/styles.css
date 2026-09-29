@@ -5953,3 +5953,30 @@ a {
   .phoenix-activity-row .button { grid-column: 2; justify-self: start; }
   .phoenix-activity-card, .phoenix-activity-side, .phoenix-activity-gate { padding: 16px; }
 }
+
+
+/* Shared Vertical Workflow module switcher */
+.phoenix-vwf-module-switcher{margin:0 0 18px;padding:14px;border:1px solid var(--border-subtle);border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.42));}
+.phoenix-vwf-module-switcher-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.phoenix-vwf-module-switcher-head>div{display:grid;gap:3px}
+.phoenix-vwf-module-switcher-head strong{font-size:15px}
+.phoenix-vwf-module-switcher-head small{color:var(--text-muted);font-size:11px}
+.phoenix-vwf-module-switcher-list{display:flex;gap:8px;overflow-x:auto;padding:2px;scrollbar-width:thin}
+.phoenix-vwf-module-link{flex:0 0 auto;display:flex;align-items:center;gap:9px;min-width:156px;padding:10px 12px;border:1px solid var(--border-subtle);border-radius:16px;background:var(--surface);color:var(--text);text-decoration:none;transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease}
+.phoenix-vwf-module-link:hover{transform:translateY(-1px);border-color:var(--accent);box-shadow:var(--shadow-sm)}
+.phoenix-vwf-module-link.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 14%,transparent)}
+.phoenix-vwf-module-link:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 38%,transparent);outline-offset:2px}
+.phoenix-vwf-module-index{font-size:10px;font-variant-numeric:tabular-nums;color:var(--text-muted);min-width:20px}
+.phoenix-vwf-module-copy{display:grid;gap:2px;min-width:0}
+.phoenix-vwf-module-copy strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phoenix-vwf-module-copy small{font-size:10px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phoenix-vwf-module-arrow{margin-inline-start:auto;opacity:.62}
+@media (max-width:760px){
+  .phoenix-vwf-module-switcher{margin-inline:-4px;padding:12px;border-radius:16px}
+  .phoenix-vwf-module-switcher-head{align-items:flex-start}
+  .phoenix-vwf-module-switcher-head>.pill{display:none}
+  .phoenix-vwf-module-link{min-width:142px;padding:9px 10px}
+}
+@media (prefers-reduced-motion:reduce){
+  .phoenix-vwf-module-link{transition:none}
+}
