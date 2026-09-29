@@ -172,6 +172,21 @@ describe("Vertical Workflow UI Canvas", () => {
 
 
 describe("Vertical Workflow overview", () => {
+  it("renders canonical schedulable resources for clinic providers", () => {
+    const blueprint = getVerticalModuleBlueprint("clinic", "پزشکان");
+    const html = renderVerticalWorkflowCanvas({
+      vertical: "clinic",
+      module: "پزشکان",
+      businessId: "business-test",
+      blueprint,
+    });
+    expect(html).toContain('data-vwf-layout="people"');
+    expect(html).toContain('data-vwf-resources-live');
+    expect(html).toContain('data-vwf-resource-type="person"');
+    expect(html).toContain("Canonical Booking Resources");
+  });
+
+
   it("renders a live inventory surface for the retail inventory module", () => {
     const blueprint = getVerticalModuleBlueprint("retail", "موجودی");
     const html = renderVerticalWorkflowCanvas({
