@@ -81,10 +81,10 @@ function renderCommand(model: VerticalWorkflowCanvasModel): string {
     ? '<a class="button button-primary" href="' + escapeHtml(contextualHref(model, model.blueprint.primaryAction.path)) + '" data-nav>' + escapeHtml(model.blueprint.primaryAction.label) + ' →</a>'
     : '<span class="pill">منبع canonical</span>';
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="Command views">' +
-      '<button type="button" class="active" aria-selected="true" data-vwf-tab="overview">نمای کلی</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="queue">صف کار</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="actions">اقدام‌ها</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای فرمان">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="overview">نمای کلی</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="queue">صف کار</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="actions">اقدام‌ها</button>' +
     '</div>' +
     viewState("نمای کلی") +
     '</div>' +
@@ -102,7 +102,7 @@ function renderCommand(model: VerticalWorkflowCanvasModel): string {
 function renderCalendar(model: VerticalWorkflowCanvasModel): string {
   const first = model.blueprint.blocks[0];
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="Calendar views">' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای تقویم">' +
       '<button type="button" class="active" data-vwf-tab="day">روز</button>' +
       '<button type="button" data-vwf-tab="week">هفته</button>' +
       '<button type="button" data-vwf-tab="month">ماه</button>' +
@@ -120,10 +120,10 @@ function renderCalendar(model: VerticalWorkflowCanvasModel): string {
 
 function renderCatalog(model: VerticalWorkflowCanvasModel): string {
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="Supply views">' +
-      '<button type="button" class="active" aria-selected="true" data-vwf-tab="grid">کارت‌ها</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="table">جدول</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="drafts">پیش‌نویس‌ها</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای عرضه">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="grid">کارت‌ها</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="table">جدول</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="drafts">پیش‌نویس‌ها</button>' +
     '</div>' +
     viewState("کارت‌ها") +
     '</div>' +
@@ -141,10 +141,10 @@ function renderCatalog(model: VerticalWorkflowCanvasModel): string {
 }
 function renderPeople(model: VerticalWorkflowCanvasModel): string {
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="People views">' +
-      '<button type="button" class="active" aria-selected="true" data-vwf-tab="people">اعضا / افراد</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="roles">نقش‌ها</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="relationships">رابطه‌ها</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای افراد">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="people">اعضا / افراد</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="roles">نقش‌ها</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="relationships">رابطه‌ها</button>' +
     '</div>' +
     viewState("اعضا / افراد") +
     '</div>' +
@@ -165,10 +165,10 @@ function renderPeople(model: VerticalWorkflowCanvasModel): string {
 }
 function renderCommerce(model: VerticalWorkflowCanvasModel): string {
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="Commerce views">' +
-      '<button type="button" class="active" aria-selected="true" data-vwf-tab="all">همه</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="open">باز</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="action">نیازمند اقدام</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای معاملات">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="all">همه</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="open">باز</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="action">نیازمند اقدام</button>' +
     '</div>' +
     viewState("همه") +
     '</div>' +
@@ -185,10 +185,10 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
 }
 function renderOperations(model: VerticalWorkflowCanvasModel): string {
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="Operations views">' +
-      '<button type="button" class="active" aria-selected="true" data-vwf-tab="board">Board</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="list">List</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="attention">نیازمند اقدام</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای عملیات">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="board">Board</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="list">List</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="attention">نیازمند اقدام</button>' +
     '</div>' +
     viewState("Board") +
     '</div>' +
@@ -203,10 +203,10 @@ function renderOperations(model: VerticalWorkflowCanvasModel): string {
 
 function renderCommunication(model: VerticalWorkflowCanvasModel): string {
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="Communication views">' +
-      '<button type="button" class="active" aria-selected="true" data-vwf-tab="inbox">Inbox</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="followup">Follow-up</button>' +
-      '<button type="button" aria-selected="false" data-vwf-tab="compose">Compose</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای ارتباطات">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="inbox">Inbox</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="followup">Follow-up</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="compose">Compose</button>' +
     '</div>' +
     viewState("Inbox") +
     '</div>' +
