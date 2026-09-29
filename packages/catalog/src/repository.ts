@@ -50,6 +50,24 @@ export interface OfferingRecord {
   readonly updatedAt: string;
 }
 
+export interface BusinessInventoryRecord {
+  readonly id: EntityId;
+  readonly businessId: EntityId;
+  readonly productId: EntityId;
+  readonly productName: string;
+  readonly variantId: EntityId;
+  readonly sku: string | null;
+  readonly attributesJson: string | null;
+  readonly variantStatus: CatalogStatus;
+  readonly locationId: EntityId;
+  readonly locationName: string;
+  readonly quantityOnHand: number;
+  readonly quantityReserved: number;
+  readonly availableQuantity: number;
+  readonly version: number;
+  readonly updatedAt: string;
+}
+
 export interface PublicBusinessOfferingRecord {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -288,6 +306,50 @@ export class CatalogRepository extends Repository {
         ORDER BY o.updated_at DESC, o.id DESC
         LIMIT ?`,
       businessId, organizationId, workspaceId, safeLimit,
+    );
+  }
+
+  async listBusinessInventory(
+    context: RequestContext,
+    businessId: EntityId,
+    limit = 100,
+  ): Promise<readonly BusinessInventoryRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
+    return this.database.all<BusinessInventoryRecord>(
+      `SELECT ii.id,
+              p.business_id AS businessId,
+              p.id AS productId,
+              p.name AS productName,
+              pv.id AS variantId,
+              pv.sku,
+              pv.attributes_json AS attributesJson,
+              pv.status AS variantStatus,
+              l.id AS locationId,
+              l.name AS locationName,
+              ii.quantity_on_hand AS quantityOnHand,
+              ii.quantity_reserved AS quantityReserved,
+              (ii.quantity_on_hand - ii.quantity_reserved) AS availableQuantity,
+              ii.version,
+              ii.updated_at AS updatedAt
+         FROM inventory_items ii
+         INNER JOIN product_variants pv ON pv.id = ii.product_variant_id
+         INNER JOIN products p ON p.id = pv.product_id
+         INNER JOIN locations l ON l.id = ii.location_id
+         INNER JOIN businesses b ON b.id = p.business_id
+        WHERE p.business_id = ?
+          AND b.organization_id = ?
+          AND b.workspace_id = ?
+          AND p.status != 'archived'
+          AND pv.status != 'archived'
+          AND l.status != 'archived'
+        ORDER BY ii.updated_at DESC, ii.id DESC
+        LIMIT ?`,
+      businessId,
+      organizationId,
+      workspaceId,
+      safeLimit,
     );
   }
 
