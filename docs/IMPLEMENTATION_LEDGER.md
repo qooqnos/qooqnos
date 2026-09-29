@@ -2575,3 +2575,10 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - No authorization decision, domain state, persistence model or API source of truth was changed.
 - Implementation commits: 04de2ab7c23f13bc4c341e480a03ffeb8045c2e8, 4be0d23a0281a232268d2b90ff66df372e9ef8b6, 35c9f3e32026c8fedd81676968a2389fab827c8b, 6337175f87c8df80d702d3c2c98d0b5eedc3f443.
 - Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
+## 2026-09-29 — Business shell context preservation
+- Hardened Vertical Workflow UI navigation at the Workspace shell level.
+- Business board cards and Role Focus actions now preserve the active Business ID and canonical Vertical when entering Booking, Catalog, Customer, Billing, Transactions, Operations, Business Profile and other canonical surfaces.
+- Legacy `/business?module=...` board/action targets continue to normalize into stable `/business/workspace/<vertical>/<module>` routes.
+- Added a separate `businessWorkspaceContextHref()` helper for shell-originated links so `fromModule` is not fabricated when there is no active module.
+- No domain state, authorization rule, duplicate store or frontend mutation was introduced.
+- Implementation commit: `9f3f89beddf7af579c4732e05bd88e3574aeee3f`.
