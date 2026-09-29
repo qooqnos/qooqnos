@@ -466,8 +466,12 @@ function render(): void {
   if (route.path === "/") bindHomeEvents();
   if (route.path === "/account") void loadAccountState();
   if (route.path === "/booking") {
-    const bookingSchedule = new URLSearchParams(location.search).get("scheduleId")?.trim();
+    const bookingParams = new URLSearchParams(location.search);
+    const bookingSchedule = bookingParams.get("scheduleId")?.trim();
+    const bookingBusiness = bookingParams.get("businessId")?.trim() || bookingParams.get("business")?.trim();
+    const bookingOffering = bookingParams.get("offering")?.trim() || bookingParams.get("offeringId")?.trim();
     if (bookingSchedule) void loadBookingSlots();
+    else if (bookingBusiness && bookingOffering) void loadBusinessBookingSchedules();
   }
   if (route.path === "/notifications") void loadNotificationsPage();
   if (route.path === "/profile") void loadProfilePage();
@@ -996,7 +1000,7 @@ function toDateTimeLocal(value: Date): string {
 function renderBooking(): string {
   const params = new URLSearchParams(location.search);
   const scheduleId = params.get("scheduleId")?.trim() ?? "";
-  const businessId = params.get("businessId")?.trim() || localStorage.getItem(STORAGE.business) || "";
+  const businessId = params.get("businessId")?.trim() || params.get("business")?.trim() || localStorage.getItem(STORAGE.business) || "";
   const offeringId = params.get("offering")?.trim() || params.get("offeringId")?.trim() || "";
   const customerId = params.get("customerId")?.trim() || localStorage.getItem(STORAGE.customer) || "";
   const resourceId = params.get("resourceId")?.trim() || "";
@@ -1028,9 +1032,13 @@ function renderBooking(): string {
           <label class="field-label">Duration (minutes)<input id="booking-duration" class="studio-input-line" type="number" min="1" value="${String(safeDuration)}" /></label>
           <label class="field-label">Resource ID<input id="booking-resource" class="studio-input-line" placeholder="Resource ID (اختیاری)" value="${escapeAttr(resourceId)}" /></label>
         </div>
-        <button class="button button-primary" type="button" data-load-slots>خواندن Availability</button>
+        <div class="booking-action-row">
+          <button class="button button-primary" type="button" data-load-slots>خواندن Availability</button>
+          <button class="button button-ghost" type="button" data-load-business-schedules>یافتن زمان‌بندی این کسب‌وکار</button>
+        </div>
+        <div id="booking-schedules-result"></div>
         <div id="booking-hold-result" class="booking-hold-result" aria-live="polite"></div>
-        <div id="booking-slots-result" class="slot-empty"><span>◷</span><p>${scheduleId ? "در حال اتصال به Availability…" : "Schedule را وارد کنید."}</p></div>
+        <div id="booking-slots-result" class="slot-empty"><span>◷</span><p>${scheduleId ? "در حال اتصال به Availability…" : offeringId ? "یک Schedule از Availability انتخاب کنید." : "Schedule را وارد کنید."}</p></div>
       </article>
     </section>
   `;
@@ -1044,6 +1052,73 @@ type BookingSlotView = {
   available?: boolean;
   status?: string;
 };
+
+type BookingScheduleView = {
+  id: string;
+  businessId: string;
+  locationId?: string | null;
+  resourceId?: string | null;
+  timezone?: string | null;
+  status?: string;
+};
+
+async function loadBusinessBookingSchedules(): Promise<void> {
+  const businessId =
+    document.querySelector<HTMLInputElement>("#booking-business")?.value.trim()
+    || new URLSearchParams(location.search).get("business")?.trim()
+    || localStorage.getItem(STORAGE.business)
+    || "";
+  const host = document.querySelector<HTMLDivElement>("#booking-schedules-result");
+  if (!host) return;
+  if (!businessId) {
+    host.innerHTML = '<div class="slot-empty"><span>!</span><p>برای پیدا کردن زمان‌بندی، Business ID لازم است.</p></div>';
+    return;
+  }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
+
+  host.innerHTML = '<div class="slot-loading">در حال خواندن Scheduleهای واقعی این کسب‌وکار…</div>';
+  try {
+    const response = await apiJson<{ data: BookingScheduleView[] }>(
+      "/api/v1/availability/schedules?businessId=" + encodeURIComponent(businessId) + "&limit=12",
+    );
+    const schedules = (response.data ?? []).filter((item) => item.status === undefined || item.status === "active");
+    host.innerHTML = schedules.length
+      ? '<div class="booking-schedule-picker"><div class="booking-schedule-picker-head"><div><span class="section-kicker">Canonical Availability</span><h3>زمان‌بندی‌های فعال</h3><p>Schedule از Availability خوانده می‌شود؛ این صفحه Schedule جدید ایجاد نمی‌کند.</p></div><span class="pill success">' + String(schedules.length) + ' مورد</span></div><div class="booking-schedule-grid">' +
+        schedules.map((schedule) => {
+          const currentId = document.querySelector<HTMLInputElement>("#booking-schedule")?.value.trim() ?? "";
+          const active = currentId === schedule.id;
+          const meta = [
+            schedule.locationId ? "Location " + schedule.locationId : "",
+            schedule.resourceId ? "Resource " + schedule.resourceId : "",
+            schedule.timezone ?? "",
+          ].filter(Boolean).join(" · ") || "منبع زمان‌بندی canonical";
+          return '<article class="booking-schedule-card' + (active ? ' active' : '') + '">' +
+            '<div class="booking-schedule-card-top"><span class="pill' + (active ? ' success' : '') + '">' + (active ? "انتخاب‌شده" : "فعال") + '</span><strong>' + escapeHtml(schedule.id) + '</strong></div>' +
+            '<p>' + escapeHtml(meta) + '</p>' +
+            '<button class="button ' + (active ? 'button-secondary' : 'button-primary') + '" type="button" data-select-booking-schedule="' + escapeAttr(schedule.id) + '" data-schedule-resource="' + escapeAttr(schedule.resourceId ?? "") + '">' + (active ? "بارگذاری Availability ↻" : "انتخاب این زمان‌بندی →") + '</button>' +
+          '</article>';
+        }).join("") +
+      '</div></div>'
+      : '<div class="slot-empty"><span>◌</span><p>برای این Business هنوز Schedule فعال قابل استفاده پیدا نشد.</p></div>';
+
+    host.querySelectorAll<HTMLButtonElement>("[data-select-booking-schedule]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const scheduleInput = document.querySelector<HTMLInputElement>("#booking-schedule");
+        const resourceInput = document.querySelector<HTMLInputElement>("#booking-resource");
+        if (scheduleInput) scheduleInput.value = button.dataset.selectBookingSchedule ?? "";
+        if (resourceInput) resourceInput.value = button.dataset.scheduleResource ?? "";
+        void loadBookingSlots();
+        host.querySelectorAll<HTMLElement>(".booking-schedule-card").forEach((card) => card.classList.remove("active"));
+        button.closest<HTMLElement>(".booking-schedule-card")?.classList.add("active");
+      });
+    });
+  } catch (error) {
+    host.innerHTML = '<div class="slot-empty"><span>!</span><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Scheduleهای Availability ناموفق بود.") + '</p></div>';
+  }
+}
 
 async function loadBookingSlots(): Promise<void> {
   const scheduleId = document.querySelector<HTMLInputElement>("#booking-schedule")?.value.trim() ?? "";
@@ -4666,6 +4741,7 @@ function bindGlobalEvents(): void {
   });
 
   document.querySelector<HTMLButtonElement>("[data-load-slots]")?.addEventListener("click", loadBookingSlots);
+  document.querySelector<HTMLButtonElement>("[data-load-business-schedules]")?.addEventListener("click", loadBusinessBookingSchedules);
   document.querySelector<HTMLButtonElement>("[data-start-checkout]")?.addEventListener("click", startCheckoutFlow);
 
   document.querySelector<HTMLButtonElement>("[data-generate-draft]")?.addEventListener("click", generateDraft);
