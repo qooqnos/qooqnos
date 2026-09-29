@@ -2590,3 +2590,14 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added responsive UI styling for the shared schedule picker in both web style entry points.
 - No booking mutation, authorization rule, or domain source-of-truth was changed.
 - Implementation commits: `3d612bd8ced89bcc8802fcbef0a578155c1574df`, `b09d3e897be5c8b19a3d799c4b98874067dd8324`, `3e2ce81ea4499c8eb756297eeb1b71ac472b32f3`.
+
+
+## 2026-09-29 — Shared Vertical Workflow Overview
+- Added a reusable `renderVerticalWorkflowOverview()` surface to `apps/web/src/vertical-workflow-ui.ts`.
+- The Business Workspace now exposes a shared visual map of the active vertical's workflow stages, the canonical module behind each stage, and the layout contract used by that module.
+- The overview preserves Business/Vertical context when opening a stage and explicitly surfaces the framework guarantees: backend-authoritative access, role-aware emphasis, canonical-only state and responsive/RTL composition.
+- Added regression coverage for all four supported verticals and identifier escaping in `apps/web/src/vertical-workflow-ui.test.ts`.
+- Mirrored the overview styling in both `apps/web/styles.css` and `apps/web/public/styles.css`.
+- No domain state, authorization rule, duplicate store or synthetic metrics were introduced.
+- Implementation commits: `0f008213c0b1cdd0fc3242a9a30851caada8a379`, `60137c78fe319ccdc602a09cd17cedb2f206691c`, `c1da61a505d4a88d325f86452a386a1e95d6c0bb`, `160543b4ec4090e83a13f9d22e09f85b7046a6ae`, `1d1f42f5ffdec64ca31f2c4fff766fcca34d61db`.
+- Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
