@@ -118,8 +118,7 @@ for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, true
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, false);
 
 function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\\]\\]/g, "\\export function translateUiText(
-");
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 const translationSources = [...textKeyIndex.entries()]
