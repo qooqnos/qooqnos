@@ -941,7 +941,48 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "discoveryPage.resultCount": "{{count}} نتیجه",
     "discoveryPage.loadMore": "نمایش موارد بیشتر",
     "discoveryPage.error": "خطا",
-    "discoveryPage.retry": "تلاش دوباره"
+    "discoveryPage.retry": "تلاش دوباره",
+    "workspaceCopy.roleBusinessProfileDescription": "هویت، Trust و Publication",
+    "workspaceCopy.roleTeamAccessDescription": "Role و Permissionهای Workspace",
+    "workspaceCopy.roleBillingDescription": "Entitlement و مالی",
+    "workspaceCopy.roleCatalogDescription": "محصول و خدمت",
+    "workspaceCopy.roleCustomerDescription": "مشتری و رابطه",
+    "workspaceCopy.roleTransactionDescription": "سفارش و معامله",
+    "workspaceCopy.roleBookingDescription": "Schedule و رزرو",
+    "workspaceCopy.roleSpecialistCustomerDescription": "مراجعان / مشتریان",
+    "workspaceCopy.roleSpecialistServicesDescription": "خدمات تخصصی",
+    "workspaceCopy.roleFinanceBillingDescription": "صورتحساب و Entitlement",
+    "workspaceCopy.roleFinanceTransactionDescription": "جریان‌های تجاری",
+    "workspaceCopy.roleGenericProfileDescription": "هویت و وضعیت انتشار",
+    "workspaceCopy.boardClinicTodayDescription": "Availability و رزرو را از Booking canonical بررسی کن.",
+    "workspaceCopy.boardClinicCareTitle": "خدمات و پزشکان",
+    "workspaceCopy.boardClinicCareDescription": "خدمات از Catalog و Provider access از Team کنترل می‌شود.",
+    "workspaceCopy.boardClinicRelationshipDescription": "Customer profile و تاریخچه رابطه را از Customer باز کن.",
+    "workspaceCopy.boardClinicTrustTitle": "احراز کسب‌وکار",
+    "workspaceCopy.boardClinicTrustDescription": "Verification و Publication قبل از نمایش عمومی.",
+    "workspaceCopy.boardRetailSalesTitle": "فروش و سفارش",
+    "workspaceCopy.boardRetailSalesDescription": "وضعیت transaction و order از Commerce خوانده می‌شود.",
+    "workspaceCopy.boardRetailSupplyTitle": "محصولات و تنوع",
+    "workspaceCopy.boardRetailSupplyDescription": "Product، Variant و listing در Catalog/Studio مدیریت می‌شوند.",
+    "workspaceCopy.boardRetailStockDescription": "موجودی فقط از Inventory/Catalog canonical نمایش داده می‌شود.",
+    "workspaceCopy.boardRetailGrowthTitle": "تخفیف و محتوا",
+    "workspaceCopy.boardRetailGrowthDescription": "Promotion و Seller AI برای رشد عرضه.",
+    "workspaceCopy.boardRestaurantReservationTitle": "رزرو میز",
+    "workspaceCopy.boardRestaurantReservationDescription": "Availability و رزرو تحت Booking قرار دارد.",
+    "workspaceCopy.boardRestaurantSupplyDescription": "عرضه‌های منو در Catalog نگهداری می‌شوند.",
+    "workspaceCopy.boardRestaurantOperationsTitle": "آشپزخانه و تحویل",
+    "workspaceCopy.boardRestaurantOperationsDescription": "عملیات و fulfillment از Operations پیگیری می‌شود.",
+    "workspaceCopy.boardSalonTodayDescription": "Availability و appointment workflow از Booking می‌آید.",
+    "workspaceCopy.boardSalonPeopleDescription": "Provider access از Team/Workspace کنترل می‌شود.",
+    "workspaceCopy.boardSalonSupplyDescription": "Service supply از Catalog مدیریت می‌شود.",
+    "workspaceCopy.boardSalonGrowthDescription": "Promotion policy در دامنه Promotion قرار دارد.",
+    "workspaceCopy.businessPublicIdentityLabel": "هویت کسب‌وکار",
+    "workspaceCopy.businessPublicProductServiceLabel": "محصول و خدمت",
+    "workspaceCopy.businessPublicTrustLabel": "اعتماد",
+    "workspaceCopy.businessPublicCommunicationLabel": "ارتباط",
+    "workspaceCopy.businessModuleWorkspaceLabel": "ماژول‌های این Workspace",
+    "workspaceCopy.businessRoleFocusLabel": "تمرکز این نقش",
+    "workspaceCopy.businessOperationsLabel": "ساختار عملیاتی این صفحه"
   },
   "en": {
     "common.appName": "Phoenix",
@@ -1880,7 +1921,48 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "discoveryPage.resultCount": "{{count}} results",
     "discoveryPage.loadMore": "Show more",
     "discoveryPage.error": "Error",
-    "discoveryPage.retry": "Try again"
+    "discoveryPage.retry": "Try again",
+    "workspaceCopy.roleBusinessProfileDescription": "Identity, Trust, and Publication",
+    "workspaceCopy.roleTeamAccessDescription": "Workspace roles and permissions",
+    "workspaceCopy.roleBillingDescription": "Entitlements and finance",
+    "workspaceCopy.roleCatalogDescription": "Products and services",
+    "workspaceCopy.roleCustomerDescription": "Customer and relationship",
+    "workspaceCopy.roleTransactionDescription": "Orders and transactions",
+    "workspaceCopy.roleBookingDescription": "Schedule and bookings",
+    "workspaceCopy.roleSpecialistCustomerDescription": "Patients / customers",
+    "workspaceCopy.roleSpecialistServicesDescription": "Specialized services",
+    "workspaceCopy.roleFinanceBillingDescription": "Invoices and entitlements",
+    "workspaceCopy.roleFinanceTransactionDescription": "Commercial flows",
+    "workspaceCopy.roleGenericProfileDescription": "Identity and publication status",
+    "workspaceCopy.boardClinicTodayDescription": "Review availability and bookings from canonical Booking.",
+    "workspaceCopy.boardClinicCareTitle": "Services and doctors",
+    "workspaceCopy.boardClinicCareDescription": "Services come from Catalog and provider access is controlled by Team.",
+    "workspaceCopy.boardClinicRelationshipDescription": "Open the customer profile and relationship history from Customer.",
+    "workspaceCopy.boardClinicTrustTitle": "Business verification",
+    "workspaceCopy.boardClinicTrustDescription": "Verification and publication happen before public display.",
+    "workspaceCopy.boardRetailSalesTitle": "Sales and orders",
+    "workspaceCopy.boardRetailSalesDescription": "Transaction and order status comes from Commerce.",
+    "workspaceCopy.boardRetailSupplyTitle": "Products and variants",
+    "workspaceCopy.boardRetailSupplyDescription": "Products, variants, and listings are managed in Catalog/Studio.",
+    "workspaceCopy.boardRetailStockDescription": "Inventory is shown only from canonical Inventory/Catalog data.",
+    "workspaceCopy.boardRetailGrowthTitle": "Promotions and content",
+    "workspaceCopy.boardRetailGrowthDescription": "Promotion and Seller AI support supply growth.",
+    "workspaceCopy.boardRestaurantReservationTitle": "Table reservations",
+    "workspaceCopy.boardRestaurantReservationDescription": "Availability and reservations are managed under Booking.",
+    "workspaceCopy.boardRestaurantSupplyDescription": "Menu offerings are maintained in Catalog.",
+    "workspaceCopy.boardRestaurantOperationsTitle": "Kitchen and delivery",
+    "workspaceCopy.boardRestaurantOperationsDescription": "Operations and fulfillment are tracked through Operations.",
+    "workspaceCopy.boardSalonTodayDescription": "Availability and appointment workflow come from Booking.",
+    "workspaceCopy.boardSalonPeopleDescription": "Provider access is controlled by Team/Workspace.",
+    "workspaceCopy.boardSalonSupplyDescription": "Service supply is managed in Catalog.",
+    "workspaceCopy.boardSalonGrowthDescription": "Promotion policy belongs to the Promotion domain.",
+    "workspaceCopy.businessPublicIdentityLabel": "Business identity",
+    "workspaceCopy.businessPublicProductServiceLabel": "Products and services",
+    "workspaceCopy.businessPublicTrustLabel": "Trust",
+    "workspaceCopy.businessPublicCommunicationLabel": "Communication",
+    "workspaceCopy.businessModuleWorkspaceLabel": "Workspace modules",
+    "workspaceCopy.businessRoleFocusLabel": "Role focus",
+    "workspaceCopy.businessOperationsLabel": "Operational structure for this page"
   },
   "ar": {
     "common.appName": "فينيكس",
@@ -2819,124 +2901,123 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "discoveryPage.resultCount": "{{count}} نتيجة",
     "discoveryPage.loadMore": "عرض المزيد",
     "discoveryPage.error": "خطأ",
-    "discoveryPage.retry": "حاول مرة أخرى"
+    "discoveryPage.retry": "حاول مرة أخرى",
+    "workspaceCopy.roleBusinessProfileDescription": "الهوية والثقة والنشر",
+    "workspaceCopy.roleTeamAccessDescription": "أدوار وصلاحيات مساحة العمل",
+    "workspaceCopy.roleBillingDescription": "الاستحقاقات والمالية",
+    "workspaceCopy.roleCatalogDescription": "المنتجات والخدمات",
+    "workspaceCopy.roleCustomerDescription": "العميل والعلاقة",
+    "workspaceCopy.roleTransactionDescription": "الطلبات والمعاملات",
+    "workspaceCopy.roleBookingDescription": "الجدولة والحجوزات",
+    "workspaceCopy.roleSpecialistCustomerDescription": "المرضى / العملاء",
+    "workspaceCopy.roleSpecialistServicesDescription": "الخدمات المتخصصة",
+    "workspaceCopy.roleFinanceBillingDescription": "الفواتير والاستحقاقات",
+    "workspaceCopy.roleFinanceTransactionDescription": "التدفقات التجارية",
+    "workspaceCopy.roleGenericProfileDescription": "الهوية وحالة النشر",
+    "workspaceCopy.boardClinicTodayDescription": "راجع التوافر والحجوزات من Booking الموثوق.",
+    "workspaceCopy.boardClinicCareTitle": "الخدمات والأطباء",
+    "workspaceCopy.boardClinicCareDescription": "تأتي الخدمات من Catalog ويُتحكم في وصول مقدمي الخدمة عبر Team.",
+    "workspaceCopy.boardClinicRelationshipDescription": "افتح ملف العميل وسجل العلاقة من Customer.",
+    "workspaceCopy.boardClinicTrustTitle": "التحقق من النشاط التجاري",
+    "workspaceCopy.boardClinicTrustDescription": "يأتي التحقق والنشر قبل العرض العام.",
+    "workspaceCopy.boardRetailSalesTitle": "المبيعات والطلبات",
+    "workspaceCopy.boardRetailSalesDescription": "تُقرأ حالة المعاملة والطلب من Commerce.",
+    "workspaceCopy.boardRetailSupplyTitle": "المنتجات والنسخ",
+    "workspaceCopy.boardRetailSupplyDescription": "تُدار المنتجات والنسخ والقوائم في Catalog/Studio.",
+    "workspaceCopy.boardRetailStockDescription": "يُعرض المخزون فقط من بيانات Inventory/Catalog الموثوقة.",
+    "workspaceCopy.boardRetailGrowthTitle": "العروض والمحتوى",
+    "workspaceCopy.boardRetailGrowthDescription": "يدعم Promotion وSeller AI نمو العرض.",
+    "workspaceCopy.boardRestaurantReservationTitle": "حجوزات الطاولات",
+    "workspaceCopy.boardRestaurantReservationDescription": "يقع التوافر والحجوزات ضمن Booking.",
+    "workspaceCopy.boardRestaurantSupplyDescription": "تُحفظ عروض القائمة في Catalog.",
+    "workspaceCopy.boardRestaurantOperationsTitle": "المطبخ والتوصيل",
+    "workspaceCopy.boardRestaurantOperationsDescription": "تُتابع العمليات والتنفيذ عبر Operations.",
+    "workspaceCopy.boardSalonTodayDescription": "يأتي التوافر وسير عمل المواعيد من Booking.",
+    "workspaceCopy.boardSalonPeopleDescription": "يُتحكم في وصول مقدمي الخدمة عبر Team/Workspace.",
+    "workspaceCopy.boardSalonSupplyDescription": "تُدار عروض الخدمات في Catalog.",
+    "workspaceCopy.boardSalonGrowthDescription": "تنتمي سياسة Promotion إلى نطاق Promotion.",
+    "workspaceCopy.businessPublicIdentityLabel": "هوية النشاط التجاري",
+    "workspaceCopy.businessPublicProductServiceLabel": "المنتجات والخدمات",
+    "workspaceCopy.businessPublicTrustLabel": "الثقة",
+    "workspaceCopy.businessPublicCommunicationLabel": "التواصل",
+    "workspaceCopy.businessModuleWorkspaceLabel": "وحدات مساحة العمل",
+    "workspaceCopy.businessRoleFocusLabel": "تركيز الدور",
+    "workspaceCopy.businessOperationsLabel": "البنية التشغيلية لهذه الصفحة"
   }
 };
 
 export class I18nManager {
   constructor(private currentLanguage: SupportedLanguage = "fa") {}
-
-  setLanguage(language: SupportedLanguage): void {
-    this.currentLanguage = language in translations ? language : "fa";
-  }
-
-  getLanguage(): SupportedLanguage {
-    return this.currentLanguage;
-  }
-
-  t(key: string, variables?: Readonly<Record<string, string>>): string {
-    let text = translations[this.currentLanguage][key] ?? translations.fa[key] ?? key;
-    for (const [name, value] of Object.entries(variables ?? {})) {
-      text = text.replaceAll("{{" + name + "}}", value);
-    }
+  setLanguage(language: SupportedLanguage): void { this.currentLanguage = language in translations ? language : "fa"; }
+  getLanguage(): SupportedLanguage { return this.currentLanguage; }
+  t(key: string, variables?: Readonly<Record<string,string>>): string {
+    let text=translations[this.currentLanguage][key] ?? translations.fa[key] ?? key;
+    for(const [name,value] of Object.entries(variables ?? {})) text=text.replaceAll("{{"+name+"}}",value);
     return text;
   }
-
-  translate(key: string, variables?: Readonly<Record<string, string>>): string {
-    return this.t(key, variables);
-  }
+  translate(key:string, variables?: Readonly<Record<string,string>>):string{return this.t(key,variables);}
 }
-
-export const defaultI18n = new I18nManager("fa");
-
-export type CanonicalTermKey = string;
-export const canonicalTerms: Record<SupportedLanguage, Readonly<Record<string, string>>> = {
-  fa: Object.fromEntries(Object.entries(translations.fa).filter(([key]) => key.startsWith("canonical."))),
-  en: Object.fromEntries(Object.entries(translations.en).filter(([key]) => key.startsWith("canonical."))),
-  ar: Object.fromEntries(Object.entries(translations.ar).filter(([key]) => key.startsWith("canonical."))),
+export const defaultI18n=new I18nManager("fa");
+export type CanonicalTermKey=string;
+export const canonicalTerms: Record<SupportedLanguage, Readonly<Record<string,string>>> = {
+  fa:Object.fromEntries(Object.entries(translations.fa).filter(([key])=>key.startsWith("canonical."))),
+  en:Object.fromEntries(Object.entries(translations.en).filter(([key])=>key.startsWith("canonical."))),
+  ar:Object.fromEntries(Object.entries(translations.ar).filter(([key])=>key.startsWith("canonical."))),
 };
-
-export function translateCanonicalTerm(
-  key: CanonicalTermKey,
-  locale: Locale,
-): string {
-  return canonicalTerms[locale][key] ?? canonicalTerms.fa[key] ?? key;
-}
-
-const textKeyIndex = new Map<string, string[]>();
-const keyPriority = (key: string): number => {
-  if (key.startsWith("canonical.")) return 0;
-  if (key.startsWith("businessPage.")) return 10;
-  if (key.startsWith("businessSurface.")) return 20;
-  if (key.startsWith("discoveryPage.")) return 30;
-  if (key.startsWith("common.")) return 40;
-  if (key.startsWith("nav.")) return 50;
-  if (key.startsWith("auth.")) return 60;
-  if (key.startsWith("status.")) return 70;
-  if (key.startsWith("errors.")) return 80;
-  if (key.startsWith("messages.")) return 90;
-  if (key.startsWith("ui.")) return 100;
-  if (key.startsWith("runtime.")) return 110;
-  if (key.startsWith("vertical.")) return 120;
+export function translateCanonicalTerm(key:CanonicalTermKey,locale:Locale):string{return canonicalTerms[locale][key]??canonicalTerms.fa[key]??key;}
+const textKeyIndex=new Map<string,string[]>();
+const keyPriority=(key:string):number=>{
+  if(key.startsWith("canonical."))return 0;
+  if(key.startsWith("businessPage."))return 10;
+  if(key.startsWith("businessSurface."))return 20;
+  if(key.startsWith("discoveryPage."))return 30;
+  if(key.startsWith("common."))return 40;
+  if(key.startsWith("nav."))return 50;
+  if(key.startsWith("auth."))return 60;
+  if(key.startsWith("status."))return 70;
+  if(key.startsWith("errors."))return 80;
+  if(key.startsWith("messages."))return 90;
+  if(key.startsWith("ui."))return 100;
+  if(key.startsWith("runtime."))return 110;
+  if(key.startsWith("vertical."))return 120;
   return 200;
 };
-const indexLanguage = (language: SupportedLanguage, canonicalOnly: boolean): void => {
-  for (const [key, text] of Object.entries(translations[language])) {
-    if (canonicalOnly !== key.startsWith("canonical.")) continue;
-    const normalized = text.trim();
-    if (!normalized) continue;
-    const keys = textKeyIndex.get(normalized) ?? [];
-    if (!keys.includes(key)) keys.push(key);
-    keys.sort((a, b) => keyPriority(a) - keyPriority(b));
-    textKeyIndex.set(normalized, keys);
+const indexLanguage=(language:SupportedLanguage,canonicalOnly:boolean):void=>{
+  for(const [key,text] of Object.entries(translations[language])){
+    if(canonicalOnly!==key.startsWith("canonical."))continue;
+    const normalized=text.trim();
+    if(!normalized)continue;
+    const keys=textKeyIndex.get(normalized)??[];
+    if(!keys.includes(key))keys.push(key);
+    keys.sort((a,b)=>keyPriority(a)-keyPriority(b));
+    textKeyIndex.set(normalized,keys);
   }
 };
-
-// Canonical domain terms always win over page-specific, navigation and legacy/UI convenience labels.
-for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, true);
-for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, false);
-
-function resolveTextKey(value: string, locale: Locale): string | undefined {
-  const candidates = textKeyIndex.get(value.trim()) ?? [];
-  return candidates.find((key) => {
-    const translated = translations[locale][key] ?? translations.fa[key];
-    return Boolean(translated && translated !== value.trim());
-  }) ?? candidates[0];
+for(const language of ["fa","en","ar"] as const)indexLanguage(language,true);
+for(const language of ["fa","en","ar"] as const)indexLanguage(language,false);
+function resolveTextKey(value:string,locale:Locale):string|undefined{
+  const candidates=textKeyIndex.get(value.trim())??[];
+  return candidates.find(key=>Boolean((translations[locale][key]??translations.fa[key]) && (translations[locale][key]??translations.fa[key])!==value.trim()))??candidates[0];
 }
-
-export function translateUiText(value: string, locale: Locale): string {
-  const trimmed = value.trim();
-  if (!trimmed) return value;
-
-  const directKey = resolveTextKey(trimmed, locale);
-  if (directKey) {
-    const translated = translations[locale][directKey] ?? translations.fa[directKey];
-    if (translated) {
-      const leading = value.match(/^\\s*/u)?.[0] ?? "";
-      const trailing = value.match(/\\s*$/u)?.[0] ?? "";
-      return leading + translated + trailing;
+export function translateUiText(value:string,locale:Locale):string{
+  const trimmed=value.trim();
+  if(!trimmed)return value;
+  const directKey=resolveTextKey(trimmed,locale);
+  if(directKey){
+    const translated=translations[locale][directKey]??translations.fa[directKey];
+    if(translated){
+      const leading=value.match(/^\s*/u)?.[0]??"";
+      const trailing=value.match(/\s*$/u)?.[0]??"";
+      return leading+translated+trailing;
     }
   }
-
   return value;
 }
-
-export function getDirection(locale: Locale): "ltr" | "rtl" {
-  return locale === "fa" || locale === "ar" ? "rtl" : "ltr";
+export function getDirection(locale:Locale):"ltr"|"rtl"{return locale==="fa"||locale==="ar"?"rtl":"ltr";}
+export function getLocaleFromPreference(preference:string,fallback:Locale="fa"):Locale{
+  const normalized=preference.trim().toLowerCase().split(/[-_]/u,1)[0];
+  return normalized==="fa"||normalized==="ar"||normalized==="en"?normalized:fallback;
 }
-
-export function getLocaleFromPreference(preference: string, fallback: Locale = "fa"): Locale {
-  const normalized = preference.trim().toLowerCase().split(/[-_]/u, 1)[0];
-  return normalized === "fa" || normalized === "ar" || normalized === "en" ? normalized : fallback;
-}
-
-export const LOCALE_STORAGE_KEY = "qooqnos.locale";
-
-export function persistLocale(locale: Locale, storage?: Pick<Storage, "setItem"> | null): void {
-  storage?.setItem(LOCALE_STORAGE_KEY, locale);
-}
-
-export function readPersistedLocale(storage?: Pick<Storage, "getItem"> | null): Locale | null {
-  const value = storage?.getItem(LOCALE_STORAGE_KEY);
-  return value ? getLocaleFromPreference(value, "fa") : null;
-}
+export const LOCALE_STORAGE_KEY="qooqnos.locale";
+export function persistLocale(locale:Locale,storage?:Pick<Storage,"setItem">|null):void{storage?.setItem(LOCALE_STORAGE_KEY,locale);}
+export function readPersistedLocale(storage?:Pick<Storage,"getItem">|null):Locale|null{const value=storage?.getItem(LOCALE_STORAGE_KEY);return value?getLocaleFromPreference(value,"fa"):null;}
