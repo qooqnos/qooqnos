@@ -4279,7 +4279,14 @@ body::before {
 .phoenix-vwf-local-empty{margin-top:9px;padding:11px 13px;border:1px dashed var(--line-strong);border-radius:13px;background:color-mix(in srgb,var(--surface) 48%,transparent);color:var(--muted);font-size:7px}
 .phoenix-vwf-action-note{margin-top:9px}
 .phoenix-vwf-canvas [hidden]{display:none!important}
-.phoenix-vwf-command-primary .button{margin-top:12px}
+.phoenix-vwf-command-primary .button{margin-top:12px}.phoenix-vwf-command-live{display:grid;gap:10px;padding:13px;border:1px solid var(--line);border-radius:16px;background:var(--surface-1)}
+.phoenix-vwf-command-live .phoenix-vwf-live-head{margin-bottom:0}
+.phoenix-vwf-command-live-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.phoenix-vwf-command-live-item{display:grid;gap:4px;min-width:0;padding:10px 11px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2)}
+.phoenix-vwf-command-live-item>span{color:var(--faint);font-size:6px}
+.phoenix-vwf-command-live-item>strong{font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.phoenix-vwf-command-live-item>small{color:var(--muted);font-size:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:620px){.phoenix-vwf-command-live-grid{grid-template-columns:1fr}}
 .phoenix-vwf-people-card .text-link,.phoenix-vwf-commerce-card .text-link,.phoenix-vwf-kanban-column .text-link,.phoenix-vwf-inbox .text-link{display:inline-block;margin-top:9px}
 .phoenix-vwf-customer-history{margin-top:10px;padding:14px;border:1px solid var(--line);border-radius:17px;background:var(--surface-2)}
 .phoenix-vwf-customer-history-list{display:grid;gap:7px;margin-top:10px}
