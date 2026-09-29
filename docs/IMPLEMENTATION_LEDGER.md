@@ -2689,3 +2689,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added responsive Activity styles to both source and served Web stylesheets.
 - Verification: workspace build completed successfully in Phoenix verification on commit `9acf5ebe3e73161489df9ead5411acdfc3c82138`; Phoenix web preview deploy succeeded. The full repository test suite still has 5 failing tests (4 Vertical Workflow UI / Business Vertical registry assertions and 1 SEO crawler assertion), so the repository is not globally green yet.
 - Social implementation commits: `1e716e81e3b5958675ee16a7e274aec1a2a95989`, `5e6b24f4c8a1a72f0ec77944b5049bff03b026ce`, `26d1c89da05e36045441c7da7d39d7d442cf7026`, styles `352dc097faab256f26131c419eaa156ee26faaf4`, `24778083f998a5d85a0dbfb74aea4b1c20fefb57`.
+
+
+## 2026-09-29 — Vertical module capability contract closure
+- Completed the shared presentation capability registry for every registered Clinic, Retail, Restaurant and Salon Workspace module.
+- Added explicit capability/permission metadata for Retail `فروش امروز`, Salon `وقت‌های امروز`, and the generic `نمای کلی` surface so module navigation no longer contains contractless registered modules.
+- The registry remains presentation metadata only; Runtime/module registry and backend authorization remain authoritative.
+- No domain state, persistence model, authorization rule or second source of truth was introduced.
+- Implementation commit: `d5038eddd50b3e6df2c12fa755d96cc0e3d7696d`.
+- Verification: static registry cross-check confirms zero registered modules missing a capability contract; full TypeScript build, full test suite and browser/device visual QA remain pending.
