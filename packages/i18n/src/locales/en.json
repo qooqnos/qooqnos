@@ -548,7 +548,11 @@
     "vertical_salonLabel": "Beauty salon",
     "vertical_salonSubtitle": "Services, specialists, calendar, capacity, and customers.",
     "vertical_viewService": "View service",
-    "vertical_chooseSpecialist": "Choose specialist"
+    "vertical_chooseSpecialist": "Choose specialist",
+    "business_clinicType": "Clinic",
+    "business_storeType": "Store",
+    "business_restaurantType": "Restaurant",
+    "business_salonType": "Salon"
   },
   "canonical": {
     "identity": {
