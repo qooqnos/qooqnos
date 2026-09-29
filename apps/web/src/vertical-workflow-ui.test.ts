@@ -202,6 +202,21 @@ describe("Vertical Workflow overview", () => {
   });
 
 
+  it("renders a live booking-resource surface for restaurant tables", () => {
+    const blueprint = getVerticalModuleBlueprint("restaurant", "میزها");
+    const html = renderVerticalWorkflowCanvas({
+      vertical: "restaurant",
+      module: "میزها",
+      businessId: "business-test",
+      blueprint,
+    });
+    expect(html).toContain('data-vwf-layout="operations"');
+    expect(html).toContain('data-vwf-resources-live');
+    expect(html).toContain('data-vwf-resource-type=""');
+    expect(html).toContain("Canonical Booking Resources");
+    expect(html).toContain("میزها و منابع رزرو");
+  });
+
   it("covers all supported verticals with shared stage navigation", () => {
     for (const vertical of ["clinic", "retail", "restaurant", "salon"]) {
       const html = renderVerticalWorkflowOverview({ vertical, businessId: "business-test" });
