@@ -341,7 +341,13 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.home_homeFinalPlaceholder": "نیازت را به زبان خودت بنویس...",
     "ui.home_homeAskPhoenix": "از ققنوس بپرس",
     "ui.home_homeFooterDescription": "لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار.",
-    "ui.home_homeFooterLinks": "پیوندهای پایانی"
+    "ui.home_homeFooterLinks": "پیوندهای پایانی",
+    "ui.social_socialForYou": "برای تو",
+    "ui.social_socialFollowing": "دنبال‌شده‌ها",
+    "ui.social_socialExplore": "اکسپلور",
+    "ui.social_socialActivity": "فعالیت",
+    "ui.social_newPost": "پست جدید",
+    "ui.social_create": "ایجاد"
   },
   "en": {
     "common.appName": "Phoenix",
@@ -680,7 +686,13 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.home_homeFinalPlaceholder": "Describe your need in your own words...",
     "ui.home_homeAskPhoenix": "Ask Phoenix",
     "ui.home_homeFooterDescription": "The intelligent layer for customer and business decisions and connections.",
-    "ui.home_homeFooterLinks": "Footer links"
+    "ui.home_homeFooterLinks": "Footer links",
+    "ui.social_socialForYou": "For you",
+    "ui.social_socialFollowing": "Following",
+    "ui.social_socialExplore": "Explore",
+    "ui.social_socialActivity": "Activity",
+    "ui.social_newPost": "New post",
+    "ui.social_create": "Create"
   },
   "ar": {
     "common.appName": "فينيكس",
@@ -1019,7 +1031,13 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.home_homeFinalPlaceholder": "اكتب احتياجك بكلماتك الخاصة...",
     "ui.home_homeAskPhoenix": "اسأل ققنوس",
     "ui.home_homeFooterDescription": "الطبقة الذكية لاتخاذ قرارات وربط العملاء بالأعمال.",
-    "ui.home_homeFooterLinks": "روابط التذييل"
+    "ui.home_homeFooterLinks": "روابط التذييل",
+    "ui.social_socialForYou": "لك",
+    "ui.social_socialFollowing": "المتابَعون",
+    "ui.social_socialExplore": "استكشاف",
+    "ui.social_socialActivity": "النشاط",
+    "ui.social_newPost": "منشور جديد",
+    "ui.social_create": "إنشاء"
   }
 };
 
@@ -1038,7 +1056,6 @@ export class I18nManager {
 export const defaultI18n = new I18nManager("fa");
 
 const textKeyIndex = new Map<string,string>();
-
 for (const language of ["fa", "en", "ar"] as const) {
   for (const [key, text] of Object.entries(translations[language])) {
     const normalized = text.trim();
@@ -1046,7 +1063,6 @@ for (const language of ["fa", "en", "ar"] as const) {
     textKeyIndex.set(normalized, key);
   }
 }
-
 const translationSources = [...textKeyIndex.entries()]
   .filter(([source]) => source.length >= 3)
   .sort((a, b) => b[0].length - a[0].length);
@@ -1054,7 +1070,6 @@ const translationSources = [...textKeyIndex.entries()]
 export function translateUiText(value: string, locale: Locale): string {
   const trimmed = value.trim();
   if (!trimmed) return value;
-
   const directKey = textKeyIndex.get(trimmed);
   if (directKey) {
     const translated = translations[locale][directKey] ?? translations.fa[directKey];
@@ -1064,18 +1079,15 @@ export function translateUiText(value: string, locale: Locale): string {
       return leading + translated + trailing;
     }
   }
-
   const candidate = translationSources.find(([source, key]) => {
     if (!trimmed.includes(source)) return false;
     const translated = translations[locale][key] ?? translations.fa[key];
     return Boolean(translated && translated !== source);
   });
   if (!candidate) return value;
-
   const [source, key] = candidate;
   const translated = translations[locale][key] ?? translations.fa[key];
-  if (!translated) return value;
-  return value.split(source).join(translated);
+  return translated ? value.split(source).join(translated) : value;
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" { return locale === "fa" || locale === "ar" ? "rtl" : "ltr"; }
