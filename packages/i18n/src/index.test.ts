@@ -26,7 +26,7 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("کسب‌وکار تو باید برای مشتری هم به همان اندازه واضح باشد.", "en")).toBe("Your business should be just as clear to customers.");
     expect(translateUiText("از Product Studio یا Catalog شروع کن.", "en")).toBe("Start from Product Studio or Catalog.");
     expect(translateUiText("در حال بررسی نقش:", "en")).toBe("Checking role:");
-    expect(translateUiText("ماژول‌های این Workspace بر اساس نوع کسب‌وکار ترکیب می‌شوند؛ مجوزها همچنان توسط backend تعیین می‌شوند.", "en")).toBe("Workspace modules are composed by business type; permissions remain controlled by the backend.");
+    expect(translateUiText("ماژول‌های این Workspace بر اساس نوع کسب‌وکار ترکیب می‌شوند؛ مجوزها همچنان توسط backend تعیین می‌شوند.", "en")).toBe("Workspace modules are composed from the business type; permissions remain determined by the backend.");
   });
 
   it("resolves duplicate Persian labels to the semantic page namespace when available", () => {
