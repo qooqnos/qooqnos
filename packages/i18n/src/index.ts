@@ -2,9 +2,9 @@
 // INTERNATIONALIZATION (i18n) SUPPORT
 // ============================================================================
 
-import arLocale from "../locales/ar.json";
-import enLocale from "../locales/en.json";
-import faLocale from "../locales/fa.json";
+import arLocale from "./locales/ar.json";
+import enLocale from "./locales/en.json";
+import faLocale from "./locales/fa.json";
 
 export type SupportedLanguage = "en" | "fa" | "ar";
 export type Locale = SupportedLanguage;
