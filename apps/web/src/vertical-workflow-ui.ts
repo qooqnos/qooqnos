@@ -1,6 +1,8 @@
 import { getVerticalModuleBlueprint, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
 import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
+type VerticalWorkflowEntityRecord = Record<string, unknown>;
+
 export type VerticalWorkflowCanvasModel = {
   readonly vertical: string;
   readonly module: string;
@@ -223,6 +225,8 @@ function renderOperations(model: VerticalWorkflowCanvasModel): string {
         '<div class="phoenix-vwf-live-resources-grid" data-vwf-resource-items><div class="slot-loading">در حال آماده‌سازی منابع رزرو…</div></div>' +
       '</div>'
     : "";
+
+  const fulfillmentSurface = renderFulfillmentLookupSurface();
 
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای عملیات">' +
