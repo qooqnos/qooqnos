@@ -1377,6 +1377,16 @@ button:disabled, .button:disabled { cursor: not-allowed; }
 .phoenix-public-nav a { color:var(--muted); font-size:10px; text-decoration:none; }
 .phoenix-public-nav a:hover { color:var(--text); }
 .phoenix-public-actions { display:flex; align-items:center; gap:8px; }
+.language-switcher { position:relative; display:flex; align-items:center; }
+.language-toggle { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-width:74px; padding-inline:10px; }
+.language-toggle > span:first-child { font-size:14px; opacity:.7; }
+.language-toggle > span:last-child { font-size:12px; opacity:.55; }
+.language-menu { position:absolute; z-index:120; top:calc(100% + 8px); inset-inline-end:0; min-width:156px; padding:6px; border:1px solid var(--border); border-radius:14px; box-shadow:0 16px 40px rgba(0,0,0,.14); }
+.language-option { width:100%; display:grid; grid-template-columns:34px 1fr 18px; align-items:center; gap:8px; padding:9px 10px; border:0; border-radius:10px; background:transparent; color:var(--text); text-align:start; cursor:pointer; font:inherit; }
+.language-option:hover, .language-option.active { background:var(--surface-2); }
+.language-option-code { font-size:11px; font-weight:700; letter-spacing:.04em; opacity:.7; }
+.language-option b { opacity:0; font-size:12px; }
+.language-option.active b { opacity:1; }
 .phoenix-home { overflow:hidden; }
 .phoenix-home-hero {
   width:min(1180px, calc(100% - 40px)); min-height:680px; margin:0 auto;
