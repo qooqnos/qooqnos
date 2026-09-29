@@ -248,6 +248,23 @@ describe("Vertical Workflow overview", () => {
   });
 
 
+  it("renders the shared canonical Billing surface for payment modules", () => {
+    for (const vertical of ["clinic", "restaurant", "salon"]) {
+      const blueprint = getVerticalModuleBlueprint(vertical, "پرداخت");
+      const html = renderVerticalWorkflowCanvas({
+        vertical,
+        module: "پرداخت",
+        businessId: "business-test",
+        blueprint,
+      });
+      expect(html).toContain('data-vwf-layout="commerce"');
+      expect(html).toContain('data-vwf-billing-live');
+      expect(html).toContain('data-vwf-invoice-items');
+      expect(html).toContain("Canonical Billing");
+      expect(html).toContain("صورتحساب‌های این کسب‌وکار");
+    }
+  });
+
   it("renders the shared canonical Fulfillment lookup for Operations modules", () => {
     const blueprint = getVerticalModuleBlueprint("restaurant", "تحویل");
     const html = renderVerticalWorkflowCanvas({
