@@ -663,6 +663,35 @@
       "action": "الإجراء",
       "sourceOfTruth": "مصدر الحقيقة",
       "projection": "إسقاط مشتق"
+    },
+    "fulfillment": {
+      "fulfillmentOrder": "أمر التنفيذ",
+      "fulfillmentItem": "عنصر التنفيذ",
+      "fulfillmentPlan": "خطة التنفيذ",
+      "fulfillmentTask": "مهمة التنفيذ",
+      "fulfillmentAssignment": "تخصيص التنفيذ",
+      "shipment": "الشحنة",
+      "shipmentPackage": "طرد الشحنة",
+      "trackingEvent": "حدث التتبع"
+    },
+    "promotion": {
+      "promotion": "الترويج",
+      "promotionVersion": "نسخة الترويج",
+      "benefit": "منفعة",
+      "rule": "قاعدة",
+      "scope": "نطاق",
+      "stackPolicy": "سياسة الدمج",
+      "qualification": "التأهل",
+      "offer": "عرض",
+      "reservation": "حجز مؤقت",
+      "redemption": "استرداد",
+      "usageCounter": "عداد الاستخدام",
+      "campaign": "حملة",
+      "campaignAudience": "جمهور الحملة",
+      "campaignPromotionLink": "ربط الحملة والترويج",
+      "campaignExperiment": "تجربة الحملة",
+      "campaignMeasurement": "قياس الحملة",
+      "abuseSignal": "إشارة إساءة الاستخدام"
     }
   }
 }
