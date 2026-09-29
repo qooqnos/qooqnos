@@ -120,7 +120,7 @@ const dictionaryFragmentEntries = (() => {
   for (const language of ["fa", "en", "ar"] as const) {
     for (const [key, text] of Object.entries(translations[language])) {
       const source = text.trim();
-      if (source.length < 3) continue;
+      if (source.length < 3 && key !== "common.and" && key !== "common.or") continue;
       const keys = sourceToKeys.get(source) ?? new Set<string>();
       keys.add(key);
       sourceToKeys.set(source, keys);
