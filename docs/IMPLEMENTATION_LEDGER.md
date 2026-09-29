@@ -1,3 +1,13 @@
+
+## 2026-09-29 — Shared Restaurant Table Resource Surface
+
+- 🟢 Extended the shared Vertical Workflow Operations canvas for Restaurant `میزها` with a live Booking Resource surface.
+- 🟢 Restaurant table/resource presentation reuses the existing canonical Booking resource reader; no restaurant-specific table store or UI-owned capacity state was introduced.
+- 🟢 Refresh and initial hydration both respect the active Business context and render truthful connected / requires-context / unavailable states through the shared resource hydrator.
+- 🟢 Added regression coverage for the Restaurant table module.
+- 🟡 TypeScript build, full test suite, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: `f05f24b4`, `e8d18818`, `9ae6dfc4`, `e5e71321`.
 ## 2026-09-29 — Vertical Workflow capability contract surfaced in the shared Canvas
 
 - 🟢 Fixed the module blueprint fallback so declared capability contracts from the shared registry are actually applied when a blueprint has an empty placeholder contract.
