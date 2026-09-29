@@ -46,6 +46,12 @@ export type VerticalModuleBlueprintState = {
 };
 
 export type VerticalModuleBlueprint = {
+  /**
+   * Canonical domain concepts represented by this UI module.
+   * These keys are presentation references only; the domain source of truth
+   * remains owned by the canonical module described by each key.
+   */
+  readonly canonicalTermKeys: readonly string[];
   readonly eyebrow: string;
   readonly layout: VerticalModuleLayout;
   readonly interaction: "command" | "browse" | "configure" | "review";
@@ -72,6 +78,49 @@ export type VerticalModuleBlueprint = {
  * A module may declare a capability without a local client-side enablement
  * decision; this registry only describes what the surface depends on.
  */
+const MODULE_CANONICAL_TERM_KEYS: Readonly<Record<string, readonly string[]>> = {
+  "نمای کلی": ["canonical.business.business"],
+  "امروز": ["canonical.booking.appointment", "canonical.customer.customer"],
+  "فروش امروز": ["canonical.commerce.order", "canonical.customer.customer"],
+  "وقت‌های امروز": ["canonical.booking.appointment", "canonical.customer.customer"],
+  "نوبت‌ها": ["canonical.booking.appointment", "canonical.booking.booking"],
+  "تقویم": ["canonical.booking.schedule", "canonical.booking.availabilityRule"],
+  "پزشکان": ["canonical.identity.membership", "canonical.platform.capability"],
+  "متخصصان": ["canonical.identity.membership", "canonical.booking.resource"],
+  "مراجعان": ["canonical.customer.customer", "canonical.booking.appointment"],
+  "مشتریان": ["canonical.customer.customer", "canonical.customer.customerRelationship"],
+  "ساعات کاری": ["canonical.business.business", "canonical.booking.schedule"],
+  "ساعت کاری": ["canonical.business.business", "canonical.booking.schedule"],
+  "زمان‌بندی": ["canonical.booking.schedule", "canonical.booking.availabilityRule"],
+  "ظرفیت": ["canonical.booking.resource", "canonical.booking.slot"],
+  "خدمات": ["canonical.catalog.service", "canonical.catalog.offering"],
+  "محصولات": ["canonical.catalog.product", "canonical.catalog.offering"],
+  "مدل‌ها و تنوع": ["canonical.catalog.productVariant", "canonical.catalog.attributeValue"],
+  "سایز و رنگ": ["canonical.catalog.productVariant", "canonical.catalog.attributeValue"],
+  "موجودی": ["canonical.catalog.inventory", "canonical.catalog.productVariant"],
+  "سفارش‌ها": ["canonical.commerce.order", "canonical.commerce.orderItem"],
+  "مرجوعی": ["canonical.billing.refund", "canonical.commerce.order"],
+  "سفارش‌های امروز": ["canonical.commerce.order", "canonical.fulfillment.fulfillment"],
+  "میزها": ["canonical.business.location", "canonical.booking.resource"],
+  "رزرو": ["canonical.booking.booking", "canonical.booking.appointment"],
+  "رزروها": ["canonical.booking.booking", "canonical.booking.appointment"],
+  "منو": ["canonical.catalog.offering", "canonical.catalog.product"],
+  "آشپزخانه": ["canonical.fulfillment.fulfillment"],
+  "تحویل": ["canonical.fulfillment.fulfillment", "canonical.commerce.order"],
+  "پیام‌ها": ["canonical.communication.conversation", "canonical.communication.message"],
+  "پرداخت": ["canonical.billing.payment", "canonical.commerce.order"],
+  "تخفیف": ["canonical.promotion.promotion"],
+  "تخفیف‌ها": ["canonical.promotion.promotion"],
+  "پیشنهادها": ["canonical.matching.recommendation"],
+  "گزارش": ["canonical.platform.projection"],
+  "گزارش فروش": ["canonical.platform.projection", "canonical.commerce.order"],
+  "تیم": ["canonical.identity.membership", "canonical.identity.role", "canonical.identity.permission"],
+  "محتوا": ["canonical.catalog.offering", "canonical.media.mediaAsset"],
+  "پروفایل": ["canonical.business.businessProfile"],
+  "گزارش‌ها": ["canonical.platform.projection"],
+  "معاملات": ["canonical.commerce.order", "canonical.billing.payment"],
+};
+
 const MODULE_CAPABILITY_CONTRACTS: Readonly<Record<string, VerticalModuleCapabilityContract>> = {
   "نمای کلی": { requiredCapabilities: ["business"], requiredPermissions: ["business.profile.read"], source: "runtime-registry-contract" },
   "امروز": { requiredCapabilities: ["booking", "crm"], requiredPermissions: ["booking.read", "crm.read"], source: "runtime-registry-contract" },
@@ -144,7 +193,9 @@ const blueprint = (
   interaction: VerticalModuleBlueprint["interaction"],
   blocks: readonly VerticalModuleBlueprintBlock[],
   primaryAction?: VerticalModuleBlueprint["primaryAction"],
+  canonicalTermKeys: readonly string[] = [],
 ): VerticalModuleBlueprint => ({
+  canonicalTermKeys,
   eyebrow,
   layout,
   interaction,
@@ -606,6 +657,13 @@ export function getVerticalModuleBlueprint(vertical: string, module: string): Ve
       ],
     );
   const declaredContract = getVerticalModuleCapabilityContract(module);
+  const canonicalTermKeys = selected.canonicalTermKeys.length
+    ? selected.canonicalTermKeys
+    : MODULE_CANONICAL_TERM_KEYS[module] ?? [];
+  if (!canonicalTermKeys.length && module !== "ماژول ناشناخته") {
+    // Keep unknown/custom UI modules explicitly traceable instead of inventing
+    // a second domain concept. The generic blueprint remains source-neutral.
+  }
   const selectedContract = selected.capabilityContract;
   const hasDeclaredSelectedContract = Boolean(
     selectedContract &&
@@ -613,6 +671,7 @@ export function getVerticalModuleBlueprint(vertical: string, module: string): Ve
   );
   return {
     ...selected,
+    canonicalTermKeys,
     roleLenses: selected.roleLenses ?? deriveRoleLenses(module, selected.layout),
     capabilityContract: hasDeclaredSelectedContract ? selectedContract! : declaredContract,
   };
