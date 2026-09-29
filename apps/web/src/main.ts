@@ -4043,11 +4043,11 @@ function renderBusiness(): string {
     '</section>' +
 
     '<section class="phoenix-business-metrics" id="business-vertical-metrics">' +
-      ui.metrics.map((label, index) => '<article class="glass-card phoenix-business-metric"><span>' + localized(label) + '</span><strong id="business-metric-' + index + '">—</strong><small>اطلاعات canonical پس از اتصال</small></article>').join("") +
+      ui.metrics.map((label, index) => '<article class="glass-card phoenix-business-metric"><span>' + localized(label) + '</span><strong id="business-metric-' + index + '">—</strong><small>' + businessUi("canonicalAfterConnection") + '</small></article>').join("") +
     '</section>' +
 
     '<section class="phoenix-business-layout">' +
-      '<article class="glass-card phoenix-business-modules-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("workspaceModules") + '</span><h2>' + bt("businessSpecificTools") + '</h2></div><span id="business-module-count" class="pill">—</span></div><div id="business-module-grid" class="phoenix-business-module-grid">' + ui.modules.map((module) => '<button class="phoenix-business-module" type="button" data-business-module="' + escapeAttr(module) + '"><span>◈</span><strong>' + localized(module) + '</strong><small>باز کردن</small></button>').join("") + '</div></article>' +
+      '<article class="glass-card phoenix-business-modules-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("workspaceModules") + '</span><h2>' + bt("businessSpecificTools") + '</h2></div><span id="business-module-count" class="pill">—</span></div><div id="business-module-grid" class="phoenix-business-module-grid">' + ui.modules.map((module) => '<button class="phoenix-business-module" type="button" data-business-module="' + escapeAttr(module) + '"><span>◈</span><strong>' + localized(module) + '</strong><small>' + businessUi("open") + '</small></button>').join("") + '</div></article>' +
 
       '<aside class="phoenix-business-side">' +
         '<article class="glass-card phoenix-business-actions-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("quickActions") + '</span><h2>' + bt("quickActions") + '</h2></div></div><div id="business-quick-actions" class="phoenix-business-quick-actions">' + ui.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action data-business-quick-action-value="' + escapeAttr(action) + '">' + localized(action) + ' <span>←</span></button>').join("") + '</div></article>' +
@@ -4076,7 +4076,7 @@ function renderBusiness(): string {
         '<div class="card-section-heading"><div><span class="section-kicker">' + bt("teamAccess") + '</span><h2>' + bt("teamAndRoles") + '</h2></div><span id="business-team-count" class="pill">—</span></div>' +
         '<div class="phoenix-role-lens" id="business-role-lens"><span class="section-kicker">' + bt("roleLens") + '</span><strong id="business-role-title">—</strong><p id="business-role-description">' + bt("currentRolePermissions") + '</p></div>' +
         '<div class="phoenix-permission-cloud" id="business-permissions"><span>' + bt("readingPermissions") + '</span></div>' +
-        '<div class="phoenix-team-list" id="business-team-list"><div class="slot-loading">در حال خواندن اعضای Workspace…</div></div>' +
+        '<div class="phoenix-team-list" id="business-team-list"><div class="slot-loading">' + businessUi("readingMembers") + '</div></div>' +
         '<div class="phoenix-team-actions"><button class="button button-ghost" type="button" data-workspace-toggle>' + bt("switchWorkspace") + '</button><button class="button button-primary" type="button" data-team-management>' + bt("manageTeam") + '</button></div>' +
       '</article>' +
       '<article class="glass-card phoenix-role-guide">' +
