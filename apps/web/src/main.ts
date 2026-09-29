@@ -3381,59 +3381,6 @@ async function startCheckoutFlow(): Promise<void> {
     result.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "Checkout ناموفق بود.")}</p></div>`;
   }
 }
-const BUSINESS_VERTICAL_UI = {
-  default: {
-    key: "default", label: "کسب‌وکار عمومی", icon: "◆", subtitle: "Workspace قابل تنظیم بر اساس قابلیت‌های فعال.",
-    modules: ["نمای کلی", "پروفایل", "محتوا", "محصولات", "خدمات", "مشتریان", "پیام‌ها", "معاملات", "تیم", "گزارش‌ها"],
-    actions: ["ایجاد محتوا", "مدیریت عرضه", "بررسی معاملات"],
-    metrics: ["فعالیت امروز", "مشتریان", "محتوا", "معاملات"],
-    customerActions: ["مشاهده", "تماس", "پیام"]
-  },
-  clinic: {
-    key: "clinic", label: "مطب / کلینیک", icon: "✚", subtitle: "رزرو، خدمات، پزشکان، زمان‌بندی و ارتباط با مراجعان.",
-    modules: ["امروز", "نوبت‌ها", "تقویم", "پزشکان", "خدمات", "مراجعان", "ساعات کاری", "پیام‌ها", "پرداخت", "محتوا", "تیم"],
-    actions: ["افزودن خدمت", "تنظیم زمان‌بندی", "مدیریت نوبت‌ها"],
-    metrics: ["نوبت‌های امروز", "خدمات", "پزشکان", "پیام‌های جدید"],
-    customerActions: ["مشاهده خدمات", "رزرو", "تماس", "پیام"]
-  },
-  retail: {
-    key: "retail", label: "فروشگاه / خرده‌فروشی", icon: "▦", subtitle: "محصول، تنوع، موجودی، سفارش و مشتری در یک Workspace.",
-    modules: ["فروش امروز", "محصولات", "مدل‌ها و تنوع", "سایز و رنگ", "موجودی", "سفارش‌ها", "مرجوعی", "مشتریان", "تخفیف‌ها", "محتوا", "گزارش فروش"],
-    actions: ["افزودن محصول", "ثبت موجودی", "ساخت محتوای محصول"],
-    metrics: ["فروش امروز", "موجودی کم", "سفارش‌ها", "مشتریان"],
-    customerActions: ["مشاهده", "مقایسه", "ذخیره", "خرید فوری"]
-  },
-  restaurant: {
-    key: "restaurant", label: "رستوران", icon: "⌂", subtitle: "منو، سفارش، میز، رزرو، آشپزخانه و تحویل.",
-    modules: ["سفارش‌های امروز", "منو", "میزها", "رزرو", "آشپزخانه", "تحویل", "مشتریان", "تخفیف", "پرداخت", "گزارش"],
-    actions: ["مدیریت منو", "تنظیم میزها", "بررسی رزروها"],
-    metrics: ["سفارش‌های فعال", "رزروها", "میزهای باز", "تحویل‌ها"],
-    customerActions: ["مشاهده منو", "سفارش", "رزرو", "دریافت"]
-  },
-  salon: {
-    key: "salon", label: "سالن زیبایی", icon: "✦", subtitle: "خدمات، متخصصان، تقویم، ظرفیت و مشتریان.",
-    modules: ["وقت‌های امروز", "خدمات", "متخصصان", "تقویم", "مشتریان", "ظرفیت", "پرداخت", "پیشنهادها", "محتوا", "تیم"],
-    actions: ["افزودن خدمت", "تنظیم برنامه", "افزودن متخصص"],
-    metrics: ["وقت‌های امروز", "خدمات", "متخصصان", "مشتریان"],
-    customerActions: ["مشاهده خدمت", "انتخاب متخصص", "رزرو", "تماس"]
-  }
-} as const;
-
-type BusinessVerticalKey = keyof typeof BUSINESS_VERTICAL_UI;
-
-function resolveBusinessVerticalKey(value: unknown): BusinessVerticalKey {
-  const raw = String(value ?? "").trim().toLowerCase();
-  if (/(clinic|doctor|medical|مطب|کلینیک|پزشک)/.test(raw)) return "clinic";
-  if (/(shoe|retail|store|shop|فروشگاه|کفش|خرده)/.test(raw)) return "retail";
-  if (/(restaurant|cafe|food|رستوران|کافه|غذا)/.test(raw)) return "restaurant";
-  if (/(salon|beauty|hair|سالن|زیبایی|آرایش)/.test(raw)) return "salon";
-  return "default";
-}
-
-function getBusinessVerticalUi(value: unknown) {
-  return BUSINESS_VERTICAL_UI[resolveBusinessVerticalKey(value)];
-}
-
 const BUSINESS_ROLE_ACTIONS: Record<string, readonly { readonly label: string; readonly path: string; readonly description: string }[]> = {
   management: [
     { label: "Business Profile", path: "/business/profile", description: "هویت، Trust و Publication" },
@@ -3828,7 +3775,7 @@ function renderBusiness(): string {
 
     renderVerticalWorkflowOverview({
       vertical: ui.key,
-      businessId: businessId || undefined,
+      ...(businessId ? { businessId } : {}),
       contextualHref: (path) => businessWorkspaceContextHref(path, ui.key, businessId || undefined),
     }) +
     '<section class="phoenix-business-role-actions glass-card">' +
