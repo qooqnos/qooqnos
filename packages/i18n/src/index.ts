@@ -139,6 +139,10 @@ export function translateUiText(
   }
 
   const candidate = translationSources.find(([source, key]) => {
+    // Substring translation is reserved for canonical domain terms.
+    // UI convenience phrases must translate only on an exact dictionary match,
+    // otherwise a phrase such as «شروع کن و ...» can be corrupted into «Start و ...».
+    if (!key.startsWith("canonical.")) return false;
     if (!trimmed.includes(source)) return false;
     const translated = translations[locale][key] ?? translations.fa[key];
     return Boolean(translated && translated !== source);
