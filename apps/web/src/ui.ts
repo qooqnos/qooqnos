@@ -36,8 +36,72 @@ export function uiSelect(options: {
   return `<label class="field-label" for="${escapeUi(options.id)}">${escapeUi(options.label)}<select id="${escapeUi(options.id)}" class="ds-field ds-select">${options.items.map((item) => `<option value="${escapeUi(item.value)}"${item.selected ? " selected" : ""}>${escapeUi(item.label)}</option>`).join("")}</select></label>`;
 }
 
-export function uiTabs(items: readonly { id: string; label: string; selected?: boolean }[], dataPrefix = "ds-tab"): string {
-  return `<div class="ds-tabs" role="tablist" aria-label="Tabs">${items.map((item) => `<button class="ds-tab${item.selected ? " active" : ""}" id="${escapeUi(dataPrefix + "-" + item.id)}" type="button" role="tab" aria-selected="${item.selected ? "true" : "false"}">${escapeUi(item.label)}</button>`).join("")}</div>`;
+export function uiTabs(
+  items: readonly { id: string; label: string; selected?: boolean }[],
+  dataPrefix = "ds-tab",
+  ariaLabel = "زبانه‌ها",
+): string {
+  const selectedIndex = Math.max(0, items.findIndex((item) => item.selected));
+  return `<div class="ds-tabs" role="tablist" aria-label="${escapeUi(ariaLabel)}">${items.map((item, index) => `<button class="ds-tab${item.selected ? " active" : ""}" id="${escapeUi(dataPrefix + "-" + item.id)}" type="button" role="tab" aria-selected="${item.selected ? "true" : "false"}" tabindex="${index === selectedIndex ? "0" : "-1"}">${escapeUi(item.label)}</button>`).join("")}</div>`;
+}
+
+/** Pure keyboard-navigation primitive shared by every Phoenix tablist. */
+export function nextTabIndex(current: number, count: number, key: "ArrowRight" | "ArrowLeft" | "Home" | "End"): number {
+  if (count <= 0) return -1;
+  if (key === "Home") return 0;
+  if (key === "End") return count - 1;
+  const safeCurrent = current < 0 || current >= count ? 0 : current;
+  return key === "ArrowRight"
+    ? (safeCurrent + 1) % count
+    : (safeCurrent - 1 + count) % count;
+}
+
+/** Installs roving-focus keyboard behaviour for every Phoenix tablist. */
+export function installTabAccessibility(doc: Document): void {
+  const view = doc.defaultView;
+  if (!view) return;
+  const marker = doc as Document & { __phoenixTabsInstalled?: boolean };
+  if (marker.__phoenixTabsInstalled) return;
+  marker.__phoenixTabsInstalled = true;
+
+  const sync = (tablist: HTMLElement): HTMLButtonElement[] => {
+    const tabs = Array.from(tablist.querySelectorAll<HTMLButtonElement>('[role="tab"]:not([disabled])'));
+    if (!tabs.length) return tabs;
+    const selected = tabs.findIndex((tab) => tab.getAttribute("aria-selected") === "true");
+    const focused = tabs.indexOf(doc.activeElement as HTMLButtonElement);
+    const index = selected >= 0 ? selected : focused >= 0 ? focused : 0;
+    tabs.forEach((tab, tabIndex) => { tab.tabIndex = tabIndex === index ? 0 : -1; });
+    return tabs;
+  };
+
+  doc.addEventListener("click", (event) => {
+    const target = event.target instanceof view.HTMLElement ? event.target : null;
+    const tab = target?.closest<HTMLButtonElement>('[role="tab"]');
+    const tablist = tab?.closest<HTMLElement>('[role="tablist"]');
+    if (!tab || !tablist) return;
+    tablist.querySelectorAll<HTMLElement>('[role="tab"]').forEach((candidate) => {
+      candidate.tabIndex = candidate === tab ? 0 : -1;
+    });
+  });
+
+  doc.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft" && event.key !== "Home" && event.key !== "End") return;
+    const target = doc.activeElement instanceof view.HTMLElement ? doc.activeElement : null;
+    const tab = target?.matches('[role="tab"]') ? target as HTMLButtonElement : null;
+    const tablist = tab?.closest<HTMLElement>('[role="tablist"]');
+    if (!tab || !tablist) return;
+    const tabs = sync(tablist);
+    const next = nextTabIndex(tabs.indexOf(tab), tabs.length, event.key as "ArrowRight" | "ArrowLeft" | "Home" | "End");
+    if (next < 0) return;
+    event.preventDefault();
+    tabs.forEach((candidate, index) => { candidate.tabIndex = index === next ? 0 : -1; });
+    tabs[next]?.focus();
+  });
+
+  const observer = new view.MutationObserver(() => {
+    doc.querySelectorAll<HTMLElement>('[role="tablist"]').forEach(sync);
+  });
+  if (doc.body) observer.observe(doc.body, { childList: true, subtree: true });
 }
 
 export function uiTable(headers: readonly string[], rows: readonly (readonly string[])[]): string {
