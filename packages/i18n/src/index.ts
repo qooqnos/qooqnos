@@ -103,25 +103,53 @@ export function translateCanonicalTerm(
   return canonicalTerms[locale][key] ?? canonicalTerms.fa[key] ?? key;
 }
 
-const textKeyIndex = new Map<string, string>();
+const textKeyIndex = new Map<string, string[]>();
+const keyPriority = (key: string): number => {
+  if (key.startsWith("canonical.")) return 0;
+  if (key.startsWith("businessPage.")) return 10;
+  if (key.startsWith("businessSurface.")) return 20;
+  if (key.startsWith("discoveryPage.")) return 30;
+  if (key.startsWith("common.")) return 40;
+  if (key.startsWith("nav.")) return 50;
+  if (key.startsWith("auth.")) return 60;
+  if (key.startsWith("status.")) return 70;
+  if (key.startsWith("errors.")) return 80;
+  if (key.startsWith("messages.")) return 90;
+  if (key.startsWith("ui.")) return 100;
+  if (key.startsWith("runtime.")) return 110;
+  if (key.startsWith("vertical.")) return 120;
+  return 200;
+};
+
 const indexLanguage = (language: SupportedLanguage, canonicalOnly: boolean): void => {
   for (const [key, text] of Object.entries(translations[language])) {
     if (canonicalOnly !== key.startsWith("canonical.")) continue;
     const normalized = text.trim();
-    if (!normalized || textKeyIndex.has(normalized)) continue;
-    textKeyIndex.set(normalized, key);
+    if (!normalized) continue;
+    const keys = textKeyIndex.get(normalized) ?? [];
+    if (!keys.includes(key)) keys.push(key);
+    keys.sort((a, b) => keyPriority(a) - keyPriority(b));
+    textKeyIndex.set(normalized, keys);
   }
 };
 
-// Canonical domain terms always win over legacy/UI convenience labels when a text is ambiguous.
+// Canonical domain terms always win over page-specific, navigation and legacy/UI convenience labels.
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, true);
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, false);
+
+function resolveTextKey(value: string, locale: Locale): string | undefined {
+  const candidates = textKeyIndex.get(value.trim()) ?? [];
+  return candidates.find((key) => {
+    const translated = translations[locale][key] ?? translations.fa[key];
+    return Boolean(translated && translated !== value.trim());
+  }) ?? candidates[0];
+}
 
 export function translateUiText(value: string, locale: Locale): string {
   const trimmed = value.trim();
   if (!trimmed) return value;
 
-  const directKey = textKeyIndex.get(trimmed);
+  const directKey = resolveTextKey(trimmed, locale);
   if (directKey) {
     const translated = translations[locale][directKey] ?? translations.fa[directKey];
     if (translated) {
