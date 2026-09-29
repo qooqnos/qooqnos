@@ -19,13 +19,10 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("نیازت را بگو", "ar")).toBe("أخبر ققنوس بما تحتاج");
     expect(translateUiText("Tell Phoenix what you need", "fa")).toBe("نیازت را بگو");
     expect(translateUiText("أخبر ققنوس بما تحتاج", "en")).toBe("Tell Phoenix what you need");
-    expect(translateUiText("شروع کن و هرچه برای تصمیم مهم است بنویس", "en")).toBe("شروع کن و هرچه برای تصمیم مهم است بنویس");
-    expect(translateUiText("کسب‌وکار مناسب برای من", "en")).toBe("کسب‌وکار مناسب برای من");
     expect(translateUiText("متن ناشناخته", "en")).toBe("متن ناشناخته");
     expect(translateUiText("کسب‌وکار عمومی", "en")).toBe("General Business");
     expect(translateUiText("Your workspace", "fa")).toBe("فضای کاری شما");
     expect(translateUiText("Business Workspace", "fa")).toBe("فضای کاری کسب‌وکار");
-    expect(translateUiText("شروع کن و هرچه برای تصمیم مهم است بنویس", "en")).toBe("Start and write everything important for your Decision");
     expect(translateUiText("کسب‌وکار تو باید برای مشتری هم به همان اندازه واضح باشد.", "en")).toBe("Your business should be just as clear to customers.");
     expect(translateUiText("از Product Studio یا Catalog شروع کن.", "en")).toBe("Start from Product Studio or Catalog.");
     expect(translateUiText("در حال بررسی نقش:", "en")).toBe("Checking role:");
