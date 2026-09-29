@@ -105,7 +105,7 @@ await page.route("**/api/v1/**", async (route) => {
 await page.addInitScript(() => {
   sessionStorage.setItem("phoenix-access-token", "ui-test-token");
   localStorage.setItem("phoenix-workspace-id", "ws-1");
-  localStorage.removeItem("qooqnos.locale");
+  localStorage.setItem("qooqnos.locale", "fa");
 });
 
 const shellStartedAt = Date.now();
