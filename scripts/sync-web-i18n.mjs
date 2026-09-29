@@ -107,6 +107,7 @@ export function translateUiText(value: string, locale: Locale): string {
   }
 
   const candidate = translationSources.find(([source, key]) => {
+    if (!key.startsWith("canonical.")) return false;
     if (!trimmed.includes(source)) return false;
     const translated = translations[locale][key] ?? translations.fa[key];
     return Boolean(translated && translated !== source);
