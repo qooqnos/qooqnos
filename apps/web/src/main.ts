@@ -856,7 +856,7 @@ function renderHome(): string {
 
       <section class="phoenix-section">
         <div class="phoenix-section-heading">
-          <span class="phoenix-kicker">Discovery</span>
+          <span class="phoenix-kicker">کشف</span>
           <h2>هر نیازی، یک مسیر برای شروع.</h2>
           <p>لازم نیست محصول یا دسته‌بندی را از قبل بشناسی. کافی است نیازت را بگویی.</p>
         </div>
