@@ -641,8 +641,13 @@ export type VerticalModuleUiContract = {
   readonly roleLenses: readonly VerticalRoleLensKey[];
 };
 
+const verticalModuleBlueprintCache = new Map<string, VerticalModuleBlueprint>();
+
 export function getVerticalModuleBlueprint(vertical: string, module: string): VerticalModuleBlueprint {
   const v = vertical.trim().toLowerCase();
+  const cacheKey = v + "::" + module;
+  const cached = verticalModuleBlueprintCache.get(cacheKey);
+  if (cached) return cached;
   const selected =
     verticalSpecific[v]?.[module] ??
     shared[module] ??
@@ -669,12 +674,14 @@ export function getVerticalModuleBlueprint(vertical: string, module: string): Ve
     selectedContract &&
     (selectedContract.requiredCapabilities.length > 0 || selectedContract.requiredPermissions.length > 0),
   );
-  return {
+  const resolved: VerticalModuleBlueprint = {
     ...selected,
     canonicalTermKeys,
     roleLenses: selected.roleLenses ?? deriveRoleLenses(module, selected.layout),
     capabilityContract: hasDeclaredSelectedContract ? selectedContract! : declaredContract,
   };
+  verticalModuleBlueprintCache.set(cacheKey, resolved);
+  return resolved;
 }
 
 export function getVerticalModuleUiContract(vertical: string, module: string): VerticalModuleUiContract {
