@@ -1037,27 +1037,45 @@ export class I18nManager {
 
 export const defaultI18n = new I18nManager("fa");
 
-const uiSourceIndex: ReadonlyMap<string,string> = new Map(
-  Object.entries(translations.fa)
-    .filter(([key]) => key.startsWith("ui."))
-    .map(([key,value]) => [value,key]),
-);
+const textKeyIndex = new Map<string,string>();
+
+for (const language of ["fa", "en", "ar"] as const) {
+  for (const [key, text] of Object.entries(translations[language])) {
+    const normalized = text.trim();
+    if (!normalized || textKeyIndex.has(normalized)) continue;
+    textKeyIndex.set(normalized, key);
+  }
+}
+
+const translationSources = [...textKeyIndex.entries()]
+  .filter(([source]) => source.length >= 3)
+  .sort((a, b) => b[0].length - a[0].length);
 
 export function translateUiText(value: string, locale: Locale): string {
   const trimmed = value.trim();
-  const exactKey = uiSourceIndex.get(trimmed);
-  const key = exactKey ?? [...uiSourceIndex.keys()].find((source) =>
-    source.length >= 8 && (trimmed.includes(source) || source.includes(trimmed)),
-  );
-  if (!key) return value;
-  const translated = translations[locale][exactKey ?? uiSourceIndex.get(key)!] ?? translations.fa[exactKey ?? uiSourceIndex.get(key)!];
-  if (!translated) return value;
-  if (trimmed === key) {
-    const leading = value.match(/^\s*/u)?.[0] ?? "";
-    const trailing = value.match(/\s*$/u)?.[0] ?? "";
-    return leading + translated + trailing;
+  if (!trimmed) return value;
+
+  const directKey = textKeyIndex.get(trimmed);
+  if (directKey) {
+    const translated = translations[locale][directKey] ?? translations.fa[directKey];
+    if (translated) {
+      const leading = value.match(/^\s*/u)?.[0] ?? "";
+      const trailing = value.match(/\s*$/u)?.[0] ?? "";
+      return leading + translated + trailing;
+    }
   }
-  return value.split(key).join(translated);
+
+  const candidate = translationSources.find(([source, key]) => {
+    if (!trimmed.includes(source)) return false;
+    const translated = translations[locale][key] ?? translations.fa[key];
+    return Boolean(translated && translated !== source);
+  });
+  if (!candidate) return value;
+
+  const [source, key] = candidate;
+  const translated = translations[locale][key] ?? translations.fa[key];
+  if (!translated) return value;
+  return value.split(source).join(translated);
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" { return locale === "fa" || locale === "ar" ? "rtl" : "ltr"; }
