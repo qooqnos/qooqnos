@@ -899,7 +899,10 @@
     "roleFinanceDescription": "Payments, transactions, and financial reports are prioritized for this role.",
     "roleGenericTitle": "General Workspace",
     "roleGenericDescription": "Modules are composed by Business Type and enabled Capabilities.",
-    "unreadMe": " · You"
+    "unreadMe": " · You",
+    "nameField": "Name",
+    "statusField": "Status",
+    "localeField": "Default language"
   },
   "businessSurface": {
     "loadingPublicData": "Loading public information…",
