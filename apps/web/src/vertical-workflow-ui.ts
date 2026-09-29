@@ -663,6 +663,23 @@ type VerticalWorkflowOffering = {
   updatedAt: string;
 };
 
+export function getVerticalWorkflowOfferingActionHref(
+  offeringType: "product" | "service",
+  offeringId: string,
+  businessId?: string,
+): string {
+  if (offeringType === "service") {
+    const params = new URLSearchParams({ offering: offeringId });
+    if (businessId) params.set("business", businessId);
+    return "/booking?" + params.toString();
+  }
+  return "/checkout?entity=" + encodeURIComponent(offeringId) + "&type=offering";
+}
+
+export function getVerticalWorkflowOfferingActionLabel(offeringType: "product" | "service"): string {
+  return offeringType === "service" ? "رزرو خدمت" : "شروع خرید";
+}
+
 async function hydrateCatalogCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
   const container = canvas.querySelector<HTMLElement>("[data-vwf-catalog-items]");
   if (!container) return;
@@ -695,9 +712,9 @@ async function hydrateCatalogCanvas(canvas: HTMLElement, businessId: string): Pr
         '<div class="phoenix-vwf-live-supply-meta"><span>Publication</span><strong>' + escapeHtml(publicationLabel) + '</strong></div>' +
         '<div class="phoenix-vwf-live-supply-meta"><span>Offering</span><strong>' + escapeHtml(offer.id) + '</strong></div>' +
         '<div class="phoenix-vwf-live-supply-actions">' +
-          (offer.offeringType === "service"
-            ? '<a class="button button-secondary" data-nav href="/booking?offering=' + encodeURIComponent(offer.id) + '&business=' + encodeURIComponent(businessId) + '">رزرو خدمت →</a>'
-            : '<a class="button button-primary" data-nav href="/checkout?entity=' + encodeURIComponent(offer.id) + '&type=offering">شروع خرید →</a>') +
+          '<a class="button ' + (offer.offeringType === "service" ? "button-secondary" : "button-primary") + '" data-nav href="' + escapeHtml(getVerticalWorkflowOfferingActionHref(offer.offeringType, offer.id, businessId)) + '">' +
+            escapeHtml(getVerticalWorkflowOfferingActionLabel(offer.offeringType)) + ' →' +
+          '</a>' +
         '</div>' +
       '</article>';
     }).join("");
