@@ -554,7 +554,20 @@
     "business_restaurantType": "مطعم",
     "business_salonType": "صالون",
     "workspaceContextRequired": "يلزم سياق مساحة العمل",
-    "loadingEllipsis": "جارٍ التحميل…"
+    "loadingEllipsis": "جارٍ التحميل…",
+    "uiChecking": "جارٍ التحقق",
+    "unknownRole": "الدور: —",
+    "phoenixAi": "ذكاء ققنوس",
+    "readyToHelp": "جاهز للمساعدة",
+    "help": "المساعدة",
+    "businessType": "نوع النشاط التجاري",
+    "enterBusinessId": "أدخل Business ID لإدارة مساحة العمل هذه.",
+    "saveProfile": "حفظ الملف",
+    "createBusinessFirst": "أنشئ Business أولًا",
+    "canonicalName": "الاسم canonical",
+    "displayName": "الاسم المعروض",
+    "canonicalAfterConnection": "بيانات موثوقة بعد الاتصال",
+    "openSource": "فتح المصدر ←"
   },
   "canonical": {
     "identity": {
