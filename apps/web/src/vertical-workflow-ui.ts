@@ -606,6 +606,10 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
             void hydratePeopleCanvas(canvas).finally(finish);
             return;
           }
+          if (layout === "operations" && businessId && canvas.dataset.vwfModule === "میزها") {
+            void hydrateResourceCanvas(canvas, businessId).finally(finish);
+            return;
+          }
           if (layout === "operations") {
             void hydrateOperationsCanvas(canvas).finally(finish);
             return;
