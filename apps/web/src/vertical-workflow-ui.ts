@@ -143,6 +143,13 @@ function renderCatalog(model: VerticalWorkflowCanvasModel): string {
     '</div>';
 }
 function renderPeople(model: VerticalWorkflowCanvasModel): string {
+  const resourceType = (model.module === "پزشکان" || model.module === "متخصصان") ? "person" : "";
+  const resourceSurface = resourceType
+    ? '<div class="phoenix-vwf-live-resources" data-vwf-resources-live data-vwf-resource-type="' + resourceType + '">'+
+        '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Booking Resources</span><h3>' + (model.module === "پزشکان" ? "منابع/پزشکان قابل زمان‌بندی" : "متخصصان قابل زمان‌بندی") + '</h3><p>منابع زمان‌بندی فقط از Booking خوانده می‌شوند و UI نام یا ظرفیت جدیدی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>'+
+        '<div class="phoenix-vwf-live-resources-grid" data-vwf-resource-items><div class="slot-loading">در حال آماده‌سازی منابع زمان‌بندی…</div></div>'+
+      '</div>'
+    : "";
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای افراد">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="people">اعضا / افراد</button>' +
@@ -157,6 +164,7 @@ function renderPeople(model: VerticalWorkflowCanvasModel): string {
       '<button type="button" class="button button-secondary" data-vwf-load-customer>خواندن Customer</button>' +
       '<span class="phoenix-vwf-local-note">Lookup فقط از Customer canonical می‌خواند؛ داده محلی ذخیره نمی‌شود.</span>' +
     '</div>' +
+    resourceSurface +
     '<div class="phoenix-vwf-live-people" data-vwf-members-live>' +
       '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Workspace Team</span><h3>اعضای Workspace</h3><p>فهرست اعضا مستقیماً از Workspace می‌آید؛ این Canvas نقش یا دسترسی جدیدی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
       '<div class="phoenix-vwf-live-people-grid" data-vwf-member-items><div class="slot-loading">در حال خواندن اعضای واقعی…</div></div>' +
@@ -467,6 +475,51 @@ function setCanvasState(canvas: HTMLElement, state: VerticalWorkflowCanvasState,
       : "pill warning";
 }
 
+async function hydrateResourceCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-resource-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    setCanvasState(canvas, "requires-input");
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش منابع زمان‌بندی، session و Workspace context لازم است.</div>';
+    return;
+  }
+  const type = canvas.dataset.vwfResourceType?.trim();
+  container.innerHTML = '<div class="slot-loading">در حال خواندن منابع زمان‌بندی واقعی از Booking…</div>';
+  try {
+    const params = new URLSearchParams({ businessId, limit: "48" });
+    if (type) params.set("type", type);
+    const response = await fetch("/api/v1/booking/resources?" + params.toString(), { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowResource[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Booking resources unavailable");
+    const resources = Array.isArray(body?.data) ? body.data : [];
+    if (!resources.length) {
+      setCanvasState(canvas, "connected");
+      container.innerHTML = emptyState("منبع زمان‌بندی فعالی برای این Business پیدا نشد.", "Booking");
+      return;
+    }
+    container.innerHTML = resources.map((resource) => {
+      const meta = resource.metadata ?? {};
+      const label = typeof meta.name === "string" && meta.name.trim()
+        ? meta.name.trim()
+        : resource.id;
+      const subtitle = typeof meta.title === "string" && meta.title.trim()
+        ? meta.title.trim()
+        : resource.resourceType;
+      return '<article class="phoenix-vwf-live-resource-card" data-vwf-item>' +
+        '<div class="phoenix-vwf-live-resource-top"><span class="pill ' + (resource.status === "active" ? "success" : "warning") + '">' + escapeHtml(resource.status) + '</span><span class="phoenix-vwf-source-chip">' + escapeHtml(resource.resourceType) + '</span></div>' +
+        '<h4>' + escapeHtml(label) + '</h4>' +
+        '<p>' + escapeHtml(subtitle) + '</p>' +
+        '<div class="phoenix-vwf-live-resource-meta"><span>ظرفیت</span><strong>' + String(resource.capacity) + '</strong><span>شناسه</span><code>' + escapeHtml(resource.id) + '</code></div>' +
+      '</article>';
+    }).join("");
+    setCanvasState(canvas, "connected");
+  } catch (error) {
+    setCanvasState(canvas, "unavailable");
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن منابع Booking ناموفق بود.", "Booking");
+  }
+}
+
 export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
   const canvases = Array.from(root.querySelectorAll<HTMLElement>("[data-vwf-root]"));
   canvases.forEach((canvas) => {
@@ -535,6 +588,10 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
           }
           if (layout === "catalog" && businessId) {
             void hydrateCatalogCanvas(canvas, businessId).finally(finish);
+            return;
+          }
+          if (layout === "people" && businessId && (canvas.dataset.vwfModule === "پزشکان" || canvas.dataset.vwfModule === "متخصصان")) {
+            void hydrateResourceCanvas(canvas, businessId).finally(finish);
             return;
           }
           if (layout === "people") {
@@ -606,6 +663,9 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     if (businessId && canvas.dataset.vwfLayout === "catalog") {
       void hydrateCatalogCanvas(canvas, businessId);
     }
+    if (businessId && canvas.dataset.vwfLayout === "people" && (canvas.dataset.vwfModule === "پزشکان" || canvas.dataset.vwfModule === "متخصصان")) {
+      void hydrateResourceCanvas(canvas, businessId);
+    }
     if (canvas.dataset.vwfLayout === "people") {
       void hydratePeopleCanvas(canvas);
     }
@@ -618,6 +678,18 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
   });
 }
 
+
+type VerticalWorkflowResource = {
+  id: string;
+  businessId: string;
+  locationId?: string | null;
+  resourceType: "person" | "room" | "equipment" | "vehicle" | "service_area" | "other";
+  status: "active" | "inactive" | "archived";
+  capacity: number;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 type VerticalWorkflowBusinessRecord = {
   id?: string;
