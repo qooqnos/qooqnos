@@ -703,6 +703,20 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
 @media(max-width:620px){.booking-context-strip{grid-template-columns:1fr}.booking-slot-grid{grid-template-columns:1fr}}
 .booking-fields{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:20px}
 .booking-actions{display:flex;justify-content:flex-end;margin-top:16px}
+.booking-action-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:16px}
+.booking-schedule-picker{margin-top:14px;padding:15px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}
+.booking-schedule-picker-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+.booking-schedule-picker-head h3{margin:4px 0;font-size:13px}
+.booking-schedule-picker-head p{margin:0;color:var(--muted);font-size:8px;line-height:1.8}
+.booking-schedule-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.booking-schedule-card{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-1);display:grid;gap:7px;transition:border-color .18s ease,transform .18s ease}
+.booking-schedule-card:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--primary) 30%,var(--line))}
+.booking-schedule-card.active{border-color:color-mix(in srgb,var(--primary) 45%,var(--line));box-shadow:0 8px 24px color-mix(in srgb,var(--primary) 8%,transparent)}
+.booking-schedule-card-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.booking-schedule-card-top strong{font-size:8px;direction:ltr;text-align:start;overflow:hidden;text-overflow:ellipsis}
+.booking-schedule-card p{margin:0;color:var(--faint);font-size:7px;line-height:1.7;word-break:break-word}
+@media(max-width:980px){.booking-schedule-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.booking-action-row{justify-content:stretch}.booking-action-row .button{width:100%}.booking-schedule-picker-head{display:grid}.booking-schedule-grid{grid-template-columns:1fr}}
 .slot-list{display:grid;gap:8px;margin-top:18px}
 .slot-card{display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 15px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2);text-align:start;transition:transform .18s ease,border-color .18s ease,background .18s ease}
 .slot-card:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--primary) 30%,var(--line));background:var(--surface-1)}
