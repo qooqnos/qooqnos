@@ -4615,7 +4615,7 @@ body::before {
 .phoenix-vwf-live-supply-card h4{margin:10px 0 5px;font-size:10px}
 .phoenix-vwf-live-supply-card p{margin:0 0 10px;color:var(--muted);font-size:7px;line-height:1.8;min-height:28px}
 .phoenix-vwf-live-supply-meta{display:flex;justify-content:space-between;gap:8px;padding-top:7px;margin-top:7px;border-top:1px solid var(--line);font-size:6px;color:var(--muted)}
-.phoenix-vwf-live-supply-meta strong{font-size:7px;color:var(--text)}
+.phoenix-vwf-live-supply-meta strong{font-size:7px;color:var(--text)}.phoenix-vwf-live-supply-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:10px}.phoenix-vwf-live-supply-actions .button{min-height:30px;padding:6px 10px;font-size:7px}
 @media (max-width:900px){.phoenix-vwf-live-supply-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:620px){.phoenix-vwf-live-supply-head{flex-direction:column}.phoenix-vwf-live-supply-grid{grid-template-columns:1fr}}
 .phoenix-vwf-supply-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:10px}
