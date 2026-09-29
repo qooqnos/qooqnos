@@ -205,8 +205,20 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
     '<div class="phoenix-vwf-status-rail"><span>Order</span><i></i><span>Billing</span><i></i><span>Fulfillment</span></div>' +
     '<div class="phoenix-vwf-live-detail" data-vwf-order-detail hidden></div>';
 }
+function renderFulfillmentLookupSurface(): string {
+  return '<div class="phoenix-vwf-live-fulfillment" data-vwf-fulfillment-live>' +
+    '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Fulfillment</span><h3>وضعیت اجرای سفارش / خدمت</h3><p>برای دیدن وضعیت اجرایی، شناسه Fulfillment را وارد کنید؛ این Canvas فقط داده خواندنی canonical را نمایش می‌دهد.</p></div><span class="pill">read-only</span></div>' +
+    '<div class="phoenix-vwf-fulfillment-lookup">' +
+      '<input class="studio-input-line" data-vwf-fulfillment-id placeholder="Fulfillment ID" aria-label="شناسه Fulfillment" autocomplete="off" />' +
+      '<button type="button" class="button button-secondary" data-vwf-load-fulfillment>خواندن وضعیت</button>' +
+    '</div>' +
+    '<div class="phoenix-vwf-live-detail" data-vwf-fulfillment-detail hidden></div>' +
+  '</div>';
+}
+
 function renderOperations(model: VerticalWorkflowCanvasModel): string {
   const resourceSurface = model.module === "میزها"
+  const fulfillmentSurface = renderFulfillmentLookupSurface();
     ? '<div class="phoenix-vwf-live-resources" data-vwf-resources-live data-vwf-resource-type="">' +
         '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Booking Resources</span><h3>میزها و منابع رزرو</h3><p>منابع قابل رزرو مستقیماً از Booking خوانده می‌شوند؛ این Canvas برای میزها state موازی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
         '<div class="phoenix-vwf-live-resources-grid" data-vwf-resource-items><div class="slot-loading">در حال آماده‌سازی منابع رزرو…</div></div>' +
@@ -226,6 +238,7 @@ function renderOperations(model: VerticalWorkflowCanvasModel): string {
       '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Operations</span><h3>صف عملیات</h3><p>Case state مستقیماً از Case Support خوانده می‌شود.</p></div><span class="pill">live when connected</span></div>' +
       '<div class="phoenix-vwf-live-case-grid" data-vwf-case-items><div class="slot-loading">در حال خواندن Caseهای واقعی…</div></div>' +
     '</div>' +
+    fulfillmentSurface +
     '<div class="phoenix-vwf-kanban">' +
       model.blueprint.blocks.map((item, index) => '<article class="phoenix-vwf-kanban-column" data-vwf-item><div class="phoenix-vwf-kanban-title"><strong>' + escapeHtml(item.title) + '</strong><span class="pill">' + String(index + 1).padStart(2, "0") + '</span></div>' + emptyState(item.description, item.path ?? "Operations") + (item.path ? '<a class="text-link" href="' + escapeHtml(contextualHref(model, item.path)) + '" data-nav>باز کردن منبع ←</a>' : '') + '</article>').join("") +
     '</div>';
@@ -889,6 +902,53 @@ async function hydrateCustomerLookup(host: HTMLElement, customerId: string): Pro
   } catch (error) {
     host.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Customer ناموفق بود.", "Customer");
     if (historyItems) historyItems.innerHTML = emptyState("Timeline به‌دلیل خطای Customer قابل خواندن نیست.", "CRM Timeline");
+  }
+}
+
+type VerticalWorkflowFulfillmentRecord = {
+  id: string;
+  businessId: string;
+  sourceType: string;
+  sourceId: string;
+  status: string;
+  fulfillmentType: string;
+  createdAt?: string;
+  updatedAt?: string;
+  completedAt?: string | null;
+};
+
+async function hydrateFulfillmentLookup(detail: HTMLElement, fulfillmentId: string): Promise<void> {
+  const headers = vwfAuthHeaders();
+  detail.hidden = false;
+  if (!headers) {
+    detail.innerHTML = '<div class="phoenix-vwf-local-note">برای خواندن Fulfillment، session و Workspace context لازم است.</div>';
+    return;
+  }
+  detail.innerHTML = '<div class="slot-loading">در حال خواندن Fulfillment canonical…</div>';
+  try {
+    const response = await fetch("/api/v1/fulfillment/" + encodeURIComponent(fulfillmentId), { headers });
+    const body = await response.json().catch(() => null) as { data?: { fulfillment?: VerticalWorkflowFulfillmentRecord; items?: Array<Record<string, unknown>> }; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Fulfillment unavailable");
+    const fulfillment = body?.data?.fulfillment;
+    const items = Array.isArray(body?.data?.items) ? body.data.items : [];
+    if (!fulfillment) throw new Error("Fulfillment record not returned");
+    const dateLabel = (value?: string | null): string => {
+      if (!value) return "—";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" });
+    };
+    detail.innerHTML = '<div class="phoenix-vwf-fulfillment-card">' +
+      '<div class="phoenix-vwf-fulfillment-top"><span class="pill ' + (fulfillment.status === "completed" ? "success" : "") + '">' + escapeHtml(fulfillment.status) + '</span><span class="phoenix-vwf-source-chip">' + escapeHtml(fulfillment.fulfillmentType) + '</span></div>' +
+      '<div class="phoenix-vwf-fulfillment-grid">' +
+        '<div><span>Business</span><strong>' + escapeHtml(fulfillment.businessId) + '</strong></div>' +
+        '<div><span>منبع</span><strong>' + escapeHtml(fulfillment.sourceType + " · " + fulfillment.sourceId) + '</strong></div>' +
+        '<div><span>ایجاد</span><strong>' + escapeHtml(dateLabel(fulfillment.createdAt)) + '</strong></div>' +
+        '<div><span>به‌روزرسانی</span><strong>' + escapeHtml(dateLabel(fulfillment.updatedAt)) + '</strong></div>' +
+        '<div><span>تکمیل</span><strong>' + escapeHtml(dateLabel(fulfillment.completedAt)) + '</strong></div>' +
+        '<div><span>اقلام</span><strong>' + String(items.length) + '</strong></div>' +
+      '</div></div>';
+  } catch (error) {
+    detail.innerHTML = '<div class="phoenix-vwf-empty"><span class="phoenix-vwf-empty-mark">!</span><strong>Fulfillment خوانده نشد</strong><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Fulfillment ناموفق بود.") + '</p><small>Fulfillment API · read-only</small></div>';
   }
 }
 
