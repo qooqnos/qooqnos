@@ -5,6 +5,7 @@ import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVertica
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 import { resolveVerticalModuleAlias } from "./business-module-ui.js";
 type Theme = "dark" | "light";
+type Language = "fa" | "en" | "ar";
 
 type Route = {
   path: string;
@@ -34,6 +35,7 @@ type DiscoveryResult = {
 
 const STORAGE = {
   theme: "phoenix-theme-v2",
+  language: "phoenix-language-v1",
   workspace: "phoenix-workspace-id",
   accessToken: "phoenix-access-token",
   business: "phoenix-business-id",
@@ -311,6 +313,7 @@ const routes: Route[] = [
 
 const theme = getInitialTheme();
 document.documentElement.dataset.theme = theme;
+setLanguage(getInitialLanguage());
 
 async function hydrateSessionContext(): Promise<void> {
   const token = sessionStorage.getItem(STORAGE.accessToken);
@@ -335,6 +338,50 @@ function getInitialTheme(): Theme {
   return "light";
 }
 
+function getInitialLanguage(): Language {
+  const stored = localStorage.getItem(STORAGE.language);
+  return stored === "en" || stored === "ar" ? stored : "fa";
+}
+function languageLabel(language: Language): string {
+  return language === "en" ? "EN" : language === "ar" ? "عربي" : "فا";
+}
+function languageName(language: Language): string {
+  return language === "en" ? "English" : language === "ar" ? "العربية" : "فارسی";
+}
+function setLanguage(language: Language): void {
+  localStorage.setItem(STORAGE.language, language);
+  document.documentElement.lang = language;
+  document.documentElement.dir = language === "en" ? "ltr" : "rtl";
+  syncLanguageSwitcher();
+}
+function toggleLanguageMenu(): void {
+  const menu = document.querySelector<HTMLElement>("[data-language-menu]");
+  const trigger = document.querySelector<HTMLButtonElement>("[data-language-toggle]");
+  if (!menu || !trigger) return;
+  menu.hidden = !menu.hidden;
+  trigger.setAttribute("aria-expanded", String(!menu.hidden));
+}
+function syncLanguageSwitcher(): void {
+  const active = getInitialLanguage();
+  document.querySelectorAll<HTMLElement>("[data-language-current]").forEach((node) => { node.textContent = languageLabel(active); });
+  document.querySelectorAll<HTMLElement>("[data-language-option]").forEach((node) => {
+    const selected = node.dataset.languageOption === active;
+    node.classList.toggle("active", selected);
+    node.setAttribute("aria-selected", String(selected));
+  });
+}
+function renderLanguageSwitcher(): string {
+  const active = getInitialLanguage();
+  const selected = (language: Language): string => language === active ? " active" : "";
+  const mark = (language: Language): string => language === active ? "true" : "false";
+  return '<div class="language-switcher">' +
+    '<button class="icon-button language-toggle" type="button" data-language-toggle aria-label="انتخاب زبان" aria-haspopup="listbox" aria-expanded="false"><span aria-hidden="true">文</span><span data-language-current>' + languageLabel(active) + '</span><span aria-hidden="true">⌄</span></button>' +
+    '<div class="language-menu glass-card" data-language-menu role="listbox" aria-label="انتخاب زبان" hidden>' +
+      '<button type="button" class="language-option' + selected("fa") + '" data-language-option="fa" role="option" aria-selected="' + mark("fa") + '"><span class="language-option-code">فا</span><span>فارسی</span><b aria-hidden="true">✓</b></button>' +
+      '<button type="button" class="language-option' + selected("en") + '" data-language-option="en" role="option" aria-selected="' + mark("en") + '"><span class="language-option-code">EN</span><span>English</span><b aria-hidden="true">✓</b></button>' +
+      '<button type="button" class="language-option' + selected("ar") + '" data-language-option="ar" role="option" aria-selected="' + mark("ar") + '"><span class="language-option-code">عربي</span><span>العربية</span><b aria-hidden="true">✓</b></button>' +
+    '</div></div>';
+}
 function toggleTheme(): void {
   const next: Theme = document.documentElement.dataset.theme === "light" ? "dark" : "light";
   document.documentElement.dataset.theme = next;
@@ -646,6 +693,7 @@ function renderPublicHeader(): string {
         <a class="button button-primary phoenix-header-cta" href="#phoenix-demand-form">نیازت را بگو <span>←</span></a>
         <div class="phoenix-public-actions">
           <button type="button" class="button button-ghost" data-open-connection>ورود</button>
+          ${renderLanguageSwitcher()}
           <button type="button" class="icon-button" data-theme-toggle aria-label="تغییر پوسته">◐</button>
         </div>
       </div>
@@ -681,6 +729,7 @@ function renderHeader(route: Route): string {
             <span class="profile-copy"><strong id="shell-workspace-name">فضای شما</strong><small>${escapeHtml(route.label)}</small></span>
             <span class="chevron">⌄</span>
           </button>
+          ${renderLanguageSwitcher()}
           <button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button>
         </div>
       </div>
@@ -4765,6 +4814,16 @@ function bindGlobalEvents(): void {
   });
 
   document.querySelectorAll<HTMLElement>("[data-theme-toggle]").forEach((element) => element.addEventListener("click", toggleTheme));
+  document.querySelectorAll<HTMLButtonElement>("[data-language-toggle]").forEach((button) => button.addEventListener("click", (event) => { event.stopPropagation(); toggleLanguageMenu(); }));
+  document.querySelectorAll<HTMLButtonElement>("[data-language-option]").forEach((button) => button.addEventListener("click", () => {
+    const language = button.dataset.languageOption as Language | undefined;
+    if (!language) return;
+    setLanguage(language);
+    const menu = document.querySelector<HTMLElement>("[data-language-menu]");
+    const trigger = document.querySelector<HTMLButtonElement>("[data-language-toggle]");
+    if (menu) menu.hidden = true;
+    trigger?.setAttribute("aria-expanded", "false");
+  }));
 
   document.querySelectorAll<HTMLElement>("[data-toast]").forEach((element) => {
     element.addEventListener("click", () => showToast(element.dataset.toast ?? "انجام شد."));
