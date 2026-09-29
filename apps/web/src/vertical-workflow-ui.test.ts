@@ -103,7 +103,7 @@ describe("Vertical Workflow UI Canvas", () => {
       expect(html).toContain("زمان‌بندی");
       expect(html).toContain("پیگیری");
       expect(html).toContain("رزرو");
-      expect(html).toContain("/business/workspace/clinic/calendar?business=business-test&fromModule=%D9%86%D9%88%D8%A8%D8%AA%E2%80%8C%D9%87%D8%A7");
+      expect(html).toContain("/business/workspace/clinic/calendar?business=business-test&amp;fromModule=%D9%86%D9%88%D8%A8%D8%AA%E2%80%8C%D9%87%D8%A7");
     });
 
   it("centralizes canonical live supply actions", () => {
