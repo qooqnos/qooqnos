@@ -554,7 +554,20 @@
     "business_restaurantType": "رستوران",
     "business_salonType": "سالن",
     "workspaceContextRequired": "نیازمند Workspace context",
-    "loadingEllipsis": "در حال بارگذاری…"
+    "loadingEllipsis": "در حال بارگذاری…",
+    "uiChecking": "در حال بررسی",
+    "unknownRole": "نقش: —",
+    "phoenixAi": "هوش ققنوس",
+    "readyToHelp": "آماده برای کمک",
+    "help": "راهنما",
+    "businessType": "نوع کسب‌وکار",
+    "enterBusinessId": "یک Business ID برای مدیریت این فضای کاری ثبت کنید.",
+    "saveProfile": "ذخیره پروفایل",
+    "createBusinessFirst": "ابتدا Business بسازید",
+    "canonicalName": "نام canonical",
+    "displayName": "نام نمایشی",
+    "canonicalAfterConnection": "اطلاعات canonical پس از اتصال",
+    "openSource": "باز کردن منبع ←"
   },
   "canonical": {
     "identity": {
