@@ -5971,3 +5971,38 @@ a {
 .phoenix-vwf-fulfillment-grid strong{font-size:13px;overflow-wrap:anywhere;}
 @media (max-width:760px){.phoenix-vwf-fulfillment-lookup{flex-direction:column;align-items:stretch}.phoenix-vwf-fulfillment-grid{grid-template-columns:1fr 1fr}}
 @media (max-width:480px){.phoenix-vwf-fulfillment-grid{grid-template-columns:1fr}}
+
+
+/* Phoenix Activity / social commerce completion */
+
+.phoenix-activity-page { width: min(1040px, calc(100% - 32px)); margin: 0 auto; padding: 44px 0 104px; }
+.phoenix-activity-page .phoenix-section-heading { margin-bottom: 26px; }
+.phoenix-activity-page .phoenix-section-heading h1 { margin: 8px 0 9px; font-size: clamp(28px, 4vw, 44px); letter-spacing: -.045em; }
+.phoenix-activity-page .phoenix-section-heading p { margin: 0; color: var(--muted); line-height: 1.9; max-width: 760px; }
+.phoenix-activity-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(260px, .55fr); gap: 16px; align-items: start; }
+.phoenix-activity-card, .phoenix-activity-side, .phoenix-activity-gate { padding: 20px; }
+.phoenix-activity-card { min-width: 0; }
+.phoenix-activity-side { position: sticky; top: 86px; }
+.phoenix-activity-side h2, .phoenix-activity-gate h2 { margin: 8px 0 7px; letter-spacing: -.03em; }
+.phoenix-activity-side p, .phoenix-activity-gate p { margin: 0 0 15px; color: var(--muted); line-height: 1.85; }
+.phoenix-activity-list { display: grid; gap: 10px; }
+.phoenix-activity-row { display: grid; grid-template-columns: 42px minmax(0,1fr) auto; gap: 11px; align-items: center; padding: 13px; border: 1px solid var(--line); border-radius: 16px; background: color-mix(in srgb, var(--surface) 96%, transparent); }
+.phoenix-activity-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, var(--surface-2)); font-weight: 900; }
+.phoenix-activity-copy { min-width: 0; }
+.phoenix-activity-copy strong { display: block; margin-bottom: 3px; }
+.phoenix-activity-copy p { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+.phoenix-activity-copy small { display: block; margin-top: 4px; color: var(--faint); }
+.phoenix-activity-row .button { white-space: nowrap; }
+.phoenix-activity-gate { text-align: center; max-width: 620px; margin: 0 auto; }
+.phoenix-activity-gate .draft-orb { margin: 0 auto 13px; }
+@media (max-width: 820px) {
+  .phoenix-activity-layout { grid-template-columns: 1fr; }
+  .phoenix-activity-side { position: static; }
+}
+@media (max-width: 560px) {
+  .phoenix-activity-page { width: calc(100% - 20px); padding: 26px 0 92px; }
+  .phoenix-activity-row { grid-template-columns: 36px minmax(0,1fr); }
+  .phoenix-activity-icon { width: 36px; height: 36px; border-radius: 11px; }
+  .phoenix-activity-row .button { grid-column: 2; justify-self: start; }
+  .phoenix-activity-card, .phoenix-activity-side, .phoenix-activity-gate { padding: 16px; }
+}
