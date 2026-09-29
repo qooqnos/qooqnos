@@ -119,3 +119,4 @@ export interface LocaleDefinition {
 
 export * from "./context";
 export * from "./physical-registry";
+export * from "./preference";
