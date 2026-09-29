@@ -148,6 +148,27 @@ await page.locator("[data-theme-toggle]").click();
 assert.notEqual(await page.locator("html").getAttribute("data-theme"), initialTheme);
 
 await page.goto(baseURL + "/dashboard");
+assert.equal(await page.locator("[data-language-toggle]").count(), 1);
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='en']").click();
+await page.waitForTimeout(50);
+assert.equal(await page.locator("[data-language-current]").innerText(), "EN");
+assert.ok((await page.locator(".nav-copy").first().innerText()).length > 0);
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='fa']").click();
+await page.waitForTimeout(50);
+assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
+
+await page.goto(baseURL + "/business");
+assert.equal(await page.locator("[data-language-toggle]").count(), 1);
+
+await page.goto(baseURL + "/admin");
+assert.equal(await page.locator("[data-language-toggle]").count(), 1);
+
+await page.goto(baseURL + "/discover");
+assert.equal(await page.locator("[data-language-toggle]").count(), 1);
+
+await page.goto(baseURL + "/dashboard");
 await page.locator("[data-focus-search]").click();
 await page.locator(".command-modal").waitFor();
 assert.ok(await page.locator(".command-result").count() > 0);
