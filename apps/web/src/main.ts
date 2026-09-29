@@ -1,7 +1,7 @@
 import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui.js";
 import { BUSINESS_VERTICAL_UI, getBusinessVerticalUi, resolveBusinessVerticalKey, type BusinessVerticalKey } from "./business-vertical-ui.js";
 import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
-import { bindVerticalWorkflowCanvas, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
+import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 type Theme = "dark" | "light";
 
@@ -454,6 +454,7 @@ function render(): void {
   if (route.path === "/communication") void loadCommunicationState();
   if (route.path === "/billing") void loadBillingState();
   if (parseBusinessModulePath(route.path)) bindVerticalWorkflowCanvas(appRoot);
+  bindVerticalWorkflowOverview(appRoot);
   if (route.path === "/business" || parseBusinessModulePath(route.path)) {
     if (route.path === "/business" && !new URLSearchParams(location.search).get("module")) void loadBusinessAccess();
     else void loadBusinessModuleContext();
