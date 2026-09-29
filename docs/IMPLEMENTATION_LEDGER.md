@@ -1,3 +1,14 @@
+## 2026-09-29 — Shared Retail Variant / Attribute Canvas
+
+- 🟢 Added a canonical Catalog read surface: `GET /api/v1/catalog/businesses/:businessId/variants`, tenant/workspace scoped and backed by the existing ProductVariant + AttributeValue model.
+- 🟢 Extended Catalog repository/service with `listBusinessProductVariants()`, including normalized variant attributes; no UI-owned product/variant state is introduced.
+- 🟢 Retail `مدل‌ها و تنوع` and `سایز و رنگ` now use the shared Vertical Workflow Catalog Canvas to hydrate real Variant/SKU/Attribute facts.
+- 🟢 Variant rendering reuses the shared filter, state contract and canonical-source language; the surface is inherited from the shared framework rather than creating a retail-only page system.
+- 🟢 Added focused regression coverage and responsive styling in both authored and served web stylesheets.
+- 🟡 TypeScript build, full test suite, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: 
+
 ## 2026-09-29 — Canonical Vertical Module UI contract
 
 - 🟢 Added `getVerticalModuleUiContract()` to the shared `business-module-ui` registry as the single presentation contract for vertical/module identity.
