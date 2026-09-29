@@ -238,6 +238,49 @@ function renderLayout(layout: VerticalModuleLayout, model: VerticalWorkflowCanva
   }
 }
 
+export type VerticalWorkflowOverviewModel = {
+  readonly vertical: string;
+  readonly businessId?: string;
+  readonly contextualHref?: (path: string) => string;
+};
+
+export function renderVerticalWorkflowOverview(model: VerticalWorkflowOverviewModel): string {
+  const steps = getVerticalWorkflowSteps(model.vertical);
+  const stageItems = steps.map((stage, index) => {
+    const module = getVerticalWorkflowStageModule(model.vertical, stage) ?? stage;
+    const blueprint = getVerticalModuleBlueprint(model.vertical, module);
+    const route = getVerticalModuleRoute(model.vertical, module);
+    const params = new URLSearchParams();
+    if (model.businessId) params.set("business", model.businessId);
+    params.set("from", "workspace");
+    const rawHref = route + "?" + params.toString();
+    const href = model.contextualHref ? model.contextualHref(rawHref) : rawHref;
+    return '<a class="phoenix-vwf-overview-stage" data-nav href="' + escapeHtml(href) + '">' +
+      '<div class="phoenix-vwf-overview-stage-top"><span class="phoenix-vwf-overview-index">' + String(index + 1).padStart(2, "0") + '</span><span class="pill">' + escapeHtml(blueprint.layout) + '</span></div>' +
+      '<strong>' + escapeHtml(stage) + '</strong>' +
+      '<span class="phoenix-vwf-overview-module">' + escapeHtml(module) + '</span>' +
+      '<small>' + escapeHtml(blueprint.eyebrow) + '</small>' +
+      '<b aria-hidden="true">→</b>' +
+    '</a>';
+  }).join("");
+
+  const layouts = Array.from(new Set(steps.map((stage) => {
+    const module = getVerticalWorkflowStageModule(model.vertical, stage) ?? stage;
+    return getVerticalModuleBlueprint(model.vertical, module).layout;
+  })));
+
+  return '<section class="glass-card phoenix-vwf-overview" data-vwf-overview data-vwf-overview-vertical="' + escapeHtml(model.vertical) + '">' +
+    '<div class="phoenix-vwf-overview-head">' +
+      '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>نقشه اجرای این نوع کسب‌وکار</h2><p>همه Verticalها از یک Canvas مشترک استفاده می‌کنند؛ تفاوت فقط در ترتیب Workflow، ماژول و منبع canonical است.</p></div>' +
+      '<div class="phoenix-vwf-overview-contract"><span class="pill">Shared UI</span><span class="pill">' + String(steps.length) + ' stage</span><span class="pill">' + String(layouts.length) + ' layout</span></div>' +
+    '</div>' +
+    '<div class="phoenix-vwf-overview-rail">' + stageItems + '</div>' +
+    '<div class="phoenix-vwf-overview-footer">' +
+      '<span>Backend authoritative</span><i></i><span>Role-aware emphasis</span><i></i><span>Canonical-only state</span><i></i><span>Responsive / RTL</span>' +
+    '</div>' +
+  '</section>';
+}
+
 export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel): string {
   const copy = layoutCopy[model.blueprint.layout];
   const stageContext = getVerticalWorkflowStageContext(model.vertical, model.module);
