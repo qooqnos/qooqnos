@@ -64,6 +64,24 @@ describe("Vertical Workflow UI Canvas", () => {
     }
   });
 
+  it("renders one shared semantic module switcher for every supported vertical", () => {
+    for (const vertical of ["clinic", "retail", "restaurant", "salon"]) {
+      const definition = getVerticalWorkflowDefinition(vertical);
+      const module = getVerticalWorkflowStageModule(vertical, definition.steps[0]!)!;
+      const html = renderVerticalWorkflowCanvas({
+        vertical,
+        module,
+        businessId: "business-test",
+        blueprint: getVerticalModuleBlueprint(vertical, module),
+      });
+      expect(html).toContain('data-vwf-module-switcher');
+      expect(html).toContain('aria-label="ماژول‌های این Workspace"');
+      expect(html).toContain('data-vwf-module-state="current"');
+      expect(html).toContain('data-vwf-module-state="available"');
+      expect(html).toContain('/business/workspace/' + vertical + '/');
+    }
+  });
+
   it("renders shared previous/next stage navigation and stage metadata", () => {
       const blueprint = getVerticalModuleBlueprint("clinic", "نوبت‌ها");
       const model: VerticalWorkflowCanvasModel = {
