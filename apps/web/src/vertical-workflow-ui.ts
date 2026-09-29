@@ -661,6 +661,19 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
       void hydrateCustomerLookup(customerDetail, customerId);
     });
 
+    const fulfillmentLookup = canvas.querySelector<HTMLInputElement>("[data-vwf-fulfillment-id]");
+    const fulfillmentDetail = canvas.querySelector<HTMLElement>("[data-vwf-fulfillment-detail]");
+    canvas.querySelector<HTMLButtonElement>("[data-vwf-load-fulfillment]")?.addEventListener("click", () => {
+      const fulfillmentId = fulfillmentLookup?.value.trim();
+      if (!fulfillmentDetail) return;
+      if (!fulfillmentId) {
+        fulfillmentDetail.hidden = false;
+        fulfillmentDetail.innerHTML = '<div class="phoenix-vwf-local-note">Fulfillment ID وارد نشده است.</div>';
+        return;
+      }
+      void hydrateFulfillmentLookup(fulfillmentDetail, fulfillmentId);
+    });
+
     const orderLookup = canvas.querySelector<HTMLInputElement>("[data-vwf-order-id]");
     const orderDetail = canvas.querySelector<HTMLElement>("[data-vwf-order-detail]");
     canvas.querySelector<HTMLButtonElement>("[data-vwf-load-order]")?.addEventListener("click", () => {
