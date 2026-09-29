@@ -536,6 +536,16 @@ export function getVerticalModuleRoleFit(
   return lenses.includes(roleKey) || roleKey === "generic" ? "primary" : "shared";
 }
 
+export type VerticalModuleUiContract = {
+  readonly vertical: string;
+  readonly module: string;
+  readonly slug: string;
+  readonly route: string;
+  readonly blueprint: VerticalModuleBlueprint;
+  readonly capabilityContract: VerticalModuleCapabilityContract;
+  readonly roleLenses: readonly VerticalRoleLensKey[];
+};
+
 export function getVerticalModuleBlueprint(vertical: string, module: string): VerticalModuleBlueprint {
   const v = vertical.trim().toLowerCase();
   const selected =
@@ -561,5 +571,23 @@ export function getVerticalModuleBlueprint(vertical: string, module: string): Ve
     ...selected,
     roleLenses: selected.roleLenses ?? deriveRoleLenses(module, selected.layout),
     capabilityContract: hasDeclaredSelectedContract ? selectedContract! : declaredContract,
+  };
+}
+
+export function getVerticalModuleUiContract(vertical: string, module: string): VerticalModuleUiContract {
+  const normalizedVertical = vertical.trim().toLowerCase();
+  const blueprint = getVerticalModuleBlueprint(normalizedVertical, module);
+  const capabilityContract = blueprint.capabilityContract;
+  const roleLenses = blueprint.roleLenses ?? deriveRoleLenses(module, blueprint.layout);
+  const slug = getVerticalModuleSlug(normalizedVertical, module);
+  const route = getVerticalModuleRoute(normalizedVertical, module);
+  return {
+    vertical: normalizedVertical,
+    module,
+    slug,
+    route,
+    blueprint,
+    capabilityContract,
+    roleLenses,
   };
 }
