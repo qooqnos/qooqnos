@@ -3177,12 +3177,12 @@ function renderSocialMobileNav(): string {
 
 function renderSocialPosts(items: DiscoveryResult[]): string {
   activeDiscoveryItems = items;
-  if (!items.length) return '<div class="glass-card social-empty-state"><div class="draft-orb">⌕</div><h3>هنوز نتیجه‌ای برای این مسیر پیدا نشده است.</h3><p>نیازت را دقیق‌تر بنویس یا از اکسپلور برای مرور عرضه‌های واقعی استفاده کن.</p><a class="button button-primary" href="/discover?tab=explore" data-nav>رفتن به اکسپلور</a></div>';
+  if (!items.length) return '<div class="glass-card social-empty-state"><div class="draft-orb">⌕</div><h3>' + discoveryUi("emptyResultsTitle") + '</h3><p>' + discoveryUi("emptyResultsDescription") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' + discoveryUi("goExplore") + '</a></div>';
   return items.map((item, index) => {
-    const titleRaw = item.title ?? item.displayName ?? item.name ?? "محصول یا خدمت";
+    const titleRaw = item.title ?? item.displayName ?? item.name ?? discoveryUi("productOrService");
     const title = escapeHtml(titleRaw);
-    const description = escapeHtml(item.description ?? item.body ?? "اطلاعات این عرضه در ققنوس ثبت شده است.");
-    const locality = escapeHtml(item.locality ?? item.city ?? "در شبکه ققنوس");
+    const description = escapeHtml(item.description ?? item.body ?? discoveryUi("offeringRegistered"));
+    const locality = escapeHtml(item.locality ?? item.city ?? discoveryUi("networkLocality"));
     const key = item.id ?? item.sourceId ?? "";
     const sourceType = item.sourceType ?? String(item.metadata?.offeringType ?? "product");
     const compared = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key && Boolean(key));
@@ -3192,31 +3192,31 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
     const rawPrice = item.price;
     const price = rawPrice !== undefined && rawPrice !== null
       ? Number(rawPrice).toLocaleString("fa-IR") + " " + escapeHtml(item.currency ?? "")
-      : "قیمت را بپرس";
-    const typeLabel = sourceType === "service" ? "خدمت" : sourceType === "business" ? "کسب‌وکار" : "محصول";
-    const authorName = item.metadata && typeof item.metadata.businessName === "string" ? item.metadata.businessName : sourceType === "business" ? titleRaw : "فروشنده ققنوس";
+      : discoveryUi("askPrice");
+    const typeLabel = sourceType === "service" ? discoveryUi("service") : sourceType === "business" ? discoveryUi("business") : discoveryUi("product");
+    const authorName = item.metadata && typeof item.metadata.businessName === "string" ? item.metadata.businessName : sourceType === "business" ? titleRaw : discoveryUi("seller");
     const canFollow = Boolean(item.metadata && typeof item.metadata.businessId === "string") || sourceType === "business";
-    const followLabel = followed ? "دنبال می‌کنی" : "دنبال کردن";
+    const followLabel = followed ? discoveryUi("followActive") : discoveryUi("follow");
     const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
     const publicAction = sourceType === "business"
-      ? '<a class="button button-primary post-buy" href="/businesses/' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>مشاهده کسب‌وکار <span>←</span></a>'
+      ? '<a class="button button-primary post-buy" href="/businesses/' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>' + discoveryUi("viewBusiness") + ' <span>←</span></a>'
       : sourceType === "service"
-        ? '<a class="button button-primary post-buy" href="/booking?offering=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + (businessId ? '&businessId=' + encodeURIComponent(businessId) : '') + '" data-nav>بررسی رزرو <span>←</span></a>'
-        : '<a class="button button-primary post-buy" href="/checkout?product=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>خرید آنی <span>←</span></a>';
+        ? '<a class="button button-primary post-buy" href="/booking?offering=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + (businessId ? '&businessId=' + encodeURIComponent(businessId) : '') + '" data-nav>' + discoveryUi("checkBooking") + ' <span>←</span></a>'
+        : '<a class="button button-primary post-buy" href="/checkout?product=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>' + discoveryUi("instantBuy") + ' <span>←</span></a>';
     const followButton = canFollow
       ? '<button type="button" class="post-follow' + (followed ? ' selected' : '') + '" data-follow="' + escapeAttr(key) + '">' + followLabel + '</button>'
-      : '<span class="post-follow post-follow-disabled">فروشنده</span>';
+      : '<span class="post-follow post-follow-disabled">' + discoveryUi("viewSeller") + '</span>';
     return '<article class="phoenix-post-card">' +
       '<header class="phoenix-post-author"><span class="phoenix-avatar phoenix-avatar-image">' + (index % 2 ? "س" : "ق") + '</span><div><strong>' + escapeHtml(authorName) + '</strong><small>' + locality + ' · ' + escapeHtml(typeLabel) + '</small></div>' + followButton + '</header>' +
-      '<button type="button" class="phoenix-post-media media-'+(index%3)+'" data-discovery-index="' + index + '" aria-label="' + title + '"><span class="post-media-badge">' + typeLabel + '</span><strong>' + title + '</strong><small>مشاهده جزئیات و تصمیم</small></button>' +
+      '<button type="button" class="phoenix-post-media media-'+(index%3)+'" data-discovery-index="' + index + '" aria-label="' + title + '"><span class="post-media-badge">' + typeLabel + '</span><strong>' + title + '</strong><small>' + discoveryUi("detailsAndDecision") + '</small></button>' +
       '<div class="phoenix-post-body"><div class="phoenix-post-meta"><span class="phoenix-post-type">' + typeLabel + '</span><span>⌖ ' + locality + '</span></div><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + price + '</div>' +
       '<div class="phoenix-post-actions">' +
-      '<button type="button" class="social-action' + (liked ? ' selected' : '') + '" data-like="' + escapeAttr(key) + '">♡ <span>' + (liked ? "پسندیده شد" : "پسندیدن") + '</span></button>' +
-      '<button type="button" class="social-action" data-comment="' + escapeAttr(key) + '">◌ <span>نظر</span></button>' +
-      '<button type="button" class="social-action' + (saved ? ' selected' : '') + '" data-save="' + escapeAttr(key) + '">⌑ <span>' + (saved ? "ذخیره شد" : "ذخیره") + '</span></button>' +
-      '<button type="button" class="social-action" data-share="' + escapeAttr(key) + '">↗ <span>اشتراک</span></button>' +
-      (sourceType === "product" ? '<button type="button" class="social-action ' + (compared ? "selected" : "") + '" data-compare="' + escapeAttr(key) + '">⚖ <span>' + (compared ? "انتخاب شد" : "مقایسه") + '</span></button>' : '') +
-      (sourceType === "service" ? '<button type="button" class="social-action" data-open-view="' + escapeAttr(key) + '">◉ <span>مشاهده</span></button>' : '') +
+      '<button type="button" class="social-action' + (liked ? ' selected' : '') + '" data-like="' + escapeAttr(key) + '">♡ <span>' + (liked ? discoveryUi("likeActive") : discoveryUi("like")) + '</span></button>' +
+      '<button type="button" class="social-action" data-comment="' + escapeAttr(key) + '">◌ <span>' + discoveryUi("comment") + '</span></button>' +
+      '<button type="button" class="social-action' + (saved ? ' selected' : '') + '" data-save="' + escapeAttr(key) + '">⌑ <span>' + (saved ? discoveryUi("saveActive") : discoveryUi("save")) + '</span></button>' +
+      '<button type="button" class="social-action" data-share="' + escapeAttr(key) + '">↗ <span>' + discoveryUi("share") + '</span></button>' +
+      (sourceType === "product" ? '<button type="button" class="social-action ' + (compared ? "selected" : "") + '" data-compare="' + escapeAttr(key) + '">⚖ <span>' + (compared ? discoveryUi("selected") : discoveryUi("compare")) + '</span></button>' : '') +
+      (sourceType === "service" ? '<button type="button" class="social-action" data-open-view="' + escapeAttr(key) + '">◉ <span>' + discoveryUi("view") + '</span></button>' : '') +
       publicAction + '</div></div></article>';
   }).join("");
 }
@@ -5109,15 +5109,20 @@ async function runDiscovery(reset = true): Promise<void> {
 
   if (reset) discoveryOffset = 0;
   if (tab !== "following" && !query && tab === "for-you") {
-    resultHost.innerHTML = '<div class="social-empty-state glass-card"><div class="draft-orb">✦</div><h3>نیازت را بنویس.</h3><p>Discovery با متن طبیعی، عرضه‌های canonical را پیدا می‌کند.</p></div>';
-    meta.textContent = "منتظر نیاز";
+    resultHost.innerHTML = '<div class="social-empty-state glass-card"><div class="draft-orb">✦</div><h3>' + discoveryUi("noNeedTitle") + '</h3><p>' + discoveryUi("noNeedDescription") + '</p></div>';
+    meta.textContent = discoveryUi("waitingForNeed");
     if (pagination) pagination.innerHTML = "";
     return;
   }
 
-  if (title) title.textContent = query ? "نتایج برای «" + (query.length > 48 ? escapeHtml(query.slice(0, 48) + "…") : escapeHtml(query)) + "»" : tab === "following" ? "عرضه‌های دنبال‌شده" : "اکسپلور";
+  if (title) {
+      const displayQuery = query.length > 48 ? query.slice(0, 48) + "…" : query;
+      title.textContent = query
+        ? discoveryUi("resultsFor", { query: displayQuery })
+        : tab === "following" ? discoveryUi("followingResults") : discoveryUi("exploreResults");
+    }
   if (reset) resultHost.innerHTML = renderSkeletonCards(3);
-  meta.textContent = "در حال تحلیل…";
+  meta.textContent = discoveryUi("analyzing");
   discoveryBusy = true;
 
   try {
@@ -5136,16 +5141,16 @@ async function runDiscovery(reset = true): Promise<void> {
     discoveryHasMore = data.length === pageSize;
     const nextItems = reset ? data : [...activeDiscoveryItems, ...data];
     resultHost.innerHTML = renderSocialPosts(nextItems);
-    meta.textContent = nextItems.length + (discoveryHasMore ? "+" : "") + " نتیجه";
+    meta.textContent = discoveryUi("resultCount", { count: String(nextItems.length) + (discoveryHasMore ? "+" : "") });
     discoveryOffset += data.length;
-    if (pagination) pagination.innerHTML = discoveryHasMore ? '<button class="button button-ghost" type="button" data-load-more-discovery>نمایش موارد بیشتر <span>↓</span></button>' : "";
+    if (pagination) pagination.innerHTML = discoveryHasMore ? '<button class="button button-ghost" type="button" data-load-more-discovery>' + discoveryUi("loadMore") + ' <span>↓</span></button>' : "";
     bindDiscoveryResultEvents();
     renderCompareTray();
   } catch (error) {
     if (reset) {
-      resultHost.innerHTML = '<div class="social-error-state glass-card"><div class="draft-orb">!</div><h3>Discovery در دسترس نیست.</h3><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Discovery ناموفق بود.") + '</p><button class="button button-ghost" type="button" data-run-discovery>تلاش دوباره</button></div>';
+      resultHost.innerHTML = '<div class="social-error-state glass-card"><div class="draft-orb">!</div><h3>' + discoveryUi("unavailable") + '</h3><p>' + escapeHtml(error instanceof Error ? error.message : discoveryUi("readFailed")) + '</p><button class="button button-ghost" type="button" data-run-discovery>' + discoveryUi("retry") + '</button></div>';
     }
-    meta.textContent = "خطا";
+    meta.textContent = discoveryUi("error");
     if (pagination) pagination.innerHTML = "";
   } finally {
     discoveryBusy = false;
