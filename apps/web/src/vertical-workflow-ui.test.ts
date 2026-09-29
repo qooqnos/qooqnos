@@ -77,6 +77,22 @@ describe("Vertical Workflow UI Canvas", () => {
     expect(html).toContain("Canonical Workspace Team");
   });
 
+  it("renders a role-aware emphasis contract on every shared canvas", () => {
+    const blueprint = getVerticalModuleBlueprint("clinic", "نوبت‌ها");
+    const model: VerticalWorkflowCanvasModel = {
+      vertical: "clinic",
+      module: "نوبت‌ها",
+      businessId: "business-test",
+      blueprint,
+    };
+
+    const html = renderVerticalWorkflowCanvas(model);
+    expect(html).toContain('data-vwf-role-lens');
+    expect(html).toContain('data-vwf-role-title');
+    expect(html).toContain('data-vwf-role-description');
+    expect(html).toContain('data-vwf-role-fit');
+  });
+
   it("escapes contextual identifiers before placing them into HTML attributes", () => {
     const blueprint = getVerticalModuleBlueprint("retail", "محصولات");
     const model: VerticalWorkflowCanvasModel = {
