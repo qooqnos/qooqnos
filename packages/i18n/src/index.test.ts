@@ -25,7 +25,7 @@ describe("@qooqnos/i18n", () => {
 
   it("uses the canonical domain vocabulary as the terminology source", () => {
     expect(translations.fa["canonical.business.business"]).toBe("کسب‌وکار");
-    expect(translations.fa["canonical.business.offering"]).toBe("عرضه");
+    expect(translations.fa["canonical.catalog.offering"]).toBe("عرضه");
     expect(translations.fa["canonical.booking.booking"]).toBe("رزرو");
     expect(translations.fa["canonical.booking.appointment"]).toBe("نوبت");
     expect(translations.fa["canonical.identity.permission"]).toBe("مجوز");
