@@ -214,6 +214,22 @@ describe("Vertical Workflow overview", () => {
   });
 
 
+  it("renders canonical variant and attribute surfaces for retail catalog modules", () => {
+    for (const module of ["مدل‌ها و تنوع", "سایز و رنگ"]) {
+      const blueprint = getVerticalModuleBlueprint("retail", module);
+      const html = renderVerticalWorkflowCanvas({
+        vertical: "retail",
+        module,
+        businessId: "business-test",
+        blueprint,
+      });
+      expect(html).toContain('data-vwf-layout="catalog"');
+      expect(html).toContain('data-vwf-variants-live');
+      expect(html).toContain('data-vwf-variant-items');
+      expect(html).toContain("Canonical Catalog Variants");
+    }
+  });
+
   it("renders a live inventory surface for the retail inventory module", () => {
     const blueprint = getVerticalModuleBlueprint("retail", "موجودی");
     const html = renderVerticalWorkflowCanvas({
