@@ -447,7 +447,8 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
           : '<div class="phoenix-vwf-stage' + stateClass + '" data-vwf-stage-state="' + (active ? "current" : completed ? "completed" : "upcoming") + '">' + content + '</div>';
       }).join('<span class="phoenix-vwf-stage-connector" aria-hidden="true">→</span>') +
     '</nav>' +
-    renderModuleSwitcher(model) +\n    '<div class="phoenix-vwf-stage-context">' +
+    renderModuleSwitcher(model) +
+    '<div class="phoenix-vwf-stage-context">' +
       '<div><span class="section-kicker">Workflow stage</span><strong>' + escapeHtml(stageContext.stage) + '</strong><span class="phoenix-vwf-stage-position">' + escapeHtml(stagePosition) + '</span></div>' +
       '<div class="phoenix-vwf-stage-context-actions">' + stageNav + '</div>' +
     '</div>' +
