@@ -80,21 +80,47 @@ export class I18nManager {
 
 export const defaultI18n = new I18nManager("fa");
 
-const uiSourceIndex: ReadonlyMap<string, string> = new Map(
-  Object.entries(localeDictionaries.fa.ui ?? {}).map(([key, value]) => [value, "ui." + key]),
-);
+const textKeyIndex = new Map<string, string>();
+for (const language of ["fa", "en", "ar"] as const) {
+  for (const [key, text] of Object.entries(translations[language])) {
+    const normalized = text.trim();
+    if (!normalized || textKeyIndex.has(normalized)) continue;
+    textKeyIndex.set(normalized, key);
+  }
+}
+
+const translationSources = [...textKeyIndex.entries()]
+  .filter(([source]) => source.length >= 3)
+  .sort((a, b) => b[0].length - a[0].length);
 
 export function translateUiText(
   value: string,
   locale: Locale,
 ): string {
-  const key = uiSourceIndex.get(value.trim());
-  if (!key) return value;
+  const trimmed = value.trim();
+  if (!trimmed) return value;
+
+  const directKey = textKeyIndex.get(trimmed);
+  if (directKey) {
+    const translated = translations[locale][directKey] ?? translations.fa[directKey];
+    if (translated) {
+      const leading = value.match(/^\s*/u)?.[0] ?? "";
+      const trailing = value.match(/\s*$/u)?.[0] ?? "";
+      return leading + translated + trailing;
+    }
+  }
+
+  const candidate = translationSources.find(([source, key]) => {
+    if (!trimmed.includes(source)) return false;
+    const translated = translations[locale][key] ?? translations.fa[key];
+    return Boolean(translated && translated !== source);
+  });
+
+  if (!candidate) return value;
+
+  const [source, key] = candidate;
   const translated = translations[locale][key] ?? translations.fa[key];
-  if (!translated) return value;
-  const leading = value.match(/^\s*/u)?.[0] ?? "";
-  const trailing = value.match(/\s*$/u)?.[0] ?? "";
-  return leading + translated + trailing;
+  return translated ? value.split(source).join(translated) : value;
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
