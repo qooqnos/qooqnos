@@ -81,6 +81,59 @@ describe("CommerceRepository", () => {
     expect(inserts).toBe(0);
   });
 
+  it("lists orders within the active tenant, workspace and business", async () => {
+    let bound: unknown[] = [];
+    const statement: D1PreparedStatementLike = {
+      bind(...args: unknown[]) {
+        bound = args;
+        return this;
+      },
+      async first<T>() { return null as T | null; },
+      async all<T>() {
+        return {
+          results: [{
+            id: "order-1",
+            organizationId: "tenant-1",
+            workspaceId: "workspace-1",
+            businessId: "business-1",
+            customerId: "customer-1",
+            matchRequestId: null,
+            matchCandidateId: null,
+            priceSnapshotId: null,
+            status: "confirmed",
+            currency: "AZN",
+            subtotalMinor: 1000,
+            adjustmentTotalMinor: 0,
+            taxTotalMinor: 0,
+            feeTotalMinor: 0,
+            grandTotalMinor: 1000,
+            paymentStatusRef: null,
+            fulfillmentStatusRef: null,
+            sourceChannel: "web",
+            policyVersion: "v1",
+            idempotencyKey: "idem-1",
+            correlationId: "corr-1",
+            createdAt: "2026-09-29T00:00:00.000Z",
+            updatedAt: "2026-09-29T00:00:00.000Z",
+            confirmedAt: null,
+            completedAt: null,
+          }] as T[],
+        };
+      },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CommerceRepository(new D1Database(raw));
+
+    const orders = await repository.listOrders(context(), brandId<"EntityId">("business-1"), 100);
+    expect(orders).toHaveLength(1);
+    expect(orders[0]?.id).toBe("order-1");
+    expect(bound).toEqual(["tenant-1", "workspace-1", "business-1", 50]);
+  });
+
   it("rejects malformed stored Commerce snapshot JSON", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
