@@ -239,6 +239,9 @@ describe("Vertical Workflow overview", () => {
       expect(html).toContain("Vertical Workflow UI Framework");
       expect(html).toContain('data-nav');
       expect(html).toContain("Backend authoritative");
+      expect(html).toContain('data-vwf-overview-stage');
+      expect(html).toContain('data-vwf-overview-stage-module=' + '"' + getVerticalWorkflowStageModule(vertical, getVerticalWorkflowDefinition(vertical).steps[0]!) + '"');
+      expect(html).toContain('data-vwf-overview-access');
     }
   });
 
