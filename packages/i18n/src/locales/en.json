@@ -567,7 +567,16 @@
     "canonicalName": "Canonical name",
     "displayName": "Display name",
     "canonicalAfterConnection": "Canonical data after connection",
-    "openSource": "Open source ←"
+    "openSource": "Open source ←",
+    "phoenixSuggests": "Phoenix suggests",
+    "startAction": "Start",
+    "prepareSupplyFast": "Prepare supply faster.",
+    "sellerAiDescription": "Start with a raw image or text; Seller AI creates a draft and the business keeps final acceptance.",
+    "noConnectedLocationData": "Location data appears after connection.",
+    "noConnectedHoursData": "Hours appear after connection.",
+    "changeWorkspace": "Change Workspace",
+    "manageTeam": "Manage team",
+    "roleGuideDescription": "This guide only controls interface composition; real authorization remains controlled by the backend."
   },
   "canonical": {
     "identity": {
