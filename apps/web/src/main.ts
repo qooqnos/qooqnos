@@ -4,7 +4,7 @@ import { getVerticalModuleBlueprint, getVerticalModuleForSlug, getVerticalModule
 import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 import { resolveVerticalModuleAlias } from "./business-module-ui.js";
-import { defaultI18n, getDirection, getLocaleFromPreference, LOCALE_STORAGE_KEY, persistLocale, readPersistedLocale, translateUiText, type SupportedLanguage } from "@qooqnos/i18n";
+import { defaultI18n, getDirection, getLocaleFromPreference, LOCALE_STORAGE_KEY, persistLocale, readPersistedLocale, translateUiText, type SupportedLanguage } from "./i18n-runtime.js";
 type Theme = "dark" | "light";
 type Language = SupportedLanguage;
 
@@ -356,18 +356,6 @@ function getInitialLanguage(): Language {
 }
 
 
-let languageObserverInstalled = false;
-
-function installLanguageObserver(): void {
-  if (languageObserverInstalled || typeof MutationObserver === "undefined") return;
-  languageObserverInstalled = true;
-  const observer = new MutationObserver(() => {
-    if (!document.body) return;
-    applyLanguageToUi();
-  });
-  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-}
-
 function applyLanguageToUi(): void {
   const language = getInitialLanguage();
   defaultI18n.setLanguage(language);
@@ -518,7 +506,6 @@ function render(): void {
   bindGlobalEvents();
   syncThemeButtons();
   applyLanguageToUi();
-  installLanguageObserver();
   if (route.path === "/discover") {
     const params = new URLSearchParams(location.search);
     const initialDiscoveryQuery = params.get("q")?.trim() ?? "";
