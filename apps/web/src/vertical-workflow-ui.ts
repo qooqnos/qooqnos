@@ -266,6 +266,12 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
         '<div class="phoenix-vwf-live-inventory-grid" data-vwf-inventory-items><div class="slot-loading">در حال آماده‌سازی منبع Inventory…</div></div>' +
       '</div>'
     : "";
+  const billingSurface = model.module === "پرداخت"
+    ? '<div class="phoenix-vwf-live-billing" data-vwf-billing-live>' +
+        '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Billing</span><h3>صورتحساب‌های این کسب‌وکار</h3><p>Invoice state مستقیماً از Billing خوانده می‌شود؛ این Canvas دفتر مالی موازی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
+        '<div class="phoenix-vwf-live-billing-grid" data-vwf-invoice-items><div class="slot-loading">در حال خواندن صورتحساب‌های واقعی…</div></div>' +
+      '</div>'
+    : "";
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای معاملات">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="all">همه</button>' +
@@ -280,6 +286,7 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
       '<span class="phoenix-vwf-local-note">Order state مستقیماً از Commerce خوانده می‌شود؛ این Canvas منبع دوم نمی‌سازد.</span>' +
     '</div>' +
     inventorySurface +
+    billingSurface +
     '<div class="phoenix-vwf-commerce-grid">' +
       model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-commerce-card" data-vwf-item><span class="section-kicker">Commerce surface</span><h3>' + escapeHtml(item.title) + '</h3>' + emptyState(item.description, item.path ?? "Commerce") + (item.path ? '<a class="text-link" href="' + escapeHtml(contextualHref(model, item.path)) + '" data-nav>باز کردن منبع ←</a>' : '') + '</article>').join("") +
     '</div>' +
@@ -845,6 +852,10 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
             void hydrateInventoryCanvas(canvas, businessId).finally(finish);
             return;
           }
+          if (layout === "commerce" && businessId && canvas.dataset.vwfModule === "پرداخت") {
+            void hydrateBillingCanvas(canvas, businessId).finally(finish);
+            return;
+          }
           if (layout === "catalog" && businessId) {
             void hydrateCatalogCanvas(canvas, businessId).finally(finish);
             return;
@@ -948,6 +959,9 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     }
     if (businessId && canvas.dataset.vwfLayout === "commerce" && canvas.dataset.vwfModule === "موجودی") {
       void hydrateInventoryCanvas(canvas, businessId);
+    }
+    if (businessId && canvas.dataset.vwfLayout === "commerce" && canvas.dataset.vwfModule === "پرداخت") {
+      void hydrateBillingCanvas(canvas, businessId);
     }
     if (businessId && canvas.dataset.vwfLayout === "catalog") {
       void hydrateCatalogCanvas(canvas, businessId);
@@ -1289,6 +1303,67 @@ async function hydrateOrderLookup(host: HTMLElement, orderId: string): Promise<v
       '</div>';
   } catch (error) {
     host.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Order ناموفق بود.", "Commerce");
+  }
+}
+
+type VerticalWorkflowInvoice = {
+  id: string;
+  invoiceNumber?: string | null;
+  businessId?: string | null;
+  customerId?: string | null;
+  orderId?: string | null;
+  status: string;
+  currency: string;
+  totalMinor: number;
+  amountPaidMinor: number;
+  amountDueMinor: number;
+  issueDate?: string | null;
+  dueDate?: string | null;
+};
+
+async function hydrateBillingCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-invoice-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    setCanvasState(canvas, "requires-input");
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش صورتحساب‌های واقعی، session و Workspace context لازم است.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="slot-loading">در حال خواندن Billing canonical…</div>';
+  try {
+    const response = await fetch("/api/v1/billing/invoices?business_id=" + encodeURIComponent(businessId) + "&limit=12", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowInvoice[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Billing invoices unavailable");
+    const invoices = Array.isArray(body?.data) ? body.data : [];
+    if (!invoices.length) {
+      setCanvasState(canvas, "connected");
+      container.innerHTML = emptyState("برای این Business هنوز صورتحساب قابل نمایش برنگشته است.", "Billing");
+      return;
+    }
+
+    container.innerHTML = invoices.map((invoice) => {
+      const total = displayMinorAmount(invoice.totalMinor, invoice.currency);
+      const paid = displayMinorAmount(invoice.amountPaidMinor, invoice.currency);
+      const due = displayMinorAmount(invoice.amountDueMinor, invoice.currency);
+      const statusClass = invoice.status === "paid" || invoice.status === "settled" ? "success" : "";
+      return '<article class="phoenix-vwf-live-invoice-card" data-vwf-item>' +
+        '<div class="phoenix-vwf-live-invoice-top"><div><span class="section-kicker">Invoice</span><h4>' + escapeHtml(invoice.invoiceNumber ?? invoice.id) + '</h4></div><span class="pill ' + statusClass + '">' + escapeHtml(invoice.status) + '</span></div>' +
+        '<div class="phoenix-vwf-live-invoice-meta">' +
+          '<span>کل <strong>' + escapeHtml(total) + '</strong></span>' +
+          '<span>پرداخت‌شده <strong>' + escapeHtml(paid) + '</strong></span>' +
+          '<span>باقی‌مانده <strong>' + escapeHtml(due) + '</strong></span>' +
+        '</div>' +
+        '<div class="phoenix-vwf-live-invoice-foot"><span>' + escapeHtml(invoice.issueDate ?? "تاریخ صدور نامشخص") + '</span>' +
+        (invoice.orderId ? '<a class="text-link" href="/transactions?order=' + encodeURIComponent(invoice.orderId) + '" data-nav>مشاهده سفارش ←</a>' : '<span class="phoenix-vwf-source-chip">Billing canonical</span>') +
+        '</div>' +
+      '</article>';
+    }).join("");
+    setCanvasState(canvas, "connected");
+  } catch (error) {
+    setCanvasState(canvas, "unavailable");
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن صورتحساب‌های Billing ناموفق بود.", "Billing");
   }
 }
 
