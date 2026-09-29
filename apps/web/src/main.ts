@@ -15,6 +15,25 @@ type Route = {
   render: () => string;
 };
 
+const ROUTE_CANONICAL_TERM_KEYS: Readonly<Record<string, string>> = {
+  "/business": "canonical.business.business",
+  "/business/profile": "canonical.business.businessProfile",
+  "/catalog": "canonical.catalog.offering",
+  "/booking": "canonical.booking.booking",
+  "/customer": "canonical.customer.customer",
+  "/transactions": "canonical.commerce.order",
+  "/notifications": "canonical.communication.notification",
+  "/communication": "canonical.communication.conversation",
+  "/billing": "canonical.billing.billingAccount",
+  "/operations": "canonical.fulfillment.fulfillmentOrder",
+  "/promotion": "canonical.promotion.promotion",
+};
+
+function routeUiLabel(route: Route): string {
+  const key = ROUTE_CANONICAL_TERM_KEYS[route.path];
+  return key ? canonicalUi(key) : uiText(route.label);
+}
+
 type DiscoveryResult = {
   id?: string;
   sourceType?: string;
@@ -795,7 +814,7 @@ function renderHeader(route: Route): string {
         </a>
         <div class="header-context" aria-live="polite">
           <span class="header-context-kicker">Phoenix</span>
-          <strong>${escapeHtml(uiText(route.label))}</strong>
+          <strong>${escapeHtml(routeUiLabel(route))}</strong>
         </div>
         <div class="header-center">
           <div class="command-palette" role="button" tabindex="0" data-focus-search aria-label="جست‌وجوی سراسری">
@@ -810,7 +829,7 @@ function renderHeader(route: Route): string {
           </button>
           <button class="profile-chip workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="انتخاب فضای کاری">
             <span class="avatar">ق</span>
-            <span class="profile-copy"><strong id="shell-workspace-name">فضای شما</strong><small>${escapeHtml(uiText(route.label))}</small></span>
+            <span class="profile-copy"><strong id="shell-workspace-name">فضای شما</strong><small>${escapeHtml(routeUiLabel(route))}</small></span>
             <span class="chevron">⌄</span>
           </button>
           ${renderLanguageSwitcher()}
@@ -842,7 +861,7 @@ function renderSidebar(route: Route): string {
             .map(
               (item) => `
                 <a href="${item.path}" data-nav class="nav-item ${item.path === sidebarActivePath ? "active" : ""}" ${item.path === sidebarActivePath ? 'aria-current="page"' : ""}>
-                  <span class="nav-icon" aria-hidden="true">${item.icon}</span><span class="nav-copy">${uiText(item.label)}</span>
+                  <span class="nav-icon" aria-hidden="true">${item.icon}</span><span class="nav-copy">${routeUiLabel(item)}</span>
                 </a>`,
             )
             .join("")}
