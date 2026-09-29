@@ -13,6 +13,31 @@ export function registerBookingRoutes(
 ): void {
   router.register({
     method: "GET",
+    path: "/api/v1/booking/resources",
+    module: "booking",
+    operation: "booking.resources.read",
+    permission: "booking.read",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const url = new URL(request.url);
+      const businessId = requiredId(url.searchParams.get("businessId"), "businessId", context.requestId);
+      const rawLimit = Number(url.searchParams.get("limit") ?? "100");
+      const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 100;
+      const rawType = url.searchParams.get("type")?.trim();
+      const allowedTypes = ["person", "room", "equipment", "vehicle", "service_area", "other"] as const;
+      const resourceType = rawType && (allowedTypes as readonly string[]).includes(rawType)
+        ? (rawType as typeof allowedTypes[number])
+        : undefined;
+      const service = createService(database, authorization, context.requestId);
+      const data = await service.listBusinessResources(context, businessId, resourceType, limit);
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/availability/schedules",
     module: "booking",
     operation: "availability.schedules.read",
