@@ -4281,6 +4281,13 @@ body::before {
 .phoenix-vwf-canvas [hidden]{display:none!important}
 .phoenix-vwf-command-primary .button{margin-top:12px}
 .phoenix-vwf-people-card .text-link,.phoenix-vwf-commerce-card .text-link,.phoenix-vwf-kanban-column .text-link,.phoenix-vwf-inbox .text-link{display:inline-block;margin-top:9px}
+.phoenix-vwf-customer-history{margin-top:10px;padding:14px;border:1px solid var(--line);border-radius:17px;background:var(--surface-2)}
+.phoenix-vwf-customer-history-list{display:grid;gap:7px;margin-top:10px}
+.phoenix-vwf-customer-history-item{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:11px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.phoenix-vwf-customer-history-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:10px;color:var(--primary);background:color-mix(in srgb,var(--primary) 9%,var(--surface-2));font-size:11px}
+.phoenix-vwf-customer-history-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.phoenix-vwf-customer-history-top strong{font-size:8px}.phoenix-vwf-customer-history-item small{display:block;margin-top:3px;color:var(--faint);font-size:6px}.phoenix-vwf-customer-history-item p{margin:6px 0 0;color:var(--muted);font-size:7px;line-height:1.7}
+@media(max-width:520px){.phoenix-vwf-customer-history{padding:11px}.phoenix-vwf-customer-history-item{grid-template-columns:auto 1fr;padding:10px}.phoenix-vwf-customer-history-top{align-items:flex-start;flex-direction:column}}
+
 
 /* Vertical module canvas */
 .phoenix-module-context-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:10px;border:1px solid var(--line);border-radius:18px;background:color-mix(in srgb,var(--surface) 84%,transparent)}
