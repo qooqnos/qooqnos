@@ -117,6 +117,25 @@ const indexLanguage = (language: SupportedLanguage, canonicalOnly: boolean): voi
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, true);
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, false);
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\\]\\]/g, "\\export function translateUiText(
+");
+}
+
+const translationSources = [...textKeyIndex.entries()]
+  .filter(([source]) => source.length >= 3)
+  .sort((a, b) => b[0].length - a[0].length);
+
+function translateFragments(value: string, locale: Locale): string {
+  let translatedValue = value;
+  for (const [source, key] of translationSources) {
+    const translated = translations[locale][key] ?? translations.fa[key];
+    if (!translated || translated === source || !translatedValue.includes(source)) continue;
+    const pattern = new RegExp("(?<![\\p{L}\\p{N}_])" + escapeRegExp(source) + "(?![\\p{L}\\p{N}_])", "gu");
+    translatedValue = translatedValue.replace(pattern, translated);
+  }
+  return translatedValue;
+}
 export function translateUiText(
   value: string,
   locale: Locale,
@@ -134,7 +153,7 @@ export function translateUiText(
     }
   }
 
-  return value;
+  return translateFragments(value, locale);
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
