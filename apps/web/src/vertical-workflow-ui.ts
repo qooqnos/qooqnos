@@ -153,7 +153,7 @@ function renderCommand(model: VerticalWorkflowCanvasModel): string {
   const bookingLookup = ["نوبت‌ها", "رزرو", "وقت‌های امروز"].includes(model.module)
     ? renderBookingLookupSurface()
     : "";
-  return bookingLookup + '<div class="phoenix-vwf-toolbar">'
+  return bookingLookup + '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای فرمان">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="overview">نمای کلی</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="queue">صف کار</button>' +
