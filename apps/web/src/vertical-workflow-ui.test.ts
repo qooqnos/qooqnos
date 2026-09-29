@@ -278,6 +278,27 @@ describe("Vertical Workflow overview", () => {
     expect(html).toContain("میزها و منابع رزرو");
   });
 
+  it("renders a shared canonical booking lookup for appointment-oriented calendar modules", () => {
+    for (const [vertical, module] of [
+      ["clinic", "نوبت‌ها"],
+      ["restaurant", "رزرو"],
+      ["salon", "وقت‌های امروز"],
+    ] as const) {
+      const blueprint = getVerticalModuleBlueprint(vertical, module);
+      const html = renderVerticalWorkflowCanvas({
+        vertical,
+        module,
+        businessId: "business-test",
+        blueprint,
+      });
+      expect(html).toContain('data-vwf-booking-live');
+      expect(html).toContain('data-vwf-booking-id');
+      expect(html).toContain('data-vwf-load-booking');
+      expect(html).toContain('data-vwf-booking-detail');
+      expect(html).toContain("Canonical Booking");
+    }
+  });
+
   it("covers all supported verticals with shared stage navigation", () => {
     for (const vertical of ["clinic", "retail", "restaurant", "salon"]) {
       const html = renderVerticalWorkflowOverview({ vertical, businessId: "business-test" });
