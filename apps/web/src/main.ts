@@ -450,6 +450,26 @@ function canonicalUi(key: string): string {
   return translateCanonicalTerm(key, getInitialLanguage());
 }
 
+function pageUi(namespace: "businessPage" | "businessSurface" | "discoveryPage", key: string): string {
+  return defaultI18n.t(namespace + "." + key);
+}
+
+function businessUi(key: string): string {
+  return pageUi("businessPage", key);
+}
+
+function businessSurfaceUi(key: string): string {
+  return pageUi("businessSurface", key);
+}
+
+function discoveryUi(key: string): string {
+  return pageUi("discoveryPage", key);
+}
+
+function localizedUi(value: string): string {
+  return escapeHtml(uiText(value));
+}
+
 function setLanguage(language: Language): void {
   const next = getLocaleFromPreference(language, "fa");
   persistLocale(next, localStorage);
