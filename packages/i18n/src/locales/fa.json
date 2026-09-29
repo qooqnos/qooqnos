@@ -576,7 +576,8 @@
     "noConnectedHoursData": "ساعات بعد از اتصال نمایش داده می‌شوند.",
     "changeWorkspace": "تغییر Workspace",
     "manageTeam": "مدیریت تیم",
-    "roleGuideDescription": "این راهنما صرفاً composition رابط است؛ مجوز واقعی را backend تعیین می‌کند."
+    "roleGuideDescription": "این راهنما صرفاً composition رابط است؛ مجوز واقعی را backend تعیین می‌کند.",
+    "boardDefaultSupply": "عرضه را آماده کن"
   },
   "canonical": {
     "identity": {
@@ -856,7 +857,9 @@
     "connectedSurfaces": "Connected Surfaces",
     "backendAccess": "Backend authoritative",
     "capabilityDriven": "Capability-driven",
-    "uiFoundation": "UI foundation"
+    "uiFoundation": "UI foundation",
+    "timezone": "منطقه زمانی",
+    "currency": "واحد پول"
   },
   "businessSurface": {
     "loadingPublicData": "در حال بارگذاری اطلاعات عمومی…",
