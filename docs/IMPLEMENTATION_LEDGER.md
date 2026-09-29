@@ -2542,3 +2542,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Tests cover all four current business verticals (clinic, retail, restaurant, salon), stage→module mapping, canonical blueprint completeness/states, stable semantic module routes, and role-emphasis behavior remaining presentation-only.
 - Existing framework remains the shared UI composition layer: workflow stages, module blueprints, responsive canvas layouts, canonical data hydration, missing-context states, and backend-authoritative role emphasis are not duplicated per vertical.
 - No production metrics or domain state are fabricated by the test contract.
+
+
+## 2026-09-29 — Canonical Business Vertical UI registry
+- Extracted the Business Workspace vertical presentation registry from apps/web/src/main.ts into apps/web/src/business-vertical-ui.ts.
+- Centralized the supported vertical keys, labels, icons, module composition, quick actions, metric labels and customer actions for Default, Clinic, Retail, Restaurant and Salon.
+- Moved resolveBusinessVerticalKey() and getBusinessVerticalUi() to the same registry so routing/context resolution and Workspace rendering no longer maintain a second copy of vertical metadata in the SPA entrypoint.
+- Added apps/web/src/business-vertical-ui.test.ts to enforce module/slug completeness and keep workflow stage→module mappings aligned with the canonical registry.
+- No authorization decision, domain state, persistence model or API source of truth was changed.
+- Implementation commits: 04de2ab7c23f13bc4c341e480a03ffeb8045c2e8, 4be0d23a0281a232268d2b90ff66df372e9ef8b6, 35c9f3e32026c8fedd81676968a2389fab827c8b, 6337175f87c8df80d702d3c2c98d0b5eedc3f443.
+- Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
