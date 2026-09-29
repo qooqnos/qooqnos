@@ -323,7 +323,7 @@ async function hydrateSessionContext(): Promise<void> {
   const token = sessionStorage.getItem(STORAGE.accessToken);
   if (!token) return;
   try {
-    const response = await apiJson<{ session: { authenticated: boolean; workspaceId?: string | null } }>("/api/v1/session");
+    const response = await apiJson<{ session: { authenticated: boolean; workspaceId?: string | null; locale?: string | null } }>("/api/v1/session");
     if (!response.session.authenticated) {
       sessionStorage.removeItem(STORAGE.accessToken);
       return;
