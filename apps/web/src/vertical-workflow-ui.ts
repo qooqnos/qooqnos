@@ -218,7 +218,6 @@ function renderFulfillmentLookupSurface(): string {
 
 function renderOperations(model: VerticalWorkflowCanvasModel): string {
   const resourceSurface = model.module === "میزها"
-  const fulfillmentSurface = renderFulfillmentLookupSurface();
     ? '<div class="phoenix-vwf-live-resources" data-vwf-resources-live data-vwf-resource-type="">' +
         '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Booking Resources</span><h3>میزها و منابع رزرو</h3><p>منابع قابل رزرو مستقیماً از Booking خوانده می‌شوند؛ این Canvas برای میزها state موازی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
         '<div class="phoenix-vwf-live-resources-grid" data-vwf-resource-items><div class="slot-loading">در حال آماده‌سازی منابع رزرو…</div></div>' +
