@@ -70,6 +70,24 @@ describe("Vertical Workflow UI module blueprints", () => {
     expect(salonToday.capabilityContract.requiredPermissions).toEqual(["booking.read", "crm.read"]);
   });
 
+  it("exposes canonical domain traceability for each supported module", () => {
+    for (const [vertical, modules] of Object.entries(verticalModules)) {
+      for (const module of modules) {
+        const blueprint = getVerticalModuleBlueprint(vertical, module);
+        expect(blueprint.canonicalTermKeys.length).toBeGreaterThan(0);
+        for (const key of blueprint.canonicalTermKeys) {
+          expect(key.startsWith("canonical.")).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("does not model Provider as a parallel marketplace entity", () => {
+    const doctors = getVerticalModuleBlueprint("clinic", "پزشکان");
+    expect(doctors.eyebrow).toBe("Clinical Team");
+    expect(doctors.blocks.some((item) => item.title === "Provider roster" || item.title === "Provider identity")).toBe(false);
+  });
+
   it("keeps the salon today module aligned with the canonical Workspace label", () => {
     const blueprint = getVerticalModuleBlueprint("salon", "وقت‌های امروز");
     expect(blueprint.layout).toBe("command");
