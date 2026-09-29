@@ -1,4 +1,4 @@
-import type { VerticalModuleBlueprint, VerticalModuleLayout } from "./business-module-ui.js";
+import { getVerticalModuleRoleFit, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
 import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
 export type VerticalWorkflowCanvasModel = {
@@ -263,12 +263,59 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
       '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>' + escapeHtml(copy.label) + ' canvas</h2><p>' + escapeHtml(copy.description) + '</p></div>' +
       '<div class="phoenix-vwf-header-actions"><span class="pill">Shared component</span><span class="pill" data-vwf-state-label data-vwf-state="requires-input">نیازمند Context</span><button type="button" class="button button-ghost" data-vwf-action="refresh" aria-label="تازه‌سازی داده‌های این Canvas">↻ تازه‌سازی</button></div>' +
     '</div>' +
+    '<div class="phoenix-vwf-role-lens" data-vwf-role-lens>' +
+      '<div><span class="section-kicker">Role-aware emphasis</span><strong data-vwf-role-title>در انتظار Context</strong><small data-vwf-role-description>این لایه فقط تمرکز رابط را تعیین می‌کند؛ مجوز همچنان توسط Backend کنترل می‌شود.</small></div>' +
+      '<span class="pill" data-vwf-role-fit>در انتظار احراز</span>' +
+    '</div>' +
     '<div data-vwf-content>' + renderLayout(model.blueprint.layout, model) + '</div>' +
     '<div class="phoenix-vwf-contract"><span>state</span><strong>canonical-only</strong><span>layout</span><strong>' + escapeHtml(model.blueprint.layout) + '</strong><span>interaction</span><strong>' + escapeHtml(model.blueprint.interaction) + '</strong></div>' +
   '</section>';
 }
 
 type VerticalWorkflowCanvasState = "connected" | "requires-input" | "readonly" | "unavailable";
+
+async function hydrateCanvasRoleLens(canvas: HTMLElement): Promise<void> {
+  const title = canvas.querySelector<HTMLElement>("[data-vwf-role-title]");
+  const description = canvas.querySelector<HTMLElement>("[data-vwf-role-description]");
+  const fitNode = canvas.querySelector<HTMLElement>("[data-vwf-role-fit]");
+  if (!title || !description || !fitNode) return;
+
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    title.textContent = "Context در دسترس نیست";
+    description.textContent = "برای تعیین تمرکز این ماژول، Context احراز هویت لازم است.";
+    fitNode.textContent = "نیازمند Context";
+    fitNode.className = "pill warning";
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/v1/context", { headers });
+    const body = await response.json().catch(() => null) as { roles?: string[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Context unavailable");
+
+    const roles = Array.isArray(body?.roles) ? body.roles : [];
+    const lens = resolveVerticalRoleLens(roles);
+    const vertical = canvas.dataset.vwfVertical ?? "default";
+    const module = canvas.dataset.vwfModule ?? "";
+    // Resolve role fit without granting any authorization.
+    const moduleBlueprint = (await import("./business-module-ui.js")).getVerticalModuleBlueprint(vertical, module);
+    const fit = getVerticalModuleRoleFit(moduleBlueprint, lens.key);
+    const fitLabel = fit === "primary" ? "تمرکز این نقش" : "سطح مشترک";
+
+    title.textContent = lens.title;
+    description.textContent = lens.description;
+    fitNode.textContent = fitLabel;
+    fitNode.className = fit === "primary" ? "pill success" : "pill";
+    canvas.dataset.vwfRoleFit = fit;
+    canvas.dataset.vwfRoleLens = lens.key;
+  } catch (error) {
+    title.textContent = "Context خوانده نشد";
+    description.textContent = error instanceof Error ? error.message : "Role context در دسترس نیست.";
+    fitNode.textContent = "نامشخص";
+    fitNode.className = "pill warning";
+  }
+}
 
 function setCanvasState(canvas: HTMLElement, state: VerticalWorkflowCanvasState, label?: string): void {
   const node = canvas.querySelector<HTMLElement>("[data-vwf-state-label]");
@@ -291,6 +338,7 @@ function setCanvasState(canvas: HTMLElement, state: VerticalWorkflowCanvasState,
 export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
   const canvases = Array.from(root.querySelectorAll<HTMLElement>("[data-vwf-root]"));
   canvases.forEach((canvas) => {
+    void hydrateCanvasRoleLens(canvas);
     const tabs = Array.from(canvas.querySelectorAll<HTMLButtonElement>("[data-vwf-tab]"));
     const viewStateNode = canvas.querySelector<HTMLElement>("[data-vwf-view-state]");
 
