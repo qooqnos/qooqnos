@@ -701,6 +701,17 @@ kbd { padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 7px
 .booking-slot-action{margin-top:4px}
 @media(max-width:980px){.booking-context-strip{grid-template-columns:1fr 1fr}.booking-slot-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.booking-context-strip{grid-template-columns:1fr}.booking-slot-grid{grid-template-columns:1fr}}
+.booking-offering-context{margin:0 0 14px}
+.booking-offering-card{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.6fr);gap:14px;padding:16px;border:1px solid color-mix(in srgb,var(--primary) 18%,var(--line));border-radius:15px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 7%,var(--surface-1)),var(--surface-2));box-shadow:0 10px 28px color-mix(in srgb,var(--primary) 6%,transparent)}
+.booking-offering-card-main h3{margin:5px 0 6px;font-size:15px;color:var(--text);letter-spacing:-.02em}
+.booking-offering-card-main p{margin:0;color:var(--muted);font-size:8px;line-height:1.9}
+.booking-offering-card-meta{display:flex;flex-wrap:wrap;align-content:center;justify-content:flex-end;gap:7px}
+.booking-offering-card-meta>span:not(.pill){padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-1);color:var(--faint);font-size:7px;word-break:break-word}
+.booking-offering-card-meta strong{color:var(--text);direction:ltr}
+.booking-offering-empty{display:grid;gap:5px;padding:14px 15px;border:1px dashed var(--line);border-radius:14px;background:var(--surface-2);color:var(--muted);font-size:8px;line-height:1.8}
+.booking-offering-empty strong{color:var(--text);font-size:9px}
+.booking-offering-loading{min-height:92px!important;border-radius:14px;border:1px solid var(--line);background:var(--surface-2)}
+@media(max-width:820px){.booking-offering-card{grid-template-columns:1fr}.booking-offering-card-meta{justify-content:flex-start}}
 .booking-fields{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:20px}
 .booking-actions{display:flex;justify-content:flex-end;margin-top:16px}
 .booking-action-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:16px}
