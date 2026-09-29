@@ -2740,3 +2740,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Implementation commits: `26827f588ec0ad0a57c58704e4601f9549d60dbd`, `1eea1c3f5bf5ba857d13e5cd434b1f9a8922665e`, styles `421d97084b0a6f835823e6822b1e1b97aa799ec0`, `767ff2e4aeea0ebd208ebb063383d5a5a9685e71`, test `b6f4e5cece456519eadd992084da0bdb8cff167a`.
 - Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
 
+
+
+## 2026-09-29 — Shared canonical Booking lookup surface
+- Added a reusable read-only Booking lookup block to the Vertical Workflow UI Framework for appointment-oriented modules across Clinic, Restaurant and Salon.
+- The surface reads GET /api/v1/booking/:bookingId and shows canonical booking status, Business, Customer, Offering, start/end times, item count and status-history count. It does not create local booking state.
+- Added regression coverage for Clinic appointments, Restaurant reservations and Salon today modules.
+- Implementation commits: a2f78a5916893e78baced9228877d7a1d9ecb150, 6c8f95839100e04732ee9c9644a030e4903b5377, styles bd730117abe42208e14a4e3c756e36318dc22f99 and eb568965a611c2be094c19b8c9df72a979a67c26.
+- Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
