@@ -1884,9 +1884,7 @@ export function translateUiText(value: string, locale: Locale): string {
   const trimmed=value.trim(); if(!trimmed) return value;
   const directKey=textKeyIndex.get(trimmed);
   if(directKey){const translated=translations[locale][directKey]??translations.fa[directKey]; if(translated){const leading=value.match(/^\\s*/u)?.[0]??"";const trailing=value.match(/\\s*$/u)?.[0]??"";return leading+translated+trailing;}}
-  const candidate=translationSources.find(([source,key])=>{if(!key.startsWith("canonical."))return false;if(!trimmed.includes(source))return false;const translated=translations[locale][key]??translations.fa[key];return Boolean(translated&&translated!==source);});
-  if(!candidate)return value;
-  const [source,key]=candidate; const translated=translations[locale][key]??translations.fa[key]; return translated?value.split(source).join(translated):value;
+  return value;
 }
 export function getDirection(locale: Locale): "ltr"|"rtl" { return locale==="fa"||locale==="ar"?"rtl":"ltr"; }
 export function getLocaleFromPreference(preference:string,fallback:Locale="fa"):Locale { const normalized=preference.trim().toLowerCase().split(/[-_]/u,1)[0]; return normalized==="fa"||normalized==="ar"||normalized==="en"?normalized:fallback; }
