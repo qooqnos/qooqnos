@@ -39,6 +39,8 @@ describe("Vertical Workflow UI Canvas", () => {
       expect(html).toContain('data-vwf-action="refresh"');
       expect(html).toContain('data-vwf-state-label');
       expect(html).toContain('data-vwf-state="requires-input"');
+      expect(html).toContain('role="tab"');
+      expect(html).toContain('tabindex="0"');
     }
   });
 
