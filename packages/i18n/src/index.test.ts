@@ -40,6 +40,16 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("نوبت", "en")).toBe("Appointment");
   });
 
+  it("translates the Business Workspace dictionary as a complete UI surface", () => {
+    expect(translations.en["businessPage.createBusiness"]).toBe("Create business");
+    expect(translations.en["businessPage.businessName"]).toBe("Business name");
+    expect(translations.en["businessPage.locations"]).toBe("Locations");
+    expect(translateUiText("ساخت کسب‌وکار", "en")).toBe("Create business");
+    expect(translateUiText("اقدام‌های سریع", "en")).toBe("Quick actions");
+    expect(translateUiText("نام کسب‌وکار", "en")).toBe("Business name");
+    expect(translateUiText("مکان‌ها", "en")).toBe("Locations");
+  });
+
   it("keeps canonical concepts distinct instead of collapsing synonyms", () => {
     expect(translations.en["canonical.identity.user"]).not.toBe(translations.en["canonical.customer.customer"]);
     expect(translations.en["canonical.business.business"]).not.toBe(translations.en["canonical.catalog.offering"]);
