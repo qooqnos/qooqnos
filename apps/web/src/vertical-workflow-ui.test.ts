@@ -111,3 +111,51 @@ describe("Vertical Workflow UI Canvas", () => {
     expect(html).toContain("biz&quot;&amp;&lt;&gt;");
   });
 });
+
+
+describe("Vertical Workflow contract", () => {
+  const verticals = ["clinic", "retail", "restaurant", "salon"] as const;
+
+  it("keeps every vertical workflow mapped to real module blueprints", () => {
+    const { getVerticalWorkflowDefinition, getVerticalWorkflowStageModule } = require("./business-workflow-ui") as typeof import("./business-workflow-ui");
+    for (const vertical of verticals) {
+      const definition = getVerticalWorkflowDefinition(vertical);
+      expect(definition.steps.length).toBeGreaterThanOrEqual(4);
+      for (const stage of definition.steps) {
+        const module = getVerticalWorkflowStageModule(vertical, stage);
+        expect(module).toBeTruthy();
+        const blueprint = getVerticalModuleBlueprint(vertical, module!);
+        expect(blueprint.blocks.length).toBeGreaterThanOrEqual(3);
+        expect(blueprint.states.map((item) => item.key)).toEqual(
+          expect.arrayContaining(["connected", "requires-input", "readonly", "unavailable"]),
+        );
+      }
+    }
+  });
+
+  it("keeps semantic routes stable for all vertical module slugs", async () => {
+    const moduleUi = await import("./business-module-ui");
+    for (const vertical of verticals) {
+      const entries = Object.entries(moduleUi.VERTICAL_MODULE_SLUGS[vertical]!);
+      expect(entries.length).toBeGreaterThanOrEqual(4);
+      for (const [module, slug] of entries) {
+        expect(moduleUi.getVerticalModuleRoute(vertical, module)).toContain(
+          "/business/workspace/" + vertical + "/" + slug,
+        );
+        expect(moduleUi.getVerticalModuleForSlug(vertical, slug, entries.map(([name]) => name))).toBe(module);
+      }
+    }
+  });
+
+  it("treats role emphasis as presentation, not authorization", async () => {
+    const moduleUi = await import("./business-module-ui");
+    const management = moduleUi.resolveVerticalRoleLens(["owner"]);
+    const specialist = moduleUi.resolveVerticalRoleLens(["specialist"]);
+    const blueprint = getVerticalModuleBlueprint("clinic", "تقویم");
+
+    expect(management.key).toBe("management");
+    expect(specialist.key).toBe("specialist");
+    expect(["primary", "shared"]).toContain(moduleUi.getVerticalModuleRoleFit(blueprint, management.key));
+    expect(["primary", "shared"]).toContain(moduleUi.getVerticalModuleRoleFit(blueprint, specialist.key));
+  });
+});
