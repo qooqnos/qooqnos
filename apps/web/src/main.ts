@@ -4003,18 +4003,20 @@ function renderBusiness(): string {
     if (resolvedModule) return renderBusinessModule(vertical, resolvedModule);
   }
   const ui = getBusinessVerticalUi(vertical);
+  const bt = (key: string): string => escapeHtml(businessUi(key));
+  const localized = (value: string): string => localizedUi(value);
   return '<div class="phoenix-business-page" data-business-vertical="' + ui.key + '">' +
     '<section class="phoenix-business-hero">' +
       '<div class="phoenix-business-hero-copy">' +
-        '<span class="phoenix-kicker">Business Workspace</span>' +
-        '<div class="phoenix-business-title-row"><span id="business-vertical-icon" class="phoenix-business-vertical-icon">' + ui.icon + '</span><div><h1 id="business-vertical-title">' + ui.label + '</h1><p id="business-vertical-subtitle">' + ui.subtitle + '</p></div></div>' +
-        '<div class="phoenix-business-identity-line"><span id="business-header-name">فضای کاری شما</span><span id="business-header-status" class="pill">در حال بررسی</span><span id="business-header-role" class="pill">نقش: —</span></div>' +
+        '<span class="phoenix-kicker">' + bt("workspaceTitle") + '</span>' +
+        '<div class="phoenix-business-title-row"><span id="business-vertical-icon" class="phoenix-business-vertical-icon">' + ui.icon + '</span><div><h1 id="business-vertical-title">' + localized(ui.label) + '</h1><p id="business-vertical-subtitle">' + localized(ui.subtitle) + '</p></div></div>' +
+        '<div class="phoenix-business-identity-line"><span id="business-header-name">' + localized("فضای کاری شما") + '</span><span id="business-header-status" class="pill">' + bt("workspaceReview") + '</span><span id="business-header-role" class="pill">' + bt("unknownRole") + '</span></div>' +
       '</div>' +
-      '<div class="phoenix-business-hero-actions"><button class="button button-ghost" type="button" data-business-create>ساخت کسب‌وکار</button><button class="button button-ghost" type="button" data-business-refresh>بروزرسانی</button><a class="button button-primary" href="/product-studio" data-nav>✦ Seller AI</a></div>' +
+      '<div class="phoenix-business-hero-actions"><button class="button button-ghost" type="button" data-business-create>' + bt("createBusiness") + '</button><button class="button button-ghost" type="button" data-business-refresh>' + bt("refresh") + '</button><a class="button button-primary" href="/product-studio" data-nav>✦ Seller AI</a></div>' +
     '</section>' +
 
     '<section class="phoenix-business-attention">' +
-      '<article class="glass-card phoenix-business-assistant"><div class="phoenix-business-assistant-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div><div><span class="section-kicker">Phoenix پیشنهاد می‌دهد</span><strong id="business-next-action">اولین کار مهم امروزت را مشخص کن.</strong><p id="business-next-detail">ماژول‌های این Workspace بر اساس نوع کسب‌وکار ترکیب می‌شوند؛ مجوزها همچنان توسط backend تعیین می‌شوند.</p></div><button class="button button-primary" type="button" data-business-primary-action>شروع کن <span>←</span></button></article>' +
+      '<article class="glass-card phoenix-business-assistant"><div class="phoenix-business-assistant-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div><div><span class="section-kicker">' + bt("phoenixSuggests") + '</span><strong id="business-next-action">' + bt("todayPrimaryTask") + '</strong><p id="business-next-detail">' + bt("workspaceComposition") + '</p></div><button class="button button-primary" type="button" data-business-primary-action>' + bt("startAction") + ' <span>←</span></button></article>' +
       '<article class="glass-card phoenix-business-mini-status"><span class="section-kicker">Workspace</span><strong id="business-workspace-status">—</strong><small id="business-workspace-status-detail">—</small></article>' +
     '</section>' +
 
@@ -4036,61 +4038,61 @@ function renderBusiness(): string {
     '</section>' +
 
     '<section class="phoenix-business-metrics" id="business-vertical-metrics">' +
-      ui.metrics.map((label, index) => '<article class="glass-card phoenix-business-metric"><span>' + label + '</span><strong id="business-metric-' + index + '">—</strong><small>اطلاعات canonical پس از اتصال</small></article>').join("") +
+      ui.metrics.map((label, index) => '<article class="glass-card phoenix-business-metric"><span>' + localized(label) + '</span><strong id="business-metric-' + index + '">—</strong><small>اطلاعات canonical پس از اتصال</small></article>').join("") +
     '</section>' +
 
     '<section class="phoenix-business-layout">' +
-      '<article class="glass-card phoenix-business-modules-card"><div class="card-section-heading"><div><span class="section-kicker">Workspace Modules</span><h2>ابزارهای مخصوص این کسب‌وکار</h2></div><span id="business-module-count" class="pill">—</span></div><div id="business-module-grid" class="phoenix-business-module-grid">' + ui.modules.map((module) => '<button class="phoenix-business-module" type="button" data-business-module="' + escapeAttr(module) + '"><span>◈</span><strong>' + module + '</strong><small>باز کردن</small></button>').join("") + '</div></article>' +
+      '<article class="glass-card phoenix-business-modules-card"><div class="card-section-heading"><div><span class="section-kicker">Workspace Modules</span><h2>' + bt("businessSpecificTools") + '</h2></div><span id="business-module-count" class="pill">—</span></div><div id="business-module-grid" class="phoenix-business-module-grid">' + ui.modules.map((module) => '<button class="phoenix-business-module" type="button" data-business-module="' + escapeAttr(module) + '"><span>◈</span><strong>' + localized(module) + '</strong><small>باز کردن</small></button>').join("") + '</div></article>' +
 
       '<aside class="phoenix-business-side">' +
-        '<article class="glass-card phoenix-business-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>اقدام‌های سریع</h2></div></div><div id="business-quick-actions" class="phoenix-business-quick-actions">' + ui.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action data-business-quick-action-value="' + escapeAttr(action) + '">' + action + ' <span>←</span></button>').join("") + '</div></article>' +
-        '<article class="glass-card ai-action-card"><span class="ai-badge">AI COPILOT</span><h2>عرضه را سریع‌تر آماده کن.</h2><p>از تصویر یا متن خام شروع کن؛ Seller AI پیش‌نویس می‌سازد و پذیرش نهایی همچنان دست کسب‌وکار می‌ماند.</p><a class="button button-primary" href="/product-studio" data-nav>باز کردن Product Studio <span>→</span></a></article>' +
+        '<article class="glass-card phoenix-business-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>اقدام‌های سریع</h2></div></div><div id="business-quick-actions" class="phoenix-business-quick-actions">' + ui.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action data-business-quick-action-value="' + escapeAttr(action) + '">' + localized(action) + ' <span>←</span></button>').join("") + '</div></article>' +
+        '<article class="glass-card ai-action-card"><span class="ai-badge">AI COPILOT</span><h2>' + bt("prepareSupplyFast") + '</h2><p>' + bt("sellerAiDescription") + '</p><a class="button button-primary" href="/product-studio" data-nav>' + bt("openProductStudio") + ' <span>→</span></a></article>' +
       '</aside>' +
     '</section>' +
 
     '<section class="phoenix-business-brand-preview">' +
       '<article class="glass-card phoenix-brand-preview-card">' +
         '<div class="phoenix-brand-preview-cover"><div class="phoenix-brand-preview-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div></div>' +
-        '<div class="phoenix-brand-preview-body"><div><span class="section-kicker">Public Brand</span><h2 id="business-brand-preview-name">نام کسب‌وکار</h2><p id="business-brand-preview-type">نوع کسب‌وکار</p></div><span id="business-brand-preview-status" class="pill">—</span></div>' +
-        '<div class="phoenix-brand-preview-cta"><a class="button button-secondary" href="/business/profile" data-nav>مدیریت و Preview ↗</a>' + (businessId ? '<a class="button button-primary" href="/businesses/' + encodeURIComponent(businessId) + '" data-nav>نمای مشتری ↗</a>' : '') + '</div>' +
+        '<div class="phoenix-brand-preview-body"><div><span class="section-kicker">' + bt("publicBrand") + '</span><h2 id="business-brand-preview-name">' + bt("businessName") + '</h2><p id="business-brand-preview-type">' + bt("businessType") + '</p></div><span id="business-brand-preview-status" class="pill">—</span></div>' +
+        '<div class="phoenix-brand-preview-cta"><a class="button button-secondary" href="/business/profile" data-nav>' + bt("managePreview") + '</a>' + (businessId ? '<a class="button button-primary" href="/businesses/' + encodeURIComponent(businessId) + '" data-nav>' + bt("customerView") + '</a>' : '') + '</div>' +
         '<div class="phoenix-brand-preview-facts"><span>Profile</span><span>Catalog</span><span>Contact</span><span>Trust</span></div>' +
       '</article>' +
-      '<article class="glass-card phoenix-brand-preview-copy"><span class="section-kicker">Public Profile</span><h2>کسب‌وکار تو باید برای مشتری هم به همان اندازه واضح باشد.</h2><p>این پیش‌نمایش فقط بر اساس داده‌های canonical Business ساخته می‌شود؛ اطلاعات خصوصی Workspace در سطح عمومی نمایش داده نمی‌شود.</p><div class="phoenix-public-capability-list"><span>هویت کسب‌وکار</span><span>محصول و خدمت</span><span>اعتماد</span><span>ارتباط</span></div></article>' +
+      '<article class="glass-card phoenix-brand-preview-copy"><span class="section-kicker">' + bt("publicProfile") + '</span><h2>' + bt("businessCustomerClarity") + '</h2><p>' + bt("businessPreviewDescription") + '</p><div class="phoenix-public-capability-list"><span>هویت کسب‌وکار</span><span>محصول و خدمت</span><span>اعتماد</span><span>ارتباط</span></div></article>' +
     '</section>' +
 
     '<section class="phoenix-business-public-preview glass-card">' +
-      '<div class="card-section-heading"><div><span class="section-kicker">Customer Experience</span><h2>کاربر این کسب‌وکار را چگونه می‌بیند؟</h2></div><span class="pill success">Capability-driven</span></div>' +
-      '<div id="business-customer-actions" class="phoenix-business-customer-actions">' + ui.customerActions.map((action) => '<span>' + action + '</span>').join("") + '</div>' +
-      '<p>این Actionها باید فقط وقتی نمایش داده شوند که Capability متناظر در منبع canonical فعال باشد.</p>' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + bt("customerExperience") + '</span><h2>' + bt("customerExperienceQuestion") + '</h2></div><span class="pill success">' + bt("capabilityDriven") + '</span></div>' +
+      '<div id="business-customer-actions" class="phoenix-business-customer-actions">' + ui.customerActions.map((action) => '<span>' + localized(action) + '</span>').join("") + '</div>' +
+      '<p>' + bt("capabilityActionsDescription") + '</p>' +
     '</section>' +
 
     '<section class="phoenix-business-team-section">' +
       '<article class="glass-card phoenix-team-card">' +
-        '<div class="card-section-heading"><div><span class="section-kicker">Team & Access</span><h2>تیم و نقش‌ها</h2></div><span id="business-team-count" class="pill">—</span></div>' +
-        '<div class="phoenix-role-lens" id="business-role-lens"><span class="section-kicker">Role Lens</span><strong id="business-role-title">—</strong><p id="business-role-description">نقش و مجوزهای فعلی از context canonical خوانده می‌شوند.</p></div>' +
-        '<div class="phoenix-permission-cloud" id="business-permissions"><span>در حال خواندن مجوزها…</span></div>' +
+        '<div class="card-section-heading"><div><span class="section-kicker">' + bt("teamAccess") + '</span><h2>' + bt("teamAndRoles") + '</h2></div><span id="business-team-count" class="pill">—</span></div>' +
+        '<div class="phoenix-role-lens" id="business-role-lens"><span class="section-kicker">' + bt("roleLens") + '</span><strong id="business-role-title">—</strong><p id="business-role-description">' + bt("currentRolePermissions") + '</p></div>' +
+        '<div class="phoenix-permission-cloud" id="business-permissions"><span>' + bt("readingPermissions") + '</span></div>' +
         '<div class="phoenix-team-list" id="business-team-list"><div class="slot-loading">در حال خواندن اعضای Workspace…</div></div>' +
         '<div class="phoenix-team-actions"><button class="button button-ghost" type="button" data-workspace-toggle>تغییر Workspace</button><button class="button button-primary" type="button" data-team-management>مدیریت تیم</button></div>' +
       '</article>' +
       '<article class="glass-card phoenix-role-guide">' +
-        '<span class="section-kicker">Role-based Workspace</span><h2>هر نقش، مسیر خودش را دارد.</h2>' +
+        '<span class="section-kicker">' + bt("roleBasedWorkspace") + '</span><h2>' + bt("roleRoutes") + '</h2>' +
         '<div class="phoenix-role-guide-list">' +
-          '<div><b>Owner / Admin</b><span>مدیریت، مالی، تیم، گزارش و تنظیمات</span></div>' +
-          '<div><b>Sales</b><span>مشتریان، محصولات، پیام‌ها و معاملات</span></div>' +
-          '<div><b>Specialist</b><span>خدمات، برنامه، رزرو و پروفایل تخصصی</span></div>' +
-          '<div><b>Finance</b><span>پرداخت‌ها، تراکنش‌ها و گزارش مالی</span></div>' +
+          '<div><b>Owner / Admin</b><span>' + bt("ownerAdminFocus") + '</span></div>' +
+          '<div><b>Sales</b><span>' + bt("salesFocus") + '</span></div>' +
+          '<div><b>Specialist</b><span>' + bt("specialistFocus") + '</span></div>' +
+          '<div><b>Finance</b><span>' + bt("financeFocus") + '</span></div>' +
         '</div>' +
-        '<p>این راهنما صرفاً composition رابط است؛ مجوز واقعی را backend تعیین می‌کند.</p>' +
+        '<p>' + bt("roleGuideDescription") + '</p>' +
       '</article>' +
     '</section>' +
 
     '<section class="business-grid phoenix-business-management-grid">' +
-      '<article class="glass-card business-main"><div class="card-section-heading"><div><span class="section-kicker">Profile</span><h2>پروفایل کسب‌وکار</h2></div><span id="business-management-status" class="pill">در حال بررسی</span></div><div id="business-profile-content" class="business-profile-content"><div class="slot-empty"><span>▦</span><p>' + (businessId ? "در حال خواندن پروفایل…" : "یک Business ID برای مدیریت این فضای کاری ثبت کنید.") + '</p></div></div><div class="business-management-form"><input id="business-name-input" class="studio-input-line" placeholder="نام canonical" /><input id="business-display-name-input" class="studio-input-line" placeholder="نام نمایشی" /><div class="phoenix-business-type-picker"><input id="business-type-input" class="studio-input-line" placeholder="نوع کسب‌وکار" /><div class="phoenix-business-type-chips"><button type="button" data-business-type-choice="clinic">مطب / کلینیک</button><button type="button" data-business-type-choice="retail">فروشگاه</button><button type="button" data-business-type-choice="restaurant">رستوران</button><button type="button" data-business-type-choice="salon">سالن</button></div></div><input id="business-timezone-input" class="studio-input-line" placeholder="Timezone" /><input id="business-currency-input" class="studio-input-line" placeholder="Currency" /><button class="button button-primary" type="button" data-business-save>' + (businessId ? "ذخیره پروفایل" : "ابتدا Business بسازید") + '</button></div></article>' +
-      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div><button class="button button-ghost" type="button" data-business-add-location>افزودن مکان</button></div><div id="business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>داده مکان بعد از اتصال نمایش داده می‌شود.</p></div></div></article>' +
-      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Availability</span><h2>ساعات فعال</h2></div></div><div id="business-hours" class="business-hours-list"><div class="slot-empty"><span>◷</span><p>ساعات بعد از اتصال نمایش داده می‌شوند.</p></div></div></article>' +
-      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Contacts</span><h2>راه‌های تماس</h2></div></div><div id="business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
-      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Publication</span><h2>وضعیت انتشار</h2></div><span id="business-publication-status" class="pill">—</span></div><div id="business-publication-detail" class="connection-state">—</div></article>' +
-      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Verification</span><h2>وضعیت احراز</h2></div><span id="business-verification-status" class="pill">—</span></div><div id="business-verification-detail" class="connection-state">در حال خواندن Verification…</div></article>' +
+      '<article class="glass-card business-main"><div class="card-section-heading"><div><span class="section-kicker">' + bt("profileSection") + '</span><h2>' + bt("businessProfile") + '</h2></div><span id="business-management-status" class="pill">' + bt("workspaceReview") + '</span></div><div id="business-profile-content" class="business-profile-content"><div class="slot-empty"><span>▦</span><p>' + (businessId ? "در حال خواندن پروفایل…" : "یک Business ID برای مدیریت این فضای کاری ثبت کنید.") + '</p></div></div><div class="business-management-form"><input id="business-name-input" class="studio-input-line" placeholder="نام canonical" /><input id="business-display-name-input" class="studio-input-line" placeholder="نام نمایشی" /><div class="phoenix-business-type-picker"><input id="business-type-input" class="studio-input-line" placeholder="نوع کسب‌وکار" /><div class="phoenix-business-type-chips"><button type="button" data-business-type-choice="clinic">مطب / کلینیک</button><button type="button" data-business-type-choice="retail">فروشگاه</button><button type="button" data-business-type-choice="restaurant">رستوران</button><button type="button" data-business-type-choice="salon">سالن</button></div></div><input id="business-timezone-input" class="studio-input-line" placeholder="Timezone" /><input id="business-currency-input" class="studio-input-line" placeholder="Currency" /><button class="button button-primary" type="button" data-business-save>' + (businessId ? "ذخیره پروفایل" : "ابتدا Business بسازید") + '</button></div></article>' +
+      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>' + bt("locations") + '</h2></div><button class="button button-ghost" type="button" data-business-add-location>' + bt("addLocation") + '</button></div><div id="business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>' + bt("locationsAfterConnection") + '</p></div></div></article>' +
+      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Availability</span><h2>' + bt("activeHours") + '</h2></div></div><div id="business-hours" class="business-hours-list"><div class="slot-empty"><span>◷</span><p>' + bt("hoursAfterConnection") + '</p></div></div></article>' +
+      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Contacts</span><h2>' + bt("contactMethods") + '</h2></div></div><div id="business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
+      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Publication</span><h2>' + bt("publicationStatus") + '</h2></div><span id="business-publication-status" class="pill">—</span></div><div id="business-publication-detail" class="connection-state">—</div></article>' +
+      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">Verification</span><h2>' + bt("verificationStatus") + '</h2></div><span id="business-verification-status" class="pill">—</span></div><div id="business-verification-detail" class="connection-state">' + bt("readingVerification") + '</div></article>' +
     '</section>' +
   '</div>';
 }
