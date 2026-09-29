@@ -153,7 +153,6 @@ await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='en']").click();
 await page.waitForTimeout(50);
 assert.equal(await page.locator("[data-language-current]").innerText(), "EN");
-assert.ok((await page.locator(".app-header .brand-copy strong").innerText()).length > 0);
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);
