@@ -1,3 +1,14 @@
+## 2026-09-29 — Vertical Workflow overview role/access awareness
+
+- 🟢 The shared Vertical Workflow overview now hydrates the current role lens and declared module permissions from canonical `/api/v1/context`.
+- 🟢 Each stage card exposes truthful presentation state: role focus/shared surface and whether declared permissions are present, missing, or backend-policy controlled.
+- 🟢 This is presentation-only; the overview never disables or grants a capability and backend authorization remains authoritative.
+- 🟢 The behavior is shared across Clinic, Retail, Restaurant and Salon, with no duplicate vertical-specific access logic.
+- 🟢 Added regression coverage and responsive styling in both authored and served web stylesheets.
+- 🟡 TypeScript build, full tests, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: c4b23829 (overview binder), df6d5c8f (SPA binding), 5addccf6 (tests), d9562fe2 / 1b0d80be (styles).
+
 
 ## 2026-09-29 — Shared Restaurant Table Resource Surface
 
