@@ -1,3 +1,14 @@
+
+## 2026-09-29 — Shared People canvas → canonical CRM timeline context
+
+- Extended the shared People layout in `apps/web/src/vertical-workflow-ui.ts` so a selected Customer now exposes a read-only CRM Timeline surface alongside the canonical Customer profile.
+- The Canvas reads `GET /api/v1/customers/:customerId/history?limit=12` from the existing Customer/CRM boundary and renders truthful loading, empty and error states.
+- Timeline payloads are treated as derived read data only; the UI does not create, mutate, or persist CRM history locally.
+- Because People is a shared Vertical Workflow layout, the surface is inherited by Clinic, Retail, Restaurant and Salon without duplicating occupation-specific Customer state.
+- Added regression assertions and responsive styling in both frontend stylesheet surfaces.
+- Implementation commits: `ad23d7b3400f70247260445b319bd4e62c615a93`, `084a871a895e33a73f655c8131787837e5bf1d0e`, `80552fc6269e5e868ec85d24478fbf19a67f9451`, `250d055b5e9e53e7826d17b42a0ee00f53f6b933`.
+- Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
+
 # Phoenix Implementation Ledger
 
 **Status:** Current implementation ledger
