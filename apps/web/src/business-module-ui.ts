@@ -548,9 +548,15 @@ export function getVerticalModuleBlueprint(vertical: string, module: string): Ve
         block("03", "Next action", "اقدام اجرایی باید از command/API canonical عبور کند."),
       ],
     );
+  const declaredContract = getVerticalModuleCapabilityContract(module);
+  const selectedContract = selected.capabilityContract;
+  const hasDeclaredSelectedContract = Boolean(
+    selectedContract &&
+    (selectedContract.requiredCapabilities.length > 0 || selectedContract.requiredPermissions.length > 0),
+  );
   return {
     ...selected,
     roleLenses: selected.roleLenses ?? deriveRoleLenses(module, selected.layout),
-    capabilityContract: selected.capabilityContract ?? getVerticalModuleCapabilityContract(module),
+    capabilityContract: hasDeclaredSelectedContract ? selectedContract! : declaredContract,
   };
 }
