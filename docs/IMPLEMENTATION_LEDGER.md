@@ -1,3 +1,11 @@
+## 2026-09-29 — Shared Vertical Billing surface
+- Extended the shared Vertical Workflow UI Framework so Clinic, Restaurant and Salon payment modules expose a common read-only Billing canvas.
+- The surface reads authoritative invoices from `GET /api/v1/billing/invoices?business_id=...` and displays invoice number, state, total, paid amount, due amount and an optional canonical order handoff.
+- Billing remains the financial source of truth; the Vertical Workflow Canvas only composes and contextualizes it and does not create a parallel ledger or payment state.
+- Added responsive/reduced-density styling in both frontend stylesheet surfaces and regression coverage for all three supported payment modules.
+- Implementation commit: `376d56aca47ef68032d46fe02bc38ea98b1d9378`; test: `41db63edac7a4701ba52d3b74c52c6fa8d24b4cf`; styles: `12307cba478c43c29852650fa2d0f0b14e2c519f`, `5b40cf4d9726ab8414cdf30975720472bd204951`.
+- Verification: TypeScript build, full test suite and browser/device visual QA remain pending after this slice.
+
 ## 2026-09-29 — Vertical service booking context continuity
 - Extended the shared Booking surface so a service Offering arriving from Vertical Workflow, Public Business, Discovery or Social Commerce is resolved against the canonical published Business supply before schedule selection.
 - Added a read-only Offering context card to `/booking` using `GET /api/v1/public/businesses/:businessId`; the UI shows canonical title, description, offering type and service identity without creating a local offering store.
