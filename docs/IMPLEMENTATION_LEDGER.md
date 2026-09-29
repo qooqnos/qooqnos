@@ -1,3 +1,12 @@
+## 2026-09-29 — Shared Vertical Workflow Context Bus
+
+- 🟢 Added a shared in-memory Context reader to `apps/web/src/vertical-workflow-ui.ts` so the overview, role lens and capability/permission surface reuse one canonical `GET /api/v1/context` request instead of issuing parallel reads.
+- 🟢 The cache is keyed to the active session token + Workspace context, clears automatically on auth/workspace changes, and invalidates explicitly when the shared Canvas refresh action is used.
+- 🟢 Context failures clear the cached promise so a later navigation/refresh can retry; no authorization decision or domain state is moved into the UI layer.
+- 🟡 Build, full test suite, browser/device visual QA and production deployment verification remain pending for this slice.
+
+Implementation commit: `1fdb20e1c31c04067f20f5b9db1c81e2a9ac4f14`.
+
 ## 2026-09-29 — Shared Retail Variant / Attribute Canvas
 
 - 🟢 Added a canonical Catalog read surface: `GET /api/v1/catalog/businesses/:businessId/variants`, tenant/workspace scoped and backed by the existing ProductVariant + AttributeValue model.
