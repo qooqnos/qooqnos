@@ -3,7 +3,18 @@ import {
   renderVerticalWorkflowCanvas,
   type VerticalWorkflowCanvasModel,
 } from "./vertical-workflow-ui";
-import { getVerticalModuleBlueprint } from "./business-module-ui";
+import {
+  VERTICAL_MODULE_SLUGS,
+  getVerticalModuleBlueprint,
+  getVerticalModuleForSlug,
+  getVerticalModuleRoleFit,
+  getVerticalModuleRoute,
+  resolveVerticalRoleLens,
+} from "./business-module-ui";
+import {
+  getVerticalWorkflowDefinition,
+  getVerticalWorkflowStageModule,
+} from "./business-workflow-ui";
 
 describe("Vertical Workflow UI Canvas", () => {
   const layouts = [
@@ -117,7 +128,6 @@ describe("Vertical Workflow contract", () => {
   const verticals = ["clinic", "retail", "restaurant", "salon"] as const;
 
   it("keeps every vertical workflow mapped to real module blueprints", () => {
-    const { getVerticalWorkflowDefinition, getVerticalWorkflowStageModule } = require("./business-workflow-ui") as typeof import("./business-workflow-ui");
     for (const vertical of verticals) {
       const definition = getVerticalWorkflowDefinition(vertical);
       expect(definition.steps.length).toBeGreaterThanOrEqual(4);
@@ -134,28 +144,27 @@ describe("Vertical Workflow contract", () => {
   });
 
   it("keeps semantic routes stable for all vertical module slugs", async () => {
-    const moduleUi = await import("./business-module-ui");
     for (const vertical of verticals) {
-      const entries = Object.entries(moduleUi.VERTICAL_MODULE_SLUGS[vertical]!);
+      const entries = Object.entries(VERTICAL_MODULE_SLUGS[vertical]!);
       expect(entries.length).toBeGreaterThanOrEqual(4);
       for (const [module, slug] of entries) {
-        expect(moduleUi.getVerticalModuleRoute(vertical, module)).toContain(
+        expect(getVerticalModuleRoute(vertical, module)).toContain(
           "/business/workspace/" + vertical + "/" + slug,
         );
-        expect(moduleUi.getVerticalModuleForSlug(vertical, slug, entries.map(([name]) => name))).toBe(module);
+        expect(getVerticalModuleForSlug(vertical, slug, entries.map(([name]) => name))).toBe(module);
       }
     }
   });
 
   it("treats role emphasis as presentation, not authorization", async () => {
     const moduleUi = await import("./business-module-ui");
-    const management = moduleUi.resolveVerticalRoleLens(["owner"]);
+    const management = resolveVerticalRoleLens(["owner"]);
     const specialist = moduleUi.resolveVerticalRoleLens(["specialist"]);
     const blueprint = getVerticalModuleBlueprint("clinic", "تقویم");
 
     expect(management.key).toBe("management");
     expect(specialist.key).toBe("specialist");
-    expect(["primary", "shared"]).toContain(moduleUi.getVerticalModuleRoleFit(blueprint, management.key));
+    expect(["primary", "shared"]).toContain(getVerticalModuleRoleFit(blueprint, management.key));
     expect(["primary", "shared"]).toContain(moduleUi.getVerticalModuleRoleFit(blueprint, specialist.key));
   });
 });
