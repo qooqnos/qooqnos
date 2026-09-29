@@ -2517,3 +2517,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - This protects the shared Vertical Workflow UI Framework from silent drift between the workflow registry and the per-vertical module registry.
 - No domain state, authorization rule, second source of truth, or frontend mutation was introduced.
 - Implementation commit: `ba17f350ee0a146a7a47f71698a56c54d1fd545b`.
+
+## 2026-09-29 — Vertical Workflow Canvas role-aware emphasis
+- Added a shared role-aware emphasis surface inside every Vertical Workflow Canvas (`apps/web/src/vertical-workflow-ui.ts`).
+- The Canvas now reads the existing canonical `/api/v1/context` roles and resolves the existing VerticalRoleLens/module-fit contract to show either «تمرکز این نقش» or «سطح مشترک».
+- This is explicitly presentation-only: it does not grant/deny permission, mutate domain state, or create a second authorization source.
+- Added regression coverage for the Canvas role contract and mirrored responsive styling in `apps/web/styles.css` and `apps/web/public/styles.css`.
+- Implementation commits: `5ca9b3be13f42eb998a57c1b2868f61e917dcd69`, `3c475645e5c24eebc9e3f0c15cbd9e951f58693b`, `6e34c1208090a47fb49489db91bc0a2a3615053e`, `fedeb35d623129f6adfede083c5ee808461d093c`, `df4e0ebf26b82831d98c844ecfa6baec1be9d96b`.
+- Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
