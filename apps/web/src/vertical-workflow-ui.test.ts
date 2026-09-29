@@ -55,6 +55,12 @@ describe("Vertical Workflow UI Canvas", () => {
       expect(html).toContain('data-vwf-state="requires-input"');
       expect(html).toContain('role="tab"');
       expect(html).toContain('tabindex="0"');
+      expect(html).toContain('aria-selected="true"');
+      expect([...html.matchAll(/<button[^>]*data-vwf-tab[^>]*>/g)].every((match) =>
+        match[0].includes('role="tab"') &&
+        match[0].includes('aria-selected=') &&
+        match[0].includes('tabindex=')
+      )).toBe(true);
     }
   });
 
