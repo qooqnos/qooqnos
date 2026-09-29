@@ -5932,3 +5932,16 @@ a {
   .phoenix-vwf-overview-rail{grid-template-columns:1fr}
   .phoenix-vwf-overview-stage{min-height:132px}
 }
+
+/* Vertical Workflow live inventory */
+.phoenix-vwf-live-inventory{margin:18px 0;padding:18px;border:1px solid var(--line,rgba(22,22,22,.08));border-radius:24px;background:var(--surface,rgba(255,255,255,.6))}
+.phoenix-vwf-live-inventory-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.phoenix-vwf-live-inventory-card{display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid var(--line,rgba(22,22,22,.08));border-radius:18px;background:var(--surface-strong,#fff);box-shadow:var(--shadow-sm,0 8px 24px rgba(0,0,0,.05))}
+.phoenix-vwf-live-inventory-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.phoenix-vwf-live-inventory-card h4{margin:0;font-size:1rem}
+.phoenix-vwf-live-inventory-card p{margin:0;color:var(--text-muted,#6b625b);font-size:.86rem}
+.phoenix-vwf-live-inventory-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.phoenix-vwf-live-inventory-metrics div{display:flex;flex-direction:column;gap:4px;padding:9px;border-radius:14px;background:var(--surface-soft,rgba(0,0,0,.03))}
+.phoenix-vwf-live-inventory-metrics span{font-size:.72rem;color:var(--text-muted,#6b625b)}
+.phoenix-vwf-live-inventory-metrics strong{font-size:1.05rem}
+@media (max-width:720px){.phoenix-vwf-live-inventory{padding:14px}.phoenix-vwf-live-inventory-grid{grid-template-columns:1fr}.phoenix-vwf-live-inventory-metrics{grid-template-columns:1fr 1fr 1fr}}
