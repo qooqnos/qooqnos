@@ -548,7 +548,11 @@
     "vertical_salonLabel": "سالن زیبایی",
     "vertical_salonSubtitle": "خدمات، متخصصان، تقویم، ظرفیت و مشتریان.",
     "vertical_viewService": "مشاهده خدمت",
-    "vertical_chooseSpecialist": "انتخاب متخصص"
+    "vertical_chooseSpecialist": "انتخاب متخصص",
+    "business_clinicType": "مطب / کلینیک",
+    "business_storeType": "فروشگاه",
+    "business_restaurantType": "رستوران",
+    "business_salonType": "سالن"
   },
   "canonical": {
     "identity": {
