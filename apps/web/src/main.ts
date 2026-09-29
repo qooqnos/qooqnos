@@ -3124,7 +3124,7 @@ function renderSocialHeader(active: "feed" | "following" | "explore" | "activity
     '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">دنبال‌شده‌ها</a>' +
     '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a>' +
     '<a href="/activity" data-nav class="' + (active === "activity" ? "active" : "") + '">فعالیت</a></nav>' +
-    '<div class="phoenix-social-actions"><button class="icon-button" type="button" data-open-create-post aria-label="پست جدید">＋</button><button class="icon-button" type="button" data-theme-toggle aria-label="${uiText("تغییر پوسته")}">◐</button></div>' +
+    '<div class="phoenix-social-actions"><button class="icon-button" type="button" data-open-create-post aria-label="' + uiText("پست جدید") + '">＋</button>' + renderLanguageSwitcher() + '<button class="icon-button" type="button" data-theme-toggle aria-label="' + uiText("تغییر پوسته") + '">◐</button></div>' +
     '</div></header>';
 }
 
