@@ -93,8 +93,11 @@ function renderCommand(model: VerticalWorkflowCanvasModel): string {
         '<span class="section-kicker">Primary flow</span><h3>' + escapeHtml(model.blueprint.primaryAction?.label ?? "منبع canonical") + '</h3><p>اقدام اصلی این ماژول باید از مسیر canonical اجرا شود؛ این Canvas فقط composition و context را فراهم می‌کند.</p>' +
         '<div class="phoenix-vwf-action-row"><span class="phoenix-vwf-source-chip">Vertical: ' + escapeHtml(model.vertical) + '</span><span class="phoenix-vwf-source-chip">Module: ' + escapeHtml(model.module) + '</span>' + action + '</div>' +
       '</article>' +
-      '<article class="phoenix-vwf-command-secondary" data-vwf-item><span class="section-kicker">Queue</span>' +
-        emptyState("صف واقعی بعد از اتصال endpoint دامنه در همین ناحیه hydrate می‌شود.") +
+      '<article class="phoenix-vwf-command-secondary" data-vwf-item>' +
+        '<div class="phoenix-vwf-command-live" data-vwf-business-live>' +
+          '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Business Context</span><h3>وضعیت این Workspace</h3><p>هویت و publication فقط از Business management خوانده می‌شود؛ صف یا metric محلی ساخته نمی‌شود.</p></div><span class="pill">live when connected</span></div>' +
+          '<div class="phoenix-vwf-command-live-grid" data-vwf-command-live-content><div class="slot-loading">در حال خواندن Business context…</div></div>' +
+        '</div>' +
       '</article>' +
     '</div>';
 }
@@ -458,6 +461,7 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     const businessId = canvas.dataset.vwfBusinessId?.trim();
     if (canvas.dataset.vwfLayout === "command") {
       setCanvasState(canvas, businessId ? "readonly" : "requires-input");
+      if (businessId) void hydrateCommandCanvas(canvas, businessId);
     }
     if (businessId && canvas.dataset.vwfLayout === "calendar") {
       void hydrateCalendarCanvas(canvas, businessId);
@@ -478,7 +482,51 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
 }
 
 
-type VerticalWorkflowEntityRecord = Record<string, unknown>;
+type VerticalWorkflowBusinessRecord = {
+  id?: string;
+  name?: string;
+  displayName?: string;
+  status?: string;
+  publicationStatus?: string;
+  businessType?: string;
+  defaultLocale?: string;
+  defaultCurrency?: string;
+};
+
+async function hydrateCommandCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
+  const host = canvas.querySelector<HTMLElement>("[data-vwf-command-live-content]");
+  if (!host) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    setCanvasState(canvas, "requires-input");
+    host.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش Business context، session و Workspace context لازم است.</div>';
+    return;
+  }
+  host.innerHTML = '<div class="slot-loading">در حال خواندن Business management…</div>';
+  try {
+    const response = await fetch("/api/v1/businesses/" + encodeURIComponent(businessId) + "/management", { headers });
+    const body = await response.json().catch(() => null) as { data?: { business?: VerticalWorkflowBusinessRecord }; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Business context unavailable");
+    const business = body?.data?.business;
+    if (!business) throw new Error("Business record not returned");
+    const displayName = String(business.displayName ?? business.name ?? businessId);
+    const publication = String(business.publicationStatus ?? "unpublished");
+    const status = String(business.status ?? "—");
+    const verticalLabel = String(business.businessType ?? "—");
+    const locale = String(business.defaultLocale ?? "—");
+    const currency = String(business.defaultCurrency ?? "—");
+    const publicationClass = publication === "published" ? "pill success" : "pill warning";
+    host.innerHTML =
+      '<div class="phoenix-vwf-command-live-item"><span>Business</span><strong>' + escapeHtml(displayName) + '</strong><small>' + escapeHtml(businessId) + '</small></div>' +
+      '<div class="phoenix-vwf-command-live-item"><span>Status</span><strong>' + escapeHtml(status) + '</strong><small>' + escapeHtml(verticalLabel) + '</small></div>' +
+      '<div class="phoenix-vwf-command-live-item"><span>Publication</span><strong><span class="' + publicationClass + '">' + escapeHtml(publication) + '</span></strong><small>Business policy</small></div>' +
+      '<div class="phoenix-vwf-command-live-item"><span>Locale / Currency</span><strong>' + escapeHtml(locale) + '</strong><small>' + escapeHtml(currency) + '</small></div>';
+    setCanvasState(canvas, "connected");
+  } catch (error) {
+    setCanvasState(canvas, "unavailable");
+    host.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Business context ناموفق بود.", "Business management");
+  }
+}
 
 function vwfAuthHeaders(): Headers | null {
   const token = sessionStorage.getItem("phoenix-access-token");
