@@ -73,7 +73,10 @@ export type VerticalModuleBlueprint = {
  * decision; this registry only describes what the surface depends on.
  */
 const MODULE_CAPABILITY_CONTRACTS: Readonly<Record<string, VerticalModuleCapabilityContract>> = {
+  "نمای کلی": { requiredCapabilities: ["business"], requiredPermissions: ["business.profile.read"], source: "runtime-registry-contract" },
   "امروز": { requiredCapabilities: ["booking", "crm"], requiredPermissions: ["booking.read", "crm.read"], source: "runtime-registry-contract" },
+  "فروش امروز": { requiredCapabilities: ["commerce", "analytics"], requiredPermissions: ["analytics.read"], source: "runtime-registry-contract" },
+  "وقت‌های امروز": { requiredCapabilities: ["booking", "crm"], requiredPermissions: ["booking.read", "crm.read"], source: "runtime-registry-contract" },
   "نوبت‌ها": { requiredCapabilities: ["booking"], requiredPermissions: ["booking.read", "booking.manage"], source: "runtime-registry-contract" },
   "تقویم": { requiredCapabilities: ["availability"], requiredPermissions: ["availability.read", "availability.manage"], source: "runtime-registry-contract" },
   "پزشکان": { requiredCapabilities: ["team"], requiredPermissions: ["team.manage"], source: "runtime-registry-contract" },
