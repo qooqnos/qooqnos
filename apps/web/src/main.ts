@@ -4004,6 +4004,7 @@ function renderBusiness(): string {
   }
   const ui = getBusinessVerticalUi(vertical);
   const bt = (key: string): string => escapeHtml(businessUi(key));
+  const bs = (key: string): string => escapeHtml(businessSurfaceUi(key));
   const localized = (value: string): string => localizedUi(value);
   return '<div class="phoenix-business-page" data-business-vertical="' + ui.key + '">' +
     '<section class="phoenix-business-hero">' +
@@ -4012,12 +4013,12 @@ function renderBusiness(): string {
         '<div class="phoenix-business-title-row"><span id="business-vertical-icon" class="phoenix-business-vertical-icon">' + ui.icon + '</span><div><h1 id="business-vertical-title">' + localized(ui.label) + '</h1><p id="business-vertical-subtitle">' + localized(ui.subtitle) + '</p></div></div>' +
         '<div class="phoenix-business-identity-line"><span id="business-header-name">' + localized("فضای کاری شما") + '</span><span id="business-header-status" class="pill">' + bt("workspaceReview") + '</span><span id="business-header-role" class="pill">' + bt("unknownRole") + '</span></div>' +
       '</div>' +
-      '<div class="phoenix-business-hero-actions"><button class="button button-ghost" type="button" data-business-create>' + bt("createBusiness") + '</button><button class="button button-ghost" type="button" data-business-refresh>' + bt("refresh") + '</button><a class="button button-primary" href="/product-studio" data-nav>✦ Seller AI</a></div>' +
+      '<div class="phoenix-business-hero-actions"><button class="button button-ghost" type="button" data-business-create>' + bt("createBusiness") + '</button><button class="button button-ghost" type="button" data-business-refresh>' + bt("refresh") + '</button><a class="button button-primary" href="/product-studio" data-nav>✦ ' + bt("sellerAi") + '</a></div>' +
     '</section>' +
 
     '<section class="phoenix-business-attention">' +
       '<article class="glass-card phoenix-business-assistant"><div class="phoenix-business-assistant-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div><div><span class="section-kicker">' + bt("phoenixSuggests") + '</span><strong id="business-next-action">' + bt("todayPrimaryTask") + '</strong><p id="business-next-detail">' + bt("workspaceComposition") + '</p></div><button class="button button-primary" type="button" data-business-primary-action>' + bt("startAction") + ' <span>←</span></button></article>' +
-      '<article class="glass-card phoenix-business-mini-status"><span class="section-kicker">Workspace</span><strong id="business-workspace-status">—</strong><small id="business-workspace-status-detail">—</small></article>' +
+      '<article class="glass-card phoenix-business-mini-status"><span class="section-kicker">' + bs("workspace") + '</span><strong id="business-workspace-status">—</strong><small id="business-workspace-status-detail">—</small></article>' +
     '</section>' +
 
     '<section class="phoenix-business-board">' +
@@ -4033,7 +4034,7 @@ function renderBusiness(): string {
       contextualHref: (path) => businessWorkspaceContextHref(path, ui.key, businessId || undefined),
     }) +
     '<section class="phoenix-business-role-actions glass-card">' +
-      '<div class="card-section-heading"><div><span class="section-kicker">Role Focus</span><h2 id="business-role-focus-title">مسیر نقش شما</h2></div><span id="business-role-focus-badge" class="pill">—</span></div>' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + bt("roleFocus") + '</span><h2 id="business-role-focus-title">' + bt("roleFocus") + '</h2></div><span id="business-role-focus-badge" class="pill">—</span></div>' +
       '<div id="business-role-actions-grid" class="phoenix-business-role-actions-grid"><div class="slot-loading">در حال خواندن Role Lens…</div></div>' +
     '</section>' +
 
