@@ -3181,7 +3181,7 @@ function renderDiscover(): string {
     ? "عرضه‌های منتشرشده از کسب‌وکارهایی که خودت دنبال کرده‌ای."
     : tab === "explore"
       ? "مرور عرضه‌های واقعی و قابل کشف در شبکه ققنوس."
-      : "نیازت را بگو تا Discovery روی منبع canonical ققنوس جست‌وجو کند.";
+      : "نیازت رو بگو؛ ققنوس از میان کالاها و خدمات واقعی، گزینه‌های مناسب رو برات پیدا می‌کنه.";
   return '<div class="phoenix-social-page">' +
     '<section class="phoenix-social-hero">' +
       '<div class="phoenix-social-intro"><span class="phoenix-kicker">Phoenix ' + (tab === "explore" ? "Explore" : tab === "following" ? "Following" : "For You") + '</span><h1>' + title + '</h1><p>' + intro + '</p></div>' +
