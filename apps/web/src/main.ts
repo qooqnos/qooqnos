@@ -82,10 +82,6 @@ function socialKey(targetType: string, targetId: string): string {
   return targetType + ":" + targetId;
 }
 
-function discoveryKey(item: DiscoveryResult): string {
-  return socialKey(item.sourceType ?? "product", item.sourceId ?? item.id ?? "");
-}
-
 function isSocialActive(action: "follow" | "like" | "save", item: DiscoveryResult): boolean {
   const target = action === "follow"
     ? (item.metadata && typeof item.metadata.businessId === "string"
@@ -3086,13 +3082,6 @@ function getSavedSearches(): string[] {
   }
 }
 
-function saveSearch(query: string): void {
-  const normalized = query.trim();
-  if (!normalized) return;
-  const current = getSavedSearches().filter((item) => item !== normalized);
-  localStorage.setItem("phoenix-saved-searches", JSON.stringify([...current, normalized].slice(-30)));
-}
-
 function renderResultCards(items: DiscoveryResult[]): string {
   activeDiscoveryItems = items;
   return items.map((item,index) => {
@@ -3390,10 +3379,6 @@ function businessModuleInfo(vertical: string, module: string): { readonly label:
   return BUSINESS_MODULE_LINKS[vertical]?.[module] ?? BUSINESS_MODULE_LINKS.default?.[module] ?? { label: module, status: "capability", description: "این ماژول در ترکیب Capabilityهای Workspace قرار می‌گیرد." };
 }
 
-function businessModuleSlug(vertical: string, module: string): string {
-  return getVerticalModuleRoute(vertical, module).split("/").pop() ?? module;
-}
-
 function businessModulePath(vertical: string, module: string): string {
   return getVerticalModuleRoute(resolveBusinessVerticalKey(vertical), module);
 }
@@ -3522,7 +3507,6 @@ function renderBusinessModule(vertical: string, module: string): string {
   const surfaces = presentation?.surfaces ?? (info.path ? [{ label: info.label, path: info.path, description: info.description }] : []);
   const actions = ui.actions.slice(0, 3);
   const workflow = getVerticalWorkflowSteps(ui.key);
-  const moduleStatus = info.status ?? presentation?.stateLabel ?? "connected";
   const blueprint: VerticalModuleBlueprint = getVerticalModuleBlueprint(ui.key, module);
   const workflowCanvas = renderVerticalWorkflowCanvas({
     vertical: ui.key,
@@ -4301,67 +4285,6 @@ function openSimpleFormDialog(title:string,kicker:string,fields:Array<{id:string
     const ok=await onSubmit(overlay);
     if(ok) overlay.remove();
   });
-}
-
-async function loadHomeState(): Promise<void> {
-  const setText = (selector: string, value: string): void => {
-    const node = document.querySelector<HTMLElement>(selector);
-    if (node) node.textContent = value;
-  };
-  const setProgress = (selector: string, value: number): void => {
-    const node = document.querySelector<HTMLElement>(selector);
-    if (node) node.style.width = Math.max(0, Math.min(100, value)) + "%";
-  };
-  const recent = getSavedSearches();
-  const latestDiscovery = readStorageRecord<{ count: number; at: string }>("phoenix-last-discovery");
-  const latestAi = readStorageRecord<{ units: string; at: string }>("phoenix-last-ai-usage");
-
-  setText("#home-demand-count", String(recent.length));
-  setText("#home-demand-value", String(recent.length));
-  setText("#home-demand-insight", recent.length ? String(recent.length) + " جست‌وجوی اخیر ثبت شده است" : "هنوز نیاز قابل ردیابی ثبت نشده");
-  setText("#home-demand-note", latestDiscovery ? "آخرین کشف: " + String(latestDiscovery.count) + " نتیجه" : "جست‌وجوی اخیر");
-  setText("#home-matching-value", latestDiscovery ? String(latestDiscovery.count) : "—");
-  setText("#home-matching-insight", latestDiscovery ? "آخرین Discovery: " + formatDate(latestDiscovery.at) : "پس از Discovery واقعی");
-  setText("#home-live-time", new Intl.DateTimeFormat("fa-IR", { timeStyle: "short" }).format(new Date()));
-  if (latestAi) {
-    setText("#home-ai-usage", latestAi.units);
-    setText("#home-ai-note", "آخرین اجرا: " + formatDate(latestAi.at));
-  }
-
-  if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    setText("#home-live-status", "Offline UI");
-    setText("#home-live-question", "برای context زنده، یک session ققنوس متصل کنید.");
-    setText("#home-business-status", "—");
-    setText("#home-business-note", "session متصل نیست");
-    return;
-  }
-
-  try {
-    const context = await apiJson<{ tenantId?: string; workspaceId?: string }>("/api/v1/context");
-    setText("#home-live-status", "متصل");
-    setText("#home-business-status", context.workspaceId ? "Connected" : "—");
-    setText("#home-business-note", context.tenantId ? "Tenant · " + compactId(context.tenantId) : "Business context");
-    setText("#home-live-question", context.workspaceId ? "Workspace معتبر و tenant-scoped فعال است." : "Workspace context موجود نیست.");
-    setProgress("#home-business-progress", context.workspaceId ? 100 : 0);
-    setText("#home-business-detail", context.workspaceId ? "Context معتبر و آمادهٔ عملیات است." : "برای Supply به Workspace نیاز است");
-
-    if (localStorage.getItem(STORAGE.business)) {
-      try {
-        const access = await apiJson<{ status: string }>("/api/v1/business-access");
-        const ok = access.status === "authorized";
-        setText("#home-business-status", ok ? "Ready" : "Blocked");
-        setText("#home-business-badge", ok ? "● آماده" : "● نیازمند توجه");
-        setText("#home-business-detail", ok ? "Business management قابل استفاده است." : "Business access قابل استفاده نیست.");
-        setProgress("#home-business-progress", ok ? 100 : 20);
-      } catch {
-        setText("#home-business-status", "Unknown");
-        setText("#home-business-note", "Business access خوانده نشد");
-      }
-    }
-  } catch (error) {
-    setText("#home-live-status", "نیازمند توجه");
-    setText("#home-live-question", error instanceof Error ? error.message : "context زنده در دسترس نیست.");
-  }
 }
 
 function readStorageRecord<T>(key: string): T | null {
