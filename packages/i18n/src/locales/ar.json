@@ -350,6 +350,12 @@
     "home_homeFinalPlaceholder": "اكتب احتياجك بكلماتك الخاصة...",
     "home_homeAskPhoenix": "اسأل ققنوس",
     "home_homeFooterDescription": "الطبقة الذكية لاتخاذ قرارات وربط العملاء بالأعمال.",
-    "home_homeFooterLinks": "روابط التذييل"
+    "home_homeFooterLinks": "روابط التذييل",
+    "social_socialForYou": "لك",
+    "social_socialFollowing": "المتابَعون",
+    "social_socialExplore": "استكشاف",
+    "social_socialActivity": "النشاط",
+    "social_newPost": "منشور جديد",
+    "social_create": "إنشاء"
   }
 }
