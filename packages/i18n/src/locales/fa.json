@@ -899,7 +899,10 @@
     "roleFinanceDescription": "پرداخت‌ها، تراکنش‌ها و گزارش‌های مالی در اولویت این نقش هستند.",
     "roleGenericTitle": "Workspace عمومی",
     "roleGenericDescription": "ماژول‌ها براساس Business Type و Capabilityهای فعال ترکیب می‌شوند.",
-    "unreadMe": " · شما"
+    "unreadMe": " · شما",
+    "nameField": "نام",
+    "statusField": "وضعیت",
+    "localeField": "زبان پیش‌فرض"
   },
   "businessSurface": {
     "loadingPublicData": "در حال بارگذاری اطلاعات عمومی…",
