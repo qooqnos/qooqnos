@@ -172,6 +172,21 @@ describe("Vertical Workflow UI Canvas", () => {
 
 
 describe("Vertical Workflow overview", () => {
+  it("renders a live inventory surface for the retail inventory module", () => {
+    const blueprint = getVerticalModuleBlueprint("retail", "موجودی");
+    const html = renderVerticalWorkflowCanvas({
+      vertical: "retail",
+      module: "موجودی",
+      businessId: "business-test",
+      blueprint,
+    });
+    expect(html).toContain('data-vwf-layout="commerce"');
+    expect(html).toContain('data-vwf-inventory-live');
+    expect(html).toContain("Canonical Inventory");
+    expect(html).toContain("موجودی واقعی این کسب‌وکار");
+  });
+
+
   it("covers all supported verticals with shared stage navigation", () => {
     for (const vertical of ["clinic", "retail", "restaurant", "salon"]) {
       const html = renderVerticalWorkflowOverview({ vertical, businessId: "business-test" });
