@@ -433,6 +433,7 @@ function installLanguageObserver(): void {
     subtree: true,
     childList: true,
     attributes: true,
+    characterData: true,
     attributeFilter: ["placeholder", "aria-label", "title"],
   });
 }
