@@ -4842,6 +4842,12 @@ body::before {
 .phoenix-vwf-lookup-row .studio-input-line{min-width:190px;max-width:300px}
 .phoenix-vwf-lookup-row .button{min-height:32px}
 .phoenix-vwf-live-detail{margin-top:10px;padding:15px;border:1px solid var(--line);border-radius:18px;background:var(--surface-2)}
+.phoenix-vwf-live-booking{margin-top:12px;padding:15px;border:1px solid rgba(242,111,56,.18);border-radius:20px;background:linear-gradient(180deg,rgba(242,111,56,.045),var(--surface-2))}
+.phoenix-vwf-booking-lookup{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.phoenix-vwf-booking-lookup .studio-input-line{flex:1;min-width:220px}
+.phoenix-vwf-live-booking .phoenix-vwf-live-detail{margin-top:12px;background:var(--surface)}
+@media(max-width:720px){.phoenix-vwf-booking-lookup{align-items:stretch}.phoenix-vwf-booking-lookup .studio-input-line{width:100%;min-width:0}.phoenix-vwf-booking-lookup .button{width:100%}}
+
 .phoenix-vwf-live-detail[hidden]{display:none}
 .phoenix-vwf-live-detail-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
 .phoenix-vwf-live-detail-head h3{margin:3px 0 4px;font-size:11px}
