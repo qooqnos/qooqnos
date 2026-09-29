@@ -55,7 +55,7 @@ const layoutCopy: Record<VerticalModuleLayout, { label: string; description: str
   },
 };
 
-type VerticalWorkflowUiContext = {
+export type VerticalWorkflowUiContext = {
   readonly roles: readonly string[];
   readonly permissions: readonly string[];
   readonly workspaceId?: string;
