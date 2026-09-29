@@ -567,7 +567,16 @@
     "canonicalName": "نام canonical",
     "displayName": "نام نمایشی",
     "canonicalAfterConnection": "اطلاعات canonical پس از اتصال",
-    "openSource": "باز کردن منبع ←"
+    "openSource": "باز کردن منبع ←",
+    "phoenixSuggests": "ققنوس پیشنهاد می‌دهد",
+    "startAction": "شروع کن",
+    "prepareSupplyFast": "عرضه را سریع‌تر آماده کن.",
+    "sellerAiDescription": "از تصویر یا متن خام شروع کن؛ Seller AI پیش‌نویس می‌سازد و پذیرش نهایی همچنان دست کسب‌وکار می‌ماند.",
+    "noConnectedLocationData": "داده مکان بعد از اتصال نمایش داده می‌شود.",
+    "noConnectedHoursData": "ساعات بعد از اتصال نمایش داده می‌شوند.",
+    "changeWorkspace": "تغییر Workspace",
+    "manageTeam": "مدیریت تیم",
+    "roleGuideDescription": "این راهنما صرفاً composition رابط است؛ مجوز واقعی را backend تعیین می‌کند."
   },
   "canonical": {
     "identity": {
