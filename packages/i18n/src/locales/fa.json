@@ -530,7 +530,25 @@
     "business_roleCustomers": "مشتریان",
     "business_roleContent": "محتوا",
     "business_roleTransactions": "معاملات",
-    "business_quickActions": "کارهای مرتبط"
+    "business_quickActions": "کارهای مرتبط",
+    "vertical_todayActivity": "فعالیت امروز",
+    "vertical_clinicSubtitle": "رزرو، خدمات، پزشکان، زمان‌بندی و ارتباط با مراجعان.",
+    "vertical_newMessages": "پیام‌های جدید",
+    "vertical_viewServices": "مشاهده خدمات",
+    "vertical_retailLabel": "فروشگاه / خرده‌فروشی",
+    "vertical_retailSubtitle": "محصول، تنوع، موجودی، سفارش و مشتری در یک Workspace.",
+    "vertical_lowInventory": "موجودی کم",
+    "vertical_instantPurchase": "خرید فوری",
+    "vertical_restaurantSubtitle": "منو، سفارش، میز، رزرو، آشپزخانه و تحویل.",
+    "vertical_activeOrders": "سفارش‌های فعال",
+    "vertical_openTables": "میزهای باز",
+    "vertical_deliveries": "تحویل‌ها",
+    "vertical_viewMenu": "مشاهده منو",
+    "vertical_receive": "دریافت",
+    "vertical_salonLabel": "سالن زیبایی",
+    "vertical_salonSubtitle": "خدمات، متخصصان، تقویم، ظرفیت و مشتریان.",
+    "vertical_viewService": "مشاهده خدمت",
+    "vertical_chooseSpecialist": "انتخاب متخصص"
   },
   "canonical": {
     "identity": {
