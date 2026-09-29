@@ -4,7 +4,7 @@ import { getVerticalModuleBlueprint, getVerticalModuleForSlug, getVerticalModule
 import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 import { resolveVerticalModuleAlias } from "./business-module-ui.js";
-import { defaultI18n, getDirection, getLocaleFromPreference, LOCALE_STORAGE_KEY, persistLocale, readPersistedLocale, translateUiText, type SupportedLanguage } from "./i18n-runtime.js";
+import { defaultI18n, getDirection, getLocaleFromPreference, LOCALE_STORAGE_KEY, persistLocale, readPersistedLocale, translateCanonicalTerm, translateUiText, type SupportedLanguage } from "./i18n-runtime.js";
 type Theme = "dark" | "light";
 type Language = SupportedLanguage;
 
@@ -432,6 +432,10 @@ function uiText(value: string): string {
   return translateUiText(value, getInitialLanguage());
 }
 
+function canonicalUi(key: string): string {
+  return translateCanonicalTerm(key, getInitialLanguage());
+}
+
 function setLanguage(language: Language): void {
   const next = getLocaleFromPreference(language, "fa");
   persistLocale(next, localStorage);
@@ -833,7 +837,7 @@ function renderSidebar(route: Route): string {
       </div>
       <div class="side-nav-scroll">
         <nav class="side-nav" aria-label="ناوبری برنامه">
-          <div class="nav-label">${uiText("محصول")}</div>
+          <div class="nav-label">${canonicalUi("canonical.catalog.product")}</div>
           ${routes
             .map(
               (item) => `
