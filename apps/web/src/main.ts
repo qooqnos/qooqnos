@@ -474,6 +474,12 @@ function localizedUi(value: string): string {
   return escapeHtml(uiText(value));
 }
 
+function formatLocalizedNumber(value: number): string {
+  const language = getInitialLanguage();
+  const locale = language === "fa" ? "fa-IR" : language === "ar" ? "ar-EG" : "en-US";
+  return value.toLocaleString(locale);
+}
+
 function setLanguage(language: Language): void {
   const next = getLocaleFromPreference(language, "fa");
   persistLocale(next, localStorage);
@@ -3191,7 +3197,7 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
     const saved = isSocialActive("save", item);
     const rawPrice = item.price;
     const price = rawPrice !== undefined && rawPrice !== null
-      ? Number(rawPrice).toLocaleString("fa-IR") + " " + escapeHtml(item.currency ?? "")
+      ? formatLocalizedNumber(Number(rawPrice)) + " " + escapeHtml(item.currency ?? "")
       : discoveryUi("askPrice");
     const typeLabel = sourceType === "service" ? discoveryUi("service") : sourceType === "business" ? discoveryUi("business") : discoveryUi("product");
     const authorName = item.metadata && typeof item.metadata.businessName === "string" ? item.metadata.businessName : sourceType === "business" ? titleRaw : discoveryUi("seller");
@@ -3394,7 +3400,7 @@ function renderCompare(): string {
   const metadataKeys = Array.from(new Set(items.flatMap((item) => Object.keys(item.metadata ?? {})))).filter((key) => !["businessId","businessName","offeringType"].includes(key)).slice(0, 8);
   const rows: Array<[string, (item: DiscoveryResult) => unknown]> = [
     ["نوع", (item) => item.sourceType ?? "product"],
-    ["قیمت", (item) => item.price !== undefined && item.price !== null ? Number(item.price).toLocaleString("fa-IR") + " " + (item.currency ?? "") : "استعلام قیمت"],
+    ["قیمت", (item) => item.price !== undefined && item.price !== null ? formatLocalizedNumber(Number(item.price)) + " " + (item.currency ?? "") : "استعلام قیمت"],
     ["امتیاز", (item) => item.rating !== undefined && item.rating !== null ? Number(item.rating).toFixed(1) : "—"],
     ["موقعیت", (item) => item.locality ?? item.city ?? "—"],
     ["توضیح", (item) => item.description ?? item.body ?? "—"],
@@ -5982,7 +5988,7 @@ async function loadAdminState(): Promise<void> {
         const response = await apiJson<{ data: { operationId: string; operationType: string; meterUnit: string; quantity: number; modelId?: string | null; billingUsageReference?: string | null; createdAt: string }[] }>("/api/v1/ai/usage?limit=12");
         const items = Array.isArray(response.data) ? response.data : [];
         const total = items.reduce((sum, item) => sum + (Number.isFinite(item.quantity) ? item.quantity : 0), 0);
-        if (usageSummary) usageSummary.textContent = items.length ? `${items.length} رکورد · ${total.toLocaleString("fa-IR")} ${items[0]?.meterUnit ?? "units"}` : "هنوز telemetry AI برای این حساب ثبت نشده است.";
+        if (usageSummary) usageSummary.textContent = items.length ? `${items.length} رکورد · ${formatLocalizedNumber(total)} ${items[0]?.meterUnit ?? "units"}` : "هنوز telemetry AI برای این حساب ثبت نشده است.";
         usageList.innerHTML = items.length ? items.slice(0,6).map((item) => `
           <div class="admin-usage-row"><div><strong>${escapeHtml(item.operationType)}</strong><small>${escapeHtml(item.modelId ?? "provider/model نامشخص")} · ${escapeHtml(formatDate(item.createdAt))}</small></div><span>${escapeHtml(String(item.quantity))} ${escapeHtml(item.meterUnit)}</span></div>`).join("") : '<div class="slot-empty"><span>✦</span><p>Usage فعالی ثبت نشده است.</p></div>';
       } catch (error) {
