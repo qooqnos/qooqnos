@@ -30,6 +30,15 @@ export interface CreateBookingCommand {
 export class BookingService {
   constructor(private readonly options: BookingServiceOptions) {}
 
+  async listBusinessResources(
+    context: RequestContext,
+    businessId: EntityId,
+    resourceType?: import("./repository").ResourceRecord["resourceType"],
+    limit = 100,
+  ) {
+    return this.options.repository.listBusinessResources(context, businessId, resourceType, limit);
+  }
+
   async create(context: RequestContext, command: CreateBookingCommand): Promise<BookingRecord> {
     await this.options.authorization.assert({
       context,
