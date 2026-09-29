@@ -1,6 +1,6 @@
 import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui.js";
-import { BUSINESS_VERTICAL_UI, getBusinessVerticalUi, resolveBusinessVerticalKey, type BusinessVerticalKey } from "./business-vertical-ui.js";
-import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, getVerticalModuleUiContract, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
+import { getBusinessVerticalUi, resolveBusinessVerticalKey } from "./business-vertical-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, getVerticalModuleUiContract, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
 import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 import { resolveVerticalModuleAlias } from "./business-module-ui.js";
@@ -360,9 +360,6 @@ function languageLabel(language: Language): string {
   return language === "en" ? "EN" : language === "ar" ? "عربي" : "فا";
 }
 
-function languageName(language: Language): string {
-  return language === "en" ? "English" : language === "ar" ? "العربية" : "فارسی";
-}
 
 function applyLanguageToUi(): void {
   const language = getInitialLanguage();
@@ -408,15 +405,6 @@ function toggleLanguageMenu(): void {
   if (!menu || !trigger) return;
   menu.hidden = !menu.hidden;
   trigger.setAttribute("aria-expanded", String(!menu.hidden));
-}
-function syncLanguageSwitcher(): void {
-  const active = getInitialLanguage();
-  document.querySelectorAll<HTMLElement>("[data-language-current]").forEach((node) => { node.textContent = languageLabel(active); });
-  document.querySelectorAll<HTMLElement>("[data-language-option]").forEach((node) => {
-    const selected = node.dataset.languageOption === active;
-    node.classList.toggle("active", selected);
-    node.setAttribute("aria-selected", String(selected));
-  });
 }
 function renderLanguageSwitcher(): string {
   const active = getInitialLanguage();
