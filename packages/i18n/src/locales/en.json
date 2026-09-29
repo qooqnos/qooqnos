@@ -350,6 +350,12 @@
     "home_homeFinalPlaceholder": "Describe your need in your own words...",
     "home_homeAskPhoenix": "Ask Phoenix",
     "home_homeFooterDescription": "The intelligent layer for customer and business decisions and connections.",
-    "home_homeFooterLinks": "Footer links"
+    "home_homeFooterLinks": "Footer links",
+    "social_socialForYou": "For you",
+    "social_socialFollowing": "Following",
+    "social_socialExplore": "Explore",
+    "social_socialActivity": "Activity",
+    "social_newPost": "New post",
+    "social_create": "Create"
   }
 }
