@@ -20,6 +20,18 @@ export type VerticalRoleLensKey =
   | "finance"
   | "generic";
 
+export type VerticalModuleCapabilityRequirement = {
+  readonly capability: string;
+  readonly permissions: readonly string[];
+  readonly source: "runtime-registry-contract";
+};
+
+export type VerticalModuleCapabilityContract = {
+  readonly requiredCapabilities: readonly string[];
+  readonly requiredPermissions: readonly string[];
+  readonly source: "runtime-registry-contract";
+};
+
 export type VerticalModuleBlueprintBlock = {
   readonly label: string;
   readonly title: string;
@@ -48,6 +60,55 @@ export type VerticalModuleBlueprint = {
   };
   readonly blocks: readonly VerticalModuleBlueprintBlock[];
   readonly states: readonly VerticalModuleBlueprintState[];
+};
+
+/**
+ * Capability requirements are presentation metadata only.
+ * The Runtime/module registry remains the authoritative source of enabled
+ * capabilities and the backend remains authoritative for authorization.
+ *
+ * Keep permission identifiers grounded in the existing authorization contracts.
+ * A module may declare a capability without a local client-side enablement
+ * decision; this registry only describes what the surface depends on.
+ */
+const MODULE_CAPABILITY_CONTRACTS: Readonly<Record<string, VerticalModuleCapabilityContract>> = {
+  "امروز": { requiredCapabilities: ["booking", "crm"], requiredPermissions: ["booking.read", "crm.read"], source: "runtime-registry-contract" },
+  "نوبت‌ها": { requiredCapabilities: ["booking"], requiredPermissions: ["booking.read", "booking.manage"], source: "runtime-registry-contract" },
+  "تقویم": { requiredCapabilities: ["availability"], requiredPermissions: ["availability.read", "availability.manage"], source: "runtime-registry-contract" },
+  "پزشکان": { requiredCapabilities: ["team"], requiredPermissions: ["team.manage"], source: "runtime-registry-contract" },
+  "متخصصان": { requiredCapabilities: ["team"], requiredPermissions: ["team.manage"], source: "runtime-registry-contract" },
+  "مراجعان": { requiredCapabilities: ["crm", "customer"], requiredPermissions: ["crm.read", "customer.read"], source: "runtime-registry-contract" },
+  "مشتریان": { requiredCapabilities: ["crm", "customer"], requiredPermissions: ["crm.read", "customer.read"], source: "runtime-registry-contract" },
+  "ساعات کاری": { requiredCapabilities: ["business"], requiredPermissions: ["business.profile.read"], source: "runtime-registry-contract" },
+  "ساعت کاری": { requiredCapabilities: ["business"], requiredPermissions: ["business.profile.read"], source: "runtime-registry-contract" },
+  "زمان‌بندی": { requiredCapabilities: ["availability"], requiredPermissions: ["availability.read", "availability.manage"], source: "runtime-registry-contract" },
+  "ظرفیت": { requiredCapabilities: ["availability"], requiredPermissions: ["availability.read"], source: "runtime-registry-contract" },
+  "خدمات": { requiredCapabilities: ["catalog", "booking"], requiredPermissions: ["catalog.offer.create", "catalog.offer.publish", "booking.read"], source: "runtime-registry-contract" },
+  "محصولات": { requiredCapabilities: ["catalog", "commerce"], requiredPermissions: ["catalog.offer.create", "catalog.offer.publish"], source: "runtime-registry-contract" },
+  "مدل‌ها و تنوع": { requiredCapabilities: ["catalog"], requiredPermissions: ["catalog.offer.update"], source: "runtime-registry-contract" },
+  "سایز و رنگ": { requiredCapabilities: ["catalog"], requiredPermissions: ["catalog.offer.update"], source: "runtime-registry-contract" },
+  "موجودی": { requiredCapabilities: ["catalog", "commerce"], requiredPermissions: ["catalog.offer.update"], source: "runtime-registry-contract" },
+  "سفارش‌ها": { requiredCapabilities: ["commerce"], requiredPermissions: [], source: "runtime-registry-contract" },
+  "مرجوعی": { requiredCapabilities: ["commerce"], requiredPermissions: [], source: "runtime-registry-contract" },
+  "سفارش‌های امروز": { requiredCapabilities: ["commerce"], requiredPermissions: [], source: "runtime-registry-contract" },
+  "میزها": { requiredCapabilities: ["business", "booking"], requiredPermissions: ["business.profile.read", "booking.read"], source: "runtime-registry-contract" },
+  "رزرو": { requiredCapabilities: ["booking"], requiredPermissions: ["booking.read", "booking.manage"], source: "runtime-registry-contract" },
+  "رزروها": { requiredCapabilities: ["booking"], requiredPermissions: ["booking.read", "booking.manage"], source: "runtime-registry-contract" },
+  "منو": { requiredCapabilities: ["catalog", "commerce"], requiredPermissions: ["catalog.offer.create", "catalog.offer.publish"], source: "runtime-registry-contract" },
+  "آشپزخانه": { requiredCapabilities: ["commerce", "operations"], requiredPermissions: [], source: "runtime-registry-contract" },
+  "تحویل": { requiredCapabilities: ["commerce", "operations"], requiredPermissions: [], source: "runtime-registry-contract" },
+  "پیام‌ها": { requiredCapabilities: ["communication"], requiredPermissions: ["communication.conversation.manage"], source: "runtime-registry-contract" },
+  "پرداخت": { requiredCapabilities: ["billing", "commerce"], requiredPermissions: ["billing.manage"], source: "runtime-registry-contract" },
+  "تخفیف": { requiredCapabilities: ["promotion"], requiredPermissions: ["promotion.read", "promotion.create"], source: "runtime-registry-contract" },
+  "تخفیف‌ها": { requiredCapabilities: ["promotion"], requiredPermissions: ["promotion.read", "promotion.create"], source: "runtime-registry-contract" },
+  "پیشنهادها": { requiredCapabilities: ["promotion"], requiredPermissions: ["promotion.read", "promotion.create"], source: "runtime-registry-contract" },
+  "گزارش": { requiredCapabilities: ["analytics"], requiredPermissions: ["analytics.read"], source: "runtime-registry-contract" },
+  "گزارش فروش": { requiredCapabilities: ["analytics", "commerce"], requiredPermissions: ["analytics.read"], source: "runtime-registry-contract" },
+  "تیم": { requiredCapabilities: ["team"], requiredPermissions: ["team.manage"], source: "runtime-registry-contract" },
+  "محتوا": { requiredCapabilities: ["catalog"], requiredPermissions: ["catalog.offer.create", "catalog.offer.publish"], source: "runtime-registry-contract" },
+  "پروفایل": { requiredCapabilities: ["business"], requiredPermissions: ["business.profile.read", "business.profile.update"], source: "runtime-registry-contract" },
+  "گزارش‌ها": { requiredCapabilities: ["analytics"], requiredPermissions: ["analytics.read"], source: "runtime-registry-contract" },
+  "معاملات": { requiredCapabilities: ["commerce"], requiredPermissions: [], source: "runtime-registry-contract" },
 };
 
 const block = (
@@ -393,6 +454,14 @@ const ROLE_LENS_BY_MODULE: Record<string, readonly VerticalRoleLensKey[]> = {
   "پیشنهادها": ["sales", "management"],
 };
 
+export function getVerticalModuleCapabilityContract(module: string): VerticalModuleCapabilityContract {
+  return MODULE_CAPABILITY_CONTRACTS[module] ?? {
+    requiredCapabilities: [],
+    requiredPermissions: [],
+    source: "runtime-registry-contract",
+  };
+}
+
 function deriveRoleLenses(module: string, layout: VerticalModuleLayout): readonly VerticalRoleLensKey[] {
   const explicit = ROLE_LENS_BY_MODULE[module];
   if (explicit) return explicit;
@@ -473,5 +542,5 @@ export function getVerticalModuleBlueprint(vertical: string, module: string): Ve
         block("03", "Next action", "اقدام اجرایی باید از command/API canonical عبور کند."),
       ],
     );
-  return { ...selected, roleLenses: selected.roleLenses ?? deriveRoleLenses(module, selected.layout) };
+  return {\n    ...selected,\n    roleLenses: selected.roleLenses ?? deriveRoleLenses(module, selected.layout),\n    capabilityContract: selected.capabilityContract ?? getVerticalModuleCapabilityContract(module),\n  };
 }
