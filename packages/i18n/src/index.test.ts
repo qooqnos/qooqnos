@@ -22,6 +22,10 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("شروع کن و هرچه برای تصمیم مهم است بنویس", "en")).toBe("شروع کن و هرچه برای تصمیم مهم است بنویس");
     expect(translateUiText("کسب‌وکار مناسب برای من", "en")).toBe("کسب‌وکار مناسب برای من");
     expect(translateUiText("متن ناشناخته", "en")).toBe("متن ناشناخته");
+    expect(translateUiText("کسب‌وکار عمومی", "en")).toBe("General Business");
+    expect(translateUiText("Your workspace", "fa")).toBe("فضای کاری شما");
+    expect(translateUiText("Business Workspace", "fa")).toBe("فضای کاری کسب‌وکار");
+    expect(translateUiText("شروع کن و هرچه برای تصمیم مهم است بنویس", "en")).toBe("Start and write everything important for your Decision");
   });
 
   it("uses the canonical domain vocabulary as the terminology source", () => {
