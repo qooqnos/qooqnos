@@ -1,4 +1,4 @@
-import { getVerticalModuleBlueprint, getVerticalModuleRoleFit, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
 import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
 export type VerticalWorkflowCanvasModel = {
@@ -54,11 +54,11 @@ const layoutCopy: Record<VerticalModuleLayout, { label: string; description: str
 };
 
 function workflowModuleHref(model: VerticalWorkflowCanvasModel, module: string): string {
+  const route = getVerticalModuleRoute(model.vertical, module);
   const params = new URLSearchParams();
-  params.set("vertical", model.vertical);
-  params.set("module", module);
   if (model.businessId) params.set("business", model.businessId);
-  return "/business?" + params.toString();
+  params.set("fromModule", model.module);
+  return params.toString() ? route + "?" + params.toString() : route;
 }
 
 function contextualHref(model: VerticalWorkflowCanvasModel, path?: string): string {
