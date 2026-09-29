@@ -114,6 +114,43 @@ function resolveTextKey(value: string, locale: Locale): string | undefined {
     return Boolean(translated && translated !== value.trim());
   }) ?? candidates[0];
 }
+
+const canonicalFragmentEntries = (() => {
+  const sourceToKeys = new Map<string, Set<string>>();
+  for (const language of ["fa", "en", "ar"] as const) {
+    for (const [key, text] of Object.entries(canonicalTerms[language])) {
+      const source = text.trim();
+      if (!source) continue;
+      const keys = sourceToKeys.get(source) ?? new Set<string>();
+      keys.add(key);
+      sourceToKeys.set(source, keys);
+    }
+  }
+  return [...sourceToKeys.entries()]
+    .filter(([, keys]) => keys.size === 1)
+    .map(([source, keys]) => ({ source, key: [...keys][0]! }))
+    .sort((a, b) => b.source.length - a.source.length);
+})();
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^\${}()|[\]\\]/g, "\\$&");
+}
+
+function translateCanonicalFragments(value: string, locale: Locale): string {
+  let translated = value;
+  for (const { source, key } of canonicalFragmentEntries) {
+    if (!translated.includes(source)) continue;
+    const target = canonicalTerms[locale][key] ?? canonicalTerms.fa[key];
+    if (!target || target === source) continue;
+    const pattern = new RegExp(
+      "(^|[^\\p{L}\\p{N}_])" + escapeRegExp(source) + "(?![\\p{L}\\p{N}_])",
+      "gu",
+    );
+    translated = translated.replace(pattern, (_match, prefix) => prefix + target);
+  }
+  return translated;
+}
+
 export function translateUiText(value: string, locale: Locale): string {
   const trimmed = value.trim();
   if (!trimmed) return value;
@@ -126,7 +163,7 @@ export function translateUiText(value: string, locale: Locale): string {
       return leading + translated + trailing;
     }
   }
-  return value;
+  return translateCanonicalFragments(value, locale);
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
