@@ -456,8 +456,6 @@ const ROUTE_CANONICAL_LABELS: Readonly<Record<string, string>> = {
   "/business/profile": "canonical.business.businessProfile",
   "/booking": "canonical.booking.booking",
   "/customer": "canonical.customer.customer",
-  "/notifications": "canonical.communication.notification",
-  "/catalog": "canonical.catalog.category",
 };
 
 function routeUiLabel(route: Route): string {
