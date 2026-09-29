@@ -576,7 +576,8 @@
     "noConnectedHoursData": "تظهر الساعات بعد الاتصال.",
     "changeWorkspace": "تغيير مساحة العمل",
     "manageTeam": "إدارة الفريق",
-    "roleGuideDescription": "هذا الدليل يحدد تركيب الواجهة فقط؛ ويظل التفويض الفعلي تحت تحكم الخلفية."
+    "roleGuideDescription": "هذا الدليل يحدد تركيب الواجهة فقط؛ ويظل التفويض الفعلي تحت تحكم الخلفية.",
+    "boardDefaultSupply": "جهّز العرض"
   },
   "canonical": {
     "identity": {
@@ -856,7 +857,9 @@
     "connectedSurfaces": "الواجهات المتصلة",
     "backendAccess": "التفويض من الخلفية",
     "capabilityDriven": "مدفوع بالقدرات",
-    "uiFoundation": "أساس الواجهة"
+    "uiFoundation": "أساس الواجهة",
+    "timezone": "المنطقة الزمنية",
+    "currency": "العملة"
   },
   "businessSurface": {
     "loadingPublicData": "جارٍ تحميل المعلومات العامة…",
