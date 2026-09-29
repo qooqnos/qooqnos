@@ -115,20 +115,19 @@ function resolveTextKey(value: string, locale: Locale): string | undefined {
   }) ?? candidates[0];
 }
 
-const canonicalFragmentEntries = (() => {
+const dictionaryFragmentEntries = (() => {
   const sourceToKeys = new Map<string, Set<string>>();
   for (const language of ["fa", "en", "ar"] as const) {
-    for (const [key, text] of Object.entries(canonicalTerms[language])) {
+    for (const [key, text] of Object.entries(translations[language])) {
       const source = text.trim();
-      if (!source) continue;
+      if (source.length < 3) continue;
       const keys = sourceToKeys.get(source) ?? new Set<string>();
       keys.add(key);
       sourceToKeys.set(source, keys);
     }
   }
   return [...sourceToKeys.entries()]
-    .filter(([, keys]) => keys.size === 1)
-    .map(([source, keys]) => ({ source, key: [...keys][0]! }))
+    .map(([source, keys]) => ({ source, keys: [...keys] }))
     .sort((a, b) => b.source.length - a.source.length);
 })();
 
@@ -136,17 +135,20 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^\${}()|[\]\\]/g, "\\$&");
 }
 
-function translateCanonicalFragments(value: string, locale: Locale): string {
+function translateDictionaryFragments(value: string, locale: Locale): string {
   let translated = value;
-  for (const { source, key } of canonicalFragmentEntries) {
+  for (const { source, keys } of dictionaryFragmentEntries) {
     if (!translated.includes(source)) continue;
-    const target = canonicalTerms[locale][key] ?? canonicalTerms.fa[key];
-    if (!target || target === source) continue;
+    const targets = keys
+      .map((key) => translations[locale][key] ?? translations.fa[key])
+      .filter((target): target is string => Boolean(target));
+    const uniqueTargets = [...new Set(targets)];
+    if (uniqueTargets.length !== 1 || uniqueTargets[0] === source) continue;
     const pattern = new RegExp(
       "(^|[^\\p{L}\\p{N}_])" + escapeRegExp(source) + "(?![\\p{L}\\p{N}_])",
       "gu",
     );
-    translated = translated.replace(pattern, (_match, prefix) => prefix + target);
+    translated = translated.replace(pattern, (_match, prefix) => prefix + uniqueTargets[0]!);
   }
   return translated;
 }
@@ -163,7 +165,7 @@ export function translateUiText(value: string, locale: Locale): string {
       return leading + translated + trailing;
     }
   }
-  return translateCanonicalFragments(value, locale);
+  return translateDictionaryFragments(value, locale);
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
