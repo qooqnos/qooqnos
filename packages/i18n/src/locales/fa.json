@@ -489,5 +489,180 @@
     "vertical_refreshCanvas": "تازه‌سازی داده‌های این Canvas",
     "vertical_roleAware": "Role-aware emphasis",
     "vertical_roleDescription": "این لایه فقط تمرکز رابط را تعیین می‌کند؛ مجوز همچنان توسط Backend کنترل می‌شود."
+  },
+  "canonical": {
+    "identity": {
+      "user": "کاربر",
+      "organization": "سازمان",
+      "workspace": "فضای کاری",
+      "membership": "عضویت",
+      "role": "نقش",
+      "permission": "مجوز",
+      "policy": "سیاست",
+      "entitlement": "حق دسترسی"
+    },
+    "business": {
+      "business": "کسب‌وکار",
+      "businessProfile": "پروفایل کسب‌وکار",
+      "location": "مکان",
+      "address": "نشانی"
+    },
+    "catalog": {
+      "category": "دسته‌بندی",
+      "service": "خدمت",
+      "product": "محصول",
+      "productVariant": "تنوع محصول",
+      "offering": "عرضه",
+      "price": "قیمت",
+      "inventory": "موجودی",
+      "attributeDefinition": "تعریف ویژگی",
+      "attributeValue": "مقدار ویژگی"
+    },
+    "discovery": {
+      "search": "جستجو",
+      "filter": "فیلتر",
+      "facet": "وجه جستجو",
+      "ranking": "رتبه‌بندی",
+      "searchProjection": "نمایهٔ جستجو",
+      "suggestion": "پیشنهاد جستجو"
+    },
+    "matching": {
+      "demand": "نیاز",
+      "matchRequest": "درخواست تطبیق",
+      "candidate": "گزینه",
+      "match": "تطبیق",
+      "score": "امتیاز",
+      "recommendation": "پیشنهاد"
+    },
+    "booking": {
+      "booking": "رزرو",
+      "bookingItem": "مورد رزرو",
+      "appointment": "نوبت",
+      "schedule": "برنامه زمانی",
+      "availabilityRule": "قاعدهٔ دسترسی‌پذیری",
+      "availabilityException": "استثنای دسترسی‌پذیری",
+      "resource": "منبع",
+      "slot": "بازهٔ قابل رزرو"
+    },
+    "commerce": {
+      "cart": "سبد خرید",
+      "cartItem": "مورد سبد خرید",
+      "order": "سفارش",
+      "orderItem": "مورد سفارش"
+    },
+    "billing": {
+      "payment": "پرداخت",
+      "paymentAttempt": "تلاش پرداخت",
+      "refund": "بازپرداخت",
+      "invoice": "صورتحساب",
+      "invoiceLine": "ردیف صورتحساب",
+      "plan": "طرح",
+      "subscription": "اشتراک",
+      "billingAccount": "حساب مالی",
+      "usageRecord": "رکورد مصرف",
+      "usageMetric": "شاخص مصرف"
+    },
+    "customer": {
+      "customer": "مشتری",
+      "customerProfile": "پروفایل مشتری",
+      "customerAddress": "نشانی مشتری",
+      "customerRelationship": "ارتباط مشتری"
+    },
+    "trust": {
+      "verificationCase": "پروندهٔ احراز",
+      "verificationDocument": "مدرک احراز",
+      "verificationCheck": "بررسی احراز",
+      "verificationDecision": "تصمیم احراز",
+      "trustSignal": "نشانهٔ اعتماد",
+      "trustScore": "امتیاز اعتماد",
+      "review": "نظر",
+      "rating": "امتیازدهی",
+      "moderationCase": "پروندهٔ نظارت"
+    },
+    "communication": {
+      "conversation": "گفت‌وگو",
+      "message": "پیام",
+      "notification": "اعلان",
+      "notificationTemplate": "الگوی اعلان",
+      "deliveryAttempt": "تلاش ارسال"
+    },
+    "ai": {
+      "agent": "عامل هوشمند",
+      "aiConversation": "گفت‌وگوی هوشمند",
+      "aiMessage": "پیام هوشمند",
+      "aiRun": "اجرای هوش مصنوعی",
+      "model": "مدل",
+      "tool": "ابزار",
+      "toolCall": "فراخوانی ابزار",
+      "memory": "حافظه",
+      "safetyPolicy": "سیاست ایمنی",
+      "aiRecommendation": "پیشنهاد هوش مصنوعی"
+    },
+    "automation": {
+      "workflow": "گردش‌کار",
+      "trigger": "محرک",
+      "condition": "شرط",
+      "action": "عمل",
+      "workflowExecution": "اجرای گردش‌کار",
+      "task": "وظیفه"
+    },
+    "media": {
+      "mediaAsset": "رسانه",
+      "mediaVariant": "گونهٔ رسانه",
+      "mediaAttachment": "پیوست رسانه"
+    },
+    "integration": {
+      "integration": "یکپارچه‌سازی",
+      "externalAccount": "حساب بیرونی",
+      "webhook": "قلاب وب",
+      "syncJob": "اجرای همگام‌سازی",
+      "externalReference": "مرجع بیرونی"
+    },
+    "platform": {
+      "module": "ماژول",
+      "capability": "قابلیت",
+      "featureFlag": "پرچم قابلیت",
+      "event": "رویداد",
+      "auditEvent": "رویداد ممیزی",
+      "outboxEvent": "رویداد صف خروجی",
+      "idempotencyRecord": "رکورد یکتایی اجرا",
+      "projection": "نما"
+    },
+    "transaction": {
+      "sale": "فروش",
+      "purchase": "خرید",
+      "rental": "اجاره",
+      "exchange": "معاوضه",
+      "auction": "مزایده",
+      "tender": "مناقصه",
+      "negotiation": "مذاکره",
+      "agreement": "توافق",
+      "completion": "تکمیل"
+    },
+    "lifecycle": {
+      "businessDraft": "پیش‌نویس کسب‌وکار",
+      "businessActive": "فعال",
+      "businessSuspended": "معلق",
+      "businessArchived": "بایگانی‌شده",
+      "offeringDraft": "پیش‌نویس عرضه",
+      "offeringPublished": "منتشرشده",
+      "offeringPaused": "متوقف‌شده",
+      "offeringArchived": "بایگانی‌شده",
+      "bookingDraft": "پیش‌نویس رزرو",
+      "bookingPending": "در انتظار",
+      "bookingConfirmed": "تأییدشده",
+      "bookingInProgress": "در حال انجام",
+      "bookingCompleted": "تکمیل‌شده",
+      "bookingCancelled": "لغوشده"
+    },
+    "core": {
+      "supply": "عرضه",
+      "demand": "تقاضا",
+      "decision": "تصمیم",
+      "connection": "اتصال",
+      "action": "اقدام",
+      "sourceOfTruth": "منبع حقیقت",
+      "projection": "نمایهٔ مشتق‌شده"
+    }
   }
 }
