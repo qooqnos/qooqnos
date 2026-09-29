@@ -1128,10 +1128,10 @@ function renderBooking(): string {
     <section class="section-block">
       <article class="glass-card booking-panel">
         <div class="booking-context-strip">
-          <div><span>Business</span><strong>${escapeHtml(businessId || "—")}</strong></div>
-          <div><span>Offering</span><strong>${escapeHtml(offeringId || "برای مسیر رزرو مشخص نشده")}</strong></div>
-          <div><span>Customer</span><strong>${escapeHtml(customerId || "از context حساب")}</strong></div>
-          <div><span>Resource</span><strong>${escapeHtml(resourceId || "از Availability")}</strong></div>
+          <div><span>${canonicalUi("canonical.business.business")}</span><strong>${escapeHtml(businessId || "—")}</strong></div>
+          <div><span>${canonicalUi("canonical.catalog.offering")}</span><strong>${escapeHtml(offeringId || "برای مسیر رزرو مشخص نشده")}</strong></div>
+          <div><span>${canonicalUi("canonical.customer.customer")}</span><strong>${escapeHtml(customerId || "از context حساب")}</strong></div>
+          <div><span>${canonicalUi("canonical.booking.resource")}</span><strong>${escapeHtml(resourceId || "از Availability")}</strong></div>
         </div>
         <div id="booking-offering-context" class="booking-offering-context" aria-live="polite">
           ${offeringId
