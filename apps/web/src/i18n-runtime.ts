@@ -3011,6 +3011,21 @@ export function translateUiText(value:string,locale:Locale):string{
       return leading+translated+trailing;
     }
   }
+function escapeRegExp(value:string):string{return value.replace(/[.*+?^${}()|[\\]\\]/g,"\\  return translateDictionaryFragments(value,locale);
+}
+export function getDirection");}
+function translateDictionaryFragments(value:string,locale:Locale):string{
+  let translated=value;
+  const entries=[...textKeyIndex.entries()].sort((a,b)=>b[0].length-a[0].length);
+  for(const [source,keys] of entries){
+    if(source.length<2||!translated.includes(source))continue;
+    const targets=[...new Set(keys.map(key=>translations[locale][key]??translations.fa[key]).filter(Boolean))];
+    if(targets.length!==1||targets[0]===source)continue;
+    const pattern=new RegExp("(^|[^\\p{L}\\p{N}_])"+escapeRegExp(source)+"(?![\\p{L}\\p{N}_])","gu");
+    translated=translated.replace(pattern,(_match,prefix)=>prefix+targets[0]);
+  }
+  return translated;
+}
   return value;
 }
 export function getDirection(locale:Locale):"ltr"|"rtl"{return locale==="fa"||locale==="ar"?"rtl":"ltr";}
