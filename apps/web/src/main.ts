@@ -3899,17 +3899,17 @@ function renderBusinessModule(vertical: string, module: string): string {
   });
   const blueprintLayoutLabels: Record<VerticalModuleBlueprint["layout"], string> = { command: "Command Center", calendar: "Timeline / Capacity", catalog: "Supply Canvas", people: "People / Relationship", commerce: "Commerce Control", operations: "Operations Board", communication: "Communication Workspace" };
   const contextRows = [
-    { label: "Business", value: businessId ? compactId(businessId) : "هنوز انتخاب نشده" },
-    { label: "Vertical", value: ui.label },
-    { label: "Source of truth", value: presentation?.stateLabel ?? info.label },
-    { label: "Access", value: "Backend authoritative" },
+    { label: "Business", value: businessId ? compactId(businessId) : localizedUi("هنوز انتخاب نشده") },
+    { label: "Vertical", value: localizedUi(ui.label) },
+    { label: "Source of truth", value: localizedUi(presentation?.stateLabel ?? info.label) },
+    { label: "Access", value: localizedUi("Backend authoritative") },
   ];
   return '<div class="phoenix-business-module-page">' +
     '<section class="phoenix-business-module-hero">' +
-      '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">' + escapeHtml(ui.label) + ' · Module</span><h1>' + escapeHtml(module) + '</h1><p>' + escapeHtml(info.description) + '</p><div class="phoenix-business-module-meta"><span>' + escapeHtml(presentation?.eyebrow ?? info.label) + '</span><span>' + (moduleIndex >= 0 ? "ماژول " + String(moduleIndex + 1) : "Capability") + '</span><span>' + escapeHtml(info.status ?? presentation?.stateLabel ?? "connected") + '</span></div></div>' +
+      '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">' + localizedUi(ui.label) + ' · Module</span><h1>' + localizedUi(module) + '</h1><p>' + localizedUi(info.description) + '</p><div class="phoenix-business-module-meta"><span>' + localizedUi(presentation?.eyebrow ?? info.label) + '</span><span>' + (moduleIndex >= 0 ? localizedUi("ماژول") + " " + String(moduleIndex + 1) : localizedUi("قابلیت")) + '</span><span>' + localizedUi(info.status ?? presentation?.stateLabel ?? "connected") + '</span></div></div>' +
       '<div class="phoenix-business-module-symbol">' + escapeHtml(ui.icon) + '</div>' +
     '</section>' +
-    '<nav class="phoenix-business-module-nav" aria-label="ماژول‌های Workspace">' +
+    '<nav class="phoenix-business-module-nav" aria-label="' + localizedUi("ماژول‌های Workspace") + '">' +
       ui.modules.map((item) => { const href = businessModuleContextHref(businessModulePath(ui.key, item), ui.key, module, businessId); return '<a class="' + (item === module ? "active" : "") + '" href="' + escapeAttr(href) + '" data-nav data-module-role-fit="' + escapeAttr(item) + '" data-module-key="' + escapeAttr(item) + '"><span>' + escapeHtml(item) + '</span><small data-module-role-marker aria-hidden="true"></small></a>'; }).join("") +
     '</nav>' +
     '<section class="phoenix-module-context-strip">' +
@@ -3935,55 +3935,55 @@ function renderBusinessModule(vertical: string, module: string): string {
       '<div class="phoenix-module-blueprint-grid">' +
         blueprint.blocks.map((block) => {
           const href = block.path ? businessModuleContextHref(block.path, ui.key, module, businessId) : "";
-          return '<article class="phoenix-module-blueprint-card"><span class="phoenix-module-blueprint-index">' + escapeHtml(block.label) + '</span><div><strong>' + escapeHtml(block.title) + '</strong><p>' + escapeHtml(block.description) + '</p></div>' + (href ? '<a href="' + escapeAttr(href) + '" data-nav>باز کردن منبع ←</a>' : '<span class="pill">Backend / endpoint لازم است</span>') + '</article>';
+          return '<article class="phoenix-module-blueprint-card"><span class="phoenix-module-blueprint-index">' + escapeHtml(block.label) + '</span><div><strong>' + localizedUi(block.title) + '</strong><p>' + localizedUi(block.description) + '</p></div>' + (href ? '<a href="' + escapeAttr(href) + '" data-nav>باز کردن منبع ←</a>' : '<span class="pill">Backend / endpoint لازم است</span>') + '</article>';
         }).join("") +
       '</div>' +
-      '<div class="phoenix-module-blueprint-footer"><span>Vertical: ' + escapeHtml(ui.key) + '</span><span>Module: ' + escapeHtml(module) + '</span><span>' + String(blueprint.blocks.length) + ' foundation blocks</span><span>' + String(blueprint.capabilityContract.requiredCapabilities.length) + ' capability dependencies</span></div>' +
+      '<div class="phoenix-module-blueprint-footer"><span>Vertical: ' + escapeHtml(ui.key) + '</span><span>Module: ' + localizedUi(module) + '</span><span>' + String(blueprint.blocks.length) + ' foundation blocks</span><span>' + String(blueprint.capabilityContract.requiredCapabilities.length) + ' capability dependencies</span></div>' +
       '<div class="phoenix-module-state-contract">' +
         '<div><span>Interaction mode</span><strong>' + escapeHtml(blueprint.interaction) + '</strong></div>' +
-        '<div><span>Primary action</span><strong>' + escapeHtml(blueprint.primaryAction?.label ?? "منبع canonical") + '</strong></div>' +
+        '<div><span>Primary action</span><strong>' + localizedUi(blueprint.primaryAction?.label ?? "منبع canonical") + '</strong></div>' +
         '<div><span>State contract</span><strong>' + String(blueprint.states.length) + ' حالت استاندارد</strong></div>' +
       '</div>' +
     '</section>' +
     '<section class="glass-card phoenix-module-state-contract-card">' +
       '<div class="card-section-heading"><div><span class="section-kicker">UI State Contract</span><h2>رفتار استاندارد همه ماژول‌ها</h2></div><span class="pill">Shared Framework</span></div>' +
       '<div class="phoenix-module-state-grid">' +
-        blueprint.states.map((item) => '<article class="phoenix-module-state-item state-' + escapeAttr(item.key) + '"><span class="phoenix-module-state-dot"></span><div><strong>' + escapeHtml(item.label) + '</strong><p>' + escapeHtml(item.description) + '</p></div></article>').join("") +
+        blueprint.states.map((item) => '<article class="phoenix-module-state-item state-' + escapeAttr(item.key) + '"><span class="phoenix-module-state-dot"></span><div><strong>' + localizedUi(item.label) + '</strong><p>' + localizedUi(item.description) + '</p></div></article>').join("") +
       '</div>' +
       (blueprint.primaryAction ? '<a class="button button-primary" href="' + escapeAttr(businessModuleContextHref(blueprint.primaryAction.path, ui.key, module, businessId)) + '" data-nav>' + escapeHtml(blueprint.primaryAction.label) + ' <span>→</span></a>' : '') +
     '</section>' +
     workflowCanvas +
     '<section class="phoenix-business-module-grid-page">' +
-      '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + escapeHtml(info.label) + '</h2><p>این سطح یک UI تخصصی برای Workspace است؛ source of truth، permission و mutation همچنان در دامنه canonical باقی می‌مانند.</p>' +
-        (canonicalPath ? '<a class="button button-primary" href="' + escapeAttr(canonicalPath) + '" data-nav>باز کردن ' + escapeHtml(info.label) + ' <span>→</span></a>' : '<span class="pill">endpoint مستقل این قابلیت هنوز ثبت نشده</span>') +
+      '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + localizedUi(info.label) + '</h2><p>این سطح یک UI تخصصی برای Workspace است؛ source of truth، permission و mutation همچنان در دامنه canonical باقی می‌مانند.</p>' +
+        (canonicalPath ? '<a class="button button-primary" href="' + escapeAttr(canonicalPath) + '" data-nav>باز کردن ' + localizedUi(info.label) + ' <span>→</span></a>' : '<span class="pill">endpoint مستقل این قابلیت هنوز ثبت نشده</span>') +
       '</article>' +
-      '<article class="glass-card phoenix-module-state-card"><span class="section-kicker">Capability State</span><h2>' + escapeHtml(presentation?.stateLabel ?? "Workspace boundary") + '</h2><p class="phoenix-module-state-description">' + escapeHtml(presentation?.stateDescription ?? "وضعیت این قابلیت از backend authoritative تعیین می‌شود.") + '</p><div class="phoenix-module-state-row"><span>Vertical</span><strong>' + escapeHtml(ui.key) + '</strong></div><div class="phoenix-module-state-row"><span>Module</span><strong>' + escapeHtml(module) + '</strong></div><div class="phoenix-module-state-row"><span>Access</span><strong>Backend authoritative</strong></div></article>' +
+      '<article class="glass-card phoenix-module-state-card"><span class="section-kicker">Capability State</span><h2>' + localizedUi(presentation?.stateLabel ?? "Workspace boundary") + '</h2><p class="phoenix-module-state-description">' + localizedUi(presentation?.stateDescription ?? "وضعیت این قابلیت از backend authoritative تعیین می‌شود.") + '</p><div class="phoenix-module-state-row"><span>Vertical</span><strong>' + escapeHtml(ui.key) + '</strong></div><div class="phoenix-module-state-row"><span>Module</span><strong>' + localizedUi(module) + '</strong></div><div class="phoenix-module-state-row"><span>Access</span><strong>Backend authoritative</strong></div></article>' +
     '</section>' +
     '<section class="glass-card phoenix-module-surfaces-card"><div class="card-section-heading"><div><span class="section-kicker">Connected Surfaces</span><h2>سطوح مرتبط این ماژول</h2></div><span class="pill">' + String(surfaces.length) + ' مسیر</span></div><div class="phoenix-module-surface-grid">' +
       (surfaces.length ? surfaces.map((surface) => {
         const href = surface.path ? businessModuleContextHref(surface.path, ui.key, module, businessId) : "";
         return surface.path
-          ? '<a class="phoenix-module-surface" href="' + escapeAttr(href) + '" data-nav><strong>' + escapeHtml(surface.label) + '</strong><span>' + escapeHtml(surface.description) + '</span><b>→</b></a>'
-          : '<div class="phoenix-module-surface disabled"><strong>' + escapeHtml(surface.label) + '</strong><span>' + escapeHtml(surface.description) + '</span><b>—</b></div>';
+          ? '<a class="phoenix-module-surface" href="' + escapeAttr(href) + '" data-nav><strong>' + localizedUi(surface.label) + '</strong><span>' + localizedUi(surface.description) + '</span><b>→</b></a>'
+          : '<div class="phoenix-module-surface disabled"><strong>' + localizedUi(surface.label) + '</strong><span>' + localizedUi(surface.description) + '</span><b>—</b></div>';
       }).join("") : '<div class="slot-empty"><span>◈</span><p>سطح canonical متصل برای این Capability ثبت نشده است.</p></div>') +
     '</div></section>' +
     '<section class="glass-card phoenix-module-workbench-card">' +
-      '<div class="card-section-heading"><div><span class="section-kicker">Workspace Canvas</span><h2>ساختار عملیاتی این صفحه</h2></div><span class="pill">' + escapeHtml(ui.label) + '</span></div>' +
+      '<div class="card-section-heading"><div><span class="section-kicker">Workspace Canvas</span><h2>ساختار عملیاتی این صفحه</h2></div><span class="pill">' + localizedUi(ui.label) + '</span></div>' +
       '<div class="phoenix-module-workbench-grid">' +
         '<article><span class="section-kicker">01 · Context</span><strong>هویت و دسترسی</strong><p>Business، نقش و Capability قبل از هر اقدام مشخص می‌شوند.</p><a href="' + escapeAttr(businessWorkspaceContextHref("/business/profile", ui.key, businessId || undefined)) + '" data-nav>مشاهده Context ←</a></article>' +
-        '<article><span class="section-kicker">02 · Canonical</span><strong>' + escapeHtml(info.label) + '</strong><p>' + escapeHtml(info.description) + '</p>' +
+        '<article><span class="section-kicker">02 · Canonical</span><strong>' + localizedUi(info.label) + '</strong><p>' + escapeHtml(info.description) + '</p>' +
           (canonicalPath ? '<a href="' + escapeAttr(canonicalPath) + '" data-nav>ورود به منبع اصلی ←</a>' : '<span class="pill">منبع مستقل هنوز ثبت نشده</span>') +
         '</article>' +
         '<article><span class="section-kicker">03 · Connected</span><strong>سطوح متصل</strong><p>این صفحه داده را دوباره ذخیره نمی‌کند؛ فقط مسیرهای canonical را در کانتکست شغلی نمایش می‌دهد.</p><div class="phoenix-module-compact-links">' +
-          surfaces.slice(0, 4).map((surface) => surface.path ? '<a href="' + escapeAttr(businessModuleContextHref(surface.path, ui.key, module, businessId)) + '" data-nav>' + escapeHtml(surface.label) + '</a>' : '<span>' + escapeHtml(surface.label) + '</span>').join("") +
+          surfaces.slice(0, 4).map((surface) => surface.path ? '<a href="' + escapeAttr(businessModuleContextHref(surface.path, ui.key, module, businessId)) + '" data-nav>' + localizedUi(surface.label) + '</a>' : '<span>' + localizedUi(surface.label) + '</span>').join("") +
         '</div></article>' +
       '</div>' +
     '</section>' +
-    '<section class="glass-card phoenix-business-workflow-card"><div class="card-section-heading"><div><span class="section-kicker">Vertical Workflow</span><h2>جریان کاری این نوع کسب‌وکار</h2></div><span class="pill">' + escapeHtml(ui.label) + '</span></div><div class="phoenix-workflow-rail">' +
+    '<section class="glass-card phoenix-business-workflow-card"><div class="card-section-heading"><div><span class="section-kicker">Vertical Workflow</span><h2>جریان کاری این نوع کسب‌وکار</h2></div><span class="pill">' + localizedUi(ui.label) + '</span></div><div class="phoenix-workflow-rail">' +
       workflow.map((step, index) => {
         const stage = businessWorkflowStageHref(ui.key, step, businessId, module);
         const current = stage.module === module ? " current" : "";
-        const content = '<span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + escapeHtml(step) + '</strong>';
+        const content = '<span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + localizedUi(step) + '</strong>';
         return stage.href
           ? '<a class="phoenix-workflow-step' + current + '" href="' + escapeAttr(stage.href) + '" data-nav>' + content + '<small>باز کردن ماژول ←</small></a>'
           : '<div class="phoenix-workflow-step' + current + '">' + content + '</div>';
@@ -4878,7 +4878,7 @@ function openCommandPalette(): void {
     selected = Math.min(selected, Math.max(0, filtered.length - 1));
     if (!results) return;
     results.innerHTML = filtered.length
-      ? filtered.map((item, index) => `<button type="button" class="command-result ${index === selected ? "selected" : ""}" data-command-path="${escapeAttr(item.path)}"><span class="command-result-icon">${escapeHtml(item.icon)}</span><span><strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.path)}</small></span><b>↵</b></button>`).join("")
+      ? filtered.map((item, index) => `<button type="button" class="command-result ${index === selected ? "selected" : ""}" data-command-path="${escapeAttr(item.path)}"><span class="command-result-icon">${escapeHtml(item.icon)}</span><span><strong>${localizedUi(item.label)}</strong><small>${escapeHtml(item.path)}</small></span><b>↵</b></button>`).join("")
       : '<div class="command-no-results">نتیجه‌ای پیدا نشد.</div>';
     results.querySelectorAll<HTMLButtonElement>("[data-command-path]").forEach((button) => button.addEventListener("click", () => {
       const path = button.dataset.commandPath ?? "/";
