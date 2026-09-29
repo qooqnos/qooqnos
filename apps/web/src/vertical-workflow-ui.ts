@@ -520,6 +520,7 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
       '<span class="pill" data-vwf-role-fit>در انتظار احراز</span>' +
     '</div>' +
     renderCapabilityContract(model.blueprint) +
+    renderWorkflowHandoff(model, stageContext) +
     '<div data-vwf-content>' + renderLayout(model.blueprint.layout, model) + '</div>' +
     '<div class="phoenix-vwf-contract"><span>state</span><strong>canonical-only</strong><span>layout</span><strong>' + escapeHtml(model.blueprint.layout) + '</strong><span>interaction</span><strong>' + escapeHtml(model.blueprint.interaction) + '</strong></div>' +
   '</section>';
