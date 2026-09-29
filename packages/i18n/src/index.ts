@@ -9,8 +9,10 @@ import faLocale from "./locales/fa.json";
 export type SupportedLanguage = "en" | "fa" | "ar";
 export type Locale = SupportedLanguage;
 
-type LocaleNode = string | Readonly<Record<string, LocaleNode>>;
-type LocaleTree = Readonly<Record<string, LocaleNode>>;
+interface LocaleObject {
+  readonly [key: string]: string | LocaleObject;
+}
+type LocaleTree = LocaleObject;
 
 export const localeDictionaries: Record<SupportedLanguage, LocaleTree> = {
   en: enLocale,
