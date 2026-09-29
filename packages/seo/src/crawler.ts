@@ -57,7 +57,7 @@ export async function crawlProductionSeoPage(expected: SeoCrawlerExpected, fetch
 }
 function matchJsonLdBlocks(html: string): string[] {
   const values: string[] = [];
-  const pattern = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\\s\\S]*?)<\/script>/gi;
+  const pattern = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   for (const match of html.matchAll(pattern)) if (match[1]) values.push(match[1].trim());
   return values;
 }
