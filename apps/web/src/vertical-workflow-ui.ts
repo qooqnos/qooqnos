@@ -171,6 +171,12 @@ function renderPeople(model: VerticalWorkflowCanvasModel): string {
     '</section>';
 }
 function renderCommerce(model: VerticalWorkflowCanvasModel): string {
+  const inventorySurface = model.module === "موجودی"
+    ? '<div class="phoenix-vwf-live-inventory" data-vwf-inventory-live>' +
+        '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Inventory</span><h3>موجودی واقعی این کسب‌وکار</h3><p>موجودی فقط از Catalog خوانده می‌شود؛ این Canvas هیچ stock state محلی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
+        '<div class="phoenix-vwf-live-inventory-grid" data-vwf-inventory-items><div class="slot-loading">در حال آماده‌سازی منبع Inventory…</div></div>' +
+      '</div>'
+    : "";
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای معاملات">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="all">همه</button>' +
@@ -184,6 +190,7 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
       '<button type="button" class="button button-secondary" data-vwf-load-order>خواندن Order</button>' +
       '<span class="phoenix-vwf-local-note">Order state مستقیماً از Commerce خوانده می‌شود؛ این Canvas منبع دوم نمی‌سازد.</span>' +
     '</div>' +
+    inventorySurface +
     '<div class="phoenix-vwf-commerce-grid">' +
       model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-commerce-card" data-vwf-item><span class="section-kicker">Commerce surface</span><h3>' + escapeHtml(item.title) + '</h3>' + emptyState(item.description, item.path ?? "Commerce") + (item.path ? '<a class="text-link" href="' + escapeHtml(contextualHref(model, item.path)) + '" data-nav>باز کردن منبع ←</a>' : '') + '</article>').join("") +
     '</div>' +
@@ -522,6 +529,10 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
             void hydrateCalendarCanvas(canvas, businessId).finally(finish);
             return;
           }
+          if (layout === "commerce" && businessId && canvas.dataset.vwfModule === "موجودی") {
+            void hydrateInventoryCanvas(canvas, businessId).finally(finish);
+            return;
+          }
           if (layout === "catalog" && businessId) {
             void hydrateCatalogCanvas(canvas, businessId).finally(finish);
             return;
@@ -588,6 +599,9 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     }
     if (businessId && canvas.dataset.vwfLayout === "calendar") {
       void hydrateCalendarCanvas(canvas, businessId);
+    }
+    if (businessId && canvas.dataset.vwfLayout === "commerce" && canvas.dataset.vwfModule === "موجودی") {
+      void hydrateInventoryCanvas(canvas, businessId);
     }
     if (businessId && canvas.dataset.vwfLayout === "catalog") {
       void hydrateCatalogCanvas(canvas, businessId);
@@ -820,6 +834,24 @@ async function hydrateOrderLookup(host: HTMLElement, orderId: string): Promise<v
   }
 }
 
+type VerticalWorkflowInventoryItem = {
+  id: string;
+  businessId: string;
+  productId: string;
+  productName: string;
+  variantId: string;
+  sku?: string | null;
+  attributesJson?: string | null;
+  variantStatus: string;
+  locationId: string;
+  locationName: string;
+  quantityOnHand: number;
+  quantityReserved: number;
+  availableQuantity: number;
+  version: number;
+  updatedAt: string;
+};
+
 type VerticalWorkflowOffering = {
   id: string;
   businessId: string;
@@ -849,6 +881,48 @@ export function getVerticalWorkflowOfferingActionHref(
 
 export function getVerticalWorkflowOfferingActionLabel(offeringType: "product" | "service"): string {
   return offeringType === "service" ? "رزرو خدمت" : "شروع خرید";
+}
+
+async function hydrateInventoryCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-inventory-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    setCanvasState(canvas, "requires-input");
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش موجودی واقعی، session و Workspace context لازم است.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="slot-loading">در حال خواندن Inventory واقعی از Catalog…</div>';
+  try {
+    const response = await fetch("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/inventory?limit=48", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowInventoryItem[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Inventory unavailable");
+    const items = Array.isArray(body?.data) ? body.data : [];
+    if (!items.length) {
+      setCanvasState(canvas, "connected");
+      container.innerHTML = emptyState("برای این Business هنوز رکورد موجودی فعالی پیدا نشد.", "Inventory");
+      return;
+    }
+    container.innerHTML = items.map((item) => {
+      const available = Number.isFinite(item.availableQuantity) ? item.availableQuantity : 0;
+      const availabilityClass = available <= 0 ? "warning" : available <= 5 ? "" : "success";
+      return '<article class="phoenix-vwf-live-inventory-card" data-vwf-item>' +
+        '<div class="phoenix-vwf-live-inventory-top"><span class="pill ' + availabilityClass + '">' + (available <= 0 ? "ناموجود" : "موجود") + '</span><span class="phoenix-vwf-source-chip">' + escapeHtml(item.variantStatus) + '</span></div>' +
+        '<h4>' + escapeHtml(item.productName) + '</h4>' +
+        '<p>Variant: ' + escapeHtml(item.sku ?? item.variantId) + '</p>' +
+        '<div class="phoenix-vwf-live-inventory-metrics">' +
+          '<div><span>قابل فروش</span><strong>' + String(available) + '</strong></div>' +
+          '<div><span>رزرو شده</span><strong>' + String(Math.max(item.quantityReserved, 0)) + '</strong></div>' +
+          '<div><span>موجودی فیزیکی</span><strong>' + String(Math.max(item.quantityOnHand, 0)) + '</strong></div>' +
+        '</div>' +
+        '<small>' + escapeHtml(item.locationName) + ' · v' + String(item.version) + '</small>' +
+      '</article>';
+    }).join("");
+    setCanvasState(canvas, "connected");
+  } catch (error) {
+    setCanvasState(canvas, "unavailable");
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Inventory ناموفق بود.", "Inventory");
+  }
 }
 
 async function hydrateCatalogCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
