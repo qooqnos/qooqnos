@@ -4,8 +4,9 @@ import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVer
 import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 import { resolveVerticalModuleAlias } from "./business-module-ui.js";
+import { defaultI18n, getDirection, getLocaleFromPreference, translateUiText, type SupportedLanguage } from "@qooqnos/i18n";
 type Theme = "dark" | "light";
-type Language = "fa" | "en" | "ar";
+type Language = SupportedLanguage;
 
 type Route = {
   path: string;
@@ -314,8 +315,9 @@ const routes: Route[] = [
 const theme = getInitialTheme();
 document.documentElement.dataset.theme = theme;
 const initialLanguage = getInitialLanguage();
+defaultI18n.setLanguage(initialLanguage);
 document.documentElement.lang = initialLanguage;
-document.documentElement.dir = initialLanguage === "en" ? "ltr" : "rtl";
+document.documentElement.dir = getDirection(initialLanguage);
 
 async function hydrateSessionContext(): Promise<void> {
   const token = sessionStorage.getItem(STORAGE.accessToken);
@@ -325,6 +327,14 @@ async function hydrateSessionContext(): Promise<void> {
     if (!response.session.authenticated) {
       sessionStorage.removeItem(STORAGE.accessToken);
       return;
+    }
+    if (!localStorage.getItem(STORAGE.language) && response.session.locale) {
+      const serverLocale = getLocaleFromPreference(response.session.locale, "fa");
+      localStorage.setItem(STORAGE.language, serverLocale);
+      defaultI18n.setLanguage(serverLocale);
+      document.documentElement.lang = serverLocale;
+      document.documentElement.dir = getDirection(serverLocale);
+      render();
     }
     if (response.session.workspaceId && !localStorage.getItem(STORAGE.workspace)) {
       localStorage.setItem(STORAGE.workspace, response.session.workspaceId);
@@ -342,75 +352,56 @@ function getInitialTheme(): Theme {
 
 function getInitialLanguage(): Language {
   const stored = localStorage.getItem(STORAGE.language);
-  return stored === "en" || stored === "ar" ? stored : "fa";
+  if (stored === "en" || stored === "ar" || stored === "fa") return stored;
+  return getLocaleFromPreference(navigator.language, "fa");
 }
+
 function languageLabel(language: Language): string {
   return language === "en" ? "EN" : language === "ar" ? "عربي" : "فا";
 }
+
 function languageName(language: Language): string {
   return language === "en" ? "English" : language === "ar" ? "العربية" : "فارسی";
 }
-const UI_TRANSLATIONS: Record<Language, Record<string, string>> = {
-  fa: {},
-  en: {
-    "نیازت را بگو": "Tell Phoenix what you need",
-    "کشف": "Discover",
-    "برای کسب‌وکارها": "For businesses",
-    "ورود": "Sign in",
-    "چگونه کار می‌کند؟": "How it works",
-    "هر چی می‌خوای بگو، تا ققنوس برات پیداش کنه": "Tell Phoenix what you need and let it find it for you",
-    "تصمیم را از نیاز شروع کن": "Start with your need",
-    "محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.": "Find a product, service, or business and compare or act right there.",
-    "با نیازت شروع کن، نه با کلمه کلیدی": "Start with your need, not a keyword",
-    "هرچه برای تصمیم مهم است بنویس؛ ققنوس مسیر کشف را باز می‌کند.": "Write what matters for your decision; Phoenix opens the discovery path.",
-    "نمایش بیشتر": "Show more",
-    "کسب‌وکار جدید بسازید": "Create a new business",
-    "انتخاب زبان": "Choose language",
-    "تغییر پوسته": "Change theme"
-  },
-  ar: {
-    "نیازت را بگو": "أخبر ققنوس بما تحتاج",
-    "کشف": "استكشاف",
-    "برای کسب‌وکارها": "للأعمال",
-    "ورود": "تسجيل الدخول",
-    "چگونه کار می‌کند؟": "كيف يعمل؟",
-    "هر چی می‌خوای بگو، تا ققنوس برات پیداش کنه": "أخبر ققنوس بما تريد وسيجده لك",
-    "تصمیم را از نیاز شروع کن": "ابدأ من احتياجك",
-    "محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.": "اعثر على المنتج أو الخدمة أو النشاط التجاري وقارن أو اتخذ الإجراء مباشرة.",
-    "با نیازت شروع کن، نه با کلمه کلیدی": "ابدأ باحتياجك، وليس بكلمة مفتاحية",
-    "هرچه برای تصمیم مهم است بنویس؛ ققنوس مسیر کشف را باز می‌کند.": "اكتب ما يهم قرارك؛ ققنوس يفتح لك طريق الاستكشاف.",
-    "نمایش بیشتر": "عرض المزيد",
-    "کسب‌وکار جدید بسازید": "أنشئ نشاطًا تجاريًا جديدًا",
-    "انتخاب زبان": "اختيار اللغة",
-    "تغییر پوسته": "تغيير المظهر"
-  }
-};
 
 function applyLanguageToUi(): void {
   const language = getInitialLanguage();
-  const dictionary = UI_TRANSLATIONS[language];
-  if (!Object.keys(dictionary).length) return;
+  defaultI18n.setLanguage(language);
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const nodes: Text[] = [];
   let node: Node | null;
   while ((node = walker.nextNode())) nodes.push(node as Text);
+
   nodes.forEach((textNode) => {
-    const value = textNode.nodeValue?.trim() ?? "";
-    if (!value) return;
-    const translated = dictionary[value];
-    if (translated) textNode.nodeValue = textNode.nodeValue?.replace(value, translated) ?? translated;
+    const value = textNode.nodeValue ?? "";
+    if (!value.trim()) return;
+    const translated = translateUiText(value, language);
+    if (translated !== value) textNode.nodeValue = translated;
   });
+
+  document.querySelectorAll<HTMLElement>("[placeholder], [aria-label], [title]").forEach((element) => {
+    (["placeholder", "aria-label", "title"] as const).forEach((attribute) => {
+      const value = element.getAttribute(attribute);
+      if (!value) return;
+      const translated = translateUiText(value, language);
+      if (translated !== value) element.setAttribute(attribute, translated);
+    });
+  });
+
   document.querySelectorAll<HTMLElement>("[data-language-current]").forEach((node) => {
     node.textContent = languageLabel(language);
   });
 }
 
 function setLanguage(language: Language): void {
-  localStorage.setItem(STORAGE.language, language);
-  document.documentElement.lang = language;
-  document.documentElement.dir = language === "en" ? "ltr" : "rtl";
+  const next = getLocaleFromPreference(language, "fa");
+  localStorage.setItem(STORAGE.language, next);
+  defaultI18n.setLanguage(next);
+  document.documentElement.lang = next;
+  document.documentElement.dir = getDirection(next);
   render();
 }
+
 function toggleLanguageMenu(): void {
   const menu = document.querySelector<HTMLElement>("[data-language-menu]");
   const trigger = document.querySelector<HTMLButtonElement>("[data-language-toggle]");
