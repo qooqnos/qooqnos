@@ -54,7 +54,7 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("نوبت", "en")).toBe("Appointment");
     expect(translateUiText("شناسه کسب‌وکار", "en")).toBe("شناسه Business");
     expect(translateUiText("توضیح محصول", "en")).toBe("توضیح Product");
-    expect(translateUiText("Business and Product", "fa")).toBe("Business and Product");
+    expect(translateUiText("Business and Product", "fa")).toBe("کسب‌وکار and محصول");
   });
 
   it("translates the Business Workspace dictionary as a complete UI surface", () => {
