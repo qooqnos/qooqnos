@@ -26,6 +26,10 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("Your workspace", "fa")).toBe("فضای کاری شما");
     expect(translateUiText("Business Workspace", "fa")).toBe("فضای کاری کسب‌وکار");
     expect(translateUiText("شروع کن و هرچه برای تصمیم مهم است بنویس", "en")).toBe("Start and write everything important for your Decision");
+    expect(translateUiText("کسب‌وکار تو باید برای مشتری هم به همان اندازه واضح باشد.", "en")).toBe("Your business should be just as clear to customers.");
+    expect(translateUiText("از Product Studio یا Catalog شروع کن.", "en")).toBe("Start from Product Studio or Catalog.");
+    expect(translateUiText("در حال بررسی نقش:", "en")).toBe("Checking role:");
+    expect(translateUiText("ماژول‌های این Workspace بر اساس نوع کسب‌وکار ترکیب می‌شوند؛ مجوزها همچنان توسط backend تعیین می‌شوند.", "en")).toBe("Workspace modules are composed by business type; permissions remain controlled by the backend.");
   });
 
   it("uses the canonical domain vocabulary as the terminology source", () => {
