@@ -272,6 +272,12 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
         '<div class="phoenix-vwf-live-billing-grid" data-vwf-invoice-items><div class="slot-loading">در حال خواندن صورتحساب‌های واقعی…</div></div>' +
       '</div>'
     : "";
+  const ordersSurface = ["فروش امروز", "سفارش‌ها", "سفارش‌های امروز"].includes(model.module)
+    ? '<div class="phoenix-vwf-live-orders" data-vwf-orders-live>' +
+        '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Commerce Orders</span><h3>سفارش‌های این کسب‌وکار</h3><p>وضعیت سفارش‌ها مستقیماً از Commerce خوانده می‌شود؛ این Canvas فهرست سفارش یا وضعیت موازی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
+        '<div class="phoenix-vwf-live-orders-grid" data-vwf-order-items><div class="slot-loading">در حال خواندن سفارش‌های واقعی…</div></div>' +
+      '</div>'
+    : "";
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای معاملات">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="all">همه</button>' +
@@ -287,6 +293,7 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
     '</div>' +
     inventorySurface +
     billingSurface +
+    ordersSurface +
     '<div class="phoenix-vwf-commerce-grid">' +
       model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-commerce-card" data-vwf-item><span class="section-kicker">Commerce surface</span><h3>' + escapeHtml(item.title) + '</h3>' + emptyState(item.description, item.path ?? "Commerce") + (item.path ? '<a class="text-link" href="' + escapeHtml(contextualHref(model, item.path)) + '" data-nav>باز کردن منبع ←</a>' : '') + '</article>').join("") +
     '</div>' +
@@ -848,6 +855,10 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
             void hydrateVariantsCanvas(canvas, businessId).finally(finish);
             return;
           }
+          if (layout === "commerce" && businessId && ["فروش امروز", "سفارش‌ها", "سفارش‌های امروز"].includes(canvas.dataset.vwfModule ?? "")) {
+            void hydrateOrdersCanvas(canvas, businessId).finally(finish);
+            return;
+          }
           if (layout === "commerce" && businessId && canvas.dataset.vwfModule === "موجودی") {
             void hydrateInventoryCanvas(canvas, businessId).finally(finish);
             return;
@@ -923,6 +934,17 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
       void hydrateBookingLookup(bookingDetail, bookingId);
     });
 
+    canvas.querySelectorAll<HTMLButtonElement>("[data-vwf-open-order]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const orderId = button.dataset.vwfOpenOrder?.trim();
+        const detail = canvas.querySelector<HTMLElement>("[data-vwf-order-detail]");
+        if (!orderId || !detail) return;
+        const lookup = canvas.querySelector<HTMLInputElement>("[data-vwf-order-id]");
+        if (lookup) lookup.value = orderId;
+        void hydrateOrderLookup(detail, orderId);
+      });
+    });
+
     const fulfillmentLookup = canvas.querySelector<HTMLInputElement>("[data-vwf-fulfillment-id]");
     const fulfillmentDetail = canvas.querySelector<HTMLElement>("[data-vwf-fulfillment-detail]");
     canvas.querySelector<HTMLButtonElement>("[data-vwf-load-fulfillment]")?.addEventListener("click", () => {
@@ -956,6 +978,9 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     }
     if (businessId && canvas.dataset.vwfLayout === "calendar") {
       void hydrateCalendarCanvas(canvas, businessId);
+    }
+    if (businessId && canvas.dataset.vwfLayout === "commerce" && ["فروش امروز", "سفارش‌ها", "سفارش‌های امروز"].includes(canvas.dataset.vwfModule ?? "")) {
+      void hydrateOrdersCanvas(canvas, businessId);
     }
     if (businessId && canvas.dataset.vwfLayout === "commerce" && canvas.dataset.vwfModule === "موجودی") {
       void hydrateInventoryCanvas(canvas, businessId);
@@ -1303,6 +1328,65 @@ async function hydrateOrderLookup(host: HTMLElement, orderId: string): Promise<v
       '</div>';
   } catch (error) {
     host.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Order ناموفق بود.", "Commerce");
+  }
+}
+
+type VerticalWorkflowOrder = {
+  id: string;
+  businessId: string;
+  customerId: string;
+  status: string;
+  currency: string;
+  grandTotalMinor: number;
+  createdAt: string;
+  sourceChannel?: string;
+  fulfillmentStatusRef?: string | null;
+};
+
+async function hydrateOrdersCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-order-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    setCanvasState(canvas, "requires-input");
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش سفارش‌های واقعی، session و Workspace context لازم است.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="slot-loading">در حال خواندن Commerce Orders…</div>';
+  try {
+    const response = await fetch("/api/v1/commerce/orders?businessId=" + encodeURIComponent(businessId) + "&limit=24", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowOrder[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Commerce orders unavailable");
+    const orders = Array.isArray(body?.data) ? body.data : [];
+    if (!orders.length) {
+      setCanvasState(canvas, "connected");
+      container.innerHTML = emptyState("برای این Business هنوز سفارشی در Commerce ثبت نشده است.", "Commerce Orders");
+      return;
+    }
+
+    container.innerHTML = orders.map((order) => {
+      const statusClass = order.status === "completed" ? "success" : order.status === "cancelled" || order.status === "refunded" ? "warning" : "";
+      const total = displayMinorAmount(order.grandTotalMinor, order.currency);
+      const createdAt = new Date(order.createdAt);
+      const created = Number.isNaN(createdAt.getTime())
+        ? "—"
+        : createdAt.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" });
+      return '<article class="phoenix-vwf-live-order-card" data-vwf-item>' +
+        '<div class="phoenix-vwf-live-order-top"><strong>' + escapeHtml(order.id) + '</strong><span class="pill ' + statusClass + '">' + escapeHtml(order.status) + '</span></div>' +
+        '<div class="phoenix-vwf-live-order-facts">' +
+          '<div><span>مشتری</span><strong>' + escapeHtml(order.customerId) + '</strong></div>' +
+          '<div><span>مبلغ</span><strong>' + escapeHtml(total) + '</strong></div>' +
+          '<div><span>ثبت</span><strong>' + escapeHtml(created) + '</strong></div>' +
+        '</div>' +
+        '<div class="phoenix-vwf-live-order-meta"><span>کانال · ' + escapeHtml(order.sourceChannel ?? "—") + '</span><span>تحویل · ' + escapeHtml(order.fulfillmentStatusRef ?? "—") + '</span></div>' +
+        '<button type="button" class="text-link" data-vwf-open-order="' + escapeHtml(order.id) + '">مشاهده جزئیات ←</button>' +
+      '</article>';
+    }).join("");
+    setCanvasState(canvas, "connected");
+  } catch (error) {
+    setCanvasState(canvas, "unavailable");
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن سفارش‌های Commerce ناموفق بود.", "Commerce Orders");
   }
 }
 
