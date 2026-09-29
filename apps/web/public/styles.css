@@ -4775,6 +4775,11 @@ body::before {
   text-decoration:none;
   transition:transform .18s ease,border-color .18s ease,background .18s ease;
 }
+.phoenix-vwf-stage.completed{border-color:var(--line);background:var(--surface-2);opacity:.86}
+.phoenix-vwf-stage.completed .phoenix-vwf-stage-number{border-color:var(--line-strong);color:var(--primary)}
+.phoenix-vwf-stage.completed .phoenix-vwf-stage-copy small::before{content:"✓ ";color:var(--accent)}
+.phoenix-vwf-stage.upcoming{opacity:.72}
+.phoenix-vwf-stage[data-vwf-stage-state="current"]{scroll-margin-inline:12px}
 .phoenix-vwf-stage:hover{transform:translateY(-1px);border-color:var(--line-strong);background:var(--surface)}
 .phoenix-vwf-stage.active{
   border-color:rgba(242,111,56,.35);
