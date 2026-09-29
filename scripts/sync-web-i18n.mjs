@@ -88,28 +88,9 @@ const indexLanguage = (language: SupportedLanguage, canonicalOnly: boolean): voi
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, true);
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, false);
 
-const translationSources = [...textKeyIndex.entries()]
-  .filter(([source]) => source.length >= 3)
-  .sort((a, b) => b[0].length - a[0].length);
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^\${}()|[\]\\]/g, "\\$&");
-}
-
-function translateFragments(value: string, locale: Locale): string {
-  let translatedValue = value;
-  for (const [source, key] of translationSources) {
-    const translated = translations[locale][key] ?? translations.fa[key];
-    if (!translated || translated === source || !translatedValue.includes(source)) continue;
-    const pattern = new RegExp("(?<![\\p{L}\\p{N}_])" + escapeRegExp(source) + "(?![\\p{L}\\p{N}_])", "gu");
-    translatedValue = translatedValue.replace(pattern, translated);
-  }
-  return translatedValue;
-}
 export function translateUiText(value: string, locale: Locale): string {
   const trimmed = value.trim();
   if (!trimmed) return value;
-
   const directKey = textKeyIndex.get(trimmed);
   if (directKey) {
     const translated = translations[locale][directKey] ?? translations.fa[directKey];
@@ -119,8 +100,7 @@ export function translateUiText(value: string, locale: Locale): string {
       return leading + translated + trailing;
     }
   }
-
-  return translateFragments(value, locale);
+  return value;
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
