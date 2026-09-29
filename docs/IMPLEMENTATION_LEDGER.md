@@ -2648,3 +2648,14 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - No domain state, authorization rule, duplicate store or synthetic metrics were introduced.
 - Implementation commits: `0f008213c0b1cdd0fc3242a9a30851caada8a379`, `60137c78fe319ccdc602a09cd17cedb2f206691c`, `c1da61a505d4a88d325f86452a386a1e95d6c0bb`, `160543b4ec4090e83a13f9d22e09f85b7046a6ae`, `1d1f42f5ffdec64ca31f2c4fff766fcca34d61db`.
 - Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
+
+## 2026-09-29 — Discovery / Social Commerce / Compare / Activity completion pass
+- Promoted Social Activity to a first-class route at `/activity` inside the social shell; the surface reads canonical `GET /api/v1/social/activity` and provides authenticated, loading, empty, error/retry and refresh states.
+- Social desktop navigation now exposes For You, Following, Explore and Activity as route-level navigation; mobile navigation converges to Home, Explore, Create, Activity and Profile.
+- Social cards now support canonical Share behavior with Web Share API + clipboard/prompt fallback, a service View action, and service booking links preserve `businessId` when the Discovery projection supplies it.
+- Create/Post now hands the entered draft text through session-scoped UI state into Seller AI Product Studio instead of dropping the user's input.
+- Compare remains canonical-data-only, product-only, 2–4 selection bounded with persistent tray semantics; it reuses canonical Checkout for action.
+- Removed the legacy Activity modal and duplicate social theme binding so the social shell has one Activity route and one canonical theme event path.
+- Added responsive Activity styles to both source and served Web stylesheets.
+- Verification: workspace build completed successfully in Phoenix verification on commit `9acf5ebe3e73161489df9ead5411acdfc3c82138`; Phoenix web preview deploy succeeded. The full repository test suite still has 5 failing tests (4 Vertical Workflow UI / Business Vertical registry assertions and 1 SEO crawler assertion), so the repository is not globally green yet.
+- Social implementation commits: `1e716e81e3b5958675ee16a7e274aec1a2a95989`, `5e6b24f4c8a1a72f0ec77944b5049bff03b026ce`, `26d1c89da05e36045441c7da7d39d7d442cf7026`, styles `352dc097faab256f26131c419eaa156ee26faaf4`, `24778083f998a5d85a0dbfb74aea4b1c20fefb57`.
