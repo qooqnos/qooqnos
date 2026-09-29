@@ -429,7 +429,9 @@ function languageLabel(language: Language): string {
   return language === "en" ? "EN" : language === "ar" ? "عربي" : "فا";
 }
 
-
+function uiText(value: string): string {
+  return translateUiText(value, getInitialLanguage());
+}
 
 function setLanguage(language: Language): void {
   const next = getLocaleFromPreference(language, "fa");
@@ -764,16 +766,16 @@ function renderPublicHeader(): string {
           <span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=1" alt="" /></span>
           <span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
         </a>
-        <nav class="phoenix-public-nav" aria-label="ناوبری اصلی">
-          <a href="#phoenix-loop">چگونه کار می‌کند؟</a>
-          <a href="/discover" data-nav>کشف</a>
-          <a href="/business" data-nav>برای کسب‌وکارها</a>
+        <nav class="phoenix-public-nav" aria-label="${uiText("ناوبری اصلی")}">
+          <a href="#phoenix-loop">${uiText("چگونه کار می‌کند؟")}</a>
+          <a href="/discover" data-nav>${uiText("کشف")}</a>
+          <a href="/business" data-nav>${uiText("برای کسب‌وکارها")}</a>
         </nav>
-        <a class="button button-primary phoenix-header-cta" href="#phoenix-demand-form">نیازت را بگو <span>←</span></a>
+        <a class="button button-primary phoenix-header-cta" href="#phoenix-demand-form">${uiText("نیازت را بگو")} <span>←</span></a>
         <div class="phoenix-public-actions">
-          <button type="button" class="button button-ghost" data-open-connection>ورود</button>
+          <button type="button" class="button button-ghost" data-open-connection>${uiText("ورود")}</button>
           ${renderLanguageSwitcher()}
-          <button type="button" class="icon-button" data-theme-toggle aria-label="تغییر پوسته">◐</button>
+          <button type="button" class="icon-button" data-theme-toggle aria-label="${uiText("تغییر پوسته")}">◐</button>
         </div>
       </div>
     </header>
@@ -790,7 +792,7 @@ function renderHeader(route: Route): string {
         </a>
         <div class="header-context" aria-live="polite">
           <span class="header-context-kicker">Phoenix</span>
-          <strong>${escapeHtml(route.label)}</strong>
+          <strong>${escapeHtml(uiText(route.label))}</strong>
         </div>
         <div class="header-center">
           <div class="command-palette" role="button" tabindex="0" data-focus-search aria-label="جست‌وجوی سراسری">
@@ -805,11 +807,11 @@ function renderHeader(route: Route): string {
           </button>
           <button class="profile-chip workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="انتخاب فضای کاری">
             <span class="avatar">ق</span>
-            <span class="profile-copy"><strong id="shell-workspace-name">فضای شما</strong><small>${escapeHtml(route.label)}</small></span>
+            <span class="profile-copy"><strong id="shell-workspace-name">فضای شما</strong><small>${escapeHtml(uiText(route.label))}</small></span>
             <span class="chevron">⌄</span>
           </button>
           ${renderLanguageSwitcher()}
-          <button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button>
+          <button class="icon-button" type="button" data-theme-toggle aria-label="${uiText("تغییر پوسته")}">◐</button>
         </div>
       </div>
     </header>
@@ -832,27 +834,27 @@ function renderSidebar(route: Route): string {
       </div>
       <div class="side-nav-scroll">
         <nav class="side-nav" aria-label="ناوبری برنامه">
-          <div class="nav-label">محصول</div>
+          <div class="nav-label">${uiText("محصول")}</div>
           ${routes
             .map(
               (item) => `
                 <a href="${item.path}" data-nav class="nav-item ${item.path === sidebarActivePath ? "active" : ""}" ${item.path === sidebarActivePath ? 'aria-current="page"' : ""}>
-                  <span class="nav-icon" aria-hidden="true">${item.icon}</span><span class="nav-copy">${item.label}</span>
+                  <span class="nav-icon" aria-hidden="true">${item.icon}</span><span class="nav-copy">${uiText(item.label)}</span>
                 </a>`,
             )
             .join("")}
-          <div class="nav-label nav-spaced">مدیریت</div>
-          <a class="nav-item ${route.path === "/booking" ? "active" : ""}" href="/booking" data-nav ${route.path === "/booking" ? 'aria-current="page"' : ""}><span class="nav-icon" aria-hidden="true">◷</span><span class="nav-copy">رزروها</span></a>
-          <button class="nav-item disabled" type="button" data-coming-soon="ارتباطات"><span class="nav-icon" aria-hidden="true">◌</span><span class="nav-copy">ارتباطات</span><em>به‌زودی</em></button>
-          <button class="nav-item disabled" type="button" data-coming-soon="گزارش‌ها"><span class="nav-icon" aria-hidden="true">↗</span><span class="nav-copy">گزارش‌ها</span><em>به‌زودی</em></button>
+          <div class="nav-label nav-spaced">${uiText("مدیریت")}</div>
+          <a class="nav-item ${route.path === "/booking" ? "active" : ""}" href="/booking" data-nav ${route.path === "/booking" ? 'aria-current="page"' : ""}><span class="nav-icon" aria-hidden="true">◷</span><span class="nav-copy">${uiText("رزروها")}</span></a>
+          <button class="nav-item disabled" type="button" data-coming-soon="ارتباطات"><span class="nav-icon" aria-hidden="true">◌</span><span class="nav-copy">${uiText("ارتباطات")}</span><em>${uiText("به‌زودی")}</em></button>
+          <button class="nav-item disabled" type="button" data-coming-soon="گزارش‌ها"><span class="nav-icon" aria-hidden="true">↗</span><span class="nav-copy">${uiText("گزارش‌ها")}</span><em>${uiText("به‌زودی")}</em></button>
         </nav>
       </div>
       <div class="sidebar-bottom">
         <div class="ai-mini-card">
           <div class="ai-orb" aria-hidden="true">✦</div>
-          <div><strong>هوش ققنوس</strong><span>آماده برای کمک</span></div>
+          <div><strong>${uiText("هوش ققنوس")}</strong><span>${uiText("آماده برای کمک")}</span></div>
         </div>
-        <button class="nav-item muted" type="button" data-toast="مرکز راهنما به‌زودی فعال می‌شود."><span class="nav-icon" aria-hidden="true">?</span><span class="nav-copy">راهنما</span></button>
+        <button class="nav-item muted" type="button" data-toast="مرکز راهنما به‌زودی فعال می‌شود."><span class="nav-icon" aria-hidden="true">?</span><span class="nav-copy">${uiText("راهنما")}</span></button>
       </div>
     </aside>
   `;
@@ -867,11 +869,11 @@ function renderMobileNav(route: Route): string {
     { path: "/profile", label: "پروفایل", icon: "◉" },
   ];
   return `
-    <nav class="mobile-nav" aria-label="ناوبری اصلی موبایل">
+    <nav class="mobile-nav" aria-label="${uiText("ناوبری اصلی موبایل")}">
       ${mobileItems.map((item) => {
         const active = item.path === route.path;
         return `<a href="${item.path}" data-nav class="${active ? "active" : ""}" ${active ? 'aria-current="page"' : ""}>
-          <span class="mobile-nav-icon" aria-hidden="true">${item.icon}</span><small>${item.label}</small>
+          <span class="mobile-nav-icon" aria-hidden="true">${item.icon}</span><small>${uiText(item.label)}</small>
         </a>`;
       }).join("")}
     </nav>
@@ -1046,7 +1048,7 @@ function renderHome(): string {
       </section>
       <footer class="phoenix-home-footer">
         <div><a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=1" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span></a><p>لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار.</p></div>
-        <nav aria-label="پیوندهای پایانی"><a href="/discover" data-nav>کشف</a><a href="/business" data-nav>برای کسب‌وکارها</a><a href="/product-studio" data-nav>استودیو محصول</a></nav>
+        <nav aria-label="پیوندهای پایانی"><a href="/discover" data-nav>${uiText("کشف")}</a><a href="/business" data-nav>${uiText("برای کسب‌وکارها")}</a><a href="/product-studio" data-nav>استودیو محصول</a></nav>
       </footer>
     </div>
   `;
@@ -3122,7 +3124,7 @@ function renderSocialHeader(active: "feed" | "following" | "explore" | "activity
     '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">دنبال‌شده‌ها</a>' +
     '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a>' +
     '<a href="/activity" data-nav class="' + (active === "activity" ? "active" : "") + '">فعالیت</a></nav>' +
-    '<div class="phoenix-social-actions"><button class="icon-button" type="button" data-open-create-post aria-label="پست جدید">＋</button><button class="icon-button" type="button" data-theme-toggle aria-label="تغییر پوسته">◐</button></div>' +
+    '<div class="phoenix-social-actions"><button class="icon-button" type="button" data-open-create-post aria-label="پست جدید">＋</button><button class="icon-button" type="button" data-theme-toggle aria-label="${uiText("تغییر پوسته")}">◐</button></div>' +
     '</div></header>';
 }
 
