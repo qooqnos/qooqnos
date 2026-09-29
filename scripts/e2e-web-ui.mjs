@@ -222,7 +222,7 @@ await page.locator("[data-run-discovery]").click();
 await page.getByRole("heading", { name: "موجودیت واقعی تست" }).waitFor();
 await page.locator("[data-discovery-index='0']").click();
 await page.locator("[data-toggle-shortlist]").click();
-await page.locator("[data-close-discovery]").first().click();
+await page.locator(".discovery-detail-modal [data-close-discovery]").first().click();
 assert.equal(await page.locator("#shortlist-count").innerText(), "1");
 
 await page.goto(baseURL + "/dashboard");
