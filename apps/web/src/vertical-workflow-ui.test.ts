@@ -135,6 +135,24 @@ describe("Vertical Workflow UI Canvas", () => {
     expect(html).toContain('data-vwf-role-fit');
   });
 
+  it("surfaces declared capability and permission dependencies without turning them into authorization", () => {
+    const blueprint = getVerticalModuleBlueprint("clinic", "نوبت‌ها");
+    expect(blueprint.capabilityContract.requiredCapabilities).toEqual(["booking"]);
+    expect(blueprint.capabilityContract.requiredPermissions).toEqual(["booking.read", "booking.manage"]);
+
+    const html = renderVerticalWorkflowCanvas({
+      vertical: "clinic",
+      module: "نوبت‌ها",
+      businessId: "business-test",
+      blueprint,
+    });
+    expect(html).toContain('data-vwf-capability="booking"');
+    expect(html).toContain('data-vwf-required-permission="booking.read"');
+    expect(html).toContain('data-vwf-required-permission="booking.manage"');
+    expect(html).toContain("Capability Contract");
+    expect(html).toContain("Backend authoritative");
+  });
+
   it("escapes contextual identifiers before placing them into HTML attributes", () => {
     const blueprint = getVerticalModuleBlueprint("retail", "محصولات");
     const model: VerticalWorkflowCanvasModel = {
