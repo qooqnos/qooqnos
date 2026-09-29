@@ -3438,6 +3438,28 @@ function businessModuleContextHref(path: string, vertical: string, module: strin
   return target.pathname + target.search + target.hash;
 }
 
+/**
+ * Preserve Business/Vertical context when a link originates from the Workspace shell
+ * rather than from a specific module. This intentionally does not add fromModule.
+ */
+function businessWorkspaceContextHref(path: string, vertical: string, businessId?: string): string {
+  const target = new URL(path, window.location.origin);
+  const resolvedVertical = resolveBusinessVerticalKey(vertical);
+  const modules: readonly string[] = getBusinessVerticalUi(resolvedVertical).modules;
+
+  if (target.pathname === "/business" && target.searchParams.get("module")) {
+    const requestedModule = target.searchParams.get("module")?.trim();
+    if (requestedModule && modules.includes(requestedModule)) {
+      target.pathname = businessModulePath(resolvedVertical, requestedModule);
+      target.search = "";
+    }
+  }
+
+  if (businessId) target.searchParams.set("business", businessId);
+  target.searchParams.set("vertical", resolvedVertical);
+  return target.pathname + target.search + target.hash;
+}
+
 type BusinessModulePresentation = {
   readonly eyebrow: string;
   readonly stateLabel: string;
@@ -3582,7 +3604,7 @@ function renderBusinessModule(vertical: string, module: string): string {
     '<section class="glass-card phoenix-module-workbench-card">' +
       '<div class="card-section-heading"><div><span class="section-kicker">Workspace Canvas</span><h2>ساختار عملیاتی این صفحه</h2></div><span class="pill">' + escapeHtml(ui.label) + '</span></div>' +
       '<div class="phoenix-module-workbench-grid">' +
-        '<article><span class="section-kicker">01 · Context</span><strong>هویت و دسترسی</strong><p>Business، نقش و Capability قبل از هر اقدام مشخص می‌شوند.</p><a href="/business/profile" data-nav>مشاهده Context ←</a></article>' +
+        '<article><span class="section-kicker">01 · Context</span><strong>هویت و دسترسی</strong><p>Business، نقش و Capability قبل از هر اقدام مشخص می‌شوند.</p><a href="' + escapeAttr(businessWorkspaceContextHref("/business/profile", ui.key, businessId || undefined)) + '" data-nav>مشاهده Context ←</a></article>' +
         '<article><span class="section-kicker">02 · Canonical</span><strong>' + escapeHtml(info.label) + '</strong><p>' + escapeHtml(info.description) + '</p>' +
           (canonicalPath ? '<a href="' + escapeAttr(canonicalPath) + '" data-nav>ورود به منبع اصلی ←</a>' : '<span class="pill">منبع مستقل هنوز ثبت نشده</span>') +
         '</article>' +
@@ -3642,7 +3664,10 @@ function renderBusiness(): string {
     '</section>' +
 
     '<section class="phoenix-business-board">' +
-      (BUSINESS_VERTICAL_BOARD[ui.key] ?? BUSINESS_VERTICAL_BOARD.default ?? []).map((card) => '<a class="glass-card phoenix-business-board-card" href="' + escapeAttr(card.path ?? "/business") + '" data-nav><span class="section-kicker">' + escapeHtml(card.eyebrow) + '</span><h3>' + escapeHtml(card.title) + '</h3><p>' + escapeHtml(card.description) + '</p><span class="phoenix-board-arrow">→</span></a>').join("") +
+      (BUSINESS_VERTICAL_BOARD[ui.key] ?? BUSINESS_VERTICAL_BOARD.default ?? []).map((card) => {
+        const href = card.path ? businessWorkspaceContextHref(card.path, ui.key, businessId || undefined) : "/business";
+        return '<a class="glass-card phoenix-business-board-card" href="' + escapeAttr(href) + '" data-nav><span class="section-kicker">' + escapeHtml(card.eyebrow) + '</span><h3>' + escapeHtml(card.title) + '</h3><p>' + escapeHtml(card.description) + '</p><span class="phoenix-board-arrow">→</span></a>';
+      }).join("") +
     '</section>' +
 
     '<section class="phoenix-business-role-actions glass-card">' +
@@ -3926,7 +3951,10 @@ async function loadBusinessAccess(): Promise<void> {
     const roleActions = BUSINESS_ROLE_ACTIONS[roleKey] ?? BUSINESS_ROLE_ACTIONS.generic ?? [];
     if (roleFocusTitle) roleFocusTitle.textContent = roleLens.title;
     if (roleFocusBadge) roleFocusBadge.textContent = roleText;
-    if (roleActionsGrid) roleActionsGrid.innerHTML = roleActions.map((item) => '<a class="phoenix-business-role-action" href="' + escapeAttr(item.path) + '" data-nav><strong>' + escapeHtml(item.label) + '</strong><span>' + escapeHtml(item.description) + '</span><b>→</b></a>').join("");
+    if (roleActionsGrid) roleActionsGrid.innerHTML = roleActions.map((item) => {
+      const href = businessWorkspaceContextHref(item.path, vertical.key, businessId || undefined);
+      return '<a class="phoenix-business-role-action" href="' + escapeAttr(href) + '" data-nav><strong>' + escapeHtml(item.label) + '</strong><span>' + escapeHtml(item.description) + '</span><b>→</b></a>';
+    }).join("");
     if (permissionsHost) permissionsHost.innerHTML = permissions.length
       ? permissions.slice(0, 24).map((permission) => '<span class="phoenix-permission-chip">' + escapeHtml(permission) + '</span>').join("")
       : '<span class="permission-empty">Permission فعلی در context برنگشت.</span>';
