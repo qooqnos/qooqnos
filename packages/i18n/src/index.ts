@@ -117,10 +117,7 @@ const indexLanguage = (language: SupportedLanguage, canonicalOnly: boolean): voi
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, true);
 for (const language of ["fa", "en", "ar"] as const) indexLanguage(language, false);
 
-export function translateUiText(
-  value: string,
-  locale: Locale,
-): string {
+export function translateUiText(value: string, locale: Locale): string {
   const trimmed = value.trim();
   if (!trimmed) return value;
 
@@ -135,26 +132,6 @@ export function translateUiText(
   }
 
   return value;
-}
-
-export function translateUiText(
-  value: string,
-  locale: Locale,
-): string {
-  const trimmed = value.trim();
-  if (!trimmed) return value;
-
-  const directKey = textKeyIndex.get(trimmed);
-  if (directKey) {
-    const translated = translations[locale][directKey] ?? translations.fa[directKey];
-    if (translated) {
-      const leading = value.match(/^\s*/u)?.[0] ?? "";
-      const trailing = value.match(/\s*$/u)?.[0] ?? "";
-      return leading + translated + trailing;
-    }
-  }
-
-  return translateFragments(value, locale);
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
