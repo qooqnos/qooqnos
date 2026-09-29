@@ -552,7 +552,9 @@
     "business_clinicType": "عيادة",
     "business_storeType": "متجر",
     "business_restaurantType": "مطعم",
-    "business_salonType": "صالون"
+    "business_salonType": "صالون",
+    "workspaceContextRequired": "يلزم سياق مساحة العمل",
+    "loadingEllipsis": "جارٍ التحميل…"
   },
   "canonical": {
     "identity": {
