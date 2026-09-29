@@ -52,9 +52,11 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("کسب‌وکار", "en")).toBe("Business");
     expect(translateUiText("عرضه", "en")).toBe("Offering");
     expect(translateUiText("نوبت", "en")).toBe("Appointment");
-    expect(translateUiText("شناسه کسب‌وکار", "en")).toBe("شناسه Business");
-    expect(translateUiText("توضیح محصول", "en")).toBe("توضیح Product");
+    expect(translateUiText("شناسه کسب‌وکار", "en")).toBe("Business ID");
+    expect(translateUiText("توضیح محصول", "en")).toBe("Product description");
     expect(translateUiText("Business and Product", "fa")).toBe("کسب‌وکار and محصول");
+    expect(translateUiText("هویت کسب‌وکار و اعتماد", "en")).toBe("Business identity and Trust");
+    expect(translateUiText("محصول و خدمت", "ar")).toBe("المنتج والخدمة");
   });
 
   it("translates the Business Workspace dictionary as a complete UI surface", () => {
