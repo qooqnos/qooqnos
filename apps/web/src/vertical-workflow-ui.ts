@@ -108,9 +108,9 @@ function renderCalendar(model: VerticalWorkflowCanvasModel): string {
   const first = model.blueprint.blocks[0];
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای تقویم">' +
-      '<button type="button" class="active" data-vwf-tab="day">روز</button>' +
-      '<button type="button" data-vwf-tab="week">هفته</button>' +
-      '<button type="button" data-vwf-tab="month">ماه</button>' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="day">روز</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="week">هفته</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="month">ماه</button>' +
     '</div>' +
     '<button type="button" class="button button-ghost" data-vwf-action="today">امروز</button>' +
     '</div>' +
