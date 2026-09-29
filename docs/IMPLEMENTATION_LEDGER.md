@@ -9,6 +9,18 @@
 - Implementation commits: `ad23d7b3400f70247260445b319bd4e62c615a93`, `084a871a895e33a73f655c8131787837e5bf1d0e`, `80552fc6269e5e868ec85d24478fbf19a67f9451`, `250d055b5e9e53e7826d17b42a0ee00f53f6b933`.
 - Verification remains pending: TypeScript build, full test suite and browser/device visual QA have not been executed after this slice.
 
+## 2026-09-29 — Canonical semantic routing for Vertical Workflow stages
+
+- 🟢 Shared Vertical Workflow stage navigation now uses the same stable semantic module-route registry as the Workspace module shell.
+- 🟢 Stage links resolve through `getVerticalModuleRoute()` instead of the legacy `/business?vertical=...&module=...` query-only form.
+- 🟢 Business ID and originating-module context remain in query parameters, while vertical/module identity is encoded in the stable path.
+- 🟢 This keeps deep-link identity independent from localized module labels and makes browser/history/analytics links consistent with the Workspace routing contract.
+- 🟢 Added regression coverage for the Clinic appointment → calendar stage transition.
+- 🟡 TypeScript build, full tests, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: `6f971358ef68615fb13ff1717532205b35baebdf`, `0b141658b63fb3d41fa9442dea67eebaf03c2e9d`.
+
+
 # Phoenix Implementation Ledger
 
 **Status:** Current implementation ledger
