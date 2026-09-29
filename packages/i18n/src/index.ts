@@ -159,7 +159,7 @@ export function translateUiText(value: string, locale: Locale): string {
     }
   }
 
-  return value;
+  return translateCanonicalFragments(value, locale);
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
