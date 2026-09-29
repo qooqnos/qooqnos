@@ -1,3 +1,12 @@
+## 2026-09-29 — Shared Vertical Workflow calendar tab semantics
+
+- 🟢 The shared Calendar layout now uses the same semantic `role=tab`, `aria-selected` and roving-tabindex contract as the other Vertical Workflow layouts.
+- 🟢 This lets the existing shared Phoenix tab accessibility primitive provide consistent Arrow/Home/End keyboard navigation instead of maintaining calendar-only behavior.
+- 🟢 Added regression coverage that all Vertical Workflow tabs expose the shared semantic attributes.
+- 🟡 Build, full tests, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: 5bcad85f (Calendar tab semantics), 0392951a (regression coverage).
+
 ## 2026-09-29 — Vertical Workflow overview role/access awareness
 
 - 🟢 The shared Vertical Workflow overview now hydrates the current role lens and declared module permissions from canonical `/api/v1/context`.
