@@ -1,3 +1,16 @@
+## 2026-09-29 — Vertical Workflow capability contract surfaced in the shared Canvas
+
+- 🟢 Fixed the module blueprint fallback so declared capability contracts from the shared registry are actually applied when a blueprint has an empty placeholder contract.
+- 🟢 The shared Vertical Workflow Canvas now shows each module's declared Capability dependencies and required Permission dependencies in one reusable surface.
+- 🟢 The Canvas reads `/api/v1/context` only to compare declared permissions with the current context; it never infers capability enablement or grants authorization from that comparison.
+- 🟢 Permission chips are marked present/missing for the current context, while backend authorization remains authoritative.
+- 🟢 The surface is shared across Clinic, Retail, Restaurant and Salon; no occupation-specific capability UI was duplicated.
+- 🟢 Added focused regression coverage for module capability contracts and Canvas rendering.
+- 🟢 Added responsive styling to both authored and served web stylesheets.
+- 🟡 TypeScript build, full test suite, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: `992fec69` (blueprint contract wiring), `1b6d824b` (Canvas capability surface), `21e639a5` / `fb991dac` (tests), `3df5f01a` / `8b1e70c` (styling).
+
 
 ## 2026-09-29 — Shared People canvas → canonical CRM timeline context
 
