@@ -76,6 +76,9 @@ describe("Vertical Workflow UI Canvas", () => {
       const html = renderVerticalWorkflowCanvas(model);
       expect(html).toContain('data-vwf-stage-index="2"');
       expect(html).toContain('data-vwf-stage-total="4"');
+      expect(html).toContain('data-vwf-stage-state="completed"');
+      expect(html).toContain('data-vwf-stage-state="current"');
+      expect(html).toContain('data-vwf-stage-state="upcoming"');
       expect(html).toContain("زمان‌بندی");
       expect(html).toContain("پیگیری");
       expect(html).toContain("رزرو");
