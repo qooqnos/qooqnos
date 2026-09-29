@@ -93,8 +93,7 @@ const translationSources = [...textKeyIndex.entries()]
   .sort((a, b) => b[0].length - a[0].length);
 
 function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\\]\\]/g, "\\export function translateUiText(value: string, locale: Locale): string {
-");
+  return value.replace(/[.*+?^\${}()|[\]\\]/g, "\\$&");
 }
 
 function translateFragments(value: string, locale: Locale): string {
