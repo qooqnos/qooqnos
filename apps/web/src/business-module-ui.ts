@@ -496,6 +496,50 @@ export const VERTICAL_MODULE_SLUGS: Readonly<Record<string, Readonly<Record<stri
   salon: { "وقت‌های امروز": "today", "خدمات": "services", "متخصصان": "specialists", "تقویم": "calendar", "مشتریان": "customers", "ظرفیت": "capacity", "پرداخت": "payments", "پیشنهادها": "promotions", "محتوا": "content", "تیم": "team" },
 };
 
+export const VERTICAL_MODULE_ALIASES: Readonly<Record<string, readonly string[]>> = {
+  profile: ["پروفایل"],
+  products: ["محصولات"],
+  product: ["محصولات"],
+  services: ["خدمات"],
+  service: ["خدمات"],
+  customers: ["مشتریان", "مراجعان"],
+  patients: ["مراجعان"],
+  clients: ["مشتریان", "مراجعان"],
+  team: ["تیم"],
+  messages: ["پیام‌ها"],
+  communications: ["پیام‌ها"],
+  transactions: ["معاملات"],
+  orders: ["سفارش‌ها", "سفارش‌های امروز"],
+  returns: ["مرجوعی"],
+  inventory: ["موجودی"],
+  variants: ["مدل‌ها و تنوع"],
+  attributes: ["سایز و رنگ"],
+  promotions: ["تخفیف‌ها", "تخفیف", "پیشنهادها"],
+  reports: ["گزارش فروش", "گزارش‌ها", "گزارش"],
+  calendar: ["تقویم"],
+  bookings: ["نوبت‌ها", "رزرو", "وقت‌های امروز"],
+  appointments: ["نوبت‌ها"],
+  reservations: ["رزرو"],
+  today: ["امروز", "فروش امروز", "سفارش‌های امروز", "وقت‌های امروز"],
+  providers: ["پزشکان"],
+  specialists: ["متخصصان"],
+  hours: ["ساعات کاری"],
+  payments: ["پرداخت"],
+  menu: ["منو"],
+  tables: ["میزها"],
+  kitchen: ["آشپزخانه"],
+  delivery: ["تحویل"],
+};
+
+export function resolveVerticalModuleAlias(vertical: string, alias: string): string | null {
+  const normalized = alias.trim().toLowerCase();
+  const modules = Object.keys(VERTICAL_MODULE_SLUGS[vertical.trim().toLowerCase()] ?? {});
+  if (!modules.length) return null;
+  const candidates = VERTICAL_MODULE_ALIASES[normalized];
+  if (!candidates) return null;
+  return candidates.find((module) => modules.includes(module)) ?? null;
+}
+
 export function getVerticalModuleSlug(vertical: string, module: string): string {
   const key = vertical.trim().toLowerCase();
   return VERTICAL_MODULE_SLUGS[key]?.[module] ?? module;
