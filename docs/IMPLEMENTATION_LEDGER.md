@@ -1,3 +1,11 @@
+## 2026-09-29 — Vertical service booking context continuity
+- Extended the shared Booking surface so a service Offering arriving from Vertical Workflow, Public Business, Discovery or Social Commerce is resolved against the canonical published Business supply before schedule selection.
+- Added a read-only Offering context card to `/booking` using `GET /api/v1/public/businesses/:businessId`; the UI shows canonical title, description, offering type and service identity without creating a local offering store.
+- The existing Availability → Schedule → Slot → Hold flow remains unchanged and authoritative; the new layer only preserves supply context across the handoff.
+- Added responsive styling in both `apps/web/styles.css` and `apps/web/public/styles.css`.
+- Implementation commit: `70120d516eec6b44d4d47ad424889fab0adc1976`; styles: `9fcaeae986786afef6724025346c88f6476676cd`, `7c57c25d35e2f8061beaa43192f666bf5bdb714c`.
+- Verification: TypeScript build, full test suite and browser/device visual QA are still pending after this slice.
+
 ## 2026-09-29 — Shared Vertical Workflow Context Bus
 
 - 🟢 Added a shared in-memory Context reader to `apps/web/src/vertical-workflow-ui.ts` so the overview, role lens and capability/permission surface reuse one canonical `GET /api/v1/context` request instead of issuing parallel reads.
