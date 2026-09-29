@@ -2393,7 +2393,7 @@ function renderBilling(): string {
   const customer = localStorage.getItem(STORAGE.customer) ?? "";
   return `
     <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Billing & Plans</span><h1>هزینه و ارزش را <em>شفاف</em> ببینید.</h1><p>Plans و invoices از Billing canonical خوانده می‌شوند؛ frontend محاسبه مالی انجام نمی‌دهد.</p></div>
+      <div><span class="eyebrow"><i></i> ${canonicalUi("canonical.billing.plan")} & Billing</span><h1>هزینه و ارزش را <em>شفاف</em> ببینید.</h1><p>Plans و invoices از Billing canonical خوانده می‌شوند؛ frontend محاسبه مالی انجام نمی‌دهد.</p></div>
       <div class="heading-actions"><button class="button button-ghost" type="button" data-load-billing>بروزرسانی</button></div>
     </section>
     <section class="billing-grid">
@@ -2402,7 +2402,7 @@ function renderBilling(): string {
         <div id="billing-plans" class="plan-list"><div class="slot-empty"><span>◈</span><p>در حال بارگذاری…</p></div></div>
       </article>
       <article class="glass-card billing-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Invoices</span><h2>صورتحساب‌ها</h2></div><span id="billing-invoice-meta">—</span></div>
+        <div class="card-section-heading"><div><span class="section-kicker">Invoices</span><h2>${canonicalUi("canonical.billing.invoice")}</h2></div><span id="billing-invoice-meta">—</span></div>
         <div class="billing-filters">
           <input class="studio-input-line" id="billing-business" type="text" value="${escapeAttr(business)}" placeholder="Business ID" />
           <input class="studio-input-line" id="billing-customer" type="text" value="${escapeAttr(customer)}" placeholder="Customer ID" />
@@ -2509,12 +2509,12 @@ function renderCommunication(): string {
   const recipient = localStorage.getItem(STORAGE.customer) ?? "";
   return `
     <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Communication Center</span><h1>پیام درست، <em>در زمان درست.</em></h1><p>ارسال notification و مدیریت preference از قرارداد canonical Communication انجام می‌شود.</p></div>
+      <div><span class="eyebrow"><i></i> ${canonicalUi("canonical.communication.conversation")} Center</span><h1>پیام درست، <em>در زمان درست.</em></h1><p>ارسال notification و مدیریت preference از قرارداد canonical Communication انجام می‌شود.</p></div>
       <div class="heading-actions"><button class="button button-ghost" type="button" data-comm-load>بارگذاری وضعیت</button></div>
     </section>
     <section class="communication-grid">
       <article class="glass-card communication-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Notification</span><h2>ارسال پیام</h2></div><span id="comm-status" class="pill">آماده</span></div>
+        <div class="card-section-heading"><div><span class="section-kicker">${canonicalUi("canonical.communication.notification")}</span><h2>${canonicalUi("canonical.communication.message")}</h2></div><span id="comm-status" class="pill">آماده</span></div>
         <div class="booking-fields">
           <div><label class="field-label" for="comm-recipient">Recipient Reference</label><input class="studio-input-line" id="comm-recipient" type="text" value="${escapeAttr(recipient)}" placeholder="Customer ID" /></div>
           <div><label class="field-label" for="comm-intent">Intent</label><input class="studio-input-line" id="comm-intent" type="text" value="transaction_update" placeholder="booking.confirmed" /></div>
@@ -2655,7 +2655,7 @@ function renderCustomer(): string {
   const customerId = localStorage.getItem(STORAGE.customer) ?? "";
   return `
     <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Customer & CRM</span><h1>رابطه را بشناسید، <em>دوباره ارزش بسازید.</em></h1><p>پروفایل، ترجیحات و timeline مشتری از قراردادهای canonical Customer/CRM خوانده می‌شوند.</p></div>
+      <div><span class="eyebrow"><i></i> ${canonicalUi("canonical.customer.customer")} & CRM</span><h1>رابطه را بشناسید، <em>دوباره ارزش بسازید.</em></h1><p>پروفایل، ترجیحات و timeline مشتری از قراردادهای canonical Customer/CRM خوانده می‌شوند.</p></div>
       <div class="heading-actions">
         <button class="button button-ghost" type="button" data-customer-refresh>بروزرسانی</button>
         <button class="button button-primary" type="button" data-customer-create>${customerId ? "مشتری جدید" : "ایجاد مشتری"}</button>
@@ -2663,7 +2663,7 @@ function renderCustomer(): string {
     </section>
     <section class="customer-grid">
       <article class="glass-card customer-profile-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Profile</span><h2>پروفایل مشتری</h2></div><span id="customer-status" class="pill">در حال بررسی</span></div>
+        <div class="card-section-heading"><div><span class="section-kicker">Profile</span><h2>${canonicalUi("canonical.customer.customerProfile")}</h2></div><span id="customer-status" class="pill">در حال بررسی</span></div>
         <div id="customer-profile" class="customer-profile-body">
           <div class="account-empty"><span>♙</span><p>${customerId ? "در حال خواندن پروفایل…" : "یک Customer ID ایجاد یا ثبت کنید."}</p></div>
         </div>
@@ -2686,9 +2686,9 @@ function renderCustomer(): string {
       <article class="glass-card customer-profile-card">
         <div class="card-section-heading"><div><span class="section-kicker">Context</span><h2>شناسه‌های فعال</h2></div></div>
         <div class="account-details">
-          <div class="account-row"><span>Customer ID</span><strong id="customer-id-display">${escapeHtml(customerId || "—")}</strong></div>
+          <div class="account-row"><span>${canonicalUi("canonical.customer.customer")} ID</span><strong id="customer-id-display">${escapeHtml(customerId || "—")}</strong></div>
           <div class="account-row"><span>Workspace</span><strong>${escapeHtml(localStorage.getItem(STORAGE.workspace) ?? "—")}</strong></div>
-          <div class="account-row"><span>Business</span><strong>${escapeHtml(localStorage.getItem(STORAGE.business) ?? "—")}</strong></div>
+          <div class="account-row"><span>${canonicalUi("canonical.business.business")}</span><strong>${escapeHtml(localStorage.getItem(STORAGE.business) ?? "—")}</strong></div>
         </div>
       </article>
     </section>
@@ -2955,7 +2955,7 @@ function renderNotifications(): string {
   return '<div class="phoenix-notifications-page">' +
     '<section class="page-heading"><div><span class="eyebrow"><i></i> Notification Center</span><h1>چیزهایی که لازم است <em>بدانی.</em></h1><p>پیام‌ها، پیشنهادهای ققنوس و تغییر وضعیت معامله را در یک فضای آرام و قابل‌فهم ببین.</p></div><button class="button button-primary" type="button" data-refresh-notifications>بروزرسانی</button></section>' +
     '<section class="phoenix-notification-tabs" aria-label="دسته اعلان‌ها"><button class="active" type="button">همه</button><button type="button">مهم</button><button type="button">پیام‌ها</button><button type="button">معاملات</button></section>' +
-    '<section class="glass-card phoenix-notifications-card"><div class="phoenix-notifications-heading"><div><span class="section-kicker">Live</span><h2>اعلان‌های شما</h2></div><span id="notifications-page-count" class="pill">—</span></div><div id="notifications-page-list" class="notification-list"><div class="slot-loading">در حال بارگذاری…</div></div></section>' +
+    '<section class="glass-card phoenix-notifications-card"><div class="phoenix-notifications-heading"><div><span class="section-kicker">Live</span><h2>${canonicalUi("canonical.communication.notification")}‌های شما</h2></div><span id="notifications-page-count" class="pill">—</span></div><div id="notifications-page-list" class="notification-list"><div class="slot-loading">در حال بارگذاری…</div></div></section>' +
   '</div>';
 }
 
