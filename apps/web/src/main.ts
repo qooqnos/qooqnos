@@ -451,18 +451,6 @@ function canonicalUi(key: string): string {
   return translateCanonicalTerm(key, getInitialLanguage());
 }
 
-const ROUTE_CANONICAL_LABELS: Readonly<Record<string, string>> = {
-  "/business": "canonical.business.business",
-  "/business/profile": "canonical.business.businessProfile",
-  "/booking": "canonical.booking.booking",
-  "/customer": "canonical.customer.customer",
-};
-
-function routeUiLabel(route: Route): string {
-  const key = ROUTE_CANONICAL_LABELS[route.path];
-  return key ? canonicalUi(key) : uiText(route.label);
-}
-
 function setLanguage(language: Language): void {
   const next = getLocaleFromPreference(language, "fa");
   persistLocale(next, localStorage);
