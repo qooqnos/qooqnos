@@ -124,6 +124,12 @@ function renderCalendar(model: VerticalWorkflowCanvasModel): string {
 }
 
 function renderCatalog(model: VerticalWorkflowCanvasModel): string {
+  const variantSurface = (model.module === "مدل‌ها و تنوع" || model.module === "سایز و رنگ")
+    ? '<div class="phoenix-vwf-live-variants" data-vwf-variants-live>' +
+        '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Catalog Variants</span><h3>' + (model.module === "سایز و رنگ" ? "سایز، رنگ و Attributeها" : "مدل‌ها و تنوع محصول") + '</h3><p>Variant و Attribute فقط از Catalog خوانده می‌شوند؛ این Canvas هیچ نسخه محلی از محصول ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
+        '<div class="phoenix-vwf-live-variants-grid" data-vwf-variant-items><div class="slot-loading">در حال آماده‌سازی Variantهای واقعی…</div></div>' +
+      '</div>'
+    : "";
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای عرضه">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="grid">کارت‌ها</button>' +
@@ -136,6 +142,7 @@ function renderCatalog(model: VerticalWorkflowCanvasModel): string {
       '<input class="studio-input-line" data-vwf-filter placeholder="فیلتر محلی این Canvas…" aria-label="فیلتر محلی" />' +
       '<span class="phoenix-vwf-local-note">Local UI filter · canonical data unchanged</span>' +
     '</div>' +
+    variantSurface +
     '<div class="phoenix-vwf-supply-grid" data-vwf-supply-live>' +
       '<div class="phoenix-vwf-live-supply" data-vwf-catalog-live>' +
         '<div class="phoenix-vwf-live-supply-head"><div><span class="section-kicker">Canonical supply</span><h3>عرضه‌های این کسب‌وکار</h3><p>فقط Offeringهای متعلق به همین Business و Workspace در این بخش hydrate می‌شوند.</p></div><span class="pill">live when connected</span></div>' +
@@ -144,6 +151,7 @@ function renderCatalog(model: VerticalWorkflowCanvasModel): string {
       model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-supply-card" data-vwf-item><span class="phoenix-module-blueprint-index">' + escapeHtml(item.label) + '</span><div><strong>' + escapeHtml(item.title) + '</strong><p>' + escapeHtml(item.description) + '</p>' + (item.path ? '<a class="text-link" href="' + escapeHtml(contextualHref(model, item.path)) + '" data-nav>باز کردن منبع ←</a>' : '<span class="phoenix-vwf-source-chip">canonical source</span>') + '</div></article>').join("") +
     '</div>';
 }
+
 function renderPeople(model: VerticalWorkflowCanvasModel): string {
   const resourceType = (model.module === "پزشکان" || model.module === "متخصصان") ? "person" : "";
   const resourceSurface = resourceType
@@ -701,6 +709,10 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
             void hydrateCalendarCanvas(canvas, businessId).finally(finish);
             return;
           }
+          if (layout === "catalog" && businessId && (canvas.dataset.vwfModule === "مدل‌ها و تنوع" || canvas.dataset.vwfModule === "سایز و رنگ")) {
+            void hydrateVariantsCanvas(canvas, businessId).finally(finish);
+            return;
+          }
           if (layout === "commerce" && businessId && canvas.dataset.vwfModule === "موجودی") {
             void hydrateInventoryCanvas(canvas, businessId).finally(finish);
             return;
@@ -798,6 +810,9 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     }
     if (businessId && canvas.dataset.vwfLayout === "catalog") {
       void hydrateCatalogCanvas(canvas, businessId);
+    }
+    if (businessId && canvas.dataset.vwfLayout === "catalog" && (canvas.dataset.vwfModule === "مدل‌ها و تنوع" || canvas.dataset.vwfModule === "سایز و رنگ")) {
+      void hydrateVariantsCanvas(canvas, businessId);
     }
     if (businessId && canvas.dataset.vwfLayout === "people" && (canvas.dataset.vwfModule === "پزشکان" || canvas.dataset.vwfModule === "متخصصان")) {
       void hydrateResourceCanvas(canvas, businessId);
@@ -1110,6 +1125,17 @@ type VerticalWorkflowInventoryItem = {
   updatedAt: string;
 };
 
+type VerticalWorkflowProductVariant = {
+  id: string;
+  productId: string;
+  productName: string;
+  sku?: string | null;
+  attributes?: Record<string, unknown> | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 type VerticalWorkflowOffering = {
   id: string;
   businessId: string;
@@ -1139,6 +1165,47 @@ export function getVerticalWorkflowOfferingActionHref(
 
 export function getVerticalWorkflowOfferingActionLabel(offeringType: "product" | "service"): string {
   return offeringType === "service" ? "رزرو خدمت" : "شروع خرید";
+}
+
+async function hydrateVariantsCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-variant-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    setCanvasState(canvas, "requires-input");
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش Variantهای واقعی، session و Workspace context لازم است.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="slot-loading">در حال خواندن Variantهای واقعی از Catalog…</div>';
+  try {
+    const response = await fetch("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/variants?limit=48", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowProductVariant[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Catalog variants unavailable");
+    const items = Array.isArray(body?.data) ? body.data : [];
+    if (!items.length) {
+      setCanvasState(canvas, "connected");
+      container.innerHTML = emptyState("برای این Business هنوز Variant فعال و غیرآرشیوی برای نمایش پیدا نشد.", "Catalog Variants");
+      return;
+    }
+    container.innerHTML = items.map((item) => {
+      const attrs = item.attributes && typeof item.attributes === "object" && !Array.isArray(item.attributes)
+        ? Object.entries(item.attributes).slice(0, 6)
+        : [];
+      const attrText = attrs.length
+        ? attrs.map(([key, value]) => escapeHtml(key) + ": " + escapeHtml(Array.isArray(value) ? value.join("، ") : String(value))).join(" · ")
+        : "Attribute ثبت نشده است";
+      return '<article class="phoenix-vwf-live-variant-card" data-vwf-item>' +
+        '<div class="phoenix-vwf-live-variant-top"><span class="pill ' + (item.status === "active" ? "success" : "") + '">' + escapeHtml(item.status) + '</span><span class="phoenix-vwf-source-chip">' + escapeHtml(item.sku ?? item.id) + '</span></div>' +
+        '<h4>' + escapeHtml(item.productName) + '</h4>' +
+        '<p>Variant · ' + escapeHtml(item.id) + '</p>' +
+        '<div class="phoenix-vwf-live-variant-attributes">' + attrText + '</div>' +
+      '</article>';
+    }).join("");
+    setCanvasState(canvas, "connected");
+  } catch (error) {
+    setCanvasState(canvas, "unavailable");
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Variantهای Catalog ناموفق بود.", "Catalog Variants");
+  }
 }
 
 async function hydrateInventoryCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
