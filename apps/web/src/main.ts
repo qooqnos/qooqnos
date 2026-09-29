@@ -1,6 +1,6 @@
 import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui.js";
 import { BUSINESS_VERTICAL_UI, getBusinessVerticalUi, resolveBusinessVerticalKey, type BusinessVerticalKey } from "./business-vertical-ui.js";
-import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, getVerticalModuleUiContract, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
 import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 type Theme = "dark" | "light";
@@ -3621,13 +3621,16 @@ function renderBusinessModule(vertical: string, module: string): string {
   const presentation = BUSINESS_MODULE_PRESENTATIONS[ui.key]?.[module];
   const businessId = new URLSearchParams(location.search).get("business")?.trim() || localStorage.getItem(STORAGE.business) || "";
   const moduleIndex = (ui.modules as readonly string[]).indexOf(module);
-  const canonicalPath = info.path ? businessModuleContextHref(info.path, ui.key, module, businessId) : undefined;
+  const moduleContract = getVerticalModuleUiContract(ui.key, module);
+  const canonicalPath = info.path
+    ? businessModuleContextHref(info.path, ui.key, module, businessId)
+    : businessModuleContextHref(moduleContract.route, ui.key, module, businessId);
   const relatedModules = ui.modules.filter((item) => item !== module).slice(0, 5);
   const surfaces = presentation?.surfaces ?? (info.path ? [{ label: info.label, path: info.path, description: info.description }] : []);
   const actions = ui.actions.slice(0, 3);
   const workflow = getVerticalWorkflowSteps(ui.key);
-  const blueprint: VerticalModuleBlueprint = getVerticalModuleBlueprint(ui.key, module);
-  const capabilityContract = getVerticalModuleCapabilityContract(module);
+  const blueprint: VerticalModuleBlueprint = moduleContract.blueprint;
+  const capabilityContract = moduleContract.capabilityContract;
   const workflowCanvas = renderVerticalWorkflowCanvas({
     vertical: ui.key,
     module,
