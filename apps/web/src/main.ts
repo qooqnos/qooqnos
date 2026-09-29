@@ -4132,22 +4132,58 @@ function renderBusinessPublic(): string {
   '</div>';
 }
 function renderBusinessProfile(): string {
-  return '<div class="phoenix-business-profile-page">' +
-    '<section class="phoenix-business-profile-hero">' +
-      '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">Public Business Profile</span><h1 id="public-business-name">${businessUi("businessProfile")}</h1><p id="public-business-summary">${businessSurfaceUi("publicProfileDescription")}</p><div class="phoenix-business-profile-status-row"><span id="public-business-publication" class="pill">—</span><span id="public-business-type" class="pill">—</span></div></div>' +
-      '<div class="phoenix-public-profile-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
-    '</section>' +
-    '<section class="phoenix-public-profile-grid">' +
-      '<article class="glass-card phoenix-public-profile-main"><div class="card-section-heading"><div><span class="section-kicker">${businessSurfaceUi("identity")}</span><h2>${businessPageLabel("businessIdentity")}</h2></div></div><div id="public-business-identity" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
-      '<aside class="glass-card phoenix-public-trust-card"><span class="section-kicker">${businessSurfaceUi("trust")}</span><h2>${businessSurfaceUi("trustBeforePublic")}</h2><p id="public-business-trust-copy">${businessSurfaceUi("trustSource")}</p><div id="public-business-trust-facts" class="phoenix-public-capability-list"></div><div id="public-business-trust-signals" class="phoenix-public-trust-signals"></div><div id="public-business-publication-action" class="phoenix-public-publication-action"></div><a class="button button-ghost" href="/trust" data-nav>${businessSurfaceUi("viewTrust")}</a></aside>' +
-    '</section>' +
-    '<section class="phoenix-public-profile-grid">' +
-      '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">${businessPageLabel("contactMethods")}</span><h2>${businessPageLabel("contactMethods")}</h2></div></div><div id="public-business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
-      '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">${businessPageLabel("locations")}</span><h2>${businessPageLabel("locations")}</h2></div></div><div id="public-business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>—</p></div></div></article>' +
-    '</section>' +
-    '<section class="glass-card phoenix-public-profile-footer"><span class="section-kicker">${businessSurfaceUi("canonicalBoundaryTitle")}</span><strong>${businessSurfaceUi("canonicalBoundaryDescription")}</strong><p>${businessSurfaceUi("publicationMutationGuard")}</p></section>' +
-  '</div>';
+  const bt = (key: string): string => escapeHtml(businessUi(key));
+  const bs = (key: string): string => escapeHtml(businessSurfaceUi(key));
+  return `
+    <div class="phoenix-business-profile-page">
+      <section class="phoenix-business-profile-hero">
+        <div>
+          <a class="button button-ghost" href="/business" data-nav>← ${bt("workspaceTitle")}</a>
+          <span class="phoenix-kicker">${bs("publicBusinessProfile")}</span>
+          <h1 id="public-business-name">${bt("businessProfile")}</h1>
+          <p id="public-business-summary">${bs("publicProfileDescription")}</p>
+          <div class="phoenix-business-profile-status-row">
+            <span id="public-business-publication" class="pill">—</span>
+            <span id="public-business-type" class="pill">—</span>
+          </div>
+        </div>
+        <div class="phoenix-public-profile-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>
+      </section>
+      <section class="phoenix-public-profile-grid">
+        <article class="glass-card phoenix-public-profile-main">
+          <div class="card-section-heading">
+            <div><span class="section-kicker">${bs("identity")}</span><h2>${bt("businessIdentity")}</h2></div>
+          </div>
+          <div id="public-business-identity" class="phoenix-public-fact-grid"><div class="slot-loading">${bt("loading")}</div></div>
+        </article>
+        <aside class="glass-card phoenix-public-trust-card">
+          <span class="section-kicker">${bs("trust")}</span>
+          <h2>${bs("trustBeforePublic")}</h2>
+          <p id="public-business-trust-copy">${bs("trustSource")}</p>
+          <div id="public-business-trust-facts" class="phoenix-public-capability-list"></div>
+          <div id="public-business-trust-signals" class="phoenix-public-trust-signals"></div>
+          <div id="public-business-publication-action" class="phoenix-public-publication-action"></div>
+          <a class="button button-ghost" href="/trust" data-nav>${bs("viewTrust")}</a>
+        </aside>
+      </section>
+      <section class="phoenix-public-profile-grid">
+        <article class="glass-card">
+          <div class="card-section-heading"><div><span class="section-kicker">${bt("contactMethods")}</span><h2>${bt("contactMethods")}</h2></div></div>
+          <div id="public-business-contacts" class="metadata-cloud"><span>—</span></div>
+        </article>
+        <article class="glass-card">
+          <div class="card-section-heading"><div><span class="section-kicker">${bt("locations")}</span><h2>${bt("locations")}</h2></div></div>
+          <div id="public-business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>—</p></div></div>
+        </article>
+      </section>
+      <section class="glass-card phoenix-public-profile-footer">
+        <span class="section-kicker">${bs("canonicalBoundaryTitle")}</span>
+        <strong>${bs("canonicalBoundaryDescription")}</strong>
+        <p>${bs("publicationMutationGuard")}</p>
+      </section>
+    </div>`;
 }
+
 async function loadBusinessModuleContext(): Promise<void> {
   const businessId = new URLSearchParams(location.search).get("business")?.trim() || localStorage.getItem(STORAGE.business);
   const businessNode = document.querySelector<HTMLElement>("#module-context-0");
