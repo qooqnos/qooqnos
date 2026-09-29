@@ -3,6 +3,7 @@ import {
   getVerticalWorkflowOfferingActionHref,
   getVerticalWorkflowOfferingActionLabel,
   renderVerticalWorkflowCanvas,
+  renderVerticalWorkflowOverview,
   type VerticalWorkflowCanvasModel,
 } from "./vertical-workflow-ui";
 import {
@@ -151,6 +152,28 @@ describe("Vertical Workflow UI Canvas", () => {
   });
 });
 
+
+describe("Vertical Workflow overview", () => {
+  it("covers all supported verticals with shared stage navigation", () => {
+    for (const vertical of ["clinic", "retail", "restaurant", "salon"]) {
+      const html = renderVerticalWorkflowOverview({ vertical, businessId: "business-test" });
+      expect(html).toContain('data-vwf-overview-vertical="' + vertical + '"');
+      expect(html).toContain("Vertical Workflow UI Framework");
+      expect(html).toContain('data-nav');
+      expect(html).toContain("Backend authoritative");
+    }
+  });
+
+  it("keeps overview identifiers escaped", () => {
+    const html = renderVerticalWorkflowOverview({
+      vertical: 'clinic"><script>',
+      businessId: 'biz"&<>',
+    });
+    expect(html).not.toContain('clinic"><script>');
+    expect(html).not.toContain('biz"&<>');
+    expect(html).toContain('data-vwf-overview-vertical="clinic&quot;&gt;&lt;script&gt;"');
+  });
+});
 
 describe("Vertical Workflow contract", () => {
   const verticals = ["clinic", "retail", "restaurant", "salon"] as const;
