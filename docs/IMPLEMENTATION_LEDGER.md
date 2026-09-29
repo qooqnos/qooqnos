@@ -5,7 +5,7 @@
 - 🟢 Context failures clear the cached promise so a later navigation/refresh can retry; no authorization decision or domain state is moved into the UI layer.
 - 🟡 Build, full test suite, browser/device visual QA and production deployment verification remain pending for this slice.
 
-Implementation commit: `1fdb20e1c31c04067f20f5b9db1c81e2a9ac4f14`.
+Implementation commits: `1fdb20e1c31c04067f20f5b9db1c81e2a9ac4f14`, `f19b5a5541ec4c97313cfe27ce6fa94f3ad006bd`.
 
 ## 2026-09-29 — Shared Retail Variant / Attribute Canvas
 
