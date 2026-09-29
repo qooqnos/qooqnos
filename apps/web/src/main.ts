@@ -466,10 +466,6 @@ function businessSurfaceUi(key: string, variables?: Readonly<Record<string, stri
   return pageUi("businessSurface", key, variables);
 }
 
-function businessPageLabel(key: string, variables?: Readonly<Record<string, string>>): string {
-  return pageUi("businessPage", key, variables);
-}
-
 function discoveryUi(key: string, variables?: Readonly<Record<string, string>>): string {
   return pageUi("discoveryPage", key, variables);
 }
