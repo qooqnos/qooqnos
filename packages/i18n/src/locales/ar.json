@@ -577,7 +577,8 @@
     "changeWorkspace": "تغيير مساحة العمل",
     "manageTeam": "إدارة الفريق",
     "roleGuideDescription": "هذا الدليل يحدد تركيب الواجهة فقط؛ ويظل التفويض الفعلي تحت تحكم الخلفية.",
-    "boardDefaultSupply": "جهّز العرض"
+    "boardDefaultSupply": "جهّز العرض",
+    "workspaceStatusMine": "مساحة عملي"
   },
   "canonical": {
     "identity": {
@@ -927,7 +928,10 @@
     "identity": "الهوية",
     "trustBeforePublic": "الثقة قبل العرض العام",
     "trustSource": "تُقرأ حالة النشر والثقة من المصدر الموثوق.",
-    "viewTrust": "عرض الثقة"
+    "viewTrust": "عرض الثقة",
+    "canonicalBoundaryTitle": "الحدّ المرجعي",
+    "canonicalBoundaryDescription": "هذه الصفحة للمعاينة والإدارة؛ النشر الفعلي يتم فقط عبر المسارات المرجعية.",
+    "publicationMutationGuard": "لن يتم اختلاق حالة النشر ما لم يتم ربط عملية النشر بهذه الواجهة."
   },
   "discoveryPage": {
     "forYouTitle": "لك، بناءً على احتياجك.",
