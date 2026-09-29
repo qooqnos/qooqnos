@@ -106,18 +106,7 @@ export function translateUiText(value: string, locale: Locale): string {
     }
   }
 
-  const candidate = translationSources.find(([source, key]) => {
-    if (!key.startsWith("canonical.")) return false;
-    if (!trimmed.includes(source)) return false;
-    const translated = translations[locale][key] ?? translations.fa[key];
-    return Boolean(translated && translated !== source);
-  });
-
-  if (!candidate) return value;
-
-  const [source, key] = candidate;
-  const translated = translations[locale][key] ?? translations.fa[key];
-  return translated ? value.split(source).join(translated) : value;
+  return value;
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
