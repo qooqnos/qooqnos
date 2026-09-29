@@ -147,33 +147,6 @@ function socialActivityLabel(eventType: string): string {
   return labels[eventType] ?? "یک فعالیت اجتماعی ثبت شد";
 }
 
-async function openSocialActivity(): Promise<void> {
-  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
-  try {
-    const items = await loadSocialActivity();
-    const overlay = document.createElement("div");
-    overlay.className = "notification-overlay";
-    const rows = items.length ? items.map((item) => {
-      const event = item && typeof item === "object" ? item as Record<string, unknown> : {};
-      const eventType = String(event.eventType ?? "social.event");
-      let payload: Record<string, unknown> = {};
-      if (typeof event.payloadJson === "string") {
-        try { const parsed = JSON.parse(event.payloadJson); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) payload = parsed as Record<string, unknown>; } catch { /* ignore malformed history */ }
-      }
-      const targetType = String(payload.targetType ?? event.aggregateType ?? "—");
-      const targetId = String(payload.targetId ?? event.aggregateId ?? "—");
-      const occurredAt = String(event.occurredAt ?? "");
-      return '<article class="notification-item social-activity-row"><div class="notification-item-icon">✦</div><div class="notification-item-copy"><div class="notification-item-top"><strong>' + escapeHtml(socialActivityLabel(eventType)) + '</strong></div><p>' + escapeHtml(targetType + " · " + targetId) + '</p><small>' + escapeHtml(formatDate(occurredAt)) + '</small></div></article>';
-    }).join("") : '<div class="slot-empty"><span>✦</span><p>هنوز فعالیت اجتماعی ثبت نشده است.</p></div>';
-    overlay.innerHTML = '<div class="connection-backdrop" data-close-social-activity></div><section class="connection-modal glass-card notification-modal social-activity-modal" role="dialog" aria-modal="true" aria-labelledby="social-activity-title"><button class="connection-close" type="button" data-close-social-activity aria-label="بستن">×</button><div class="card-section-heading"><div><span class="section-kicker">Social Activity</span><h2 id="social-activity-title">فعالیت‌های اجتماعی</h2></div><button class="button button-ghost" type="button" data-social-activity-refresh>بروزرسانی</button></div><p>فقط رویدادهای ثبت‌شده در Social Engagement در این فهرست نمایش داده می‌شوند.</p><div class="notification-list">' + rows + '</div></section>';
-    document.body.appendChild(overlay);
-    overlay.querySelectorAll<HTMLElement>("[data-close-social-activity]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
-    overlay.querySelector<HTMLButtonElement>("[data-social-activity-refresh]")?.addEventListener("click", () => { overlay.remove(); void openSocialActivity(); });
-  } catch (error) {
-    showToast(error instanceof Error ? error.message : "خواندن فعالیت‌های اجتماعی ممکن نشد.");
-  }
-}
-
 async function persistSocialAction(action: "like" | "save", item: DiscoveryResult): Promise<boolean> {
   const target = socialTarget(item);
   if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
@@ -450,7 +423,6 @@ function render(): void {
   `;
   bindGlobalEvents();
   syncThemeButtons();
-  if (route.path === "/discover" || route.path === "/compare") bindSocialHeaderEvents();
   if (route.path === "/discover") {
     const params = new URLSearchParams(location.search);
     const initialDiscoveryQuery = params.get("q")?.trim() ?? "";
@@ -2947,14 +2919,6 @@ async function revokeCurrentSession(): Promise<void> {
 }
 
 
-function bindSocialHeaderEvents(): void {
-  document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]").forEach((button) => button.addEventListener("click", () => {
-    const current = document.documentElement.dataset.theme === "light" ? "light" : "dark";
-    const next: Theme = current === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem(STORAGE.theme, next);
-  }));
-}
 function renderSocialHeader(active: "feed" | "following" | "explore" | "activity"): string {
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
     '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
@@ -4595,14 +4559,6 @@ function openCreatePostPanel(): void {
     navigate("/product-studio");
   });
 }
-
-document.addEventListener("click", (event) => {
-  const target = event.target;
-  if (target instanceof Element && target.closest("[data-open-social-activity]")) {
-    event.preventDefault();
-    void openSocialActivity();
-  }
-});
 
 function bindDiscoveryResultEvents(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-discovery-index]").forEach((button) => {
