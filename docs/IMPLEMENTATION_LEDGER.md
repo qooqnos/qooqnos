@@ -2698,3 +2698,5 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - No domain state, persistence model, authorization rule or second source of truth was introduced.
 - Implementation commit: `d5038eddd50b3e6df2c12fa755d96cc0e3d7696d`.
 - Verification: static registry cross-check confirms zero registered modules missing a capability contract; full TypeScript build, full test suite and browser/device visual QA remain pending.
+
+- Added focused regression assertions for the Retail `فروش امروز` and Salon `وقت‌های امروز` capability contracts in `business-module-ui.test.ts`. Test commit: `4d1774b0e88f685a6a97b46ccbd6352768192125`.
