@@ -1,6 +1,6 @@
 import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui.js";
 import { BUSINESS_VERTICAL_UI, getBusinessVerticalUi, resolveBusinessVerticalKey, type BusinessVerticalKey } from "./business-vertical-ui.js";
-import { getVerticalModuleBlueprint, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
 import { bindVerticalWorkflowCanvas, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 type Theme = "dark" | "light";
@@ -3606,6 +3606,7 @@ function renderBusinessModule(vertical: string, module: string): string {
   const actions = ui.actions.slice(0, 3);
   const workflow = getVerticalWorkflowSteps(ui.key);
   const blueprint: VerticalModuleBlueprint = getVerticalModuleBlueprint(ui.key, module);
+  const capabilityContract = getVerticalModuleCapabilityContract(module);
   const workflowCanvas = renderVerticalWorkflowCanvas({
     vertical: ui.key,
     module,
@@ -3631,6 +3632,13 @@ function renderBusinessModule(vertical: string, module: string): string {
     '<section class="phoenix-module-context-strip">' +
       contextRows.map((row, index) => '<div><span>' + escapeHtml(row.label) + '</span><strong id="module-context-' + String(index) + '">' + escapeHtml(row.value) + '</strong></div>').join("") +
     '</section>' +
+    '<section class="glass-card phoenix-module-capability-contract">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">Capability Contract</span><h2>وابستگی‌های این ماژول</h2><p>این فقط metadata رابط است؛ فعال/غیرفعال بودن Capability از Runtime/module registry و مجوز نهایی از Backend می‌آید.</p></div><span class="pill">registry-owned</span></div>' +
+      '<div class="phoenix-module-capability-grid">' +
+        '<div><span>Capabilities</span><div class="metadata-cloud">' + (capabilityContract.requiredCapabilities.length ? capabilityContract.requiredCapabilities.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") : '<span>—</span>') + '</div></div>' +
+        '<div><span>Required permissions</span><div class="metadata-cloud">' + (capabilityContract.requiredPermissions.length ? capabilityContract.requiredPermissions.map((item) => '<span>' + escapeHtml(item) + '</span>').join("") : '<span>Backend policy</span>') + '</div></div>' +
+      '</div>' +
+    '</section>' +
     '<section class="glass-card phoenix-module-role-contract">' +
       '<div class="card-section-heading"><div><span class="section-kicker">Role-aware Composition</span><h2>تمرکز این ماژول برای نقش فعلی</h2></div><span id="module-role-fit-badge" class="pill">در انتظار Context</span></div>' +
       '<div class="phoenix-module-role-contract-grid">' +
@@ -3647,7 +3655,7 @@ function renderBusinessModule(vertical: string, module: string): string {
           return '<article class="phoenix-module-blueprint-card"><span class="phoenix-module-blueprint-index">' + escapeHtml(block.label) + '</span><div><strong>' + escapeHtml(block.title) + '</strong><p>' + escapeHtml(block.description) + '</p></div>' + (href ? '<a href="' + escapeAttr(href) + '" data-nav>باز کردن منبع ←</a>' : '<span class="pill">Backend / endpoint لازم است</span>') + '</article>';
         }).join("") +
       '</div>' +
-      '<div class="phoenix-module-blueprint-footer"><span>Vertical: ' + escapeHtml(ui.key) + '</span><span>Module: ' + escapeHtml(module) + '</span><span>' + String(blueprint.blocks.length) + ' foundation blocks</span></div>' +
+      '<div class="phoenix-module-blueprint-footer"><span>Vertical: ' + escapeHtml(ui.key) + '</span><span>Module: ' + escapeHtml(module) + '</span><span>' + String(blueprint.blocks.length) + ' foundation blocks</span><span>' + String(blueprint.capabilityContract.requiredCapabilities.length) + ' capability dependencies</span></div>' +
       '<div class="phoenix-module-state-contract">' +
         '<div><span>Interaction mode</span><strong>' + escapeHtml(blueprint.interaction) + '</strong></div>' +
         '<div><span>Primary action</span><strong>' + escapeHtml(blueprint.primaryAction?.label ?? "منبع canonical") + '</strong></div>' +
