@@ -36,6 +36,18 @@ Implementation commits: `6f971358ef68615fb13ff1717532205b35baebdf`, `0b141658b63
 
 # Phoenix Implementation Ledger
 
+## 2026-09-29 — Shared Booking Resource Canvas
+
+- 🟢 Added `GET /api/v1/booking/resources?businessId=...` as a tenant/workspace-scoped canonical Booking read surface with optional resource-type filtering.
+- 🟢 Clinic `پزشکان` and Salon `متخصصان` now hydrate schedulable person resources inside the shared Vertical Workflow People Canvas; the UI reads canonical status, capacity and metadata only.
+- 🟢 Resource presentation stays capability-aware and does not convert UI visibility into authorization; no local provider/person source of truth was introduced.
+- 🟢 Added responsive resource cards and focused VWF regression coverage.
+- 🟡 Local build/test execution and browser/visual QA remain pending for the current slice.
+
+Implementation commits: `6de3d579`, `9da8d111`, `149183b2`, `f41fc1fb`, `9f658861`.
+
+
+
 ## 2026-09-29 — Shared Retail Inventory Canvas
 
 - 🟢 Added a canonical workspace-scoped Catalog inventory read surface: `GET /api/v1/catalog/businesses/:businessId/inventory`.
