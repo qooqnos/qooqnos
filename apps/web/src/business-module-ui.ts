@@ -225,8 +225,8 @@ const shared: Record<string, VerticalModuleBlueprint> = {
     block("02", "Seller AI", "ورودی خام به listing آماده marketplace تبدیل می‌شود.", "/product-studio"),
     block("03", "Publication", "وضعیت انتشار از Catalog/Business خوانده می‌شود.", "/business/profile"),
   ], { label: "باز کردن کاتالوگ", path: "/catalog" }),
-  "پزشکان": blueprint("Provider Surface", "people", "browse", [
-    block("01", "Provider identity", "هویت و عضویت متخصص از Workspace/Team می‌آید.", "/business?module=تیم"),
+  "پزشکان": blueprint("Business Team Surface", "people", "browse", [
+    block("01", "Team identity", "هویت و عضویت متخصص از Workspace/Team می‌آید.", "/business?module=تیم"),
     block("02", "Access & role", "Role و Permission جایگزین ساخت موجودیت موازی پزشک در UI می‌شود.", "/account"),
     block("03", "Assigned services", "خدمات از Catalog و دسترسی اجرایی از Workspace کنترل می‌شود.", "/catalog"),
   ], { label: "مشاهده تیم", path: "/business?module=تیم" }),
@@ -276,7 +276,7 @@ const shared: Record<string, VerticalModuleBlueprint> = {
     block("03", "Customer context", "مقصد/مشتری از Customer در دسترس قرار می‌گیرد.", "/customer"),
   ], { label: "باز کردن Fulfillment", path: "/operations" }),
   "زمان‌بندی": blueprint("Schedule Surface", "calendar", "configure", [
-    block("01", "Provider timeline", "برنامه متخصصان از Availability/Booking تغذیه می‌شود.", "/booking"),
+    block("01", "Specialist timeline", "برنامه متخصصان از Availability/Booking تغذیه می‌شود.", "/booking"),
     block("02", "Capacity", "ظرفیت واقعی از backend authoritative می‌آید.", "/booking"),
     block("03", "Business hours", "ساعات پایه از Business.", "/business"),
   ], { label: "باز کردن برنامه", path: "/booking" }),
@@ -299,12 +299,12 @@ const clinic: Record<string, VerticalModuleBlueprint> = {
     block("03", "Patient context", "مراجع از Customer boundary.", "/customer"),
   ], { label: "باز کردن Booking", path: "/booking" }),
   "تقویم": blueprint("Clinic Calendar", "calendar", "browse", [
-    block("01", "Provider lanes", "laneهای زمانی بر اساس scheduleهای واقعی."),
+    block("01", "Specialist lanes", "laneهای زمانی بر اساس scheduleهای واقعی."),
     block("02", "Availability", "slotها منبع حقیقت ظرفیت هستند.", "/booking"),
     block("03", "Hours & locations", "ساعت و مکان از Business.", "/business"),
   ], { label: "مشاهده Availability", path: "/booking" }),
-  "پزشکان": blueprint("Clinical Providers", "people", "browse", [
-    block("01", "Provider roster", "عضویت و نقش از Team/Workspace.", "/business?module=تیم"),
+  "پزشکان": blueprint("Clinical Team", "people", "browse", [
+    block("01", "Team roster", "عضویت و نقش از Team/Workspace.", "/business?module=تیم"),
     block("02", "Service access", "خدمات قابل ارائه از Catalog.", "/catalog"),
     block("03", "Schedule access", "زمان‌بندی در Availability/Booking.", "/booking"),
   ], { label: "مشاهده تیم", path: "/business?module=تیم" }),
@@ -337,7 +337,7 @@ const clinic: Record<string, VerticalModuleBlueprint> = {
   "تیم": blueprint("Clinic Team & Access", "people", "review", [
     block("01", "Members", "اعضای Workspace از Team.", "/business?module=تیم"),
     block("02", "Roles", "دسترسی از context و permissionهای backend.", "/account"),
-    block("03", "Provider lens", "نقش تخصصی با قابلیت‌ها compose می‌شود.", "/booking"),
+    block("03", "Specialist lens", "نقش تخصصی با قابلیت‌ها compose می‌شود.", "/booking"),
   ], { label: "مدیریت تیم", path: "/business?module=تیم" }),
 };
 
