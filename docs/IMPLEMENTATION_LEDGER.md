@@ -7,7 +7,7 @@
 - 🟢 Added focused regression coverage and responsive styling in both authored and served web stylesheets.
 - 🟡 TypeScript build, full test suite, browser/device visual QA and production deployment verification remain pending after this slice.
 
-Implementation commits: 
+Implementation commits: `fce496e8`, `f6586aa1`, `e29f482a`, `adc6a271`, `ab9c1540`, `4407c385`, `bd848491`.
 
 ## 2026-09-29 — Canonical Vertical Module UI contract
 
