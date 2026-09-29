@@ -42,6 +42,20 @@ describe("Vertical Workflow UI module blueprints", () => {
     }
   });
 
+  it("applies declared capability contracts to supported modules", () => {
+    const clinic = getVerticalModuleBlueprint("clinic", "نوبت‌ها");
+    const retail = getVerticalModuleBlueprint("retail", "موجودی");
+    const restaurant = getVerticalModuleBlueprint("restaurant", "آشپزخانه");
+    const salon = getVerticalModuleBlueprint("salon", "خدمات");
+
+    expect(clinic.capabilityContract.requiredCapabilities).toEqual(["booking"]);
+    expect(clinic.capabilityContract.requiredPermissions).toEqual(["booking.read", "booking.manage"]);
+    expect(retail.capabilityContract.requiredCapabilities).toEqual(["catalog", "commerce"]);
+    expect(retail.capabilityContract.requiredPermissions).toEqual(["catalog.offer.update"]);
+    expect(restaurant.capabilityContract.requiredCapabilities).toEqual(["commerce", "operations"]);
+    expect(salon.capabilityContract.requiredCapabilities).toEqual(["catalog", "booking"]);
+  });
+
   it("keeps the salon today module aligned with the canonical Workspace label", () => {
     const blueprint = getVerticalModuleBlueprint("salon", "وقت‌های امروز");
     expect(blueprint.layout).toBe("command");
