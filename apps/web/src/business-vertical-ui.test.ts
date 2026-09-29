@@ -7,6 +7,7 @@ import {
 import {
   VERTICAL_MODULE_SLUGS,
   getVerticalModuleBlueprint,
+  getVerticalModuleCapabilityContract,
 } from "./business-module-ui";
 import {
   getVerticalWorkflowDefinition,
