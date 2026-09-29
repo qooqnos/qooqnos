@@ -554,7 +554,20 @@
     "business_restaurantType": "Restaurant",
     "business_salonType": "Salon",
     "workspaceContextRequired": "Workspace context required",
-    "loadingEllipsis": "Loading…"
+    "loadingEllipsis": "Loading…",
+    "uiChecking": "Checking",
+    "unknownRole": "Role: —",
+    "phoenixAi": "Phoenix AI",
+    "readyToHelp": "Ready to help",
+    "help": "Help",
+    "businessType": "Business type",
+    "enterBusinessId": "Enter a Business ID to manage this workspace.",
+    "saveProfile": "Save profile",
+    "createBusinessFirst": "Create a Business first",
+    "canonicalName": "Canonical name",
+    "displayName": "Display name",
+    "canonicalAfterConnection": "Canonical data after connection",
+    "openSource": "Open source ←"
   },
   "canonical": {
     "identity": {
