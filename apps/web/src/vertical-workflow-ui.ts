@@ -73,7 +73,7 @@ export function invalidateVerticalWorkflowContextCache(): void {
   verticalWorkflowContextCache = null;
 }
 
-async function getVerticalWorkflowUiContext(): Promise<VerticalWorkflowUiContext | null> {
+export async function getVerticalWorkflowUiContext(): Promise<VerticalWorkflowUiContext | null> {
   const token = sessionStorage.getItem("phoenix-access-token")?.trim();
   const workspaceId = localStorage.getItem("phoenix-workspace-id")?.trim();
   if (!token || !workspaceId) {
