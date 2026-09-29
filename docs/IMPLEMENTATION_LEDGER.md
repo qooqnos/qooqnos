@@ -2,7 +2,7 @@
 
 **Status:** Current implementation ledger
 **Core implementation completion:** 100%  
-**Last reviewed:** 2026-09-24
+**Last reviewed:** 2026-09-29
 
 SEO/GEO implementation has started from the frozen architecture contracts; all future SEO/GEO work must extend the single reusable platform capability and never duplicate SEO logic inside vertical modules.
 **Documentation reconciliation:** 2026-09-22; see repository history and this ledger for the latest commit references.
@@ -20,6 +20,18 @@ Deployment asset repair: `0420fada`, `5c0b8e4`, `d948572`, `3e8d6f0` — synchro
 
 
 This ledger is the continuity record for future coding agents. Completed or superseded work must not be re-implemented merely because an older document still mentions it.
+
+### UI infrastructure hardening — 2026-09-29
+
+- 🟢 Reviewed the latest vertical-workflow changes before continuing; the shared semantic module registry, vertical workflow rail/canvas, role-fit composition, canonical Catalog/People/Calendar/Operations/Communication hydration and semantic Workspace module routes were retained as the existing foundation. No parallel vertical page system was introduced.
+- 🟢 Shared tab accessibility is now centralized in `apps/web/src/ui.ts`: localized tab-list labels, roving focus, ArrowLeft/ArrowRight/Home/End navigation and stable `tabindex` state are provided once for shared UI and Vertical Workflow tabs.
+- 🟢 Vertical Workflow Canvas tabs now expose explicit `role="tab"` and keyboard-focus state while keeping the existing view-state behavior; the framework continues to render only presentation state and canonical links.
+- 🟢 Removed five confirmed-unused frontend helpers/locals and one unused API SEO helper identified by the latest UI contract audit; this removes known lint noise without changing runtime ownership.
+- 🟢 Added focused unit coverage for the shared tab navigation primitive and Vertical Workflow tab semantics.
+- 🟡 Full post-change build, lint, browser/E2E and production deployment verification remain to be observed after this slice.
+
+Implementation commits: `4a07c49d` (shared tab accessibility), `debb5a1a` (tab tests), `419b632a` (frontend unused-symbol cleanup), `a666a090` (API unused-symbol cleanup), `75883045` (Vertical Workflow tab semantics), `356f899b` (Vertical Workflow test coverage).
+
 
 ### Vertical Workflow module identity registry — 2026-09-28
 
