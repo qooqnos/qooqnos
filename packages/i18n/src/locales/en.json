@@ -20,7 +20,9 @@
     "delete": "Delete",
     "create": "Create",
     "update": "Update",
-    "submit": "Submit"
+    "submit": "Submit",
+    "and": "and",
+    "or": "or"
   },
   "nav": {
     "home": "Home",
