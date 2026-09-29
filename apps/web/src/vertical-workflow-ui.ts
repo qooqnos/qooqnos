@@ -55,6 +55,74 @@ const layoutCopy: Record<VerticalModuleLayout, { label: string; description: str
   },
 };
 
+type VerticalWorkflowUiContext = {
+  readonly roles: readonly string[];
+  readonly permissions: readonly string[];
+  readonly workspaceId?: string;
+  readonly tenantId?: string;
+};
+
+type VerticalWorkflowContextCache = {
+  readonly key: string;
+  readonly promise: Promise<VerticalWorkflowUiContext>;
+};
+
+let verticalWorkflowContextCache: VerticalWorkflowContextCache | null = null;
+
+export function invalidateVerticalWorkflowContextCache(): void {
+  verticalWorkflowContextCache = null;
+}
+
+async function getVerticalWorkflowUiContext(): Promise<VerticalWorkflowUiContext | null> {
+  const token = sessionStorage.getItem("phoenix-access-token")?.trim();
+  const workspaceId = localStorage.getItem("phoenix-workspace-id")?.trim();
+  if (!token || !workspaceId) {
+    verticalWorkflowContextCache = null;
+    return null;
+  }
+
+  const key = workspaceId + "|" + token;
+  if (verticalWorkflowContextCache?.key === key) {
+    return verticalWorkflowContextCache.promise;
+  }
+
+  const headers = new Headers({
+    Accept: "application/json",
+    Authorization: "Bearer " + token,
+    "x-workspace-id": workspaceId,
+  });
+
+  const promise = fetch("/api/v1/context", { headers })
+    .then(async (response) => {
+      const body = await response.json().catch(() => null) as {
+        roles?: string[];
+        permissions?: string[];
+        workspaceId?: string;
+        tenantId?: string;
+        error?: { message?: string };
+      } | null;
+      if (!response.ok) {
+        throw new Error(body?.error?.message ?? "Context unavailable");
+      }
+      return {
+        roles: Array.isArray(body?.roles) ? body.roles : [],
+        permissions: Array.isArray(body?.permissions) ? body.permissions : [],
+        ...(body?.workspaceId ? { workspaceId: body.workspaceId } : { workspaceId }),
+        ...(body?.tenantId ? { tenantId: body.tenantId } : {}),
+      };
+    });
+
+  verticalWorkflowContextCache = { key, promise };
+  try {
+    return await promise;
+  } catch (error) {
+    if (verticalWorkflowContextCache?.promise === promise) {
+      verticalWorkflowContextCache = null;
+    }
+    throw error;
+  }
+}
+
 function workflowModuleHref(model: VerticalWorkflowCanvasModel, module: string): string {
   const route = getVerticalModuleUiContract(model.vertical, module).route;
   const params = new URLSearchParams();
@@ -383,22 +451,15 @@ export function bindVerticalWorkflowOverview(root: ParentNode = document): void 
     marker.dataset.vwfOverviewAccess = state;
   };
 
-  const headers = vwfAuthHeaders();
-  if (!headers) {
-    stageNodes.forEach((node) => setStatus(node, "نیازمند Context", "context"));
-    return;
-  }
-
   const vertical = overview.dataset.vwfOverviewVertical ?? "default";
-  void fetch("/api/v1/context", { headers })
-    .then(async (response) => {
-      const body = await response.json().catch(() => null) as { roles?: string[]; permissions?: string[]; error?: { message?: string } } | null;
-      if (!response.ok) throw new Error(body?.error?.message ?? "Context unavailable");
-      return body ?? {};
-    })
+  void getVerticalWorkflowUiContext()
     .then((context) => {
-      const roles = Array.isArray(context.roles) ? context.roles : [];
-      const permissions = Array.isArray(context.permissions) ? context.permissions : [];
+      if (!context) {
+        stageNodes.forEach((node) => setStatus(node, "نیازمند Context", "context"));
+        return;
+      }
+      const roles = context.roles;
+      const permissions = context.permissions;
       const lens = resolveVerticalRoleLens(roles);
 
       stageNodes.forEach((node) => {
@@ -548,22 +609,17 @@ async function hydrateCanvasRoleLens(canvas: HTMLElement): Promise<void> {
   const fitNode = canvas.querySelector<HTMLElement>("[data-vwf-role-fit]");
   if (!title || !description || !fitNode) return;
 
-  const headers = vwfAuthHeaders();
-  if (!headers) {
-    title.textContent = "Context در دسترس نیست";
-    description.textContent = "برای تعیین تمرکز این ماژول، Context احراز هویت لازم است.";
-    fitNode.textContent = "نیازمند Context";
-    fitNode.className = "pill warning";
-    return;
-  }
-
   try {
-    const response = await fetch("/api/v1/context", { headers });
-    const body = await response.json().catch(() => null) as { roles?: string[]; error?: { message?: string } } | null;
-    if (!response.ok) throw new Error(body?.error?.message ?? "Context unavailable");
+    const context = await getVerticalWorkflowUiContext();
+    if (!context) {
+      title.textContent = "Context در دسترس نیست";
+      description.textContent = "برای تعیین تمرکز این ماژول، Context احراز هویت لازم است.";
+      fitNode.textContent = "نیازمند Context";
+      fitNode.className = "pill warning";
+      return;
+    }
 
-    const roles = Array.isArray(body?.roles) ? body.roles : [];
-    const lens = resolveVerticalRoleLens(roles);
+    const lens = resolveVerticalRoleLens(context.roles);
     const vertical = canvas.dataset.vwfVertical ?? "default";
     const module = canvas.dataset.vwfModule ?? "";
     // Resolve role fit without granting any authorization.
@@ -608,20 +664,16 @@ async function hydrateCanvasCapabilityContract(canvas: HTMLElement): Promise<voi
   const accessNode = canvas.querySelector<HTMLElement>("[data-vwf-capability-access]");
   if (!statusNode || !accessNode) return;
 
-  const headers = vwfAuthHeaders();
-  if (!headers) {
-    statusNode.textContent = "نیازمند Context";
-    statusNode.className = "pill warning";
-    accessNode.textContent = "برای بررسی Permissionهای این ماژول، session و Workspace context لازم است.";
-    return;
-  }
-
   try {
-    const response = await fetch("/api/v1/context", { headers });
-    const body = await response.json().catch(() => null) as { permissions?: string[]; error?: { message?: string } } | null;
-    if (!response.ok) throw new Error(body?.error?.message ?? "Context unavailable");
+    const context = await getVerticalWorkflowUiContext();
+    if (!context) {
+      statusNode.textContent = "نیازمند Context";
+      statusNode.className = "pill warning";
+      accessNode.textContent = "برای بررسی Permissionهای این ماژول، session و Workspace context لازم است.";
+      return;
+    }
 
-    const permissions = Array.isArray(body?.permissions) ? body.permissions : [];
+    const permissions = context.permissions;
     const required = canvas.querySelectorAll<HTMLElement>("[data-vwf-required-permission]");
     const requiredNames = Array.from(required).map((node) => node.dataset.vwfRequiredPermission ?? "").filter(Boolean);
     const missing = requiredNames.filter((permission) => !permissions.includes(permission));
@@ -774,6 +826,7 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
         const layout = canvas.dataset.vwfLayout ?? "";
         const businessId = canvas.dataset.vwfBusinessId?.trim();
         if (action === "refresh") {
+          invalidateVerticalWorkflowContextCache();
           button.disabled = true;
           const finish = () => { button.disabled = false; };
           if (layout === "command" && businessId) {
