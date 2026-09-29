@@ -317,6 +317,7 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
       '<div><span class="section-kicker">Role-aware emphasis</span><strong data-vwf-role-title>در انتظار Context</strong><small data-vwf-role-description>این لایه فقط تمرکز رابط را تعیین می‌کند؛ مجوز همچنان توسط Backend کنترل می‌شود.</small></div>' +
       '<span class="pill" data-vwf-role-fit>در انتظار احراز</span>' +
     '</div>' +
+    renderCapabilityContract(model.blueprint) +
     '<div data-vwf-content>' + renderLayout(model.blueprint.layout, model) + '</div>' +
     '<div class="phoenix-vwf-contract"><span>state</span><strong>canonical-only</strong><span>layout</span><strong>' + escapeHtml(model.blueprint.layout) + '</strong><span>interaction</span><strong>' + escapeHtml(model.blueprint.interaction) + '</strong></div>' +
   '</section>';
@@ -367,6 +368,80 @@ async function hydrateCanvasRoleLens(canvas: HTMLElement): Promise<void> {
   }
 }
 
+function renderCapabilityContract(blueprint: VerticalModuleBlueprint): string {
+  const contract = blueprint.capabilityContract;
+  const capabilities = contract.requiredCapabilities.length
+    ? contract.requiredCapabilities.map((item) => '<span class="phoenix-vwf-contract-chip" data-vwf-capability="' + escapeHtml(item) + '">' + escapeHtml(item) + '</span>').join("")
+    : '<span class="phoenix-vwf-contract-empty">بدون Capability declaration</span>';
+  const permissions = contract.requiredPermissions.length
+    ? contract.requiredPermissions.map((item) => '<span class="phoenix-vwf-contract-chip" data-vwf-required-permission="' + escapeHtml(item) + '">' + escapeHtml(item) + '</span>').join("")
+    : '<span class="phoenix-vwf-contract-empty">بدون Permission declaration</span>';
+  return '<section class="phoenix-vwf-capability-contract" data-vwf-capability-contract>' +
+    '<div class="phoenix-vwf-capability-head"><div><span class="section-kicker">Capability Contract</span><strong>وابستگی‌های این ماژول</strong><small>این declaration فقط dependency رابط است؛ Capability فعال و Authorization توسط backend تعیین می‌شود.</small></div><span class="pill" data-vwf-capability-status>قرارداد بارگذاری شد</span></div>' +
+    '<div class="phoenix-vwf-capability-groups">' +
+      '<div><span class="phoenix-vwf-capability-label">Capabilities</span><div class="phoenix-vwf-contract-chips" data-vwf-capability-items>' + capabilities + '</div></div>' +
+      '<div><span class="phoenix-vwf-capability-label">Required permissions</span><div class="phoenix-vwf-contract-chips" data-vwf-permission-items>' + permissions + '</div></div>' +
+    '</div>' +
+    '<div class="phoenix-vwf-capability-access" data-vwf-capability-access>در انتظار بررسی Context…</div>' +
+  '</section>';
+}
+
+async function hydrateCanvasCapabilityContract(canvas: HTMLElement): Promise<void> {
+  const statusNode = canvas.querySelector<HTMLElement>("[data-vwf-capability-status]");
+  const accessNode = canvas.querySelector<HTMLElement>("[data-vwf-capability-access]");
+  if (!statusNode || !accessNode) return;
+
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    statusNode.textContent = "نیازمند Context";
+    statusNode.className = "pill warning";
+    accessNode.textContent = "برای بررسی Permissionهای این ماژول، session و Workspace context لازم است.";
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/v1/context", { headers });
+    const body = await response.json().catch(() => null) as { permissions?: string[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Context unavailable");
+
+    const permissions = Array.isArray(body?.permissions) ? body.permissions : [];
+    const required = canvas.querySelectorAll<HTMLElement>("[data-vwf-required-permission]");
+    const requiredNames = Array.from(required).map((node) => node.dataset.vwfRequiredPermission ?? "").filter(Boolean);
+    const missing = requiredNames.filter((permission) => !permissions.includes(permission));
+    required.forEach((node) => {
+      const permission = node.dataset.vwfRequiredPermission ?? "";
+      const present = permission && permissions.includes(permission);
+      node.dataset.vwfPermissionState = present ? "present" : "missing";
+      node.title = present ? "Permission در Context موجود است." : "Permission در Context فعلی گزارش نشده است.";
+    });
+
+    if (!requiredNames.length) {
+      statusNode.textContent = "بدون Permission declaration";
+      statusNode.className = "pill";
+      accessNode.textContent = "این ماژول Permission مشخصی در قرارداد UI اعلام نکرده است؛ Backend همچنان مرجع Authorization است.";
+      return;
+    }
+
+    if (!missing.length) {
+      statusNode.textContent = "Context aligned";
+      statusNode.className = "pill success";
+      accessNode.textContent = requiredNames.length + " Permission موردنیاز در Context فعلی گزارش شد.";
+    } else if (missing.length < requiredNames.length) {
+      statusNode.textContent = "Partial context";
+      statusNode.className = "pill warning";
+      accessNode.textContent = "بخشی از Permissionهای قرارداد در Context فعلی گزارش نشده است: " + missing.join(" · ");
+    } else {
+      statusNode.textContent = "Backend authoritative";
+      statusNode.className = "pill warning";
+      accessNode.textContent = "Permissionهای قرارداد در Context فعلی گزارش نشده‌اند؛ این UI دسترسی را خودش تعیین نمی‌کند.";
+    }
+  } catch (error) {
+    statusNode.textContent = "Context unavailable";
+    statusNode.className = "pill warning";
+    accessNode.textContent = error instanceof Error ? error.message : "خواندن Context برای قرارداد Capability ناموفق بود.";
+  }
+}
+
 function setCanvasState(canvas: HTMLElement, state: VerticalWorkflowCanvasState, label?: string): void {
   const node = canvas.querySelector<HTMLElement>("[data-vwf-state-label]");
   if (!node) return;
@@ -389,6 +464,7 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
   const canvases = Array.from(root.querySelectorAll<HTMLElement>("[data-vwf-root]"));
   canvases.forEach((canvas) => {
     void hydrateCanvasRoleLens(canvas);
+    void hydrateCanvasCapabilityContract(canvas);
     const tabs = Array.from(canvas.querySelectorAll<HTMLButtonElement>("[data-vwf-tab]"));
     const viewStateNode = canvas.querySelector<HTMLElement>("[data-vwf-view-state]");
 
