@@ -174,6 +174,24 @@ await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);
 assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
 
+await page.goto(baseURL + "/discover?tab=explore");
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='en']").click();
+await page.waitForTimeout(100);
+const discoveryEnglishText = await page.locator(".phoenix-social-page").innerText();
+assert.ok(discoveryEnglishText.includes("What's new in Explore."));
+assert.ok(discoveryEnglishText.includes("Browse real, discoverable offerings across Phoenix."));
+assert.ok(discoveryEnglishText.includes("Create offering"));
+assert.ok(discoveryEnglishText.includes("Discover"));
+assert.ok(!discoveryEnglishText.includes("چیزهایی که در اکسپلور تازه‌اند."));
+assert.ok(!discoveryEnglishText.includes("مرور عرضه‌های واقعی و قابل کشف در شبکه ققنوس."));
+assert.ok(!discoveryEnglishText.includes("ایجاد عرضه"));
+assert.ok(!discoveryEnglishText.includes("کشف کن"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='fa']").click();
+await page.waitForTimeout(50);
+assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
+
 await page.goto(baseURL + "/business");
 assert.equal(await page.locator("[data-language-toggle]").count(), 1);
 
