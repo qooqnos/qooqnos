@@ -989,6 +989,17 @@
     "view": "مشاهده",
     "viewBusiness": "مشاهده کسب‌وکار",
     "checkBooking": "بررسی رزرو",
-    "instantBuy": "خرید آنی"
+    "instantBuy": "خرید آنی",
+    "noNeedTitle": "نیازت را بنویس.",
+    "noNeedDescription": "کشف با متن طبیعی، عرضه‌های canonical را پیدا می‌کند.",
+    "waitingForNeed": "منتظر نیاز",
+    "resultsFor": "نتایج برای «{{query}}»",
+    "followingResults": "عرضه‌های دنبال‌شده",
+    "exploreResults": "اکسپلور",
+    "analyzing": "در حال تحلیل…",
+    "resultCount": "{{count}} نتیجه",
+    "loadMore": "نمایش موارد بیشتر",
+    "error": "خطا",
+    "retry": "تلاش دوباره"
   }
 }
