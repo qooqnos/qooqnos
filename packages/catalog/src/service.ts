@@ -65,6 +65,10 @@ export class CatalogService {
     return this.options.repository.listBusinessOfferings(context, businessId, limit);
   }
 
+  async listBusinessInventory(context: RequestContext, businessId: EntityId, limit = 100) {
+    return this.options.repository.listBusinessInventory(context, businessId, limit);
+  }
+
   async createOffering(context: RequestContext, command: Omit<CreateOfferingInput, "id" | "now">): Promise<OfferingRecord> {
     await this.authorize(context, "catalog.offering.create");
     validateText(command.title, "title");
