@@ -489,5 +489,180 @@
     "vertical_refreshCanvas": "Refresh this canvas data",
     "vertical_roleAware": "Role-aware emphasis",
     "vertical_roleDescription": "This layer only sets interface focus; authorization remains controlled by the backend."
+  },
+  "canonical": {
+    "identity": {
+      "user": "User",
+      "organization": "Organization",
+      "workspace": "Workspace",
+      "membership": "Membership",
+      "role": "Role",
+      "permission": "Permission",
+      "policy": "Policy",
+      "entitlement": "Entitlement"
+    },
+    "business": {
+      "business": "Business",
+      "businessProfile": "Business Profile",
+      "location": "Location",
+      "address": "Address"
+    },
+    "catalog": {
+      "category": "Category",
+      "service": "Service",
+      "product": "Product",
+      "productVariant": "Product Variant",
+      "offering": "Offering",
+      "price": "Price",
+      "inventory": "Inventory",
+      "attributeDefinition": "Attribute Definition",
+      "attributeValue": "Attribute Value"
+    },
+    "discovery": {
+      "search": "Search",
+      "filter": "Filter",
+      "facet": "Facet",
+      "ranking": "Ranking",
+      "searchProjection": "Search Projection",
+      "suggestion": "Suggestion"
+    },
+    "matching": {
+      "demand": "Need",
+      "matchRequest": "Match Request",
+      "candidate": "Candidate",
+      "match": "Match",
+      "score": "Score",
+      "recommendation": "Recommendation"
+    },
+    "booking": {
+      "booking": "Booking",
+      "bookingItem": "Booking Item",
+      "appointment": "Appointment",
+      "schedule": "Schedule",
+      "availabilityRule": "Availability Rule",
+      "availabilityException": "Availability Exception",
+      "resource": "Resource",
+      "slot": "Slot"
+    },
+    "commerce": {
+      "cart": "Cart",
+      "cartItem": "Cart Item",
+      "order": "Order",
+      "orderItem": "Order Item"
+    },
+    "billing": {
+      "payment": "Payment",
+      "paymentAttempt": "Payment Attempt",
+      "refund": "Refund",
+      "invoice": "Invoice",
+      "invoiceLine": "Invoice Line",
+      "plan": "Plan",
+      "subscription": "Subscription",
+      "billingAccount": "Billing Account",
+      "usageRecord": "Usage Record",
+      "usageMetric": "Usage Metric"
+    },
+    "customer": {
+      "customer": "Customer",
+      "customerProfile": "Customer Profile",
+      "customerAddress": "Customer Address",
+      "customerRelationship": "Customer Relationship"
+    },
+    "trust": {
+      "verificationCase": "Verification Case",
+      "verificationDocument": "Verification Document",
+      "verificationCheck": "Verification Check",
+      "verificationDecision": "Verification Decision",
+      "trustSignal": "Trust Signal",
+      "trustScore": "Trust Score",
+      "review": "Review",
+      "rating": "Rating",
+      "moderationCase": "Moderation Case"
+    },
+    "communication": {
+      "conversation": "Conversation",
+      "message": "Message",
+      "notification": "Notification",
+      "notificationTemplate": "Notification Template",
+      "deliveryAttempt": "Delivery Attempt"
+    },
+    "ai": {
+      "agent": "Agent",
+      "aiConversation": "AI Conversation",
+      "aiMessage": "AI Message",
+      "aiRun": "AI Run",
+      "model": "Model",
+      "tool": "Tool",
+      "toolCall": "Tool Call",
+      "memory": "Memory",
+      "safetyPolicy": "Safety Policy",
+      "aiRecommendation": "AI Recommendation"
+    },
+    "automation": {
+      "workflow": "Workflow",
+      "trigger": "Trigger",
+      "condition": "Condition",
+      "action": "Action",
+      "workflowExecution": "Workflow Execution",
+      "task": "Task"
+    },
+    "media": {
+      "mediaAsset": "Media Asset",
+      "mediaVariant": "Media Variant",
+      "mediaAttachment": "Media Attachment"
+    },
+    "integration": {
+      "integration": "Integration",
+      "externalAccount": "External Account",
+      "webhook": "Webhook",
+      "syncJob": "Sync Job",
+      "externalReference": "External Reference"
+    },
+    "platform": {
+      "module": "Module",
+      "capability": "Capability",
+      "featureFlag": "Feature Flag",
+      "event": "Event",
+      "auditEvent": "Audit Event",
+      "outboxEvent": "Outbox Event",
+      "idempotencyRecord": "Idempotency Record",
+      "projection": "Projection"
+    },
+    "transaction": {
+      "sale": "Sale",
+      "purchase": "Purchase",
+      "rental": "Rental",
+      "exchange": "Exchange",
+      "auction": "Auction",
+      "tender": "Tender",
+      "negotiation": "Negotiation",
+      "agreement": "Agreement",
+      "completion": "Completion"
+    },
+    "lifecycle": {
+      "businessDraft": "Business Draft",
+      "businessActive": "Active",
+      "businessSuspended": "Suspended",
+      "businessArchived": "Archived",
+      "offeringDraft": "Offering Draft",
+      "offeringPublished": "Published",
+      "offeringPaused": "Paused",
+      "offeringArchived": "Archived",
+      "bookingDraft": "Booking Draft",
+      "bookingPending": "Pending",
+      "bookingConfirmed": "Confirmed",
+      "bookingInProgress": "In Progress",
+      "bookingCompleted": "Completed",
+      "bookingCancelled": "Cancelled"
+    },
+    "core": {
+      "supply": "Supply",
+      "demand": "Demand",
+      "decision": "Decision",
+      "connection": "Connection",
+      "action": "Action",
+      "sourceOfTruth": "Source of Truth",
+      "projection": "Derived Projection"
+    }
   }
 }
