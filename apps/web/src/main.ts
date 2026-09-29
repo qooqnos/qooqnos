@@ -3231,17 +3231,6 @@ function renderShortlist(): void {
   }
 }
 
-function getSavedSearches(): string[] {
-  try {
-    const raw = localStorage.getItem("phoenix-saved-searches");
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string").slice(-30) : [];
-  } catch {
-    return [];
-  }
-}
-
 function renderResultCards(items: DiscoveryResult[]): string {
   activeDiscoveryItems = items;
   return items.map((item,index) => {
@@ -4486,17 +4475,6 @@ function openSimpleFormDialog(title:string,kicker:string,fields:Array<{id:string
     const ok=await onSubmit(overlay);
     if(ok) overlay.remove();
   });
-}
-
-function readStorageRecord<T>(key: string): T | null {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const parsed: unknown = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed as T : null;
-  } catch {
-    return null;
-  }
 }
 
 function renderProductStudio(): string {
