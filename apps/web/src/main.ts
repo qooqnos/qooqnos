@@ -4705,7 +4705,13 @@ function openSimpleFormDialog(title:string,kicker:string,fields:Array<{id:string
 function renderProductStudio(): string {
   const ps = (key: string, variables?: Readonly<Record<string, string>>): string => escapeHtml(productStudioUi(key, variables));
   const psTitle = (key: string): string => productStudioUi(key);
-
+  const steps: readonly (readonly [string, string])[] = [
+    ["step1", "step1Desc"],
+    ["step2", "step2Desc"],
+    ["step3", "step3Desc"],
+    ["step4", "step4Desc"],
+    ["step5", "step5Desc"],
+  ];
   return `
     <section class="page-heading">
       <div><span class="eyebrow"><i></i> ${ps("eyebrow")}</span><h1>${psTitle("heroTitle")} <em>${psTitle("heroEmphasis")}</em></h1><p>${ps("heroDescription")}</p></div>
@@ -4746,9 +4752,7 @@ function renderProductStudio(): string {
     </section>
 
     <section class="studio-flow">
-      ${[
-        ["step1","step1Desc"],["step2","step2Desc"],["step3","step3Desc"],["step4","step4Desc"],["step5","step5Desc"],
-      ].map(([title,desc],i)=>
+      ${steps.map(([title, desc], i) =>
         `<div class="studio-step ${i===0 ? "active" : ""}"><span>0${i+1}</span><div><strong>${ps(title)}</strong><small>${ps(desc)}</small></div></div>`
       ).join("")}
     </section>
