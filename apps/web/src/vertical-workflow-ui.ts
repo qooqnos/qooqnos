@@ -694,6 +694,11 @@ async function hydrateCatalogCanvas(canvas: HTMLElement, businessId: string): Pr
         '<p>' + escapeHtml(offer.description ?? "توضیحی برای این عرضه ثبت نشده است.") + '</p>' +
         '<div class="phoenix-vwf-live-supply-meta"><span>Publication</span><strong>' + escapeHtml(publicationLabel) + '</strong></div>' +
         '<div class="phoenix-vwf-live-supply-meta"><span>Offering</span><strong>' + escapeHtml(offer.id) + '</strong></div>' +
+        '<div class="phoenix-vwf-live-supply-actions">' +
+          (offer.offeringType === "service"
+            ? '<a class="button button-secondary" data-nav href="/booking?offering=' + encodeURIComponent(offer.id) + '&business=' + encodeURIComponent(businessId) + '">رزرو خدمت →</a>'
+            : '<a class="button button-primary" data-nav href="/checkout?entity=' + encodeURIComponent(offer.id) + '&type=offering">شروع خرید →</a>') +
+        '</div>' +
       '</article>';
     }).join("");
     setCanvasState(canvas, "connected");
