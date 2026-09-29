@@ -4,6 +4,18 @@
 
 Canonical contract for connecting the shared i18n package to the application UI.
 
+## Canonical terminology
+
+The UI translation dictionary is presentation-level, but its domain terminology is derived from the canonical architecture vocabulary. In particular:
+
+- docs/CANONICAL_DOMAIN_DICTIONARY.md is the authoritative terminology source.
+- docs/DATA_MODEL_RECONCILIATION.md resolves concept boundaries and forbidden synonym collapse.
+- docs/DATABASE_MODEL.md and docs/PHYSICAL_SCHEMA_BLUEPRINT.md define the persisted meaning of domain concepts.
+
+The locale dictionaries expose these concepts under the canonical.* namespace. UI convenience labels may reference these terms, but must not redefine them with module-specific synonyms.
+
+Examples: Business is not Provider; Offering is not Service; Booking is not Appointment; Permission is not Entitlement; Recommendation is not authoritative domain state.
+
 ## Locale resolution
 
 Priority is:
