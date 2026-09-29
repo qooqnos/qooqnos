@@ -36,6 +36,18 @@ Implementation commits: `6f971358ef68615fb13ff1717532205b35baebdf`, `0b141658b63
 
 # Phoenix Implementation Ledger
 
+## 2026-09-29 — Shared Retail Inventory Canvas
+
+- 🟢 Added a canonical workspace-scoped Catalog inventory read surface: `GET /api/v1/catalog/businesses/:businessId/inventory`.
+- 🟢 The shared Vertical Workflow Canvas now hydrates the Retail `موجودی` module from authoritative `inventory_items`, ProductVariant, Product and Location facts; available, reserved and on-hand quantities are never fabricated or stored in UI state.
+- 🟢 Inventory composition remains shared infrastructure: only the active `موجودی` module renders the live inventory surface; other Commerce modules keep their existing Order/Billing/Fulfillment canvas.
+- 🟢 Added responsive inventory cards and focused UI regression coverage for the Retail Inventory module.
+- 🟡 Local build/test execution was not available in this environment; browser/visual QA and production deployment verification remain pending for this slice.
+
+Implementation commits: `2f431f7e`, `dad8bd22`, `a0aaa583`, `ab8c2821`, `8b841910`, `4d5ed7a6`, `28b77b16`.
+
+
+
 **Status:** Current implementation ledger
 **Core implementation completion:** 100%  
 **Last reviewed:** 2026-09-29
