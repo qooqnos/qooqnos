@@ -466,6 +466,10 @@ function businessSurfaceUi(key: string, variables?: Readonly<Record<string, stri
   return pageUi("businessSurface", key, variables);
 }
 
+function businessPageLabel(key: string, variables?: Readonly<Record<string, string>>): string {
+  return pageUi("businessPage", key, variables);
+}
+
 function discoveryUi(key: string, variables?: Readonly<Record<string, string>>): string {
   return pageUi("discoveryPage", key, variables);
 }
@@ -876,7 +880,7 @@ function renderSidebar(route: Route): string {
       <div class="sidebar-top">
         <button class="workspace-card workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="انتخاب فضای کاری">
           <div class="workspace-icon">◆</div>
-          <div class="workspace-card-copy"><strong id="sidebar-workspace-name">ققنوس</strong><span id="sidebar-workspace-status">فضای کاری من</span></div>
+          <div class="workspace-card-copy"><strong id="sidebar-workspace-name">ققنوس</strong><span id="sidebar-workspace-status">${uiText("فضای کاری من")}</span></div>
           <span class="status-live" aria-label="فعال"></span>
         </button>
       </div>
@@ -4130,18 +4134,18 @@ function renderBusinessPublic(): string {
 function renderBusinessProfile(): string {
   return '<div class="phoenix-business-profile-page">' +
     '<section class="phoenix-business-profile-hero">' +
-      '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">Public Business Profile</span><h1 id="public-business-name">پروفایل کسب‌وکار</h1><p id="public-business-summary">پروفایل عمومی از داده‌های canonical Business ساخته می‌شود.</p><div class="phoenix-business-profile-status-row"><span id="public-business-publication" class="pill">—</span><span id="public-business-type" class="pill">—</span></div></div>' +
+      '<div><a class="button button-ghost" href="/business" data-nav>← Workspace</a><span class="phoenix-kicker">Public Business Profile</span><h1 id="public-business-name">${businessUi("businessProfile")}</h1><p id="public-business-summary">${businessSurfaceUi("publicProfileDescription")}</p><div class="phoenix-business-profile-status-row"><span id="public-business-publication" class="pill">—</span><span id="public-business-type" class="pill">—</span></div></div>' +
       '<div class="phoenix-public-profile-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
     '</section>' +
     '<section class="phoenix-public-profile-grid">' +
-      '<article class="glass-card phoenix-public-profile-main"><div class="card-section-heading"><div><span class="section-kicker">Identity</span><h2>هویت کسب‌وکار</h2></div></div><div id="public-business-identity" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
-      '<aside class="glass-card phoenix-public-trust-card"><span class="section-kicker">Trust & Publication</span><h2>اعتماد، قبل از نمایش عمومی</h2><p id="public-business-trust-copy">وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.</p><div id="public-business-trust-facts" class="phoenix-public-capability-list"></div><div id="public-business-trust-signals" class="phoenix-public-trust-signals"></div><div id="public-business-publication-action" class="phoenix-public-publication-action"></div><a class="button button-ghost" href="/trust" data-nav>مشاهده Trust</a></aside>' +
+      '<article class="glass-card phoenix-public-profile-main"><div class="card-section-heading"><div><span class="section-kicker">${businessSurfaceUi("identity")}</span><h2>${businessPageLabel("businessIdentity")}</h2></div></div><div id="public-business-identity" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
+      '<aside class="glass-card phoenix-public-trust-card"><span class="section-kicker">${businessSurfaceUi("trust")}</span><h2>${businessSurfaceUi("trustBeforePublic")}</h2><p id="public-business-trust-copy">${businessSurfaceUi("trustSource")}</p><div id="public-business-trust-facts" class="phoenix-public-capability-list"></div><div id="public-business-trust-signals" class="phoenix-public-trust-signals"></div><div id="public-business-publication-action" class="phoenix-public-publication-action"></div><a class="button button-ghost" href="/trust" data-nav>${businessSurfaceUi("viewTrust")}</a></aside>' +
     '</section>' +
     '<section class="phoenix-public-profile-grid">' +
-      '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">Contact</span><h2>راه‌های ارتباط</h2></div></div><div id="public-business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
-      '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div></div><div id="public-business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>—</p></div></div></article>' +
+      '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">${businessPageLabel("contactMethods")}</span><h2>${businessPageLabel("contactMethods")}</h2></div></div><div id="public-business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
+      '<article class="glass-card"><div class="card-section-heading"><div><span class="section-kicker">${businessPageLabel("locations")}</span><h2>${businessPageLabel("locations")}</h2></div></div><div id="public-business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>—</p></div></div></article>' +
     '</section>' +
-    '<section class="glass-card phoenix-public-profile-footer"><span class="section-kicker">Canonical Boundary</span><strong>این صفحه Preview/management-facing است؛ انتشار واقعی فقط از مسیرهای canonical انجام می‌شود.</strong><p>تا وقتی mutation انتشار به این UI متصل نشده، وضعیت «منتشر» یا «در انتظار انتشار» جعل نمی‌شود.</p></section>' +
+    '<section class="glass-card phoenix-public-profile-footer"><span class="section-kicker">${businessSurfaceUi("canonicalBoundaryTitle")}</span><strong>${businessSurfaceUi("canonicalBoundaryDescription")}</strong><p>${businessSurfaceUi("publicationMutationGuard")}</p></section>' +
   '</div>';
 }
 async function loadBusinessModuleContext(): Promise<void> {
