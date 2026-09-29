@@ -489,5 +489,180 @@
     "vertical_refreshCanvas": "تحديث بيانات هذه اللوحة",
     "vertical_roleAware": "تركيز حسب الدور",
     "vertical_roleDescription": "تحدد هذه الطبقة تركيز الواجهة فقط؛ وتبقى الصلاحيات تحت تحكم الخلفية."
+  },
+  "canonical": {
+    "identity": {
+      "user": "المستخدم",
+      "organization": "المنظمة",
+      "workspace": "مساحة العمل",
+      "membership": "العضوية",
+      "role": "الدور",
+      "permission": "الصلاحية",
+      "policy": "السياسة",
+      "entitlement": "الاستحقاق"
+    },
+    "business": {
+      "business": "النشاط التجاري",
+      "businessProfile": "ملف النشاط التجاري",
+      "location": "الموقع",
+      "address": "العنوان"
+    },
+    "catalog": {
+      "category": "التصنيف",
+      "service": "الخدمة",
+      "product": "المنتج",
+      "productVariant": "تنوع المنتج",
+      "offering": "العرض",
+      "price": "السعر",
+      "inventory": "المخزون",
+      "attributeDefinition": "تعريف السمة",
+      "attributeValue": "قيمة السمة"
+    },
+    "discovery": {
+      "search": "البحث",
+      "filter": "التصفية",
+      "facet": "الوجه",
+      "ranking": "الترتيب",
+      "searchProjection": "إسقاط البحث",
+      "suggestion": "اقتراح"
+    },
+    "matching": {
+      "demand": "الاحتياج",
+      "matchRequest": "طلب المطابقة",
+      "candidate": "مرشح",
+      "match": "مطابقة",
+      "score": "درجة",
+      "recommendation": "توصية"
+    },
+    "booking": {
+      "booking": "الحجز",
+      "bookingItem": "عنصر الحجز",
+      "appointment": "الموعد",
+      "schedule": "الجدول",
+      "availabilityRule": "قاعدة التوافر",
+      "availabilityException": "استثناء التوافر",
+      "resource": "المورد",
+      "slot": "الفترة المتاحة"
+    },
+    "commerce": {
+      "cart": "السلة",
+      "cartItem": "عنصر السلة",
+      "order": "الطلب",
+      "orderItem": "عنصر الطلب"
+    },
+    "billing": {
+      "payment": "الدفع",
+      "paymentAttempt": "محاولة الدفع",
+      "refund": "استرداد",
+      "invoice": "فاتورة",
+      "invoiceLine": "بند الفاتورة",
+      "plan": "الخطة",
+      "subscription": "الاشتراك",
+      "billingAccount": "حساب الفوترة",
+      "usageRecord": "سجل الاستخدام",
+      "usageMetric": "مؤشر الاستخدام"
+    },
+    "customer": {
+      "customer": "العميل",
+      "customerProfile": "ملف العميل",
+      "customerAddress": "عنوان العميل",
+      "customerRelationship": "علاقة العميل"
+    },
+    "trust": {
+      "verificationCase": "حالة التحقق",
+      "verificationDocument": "مستند التحقق",
+      "verificationCheck": "فحص التحقق",
+      "verificationDecision": "قرار التحقق",
+      "trustSignal": "إشارة الثقة",
+      "trustScore": "درجة الثقة",
+      "review": "مراجعة",
+      "rating": "تقييم",
+      "moderationCase": "حالة الإشراف"
+    },
+    "communication": {
+      "conversation": "محادثة",
+      "message": "رسالة",
+      "notification": "إشعار",
+      "notificationTemplate": "قالب الإشعار",
+      "deliveryAttempt": "محاولة التسليم"
+    },
+    "ai": {
+      "agent": "وكيل",
+      "aiConversation": "محادثة الذكاء الاصطناعي",
+      "aiMessage": "رسالة الذكاء الاصطناعي",
+      "aiRun": "تشغيل الذكاء الاصطناعي",
+      "model": "النموذج",
+      "tool": "أداة",
+      "toolCall": "استدعاء أداة",
+      "memory": "ذاكرة",
+      "safetyPolicy": "سياسة السلامة",
+      "aiRecommendation": "توصية الذكاء الاصطناعي"
+    },
+    "automation": {
+      "workflow": "سير العمل",
+      "trigger": "مُشغّل",
+      "condition": "شرط",
+      "action": "إجراء",
+      "workflowExecution": "تنفيذ سير العمل",
+      "task": "مهمة"
+    },
+    "media": {
+      "mediaAsset": "أصل وسائط",
+      "mediaVariant": "نسخة الوسائط",
+      "mediaAttachment": "مرفق وسائط"
+    },
+    "integration": {
+      "integration": "تكامل",
+      "externalAccount": "حساب خارجي",
+      "webhook": "خطاف ويب",
+      "syncJob": "مهمة مزامنة",
+      "externalReference": "مرجع خارجي"
+    },
+    "platform": {
+      "module": "وحدة",
+      "capability": "قدرة",
+      "featureFlag": "علامة ميزة",
+      "event": "حدث",
+      "auditEvent": "حدث تدقيق",
+      "outboxEvent": "حدث صندوق الإرسال",
+      "idempotencyRecord": "سجل منع التكرار",
+      "projection": "إسقاط"
+    },
+    "transaction": {
+      "sale": "بيع",
+      "purchase": "شراء",
+      "rental": "إيجار",
+      "exchange": "مبادلة",
+      "auction": "مزاد",
+      "tender": "مناقصة",
+      "negotiation": "تفاوض",
+      "agreement": "اتفاق",
+      "completion": "إتمام"
+    },
+    "lifecycle": {
+      "businessDraft": "مسودة نشاط تجاري",
+      "businessActive": "نشط",
+      "businessSuspended": "موقوف",
+      "businessArchived": "مؤرشف",
+      "offeringDraft": "مسودة عرض",
+      "offeringPublished": "منشور",
+      "offeringPaused": "متوقف",
+      "offeringArchived": "مؤرشف",
+      "bookingDraft": "مسودة حجز",
+      "bookingPending": "قيد الانتظار",
+      "bookingConfirmed": "مؤكد",
+      "bookingInProgress": "قيد التنفيذ",
+      "bookingCompleted": "مكتمل",
+      "bookingCancelled": "ملغى"
+    },
+    "core": {
+      "supply": "العرض",
+      "demand": "الطلب",
+      "decision": "القرار",
+      "connection": "الاتصال",
+      "action": "الإجراء",
+      "sourceOfTruth": "مصدر الحقيقة",
+      "projection": "إسقاط مشتق"
+    }
   }
 }
