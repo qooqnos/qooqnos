@@ -20,7 +20,7 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("Tell Phoenix what you need", "fa")).toBe("نیازت را بگو");
     expect(translateUiText("أخبر ققنوس بما تحتاج", "en")).toBe("Tell Phoenix what you need");
     expect(translateUiText("متن ناشناخته", "en")).toBe("متن ناشناخته");
-    expect(translateUiText("کسب‌وکار عمومی", "en")).toBe("General Business");
+    expect(translateUiText("کسب‌وکار عمومی", "en")).toBe("General business");
     expect(translateUiText("Your workspace", "fa")).toBe("فضای کاری شما");
     expect(translateUiText("Business Workspace", "fa")).toBe("فضای کاری کسب‌وکار");
     expect(translateUiText("کسب‌وکار تو باید برای مشتری هم به همان اندازه واضح باشد.", "en")).toBe("Your business should be just as clear to customers.");
