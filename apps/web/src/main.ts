@@ -3,6 +3,7 @@ import { BUSINESS_VERTICAL_UI, getBusinessVerticalUi, resolveBusinessVerticalKey
 import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, getVerticalModuleUiContract, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
 import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
+import { resolveVerticalModuleAlias } from "./business-module-ui.js";
 type Theme = "dark" | "light";
 
 type Route = {
@@ -352,7 +353,7 @@ function syncThemeButtons(): void {
 function currentRoute(): Route {
   const normalized = normalizePath(location.pathname);
   const staticRoute = routes.find((route) => route.path === normalized);
-  const businessModule = parseBusinessModuleRequest(normalized);
+  const businessModule = parseBusinessModuleRequest(normalized) ?? parseBusinessModuleAliasPath(normalized);
   if (normalized.startsWith("/businesses/") && normalized.split("/").filter(Boolean).length === 2) {
     return {
       path: normalized,
@@ -389,7 +390,7 @@ function navigate(path: string): void {
   const targetPath = normalizePath(url.pathname);
   const targetUrl = targetPath + url.search + url.hash;
   const currentUrl = normalizePath(location.pathname) + location.search + location.hash;
-  const isKnownDynamicBusinessPath = Boolean(parseBusinessModulePath(targetPath)) || targetPath.startsWith("/businesses/");
+  const isKnownDynamicBusinessPath = Boolean(parseBusinessModulePath(targetPath) || parseBusinessModuleAliasPath(targetPath)) || targetPath.startsWith("/businesses/");
   if (targetPath !== normalizePath(location.pathname) && !routes.some((route) => route.path === targetPath) && !isKnownDynamicBusinessPath) {
     window.location.assign(targetUrl);
     return;
@@ -3488,6 +3489,21 @@ function parseBusinessModulePath(path: string): { vertical: string; module: stri
   const vertical = resolveBusinessVerticalKey(parts[2]);
   const modules = getBusinessVerticalUi(vertical).modules;
   const module = getVerticalModuleForSlug(vertical, slug, modules);
+  return module ? { vertical, module } : null;
+}
+
+function parseBusinessModuleAliasPath(path: string): { vertical: string; module: string } | null {
+  const parts = path.split("/").filter(Boolean);
+  if (parts.length !== 2 || parts[0] !== "business") return null;
+  const alias = parts[1];
+  if (!alias || alias === "profile") return null;
+
+  const params = new URLSearchParams(location.search);
+  const requestedVertical = params.get("vertical")?.trim()
+    ?? localStorage.getItem(STORAGE.businessVertical)
+    ?? "default";
+  const vertical = resolveBusinessVerticalKey(requestedVertical);
+  const module = resolveVerticalModuleAlias(vertical, alias);
   return module ? { vertical, module } : null;
 }
 
