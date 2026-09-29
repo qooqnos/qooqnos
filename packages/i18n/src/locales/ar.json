@@ -548,7 +548,11 @@
     "vertical_salonLabel": "صالون تجميل",
     "vertical_salonSubtitle": "الخدمات والمتخصصون والتقويم والسعة والعملاء.",
     "vertical_viewService": "عرض الخدمة",
-    "vertical_chooseSpecialist": "اختيار متخصص"
+    "vertical_chooseSpecialist": "اختيار متخصص",
+    "business_clinicType": "عيادة",
+    "business_storeType": "متجر",
+    "business_restaurantType": "مطعم",
+    "business_salonType": "صالون"
   },
   "canonical": {
     "identity": {
