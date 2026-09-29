@@ -1,3 +1,14 @@
+## 2026-09-29 — Shared Commerce Order Canvas
+
+- 🟢 Added a tenant/workspace/business-scoped Commerce order list reader: `GET /api/v1/commerce/orders?businessId=...&limit=...`.
+- 🟢 Retail `فروش امروز` / `سفارش‌ها` and Restaurant `سفارش‌های امروز` now hydrate a shared read-only order surface from the canonical Commerce source.
+- 🟢 Order cards expose only canonical order facts (status, customer reference, amount, creation time, source channel and fulfillment reference); selecting an order reuses the existing canonical order detail lookup.
+- 🟢 The Vertical Workflow framework remains shared: no retail/restaurant order store, mutation state, or duplicate Commerce model was introduced.
+- 🟢 Added focused repository and UI regression coverage plus responsive styles in both authored and served web stylesheets.
+- 🟡 TypeScript build, full test suite, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: `f708419c`, `e3bcbca2`, `844b2436`, `59cfdc4f`, `3577e5b0`, `0765c662`, `a8adbd5b`.
+
 ## 2026-09-29 — Shared Vertical Billing surface
 - Extended the shared Vertical Workflow UI Framework so Clinic, Restaurant and Salon payment modules expose a common read-only Billing canvas.
 - The surface reads authoritative invoices from `GET /api/v1/billing/invoices?business_id=...` and displays invoice number, state, total, paid amount, due amount and an optional canonical order handoff.
