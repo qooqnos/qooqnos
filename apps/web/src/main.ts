@@ -3068,13 +3068,21 @@ async function shareSocialItem(item: DiscoveryResult): Promise<void> {
       showToast("صفحه برای اشتراک‌گذاری آماده شد.");
       return;
     }
-    await navigator.clipboard.writeText(url);
-    showToast("لینک ققنوس کپی شد.");
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      showToast("لینک ققنوس کپی شد.");
+    } else {
+      window.prompt("لینک ققنوس را کپی کنید:", url);
+    }
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") return;
     try {
-      await navigator.clipboard.writeText(url);
-      showToast("لینک ققنوس کپی شد.");
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        showToast("لینک ققنوس کپی شد.");
+      } else {
+        window.prompt("لینک ققنوس را کپی کنید:", url);
+      }
     } catch {
       showToast("اشتراک‌گذاری این مورد در مرورگر فعلی ممکن نیست.");
     }
@@ -3108,7 +3116,7 @@ function renderActivity(): string {
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
     return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><span class="phoenix-kicker">Activity</span><h1>فعالیت‌های ققنوس</h1><p>برای دیدن Follow، Like، Save و Commentهای ثبت‌شده، ابتدا به حساب متصل شوید.</p></section><div class="glass-card phoenix-activity-gate"><div class="draft-orb">✦</div><h2>فعالیت شخصی شما</h2><p>این سطح فقط رویدادهای واقعی Social Engagement را نمایش می‌دهد.</p><button class="button button-primary" type="button" data-activity-connect>اتصال حساب</button></div></div>';
   }
-  return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><div><span class="phoenix-kicker">Activity</span><h1>ردپای اجتماعی تو در ققنوس</h1><p>رویدادها مستقیماً از Social Engagement خوانده می‌شوند؛ این صفحه timeline جداگانه‌ای در مرورگر نمی‌سازد.</p></div><div class="heading-actions"><button class="button button-ghost" type="button" data-activity-refresh>↻ بروزرسانی</button><a class="button button-primary" href="/discover" data-nav>ادامه کشف ←</a></div></section><section class="phoenix-activity-layout"><article class="glass-card phoenix-activity-card"><div class="card-section-heading"><div><span class="section-kicker">Canonical Social Events</span><h2>آخرین فعالیت‌ها</h2></div><span id="activity-status" class="pill">در حال آماده‌سازی</span></div><div id="activity-list" class="phoenix-activity-list"><div class="slot-loading">در حال خواندن فعالیت‌های واقعی…</div></div></article><aside class="glass-card phoenix-activity-side"><span class="section-kicker">Your loop</span><h2>دنبال کن، ذخیره کن، مقایسه کن.</h2><p>فعالیت‌های اجتماعی در کنار Discovery و Compare برای تصمیم‌گیری پیوسته استفاده می‌شوند؛ ranking و recommendation همچنان در backend canonical باقی می‌مانند.</p><a class="button button-ghost" href="/compare" data-nav>مقایسه‌های انتخاب‌شده</a></aside></section></div>';
+  return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><div><span class="phoenix-kicker">Activity</span><h1>ردپای اجتماعی تو در ققنوس</h1><p>رویدادها مستقیماً از Social Engagement خوانده می‌شوند؛ این صفحه timeline جداگانه‌ای در مرورگر نمی‌سازد.</p></div><div class="heading-actions"><button class="button button-ghost" type="button" data-activity-refresh>↻ بروزرسانی</button><a class="button button-primary" href="/discover" data-nav>ادامه کشف ←</a></div></section><section class="phoenix-activity-layout"><article class="glass-card phoenix-activity-card"><div class="card-section-heading"><div><span class="section-kicker">Canonical Social Events</span><h2>آخرین فعالیت‌ها</h2></div><span id="activity-status" class="pill" aria-live="polite">در حال آماده‌سازی</span></div><div id="activity-list" class="phoenix-activity-list" aria-live="polite" aria-busy="true"><div class="slot-loading">در حال خواندن فعالیت‌های واقعی…</div></div></article><aside class="glass-card phoenix-activity-side"><span class="section-kicker">Your loop</span><h2>دنبال کن، ذخیره کن، مقایسه کن.</h2><p>فعالیت‌های اجتماعی در کنار Discovery و Compare برای تصمیم‌گیری پیوسته استفاده می‌شوند؛ ranking و recommendation همچنان در backend canonical باقی می‌مانند.</p><a class="button button-ghost" href="/compare" data-nav>مقایسه‌های انتخاب‌شده</a></aside></section></div>';
 }
 
 async function loadActivityPage(): Promise<void> {
@@ -3123,6 +3131,7 @@ async function loadActivityPage(): Promise<void> {
   if (!host || !status) return;
 
   const renderRows = (items: unknown[]): void => {
+    host.setAttribute("aria-busy", "false");
     if (!items.length) {
       host.innerHTML = '<div class="social-empty-state"><div class="draft-orb">✦</div><h3>هنوز فعالیتی ثبت نشده است.</h3><p>از Discover یک کسب‌وکار را دنبال کن یا یک محصول را Like/Save کن تا رویداد واقعی اینجا دیده شود.</p><a class="button button-ghost" href="/discover?tab=explore" data-nav>رفتن به اکسپلور</a></div>';
       status.textContent = "خالی";
@@ -3143,10 +3152,11 @@ async function loadActivityPage(): Promise<void> {
       const targetId = String(payload.targetId ?? event.aggregateId ?? "");
       const occurredAt = String(event.occurredAt ?? event.createdAt ?? "");
       const targetLabel = targetType && targetId ? targetType + " · " + targetId : "رویداد اجتماعی ققنوس";
+      const businessId = String(payload.businessId ?? "");
       const targetHref = targetType === "business" && targetId
         ? "/businesses/" + encodeURIComponent(targetId)
         : targetType === "service" && targetId
-          ? "/booking?offering=" + encodeURIComponent(targetId)
+          ? "/booking?offering=" + encodeURIComponent(targetId) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : "")
           : targetType === "product" && targetId
             ? "/checkout?product=" + encodeURIComponent(targetId)
             : "";
@@ -3157,6 +3167,7 @@ async function loadActivityPage(): Promise<void> {
   };
 
   const load = async (): Promise<void> => {
+    host.setAttribute("aria-busy", "true");
     host.innerHTML = '<div class="slot-loading">در حال همگام‌سازی Social Activity…</div>';
     status.textContent = "در حال خواندن";
     status.className = "pill";
@@ -4579,6 +4590,7 @@ function openCreatePostPanel(): void {
   overlay.querySelector<HTMLButtonElement>("[data-create-post-submit]")?.addEventListener("click", () => {
     const value = overlay.querySelector<HTMLTextAreaElement>("#social-post-text")?.value.trim() ?? "";
     if (!value) { showToast("توضیح محصول یا خدمت را وارد کن."); return; }
+    sessionStorage.setItem("phoenix-social-create-draft", value);
     overlay.remove();
     navigate("/product-studio");
   });
@@ -4637,11 +4649,11 @@ function bindDiscoveryResultEvents(): void {
           await persistSocialComment(item);
           active = true;
         }
-        if (button.dataset.comment === undefined && button.dataset.share === undefined && button.dataset.openView === undefined) {
+        if (button.dataset.comment !== undefined) {
+          if (active) showToast("نظر برای moderation ثبت شد.");
+        } else if (button.dataset.share === undefined && button.dataset.openView === undefined) {
           showToast(active ? "تعامل اجتماعی ثبت شد." : "تعامل اجتماعی برداشته شد.");
           refreshSocialFeed();
-        } else if (active) {
-          showToast("نظر برای moderation ثبت شد.");
         }
       } catch (error) {
         button.innerHTML = original;
@@ -4877,6 +4889,12 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-load-business-schedules]")?.addEventListener("click", loadBusinessBookingSchedules);
   document.querySelector<HTMLButtonElement>("[data-start-checkout]")?.addEventListener("click", startCheckoutFlow);
 
+  const socialDraft = sessionStorage.getItem("phoenix-social-create-draft");
+  const studioText = document.querySelector<HTMLTextAreaElement>("#studio-text");
+  if (socialDraft && studioText) {
+    studioText.value = socialDraft;
+    sessionStorage.removeItem("phoenix-social-create-draft");
+  }
   document.querySelector<HTMLButtonElement>("[data-generate-draft]")?.addEventListener("click", generateDraft);
   document.querySelector<HTMLInputElement>("#studio-file")?.addEventListener("change", (event) => {
     const input = event.currentTarget as HTMLInputElement;
