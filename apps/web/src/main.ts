@@ -3408,20 +3408,20 @@ function renderDiscover(): string {
   const params = new URLSearchParams(location.search);
   const initialQuery = params.get("q") ?? "";
   const tab = params.get("tab") ?? "for-you";
-  const title = tab === "following" ? "چیزهایی که دنبال می‌کنی." : tab === "explore" ? "چیزهایی که در اکسپلور تازه‌اند." : "برای تو، بر اساس نیازت.";
+  const title = tab === "following" ? discoveryUi("followingTitle") : tab === "explore" ? discoveryUi("exploreTitle") : discoveryUi("forYouTitle");
   const intro = tab === "following"
-    ? "عرضه‌های منتشرشده از کسب‌وکارهایی که خودت دنبال کرده‌ای."
+    ? discoveryUi("followingIntro")
     : tab === "explore"
-      ? "مرور عرضه‌های واقعی و قابل کشف در شبکه ققنوس."
-      : "هر چی می‌خوای بگو، تا ققنوس برات پیداش کنه";
+      ? discoveryUi("exploreIntro")
+      : discoveryUi("forYouIntro");
   return '<div class="phoenix-social-page">' +
     '<section class="phoenix-social-hero">' +
-      '<div class="phoenix-social-intro"><span class="phoenix-kicker">Phoenix ' + (tab === "explore" ? "Explore" : tab === "following" ? "Following" : "For You") + '</span><h1>' + title + '</h1><p>' + intro + '</p></div>' +
-      '<div class="phoenix-social-hero-card"><img src="/phoenix-mark.svg?v=1" alt="" aria-hidden="true" /><div><strong>تصمیم را از نیاز شروع کن</strong><small>محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.</small></div><button class="button button-primary" type="button" data-open-create-post>＋ ایجاد عرضه</button></div>' +
+      '<div class="phoenix-social-intro"><span class="phoenix-kicker">' + discoveryUi(tab === "explore" ? "explore" : tab === "following" ? "following" : "forYou") + '</span><h1>' + escapeHtml(title) + '</h1><p>' + escapeHtml(intro) + '</p></div>' +
+      '<div class="phoenix-social-hero-card"><img src="/phoenix-mark.svg?v=1" alt="" aria-hidden="true" /><div><strong>' + localizedUi("تصمیم را از نیاز شروع کن") + '</strong><small>' + localizedUi("محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.") + '</small></div><button class="button button-primary" type="button" data-open-create-post>＋ ' + discoveryUi("createOffering") + '</button></div>' +
     '</section>' +
-    '<section class="phoenix-social-search glass-card"><span class="phoenix-search-icon">⌕</span><input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="مثلاً «کفش دویدن تا ۵ میلیون»" /><button class="button button-primary" type="button" data-run-discovery>کشف کن <span>←</span></button></section>' +
-    '<div class="phoenix-feed-heading"><div><span class="phoenix-kicker">Discovery</span><strong id="results-title">' + escapeHtml(initialQuery ? "نتایج جست‌وجو" : tab === "following" ? "دنبال‌شده‌ها" : tab === "explore" ? "اکسپلور" : "پیشنهادهای قابل کشف") + '</strong><small id="results-meta">آماده</small></div><div class="phoenix-feed-actions"><a href="/compare" data-nav>مقایسه <span>→</span></a><button type="button" class="button button-ghost" data-social-state-refresh>↻ همگام‌سازی</button></div></div>' +
-    '<div id="discovery-results" class="phoenix-social-feed">' + (initialQuery ? '<div class="slot-loading">در حال آماده‌سازی Discovery…</div>' : '<div class="social-empty-state glass-card"><div class="draft-orb">✦</div><h3>از یک نیاز شروع کن</h3><p>یک جمله بنویس، یا وارد اکسپلور شو و کالاها و خدمات ققنوس رو ببین.</p><div class="connection-actions"><button class="button button-primary" type="button" data-focus-discover>شروع جست‌وجو</button><a class="button button-ghost" href="/discover?tab=explore" data-nav>اکسپلور</a></div></div>') + '</div>' +
+    '<section class="phoenix-social-search glass-card"><span class="phoenix-search-icon">⌕</span><input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="' + escapeAttr(discoveryUi("examplePlaceholder")) + '" /><button class="button button-primary" type="button" data-run-discovery>' + discoveryUi("discoverButton") + ' <span>←</span></button></section>' +
+    '<div class="phoenix-feed-heading"><div><span class="phoenix-kicker">' + discoveryUi("discoverButton") + '</span><strong id="results-title">' + escapeHtml(initialQuery ? discoveryUi("searchResults") : tab === "following" ? discoveryUi("following") : tab === "explore" ? discoveryUi("explore") : discoveryUi("discoverableSuggestions")) + '</strong><small id="results-meta">' + discoveryUi("ready") + '</small></div><div class="phoenix-feed-actions"><a href="/compare" data-nav>' + localizedUi("مقایسه") + ' <span>→</span></a><button type="button" class="button button-ghost" data-social-state-refresh>↻ ' + discoveryUi("sync") + '</button></div></div>' +
+    '<div id="discovery-results" class="phoenix-social-feed">' + (initialQuery ? '<div class="slot-loading">' + discoveryUi("preparing") + '</div>' : '<div class="social-empty-state glass-card"><div class="draft-orb">✦</div><h3>' + discoveryUi("startWithNeedTitle") + '</h3><p>' + discoveryUi("writeSentence") + '</p><div class="connection-actions"><button class="button button-primary" type="button" data-focus-discover>' + discoveryUi("startSearch") + '</button><a class="button button-ghost" href="/discover?tab=explore" data-nav>' + discoveryUi("explore") + '</a></div></div>') + '</div>' +
     '<div id="phoenix-compare-tray"></div><div id="discovery-pagination"></div></div>';
 }
 function getShortlist(): DiscoveryResult[] {
