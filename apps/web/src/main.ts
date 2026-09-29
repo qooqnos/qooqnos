@@ -20,8 +20,6 @@ const ROUTE_CANONICAL_TERM_KEYS: Readonly<Record<string, string>> = {
   "/business/profile": "canonical.business.businessProfile",
   "/booking": "canonical.booking.booking",
   "/customer": "canonical.customer.customer",
-  "/notifications": "canonical.communication.notification",
-  "/communication": "canonical.communication.conversation",
   "/promotion": "canonical.promotion.promotion",
 };
 
