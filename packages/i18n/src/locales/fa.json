@@ -663,6 +663,35 @@
       "action": "اقدام",
       "sourceOfTruth": "منبع حقیقت",
       "projection": "نمایهٔ مشتق‌شده"
+    },
+    "fulfillment": {
+      "fulfillmentOrder": "سفارش اجرا",
+      "fulfillmentItem": "مورد اجرا",
+      "fulfillmentPlan": "برنامه اجرا",
+      "fulfillmentTask": "وظیفه اجرا",
+      "fulfillmentAssignment": "تخصیص اجرا",
+      "shipment": "محموله",
+      "shipmentPackage": "بسته",
+      "trackingEvent": "رویداد رهگیری"
+    },
+    "promotion": {
+      "promotion": "پروموشن",
+      "promotionVersion": "نسخه پروموشن",
+      "benefit": "مزیت",
+      "rule": "قاعده",
+      "scope": "دامنه",
+      "stackPolicy": "سیاست ترکیب",
+      "qualification": "احراز شرایط",
+      "offer": "پیشنهاد",
+      "reservation": "رزرو موقت",
+      "redemption": "ثبت استفاده",
+      "usageCounter": "شمارنده مصرف",
+      "campaign": "کارزار",
+      "campaignAudience": "مخاطبان کارزار",
+      "campaignPromotionLink": "پیوند کارزار و پروموشن",
+      "campaignExperiment": "آزمایش کارزار",
+      "campaignMeasurement": "اندازه‌گیری کارزار",
+      "abuseSignal": "نشانه سوءاستفاده"
     }
   }
 }
