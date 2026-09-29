@@ -150,7 +150,10 @@ function renderCommand(model: VerticalWorkflowCanvasModel): string {
   const action = model.blueprint.primaryAction
     ? '<a class="button button-primary" href="' + escapeHtml(contextualHref(model, model.blueprint.primaryAction.path)) + '" data-nav>' + escapeHtml(model.blueprint.primaryAction.label) + ' →</a>'
     : '<span class="pill">منبع canonical</span>';
-  return '<div class="phoenix-vwf-toolbar">' +
+  const bookingLookup = ["نوبت‌ها", "رزرو", "وقت‌های امروز"].includes(model.module)
+    ? renderBookingLookupSurface()
+    : "";
+  return bookingLookup + '<div class="phoenix-vwf-toolbar">'
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای فرمان">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="overview">نمای کلی</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="queue">صف کار</button>' +
@@ -664,7 +667,7 @@ function renderCapabilityContract(blueprint: VerticalModuleBlueprint): string {
     ? contract.requiredPermissions.map((item) => '<span class="phoenix-vwf-contract-chip" data-vwf-required-permission="' + escapeHtml(item) + '">' + escapeHtml(item) + '</span>').join("")
     : '<span class="phoenix-vwf-contract-empty">بدون Permission declaration</span>';
   return '<section class="phoenix-vwf-capability-contract" data-vwf-capability-contract>' +
-    '<div class="phoenix-vwf-capability-head"><div><span class="section-kicker">Capability Contract</span><strong>وابستگی‌های این ماژول</strong><small>این declaration فقط dependency رابط است؛ Capability فعال و Authorization توسط backend تعیین می‌شود.</small></div><span class="pill" data-vwf-capability-status>قرارداد بارگذاری شد</span></div>' +
+    '<div class="phoenix-vwf-capability-head"><div><span class="section-kicker">Capability Contract</span><strong>وابستگی‌های این ماژول</strong><small>این declaration فقط dependency رابط است؛ Capability فعال و Authorization توسط backend تعیین می‌شود. Backend authoritative باقی می‌ماند.</small></div><span class="pill" data-vwf-capability-status>قرارداد بارگذاری شد</span></div>' +
     '<div class="phoenix-vwf-capability-groups">' +
       '<div><span class="phoenix-vwf-capability-label">Capabilities</span><div class="phoenix-vwf-contract-chips" data-vwf-capability-items>' + capabilities + '</div></div>' +
       '<div><span class="phoenix-vwf-capability-label">Required permissions</span><div class="phoenix-vwf-contract-chips" data-vwf-permission-items>' + permissions + '</div></div>' +
