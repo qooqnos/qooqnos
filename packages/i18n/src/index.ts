@@ -9,7 +9,7 @@ import faLocale from "../locales/fa.json";
 export type SupportedLanguage = "en" | "fa" | "ar";
 export type Locale = SupportedLanguage;
 
-type LocaleTree = Readonly<Record<string, string | Readonly<Record<string, string>>>>;
+type LocaleTree = Readonly<Record<string, Readonly<Record<string, string>>>>;
 
 export const localeDictionaries: Record<SupportedLanguage, LocaleTree> = {
   en: enLocale,
@@ -24,10 +24,6 @@ function flattenDictionary(
   const result: Record<string, string> = {};
   for (const [name, value] of Object.entries(dictionary)) {
     const key = prefix ? prefix + "." + name : name;
-    if (typeof value === "string") {
-      result[key] = value;
-      continue;
-    }
     for (const [nestedKey, nestedValue] of Object.entries(value)) {
       result[key + "." + nestedKey] = nestedValue;
     }
