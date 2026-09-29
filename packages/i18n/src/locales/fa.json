@@ -577,7 +577,8 @@
     "changeWorkspace": "تغییر Workspace",
     "manageTeam": "مدیریت تیم",
     "roleGuideDescription": "این راهنما صرفاً composition رابط است؛ مجوز واقعی را backend تعیین می‌کند.",
-    "boardDefaultSupply": "عرضه را آماده کن"
+    "boardDefaultSupply": "عرضه را آماده کن",
+    "workspaceStatusMine": "فضای کاری من"
   },
   "canonical": {
     "identity": {
@@ -927,7 +928,10 @@
     "identity": "هویت",
     "trustBeforePublic": "اعتماد، قبل از نمایش عمومی",
     "trustSource": "وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.",
-    "viewTrust": "مشاهده اعتماد"
+    "viewTrust": "مشاهده اعتماد",
+    "canonicalBoundaryTitle": "مرز canonical",
+    "canonicalBoundaryDescription": "این صفحه پیش‌نمایش و مدیریت است؛ انتشار واقعی فقط از مسیرهای canonical انجام می‌شود.",
+    "publicationMutationGuard": "تا وقتی تغییر انتشار به این رابط متصل نشده، وضعیت انتشار جعل نمی‌شود."
   },
   "discoveryPage": {
     "forYouTitle": "برای تو، بر اساس نیازت.",
