@@ -567,7 +567,16 @@
     "canonicalName": "الاسم canonical",
     "displayName": "الاسم المعروض",
     "canonicalAfterConnection": "بيانات موثوقة بعد الاتصال",
-    "openSource": "فتح المصدر ←"
+    "openSource": "فتح المصدر ←",
+    "phoenixSuggests": "يقترح ققنوس",
+    "startAction": "ابدأ",
+    "prepareSupplyFast": "جهّز العرض بشكل أسرع.",
+    "sellerAiDescription": "ابدأ بصورة أو نص خام؛ ينشئ Seller AI مسودة ويبقى الاعتماد النهائي بيد النشاط التجاري.",
+    "noConnectedLocationData": "تظهر بيانات الموقع بعد الاتصال.",
+    "noConnectedHoursData": "تظهر الساعات بعد الاتصال.",
+    "changeWorkspace": "تغيير مساحة العمل",
+    "manageTeam": "إدارة الفريق",
+    "roleGuideDescription": "هذا الدليل يحدد تركيب الواجهة فقط؛ ويظل التفويض الفعلي تحت تحكم الخلفية."
   },
   "canonical": {
     "identity": {
