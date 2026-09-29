@@ -644,6 +644,29 @@ export class BookingRepository extends Repository {
     }
   }
 
+  async listBusinessResources(
+    context: RequestContext,
+    businessId: EntityId,
+    resourceType?: ResourceRecord["resourceType"],
+    limit = 100,
+  ): Promise<readonly ResourceRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
+    const params: unknown[] = [businessId, organizationId, workspaceId];
+    let filter = "";
+    if (resourceType) {
+      filter = " AND r.resource_type = ?";
+      params.push(resourceType);
+    }
+    params.push(safeLimit);
+    const rows = await this.database.all<ResourceRecord & { metadataJson: string | null }>(
+      "SELECT r.id, r.business_id AS businessId, r.location_id AS locationId, r.resource_type AS resourceType, r.status, r.capacity, r.metadata_json AS metadataJson, r.created_at AS createdAt, r.updated_at AS updatedAt FROM resources r INNER JOIN businesses b ON b.id = r.business_id WHERE r.business_id = ? AND b.organization_id = ? AND b.workspace_id = ?" + filter + " ORDER BY r.status ASC, r.updated_at DESC, r.id ASC LIMIT ?",
+      ...params,
+    );
+    return rows.map((row) => ({ ...row, metadata: this.parseMetadata(row.metadataJson) }));
+  }
+
   async getResource(context: RequestContext, id: EntityId): Promise<ResourceRecord | null> {
     const row = await this.database.first<ResourceRecord & { metadataJson: string | null }>(
       "SELECT r.id, r.business_id AS businessId, r.location_id AS locationId, r.resource_type AS resourceType, r.status, r.capacity, r.metadata_json AS metadataJson, r.created_at AS createdAt, r.updated_at AS updatedAt FROM resources r INNER JOIN businesses b ON b.id = r.business_id WHERE r.id = ? AND b.organization_id = ? AND b.workspace_id = ? LIMIT 1",
