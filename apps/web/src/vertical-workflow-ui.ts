@@ -1,4 +1,4 @@
-import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleRoleFit, getVerticalModuleRoute, getVerticalModuleUiContract, resolveVerticalRoleLens, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
+import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleRoleFit, getVerticalModuleRoute, getVerticalModuleUiContract, resolveVerticalRoleLens, VERTICAL_MODULE_SLUGS, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
 import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
 type VerticalWorkflowEntityRecord = Record<string, unknown>;
@@ -265,6 +265,31 @@ function renderCommunication(model: VerticalWorkflowCanvasModel): string {
     '</div>';
 }
 
+function renderModuleSwitcher(model: VerticalWorkflowCanvasModel): string {
+  const vertical = model.vertical.trim().toLowerCase();
+  const modules = Object.keys(VERTICAL_MODULE_SLUGS[vertical] ?? {});
+  if (!modules.length) return "";
+
+  return '<nav class="phoenix-vwf-module-switcher" data-vwf-module-switcher aria-label="ماژول‌های این Workspace">' +
+    '<div class="phoenix-vwf-module-switcher-head"><div><span class="section-kicker">Workspace modules</span><strong>ماژول‌های این حوزه</strong><small>' +
+      escapeHtml(String(modules.length)) + ' ماژول · مسیرهای پایدار semantic' +
+    '</small></div><span class="pill">Shared navigation</span></div>' +
+    '<div class="phoenix-vwf-module-switcher-list">' +
+      modules.map((module) => {
+        const contract = getVerticalModuleUiContract(vertical, module);
+        const active = module === model.module;
+        const href = workflowModuleHref(model, module);
+        const classes = 'phoenix-vwf-module-link' + (active ? ' active' : '');
+        const content = '<span class="phoenix-vwf-module-index">' + String(modules.indexOf(module) + 1).padStart(2, "0") + '</span>' +
+          '<span class="phoenix-vwf-module-copy"><strong>' + escapeHtml(module) + '</strong><small>' + escapeHtml(contract.blueprint.eyebrow) + '</small></span>';
+        return active
+          ? '<span class="' + classes + '" aria-current="page" data-vwf-module-state="current">' + content + '</span>'
+          : '<a class="' + classes + '" href="' + escapeHtml(href) + '" data-nav data-vwf-module-state="available">' + content + '<span class="phoenix-vwf-module-arrow" aria-hidden="true">→</span></a>';
+      }).join("") +
+    '</div>' +
+    '</nav>';
+}
+
 function renderLayout(layout: VerticalModuleLayout, model: VerticalWorkflowCanvasModel): string {
   switch (layout) {
     case "command": return renderCommand(model);
@@ -414,7 +439,7 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
           : '<div class="phoenix-vwf-stage' + stateClass + '" data-vwf-stage-state="' + (active ? "current" : completed ? "completed" : "upcoming") + '">' + content + '</div>';
       }).join('<span class="phoenix-vwf-stage-connector" aria-hidden="true">→</span>') +
     '</nav>' +
-    '<div class="phoenix-vwf-stage-context">' +
+    renderModuleSwitcher(model) +\n    '<div class="phoenix-vwf-stage-context">' +
       '<div><span class="section-kicker">Workflow stage</span><strong>' + escapeHtml(stageContext.stage) + '</strong><span class="phoenix-vwf-stage-position">' + escapeHtml(stagePosition) + '</span></div>' +
       '<div class="phoenix-vwf-stage-context-actions">' + stageNav + '</div>' +
     '</div>' +
