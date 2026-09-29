@@ -206,6 +206,13 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
     '<div class="phoenix-vwf-live-detail" data-vwf-order-detail hidden></div>';
 }
 function renderOperations(model: VerticalWorkflowCanvasModel): string {
+  const resourceSurface = model.module === "میزها"
+    ? '<div class="phoenix-vwf-live-resources" data-vwf-resources-live data-vwf-resource-type="">' +
+        '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Booking Resources</span><h3>میزها و منابع رزرو</h3><p>منابع قابل رزرو مستقیماً از Booking خوانده می‌شوند؛ این Canvas برای میزها state موازی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
+        '<div class="phoenix-vwf-live-resources-grid" data-vwf-resource-items><div class="slot-loading">در حال آماده‌سازی منابع رزرو…</div></div>' +
+      '</div>'
+    : "";
+
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای عملیات">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="board">Board</button>' +
@@ -214,6 +221,7 @@ function renderOperations(model: VerticalWorkflowCanvasModel): string {
     '</div>' +
     viewState("Board") +
     '</div>' +
+    resourceSurface +
     '<div class="phoenix-vwf-live-operations" data-vwf-case-live>' +
       '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Operations</span><h3>صف عملیات</h3><p>Case state مستقیماً از Case Support خوانده می‌شود.</p></div><span class="pill">live when connected</span></div>' +
       '<div class="phoenix-vwf-live-case-grid" data-vwf-case-items><div class="slot-loading">در حال خواندن Caseهای واقعی…</div></div>' +
