@@ -202,6 +202,21 @@ describe("Vertical Workflow overview", () => {
   });
 
 
+  it("renders the shared canonical Fulfillment lookup for Operations modules", () => {
+    const blueprint = getVerticalModuleBlueprint("restaurant", "تحویل");
+    const html = renderVerticalWorkflowCanvas({
+      vertical: "restaurant",
+      module: "تحویل",
+      businessId: "business-test",
+      blueprint,
+    });
+    expect(html).toContain('data-vwf-fulfillment-live');
+    expect(html).toContain('data-vwf-fulfillment-id');
+    expect(html).toContain('data-vwf-load-fulfillment');
+    expect(html).toContain('data-vwf-fulfillment-detail');
+    expect(html).toContain("Canonical Fulfillment");
+  });
+
   it("renders a live booking-resource surface for restaurant tables", () => {
     const blueprint = getVerticalModuleBlueprint("restaurant", "میزها");
     const html = renderVerticalWorkflowCanvas({
