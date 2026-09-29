@@ -4,6 +4,6 @@
   "version": "0.1.0",
   "description": "Phoenix customer and partner web experience",
   "scripts": {
-    "build": "node ../../scripts/sync-web-assets.mjs && tsc -p tsconfig.json"
+    "build": "npm --workspace=@qooqnos/i18n run build && node ../../scripts/sync-web-assets.mjs && tsc -p tsconfig.json"
   }
 }
