@@ -5887,6 +5887,31 @@ a {
   grid-template-columns:repeat(4,minmax(0,1fr));
   gap:10px;
 }
+.phoenix-vwf-overview-access{
+  margin-top:2px;
+  width:max-content;
+  max-width:100%;
+  padding:4px 8px;
+  border-radius:999px;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  color:var(--faint);
+  font-size:9px;
+  font-weight:800;
+  line-height:1.4;
+}
+.phoenix-vwf-overview-access[data-vwf-overview-access="ready"]{
+  color:var(--success,#177245);
+  border-color:color-mix(in srgb,var(--success,#177245) 24%,var(--line));
+  background:color-mix(in srgb,var(--success,#177245) 8%,var(--surface-2));
+}
+.phoenix-vwf-overview-access[data-vwf-overview-access="warning"]{
+  color:var(--warning,#a15c00);
+  border-color:color-mix(in srgb,var(--warning,#a15c00) 24%,var(--line));
+  background:color-mix(in srgb,var(--warning,#a15c00) 8%,var(--surface-2));
+}
+.phoenix-vwf-overview-access[data-vwf-overview-access="context"]{color:var(--faint)}
+
 .phoenix-vwf-overview-stage{
   position:relative;
   min-height:150px;
