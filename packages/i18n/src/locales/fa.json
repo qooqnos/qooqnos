@@ -552,7 +552,9 @@
     "business_clinicType": "مطب / کلینیک",
     "business_storeType": "فروشگاه",
     "business_restaurantType": "رستوران",
-    "business_salonType": "سالن"
+    "business_salonType": "سالن",
+    "workspaceContextRequired": "نیازمند Workspace context",
+    "loadingEllipsis": "در حال بارگذاری…"
   },
   "canonical": {
     "identity": {
