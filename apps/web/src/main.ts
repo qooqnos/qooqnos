@@ -313,7 +313,9 @@ const routes: Route[] = [
 
 const theme = getInitialTheme();
 document.documentElement.dataset.theme = theme;
-setLanguage(getInitialLanguage());
+const initialLanguage = getInitialLanguage();
+document.documentElement.lang = initialLanguage;
+document.documentElement.dir = initialLanguage === "en" ? "ltr" : "rtl";
 
 async function hydrateSessionContext(): Promise<void> {
   const token = sessionStorage.getItem(STORAGE.accessToken);
@@ -348,11 +350,67 @@ function languageLabel(language: Language): string {
 function languageName(language: Language): string {
   return language === "en" ? "English" : language === "ar" ? "العربية" : "فارسی";
 }
+const UI_TRANSLATIONS: Record<Language, Record<string, string>> = {
+  fa: {},
+  en: {
+    "نیازت را بگو": "Tell Phoenix what you need",
+    "کشف": "Discover",
+    "برای کسب‌وکارها": "For businesses",
+    "ورود": "Sign in",
+    "چگونه کار می‌کند؟": "How it works",
+    "هر چی می‌خوای بگو، تا ققنوس برات پیداش کنه": "Tell Phoenix what you need and let it find it for you",
+    "تصمیم را از نیاز شروع کن": "Start with your need",
+    "محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.": "Find a product, service, or business and compare or act right there.",
+    "با نیازت شروع کن، نه با کلمه کلیدی": "Start with your need, not a keyword",
+    "هرچه برای تصمیم مهم است بنویس؛ ققنوس مسیر کشف را باز می‌کند.": "Write what matters for your decision; Phoenix opens the discovery path.",
+    "نمایش بیشتر": "Show more",
+    "برای کسب‌وکارها": "For businesses",
+    "کسب‌وکار جدید بسازید": "Create a new business",
+    "انتخاب زبان": "Choose language",
+    "تغییر پوسته": "Change theme"
+  },
+  ar: {
+    "نیازت را بگو": "أخبر ققنوس بما تحتاج",
+    "کشف": "استكشاف",
+    "برای کسب‌وکارها": "للأعمال",
+    "ورود": "تسجيل الدخول",
+    "چگونه کار می‌کند؟": "كيف يعمل؟",
+    "هر چی می‌خوای بگو، تا ققنوس برات پیداش کنه": "أخبر ققنوس بما تريد وسيجده لك",
+    "تصمیم را از نیاز شروع کن": "ابدأ من احتياجك",
+    "محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.": "اعثر على المنتج أو الخدمة أو النشاط التجاري وقارن أو اتخذ الإجراء مباشرة.",
+    "با نیازت شروع کن، نه با کلمه کلیدی": "ابدأ باحتياجك، وليس بكلمة مفتاحية",
+    "هرچه برای تصمیم مهم است بنویس؛ ققنوس مسیر کشف را باز می‌کند.": "اكتب ما يهم قرارك؛ ققنوس يفتح لك طريق الاستكشاف.",
+    "نمایش بیشتر": "عرض المزيد",
+    "کسب‌وکار جدید بسازید": "أنشئ نشاطًا تجاريًا جديدًا",
+    "انتخاب زبان": "اختيار اللغة",
+    "تغییر پوسته": "تغيير المظهر"
+  }
+};
+
+function applyLanguageToUi(): void {
+  const language = getInitialLanguage();
+  const dictionary = UI_TRANSLATIONS[language];
+  if (!Object.keys(dictionary).length) return;
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes: Text[] = [];
+  let node: Node | null;
+  while ((node = walker.nextNode())) nodes.push(node as Text);
+  nodes.forEach((textNode) => {
+    const value = textNode.nodeValue?.trim() ?? "";
+    if (!value) return;
+    const translated = dictionary[value];
+    if (translated) textNode.nodeValue = textNode.nodeValue?.replace(value, translated) ?? translated;
+  });
+  document.querySelectorAll<HTMLElement>("[data-language-current]").forEach((node) => {
+    node.textContent = languageLabel(language);
+  });
+}
+
 function setLanguage(language: Language): void {
   localStorage.setItem(STORAGE.language, language);
   document.documentElement.lang = language;
   document.documentElement.dir = language === "en" ? "ltr" : "rtl";
-  syncLanguageSwitcher();
+  render();
 }
 function toggleLanguageMenu(): void {
   const menu = document.querySelector<HTMLElement>("[data-language-menu]");
@@ -471,6 +529,7 @@ function render(): void {
   `;
   bindGlobalEvents();
   syncThemeButtons();
+  applyLanguageToUi();
   if (route.path === "/discover") {
     const params = new URLSearchParams(location.search);
     const initialDiscoveryQuery = params.get("q")?.trim() ?? "";
