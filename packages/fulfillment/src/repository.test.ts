@@ -60,6 +60,60 @@ describe("FulfillmentRepository", () => {
     expect(writes).toBe(0);
   });
 
+  it("lists fulfillment orders inside the active business scope", async () => {
+    const rows = [
+      {
+        id: "fulfillment-2",
+        organizationId: "tenant-1",
+        workspaceId: "workspace-1",
+        businessId: "business-1",
+        sourceType: "commerce_order",
+        sourceId: "order-2",
+        status: "ready",
+        fulfillmentType: "physical",
+        planId: null,
+        createdAt: "2026-09-22T00:02:00.000Z",
+        updatedAt: "2026-09-22T00:02:00.000Z",
+        completedAt: null,
+        cancelledAt: null,
+      },
+      {
+        id: "fulfillment-1",
+        organizationId: "tenant-1",
+        workspaceId: "workspace-1",
+        businessId: "business-1",
+        sourceType: "commerce_order",
+        sourceId: "order-1",
+        status: "pending",
+        fulfillmentType: "physical",
+        planId: null,
+        createdAt: "2026-09-22T00:01:00.000Z",
+        updatedAt: "2026-09-22T00:01:00.000Z",
+        completedAt: null,
+        cancelledAt: null,
+      },
+    ];
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: rows as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new FulfillmentRepository(new D1Database(raw));
+
+    const result = await repository.listByBusiness(
+      context(),
+      brandId<"EntityId">("business-1"),
+      100,
+    );
+
+    expect(result.map((item) => item.id)).toEqual(["fulfillment-2", "fulfillment-1"]);
+  });
+
   it("rejects an invalid lifecycle transition", async () => {
     const current = {
       id: "fulfillment-1",
