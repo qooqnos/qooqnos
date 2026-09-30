@@ -581,7 +581,26 @@
     "roleGuideDescription": "هذا الدليل يحدد تركيب الواجهة فقط؛ ويظل التفويض الفعلي تحت تحكم الخلفية.",
     "boardDefaultSupply": "جهّز العرض",
     "workspaceStatusMine": "مساحة عملي",
-    "globalSearchPlaceholder": "ابحث في الأقسام والأدوات والصفحات…"
+    "globalSearchPlaceholder": "ابحث في الأقسام والأدوات والصفحات…",
+    "vertical_sharedComponent": "مكوّن مشترك",
+    "vertical_liveWhenConnected": "مباشر عند الاتصال بالمصدر",
+    "vertical_primaryFlow": "المسار الأساسي",
+    "vertical_canonicalSource": "المصدر الأساسي",
+    "vertical_canonicalBusinessContext": "سياق النشاط التجاري الأساسي",
+    "vertical_canonicalData": "البيانات الأساسية",
+    "vertical_handoffContract": "عقد تسليم سير العمل",
+    "vertical_handoffDescription": "ينقل هذا المسار المشترك المدخلات والمخرجات بين مراحل سير العمل، وتبقى حالة التنفيذ في المجال الأساسي.",
+    "vertical_currentStage": "المرحلة الحالية",
+    "vertical_previousStage": "المرحلة السابقة",
+    "vertical_nextStage": "المرحلة التالية",
+    "vertical_workflowEntry": "مدخل سير العمل",
+    "vertical_canonicalOnly": "أساسي فقط",
+    "vertical_backendAuthoritative": "المرجع الموثوق في الخلفية",
+    "vertical_localFilterNote": "مرشح محلي للواجهة؛ لا تتغير البيانات الأساسية",
+    "vertical_canvas": "لوحة",
+    "vertical_stateContract": "عقد الحالة",
+    "vertical_interactionMode": "وضع التفاعل",
+    "vertical_primaryAction": "الإجراء الأساسي"
   },
   "canonical": {
     "identity": {
