@@ -6,7 +6,7 @@
 - 🟢 Added responsive styling and regression coverage for all three promotion modules.
 - 🟡 Full TypeScript build, full test suite, browser/device visual QA and production deployment verification remain pending after this slice.
 
-Implementation commits: `63f01214`, `628bb9e7`, `f85b3bf0`, `4a8e0b13`, `8cba4679`, `e06f4b1b`, `b0563029`.
+Implementation commits: `63f01214`, `628bb9e7`, `f85b3bf0`, `b8a4dc45`, `4a8e0b13`, `8cba4679`, `e06f4b1b`, `b0563029`.
 
 ## 2026-09-30 — Multilingual UI infrastructure re-audit and VWF i18n boundary hardening
 
