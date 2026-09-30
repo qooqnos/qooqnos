@@ -30,6 +30,17 @@ describe("Vertical Workflow UI Canvas", () => {
     ["communication", "پیام‌ها"],
   ] as const;
 
+  it("ships shared VWF labels through the multilingual dictionary", async () => {
+    const { defaultI18n } = await import("./i18n-runtime");
+    defaultI18n.setLanguage("en");
+    expect(defaultI18n.t("ui.vertical_sharedComponent")).toBe("Shared component");
+    expect(defaultI18n.t("ui.vertical_handoffContract")).toBe("Workflow handoff contract");
+    defaultI18n.setLanguage("ar");
+    expect(defaultI18n.t("ui.vertical_sharedComponent")).toBe("مكوّن مشترك");
+    expect(defaultI18n.t("ui.vertical_handoffContract")).toBe("عقد تسليم سير العمل");
+    defaultI18n.setLanguage("fa");
+  });
+
   it("renders all shared layouts with stable data attributes", () => {
     for (const [expectedLayout, module] of layouts) {
       const blueprint = getVerticalModuleBlueprint("clinic", module);
