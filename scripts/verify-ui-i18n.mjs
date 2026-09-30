@@ -40,7 +40,7 @@ const required = [
   "ui.vertical_canonicalBusinessContext","ui.vertical_canonicalData","ui.vertical_handoffContract","ui.vertical_handoffDescription",
   "ui.vertical_currentStage","ui.vertical_previousStage","ui.vertical_nextStage","ui.vertical_workflowEntry","ui.vertical_canonicalOnly",
   "ui.vertical_backendAuthoritative","ui.vertical_localFilterNote","ui.vertical_canvas","ui.vertical_stateContract","ui.vertical_interactionMode",
-  "ui.vertical_primaryAction","language.label","language.persian","language.english","language.arabic"
+  "ui.vertical_primaryAction","ui.vertical_layoutCommand","ui.vertical_layoutCalendar","ui.vertical_layoutSupply","ui.vertical_layoutPeople","ui.vertical_layoutCommerce","ui.vertical_layoutOperations","ui.vertical_layoutCommunication","ui.vertical_layoutCommandDescription","ui.vertical_layoutCalendarDescription","ui.vertical_layoutSupplyDescription","ui.vertical_layoutPeopleDescription","ui.vertical_layoutCommerceDescription","ui.vertical_layoutOperationsDescription","ui.vertical_layoutCommunicationDescription","ui.vertical_handoffTitle","language.label","language.persian","language.english","language.arabic"
 ];
 
 const missingRequired = [];
