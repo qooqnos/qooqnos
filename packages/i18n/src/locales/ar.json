@@ -600,7 +600,22 @@
     "vertical_canvas": "لوحة",
     "vertical_stateContract": "عقد الحالة",
     "vertical_interactionMode": "وضع التفاعل",
-    "vertical_primaryAction": "الإجراء الأساسي"
+    "vertical_primaryAction": "الإجراء الأساسي",
+    "vertical_layoutCommand": "الأوامر",
+    "vertical_layoutCalendar": "التقويم",
+    "vertical_layoutSupply": "العروض",
+    "vertical_layoutPeople": "الأشخاص",
+    "vertical_layoutCommerce": "التجارة",
+    "vertical_layoutOperations": "العمليات",
+    "vertical_layoutCommunication": "الاتصالات",
+    "vertical_layoutCommandDescription": "طبقة الأوامر؛ الإجراءات الأساسية وقائمة العمل دون إنشاء حالة موازية.",
+    "vertical_layoutCalendarDescription": "طبقة الوقت والسعة؛ تُغذّى الفترات والجداول فقط من Availability/Booking.",
+    "vertical_layoutSupplyDescription": "طبقة العروض؛ تبقى المنتجات والخدمات مستمدة من Catalog/Seller AI.",
+    "vertical_layoutPeopleDescription": "طبقة العلاقات والفريق؛ تأتي الهوية والأدوار وعلاقات العملاء من المجالات الأساسية.",
+    "vertical_layoutCommerceDescription": "طبقة المعاملات؛ لا يتم تخزين Order وBilling وFulfillment مرة أخرى في مساحة العمل.",
+    "vertical_layoutOperationsDescription": "طبقة تنفيذ العمليات؛ تتصل قوائم العمليات بـ Cases/Fulfillment.",
+    "vertical_layoutCommunicationDescription": "طبقة الاتصالات؛ تُقرأ المحادثات والإشعارات من حدود Communication.",
+    "vertical_handoffTitle": "الإدخال والمرحلة الحالية والمخرج التالي"
   },
   "canonical": {
     "identity": {
