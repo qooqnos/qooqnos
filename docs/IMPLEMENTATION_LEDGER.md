@@ -1,3 +1,13 @@
+## 2026-09-30 — Shared Restaurant Fulfillment Canvas
+
+- 🟢 Added a workspace/business-scoped canonical Fulfillment reader: `GET /api/v1/fulfillment?businessId=...&limit=...`, backed by the existing Fulfillment domain and `fulfillment.get` authorization.
+- 🟢 Restaurant `آشپزخانه` and `تحویل` now hydrate the same shared read-only Fulfillment queue inside the Vertical Workflow Operations Canvas.
+- 🟢 Fulfillment cards expose canonical execution state and source references only; selecting a card reuses the existing canonical Fulfillment detail lookup.
+- 🟢 Added the `fulfillment.get` dependency to the shared module capability contract for these modules, plus repository/API/UI regression coverage and responsive authored/served styles.
+- 🟡 TypeScript build, full test suite, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: `6898ebdf`, `1e26ac59`, `7767214a`, `1caea893`, `bb90c9d3`, `36d0abbf`, plus the capability/style commits recorded alongside this slice.
+
 ## 2026-09-30 — Shared Vertical Promotion Canvas
 
 - 🟢 Added a workspace/business-scoped canonical Promotion list reader: `GET /api/v1/promotions?businessId=...&limit=...`, backed by the existing Promotion domain and `promotion.read` authorization.
