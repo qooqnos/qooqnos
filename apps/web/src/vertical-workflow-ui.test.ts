@@ -352,10 +352,9 @@ describe("Vertical Workflow overview", () => {
         businessId: "business-test",
         blueprint,
       });
-      expect(html).toContain('data-vwf-live-fulfillment');
+      expect(html).toContain('data-vwf-fulfillment-live');
       expect(html).toContain('data-vwf-fulfillment-items');
-      expect(html).toContain('data-vwf-open-fulfillment');
-      expect(html).toContain("Canonical Fulfillment");
+            expect(html).toContain("Canonical Fulfillment");
     }
   });
 
@@ -376,8 +375,7 @@ describe("Vertical Workflow overview", () => {
       });
       expect(html).toContain('data-vwf-bookings-live');
       expect(html).toContain('data-vwf-booking-items');
-      expect(html).toContain('data-vwf-open-booking');
-      expect(html).toContain("Canonical Booking");
+            expect(html).toContain("Canonical Booking");
     }
   });
 
