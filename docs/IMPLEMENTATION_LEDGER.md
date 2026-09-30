@@ -2806,3 +2806,6 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - 🟡 Build/test/browser verification for this slice remains pending in the current environment.
 
 - 🟢 Fixed SPA alias navigation to resolve the target URL's `vertical` query instead of the current page's vertical before deciding whether to keep navigation client-side.
+
+- 🟢 Follow-up: the shared VWF renderer now routes authored module/stage/layout labels and copy through the shared browser i18n runtime, while preserving backend/domain identifiers as non-localized data.
+- 🟢 Added localized VWF layout labels/descriptions and wired the new verification guard into the production predeploy chain via `npm run verify:i18n`.
