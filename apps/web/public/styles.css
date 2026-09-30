@@ -6185,3 +6185,15 @@ a {
   }
   .phoenix-vwf-mobile-action-spacer{display:block}
 }
+
+/* Shared Vertical Workflow Promotion surface */
+.phoenix-vwf-live-promotions{margin-top:14px;border:1px solid var(--line);border-radius:20px;background:color-mix(in srgb,var(--surface) 92%,transparent);padding:14px}
+.phoenix-vwf-live-promotions-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.phoenix-vwf-live-promotion-card{border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:12px;min-width:0}
+.phoenix-vwf-live-promotion-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.phoenix-vwf-live-promotion-top h4{margin:4px 0 0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.phoenix-vwf-live-promotion-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;font-size:11px;color:var(--faint)}
+.phoenix-vwf-live-promotion-meta span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.phoenix-vwf-live-promotion-meta strong{color:var(--text);overflow-wrap:anywhere}
+@media (max-width:980px){.phoenix-vwf-live-promotions-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:680px){.phoenix-vwf-live-promotions{padding:11px}.phoenix-vwf-live-promotions-grid{grid-template-columns:1fr}.phoenix-vwf-live-promotion-meta{grid-template-columns:1fr 1fr}}
