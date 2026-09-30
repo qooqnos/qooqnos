@@ -63,8 +63,9 @@ describe("BookingRepository", () => {
     expect(result[0]?.offeringTitle).toBe("Consultation");
     expect(result[0]?.resourceId).toBe("resource-1");
   });
+});
 
-describe("BookingRepository
+describe("BookingRepository", () => {
   it("keeps terminal bookings from being reopened", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
