@@ -3016,17 +3016,23 @@ function escapeRegExp(value:string):string{return value.replace(/[.*+?^${}()|[\\
 export function getDirection");}
 function translateDictionaryFragments(value:string,locale:Locale):string{
   let translated=value;
-  const entries=[...textKeyIndex.entries()].sort((a,b)=>b[0].length-a[0].length);
-  for(const [source,keys] of entries){
+  const entries=[...textKeyIndex.entries()]
+    .map(([source,keys])=>({
+      source,
+      keys:[...keys].sort((a,b)=>(a.startsWith("canonical.")?0:1)-(b.startsWith("canonical.")?0:1))
+    }))
+    .sort((a,b)=>b.source.length-a.source.length);
+  for(const {source,keys} of entries){
     if(source.length<2||!translated.includes(source))continue;
-    const targets=[...new Set(keys.map(key=>translations[locale][key]??translations.fa[key]).filter(Boolean))];
+    const canonicalKeys=keys.filter(key=>key.startsWith("canonical."));
+    const candidateKeys=canonicalKeys.length?canonicalKeys:keys;
+    const targets=[...new Set(candidateKeys.map(key=>translations[locale][key]??translations.fa[key]).filter(Boolean))];
     if(targets.length!==1||targets[0]===source)continue;
     const pattern=new RegExp("(^|[^\\p{L}\\p{N}_])"+escapeRegExp(source)+"(?![\\p{L}\\p{N}_])","gu");
     translated=translated.replace(pattern,(_match,prefix)=>prefix+targets[0]);
   }
   return translated;
-}
-  return value;
+}  return value;
 }
 export function getDirection(locale:Locale):"ltr"|"rtl"{return locale==="fa"||locale==="ar"?"rtl":"ltr";}
 export function getLocaleFromPreference(preference:string,fallback:Locale="fa"):Locale{
