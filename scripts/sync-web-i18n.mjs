@@ -117,7 +117,7 @@ function resolveTextKey(value: string, locale: Locale): string | undefined {
 
 const dictionaryFragmentEntries = (() => {
   const sourceToKeys = new Map();
-  for (const language of ["fa", "en", "ar"]) {
+  for (const language of ["fa", "en", "ar"] as const) {
     for (const [key, text] of Object.entries(translations[language])) {
       const source = text.trim();
       if (source.length < 3 && key !== "common.and" && key !== "common.or") continue;
@@ -135,9 +135,9 @@ const dictionaryFragmentEntries = (() => {
     .sort((a, b) => b.source.length - a.source.length);
 })();
 
-function canonicalFragmentEntriesFor(locale) {
-  const entries = [];
-  const seen = new Set();
+function canonicalFragmentEntriesFor(locale: Locale): readonly [string, string][] {
+  const entries: Array<[string, string]> = [];
+  const seen = new Set<string>();
   for (const language of ["fa", "en", "ar"]) {
     for (const [key, source] of Object.entries(canonicalTerms[language])) {
       const target = translations[locale][key] ?? translations.fa[key];
@@ -151,7 +151,7 @@ function canonicalFragmentEntriesFor(locale) {
   return entries.sort((a, b) => b[0].length - a[0].length);
 }
 
-function translateCanonicalFragments(value, locale) {
+function translateCanonicalFragments(value: string, locale: Locale): string {
   let translated = value;
   for (const [source, target] of canonicalFragmentEntriesFor(locale)) {
     if (!translated.includes(source)) continue;
@@ -159,7 +159,7 @@ function translateCanonicalFragments(value, locale) {
       "(^|[^\\p{L}\\p{N}_])" + escapeRegExp(source) + "(?![\\p{L}\\p{N}_])",
       "gu",
     );
-    translated = translated.replace(pattern, (_match, prefix) => prefix + target);
+    translated = translated.replace(pattern, (_match, prefix: string) => prefix + target);
   }
   return translated;
 }
@@ -181,7 +181,7 @@ function translateDictionaryFragments(value: string, locale: Locale): string {
       "(^|[^\\p{L}\\p{N}_])" + escapeRegExp(source) + "(?![\\p{L}\\p{N}_])",
       "gu",
     );
-    translated = translated.replace(pattern, (_match, prefix) => prefix + uniqueTargets[0]!);
+    translated = translated.replace(pattern, (_match, prefix: string) => prefix + uniqueTargets[0]!);
   }
   return translated;
 }
