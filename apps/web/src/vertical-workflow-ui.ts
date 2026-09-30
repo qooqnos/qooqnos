@@ -30,6 +30,11 @@ function authoredText(value: string): string {
   return escapeHtml(translateUiText(value, defaultI18n.getLanguage()));
 }
 
+function uiCopy(key: string, fallback: string): string {
+  const translated = defaultI18n.t(key);
+  return escapeHtml(translated === key ? fallback : translated);
+}
+
 const layoutCopy: Record<VerticalModuleLayout, { label: string; description: string }> = {
   command: {
     label: "Command",
@@ -143,13 +148,13 @@ function contextualHref(model: VerticalWorkflowCanvasModel, path?: string): stri
 }
 
 function emptyState(message: string, eyebrow = "Canonical data"): string {
-  return '<div class="phoenix-vwf-empty"><span class="phoenix-vwf-empty-mark">◌</span><strong>داده نمایشی در این سطح ساخته نمی‌شود</strong><p>' +
+  return '<div class="phoenix-vwf-empty"><span class="phoenix-vwf-empty-mark">◌</span><strong>' + uiCopy("messages.noResults", "داده نمایشی در این سطح ساخته نمی‌شود") + '</strong><p>' +
     escapeHtml(message) +
-    '</p><small>' + escapeHtml(eyebrow) + '</small></div>';
+    '</p><small>' + authoredText(eyebrow) + '</small></div>';
 }
 
 function viewState(label: string): string {
-  return '<span class="phoenix-vwf-view-state" data-vwf-view-state>نمای فعال: ' + escapeHtml(label) + '</span>';
+  return '<span class="phoenix-vwf-view-state" data-vwf-view-state>' + uiCopy("vertical.currentStage", "نمای فعال") + ': ' + escapeHtml(label) + '</span>';
 }
 
 function renderCommand(model: VerticalWorkflowCanvasModel): string {
@@ -160,10 +165,10 @@ function renderCommand(model: VerticalWorkflowCanvasModel): string {
     ? renderBookingLookupSurface()
     : "";
   return bookingLookup + '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای فرمان">' +
-      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="overview">نمای کلی</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="queue">صف کار</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="actions">اقدام‌ها</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("vertical.overviewView", "نمای فرمان") + '">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="overview">' + uiCopy("vertical.overviewView", "نمای کلی") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="queue">' + uiCopy("vertical.workQueue", "صف کار") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="actions">' + uiCopy("vertical.actions", "اقدام‌ها") + '</button>' +
     '</div>' +
     viewState("نمای کلی") +
     '</div>' +
@@ -187,12 +192,12 @@ function renderCalendar(model: VerticalWorkflowCanvasModel): string {
     ? renderBookingLookupSurface()
     : "";
   return bookingLookup + '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای تقویم">' +
-      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="day">روز</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="week">هفته</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="month">ماه</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("vertical.calendarView", "نمای تقویم") + '">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="day">' + uiCopy("vertical.day", "روز") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="week">' + uiCopy("vertical.week", "هفته") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="month">' + uiCopy("vertical.month", "ماه") + '</button>' +
     '</div>' +
-    '<button type="button" class="button button-ghost" data-vwf-action="today">امروز</button>' +
+    '<button type="button" class="button button-ghost" data-vwf-action="today">' + uiCopy("vertical.today", "امروز") + '</button>' +
     '</div>' +
     '<div class="phoenix-vwf-calendar-head"><span>بازه زمانی</span><span>Resource lanes</span><span>Availability</span></div>' +
     '<div class="phoenix-vwf-calendar-grid" data-vwf-calendar-live>' +
@@ -211,11 +216,11 @@ function renderCatalog(model: VerticalWorkflowCanvasModel): string {
       '</div>'
     : "";
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای عرضه">' +
-      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="grid">کارت‌ها</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="table">جدول</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="drafts">پیش‌نویس‌ها</button>' +
-    '</div>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("vertical.supplyView", "نمای عرضه") + '">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="grid">' + uiCopy("vertical.cards", "کارت‌ها") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="table">' + uiCopy("vertical.tableView", "جدول") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="drafts">' + uiCopy("vertical.drafts", "پیش‌نویس‌ها") + '</button>' +
+    '</div> +
     viewState("کارت‌ها") +
     '</div>' +
     '<div class="phoenix-vwf-filter-row">' +
@@ -241,11 +246,11 @@ function renderPeople(model: VerticalWorkflowCanvasModel): string {
       '</div>'
     : "";
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای افراد">' +
-      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="people">اعضا / افراد</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="roles">نقش‌ها</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="relationships">رابطه‌ها</button>' +
-    '</div>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("vertical.teamMembers", "نمای افراد") + '">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="people">' + uiCopy("vertical.teamMembers", "اعضا / افراد") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="roles">' + uiCopy("vertical.roles", "نقش‌ها") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="relationships">' + uiCopy("vertical.relationships", "رابطه‌ها") + '</button>' +
+    '</div> +
     viewState("اعضا / افراد") +
     '</div>' +
     '<div class="phoenix-vwf-filter-row phoenix-vwf-lookup-row">' +
@@ -288,11 +293,11 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
       '</div>'
     : "";
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای معاملات">' +
-      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="all">همه</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="open">باز</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="action">نیازمند اقدام</button>' +
-    '</div>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("vertical.commerceOrders", "نمای معاملات") + '">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="all">' + uiCopy("vertical.all", "همه") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="open">' + uiCopy("vertical.open", "باز") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="action">' + uiCopy("vertical.needsAction", "نیازمند اقدام") + '</button>' +
+    '</div> +
     viewState("همه") +
     '</div>' +
     '<div class="phoenix-vwf-lookup-row">' +
@@ -606,7 +611,7 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
     '</nav>' +
     renderModuleSwitcher(model) +
     '<div class="phoenix-vwf-stage-context">' +
-      '<div><span class="section-kicker">Workflow stage</span><strong>' + authoredText(stageContext.stage) + '</strong><span class="phoenix-vwf-stage-position">' + escapeHtml(stagePosition) + '</span></div>' +
+      '<div><span class="section-kicker">' + uiCopy("vertical.currentStage", "Workflow stage") + '</span><strong>' + authoredText(stageContext.stage) + '</strong><span class="phoenix-vwf-stage-position">' + escapeHtml(stagePosition) + '</span></div>' +
       '<div class="phoenix-vwf-stage-context-actions">' + stageNav + '</div>' +
     '</div>' +
     '<div class="phoenix-vwf-header">' +
@@ -673,7 +678,7 @@ function renderCapabilityContract(blueprint: VerticalModuleBlueprint): string {
     ? contract.requiredPermissions.map((item) => '<span class="phoenix-vwf-contract-chip" data-vwf-required-permission="' + escapeHtml(item) + '">' + escapeHtml(item) + '</span>').join("")
     : '<span class="phoenix-vwf-contract-empty">بدون Permission declaration</span>';
   return '<section class="phoenix-vwf-capability-contract" data-vwf-capability-contract>' +
-    '<div class="phoenix-vwf-capability-head"><div><span class="section-kicker">Capability Contract</span><strong>وابستگی‌های این ماژول</strong><small>این declaration فقط dependency رابط است؛ Capability فعال و Authorization توسط backend تعیین می‌شود. Backend authoritative باقی می‌ماند.</small></div><span class="pill" data-vwf-capability-status>قرارداد بارگذاری شد</span></div>' +
+    '<div class="phoenix-vwf-capability-head"><div><span class="section-kicker">Capability Contract</span><strong>' + uiCopy("ui.vertical_capabilityDependencies", "وابستگی‌های این ماژول") + '</strong><small>' + uiCopy("ui.vertical_capabilityDescription", "این declaration فقط dependency رابط است؛ Capability فعال و Authorization توسط backend تعیین می‌شود. Backend authoritative باقی می‌ماند.") + '</small></div><span class="pill" data-vwf-capability-status>' + uiCopy("ui.vertical_contractLoaded", "قرارداد بارگذاری شد") + '</span></div>' +
     '<div class="phoenix-vwf-capability-groups">' +
       '<div><span class="phoenix-vwf-capability-label">Capabilities</span><div class="phoenix-vwf-contract-chips" data-vwf-capability-items>' + capabilities + '</div></div>' +
       '<div><span class="phoenix-vwf-capability-label">Required permissions</span><div class="phoenix-vwf-contract-chips" data-vwf-permission-items>' + permissions + '</div></div>' +
