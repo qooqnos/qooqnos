@@ -1497,8 +1497,7 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.business_managePreview": "Manage and Preview",
     "ui.business_roleLens": "Your role path",
     "ui.business_loadingRoleLens": "Reading Role Lens…",
-    "ui.business_roleActivity": "Today",
-    "ui.business_roleCustomers": "Customers",
+    "ui.business_roleActivity": "Today",    "ui.business_roleCustomers": "Customers",
     "ui.business_roleContent": "Content",
     "ui.business_roleTransactions": "Transactions",
     "ui.business_quickActions": "Quick actions",
@@ -3011,6 +3010,9 @@ export function translateUiText(value:string,locale:Locale):string{
       return leading+translated+trailing;
     }
   }
+  const withCanonicalTerms=translateCanonicalFragments(value,locale);
+  return translateDictionaryFragments(withCanonicalTerms,locale);
+}
 function canonicalFragmentEntriesFor(locale:Locale):readonly [string,string][]{
   const entries:[string,string][]=[];
   const seen=new Set<string>();
@@ -3020,7 +3022,8 @@ function canonicalFragmentEntriesFor(locale:Locale):readonly [string,string][]{
       if(!source||!target||source===target)continue;
       const signature=source+"\\u0000"+target;
       if(seen.has(signature))continue;
-      seen.add(signature); entries.push([source,target]);
+      seen.add(signature);
+      entries.push([source,target]);
     }
   }
   return entries.sort((a,b)=>b[0].length-a[0].length);
@@ -3034,10 +3037,9 @@ function translateCanonicalFragments(value:string,locale:Locale):string{
   }
   return translated;
 }
-function escapeRegExp(value:string):string{return value.replace(/[.*+?^${}()|[\\]\\]/g,"\\  const withCanonicalTerms=translateCanonicalFragments(value,locale);
-  return translateDictionaryFragments(withCanonicalTerms,locale);
+function escapeRegExp(value:string):string{
+  return value.replace(/[.*+?^${}()|[\\]\\]/g,"\\$&");
 }
-export function getDirection");}
 function translateDictionaryFragments(value:string,locale:Locale):string{
   let translated=value;
   const entries=[...textKeyIndex.entries()]
