@@ -116,18 +116,22 @@ function resolveTextKey(value: string, locale: Locale): string | undefined {
 }
 
 const dictionaryFragmentEntries = (() => {
-  const sourceToKeys = new Map<string, Set<string>>();
-  for (const language of ["fa", "en", "ar"] as const) {
+  const sourceToKeys = new Map();
+  for (const language of ["fa", "en", "ar"]) {
     for (const [key, text] of Object.entries(translations[language])) {
       const source = text.trim();
       if (source.length < 3 && key !== "common.and" && key !== "common.or") continue;
-      const keys = sourceToKeys.get(source) ?? new Set<string>();
+      const keys = sourceToKeys.get(source) ?? new Set();
       keys.add(key);
       sourceToKeys.set(source, keys);
     }
   }
   return [...sourceToKeys.entries()]
-    .map(([source, keys]) => ({ source, keys: [...keys] }))
+    .map(([source, keys]) => {
+      const orderedKeys = [...keys].sort((a, b) => keyPriority(a) - keyPriority(b));
+      const canonicalKeys = orderedKeys.filter((key) => key.startsWith("canonical."));
+      return { source, keys: canonicalKeys.length ? canonicalKeys : orderedKeys };
+    })
     .sort((a, b) => b.source.length - a.source.length);
 })();
 
