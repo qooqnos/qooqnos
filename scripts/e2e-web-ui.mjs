@@ -141,7 +141,8 @@ assert.equal(await page.locator("#business-vertical-title").innerText(), "Genera
 assert.equal(await page.locator("#business-vertical-subtitle").innerText(), "A Workspace composed from enabled capabilities.");
 assert.equal(await page.locator("#business-next-action").innerText(), "Choose the most important thing to do today.");
 assert.equal(await page.locator("#business-next-detail").innerText(), "Workspace modules are composed from the business type; permissions remain determined by the backend.");
-assert.equal(await page.locator("#sidebar-workspace-status").innerText(), "My workspace");
+assert.equal(await page.locator("#sidebar-workspace-status").getAttribute("data-workspace-status"), "active");
+assert.ok((await page.locator("#sidebar-workspace-status").innerText()).includes("Workspace"));
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(100);
