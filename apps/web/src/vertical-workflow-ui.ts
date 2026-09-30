@@ -626,6 +626,16 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
     renderWorkflowHandoff(model, stageContext) +
     '<div data-vwf-content>' + renderLayout(model.blueprint.layout, model) + '</div>' +
     '<div class="phoenix-vwf-contract"><span>state</span><strong>canonical-only</strong><span>layout</span><strong>' + escapeHtml(model.blueprint.layout) + '</strong><span>interaction</span><strong>' + escapeHtml(model.blueprint.interaction) + '</strong></div>' +
+    '<div class="phoenix-vwf-mobile-actionbar" data-vwf-mobile-actions>' +
+      (stageContext.previous
+        ? '<a class="button button-ghost" href="' + escapeHtml(workflowModuleHref(model, stageContext.previous.module)) + '" data-nav>' + uiCopy("ui.vertical_previousStage", "مرحله قبلی") + '</a>'
+        : '<span class="phoenix-vwf-mobile-action-spacer"></span>') +
+      (stageContext.next
+        ? '<a class="button button-primary" href="' + escapeHtml(workflowModuleHref(model, stageContext.next.module)) + '" data-nav>' + uiCopy("ui.vertical_nextStage", "مرحله بعدی") + ' →</a>'
+        : model.blueprint.primaryAction
+          ? '<a class="button button-primary" href="' + escapeHtml(contextualHref(model, model.blueprint.primaryAction.path)) + '" data-nav>' + authoredText(model.blueprint.primaryAction.label) + ' →</a>'
+          : '<span class="phoenix-vwf-mobile-action-spacer"></span>') +
+    '</div>' +
   '</section>';
 }
 
