@@ -44,6 +44,15 @@ export class FulfillmentRepository extends Repository {
       id,this.requireOrganization({organizationId:context.tenantId}),this.requireWorkspace({workspaceId:context.workspaceId}));
   }
 
+  async listByBusiness(context:RequestContext,businessId:EntityId,limit=24):Promise<readonly FulfillmentOrderRecord[]>{
+    const organizationId=this.requireOrganization({organizationId:context.tenantId});
+    const workspaceId=this.requireWorkspace({workspaceId:context.workspaceId});
+    const safeLimit=Math.min(Math.max(Math.trunc(limit),1),50);
+    return this.database.all<FulfillmentOrderRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, source_type AS sourceType, source_id AS sourceId, status, fulfillment_type AS fulfillmentType, plan_id AS planId, created_at AS createdAt, updated_at AS updatedAt, completed_at AS completedAt, cancelled_at AS cancelledAt FROM fulfillment_orders WHERE organization_id=? AND workspace_id=? AND business_id=? ORDER BY created_at DESC,id DESC LIMIT ?",
+      organizationId,workspaceId,businessId,safeLimit);
+  }
+
   async createFromCommitment(context:RequestContext,input:{
     readonly id:EntityId; readonly sourceType:"commerce_order"|"booking"; readonly sourceId:EntityId;
     readonly businessId:EntityId; readonly fulfillmentType:"physical"|"digital"|"service"|"hybrid"; readonly now:string;
