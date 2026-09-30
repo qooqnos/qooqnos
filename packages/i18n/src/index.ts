@@ -237,8 +237,7 @@ export function translateUiText(
   }
 
   const withCanonicalTerms = translateCanonicalFragments(value, locale);
-  if (withCanonicalTerms !== value) return withCanonicalTerms;
-  return translateDictionaryFragments(value, locale);
+  return translateDictionaryFragments(withCanonicalTerms, locale);
 }
 
 export function getDirection(locale: Locale): "ltr" | "rtl" {
