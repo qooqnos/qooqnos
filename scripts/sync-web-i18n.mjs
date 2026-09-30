@@ -135,6 +135,35 @@ const dictionaryFragmentEntries = (() => {
     .sort((a, b) => b.source.length - a.source.length);
 })();
 
+function canonicalFragmentEntriesFor(locale) {
+  const entries = [];
+  const seen = new Set();
+  for (const language of ["fa", "en", "ar"]) {
+    for (const [key, source] of Object.entries(canonicalTerms[language])) {
+      const target = translations[locale][key] ?? translations.fa[key];
+      if (!source || !target || source === target) continue;
+      const signature = source + "\\u0000" + target;
+      if (seen.has(signature)) continue;
+      seen.add(signature);
+      entries.push([source, target]);
+    }
+  }
+  return entries.sort((a, b) => b[0].length - a[0].length);
+}
+
+function translateCanonicalFragments(value, locale) {
+  let translated = value;
+  for (const [source, target] of canonicalFragmentEntriesFor(locale)) {
+    if (!translated.includes(source)) continue;
+    const pattern = new RegExp(
+      "(^|[^\\p{L}\\p{N}_])" + escapeRegExp(source) + "(?![\\p{L}\\p{N}_])",
+      "gu",
+    );
+    translated = translated.replace(pattern, (_match, prefix) => prefix + target);
+  }
+  return translated;
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^\${}()|[\]\\]/g, "\\$&");
 }
