@@ -889,7 +889,7 @@ function renderSidebar(route: Route): string {
       <div class="sidebar-top">
         <button class="workspace-card workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="انتخاب فضای کاری">
           <div class="workspace-icon">◆</div>
-          <div class="workspace-card-copy"><strong id="sidebar-workspace-name">ققنوس</strong><span id="sidebar-workspace-status">${uiText("فضای کاری من")}</span></div>
+          <div class="workspace-card-copy"><strong id="sidebar-workspace-name">ققنوس</strong><span id="sidebar-workspace-status" data-workspace-status>${uiText("فضای کاری من")}</span></div>
           <span class="status-live" aria-label="فعال"></span>
         </button>
       </div>
@@ -5795,7 +5795,12 @@ function updateShellIndicators(): void {
     node.textContent = name;
   });
   document.querySelectorAll<HTMLElement>("#sidebar-workspace-status").forEach((node) => {
-    node.textContent = current?.status === "active" ? "فعال · Workspace" : current ? current.status ?? "Workspace" : "فضای کاری من";
+    node.dataset.workspaceStatus = current?.status ?? "unavailable";
+    node.textContent = current?.status === "active"
+      ? uiText("فعال") + " · " + canonicalUi("canonical.identity.workspace")
+      : current
+        ? uiText(current.status ?? "فضای کاری من")
+        : uiText("فضای کاری من");
   });
   const readIds = getReadNotificationIds();
   const unread = shellNotifications.filter((item) => !readIds.has(item.id)).length;
