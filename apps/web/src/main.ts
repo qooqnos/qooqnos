@@ -1704,9 +1704,10 @@ function renderAdmin(): string {
         <div id="admin-members" class="admin-member-list"><div class="slot-loading">در حال بارگذاری…</div></div>
       </article>
       <article class="glass-card admin-card">
-        <div class="card-section-heading"><div><span class="section-kicker">AI / Billing</span><h2>مصرف و مسیر مالی</h2></div></div>
+        <div class="card-section-heading"><div><span class="section-kicker">AI / Billing</span><h2>مصرف و مسیر مالی</h2></div><span id="admin-ai-usage-summary" class="pill">—</span></div>
         <div id="admin-ai-usage" class="admin-usage-panel">
           <div class="usage-callout"><strong>Seller AI</strong><span>مصرف واقعی Runtime در اجرای هر عملیات ثبت می‌شود.</span></div>
+          <div id="admin-ai-usage-list" class="admin-usage-list"><div class="slot-loading">در حال خواندن AI telemetry…</div></div>
           <div class="usage-actions">
             <a class="button button-primary" href="/product-studio" data-nav>باز کردن Seller AI</a>
             <a class="button button-ghost" href="/billing" data-nav>Billing</a>
@@ -1727,9 +1728,9 @@ function renderAdmin(): string {
         </div>
       </article>
       <article class="glass-card admin-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Audit</span><h2>Audit Surface</h2></div></div>
-        <p class="admin-note">Commandها و mutationهای حساس ققنوس در canonical audit boundary ثبت می‌شوند. این سطح فعلاً برای مشاهده مستقیم به API اختصاصی Audit نیاز دارد.</p>
-        <div class="admin-actions"><button class="button button-ghost" type="button" data-toast="Audit read API در حال تکمیل است؛ mutationها همچنان از audit canonical عبور می‌کنند.">وضعیت Audit</button></div>
+        <div class="card-section-heading"><div><span class="section-kicker">Audit</span><h2>Audit Surface</h2></div><span id="admin-audit-meta" class="pill">—</span></div>
+        <p class="admin-note">Commandها و mutationهای حساس ققنوس از canonical audit boundary خوانده می‌شوند؛ این سطح فقط خواندنی است.</p>
+        <div id="admin-audit-list" class="admin-audit-list"><div class="slot-loading">در حال خواندن Audit…</div></div>
       </article>
     </section>
   `;
