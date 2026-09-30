@@ -140,7 +140,9 @@ describe("Vertical Workflow UI Canvas", () => {
     expect(getVerticalWorkflowOfferingActionLabel("product")).toBe("شروع خرید");
   });
 
-  it("renders the command canvas with a canonical Business context hydration surface", () => {
+  it("renders the command canvas with a canonical Business context hydration surface", async () => {
+    const { defaultI18n } = await import("./i18n-runtime");
+    defaultI18n.setLanguage("en");
     const blueprint = getVerticalModuleBlueprint("clinic", "امروز");
     const model: VerticalWorkflowCanvasModel = {
       vertical: "clinic",
@@ -152,11 +154,13 @@ describe("Vertical Workflow UI Canvas", () => {
     const html = renderVerticalWorkflowCanvas(model);
     expect(html).toContain('data-vwf-business-live');
     expect(html).toContain('data-vwf-command-live-content');
-    expect(html).toContain("Canonical Business Context");
-    expect(html).toContain("Business management");
+    expect(html).toContain(defaultI18n.t("ui.vertical_canonicalBusinessContext"));
+    expect(html).toContain(defaultI18n.t("ui.vertical_businessManagement"));
   });
 
-  it("renders the people canvas with a canonical workspace-member hydration surface", () => {
+  it("renders the people canvas with a canonical workspace-member hydration surface", async () => {
+    const { defaultI18n } = await import("./i18n-runtime");
+    defaultI18n.setLanguage("en");
     const blueprint = getVerticalModuleBlueprint("clinic", "پزشکان");
     const model: VerticalWorkflowCanvasModel = {
       vertical: "clinic",
@@ -169,7 +173,7 @@ describe("Vertical Workflow UI Canvas", () => {
     expect(html).toContain('data-vwf-layout="people"');
     expect(html).toContain('data-vwf-members-live');
     expect(html).toContain('data-vwf-member-items');
-    expect(html).toContain("Canonical Workspace Team");
+    expect(html).toContain(defaultI18n.t("ui.vertical_teamWorkspace"));
     expect(html).toContain('data-vwf-customer-history');
     expect(html).toContain('data-vwf-customer-history-items');
   });
@@ -231,7 +235,9 @@ describe("Vertical Workflow UI Canvas", () => {
 
 
 describe("Vertical Workflow overview", () => {
-  it("renders canonical schedulable resources for clinic providers", () => {
+  it("renders canonical schedulable resources for clinic providers", async () => {
+    const { defaultI18n } = await import("./i18n-runtime");
+    defaultI18n.setLanguage("en");
     const blueprint = getVerticalModuleBlueprint("clinic", "پزشکان");
     const html = renderVerticalWorkflowCanvas({
       vertical: "clinic",
@@ -242,11 +248,13 @@ describe("Vertical Workflow overview", () => {
     expect(html).toContain('data-vwf-layout="people"');
     expect(html).toContain('data-vwf-resources-live');
     expect(html).toContain('data-vwf-resource-type="person"');
-    expect(html).toContain("Canonical Booking Resources");
+    expect(html).toContain(defaultI18n.t("ui.vertical_bookingResources"));
   });
 
 
-  it("renders canonical variant and attribute surfaces for retail catalog modules", () => {
+  it("renders canonical variant and attribute surfaces for retail catalog modules", async () => {
+    const { defaultI18n } = await import("./i18n-runtime");
+    defaultI18n.setLanguage("en");
     for (const module of ["مدل‌ها و تنوع", "سایز و رنگ"]) {
       const blueprint = getVerticalModuleBlueprint("retail", module);
       const html = renderVerticalWorkflowCanvas({
@@ -258,7 +266,7 @@ describe("Vertical Workflow overview", () => {
       expect(html).toContain('data-vwf-layout="catalog"');
       expect(html).toContain('data-vwf-variants-live');
       expect(html).toContain('data-vwf-variant-items');
-      expect(html).toContain("Canonical Catalog Variants");
+      expect(html).toContain(defaultI18n.t("ui.vertical_canonicalCatalogVariants"));
     }
   });
 
