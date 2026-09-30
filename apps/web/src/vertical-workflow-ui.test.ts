@@ -155,7 +155,7 @@ describe("Vertical Workflow UI Canvas", () => {
     expect(html).toContain('data-vwf-business-live');
     expect(html).toContain('data-vwf-command-live-content');
     expect(html).toContain(defaultI18n.t("ui.vertical_canonicalBusinessContext"));
-    expect(html).toContain(defaultI18n.t("ui.vertical_businessManagement"));
+    expect(html).toContain(defaultI18n.t("ui.vertical_workspaceState"));
   });
 
   it("renders the people canvas with a canonical workspace-member hydration surface", async () => {
@@ -248,7 +248,7 @@ describe("Vertical Workflow overview", () => {
     expect(html).toContain('data-vwf-layout="people"');
     expect(html).toContain('data-vwf-resources-live');
     expect(html).toContain('data-vwf-resource-type="person"');
-    expect(html).toContain(defaultI18n.t("ui.vertical_bookingResources"));
+    expect(html).toContain("Canonical Booking Resources");
   });
 
 
