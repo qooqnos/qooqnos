@@ -600,7 +600,22 @@
     "vertical_canvas": "Canvas",
     "vertical_stateContract": "قرارداد وضعیت",
     "vertical_interactionMode": "حالت تعامل",
-    "vertical_primaryAction": "اقدام اصلی"
+    "vertical_primaryAction": "اقدام اصلی",
+    "vertical_layoutCommand": "فرمان",
+    "vertical_layoutCalendar": "تقویم",
+    "vertical_layoutSupply": "عرضه",
+    "vertical_layoutPeople": "افراد",
+    "vertical_layoutCommerce": "تجارت",
+    "vertical_layoutOperations": "عملیات",
+    "vertical_layoutCommunication": "ارتباطات",
+    "vertical_layoutCommandDescription": "سطح فرمان؛ اقدام‌های اصلی و صف کاری بدون ساختن state موازی.",
+    "vertical_layoutCalendarDescription": "سطح زمان و ظرفیت؛ slot و schedule فقط از Availability/Booking تغذیه می‌شوند.",
+    "vertical_layoutSupplyDescription": "سطح عرضه؛ محصول و خدمت در Catalog/Seller AI منبع حقیقت باقی می‌مانند.",
+    "vertical_layoutPeopleDescription": "سطح رابطه و تیم؛ هویت، نقش و رابطه مشتری از domainهای canonical می‌آیند.",
+    "vertical_layoutCommerceDescription": "سطح معامله؛ Order، Billing و Fulfillment دوباره در Workspace ذخیره نمی‌شوند.",
+    "vertical_layoutOperationsDescription": "سطح اجرای عملیات؛ صف‌های عملیاتی به Cases/Fulfillment متصل می‌شوند.",
+    "vertical_layoutCommunicationDescription": "سطح ارتباط؛ گفتگو و notification از Communication boundary خوانده می‌شوند.",
+    "vertical_handoffTitle": "ورودی، مرحله فعلی و خروجی بعدی"
   },
   "canonical": {
     "identity": {
