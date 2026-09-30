@@ -58,6 +58,10 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("هویت کسب‌وکار و اعتماد", "en")).toBe("Business identity and Trust");
     expect(translateUiText("و", "en")).toBe("and");
     expect(translateUiText("محصول و خدمت", "ar")).toBe("المنتجات والخدمات");
+    expect(translateUiText("محصول را آماده کن", "en")).toBe("Product را آماده کن");
+    expect(translateUiText("شناسه کسب‌وکار جدید", "en")).toBe("Business ID جدید");
+    expect(translateUiText("مشتری و رزرو", "en")).toBe("Customer and Booking");
+
   });
 
   it("translates the Business Workspace dictionary as a complete UI surface", () => {
