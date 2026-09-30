@@ -1,3 +1,13 @@
+## 2026-09-30 — Vertical Workflow UI registry audit gate
+
+- 🟢 Added `scripts/verify-vertical-workflow-ui.mjs` as a lightweight source-level guard for the shared Vertical Workflow UI registry.
+- 🟢 The guard verifies that Clinic, Retail, Restaurant and Salon each have a registered module set, semantic module contracts, capability contracts and workflow-registry presence.
+- 🟢 Added `npm run verify:vertical-ui` and wired it into `predeploy:prod`, so vertical UI contract drift is caught before production deployment.
+- 🟢 This is a presentation/infrastructure integrity check only; it does not replace backend authorization or domain source-of-truth validation.
+- 🟡 The new script has been committed, but a local/CI execution of the full verification chain has not been run in this turn.
+
+Implementation commits: `5f0e1639`, `0cc79ed9`.
+
 ## 2026-09-30 — Shared Business Booking Queue Canvas
 
 - 🟢 Added a workspace/business-scoped canonical Booking reader: `GET /api/v1/booking?businessId=...&limit=...`, returning booking status plus appointment, resource and first offering context.
