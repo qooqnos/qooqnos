@@ -4808,6 +4808,20 @@ body::before {
 .phoenix-vwf-live-case-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto;color:var(--faint);font-size:6px}
 .phoenix-vwf-live-case-meta b{color:var(--text);font-size:7px}
 .phoenix-vwf-live-case-card .text-link{font-size:7px;color:var(--primary);text-decoration:none}
+.phoenix-vwf-live-fulfillment{margin-top:10px;padding:15px;border:1px solid var(--line);border-radius:20px;background:var(--surface-1);box-shadow:var(--shadow-soft,0 10px 28px rgba(0,0,0,.06))}
+.phoenix-vwf-live-fulfillment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.phoenix-vwf-live-fulfillment-card{display:grid;gap:8px;min-height:145px;padding:13px;border:1px solid var(--line);border-radius:16px;background:var(--surface-2)}
+.phoenix-vwf-live-fulfillment-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.phoenix-vwf-live-fulfillment-top strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px}
+.phoenix-vwf-live-fulfillment-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.phoenix-vwf-live-fulfillment-facts>div{display:grid;gap:3px;padding:8px 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.phoenix-vwf-live-fulfillment-facts span{color:var(--faint);font-size:6px}
+.phoenix-vwf-live-fulfillment-facts strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:7px}
+.phoenix-vwf-live-fulfillment-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;color:var(--muted);font-size:6px}
+.phoenix-vwf-live-fulfillment-meta .text-link{font-size:7px;color:var(--primary);text-decoration:none;background:none;border:0;padding:0;cursor:pointer}
+@media(max-width:900px){.phoenix-vwf-live-fulfillment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.phoenix-vwf-live-fulfillment-grid{grid-template-columns:1fr}.phoenix-vwf-live-fulfillment-facts{grid-template-columns:1fr}}
+
 .phoenix-vwf-live-notification-list{display:grid;gap:7px}
 .phoenix-vwf-live-notification{display:grid;grid-template-columns:auto 1fr;gap:9px;padding:11px 12px;border:1px solid var(--line);border-radius:15px;background:var(--surface-2)}
 .phoenix-vwf-live-notification-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:color-mix(in srgb,var(--primary) 9%,var(--surface));color:var(--primary);font-size:12px}
