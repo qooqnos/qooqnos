@@ -323,6 +323,26 @@ describe("Vertical Workflow overview", () => {
     }
   });
 
+  it("renders the shared canonical Promotion surface for promotion modules", () => {
+    for (const [vertical, module] of [
+      ["retail", "تخفیف‌ها"],
+      ["restaurant", "تخفیف"],
+      ["salon", "پیشنهادها"],
+    ] as const) {
+      const blueprint = getVerticalModuleBlueprint(vertical, module);
+      const html = renderVerticalWorkflowCanvas({
+        vertical,
+        module,
+        businessId: "business-test",
+        blueprint,
+      });
+      expect(html).toContain('data-vwf-layout="commerce"');
+      expect(html).toContain('data-vwf-promotions-live');
+      expect(html).toContain('data-vwf-promotion-items');
+      expect(html).toContain("Promotion");
+    }
+  });
+
   it("renders the shared canonical Fulfillment lookup for Operations modules", () => {
     const blueprint = getVerticalModuleBlueprint("restaurant", "تحویل");
     const html = renderVerticalWorkflowCanvas({
