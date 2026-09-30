@@ -59,7 +59,7 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("و", "en")).toBe("and");
     expect(translateUiText("محصول و خدمت", "ar")).toBe("المنتجات والخدمات");
     expect(translateUiText("محصول را آماده کن", "en")).toBe("Product را Ready کن");
-    expect(translateUiText("شناسه کسب‌وکار جدید", "en")).toBe("Business ID جدید");
+    expect(translateUiText("شناسه کسب‌وکار جدید", "en")).toBe("شناسه Business جدید");
     expect(translateUiText("مشتری و رزرو", "en")).toBe("Customer and Booking");
 
   });
