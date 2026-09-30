@@ -138,7 +138,7 @@ const dictionaryFragmentEntries = (() => {
 function canonicalFragmentEntriesFor(locale: Locale): readonly [string, string][] {
   const entries: Array<[string, string]> = [];
   const seen = new Set<string>();
-  for (const language of ["fa", "en", "ar"]) {
+  for (const language of ["fa", "en", "ar"] as const) {
     for (const [key, source] of Object.entries(canonicalTerms[language])) {
       const target = translations[locale][key] ?? translations.fa[key];
       if (!source || !target || source === target) continue;
