@@ -147,6 +147,8 @@ await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(100);
 assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
+
+await page.goto(baseURL + "/");
 assert.ok(await page.locator("#phoenix-demand-input").count() > 0);
 await page.locator("#phoenix-demand-input").fill("یک کسب‌وکار مناسب نزدیک من می‌خواهم");
 assert.ok(await page.locator("[data-phoenix-example]").count() >= 4);
