@@ -2843,3 +2843,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 
 - 🟢 Follow-up commits after the first i18n hardening slice: `c10958fa` makes authored VWF stage/layout/module copy resolve through the shared runtime; `ddb96263`, `11fc33ba`, `a7fc91c8`, `cc691630`, and `713fe8f0` complete the three-locale layout-copy dictionary, runtime regeneration, guard coverage, and renderer regression test.
 - 🟢 Production predeploy now includes `verify:i18n` (`796af4fa`), so locale key drift is part of the release gate.
+
+
+## 2026-09-30 — Vertical Workflow UI Framework registry hardening
+- Added `docs/VERTICAL_WORKFLOW_UI_FRAMEWORK.md` as the shared UI contract for Clinic, Retail, Restaurant and Salon.
+- Added `auditVerticalUiRegistry()` to `apps/web/src/business-module-ui.ts` so every vertical module can be checked for blueprint, semantic route slug, capability/permission metadata and canonical term coverage.
+- Completed the default Workspace registry's missing Overview route/capability contract.
+- This is a UI-architecture consistency layer only; backend authorization and domain sources remain authoritative.
+- Verification: static registry changes committed; full TypeScript/build/browser verification has not been run in this step.
