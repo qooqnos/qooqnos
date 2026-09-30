@@ -2809,3 +2809,6 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 
 - 🟢 Follow-up: the shared VWF renderer now routes authored module/stage/layout labels and copy through the shared browser i18n runtime, while preserving backend/domain identifiers as non-localized data.
 - 🟢 Added localized VWF layout labels/descriptions and wired the new verification guard into the production predeploy chain via `npm run verify:i18n`.
+
+- 🟢 Follow-up commits after the first i18n hardening slice: `c10958fa` makes authored VWF stage/layout/module copy resolve through the shared runtime; `ddb96263`, `11fc33ba`, `a7fc91c8`, `cc691630`, and `713fe8f0` complete the three-locale layout-copy dictionary, runtime regeneration, guard coverage, and renderer regression test.
+- 🟢 Production predeploy now includes `verify:i18n` (`796af4fa`), so locale key drift is part of the release gate.
