@@ -581,7 +581,26 @@
     "roleGuideDescription": "This guide only controls interface composition; real authorization remains controlled by the backend.",
     "boardDefaultSupply": "Prepare supply",
     "workspaceStatusMine": "My workspace",
-    "globalSearchPlaceholder": "Search sections, tools, and pages…"
+    "globalSearchPlaceholder": "Search sections, tools, and pages…",
+    "vertical_sharedComponent": "Shared component",
+    "vertical_liveWhenConnected": "Live when connected",
+    "vertical_primaryFlow": "Primary flow",
+    "vertical_canonicalSource": "Canonical source",
+    "vertical_canonicalBusinessContext": "Canonical business context",
+    "vertical_canonicalData": "Canonical data",
+    "vertical_handoffContract": "Workflow handoff contract",
+    "vertical_handoffDescription": "This shared path carries input and output between workflow stages; execution state remains in the canonical domain.",
+    "vertical_currentStage": "Current stage",
+    "vertical_previousStage": "Previous stage",
+    "vertical_nextStage": "Next stage",
+    "vertical_workflowEntry": "Workflow entry",
+    "vertical_canonicalOnly": "Canonical only",
+    "vertical_backendAuthoritative": "Backend authoritative",
+    "vertical_localFilterNote": "Local UI filter; canonical data unchanged",
+    "vertical_canvas": "Canvas",
+    "vertical_stateContract": "State contract",
+    "vertical_interactionMode": "Interaction mode",
+    "vertical_primaryAction": "Primary action"
   },
   "canonical": {
     "identity": {
