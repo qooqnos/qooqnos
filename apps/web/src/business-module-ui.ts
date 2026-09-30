@@ -161,7 +161,8 @@ const MODULE_CAPABILITY_CONTRACTS: Readonly<Record<string, VerticalModuleCapabil
   "محتوا": { requiredCapabilities: ["catalog"], requiredPermissions: ["catalog.offer.create", "catalog.offer.publish"], source: "runtime-registry-contract" },
   "پروفایل": { requiredCapabilities: ["business"], requiredPermissions: ["business.profile.read", "business.profile.update"], source: "runtime-registry-contract" },
   "گزارش‌ها": { requiredCapabilities: ["analytics"], requiredPermissions: ["analytics.read"], source: "runtime-registry-contract" },
-  "معاملات": { requiredCapabilities: ["commerce"], requiredPermissions: [], source: "runtime-registry-contract" },
+  "معاملات": { requiredCapabilities: ["commerce"], requiredPermissions: ["commerce.order.read"], source: "runtime-registry-contract" },
+  "نمای کلی": { requiredCapabilities: ["business"], requiredPermissions: ["business.profile.read"], source: "runtime-registry-contract" },
 };
 
 const block = (
@@ -540,7 +541,7 @@ function deriveRoleLenses(module: string, layout: VerticalModuleLayout): readonl
  * Localized labels remain presentation-only; route identity must not change with copy/locale.
  */
 export const VERTICAL_MODULE_SLUGS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
-  default: { "پروفایل": "profile", "محتوا": "content", "محصولات": "products", "خدمات": "services", "مشتریان": "customers", "پیام‌ها": "messages", "معاملات": "transactions", "تیم": "team", "گزارش‌ها": "reports" },
+  default: { "نمای کلی": "overview", "پروفایل": "profile", "محتوا": "content", "محصولات": "products", "خدمات": "services", "مشتریان": "customers", "پیام‌ها": "messages", "معاملات": "transactions", "تیم": "team", "گزارش‌ها": "reports" },
   clinic: { "امروز": "today", "نوبت‌ها": "appointments", "تقویم": "calendar", "پزشکان": "providers", "خدمات": "services", "مراجعان": "patients", "ساعات کاری": "hours", "پیام‌ها": "messages", "پرداخت": "payments", "محتوا": "content", "تیم": "team" },
   retail: { "فروش امروز": "sales", "محصولات": "products", "مدل‌ها و تنوع": "variants", "سایز و رنگ": "attributes", "موجودی": "inventory", "سفارش‌ها": "orders", "مرجوعی": "returns", "مشتریان": "customers", "تخفیف‌ها": "promotions", "محتوا": "content", "گزارش فروش": "reports" },
   restaurant: { "سفارش‌های امروز": "orders", "منو": "menu", "میزها": "tables", "رزرو": "reservations", "آشپزخانه": "kitchen", "تحویل": "delivery", "مشتریان": "customers", "تخفیف": "promotions", "پرداخت": "payments", "گزارش": "reports" },
