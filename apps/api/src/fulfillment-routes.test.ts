@@ -3,6 +3,18 @@ import { createAuthorizationRegistry } from "@qooqnos/runtime";
 import { ApiRouter } from "./router";
 
 describe("Fulfillment API routes", () => {
+  it("protects the business-scoped fulfillment list", async () => {
+    const router = new ApiRouter({ authorization: createAuthorizationRegistry() });
+
+    const response = await router.handle(
+      new Request("https://example.test/api/v1/fulfillment?businessId=business-1", {
+        method: "GET",
+      }),
+    );
+
+    expect(response.status).toBe(401);
+  });
+
   it("registers protected fulfillment commitment intake", async () => {
     const router = new ApiRouter({ authorization: createAuthorizationRegistry() });
 
