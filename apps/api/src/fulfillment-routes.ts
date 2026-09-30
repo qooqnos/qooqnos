@@ -34,6 +34,27 @@ export function registerFulfillmentRoutes(
 
   router.register({
     method: "GET",
+    path: "/api/v1/fulfillment",
+    module: "fulfillment",
+    operation: "fulfillment.list",
+    permission: "fulfillment.get",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const repository = new FulfillmentRepository(database);
+      const url = new URL(request.url);
+      const businessId = url.searchParams.get("businessId")?.trim();
+      if (!businessId) throw new AppError({ code: "VALIDATION_ERROR", message: "businessId query parameter is required.", requestId: context.requestId });
+      const requestedLimit = Number(url.searchParams.get("limit") ?? "24");
+      const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(Math.trunc(requestedLimit), 1), 50) : 24;
+      const fulfillments = await repository.listByBusiness(context, brandId<"EntityId">(businessId), limit);
+      return json({ data: fulfillments }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/fulfillment/:fulfillmentId",
     module: "fulfillment",
     operation: "fulfillment.get",
