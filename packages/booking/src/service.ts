@@ -30,6 +30,14 @@ export interface CreateBookingCommand {
 export class BookingService {
   constructor(private readonly options: BookingServiceOptions) {}
 
+  async listBusinessBookings(
+    context: RequestContext,
+    businessId: EntityId,
+    limit = 24,
+  ) {
+    return this.options.repository.listBusinessBookings(context, businessId, limit);
+  }
+
   async listBusinessResources(
     context: RequestContext,
     businessId: EntityId,
