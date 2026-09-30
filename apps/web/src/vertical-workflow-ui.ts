@@ -352,6 +352,12 @@ function renderOperations(model: VerticalWorkflowCanvasModel): string {
     : "";
 
   const fulfillmentSurface = renderFulfillmentLookupSurface();
+  const fulfillmentQueueSurface = ["آشپزخانه", "تحویل"].includes(model.module)
+    ? '<div class="phoenix-vwf-live-fulfillment" data-vwf-fulfillment-live>' +
+        '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Fulfillment</span><h3>' + (model.module === "آشپزخانه" ? "صف اجرای سفارش" : "صف تحویل") + '</h3><p>وضعیت اجرا مستقیماً از Fulfillment خوانده می‌شود؛ این Canvas هیچ state اجرایی موازی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
+        '<div class="phoenix-vwf-live-fulfillment-grid" data-vwf-fulfillment-items><div class="slot-loading">در حال خواندن Fulfillmentهای واقعی…</div></div>' +
+      '</div>'
+    : "";
 
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="نمای عملیات">' +
@@ -362,6 +368,7 @@ function renderOperations(model: VerticalWorkflowCanvasModel): string {
     viewState("Board") +
     '</div>' +
     resourceSurface +
+    fulfillmentQueueSurface +
     '<div class="phoenix-vwf-live-operations" data-vwf-case-live>' +
       '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Operations</span><h3>صف عملیات</h3><p>Case state مستقیماً از Case Support خوانده می‌شود.</p></div><span class="pill">live when connected</span></div>' +
       '<div class="phoenix-vwf-live-case-grid" data-vwf-case-items><div class="slot-loading">در حال خواندن Caseهای واقعی…</div></div>' +
@@ -910,6 +917,10 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
             void hydratePeopleCanvas(canvas).finally(finish);
             return;
           }
+          if (layout === "operations" && businessId && ["آشپزخانه", "تحویل"].includes(canvas.dataset.vwfModule ?? "")) {
+            void hydrateFulfillmentCanvas(canvas, businessId).finally(finish);
+            return;
+          }
           if (layout === "operations" && businessId && canvas.dataset.vwfModule === "میزها") {
             void hydrateResourceCanvas(canvas, businessId).finally(finish);
             return;
@@ -976,6 +987,17 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
       });
     });
 
+    canvas.querySelectorAll<HTMLButtonElement>("[data-vwf-open-fulfillment]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const fulfillmentId = button.dataset.vwfOpenFulfillment?.trim();
+        const detail = canvas.querySelector<HTMLElement>("[data-vwf-fulfillment-detail]");
+        if (!fulfillmentId || !detail) return;
+        const lookup = canvas.querySelector<HTMLInputElement>("[data-vwf-fulfillment-id]");
+        if (lookup) lookup.value = fulfillmentId;
+        void hydrateFulfillmentLookup(detail, fulfillmentId);
+      });
+    });
+
     const fulfillmentLookup = canvas.querySelector<HTMLInputElement>("[data-vwf-fulfillment-id]");
     const fulfillmentDetail = canvas.querySelector<HTMLElement>("[data-vwf-fulfillment-detail]");
     canvas.querySelector<HTMLButtonElement>("[data-vwf-load-fulfillment]")?.addEventListener("click", () => {
@@ -1033,6 +1055,9 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     }
     if (canvas.dataset.vwfLayout === "people") {
       void hydratePeopleCanvas(canvas);
+    }
+    if (businessId && canvas.dataset.vwfLayout === "operations" && ["آشپزخانه", "تحویل"].includes(canvas.dataset.vwfModule ?? "")) {
+      void hydrateFulfillmentCanvas(canvas, businessId);
     }
     if (businessId && canvas.dataset.vwfLayout === "operations" && canvas.dataset.vwfModule === "میزها") {
       void hydrateResourceCanvas(canvas, businessId);
@@ -1738,6 +1763,60 @@ type VerticalWorkflowCase = {
   subjectId: string;
   version?: number;
 };
+
+async function hydrateFulfillmentCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-fulfillment-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    setCanvasState(canvas, "requires-input");
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش Fulfillmentهای واقعی، session و Workspace context لازم است.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="slot-loading">در حال خواندن Fulfillmentهای واقعی…</div>';
+  try {
+    const response = await fetch("/api/v1/fulfillment?businessId=" + encodeURIComponent(businessId) + "&limit=24", { headers });
+    const body = await response.json().catch(() => null) as {
+      data?: VerticalWorkflowFulfillmentRecord[];
+      error?: { message?: string };
+    } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Fulfillment list unavailable");
+    const fulfillments = Array.isArray(body?.data) ? body.data : [];
+    if (!fulfillments.length) {
+      setCanvasState(canvas, "connected");
+      container.innerHTML = emptyState("برای این Business هنوز Fulfillment canonical قابل نمایش پیدا نشد.", "Fulfillment");
+      return;
+    }
+
+    const dateLabel = (value?: string): string => {
+      if (!value) return "—";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime())
+        ? value
+        : date.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" });
+    };
+
+    container.innerHTML = fulfillments.map((item) => {
+      const terminal = item.status === "completed" || item.status === "closed" || item.status === "cancelled";
+      const statusClass = item.status === "completed" ? "success" : item.status === "failed" || item.status === "cancelled" ? "warning" : "";
+      return '<article class="phoenix-vwf-live-fulfillment-card" data-vwf-item>' +
+        '<div class="phoenix-vwf-live-fulfillment-top"><strong>' + escapeHtml(item.id) + '</strong><span class="pill ' + statusClass + '">' + escapeHtml(item.status) + '</span></div>' +
+        '<div class="phoenix-vwf-live-fulfillment-facts">' +
+          '<div><span>منبع</span><strong>' + escapeHtml(item.sourceType + " · " + item.sourceId) + '</strong></div>' +
+          '<div><span>نوع اجرا</span><strong>' + escapeHtml(item.fulfillmentType) + '</strong></div>' +
+          '<div><span>ثبت</span><strong>' + escapeHtml(dateLabel(item.createdAt)) + '</strong></div>' +
+          '<div><span>آخرین تغییر</span><strong>' + escapeHtml(dateLabel(item.updatedAt)) + '</strong></div>' +
+        '</div>' +
+        '<div class="phoenix-vwf-live-fulfillment-meta"><span>' + (terminal ? "state نهایی" : "در جریان") + '</span><button type="button" class="text-link" data-vwf-open-fulfillment="' + escapeHtml(item.id) + '">جزئیات ←</button></div>' +
+      '</article>';
+    }).join("");
+    setCanvasState(canvas, "connected");
+  } catch (error) {
+    setCanvasState(canvas, "unavailable");
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Fulfillment ناموفق بود.", "Fulfillment");
+  }
+}
 
 async function hydrateOperationsCanvas(canvas: HTMLElement): Promise<void> {
   const container = canvas.querySelector<HTMLElement>("[data-vwf-case-items]");
