@@ -359,6 +359,28 @@ describe("Vertical Workflow overview", () => {
     }
   });
 
+  it("renders a shared live booking queue for appointment-oriented modules", () => {
+    for (const [vertical, module] of [
+      ["clinic", "نوبت‌ها"],
+      ["clinic", "تقویم"],
+      ["restaurant", "رزرو"],
+      ["salon", "وقت‌های امروز"],
+      ["salon", "تقویم"],
+    ] as const) {
+      const blueprint = getVerticalModuleBlueprint(vertical, module);
+      const html = renderVerticalWorkflowCanvas({
+        vertical,
+        module,
+        businessId: "business-test",
+        blueprint,
+      });
+      expect(html).toContain('data-vwf-bookings-live');
+      expect(html).toContain('data-vwf-booking-items');
+      expect(html).toContain('data-vwf-open-booking');
+      expect(html).toContain("Canonical Booking");
+    }
+  });
+
   it("renders the shared canonical Fulfillment lookup for Operations modules", () => {
     const blueprint = getVerticalModuleBlueprint("restaurant", "تحویل");
     const html = renderVerticalWorkflowCanvas({
