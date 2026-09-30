@@ -36,7 +36,7 @@ export function registerPromotionRoutes(
     method: "GET",
     path: "/api/v1/promotions",
     module: "promotion",
-    operation: "promotion.list",
+    operation: "promotion.read",
     permission: "promotion.read",
     requireAuthentication: true,
     requireWorkspace: true,
