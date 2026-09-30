@@ -3294,7 +3294,7 @@ function translateCanonicalFragments(value: string, locale: Locale): string {
       "(^|[^\p{L}\p{N}_])" + escapeRegExp(source) + "(?![\p{L}\p{N}_])",
       "gu",
     );
-    translated = translated.replace(pattern, (_match, prefix) => prefix + target);
+    translated = translated.replace(pattern, (_match, prefix: string) => prefix + target);
   }
   return translated;
 }
@@ -3316,7 +3316,7 @@ function translateDictionaryFragments(value: string, locale: Locale): string {
       "(^|[^\p{L}\p{N}_])" + escapeRegExp(source) + "(?![\p{L}\p{N}_])",
       "gu",
     );
-    translated = translated.replace(pattern, (_match, prefix) => prefix + uniqueTargets[0]!);
+    translated = translated.replace(pattern, (_match, prefix: string) => prefix + uniqueTargets[0]!);
   }
   return translated;
 }
