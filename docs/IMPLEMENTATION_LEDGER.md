@@ -14,7 +14,8 @@ Implementation commits: `844de061`, `eabe4549`, `0995ee25`, `93b73945`, `95a00d6
 - 🟢 Restaurant `آشپزخانه` and `تحویل` now hydrate the same shared read-only Fulfillment queue inside the Vertical Workflow Operations Canvas.
 - 🟢 Fulfillment cards expose canonical execution state and source references only; selecting a card reuses the existing canonical Fulfillment detail lookup.
 - 🟢 Added the `fulfillment.get` dependency to the shared module capability contract for these modules, plus repository/API/UI regression coverage and responsive authored/served styles.
-- 🟡 TypeScript build, full test suite, browser/device visual QA and production deployment verification remain pending after this slice.
+- 🟢 Verification after this slice: workspace build/typecheck, unit tests, source/migration checks, lint/format, web UI Playwright smoke and web preview deployment completed successfully.
+- 🟡 Production deployment verification remains separate and was not asserted by these runs.
 
 Implementation commits: `6898ebdf`, `1e26ac59`, `7767214a`, `1caea893`, `bb90c9d3`, `36d0abbf`, plus the capability/style commits recorded alongside this slice.
 
