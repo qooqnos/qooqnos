@@ -580,7 +580,8 @@
     "manageTeam": "Manage team",
     "roleGuideDescription": "This guide only controls interface composition; real authorization remains controlled by the backend.",
     "boardDefaultSupply": "Prepare supply",
-    "workspaceStatusMine": "My workspace"
+    "workspaceStatusMine": "My workspace",
+    "globalSearchPlaceholder": "Search sections, tools, and pages…"
   },
   "canonical": {
     "identity": {

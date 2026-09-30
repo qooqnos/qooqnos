@@ -849,7 +849,7 @@ function renderHeader(route: Route): string {
         <div class="header-center">
           <div class="command-palette" role="button" tabindex="0" data-focus-search aria-label="جست‌وجوی سراسری">
             <span class="command-icon">⌕</span>
-            <span class="command-placeholder">کجا می‌خواهید بروید؟</span>
+            <span class="command-placeholder">${escapeHtml(uiText("جستجوی بخش‌ها، ابزارها و صفحات…"))}</span>
             <kbd>/</kbd>
           </div>
         </div>
@@ -4905,13 +4905,13 @@ function openCommandPalette(): void {
       <div class="command-modal-head">
         <div>
           <span class="section-kicker">Phoenix Command</span>
-          <h2 id="global-command-title">کجا می‌خواهید بروید؟</h2>
+          <h2 id="global-command-title">${escapeHtml(uiText("جستجوی بخش‌ها، ابزارها و صفحات…"))}</h2>
         </div>
         <button class="icon-button" type="button" data-close-command aria-label="بستن">×</button>
       </div>
       <div class="command-search-row">
         <span>⌕</span>
-        <input id="global-command-input" class="command-modal-input" autocomplete="off" placeholder="جست‌وجوی بخش‌ها، ابزارها و صفحات…" />
+        <input id="global-command-input" class="command-modal-input" autocomplete="off" placeholder="${escapeAttr(uiText("جستجوی بخش‌ها، ابزارها و صفحات…"))}" />
         <kbd>Esc</kbd>
       </div>
       <div id="global-command-results" class="command-results"></div>

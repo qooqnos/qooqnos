@@ -580,7 +580,8 @@
     "manageTeam": "إدارة الفريق",
     "roleGuideDescription": "هذا الدليل يحدد تركيب الواجهة فقط؛ ويظل التفويض الفعلي تحت تحكم الخلفية.",
     "boardDefaultSupply": "جهّز العرض",
-    "workspaceStatusMine": "مساحة عملي"
+    "workspaceStatusMine": "مساحة عملي",
+    "globalSearchPlaceholder": "ابحث في الأقسام والأدوات والصفحات…"
   },
   "canonical": {
     "identity": {

@@ -580,7 +580,8 @@
     "manageTeam": "مدیریت تیم",
     "roleGuideDescription": "این راهنما صرفاً composition رابط است؛ مجوز واقعی را backend تعیین می‌کند.",
     "boardDefaultSupply": "عرضه را آماده کن",
-    "workspaceStatusMine": "فضای کاری من"
+    "workspaceStatusMine": "فضای کاری من",
+    "globalSearchPlaceholder": "جستجوی بخش‌ها، ابزارها و صفحات…"
   },
   "canonical": {
     "identity": {
