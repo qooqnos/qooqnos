@@ -189,7 +189,9 @@ describe("Vertical Workflow UI Canvas", () => {
     expect(html).toContain('data-vwf-role-fit');
   });
 
-  it("surfaces declared capability and permission dependencies without turning them into authorization", () => {
+  it("surfaces declared capability and permission dependencies without turning them into authorization", async () => {
+    const { defaultI18n } = await import("./i18n-runtime");
+    defaultI18n.setLanguage("en");
     const blueprint = getVerticalModuleBlueprint("clinic", "نوبت‌ها");
     expect(blueprint.capabilityContract.requiredCapabilities).toEqual(["booking"]);
     expect(blueprint.capabilityContract.requiredPermissions).toEqual(["booking.read", "booking.manage"]);
@@ -204,7 +206,9 @@ describe("Vertical Workflow UI Canvas", () => {
     expect(html).toContain('data-vwf-required-permission="booking.read"');
     expect(html).toContain('data-vwf-required-permission="booking.manage"');
     expect(html).toContain("Capability Contract");
-    expect(html).toContain("Backend authoritative");
+    expect(html).toContain(defaultI18n.t("ui.vertical_backendAuthoritative"));
+    expect(html).toContain(defaultI18n.t("ui.vertical_capabilityDescription"));
+    defaultI18n.setLanguage("fa");
   });
 
   it("escapes contextual identifiers before placing them into HTML attributes", () => {
