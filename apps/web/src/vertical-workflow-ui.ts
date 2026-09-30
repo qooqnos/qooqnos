@@ -292,6 +292,12 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
         '<div class="phoenix-vwf-live-orders-grid" data-vwf-order-items><div class="slot-loading">در حال خواندن سفارش‌های واقعی…</div></div>' +
       '</div>'
     : "";
+  const promotionSurface = ["تخفیف‌ها", "تخفیف", "پیشنهادها"].includes(model.module)
+    ? '<div class="phoenix-vwf-live-promotions" data-vwf-promotions-live>' +
+        '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">' + uiCopy("ui.vertical_canonicalSource", "Canonical source") + '</span><h3>' + authoredText(model.module) + '</h3><p>قواعد Promotion و وضعیت انتشار از منبع canonical خوانده می‌شوند؛ این Canvas سیاست یا qualification موازی ایجاد نمی‌کند.</p></div><span class="pill">' + uiCopy("ui.vertical_liveWhenConnected", "live when connected") + '</span></div>' +
+        '<div class="phoenix-vwf-live-promotions-grid" data-vwf-promotion-items><div class="slot-loading">در حال خواندن Promotionهای واقعی…</div></div>' +
+      '</div>'
+    : "";
   return '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("ui.vertical_commerceOrders", "نمای معاملات") + '">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="all">' + uiCopy("ui.vertical_all", "همه") + '</button>' +
@@ -308,6 +314,7 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
     inventorySurface +
     billingSurface +
     ordersSurface +
+    promotionSurface +
     '<div class="phoenix-vwf-commerce-grid">' +
       model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-commerce-card" data-vwf-item><span class="section-kicker">Commerce surface</span><h3>' + escapeHtml(item.title) + '</h3>' + emptyState(item.description, item.path ?? "Commerce") + (item.path ? '<a class="text-link" href="' + escapeHtml(contextualHref(model, item.path)) + '" data-nav>باز کردن منبع ←</a>' : '') + '</article>').join("") +
     '</div>' +
@@ -1012,6 +1019,9 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     if (businessId && canvas.dataset.vwfLayout === "commerce" && canvas.dataset.vwfModule === "پرداخت") {
       void hydrateBillingCanvas(canvas, businessId);
     }
+    if (businessId && canvas.dataset.vwfLayout === "commerce" && ["تخفیف‌ها", "تخفیف", "پیشنهادها"].includes(canvas.dataset.vwfModule ?? "")) {
+      void hydratePromotionsCanvas(canvas, businessId);
+    }
     if (businessId && canvas.dataset.vwfLayout === "catalog") {
       void hydrateCatalogCanvas(canvas, businessId);
     }
@@ -1428,6 +1438,62 @@ type VerticalWorkflowInvoice = {
   issueDate?: string | null;
   dueDate?: string | null;
 };
+
+type VerticalWorkflowPromotion = {
+  id: string;
+  businessId?: string | null;
+  name: string;
+  promotionType: string;
+  scope: string;
+  status: string;
+  currentVersionId?: string | null;
+  updatedAt?: string;
+};
+
+async function hydratePromotionsCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-promotion-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    setCanvasState(canvas, "requires-input");
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش Promotionهای واقعی، session و Workspace context لازم است.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="slot-loading">در حال خواندن Promotionهای واقعی…</div>';
+  try {
+    const response = await fetch("/api/v1/promotions?businessId=" + encodeURIComponent(businessId) + "&limit=24", { headers });
+    const body = await response.json().catch(() => null) as { data?: VerticalWorkflowPromotion[]; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Promotion list unavailable");
+    const promotions = Array.isArray(body?.data) ? body.data : [];
+    if (!promotions.length) {
+      setCanvasState(canvas, "connected");
+      container.innerHTML = emptyState("برای این Business هنوز Promotion canonical قابل نمایش پیدا نشد.", "Promotion");
+      return;
+    }
+    container.innerHTML = promotions.map((promotion) => {
+      const statusClass = promotion.status === "active" ? "success" : promotion.status === "paused" ? "warning" : "";
+      const updatedAt = promotion.updatedAt ? new Date(promotion.updatedAt) : null;
+      const updatedLabel = updatedAt && !Number.isNaN(updatedAt.getTime())
+        ? updatedAt.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" })
+        : "—";
+      return '<article class="phoenix-vwf-live-promotion-card" data-vwf-item>' +
+        '<div class="phoenix-vwf-live-promotion-top"><div><span class="section-kicker">' + escapeHtml(promotion.promotionType) + '</span><h4>' + escapeHtml(promotion.name) + '</h4></div><span class="pill ' + statusClass + '">' + escapeHtml(promotion.status) + '</span></div>' +
+        '<div class="phoenix-vwf-live-promotion-meta">' +
+          '<span>Scope <strong>' + escapeHtml(promotion.scope) + '</strong></span>' +
+          '<span>Business <strong>' + escapeHtml(promotion.businessId ?? businessId) + '</strong></span>' +
+          '<span>Updated <strong>' + escapeHtml(updatedLabel) + '</strong></span>' +
+        '</div>' +
+        (promotion.currentVersionId
+          ? '<a class="text-link" href="/promotion?promotion=' + encodeURIComponent(promotion.id) + '" data-nav>باز کردن Promotion ←</a>'
+          : '<span class="phoenix-vwf-source-chip">نسخه فعال ثبت نشده</span>') +
+      '</article>';
+    }).join("");
+    setCanvasState(canvas, "connected");
+  } catch (error) {
+    setCanvasState(canvas, "unavailable");
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Promotion ناموفق بود.", "Promotion");
+  }
+}
 
 async function hydrateBillingCanvas(canvas: HTMLElement, businessId: string): Promise<void> {
   const container = canvas.querySelector<HTMLElement>("[data-vwf-invoice-items]");
