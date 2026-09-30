@@ -33,6 +33,27 @@ export interface BookingRecord {
   readonly updatedAt: string;
 }
 
+export interface BusinessBookingRecord {
+  readonly id: EntityId;
+  readonly organizationId: EntityId;
+  readonly workspaceId: EntityId;
+  readonly businessId: EntityId;
+  readonly customerId: EntityId;
+  readonly status: BookingStatus;
+  readonly currency: string;
+  readonly totalAmountMinor: number | null;
+  readonly appointmentStatus: AppointmentStatus | null;
+  readonly startsAt: string | null;
+  readonly endsAt: string | null;
+  readonly timezone: string | null;
+  readonly locationId: EntityId | null;
+  readonly resourceId: EntityId | null;
+  readonly offeringId: EntityId | null;
+  readonly offeringTitle: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export interface BookingItemRecord {
   readonly id: EntityId;
   readonly bookingId: EntityId;
@@ -166,6 +187,23 @@ export class BookingRepository extends Repository {
     const booking = await this.get(context, input.id);
     if (!booking) throw new DatabaseError("Booking not found after creation");
     return booking;
+  }
+
+  async listBusinessBookings(
+    context: RequestContext,
+    businessId: EntityId,
+    limit = 24,
+  ): Promise<readonly BusinessBookingRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 50);
+    return this.database.all<BusinessBookingRecord>(
+      "SELECT b.id, b.organization_id AS organizationId, b.workspace_id AS workspaceId, b.business_id AS businessId, b.customer_id AS customerId, b.status, b.currency, b.total_amount_minor AS totalAmountMinor, a.status AS appointmentStatus, a.starts_at AS startsAt, a.ends_at AS endsAt, a.timezone, a.location_id AS locationId, (SELECT ar.resource_id FROM appointment_resources ar WHERE ar.appointment_id = a.id ORDER BY ar.created_at ASC LIMIT 1) AS resourceId, (SELECT bi.offering_id FROM booking_items bi WHERE bi.booking_id = b.id ORDER BY bi.created_at ASC LIMIT 1) AS offeringId, (SELECT bi.title_snapshot FROM booking_items bi WHERE bi.booking_id = b.id ORDER BY bi.created_at ASC LIMIT 1) AS offeringTitle, b.created_at AS createdAt, b.updated_at AS updatedAt FROM bookings b LEFT JOIN appointments a ON a.booking_id = b.id WHERE b.organization_id = ? AND b.workspace_id = ? AND b.business_id = ? ORDER BY CASE WHEN a.starts_at IS NULL THEN 1 ELSE 0 END ASC, a.starts_at ASC, b.created_at DESC, b.id DESC LIMIT ?",
+      organizationId,
+      workspaceId,
+      businessId,
+      safeLimit,
+    );
   }
 
   async get(context: RequestContext, id: EntityId): Promise<BookingRecord | null> {
