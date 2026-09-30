@@ -157,6 +157,17 @@ function viewState(label: string): string {
   return '<span class="phoenix-vwf-view-state" data-vwf-view-state>' + uiCopy("ui.vertical_currentStage", "نمای فعال") + ': ' + escapeHtml(label) + '</span>';
 }
 
+function renderBusinessBookingQueueSurface(model: VerticalWorkflowCanvasModel): string {
+  const modules = ["امروز", "نوبت‌ها", "تقویم", "وقت‌های امروز"];
+  if (!modules.includes(model.module) && !(model.vertical === "restaurant" && model.module === "رزرو")) return "";
+  return '<div class="phoenix-vwf-live-bookings" data-vwf-bookings-live>' +
+    '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Booking</span><h3>' +
+      (model.module === "امروز" || model.module === "وقت‌های امروز" ? "وقت‌های این Workspace" : model.module === "رزرو" ? "رزروهای این Workspace" : "نوبت‌های ثبت‌شده") +
+      '</h3><p>Booking و Appointment فقط از منبع canonical خوانده می‌شوند؛ این Canvas وضعیت موازی ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
+    '<div class="phoenix-vwf-live-bookings-grid" data-vwf-booking-items><div class="slot-loading">در حال خواندن Bookingهای واقعی…</div></div>' +
+  '</div>';
+}
+
 function renderCommand(model: VerticalWorkflowCanvasModel): string {
   const action = model.blueprint.primaryAction
     ? '<a class="button button-primary" href="' + escapeHtml(contextualHref(model, model.blueprint.primaryAction.path)) + '" data-nav>' + escapeHtml(model.blueprint.primaryAction.label) + ' →</a>'
@@ -164,7 +175,8 @@ function renderCommand(model: VerticalWorkflowCanvasModel): string {
   const bookingLookup = ["نوبت‌ها", "رزرو", "وقت‌های امروز"].includes(model.module)
     ? renderBookingLookupSurface()
     : "";
-  return bookingLookup + '<div class="phoenix-vwf-toolbar">' +
+  const bookingQueue = renderBusinessBookingQueueSurface(model);
+  return bookingLookup + bookingQueue + '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("ui.vertical_overviewView", "نمای فرمان") + '">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="overview">' + uiCopy("ui.vertical_overviewView", "نمای کلی") + '</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="queue">' + uiCopy("ui.vertical_workQueue", "صف کار") + '</button>' +
@@ -191,7 +203,8 @@ function renderCalendar(model: VerticalWorkflowCanvasModel): string {
   const bookingLookup = ["نوبت‌ها", "رزرو", "وقت‌های امروز"].includes(model.module)
     ? renderBookingLookupSurface()
     : "";
-  return bookingLookup + '<div class="phoenix-vwf-toolbar">' +
+  const bookingQueue = renderBusinessBookingQueueSurface(model);
+  return bookingLookup + bookingQueue + '<div class="phoenix-vwf-toolbar">' +
     '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("ui.vertical_calendarView", "نمای تقویم") + '">' +
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="day">' + uiCopy("ui.vertical_day", "روز") + '</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="week">' + uiCopy("ui.vertical_week", "هفته") + '</button>' +
@@ -882,7 +895,13 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
           button.disabled = true;
           const finish = () => { button.disabled = false; };
           if (layout === "command" && businessId) {
+            if (["امروز", "نوبت‌ها", "وقت‌های امروز"].includes(canvas.dataset.vwfModule ?? "")) void hydrateBusinessBookingQueue(canvas, businessId);
             void hydrateCommandCanvas(canvas, businessId).finally(finish);
+            return;
+          }
+          if (layout === "calendar" && businessId && ["نوبت‌ها", "تقویم", "رزرو"].includes(canvas.dataset.vwfModule ?? "")) {
+            void hydrateBusinessBookingQueue(canvas, businessId).finally(finish);
+            void hydrateCalendarCanvas(canvas, businessId).finally(finish);
             return;
           }
           if (layout === "calendar" && businessId) {
@@ -963,6 +982,17 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
       void hydrateCustomerLookup(customerDetail, customerId);
     });
 
+    canvas.querySelectorAll<HTMLButtonElement>("[data-vwf-open-booking]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const bookingId = button.dataset.vwfOpenBooking?.trim();
+        const detail = canvas.querySelector<HTMLElement>("[data-vwf-booking-detail]");
+        if (!bookingId || !detail) return;
+        const lookup = canvas.querySelector<HTMLInputElement>("[data-vwf-booking-id]");
+        if (lookup) lookup.value = bookingId;
+        void hydrateBookingLookup(detail, bookingId);
+      });
+    });
+
     const bookingLookup = canvas.querySelector<HTMLInputElement>("[data-vwf-booking-id]");
     const bookingDetail = canvas.querySelector<HTMLElement>("[data-vwf-booking-detail]");
     canvas.querySelector<HTMLButtonElement>("[data-vwf-load-booking]")?.addEventListener("click", () => {
@@ -1025,9 +1055,15 @@ export function bindVerticalWorkflowCanvas(root: ParentNode = document): void {
     });
 
     const businessId = canvas.dataset.vwfBusinessId?.trim();
+    if (businessId && canvas.dataset.vwfLayout === "command" && ["امروز", "نوبت‌ها", "وقت‌های امروز"].includes(canvas.dataset.vwfModule ?? "")) {
+      void hydrateBusinessBookingQueue(canvas, businessId);
+    }
     if (canvas.dataset.vwfLayout === "command") {
       setCanvasState(canvas, businessId ? "readonly" : "requires-input");
       if (businessId) void hydrateCommandCanvas(canvas, businessId);
+    }
+    if (businessId && canvas.dataset.vwfLayout === "calendar" && ["نوبت‌ها", "تقویم", "رزرو"].includes(canvas.dataset.vwfModule ?? "")) {
+      void hydrateBusinessBookingQueue(canvas, businessId);
     }
     if (businessId && canvas.dataset.vwfLayout === "calendar") {
       void hydrateCalendarCanvas(canvas, businessId);
@@ -1815,6 +1851,83 @@ async function hydrateFulfillmentCanvas(canvas: HTMLElement, businessId: string)
   } catch (error) {
     setCanvasState(canvas, "unavailable");
     container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Fulfillment ناموفق بود.", "Fulfillment");
+  }
+}
+
+type VerticalWorkflowBusinessBooking = {
+  id: string;
+  businessId: string;
+  customerId: string;
+  status: string;
+  appointmentStatus?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  timezone?: string | null;
+  locationId?: string | null;
+  resourceId?: string | null;
+  offeringId?: string | null;
+  offeringTitle?: string | null;
+  currency?: string;
+  totalAmountMinor?: number | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+async function hydrateBusinessBookingQueue(canvas: HTMLElement, businessId: string): Promise<void> {
+  const container = canvas.querySelector<HTMLElement>("[data-vwf-booking-items]");
+  if (!container) return;
+  const headers = vwfAuthHeaders();
+  if (!headers) {
+    setCanvasState(canvas, "requires-input");
+    container.innerHTML = '<div class="phoenix-vwf-local-note">برای نمایش Bookingهای واقعی، session و Workspace context لازم است.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="slot-loading">در حال خواندن Bookingهای واقعی…</div>';
+  try {
+    const response = await fetch("/api/v1/booking?businessId=" + encodeURIComponent(businessId) + "&limit=24", { headers });
+    const body = await response.json().catch(() => null) as {
+      data?: VerticalWorkflowBusinessBooking[];
+      error?: { message?: string };
+    } | null;
+    if (!response.ok) throw new Error(body?.error?.message ?? "Booking list unavailable");
+    const bookings = Array.isArray(body?.data) ? body.data : [];
+    if (!bookings.length) {
+      setCanvasState(canvas, "connected");
+      container.innerHTML = emptyState("برای این Business هنوز Booking یا Appointment ثبت‌شده‌ای پیدا نشد.", "Booking");
+      return;
+    }
+
+    const dateLabel = (value?: string | null): string => {
+      if (!value) return "زمان ثبت نشده";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime())
+        ? value
+        : date.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" });
+    };
+
+    container.innerHTML = bookings.map((booking) => {
+      const appointmentState = booking.appointmentStatus ?? "بدون Appointment";
+      const statusClass = booking.status === "confirmed" || appointmentState === "confirmed"
+        ? "success"
+        : booking.status === "cancelled" || appointmentState === "cancelled"
+          ? "warning"
+          : "";
+      const title = booking.offeringTitle ?? booking.offeringId ?? "خدمت / Offering";
+      return '<article class="phoenix-vwf-live-booking-card" data-vwf-item>' +
+        '<div class="phoenix-vwf-live-booking-top"><div><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(booking.id) + '</small></div><span class="pill ' + statusClass + '">' + escapeHtml(booking.status) + '</span></div>' +
+        '<div class="phoenix-vwf-live-booking-facts">' +
+          '<div><span>مشتری</span><strong>' + escapeHtml(booking.customerId) + '</strong></div>' +
+          '<div><span>زمان</span><strong>' + escapeHtml(dateLabel(booking.startsAt)) + '</strong></div>' +
+          '<div><span>Appointment</span><strong>' + escapeHtml(appointmentState) + '</strong></div>' +
+          '<div><span>Resource</span><strong>' + escapeHtml(booking.resourceId ?? "—") + '</strong></div>' +
+        '</div>' +
+        '<div class="phoenix-vwf-live-booking-meta"><span>' + escapeHtml(booking.timezone ?? "Timezone نامشخص") + '</span><button type="button" class="text-link" data-vwf-open-booking="' + escapeHtml(booking.id) + '">جزئیات ←</button></div>' +
+      '</article>';
+    }).join("");
+    setCanvasState(canvas, "connected");
+  } catch (error) {
+    setCanvasState(canvas, "unavailable");
+    container.innerHTML = emptyState(error instanceof Error ? error.message : "خواندن Booking ناموفق بود.", "Booking");
   }
 }
 
