@@ -236,6 +236,8 @@ export function translateUiText(
     }
   }
 
+  const withCanonicalTerms = translateCanonicalFragments(value, locale);
+  if (withCanonicalTerms !== value) return withCanonicalTerms;
   return translateDictionaryFragments(value, locale);
 }
 
