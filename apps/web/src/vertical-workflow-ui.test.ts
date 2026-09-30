@@ -38,6 +38,15 @@ describe("Vertical Workflow UI Canvas", () => {
     defaultI18n.setLanguage("ar");
     expect(defaultI18n.t("ui.vertical_sharedComponent")).toBe("مكوّن مشترك");
     expect(defaultI18n.t("ui.vertical_handoffContract")).toBe("عقد تسليم سير العمل");
+    defaultI18n.setLanguage("en");
+    const html = renderVerticalWorkflowCanvas({
+      vertical: "clinic",
+      module: "نوبت‌ها",
+      businessId: "business-test",
+      blueprint: getVerticalModuleBlueprint("clinic", "نوبت‌ها"),
+    });
+    expect(html).toContain("Workflow handoff contract");
+    expect(html).toContain("Command layer; primary actions and the work queue without creating parallel state.");
     defaultI18n.setLanguage("fa");
   });
 
