@@ -174,12 +174,12 @@ function renderCommand(model: VerticalWorkflowCanvasModel): string {
     '</div>' +
     '<div class="phoenix-vwf-command-grid">' +
       '<article class="phoenix-vwf-command-primary" data-vwf-item>' +
-        '<span class="section-kicker">Primary flow</span><h3>' + escapeHtml(model.blueprint.primaryAction?.label ?? "منبع canonical") + '</h3><p>اقدام اصلی این ماژول باید از مسیر canonical اجرا شود؛ این Canvas فقط composition و context را فراهم می‌کند.</p>' +
+        '<span class="section-kicker">' + uiCopy("ui.vertical_primaryFlow", "Primary flow") + '</span><h3>' + escapeHtml(model.blueprint.primaryAction?.label ?? "منبع canonical") + '</h3><p>اقدام اصلی این ماژول باید از مسیر canonical اجرا شود؛ این Canvas فقط composition و context را فراهم می‌کند.</p>' +
         '<div class="phoenix-vwf-action-row"><span class="phoenix-vwf-source-chip">Vertical: ' + escapeHtml(model.vertical) + '</span><span class="phoenix-vwf-source-chip">Module: ' + escapeHtml(model.module) + '</span>' + action + '</div>' +
       '</article>' +
       '<article class="phoenix-vwf-command-secondary" data-vwf-item>' +
         '<div class="phoenix-vwf-command-live" data-vwf-business-live>' +
-          '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Business Context</span><h3>وضعیت این Workspace</h3><p>هویت و publication فقط از Business management خوانده می‌شود؛ صف یا metric محلی ساخته نمی‌شود.</p></div><span class="pill">live when connected</span></div>' +
+          '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">' + uiCopy("ui.vertical_canonicalBusinessContext", "Canonical Business Context") + '</span><h3>' + uiCopy("ui.vertical_workspaceState", "وضعیت این Workspace") + '</h3><p>' + uiCopy("ui.vertical_businessContextDescription", "هویت و publication فقط از Business management خوانده می‌شود؛ صف یا metric محلی ساخته نمی‌شود.") + '</p></div><span class="pill">' + uiCopy("ui.vertical_liveWhenConnected", "live when connected") + '</span></div>' +
           '<div class="phoenix-vwf-command-live-grid" data-vwf-command-live-content><div class="slot-loading">در حال خواندن Business context…</div></div>' +
         '</div>' +
       '</article>' +
@@ -211,7 +211,7 @@ function renderCalendar(model: VerticalWorkflowCanvasModel): string {
 function renderCatalog(model: VerticalWorkflowCanvasModel): string {
   const variantSurface = (model.module === "مدل‌ها و تنوع" || model.module === "سایز و رنگ")
     ? '<div class="phoenix-vwf-live-variants" data-vwf-variants-live>' +
-        '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">Canonical Catalog Variants</span><h3>' + (model.module === "سایز و رنگ" ? "سایز، رنگ و Attributeها" : "مدل‌ها و تنوع محصول") + '</h3><p>Variant و Attribute فقط از Catalog خوانده می‌شوند؛ این Canvas هیچ نسخه محلی از محصول ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
+        '<div class="phoenix-vwf-live-head"><div><span class="section-kicker">' + uiCopy("ui.vertical_canonicalCatalogVariants", "Canonical Catalog Variants") + '</span><h3>' + (model.module === "سایز و رنگ" ? "سایز، رنگ و Attributeها" : "مدل‌ها و تنوع محصول") + '</h3><p>Variant و Attribute فقط از Catalog خوانده می‌شوند؛ این Canvas هیچ نسخه محلی از محصول ایجاد نمی‌کند.</p></div><span class="pill">live when connected</span></div>' +
         '<div class="phoenix-vwf-live-variants-grid" data-vwf-variant-items><div class="slot-loading">در حال آماده‌سازی Variantهای واقعی…</div></div>' +
       '</div>'
     : "";
@@ -224,13 +224,13 @@ function renderCatalog(model: VerticalWorkflowCanvasModel): string {
     viewState("کارت‌ها") +
     '</div>' +
     '<div class="phoenix-vwf-filter-row">' +
-      '<input class="studio-input-line" data-vwf-filter placeholder="فیلتر محلی این Canvas…" aria-label="فیلتر محلی" />' +
-      '<span class="phoenix-vwf-local-note">Local UI filter · canonical data unchanged</span>' +
+      '<input class="studio-input-line" data-vwf-filter placeholder="' + uiCopy("ui.vertical_localFilter", "فیلتر محلی این Canvas…") + '" aria-label="' + uiCopy("ui.vertical_localFilter", "فیلتر محلی") + '" />' +
+      '<span class="phoenix-vwf-local-note">' + uiCopy("ui.vertical_localFilterNote", "Local UI filter · canonical data unchanged") + '</span>' +
     '</div>' +
     variantSurface +
     '<div class="phoenix-vwf-supply-grid" data-vwf-supply-live>' +
       '<div class="phoenix-vwf-live-supply" data-vwf-catalog-live>' +
-        '<div class="phoenix-vwf-live-supply-head"><div><span class="section-kicker">Canonical supply</span><h3>عرضه‌های این کسب‌وکار</h3><p>فقط Offeringهای متعلق به همین Business و Workspace در این بخش hydrate می‌شوند.</p></div><span class="pill">live when connected</span></div>' +
+        '<div class="phoenix-vwf-live-supply-head"><div><span class="section-kicker">' + uiCopy("ui.vertical_canonicalSupply", "Canonical supply") + '</span><h3>' + uiCopy("ui.vertical_businessOffers", "عرضه‌های این کسب‌وکار") + '</h3><p>' + uiCopy("ui.vertical_supplyDescription", "فقط Offeringهای متعلق به همین Business و Workspace در این بخش hydrate می‌شوند.") + '</p></div><span class="pill">' + uiCopy("ui.vertical_liveWhenConnected", "live when connected") + '</span></div>' +
         '<div class="phoenix-vwf-live-supply-grid" data-vwf-catalog-items><div class="slot-loading">در حال آماده‌سازی منبع Catalog…</div></div>' +
       '</div>' +
       model.blueprint.blocks.map((item) => '<article class="phoenix-vwf-supply-card" data-vwf-item><span class="phoenix-module-blueprint-index">' + escapeHtml(item.label) + '</span><div><strong>' + escapeHtml(item.title) + '</strong><p>' + escapeHtml(item.description) + '</p>' + (item.path ? '<a class="text-link" href="' + escapeHtml(contextualHref(model, item.path)) + '" data-nav>باز کردن منبع ←</a>' : '<span class="phoenix-vwf-source-chip">canonical source</span>') + '</div></article>').join("") +
@@ -389,9 +389,9 @@ function renderModuleSwitcher(model: VerticalWorkflowCanvasModel): string {
   if (!modules.length) return "";
 
   return '<nav class="phoenix-vwf-module-switcher" data-vwf-module-switcher aria-label="ماژول‌های این Workspace">' +
-    '<div class="phoenix-vwf-module-switcher-head"><div><span class="section-kicker">Workspace modules</span><strong>ماژول‌های این حوزه</strong><small>' +
+    '<div class="phoenix-vwf-module-switcher-head"><div><span class="section-kicker">' + uiCopy("ui.vertical_workspaceModules", "Workspace modules") + '</span><strong>' + uiCopy("ui.vertical_moduleList", "ماژول‌های این حوزه") + '</strong><small>' +
       escapeHtml(String(modules.length)) + ' ماژول · مسیرهای پایدار semantic' +
-    '</small></div><span class="pill">Shared navigation</span></div>' +
+    '</small></div><span class="pill">' + uiCopy("ui.vertical_sharedNavigation", "Shared navigation") + '</span></div>' +
     '<div class="phoenix-vwf-module-switcher-list">' +
       modules.map((module) => {
         const contract = getVerticalModuleUiContract(vertical, module);
@@ -443,7 +443,7 @@ export function renderVerticalWorkflowOverview(model: VerticalWorkflowOverviewMo
       '<strong>' + authoredText(stage) + '</strong>' +
       '<span class="phoenix-vwf-overview-module">' + authoredText(module) + '</span>' +
       '<small>' + authoredText(blueprint.eyebrow) + '</small>' +
-      '<span class="phoenix-vwf-overview-access" data-vwf-overview-access>در انتظار Context</span>' +
+      '<span class="phoenix-vwf-overview-access" data-vwf-overview-access>' + uiCopy("ui.vertical_contextRequired", "در انتظار Context") + '</span>' +
       '<b aria-hidden="true">→</b>' +
     '</a>';
   }).join("");
@@ -455,7 +455,7 @@ export function renderVerticalWorkflowOverview(model: VerticalWorkflowOverviewMo
 
   return '<section class="glass-card phoenix-vwf-overview" data-vwf-overview data-vwf-overview-vertical="' + escapeHtml(model.vertical) + '">' +
     '<div class="phoenix-vwf-overview-head">' +
-      '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>نقشه اجرای این نوع کسب‌وکار</h2><p>همه Verticalها از یک Canvas مشترک استفاده می‌کنند؛ تفاوت فقط در ترتیب Workflow، ماژول و منبع canonical است.</p></div>' +
+      '<div><span class="section-kicker">' + uiCopy("ui.vertical_verticalFramework", "Vertical Workflow UI Framework") + '</span><h2>' + uiCopy("ui.vertical_workflowMapTitle", "نقشه اجرای این نوع کسب‌وکار") + '</h2><p>' + uiCopy("ui.vertical_workflowCommonDescription", "همه Verticalها از یک Canvas مشترک استفاده می‌کنند؛ تفاوت فقط در ترتیب Workflow، ماژول و منبع canonical است.") + '</p></div>' +
       '<div class="phoenix-vwf-overview-contract"><span class="pill">Shared UI</span><span class="pill">' + String(steps.length) + ' stage</span><span class="pill">' + String(layouts.length) + ' layout</span></div>' +
     '</div>' +
     '<div class="phoenix-vwf-overview-rail">' + stageItems + '</div>' +
@@ -1151,7 +1151,7 @@ async function hydratePeopleCanvas(canvas: HTMLElement): Promise<void> {
       const label = String(member.displayName ?? member.name ?? member.userId ?? member.id);
       const status = String(member.status ?? "unknown");
       return '<article class="phoenix-vwf-live-people-card" data-vwf-item>' +
-        '<div class="phoenix-vwf-live-people-top"><div><span class="section-kicker">Workspace member</span><h4>' + escapeHtml(label) + '</h4></div><span class="pill">' + escapeHtml(status) + '</span></div>' +
+        '<div class="phoenix-vwf-live-people-top"><div><span class="section-kicker">' + uiCopy("ui.vertical_workspaceMember", "Workspace member") + '</span><h4>' + escapeHtml(label) + '</h4></div><span class="pill">' + escapeHtml(status) + '</span></div>' +
         '<div class="phoenix-vwf-live-people-meta"><span>User</span><strong>' + escapeHtml(member.userId) + '</strong></div>' +
         '<div class="phoenix-vwf-live-people-meta"><span>Member</span><strong>' + escapeHtml(member.id) + '</strong></div>' +
         '<small>Role و Permission همچنان از Context/Authorization backend تعیین می‌شود.</small>' +
