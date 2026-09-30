@@ -550,7 +550,7 @@ function renderWorkflowHandoff(
 
   return '<section class="phoenix-vwf-handoff" data-vwf-handoff>' +
     '<div class="phoenix-vwf-handoff-head">' +
-      '<div><span class="section-kicker">Workflow Handoff Contract</span><h3>ورودی، مرحله فعلی و خروجی بعدی</h3><p>این rail برای هر چهار Vertical یکسان است؛ فقط stage و module تغییر می‌کند. state اجرایی همچنان از domain canonical می‌آید.</p></div>' +
+      '<div><span class="section-kicker">' + uiCopy("ui.vertical_handoffContract", "قرارداد تحویل Workflow") + '</span><h3>' + uiCopy("ui.vertical_handoffTitle", "ورودی، مرحله فعلی و خروجی بعدی") + '</h3><p>' + uiCopy("ui.vertical_handoffDescription", "این rail برای هر چهار Vertical یکسان است؛ فقط stage و module تغییر می‌کند. state اجرایی همچنان از domain canonical می‌آید.") + '</p></div>' +
       '<span class="phoenix-vwf-handoff-position">' + (stageContext.index >= 0 ? String(stageContext.index + 1) + " / " + String(stageContext.total) : "—") + '</span>' +
     '</div>' +
     '<div class="phoenix-vwf-handoff-grid">' +
