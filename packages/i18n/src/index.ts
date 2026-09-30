@@ -157,7 +157,14 @@ const dictionaryFragmentEntries = (() => {
     }
   }
   return [...sourceToKeys.entries()]
-    .map(([source, keys]) => ({ source, keys: [...keys] }))
+    .map(([source, keys]) => {
+      const orderedKeys = [...keys].sort((a, b) => keyPriority(a) - keyPriority(b));
+      const canonicalKeys = orderedKeys.filter((key) => key.startsWith("canonical."));
+      return {
+        source,
+        keys: canonicalKeys.length ? canonicalKeys : orderedKeys,
+      };
+    })
     .sort((a, b) => b.source.length - a.source.length);
 })();
 
