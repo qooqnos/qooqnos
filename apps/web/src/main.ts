@@ -504,12 +504,18 @@ function renderLanguageSwitcher(): string {
   const active = getInitialLanguage();
   const selected = (language: Language): string => language === active ? " active" : "";
   const mark = (language: Language): string => language === active ? "true" : "false";
+  const ariaLabel = escapeAttr(defaultI18n.t("language.label"));
+  const names = {
+    fa: escapeHtml(defaultI18n.t("language.persian")),
+    en: escapeHtml(defaultI18n.t("language.english")),
+    ar: escapeHtml(defaultI18n.t("language.arabic")),
+  };
   return '<div class="language-switcher">' +
-    '<button class="icon-button language-toggle" type="button" data-language-toggle aria-label="انتخاب زبان" aria-haspopup="listbox" aria-expanded="false"><span aria-hidden="true">文</span><span data-language-current>' + languageLabel(active) + '</span><span aria-hidden="true">⌄</span></button>' +
-    '<div class="language-menu glass-card" data-language-menu role="listbox" aria-label="انتخاب زبان" hidden>' +
-      '<button type="button" class="language-option' + selected("fa") + '" data-language-option="fa" role="option" aria-selected="' + mark("fa") + '"><span class="language-option-code">فا</span><span>فارسی</span><b aria-hidden="true">✓</b></button>' +
-      '<button type="button" class="language-option' + selected("en") + '" data-language-option="en" role="option" aria-selected="' + mark("en") + '"><span class="language-option-code">EN</span><span>English</span><b aria-hidden="true">✓</b></button>' +
-      '<button type="button" class="language-option' + selected("ar") + '" data-language-option="ar" role="option" aria-selected="' + mark("ar") + '"><span class="language-option-code">عربي</span><span>العربية</span><b aria-hidden="true">✓</b></button>' +
+    '<button class="icon-button language-toggle" type="button" data-language-toggle aria-label="' + ariaLabel + '" aria-haspopup="listbox" aria-expanded="false"><span aria-hidden="true">文</span><span data-language-current>' + languageLabel(active) + '</span><span aria-hidden="true">⌄</span></button>' +
+    '<div class="language-menu glass-card" data-language-menu role="listbox" aria-label="' + ariaLabel + '" hidden>' +
+      '<button type="button" class="language-option' + selected("fa") + '" data-language-option="fa" role="option" aria-selected="' + mark("fa") + '"><span class="language-option-code">فا</span><span>' + names.fa + '</span><b aria-hidden="true">✓</b></button>' +
+      '<button type="button" class="language-option' + selected("en") + '" data-language-option="en" role="option" aria-selected="' + mark("en") + '"><span class="language-option-code">EN</span><span>' + names.en + '</span><b aria-hidden="true">✓</b></button>' +
+      '<button type="button" class="language-option' + selected("ar") + '" data-language-option="ar" role="option" aria-selected="' + mark("ar") + '"><span class="language-option-code">عربي</span><span>' + names.ar + '</span><b aria-hidden="true">✓</b></button>' +
     '</div></div>';
 }
 function toggleTheme(): void {
@@ -523,7 +529,10 @@ function syncThemeButtons(): void {
   const isLight = document.documentElement.dataset.theme === "light";
   document.querySelectorAll<HTMLElement>("[data-theme-toggle]").forEach((button) => {
     button.textContent = isLight ? "☾" : "☀";
-    button.setAttribute("aria-label", isLight ? "فعال کردن پوسته تاریک" : "فعال کردن پوسته روشن");
+    button.setAttribute(
+      "aria-label",
+      defaultI18n.t(isLight ? "ui.themeDark" : "ui.themeLight"),
+    );
   });
 }
 
