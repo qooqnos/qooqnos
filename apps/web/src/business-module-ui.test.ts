@@ -8,6 +8,7 @@ import {
   getVerticalModuleSlug,
   resolveVerticalRoleLens,
   resolveVerticalModuleAlias,
+  auditVerticalUiRegistry,
 } from "./business-module-ui";
 
 const verticalModules: Record<string, string[]> = {
@@ -137,6 +138,20 @@ describe("Vertical Workflow UI module blueprints", () => {
     expect(getVerticalModuleRoute("restaurant", "آشپزخانه")).toBe("/business/workspace/restaurant/kitchen");
     expect(getVerticalModuleForSlug("salon", "specialists", (verticalModules.salon ?? []))).toBe("متخصصان");
     expect(getVerticalModuleForSlug("salon", "نامعتبر", (verticalModules.salon ?? []))).toBeNull();
+  });
+
+  it("passes the shared registry audit for the canonical Workspace verticals", async () => {
+    const { BUSINESS_VERTICAL_UI } = await import("./business-vertical-ui");
+    const audit = auditVerticalUiRegistry(BUSINESS_VERTICAL_UI);
+    expect(audit).toHaveLength(5);
+    for (const result of audit) {
+      expect(result.moduleCount).toBeGreaterThan(0);
+      expect(result.missingBlueprints).toEqual([]);
+      expect(result.missingSlugs).toEqual([]);
+      expect(result.missingCapabilityContracts).toEqual([]);
+      expect(result.missingCanonicalTerms).toEqual([]);
+      expect(result.ready).toBe(true);
+    }
   });
 
 });
