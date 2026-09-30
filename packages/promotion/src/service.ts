@@ -41,6 +41,11 @@ export class PromotionService {
     return this.options.repository.get(context, id);
   }
 
+  async list(context: RequestContext, businessId: EntityId, limit = 20) {
+    await this.authorize(context, "promotion.read", false);
+    return this.options.repository.list(context, { businessId, limit });
+  }
+
   async createVersion(context: RequestContext, input: {
     readonly promotionId: EntityId;
     readonly version: number;
