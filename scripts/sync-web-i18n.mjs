@@ -198,6 +198,8 @@ export function translateUiText(value: string, locale: Locale): string {
       return leading + translated + trailing;
     }
   }
+  const withCanonicalTerms = translateCanonicalFragments(value, locale);
+  if (withCanonicalTerms !== value) return withCanonicalTerms;
   return translateDictionaryFragments(value, locale);
 }
 
