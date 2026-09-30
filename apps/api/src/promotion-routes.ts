@@ -34,6 +34,28 @@ export function registerPromotionRoutes(
 
   router.register({
     method: "GET",
+    path: "/api/v1/promotions",
+    module: "promotion",
+    operation: "promotion.list",
+    permission: "promotion.read",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const url = new URL(request.url);
+      const businessId = url.searchParams.get("businessId")?.trim();
+      if (!businessId) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "businessId query parameter is required.", requestId: context.requestId });
+      }
+      const requestedLimit = Number(url.searchParams.get("limit") ?? "20");
+      const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(Math.trunc(requestedLimit), 1), 50) : 20;
+      const promotions = await service.list(context, brandId<EntityId>(businessId), limit);
+      return json({ data: promotions }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/promotions/:promotionId",
     module: "promotion",
     operation: "promotion.read",
