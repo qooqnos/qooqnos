@@ -615,8 +615,8 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
       '<div class="phoenix-vwf-stage-context-actions">' + stageNav + '</div>' +
     '</div>' +
     '<div class="phoenix-vwf-header">' +
-      '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>' + authoredText(copy.label) + ' canvas</h2><p>' + authoredText(copy.description) + '</p></div>' +
-      '<div class="phoenix-vwf-header-actions"><span class="pill">Shared component</span><span class="pill" data-vwf-state-label data-vwf-state="requires-input">نیازمند Context</span><button type="button" class="button button-ghost" data-vwf-action="refresh" aria-label="تازه‌سازی داده‌های این Canvas">↻ تازه‌سازی</button></div>' +
+      '<div><span class="section-kicker">' + uiCopy("ui.vertical_verticalFramework", "Vertical Workflow UI Framework") + '</span><h2>' + authoredText(copy.label) + ' ' + uiCopy("ui.vertical_canvas", "canvas") + '</h2><p>' + authoredText(copy.description) + '</p></div>' +
+      '<div class="phoenix-vwf-header-actions"><span class="pill">' + uiCopy("ui.vertical_sharedComponent", "کامپوننت مشترک") + '</span><span class="pill">' + uiCopy("ui.vertical_backendAuthoritative", "مرجع اصلی در Backend") + '</span><span class="pill" data-vwf-state-label data-vwf-state="requires-input">' + uiCopy("ui.vertical_needsContext", "نیازمند Context") + '</span><button type="button" class="button button-ghost" data-vwf-action="refresh" aria-label="' + uiCopy("ui.vertical_refreshCanvas", "تازه‌سازی داده‌های این Canvas") + '">↻ ' + uiCopy("ui.vertical_refreshCanvas", "تازه‌سازی") + '</button></div>' +
     '</div>' +
     '<div class="phoenix-vwf-role-lens" data-vwf-role-lens>' +
       '<div><span class="section-kicker">Role-aware emphasis</span><strong data-vwf-role-title>در انتظار Context</strong><small data-vwf-role-description>این لایه فقط تمرکز رابط را تعیین می‌کند؛ مجوز همچنان توسط Backend کنترل می‌شود.</small></div>' +
