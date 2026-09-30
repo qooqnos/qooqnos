@@ -154,7 +154,7 @@ function emptyState(message: string, eyebrow = "Canonical data"): string {
 }
 
 function viewState(label: string): string {
-  return '<span class="phoenix-vwf-view-state" data-vwf-view-state>' + uiCopy("vertical.currentStage", "نمای فعال") + ': ' + escapeHtml(label) + '</span>';
+  return '<span class="phoenix-vwf-view-state" data-vwf-view-state>' + uiCopy("ui.vertical_currentStage", "نمای فعال") + ': ' + escapeHtml(label) + '</span>';
 }
 
 function renderCommand(model: VerticalWorkflowCanvasModel): string {
@@ -165,10 +165,10 @@ function renderCommand(model: VerticalWorkflowCanvasModel): string {
     ? renderBookingLookupSurface()
     : "";
   return bookingLookup + '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("vertical.overviewView", "نمای فرمان") + '">' +
-      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="overview">' + uiCopy("vertical.overviewView", "نمای کلی") + '</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="queue">' + uiCopy("vertical.workQueue", "صف کار") + '</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="actions">' + uiCopy("vertical.actions", "اقدام‌ها") + '</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("ui.vertical_overviewView", "نمای فرمان") + '">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="overview">' + uiCopy("ui.vertical_overviewView", "نمای کلی") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="queue">' + uiCopy("ui.vertical_workQueue", "صف کار") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="actions">' + uiCopy("ui.vertical_actions", "اقدام‌ها") + '</button>' +
     '</div>' +
     viewState("نمای کلی") +
     '</div>' +
@@ -192,12 +192,12 @@ function renderCalendar(model: VerticalWorkflowCanvasModel): string {
     ? renderBookingLookupSurface()
     : "";
   return bookingLookup + '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("vertical.calendarView", "نمای تقویم") + '">' +
-      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="day">' + uiCopy("vertical.day", "روز") + '</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="week">' + uiCopy("vertical.week", "هفته") + '</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="month">' + uiCopy("vertical.month", "ماه") + '</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("ui.vertical_calendarView", "نمای تقویم") + '">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="day">' + uiCopy("ui.vertical_day", "روز") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="week">' + uiCopy("ui.vertical_week", "هفته") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="month">' + uiCopy("ui.vertical_month", "ماه") + '</button>' +
     '</div>' +
-    '<button type="button" class="button button-ghost" data-vwf-action="today">' + uiCopy("vertical.today", "امروز") + '</button>' +
+    '<button type="button" class="button button-ghost" data-vwf-action="today">' + uiCopy("ui.vertical_today", "امروز") + '</button>' +
     '</div>' +
     '<div class="phoenix-vwf-calendar-head"><span>بازه زمانی</span><span>Resource lanes</span><span>Availability</span></div>' +
     '<div class="phoenix-vwf-calendar-grid" data-vwf-calendar-live>' +
@@ -216,10 +216,10 @@ function renderCatalog(model: VerticalWorkflowCanvasModel): string {
       '</div>'
     : "";
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("vertical.supplyView", "نمای عرضه") + '">' +
-      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="grid">' + uiCopy("vertical.cards", "کارت‌ها") + '</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="table">' + uiCopy("vertical.tableView", "جدول") + '</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="drafts">' + uiCopy("vertical.drafts", "پیش‌نویس‌ها") + '</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("ui.vertical_supplyView", "نمای عرضه") + '">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="grid">' + uiCopy("ui.vertical_cards", "کارت‌ها") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="table">' + uiCopy("ui.vertical_tableView", "جدول") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="drafts">' + uiCopy("ui.vertical_drafts", "پیش‌نویس‌ها") + '</button>' +
     '</div> +
     viewState("کارت‌ها") +
     '</div>' +
@@ -246,10 +246,10 @@ function renderPeople(model: VerticalWorkflowCanvasModel): string {
       '</div>'
     : "";
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("vertical.teamMembers", "نمای افراد") + '">' +
-      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="people">' + uiCopy("vertical.teamMembers", "اعضا / افراد") + '</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="roles">' + uiCopy("vertical.roles", "نقش‌ها") + '</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="relationships">' + uiCopy("vertical.relationships", "رابطه‌ها") + '</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("ui.vertical_teamMembers", "نمای افراد") + '">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="people">' + uiCopy("ui.vertical_teamMembers", "اعضا / افراد") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="roles">' + uiCopy("ui.vertical_roles", "نقش‌ها") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="relationships">' + uiCopy("ui.vertical_relationships", "رابطه‌ها") + '</button>' +
     '</div> +
     viewState("اعضا / افراد") +
     '</div>' +
@@ -293,10 +293,10 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
       '</div>'
     : "";
   return '<div class="phoenix-vwf-toolbar">' +
-    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("vertical.commerceOrders", "نمای معاملات") + '">' +
-      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="all">' + uiCopy("vertical.all", "همه") + '</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="open">' + uiCopy("vertical.open", "باز") + '</button>' +
-      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="action">' + uiCopy("vertical.needsAction", "نیازمند اقدام") + '</button>' +
+    '<div class="phoenix-vwf-tabs" role="tablist" aria-label="' + uiCopy("ui.vertical_commerceOrders", "نمای معاملات") + '">' +
+      '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="all">' + uiCopy("ui.vertical_all", "همه") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="open">' + uiCopy("ui.vertical_open", "باز") + '</button>' +
+      '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="action">' + uiCopy("ui.vertical_needsAction", "نیازمند اقدام") + '</button>' +
     '</div> +
     viewState("همه") +
     '</div>' +
@@ -611,7 +611,7 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
     '</nav>' +
     renderModuleSwitcher(model) +
     '<div class="phoenix-vwf-stage-context">' +
-      '<div><span class="section-kicker">' + uiCopy("vertical.currentStage", "Workflow stage") + '</span><strong>' + authoredText(stageContext.stage) + '</strong><span class="phoenix-vwf-stage-position">' + escapeHtml(stagePosition) + '</span></div>' +
+      '<div><span class="section-kicker">' + uiCopy("ui.vertical_currentStage", "Workflow stage") + '</span><strong>' + authoredText(stageContext.stage) + '</strong><span class="phoenix-vwf-stage-position">' + escapeHtml(stagePosition) + '</span></div>' +
       '<div class="phoenix-vwf-stage-context-actions">' + stageNav + '</div>' +
     '</div>' +
     '<div class="phoenix-vwf-header">' +
