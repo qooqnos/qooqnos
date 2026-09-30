@@ -6241,3 +6241,30 @@ a {
 .phoenix-vwf-live-variant-attributes{padding:10px 12px;border-radius:14px;background:rgba(246,142,55,.07);color:var(--text,#241f1a);font-size:12px;line-height:1.8;overflow-wrap:anywhere}
 @media(max-width:900px){.phoenix-vwf-live-variants-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.phoenix-vwf-live-variants{padding:14px;border-radius:20px}.phoenix-vwf-live-variants-grid{grid-template-columns:1fr}.phoenix-vwf-live-variant-card{padding:14px}}
+
+
+/* Vertical Workflow mobile stage actions */
+.phoenix-vwf-mobile-actionbar{display:none}
+@media(max-width:720px){
+  .phoenix-vwf-mobile-actionbar{
+    position:sticky;
+    bottom:calc(10px + env(safe-area-inset-bottom));
+    z-index:4;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:8px;
+    margin:14px -2px -2px;
+    padding:8px;
+    border:1px solid var(--line);
+    border-radius:18px;
+    background:color-mix(in srgb,var(--surface-strong,#fff) 92%, transparent);
+    box-shadow:var(--shadow-md,0 14px 34px rgba(0,0,0,.12));
+    backdrop-filter:blur(14px);
+  }
+  .phoenix-vwf-mobile-actionbar .button{
+    width:100%;
+    min-height:38px;
+    justify-content:center;
+  }
+  .phoenix-vwf-mobile-action-spacer{display:block}
+}
