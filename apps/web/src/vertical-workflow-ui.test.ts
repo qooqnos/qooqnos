@@ -35,9 +35,11 @@ describe("Vertical Workflow UI Canvas", () => {
     defaultI18n.setLanguage("en");
     expect(defaultI18n.t("ui.vertical_sharedComponent")).toBe("Shared component");
     expect(defaultI18n.t("ui.vertical_handoffContract")).toBe("Workflow handoff contract");
+    expect(defaultI18n.t("ui.vertical_capabilityDependencies")).toBe("Module dependencies");
     defaultI18n.setLanguage("ar");
     expect(defaultI18n.t("ui.vertical_sharedComponent")).toBe("مكوّن مشترك");
     expect(defaultI18n.t("ui.vertical_handoffContract")).toBe("عقد تسليم سير العمل");
+    expect(defaultI18n.t("ui.vertical_capabilityDependencies")).toBe("تبعية الوحدة");
     defaultI18n.setLanguage("en");
     const html = renderVerticalWorkflowCanvas({
       vertical: "clinic",
@@ -47,6 +49,8 @@ describe("Vertical Workflow UI Canvas", () => {
     });
     expect(html).toContain("Workflow handoff contract");
     expect(html).toContain("Command layer; primary actions and the work queue without creating parallel state.");
+    expect(html).toContain('data-vwf-mobile-actions');
+    expect(html).toContain('Refresh this canvas data');
     defaultI18n.setLanguage("fa");
   });
 
