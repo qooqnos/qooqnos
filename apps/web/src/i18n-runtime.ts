@@ -3035,8 +3035,7 @@ function translateCanonicalFragments(value:string,locale:Locale):string{
   return translated;
 }
 function escapeRegExp(value:string):string{return value.replace(/[.*+?^${}()|[\\]\\]/g,"\\  const withCanonicalTerms=translateCanonicalFragments(value,locale);
-  if(withCanonicalTerms!==value)return withCanonicalTerms;
-  return translateDictionaryFragments(value,locale);
+  return translateDictionaryFragments(withCanonicalTerms,locale);
 }
 export function getDirection");}
 function translateDictionaryFragments(value:string,locale:Locale):string{
