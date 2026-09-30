@@ -1,4 +1,5 @@
 import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleRoleFit, getVerticalModuleUiContract, resolveVerticalRoleLens, VERTICAL_MODULE_SLUGS, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
+import { defaultI18n, translateUiText } from "./i18n-runtime.js";
 import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 
 type VerticalWorkflowEntityRecord = Record<string, unknown>;
@@ -22,6 +23,11 @@ function escapeHtml(value: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+/** Authored UI copy uses the shared locale dictionary; domain identifiers remain unchanged. */
+function authoredText(value: string): string {
+  return escapeHtml(translateUiText(value, defaultI18n.getLanguage()));
 }
 
 const layoutCopy: Record<VerticalModuleLayout, { label: string; description: string }> = {
@@ -427,11 +433,11 @@ export function renderVerticalWorkflowOverview(model: VerticalWorkflowOverviewMo
     params.set("from", "workspace");
     const rawHref = route + "?" + params.toString();
     const href = model.contextualHref ? model.contextualHref(rawHref) : rawHref;
-    return '<a class="phoenix-vwf-overview-stage" data-vwf-overview-stage data-vwf-overview-stage-module="' + escapeHtml(module) + '" data-vwf-overview-stage-index="' + String(index) + '" data-nav href="' + escapeHtml(href) + '">' +
+    return '<a class="phoenix-vwf-overview-stage" data-vwf-overview-stage data-vwf-overview-stage-module="' + authoredText(module) + '" data-vwf-overview-stage-index="' + String(index) + '" data-nav href="' + escapeHtml(href) + '">' +
       '<div class="phoenix-vwf-overview-stage-top"><span class="phoenix-vwf-overview-index">' + String(index + 1).padStart(2, "0") + '</span><span class="pill">' + escapeHtml(blueprint.layout) + '</span></div>' +
-      '<strong>' + escapeHtml(stage) + '</strong>' +
-      '<span class="phoenix-vwf-overview-module">' + escapeHtml(module) + '</span>' +
-      '<small>' + escapeHtml(blueprint.eyebrow) + '</small>' +
+      '<strong>' + authoredText(stage) + '</strong>' +
+      '<span class="phoenix-vwf-overview-module">' + authoredText(module) + '</span>' +
+      '<small>' + authoredText(blueprint.eyebrow) + '</small>' +
       '<span class="phoenix-vwf-overview-access" data-vwf-overview-access>در انتظار Context</span>' +
       '<b aria-hidden="true">→</b>' +
     '</a>';
@@ -531,9 +537,9 @@ function renderWorkflowHandoff(
     href?: string,
   ): string =>
     '<article class="phoenix-vwf-handoff-card handoff-' + tone + '">' +
-      '<div class="phoenix-vwf-handoff-top"><span class="phoenix-vwf-handoff-index">' + (tone === "input" ? "01" : tone === "current" ? "02" : "03") + '</span><span class="pill">' + escapeHtml(eyebrow) + '</span></div>' +
-      '<strong>' + escapeHtml(title) + '</strong>' +
-      '<p>' + escapeHtml(description) + '</p>' +
+      '<div class="phoenix-vwf-handoff-top"><span class="phoenix-vwf-handoff-index">' + (tone === "input" ? "01" : tone === "current" ? "02" : "03") + '</span><span class="pill">' + authoredText(eyebrow) + '</span></div>' +
+      '<strong>' + authoredText(title) + '</strong>' +
+      '<p>' + authoredText(description) + '</p>' +
       (href ? '<a class="text-link" href="' + escapeHtml(href) + '" data-nav>باز کردن ←</a>' : '<span class="phoenix-vwf-handoff-muted">' + (tone === "input" ? "شروع Workflow" : "پایان Workflow") + '</span>') +
     '</article>';
 
@@ -592,7 +598,7 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
         const upcoming = stageContext.index >= 0 && index > stageContext.index;
         const stateClass = active ? " active" : completed ? " completed" : upcoming ? " upcoming" : "";
         const href = stageModule ? workflowModuleHref(model, stageModule) : "";
-        const content = '<span class="phoenix-vwf-stage-number">' + String(index + 1).padStart(2, "0") + '</span><span class="phoenix-vwf-stage-copy"><strong>' + escapeHtml(stage) + '</strong><small>' + escapeHtml(stageModule ?? "Capability") + '</small></span>';
+        const content = '<span class="phoenix-vwf-stage-number">' + String(index + 1).padStart(2, "0") + '</span><span class="phoenix-vwf-stage-copy"><strong>' + authoredText(stage) + '</strong><small>' + authoredText(stageModule ?? "Capability") + '</small></span>';
         return href
           ? '<a class="phoenix-vwf-stage' + stateClass + '" href="' + escapeHtml(href) + '" data-nav aria-current="' + (active ? "step" : "false") + '" data-vwf-stage-state="' + (active ? "current" : completed ? "completed" : "upcoming") + '">' + content + '</a>'
           : '<div class="phoenix-vwf-stage' + stateClass + '" data-vwf-stage-state="' + (active ? "current" : completed ? "completed" : "upcoming") + '">' + content + '</div>';
@@ -600,11 +606,11 @@ export function renderVerticalWorkflowCanvas(model: VerticalWorkflowCanvasModel)
     '</nav>' +
     renderModuleSwitcher(model) +
     '<div class="phoenix-vwf-stage-context">' +
-      '<div><span class="section-kicker">Workflow stage</span><strong>' + escapeHtml(stageContext.stage) + '</strong><span class="phoenix-vwf-stage-position">' + escapeHtml(stagePosition) + '</span></div>' +
+      '<div><span class="section-kicker">Workflow stage</span><strong>' + authoredText(stageContext.stage) + '</strong><span class="phoenix-vwf-stage-position">' + escapeHtml(stagePosition) + '</span></div>' +
       '<div class="phoenix-vwf-stage-context-actions">' + stageNav + '</div>' +
     '</div>' +
     '<div class="phoenix-vwf-header">' +
-      '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>' + escapeHtml(copy.label) + ' canvas</h2><p>' + escapeHtml(copy.description) + '</p></div>' +
+      '<div><span class="section-kicker">Vertical Workflow UI Framework</span><h2>' + authoredText(copy.label) + ' canvas</h2><p>' + authoredText(copy.description) + '</p></div>' +
       '<div class="phoenix-vwf-header-actions"><span class="pill">Shared component</span><span class="pill" data-vwf-state-label data-vwf-state="requires-input">نیازمند Context</span><button type="button" class="button button-ghost" data-vwf-action="refresh" aria-label="تازه‌سازی داده‌های این Canvas">↻ تازه‌سازی</button></div>' +
     '</div>' +
     '<div class="phoenix-vwf-role-lens" data-vwf-role-lens>' +
