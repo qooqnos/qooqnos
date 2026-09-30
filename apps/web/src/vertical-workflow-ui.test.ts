@@ -361,15 +361,25 @@ describe("Vertical Workflow overview", () => {
     }
   });
 
-  it("covers all supported verticals with shared stage navigation", () => {
-    for (const vertical of ["clinic", "retail", "restaurant", "salon"]) {
+  it("covers all supported verticals with shared stage navigation", async () => {
+    const { defaultI18n, translateUiText } = await import("./i18n-runtime");
+    defaultI18n.setLanguage("fa");
+    for (const vertical of ["clinic", "retail", "restaurant", "salon"] as const) {
       const html = renderVerticalWorkflowOverview({ vertical, businessId: "business-test" });
       expect(html).toContain('data-vwf-overview-vertical="' + vertical + '"');
       expect(html).toContain("Vertical Workflow UI Framework");
       expect(html).toContain('data-nav');
       expect(html).toContain("Backend authoritative");
       expect(html).toContain('data-vwf-overview-stage');
-      expect(html).toContain('data-vwf-overview-stage-module=' + '"' + getVerticalWorkflowStageModule(vertical, getVerticalWorkflowDefinition(vertical).steps[0]!) + '"');
+      const firstStageModule = getVerticalWorkflowStageModule(
+        vertical,
+        getVerticalWorkflowDefinition(vertical).steps[0]!,
+      );
+      expect(html).toContain(
+        'data-vwf-overview-stage-module="' +
+          translateUiText(firstStageModule ?? "", "fa") +
+          '"',
+      );
       expect(html).toContain('data-vwf-overview-access');
     }
   });
