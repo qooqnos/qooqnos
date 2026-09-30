@@ -38,6 +38,26 @@ export function registerBookingRoutes(
 
   router.register({
     method: "GET",
+    path: "/api/v1/booking",
+    module: "booking",
+    operation: "booking.list",
+    permission: "booking.read",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const url = new URL(request.url);
+      const businessId = requiredId(url.searchParams.get("businessId"), "businessId", context.requestId);
+      const rawLimit = Number(url.searchParams.get("limit") ?? "24");
+      const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 50) : 24;
+      const service = createService(database, authorization, context.requestId);
+      const data = await service.listBusinessBookings(context, businessId, limit);
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/availability/schedules",
     module: "booking",
     operation: "availability.schedules.read",
