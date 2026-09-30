@@ -26,6 +26,8 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "common.create": "ایجاد",
     "common.update": "به‌روزرسانی",
     "common.submit": "ثبت",
+    "common.and": "و",
+    "common.or": "یا",
     "nav.home": "خانه",
     "nav.discover": "کشف",
     "nav.matching": "تطبیق",
@@ -84,7 +86,6 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.forBusinesses": "برای کسب‌وکارها",
     "ui.howItWorks": "چگونه کار می‌کند؟",
     "ui.askAnything": "هر چی می‌خوای بگو، تا ققنوس برات پیداش کنه",
-    "ui.globalSearchPlaceholder": "جستجوی بخش‌ها، ابزارها و صفحات…",
     "ui.startWithNeed": "تصمیم را از نیاز شروع کن",
     "ui.findAndAct": "محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.",
     "ui.notKeyword": "با نیازت شروع کن، نه با کلمه کلیدی",
@@ -570,6 +571,27 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.manageTeam": "مدیریت تیم",
     "ui.roleGuideDescription": "این راهنما صرفاً composition رابط است؛ مجوز واقعی را backend تعیین می‌کند.",
     "ui.boardDefaultSupply": "عرضه را آماده کن",
+    "ui.workspaceStatusMine": "فضای کاری من",
+    "ui.globalSearchPlaceholder": "جستجوی بخش‌ها، ابزارها و صفحات…",
+    "ui.vertical_sharedComponent": "کامپوننت مشترک",
+    "ui.vertical_liveWhenConnected": "فعال هنگام اتصال به منبع",
+    "ui.vertical_primaryFlow": "جریان اصلی",
+    "ui.vertical_canonicalSource": "منبع canonical",
+    "ui.vertical_canonicalBusinessContext": "Context کاننیکال کسب‌وکار",
+    "ui.vertical_canonicalData": "داده canonical",
+    "ui.vertical_handoffContract": "قرارداد تحویل Workflow",
+    "ui.vertical_handoffDescription": "این مسیر بین مرحله‌های مشترک، ورودی و خروجی را منتقل می‌کند و state اجرایی از دامنه canonical می‌آید.",
+    "ui.vertical_currentStage": "مرحله فعلی",
+    "ui.vertical_previousStage": "مرحله قبلی",
+    "ui.vertical_nextStage": "مرحله بعدی",
+    "ui.vertical_workflowEntry": "ورودی Workflow",
+    "ui.vertical_canonicalOnly": "فقط canonical",
+    "ui.vertical_backendAuthoritative": "مرجع اصلی در Backend",
+    "ui.vertical_localFilterNote": "فیلتر محلی رابط؛ داده canonical تغییر نمی‌کند",
+    "ui.vertical_canvas": "Canvas",
+    "ui.vertical_stateContract": "قرارداد وضعیت",
+    "ui.vertical_interactionMode": "حالت تعامل",
+    "ui.vertical_primaryAction": "اقدام اصلی",
     "canonical.identity.user": "کاربر",
     "canonical.identity.organization": "سازمان",
     "canonical.identity.workspace": "فضای کاری",
@@ -872,6 +894,9 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "businessSurface.trustBeforePublic": "اعتماد، قبل از نمایش عمومی",
     "businessSurface.trustSource": "وضعیت انتشار و اعتماد از منبع canonical خوانده می‌شود.",
     "businessSurface.viewTrust": "مشاهده اعتماد",
+    "businessSurface.canonicalBoundaryTitle": "مرز canonical",
+    "businessSurface.canonicalBoundaryDescription": "این صفحه پیش‌نمایش و مدیریت است؛ انتشار واقعی فقط از مسیرهای canonical انجام می‌شود.",
+    "businessSurface.publicationMutationGuard": "تا وقتی تغییر انتشار به این رابط متصل نشده، وضعیت انتشار جعل نمی‌شود.",
     "discoveryPage.forYouTitle": "برای تو، بر اساس نیازت.",
     "discoveryPage.followingTitle": "چیزهایی که دنبال می‌کنی.",
     "discoveryPage.exploreTitle": "چیزهایی که در اکسپلور تازه‌اند.",
@@ -983,7 +1008,37 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "workspaceCopy.businessPublicCommunicationLabel": "ارتباط",
     "workspaceCopy.businessModuleWorkspaceLabel": "ماژول‌های این Workspace",
     "workspaceCopy.businessRoleFocusLabel": "تمرکز این نقش",
-    "workspaceCopy.businessOperationsLabel": "ساختار عملیاتی این صفحه"
+    "workspaceCopy.businessOperationsLabel": "ساختار عملیاتی این صفحه",
+    "productStudio.eyebrow": "استودیو هوش فروش",
+    "productStudio.heroTitle": "محصول را بده؛",
+    "productStudio.heroEmphasis": "بقیه‌اش با ققنوس.",
+    "productStudio.heroDescription": "متن خام، تصویر یا توضیح آزاد را به یک پیش‌نویس محصول قابل بازبینی تبدیل کن.",
+    "productStudio.billingNote": "هر اجرای AI مصرف‌محور است.",
+    "productStudio.inputTab": "ورودی",
+    "productStudio.imageTab": "تصویر",
+    "productStudio.businessId": "شناسه کسب‌وکار",
+    "productStudio.workspaceId": "شناسه فضای کاری",
+    "productStudio.productDescription": "توضیح محصول",
+    "productStudio.productPlaceholder": "مثلاً: کفش چرمی دست‌دوز، رنگ قهوه‌ای، مناسب استفاده روزمره...",
+    "productStudio.addProductPhoto": "عکس محصول را اینجا اضافه کنید",
+    "productStudio.imageFormats": "JPG / PNG / WebP · حداکثر 10MB",
+    "productStudio.noImage": "بدون تصویر",
+    "productStudio.inputHint": "ورودی می‌تواند ناقص باشد؛ ققنوس سؤال‌های ضروری را مشخص می‌کند.",
+    "productStudio.buildDraft": "ساخت پیش‌نویس",
+    "productStudio.livePreview": "پیش‌نمایش زنده",
+    "productStudio.ready": "آماده",
+    "productStudio.draftEmptyTitle": "هنوز پیش‌نویسی ساخته نشده",
+    "productStudio.draftEmptyDescription": "یک ورودی کوتاه بنویس و اجازه بده ققنوس ساختار، متن و فیلدهای لازم را پیشنهاد کند.",
+    "productStudio.step1": "ورودی فروشنده",
+    "productStudio.step1Desc": "خام و آزاد",
+    "productStudio.step2": "درک و استخراج",
+    "productStudio.step2Desc": "ساختارمند کردن داده",
+    "productStudio.step3": "غنی‌سازی",
+    "productStudio.step3Desc": "پیشنهاد بهتر",
+    "productStudio.step4": "بازبینی",
+    "productStudio.step4Desc": "کنترل انسانی",
+    "productStudio.step5": "انتشار",
+    "productStudio.step5Desc": "ورود به کاتالوگ"
   },
   "en": {
     "common.appName": "Phoenix",
@@ -1007,6 +1062,8 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "common.create": "Create",
     "common.update": "Update",
     "common.submit": "Submit",
+    "common.and": "and",
+    "common.or": "or",
     "nav.home": "Home",
     "nav.discover": "Discover",
     "nav.matching": "Matching",
@@ -1065,7 +1122,6 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.forBusinesses": "For businesses",
     "ui.howItWorks": "How it works",
     "ui.askAnything": "Tell Phoenix what you need and let it find it for you",
-    "ui.globalSearchPlaceholder": "Search sections, tools, and pages…",
     "ui.startWithNeed": "Start with your need",
     "ui.findAndAct": "Find a product, service, or business and compare or act right there.",
     "ui.notKeyword": "Start with your need, not a keyword",
@@ -1499,7 +1555,8 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.business_managePreview": "Manage and Preview",
     "ui.business_roleLens": "Your role path",
     "ui.business_loadingRoleLens": "Reading Role Lens…",
-    "ui.business_roleActivity": "Today",    "ui.business_roleCustomers": "Customers",
+    "ui.business_roleActivity": "Today",
+    "ui.business_roleCustomers": "Customers",
     "ui.business_roleContent": "Content",
     "ui.business_roleTransactions": "Transactions",
     "ui.business_quickActions": "Quick actions",
@@ -1550,6 +1607,27 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.manageTeam": "Manage team",
     "ui.roleGuideDescription": "This guide only controls interface composition; real authorization remains controlled by the backend.",
     "ui.boardDefaultSupply": "Prepare supply",
+    "ui.workspaceStatusMine": "My workspace",
+    "ui.globalSearchPlaceholder": "Search sections, tools, and pages…",
+    "ui.vertical_sharedComponent": "Shared component",
+    "ui.vertical_liveWhenConnected": "Live when connected",
+    "ui.vertical_primaryFlow": "Primary flow",
+    "ui.vertical_canonicalSource": "Canonical source",
+    "ui.vertical_canonicalBusinessContext": "Canonical business context",
+    "ui.vertical_canonicalData": "Canonical data",
+    "ui.vertical_handoffContract": "Workflow handoff contract",
+    "ui.vertical_handoffDescription": "This shared path carries input and output between workflow stages; execution state remains in the canonical domain.",
+    "ui.vertical_currentStage": "Current stage",
+    "ui.vertical_previousStage": "Previous stage",
+    "ui.vertical_nextStage": "Next stage",
+    "ui.vertical_workflowEntry": "Workflow entry",
+    "ui.vertical_canonicalOnly": "Canonical only",
+    "ui.vertical_backendAuthoritative": "Backend authoritative",
+    "ui.vertical_localFilterNote": "Local UI filter; canonical data unchanged",
+    "ui.vertical_canvas": "Canvas",
+    "ui.vertical_stateContract": "State contract",
+    "ui.vertical_interactionMode": "Interaction mode",
+    "ui.vertical_primaryAction": "Primary action",
     "canonical.identity.user": "User",
     "canonical.identity.organization": "Organization",
     "canonical.identity.workspace": "Workspace",
@@ -1852,6 +1930,9 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "businessSurface.trustBeforePublic": "Trust before public display",
     "businessSurface.trustSource": "Publication and trust status are read from the canonical source.",
     "businessSurface.viewTrust": "View trust",
+    "businessSurface.canonicalBoundaryTitle": "Canonical boundary",
+    "businessSurface.canonicalBoundaryDescription": "This page is preview and management-facing; real publication happens only through canonical paths.",
+    "businessSurface.publicationMutationGuard": "Until publication mutation is connected to this UI, publication state is never fabricated.",
     "discoveryPage.forYouTitle": "For you, based on your need.",
     "discoveryPage.followingTitle": "Things you follow.",
     "discoveryPage.exploreTitle": "What's new in Explore.",
@@ -1963,7 +2044,37 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "workspaceCopy.businessPublicCommunicationLabel": "Communication",
     "workspaceCopy.businessModuleWorkspaceLabel": "Workspace modules",
     "workspaceCopy.businessRoleFocusLabel": "Role focus",
-    "workspaceCopy.businessOperationsLabel": "Operational structure for this page"
+    "workspaceCopy.businessOperationsLabel": "Operational structure for this page",
+    "productStudio.eyebrow": "Seller AI Studio",
+    "productStudio.heroTitle": "Give Phoenix the product;",
+    "productStudio.heroEmphasis": "Phoenix handles the rest.",
+    "productStudio.heroDescription": "Turn raw text, an image, or free-form details into a reviewable product draft.",
+    "productStudio.billingNote": "Each AI run is usage-metered.",
+    "productStudio.inputTab": "Input",
+    "productStudio.imageTab": "Image",
+    "productStudio.businessId": "Business ID",
+    "productStudio.workspaceId": "Workspace ID",
+    "productStudio.productDescription": "Product description",
+    "productStudio.productPlaceholder": "For example: handmade leather shoes, brown, suitable for everyday use...",
+    "productStudio.addProductPhoto": "Add a product photo here",
+    "productStudio.imageFormats": "JPG / PNG / WebP · up to 10MB",
+    "productStudio.noImage": "No image",
+    "productStudio.inputHint": "Your input can be incomplete; Phoenix will identify the required questions.",
+    "productStudio.buildDraft": "Build draft",
+    "productStudio.livePreview": "Live preview",
+    "productStudio.ready": "Ready",
+    "productStudio.draftEmptyTitle": "No draft yet",
+    "productStudio.draftEmptyDescription": "Write a short input and let Phoenix suggest the structure, copy, and required fields.",
+    "productStudio.step1": "Seller input",
+    "productStudio.step1Desc": "Raw and free-form",
+    "productStudio.step2": "Understand & extract",
+    "productStudio.step2Desc": "Structure the data",
+    "productStudio.step3": "Enrich",
+    "productStudio.step3Desc": "Improve the proposal",
+    "productStudio.step4": "Review",
+    "productStudio.step4Desc": "Human control",
+    "productStudio.step5": "Publish",
+    "productStudio.step5Desc": "Enter Catalog"
   },
   "ar": {
     "common.appName": "فينيكس",
@@ -1987,6 +2098,8 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "common.create": "إنشاء",
     "common.update": "تحديث",
     "common.submit": "إرسال",
+    "common.and": "و",
+    "common.or": "أو",
     "nav.home": "الرئيسية",
     "nav.discover": "اكتشاف",
     "nav.matching": "مطابقة",
@@ -2045,7 +2158,6 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.forBusinesses": "للأعمال",
     "ui.howItWorks": "كيف يعمل؟",
     "ui.askAnything": "أخبر ققنوس بما تريد وسيجده لك",
-    "ui.globalSearchPlaceholder": "ابحث في الأقسام والأدوات والصفحات…",
     "ui.startWithNeed": "ابدأ من احتياجك",
     "ui.findAndAct": "اعثر على المنتج أو الخدمة أو النشاط التجاري وقارن أو اتخذ الإجراء مباشرة.",
     "ui.notKeyword": "ابدأ باحتياجك، وليس بكلمة مفتاحية",
@@ -2531,6 +2643,27 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.manageTeam": "إدارة الفريق",
     "ui.roleGuideDescription": "هذا الدليل يحدد تركيب الواجهة فقط؛ ويظل التفويض الفعلي تحت تحكم الخلفية.",
     "ui.boardDefaultSupply": "جهّز العرض",
+    "ui.workspaceStatusMine": "مساحة عملي",
+    "ui.globalSearchPlaceholder": "ابحث في الأقسام والأدوات والصفحات…",
+    "ui.vertical_sharedComponent": "مكوّن مشترك",
+    "ui.vertical_liveWhenConnected": "مباشر عند الاتصال بالمصدر",
+    "ui.vertical_primaryFlow": "المسار الأساسي",
+    "ui.vertical_canonicalSource": "المصدر الأساسي",
+    "ui.vertical_canonicalBusinessContext": "سياق النشاط التجاري الأساسي",
+    "ui.vertical_canonicalData": "البيانات الأساسية",
+    "ui.vertical_handoffContract": "عقد تسليم سير العمل",
+    "ui.vertical_handoffDescription": "ينقل هذا المسار المشترك المدخلات والمخرجات بين مراحل سير العمل، وتبقى حالة التنفيذ في المجال الأساسي.",
+    "ui.vertical_currentStage": "المرحلة الحالية",
+    "ui.vertical_previousStage": "المرحلة السابقة",
+    "ui.vertical_nextStage": "المرحلة التالية",
+    "ui.vertical_workflowEntry": "مدخل سير العمل",
+    "ui.vertical_canonicalOnly": "أساسي فقط",
+    "ui.vertical_backendAuthoritative": "المرجع الموثوق في الخلفية",
+    "ui.vertical_localFilterNote": "مرشح محلي للواجهة؛ لا تتغير البيانات الأساسية",
+    "ui.vertical_canvas": "لوحة",
+    "ui.vertical_stateContract": "عقد الحالة",
+    "ui.vertical_interactionMode": "وضع التفاعل",
+    "ui.vertical_primaryAction": "الإجراء الأساسي",
     "canonical.identity.user": "المستخدم",
     "canonical.identity.organization": "المنظمة",
     "canonical.identity.workspace": "مساحة العمل",
@@ -2833,6 +2966,9 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "businessSurface.trustBeforePublic": "الثقة قبل العرض العام",
     "businessSurface.trustSource": "تُقرأ حالة النشر والثقة من المصدر الموثوق.",
     "businessSurface.viewTrust": "عرض الثقة",
+    "businessSurface.canonicalBoundaryTitle": "الحدّ المرجعي",
+    "businessSurface.canonicalBoundaryDescription": "هذه الصفحة للمعاينة والإدارة؛ النشر الفعلي يتم فقط عبر المسارات المرجعية.",
+    "businessSurface.publicationMutationGuard": "لن يتم اختلاق حالة النشر ما لم يتم ربط عملية النشر بهذه الواجهة.",
     "discoveryPage.forYouTitle": "لك، بناءً على احتياجك.",
     "discoveryPage.followingTitle": "ما تتابعه.",
     "discoveryPage.exploreTitle": "ما الجديد في الاستكشاف.",
@@ -2944,7 +3080,37 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "workspaceCopy.businessPublicCommunicationLabel": "التواصل",
     "workspaceCopy.businessModuleWorkspaceLabel": "وحدات مساحة العمل",
     "workspaceCopy.businessRoleFocusLabel": "تركيز الدور",
-    "workspaceCopy.businessOperationsLabel": "البنية التشغيلية لهذه الصفحة"
+    "workspaceCopy.businessOperationsLabel": "البنية التشغيلية لهذه الصفحة",
+    "productStudio.eyebrow": "استوديو ذكاء البائع",
+    "productStudio.heroTitle": "أعطِ ققنوس المنتج؛",
+    "productStudio.heroEmphasis": "وققنوس يتولى الباقي.",
+    "productStudio.heroDescription": "حوّل النص الخام أو الصورة أو الوصف الحر إلى مسودة منتج قابلة للمراجعة.",
+    "productStudio.billingNote": "كل تشغيل للذكاء الاصطناعي يُحتسب حسب الاستخدام.",
+    "productStudio.inputTab": "الإدخال",
+    "productStudio.imageTab": "الصورة",
+    "productStudio.businessId": "معرّف النشاط التجاري",
+    "productStudio.workspaceId": "معرّف مساحة العمل",
+    "productStudio.productDescription": "وصف المنتج",
+    "productStudio.productPlaceholder": "مثال: حذاء جلدي مصنوع يدويًا، بني اللون، مناسب للاستخدام اليومي…",
+    "productStudio.addProductPhoto": "أضف صورة للمنتج هنا",
+    "productStudio.imageFormats": "JPG / PNG / WebP · حتى 10MB",
+    "productStudio.noImage": "بدون صورة",
+    "productStudio.inputHint": "يمكن أن يكون الإدخال ناقصًا؛ سيحدد ققنوس الأسئلة المطلوبة.",
+    "productStudio.buildDraft": "إنشاء مسودة",
+    "productStudio.livePreview": "معاينة مباشرة",
+    "productStudio.ready": "جاهز",
+    "productStudio.draftEmptyTitle": "لا توجد مسودة بعد",
+    "productStudio.draftEmptyDescription": "اكتب إدخالًا قصيرًا ودع ققنوس يقترح الهيكل والنص والحقول المطلوبة.",
+    "productStudio.step1": "إدخال البائع",
+    "productStudio.step1Desc": "خام وحر",
+    "productStudio.step2": "الفهم والاستخراج",
+    "productStudio.step2Desc": "تنظيم البيانات",
+    "productStudio.step3": "الإثراء",
+    "productStudio.step3Desc": "اقتراح أفضل",
+    "productStudio.step4": "المراجعة",
+    "productStudio.step4Desc": "تحكم بشري",
+    "productStudio.step5": "النشر",
+    "productStudio.step5Desc": "إدخال إلى الكاتالوج"
   }
 };
 
@@ -2953,11 +3119,11 @@ export class I18nManager {
   setLanguage(language: SupportedLanguage): void { this.currentLanguage = language in translations ? language : "fa"; }
   getLanguage(): SupportedLanguage { return this.currentLanguage; }
   t(key: string, variables?: Readonly<Record<string,string>>): string {
-    let text=translations[this.currentLanguage][key] ?? translations.fa[key] ?? key;
-    for(const [name,value] of Object.entries(variables ?? {})) text=text.replaceAll("{{"+name+"}}",value);
+    let text = translations[this.currentLanguage][key] ?? translations.fa[key] ?? key;
+    for (const [name, value] of Object.entries(variables ?? {})) text = text.replaceAll("{{" + name + "}}", value);
     return text;
   }
-  translate(key:string, variables?: Readonly<Record<string,string>>):string{return this.t(key,variables);}
+  translate(key:string, variables?: Readonly<Record<string,string>>):string { return this.t(key, variables); }
 }
 export const defaultI18n=new I18nManager("fa");
 export type CanonicalTermKey=string;
@@ -2969,104 +3135,58 @@ export const canonicalTerms: Record<SupportedLanguage, Readonly<Record<string,st
 export function translateCanonicalTerm(key:CanonicalTermKey,locale:Locale):string{return canonicalTerms[locale][key]??canonicalTerms.fa[key]??key;}
 const textKeyIndex=new Map<string,string[]>();
 const keyPriority=(key:string):number=>{
-  if(key.startsWith("canonical."))return 0;
-  if(key.startsWith("businessPage."))return 10;
-  if(key.startsWith("businessSurface."))return 20;
-  if(key.startsWith("discoveryPage."))return 30;
-  if(key.startsWith("common."))return 40;
-  if(key.startsWith("nav."))return 50;
-  if(key.startsWith("auth."))return 60;
-  if(key.startsWith("status."))return 70;
-  if(key.startsWith("errors."))return 80;
-  if(key.startsWith("messages."))return 90;
-  if(key.startsWith("ui."))return 100;
-  if(key.startsWith("runtime."))return 110;
-  if(key.startsWith("vertical."))return 120;
-  return 200;
+  if(key.startsWith("canonical."))return 0;if(key.startsWith("businessPage."))return 10;if(key.startsWith("businessSurface."))return 20;
+  if(key.startsWith("discoveryPage."))return 30;if(key.startsWith("common."))return 40;if(key.startsWith("nav."))return 50;if(key.startsWith("auth."))return 60;
+  if(key.startsWith("status."))return 70;if(key.startsWith("errors."))return 80;if(key.startsWith("messages."))return 90;if(key.startsWith("ui."))return 100;
+  if(key.startsWith("runtime."))return 110;if(key.startsWith("vertical."))return 120;return 200;
 };
 const indexLanguage=(language:SupportedLanguage,canonicalOnly:boolean):void=>{
   for(const [key,text] of Object.entries(translations[language])){
-    if(canonicalOnly!==key.startsWith("canonical."))continue;
-    const normalized=text.trim();
-    if(!normalized)continue;
-    const keys=textKeyIndex.get(normalized)??[];
-    if(!keys.includes(key))keys.push(key);
-    keys.sort((a,b)=>keyPriority(a)-keyPriority(b));
-    textKeyIndex.set(normalized,keys);
+    if(canonicalOnly!==key.startsWith("canonical."))continue;const normalized=text.trim();if(!normalized)continue;
+    const keys=textKeyIndex.get(normalized)??[];if(!keys.includes(key))keys.push(key);keys.sort((a,b)=>keyPriority(a)-keyPriority(b));textKeyIndex.set(normalized,keys);
   }
 };
 for(const language of ["fa","en","ar"] as const)indexLanguage(language,true);
 for(const language of ["fa","en","ar"] as const)indexLanguage(language,false);
 function resolveTextKey(value:string,locale:Locale):string|undefined{
   const candidates=textKeyIndex.get(value.trim())??[];
-  return candidates.find(key=>Boolean((translations[locale][key]??translations.fa[key]) && (translations[locale][key]??translations.fa[key])!==value.trim()))??candidates[0];
-}
-export function translateUiText(value:string,locale:Locale):string{
-  const trimmed=value.trim();
-  if(!trimmed)return value;
-  const directKey=resolveTextKey(trimmed,locale);
-  if(directKey){
-    const translated=translations[locale][directKey]??translations.fa[directKey];
-    if(translated){
-      const leading=value.match(/^\s*/u)?.[0]??"";
-      const trailing=value.match(/\s*$/u)?.[0]??"";
-      return leading+translated+trailing;
-    }
-  }
-  const withCanonicalTerms=translateCanonicalFragments(value,locale);
-  return translateDictionaryFragments(withCanonicalTerms,locale);
+  return candidates.find(key=>Boolean((translations[locale][key]??translations.fa[key])&&(translations[locale][key]??translations.fa[key])!==value.trim()))??candidates[0];
 }
 function canonicalFragmentEntriesFor(locale:Locale):readonly [string,string][]{
-  const entries:[string,string][]=[];
-  const seen=new Set<string>();
-  for(const language of ["fa","en","ar"] as const){
-    for(const [key,source] of Object.entries(canonicalTerms[language])){
-      const target=translations[locale][key]??translations.fa[key];
-      if(!source||!target||source===target)continue;
-      const signature=source+"\\u0000"+target;
-      if(seen.has(signature))continue;
-      seen.add(signature);
-      entries.push([source,target]);
-    }
+  const entries:[string,string][]=[];const seen=new Set<string>();
+  for(const language of ["fa","en","ar"] as const)for(const [key,source] of Object.entries(canonicalTerms[language])){
+    const target=translations[locale][key]??translations.fa[key];if(!source||!target||source===target)continue;const signature=source+"\u0000"+target;
+    if(seen.has(signature))continue;seen.add(signature);entries.push([source,target]);
   }
   return entries.sort((a,b)=>b[0].length-a[0].length);
 }
 function translateCanonicalFragments(value:string,locale:Locale):string{
   let translated=value;
   for(const [source,target] of canonicalFragmentEntriesFor(locale)){
-    if(!translated.includes(source))continue;
-    const pattern=new RegExp("(^|[^\\p{L}\\p{N}_])"+escapeRegExp(source)+"(?![\\p{L}\\p{N}_])","gu");
+    if(!translated.includes(source))continue;const pattern=new RegExp("(^|[^\p{L}\p{N}_])"+escapeRegExp(source)+"(?![\p{L}\p{N}_])","gu");
     translated=translated.replace(pattern,(_match,prefix)=>prefix+target);
   }
   return translated;
 }
-function escapeRegExp(value:string):string{
-  return value.replace(/[.*+?^${}()|[\\]\\]/g,"\\$&");
-}
+function escapeRegExp(value:string):string{return value.replace(/[.*+?^\u0024{}()|[\]\\]/g,"\\$&");}
 function translateDictionaryFragments(value:string,locale:Locale):string{
   let translated=value;
-  const entries=[...textKeyIndex.entries()]
-    .map(([source,keys])=>({
-      source,
-      keys:[...keys].sort((a,b)=>(a.startsWith("canonical.")?0:1)-(b.startsWith("canonical.")?0:1))
-    }))
-    .sort((a,b)=>b.source.length-a.source.length);
+  const entries=[...textKeyIndex.entries()].map(([source,keys])=>({source,keys:[...keys].sort((a,b)=>(a.startsWith("canonical.")?0:1)-(b.startsWith("canonical.")?0:1))})).sort((a,b)=>b.source.length-a.source.length);
   for(const {source,keys} of entries){
-    if(source.length<2||!translated.includes(source))continue;
-    const canonicalKeys=keys.filter(key=>key.startsWith("canonical."));
-    const candidateKeys=canonicalKeys.length?canonicalKeys:keys;
-    const targets=[...new Set(candidateKeys.map(key=>translations[locale][key]??translations.fa[key]).filter(Boolean))];
-    if(targets.length!==1||targets[0]===source)continue;
-    const pattern=new RegExp("(^|[^\\p{L}\\p{N}_])"+escapeRegExp(source)+"(?![\\p{L}\\p{N}_])","gu");
+    if(source.length<2||!translated.includes(source))continue;const canonicalKeys=keys.filter(key=>key.startsWith("canonical."));
+    const candidateKeys=canonicalKeys.length?canonicalKeys:keys;const targets=[...new Set(candidateKeys.map(key=>translations[locale][key]??translations.fa[key]).filter(Boolean))];
+    if(targets.length!==1||targets[0]===source)continue;const pattern=new RegExp("(^|[^\p{L}\p{N}_])"+escapeRegExp(source)+"(?![\p{L}\p{N}_])","gu");
     translated=translated.replace(pattern,(_match,prefix)=>prefix+targets[0]);
   }
   return translated;
 }
-export function getDirection(locale:Locale):"ltr"|"rtl"{return locale==="fa"||locale==="ar"?"rtl":"ltr";}
-export function getLocaleFromPreference(preference:string,fallback:Locale="fa"):Locale{
-  const normalized=preference.trim().toLowerCase().split(/[-_]/u,1)[0];
-  return normalized==="fa"||normalized==="ar"||normalized==="en"?normalized:fallback;
+export function translateUiText(value:string,locale:Locale):string{
+  const trimmed=value.trim();if(!trimmed)return value;const directKey=resolveTextKey(trimmed,locale);
+  if(directKey){const translated=translations[locale][directKey]??translations.fa[directKey];if(translated){const leading=value.match(/^\s*/u)?.[0]??"";const trailing=value.match(/\s*$/u)?.[0]??"";return leading+translated+trailing;}}
+  return translateDictionaryFragments(translateCanonicalFragments(value,locale),locale);
 }
+export function getDirection(locale:Locale):"ltr"|"rtl"{return locale==="fa"||locale==="ar"?"rtl":"ltr";}
+export function getLocaleFromPreference(preference:string,fallback:Locale="fa"):Locale{const normalized=preference.trim().toLowerCase().split(/[-_]/u,1)[0];return normalized==="fa"||normalized==="ar"||normalized==="en"?normalized:fallback;}
 export const LOCALE_STORAGE_KEY="qooqnos.locale";
 export function persistLocale(locale:Locale,storage?:Pick<Storage,"setItem">|null):void{storage?.setItem(LOCALE_STORAGE_KEY,locale);}
 export function readPersistedLocale(storage?:Pick<Storage,"getItem">|null):Locale|null{const value=storage?.getItem(LOCALE_STORAGE_KEY);return value?getLocaleFromPreference(value,"fa"):null;}
