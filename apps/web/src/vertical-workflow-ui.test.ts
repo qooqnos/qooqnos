@@ -47,14 +47,14 @@ describe("Vertical Workflow UI Canvas", () => {
       businessId: "business-test",
       blueprint: getVerticalModuleBlueprint("clinic", "نوبت‌ها"),
     });
-    expect(html).toContain("Workflow handoff contract");
-    expect(html).toContain("Command layer; primary actions and the work queue without creating parallel state.");
+    expect(html).toContain(defaultI18n.t("ui.vertical_handoffContract"));
+    expect(html).toContain(defaultI18n.t("ui.vertical_handoffDescription"));
     expect(html).toContain('data-vwf-mobile-actions');
     expect(html).toContain('Refresh this canvas data');
     defaultI18n.setLanguage("fa");
   });
 
-  it("renders all shared layouts with stable data attributes", () => {
+  it("renders all shared layouts with stable data attributes", async () => {
     for (const [expectedLayout, module] of layouts) {
       const blueprint = getVerticalModuleBlueprint("clinic", module);
       expect(blueprint.layout).toBe(expectedLayout);
@@ -75,8 +75,9 @@ describe("Vertical Workflow UI Canvas", () => {
       expect(html).toContain('data-vwf-module="' + module + '"');
       expect(html).toContain("Vertical Workflow UI Framework");
       expect(html).toContain('data-vwf-handoff');
-      expect(html).toContain("Workflow Handoff Contract");
-      expect(html).toContain("ورودی، مرحله فعلی و خروجی بعدی");
+      const { defaultI18n } = await import("./i18n-runtime");
+      expect(html).toContain(defaultI18n.t("ui.vertical_handoffContract"));
+      expect(html).toContain(defaultI18n.t("ui.vertical_handoffTitle"));
       expect(html).toContain('data-vwf-action="refresh"');
       expect(html).toContain('data-vwf-state-label');
       expect(html).toContain('data-vwf-state="requires-input"');
