@@ -18,6 +18,53 @@ function context(): RequestContext {
 }
 
 describe("BookingRepository", () => {
+  it("lists business bookings with appointment context", async () => {
+    const rows = [
+      {
+        id: "booking-1",
+        organizationId: "tenant-1",
+        workspaceId: "workspace-1",
+        businessId: "business-1",
+        customerId: "customer-1",
+        status: "confirmed",
+        currency: "USD",
+        totalAmountMinor: 5000,
+        appointmentStatus: "confirmed",
+        startsAt: "2026-09-30T10:00:00.000Z",
+        endsAt: "2026-09-30T10:30:00.000Z",
+        timezone: "UTC",
+        locationId: null,
+        resourceId: "resource-1",
+        offeringId: "offering-1",
+        offeringTitle: "Consultation",
+        createdAt: "2026-09-30T09:00:00.000Z",
+        updatedAt: "2026-09-30T09:30:00.000Z",
+      },
+    ];
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: rows as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new BookingRepository(new D1Database(raw));
+
+    const result = await repository.listBusinessBookings(
+      context(),
+      brandId<"EntityId">("business-1"),
+      24,
+    );
+
+    expect(result[0]?.id).toBe("booking-1");
+    expect(result[0]?.offeringTitle).toBe("Consultation");
+    expect(result[0]?.resourceId).toBe("resource-1");
+  });
+
+describe("BookingRepository
   it("keeps terminal bookings from being reopened", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
