@@ -220,7 +220,7 @@ function renderCatalog(model: VerticalWorkflowCanvasModel): string {
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="grid">' + uiCopy("ui.vertical_cards", "کارت‌ها") + '</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="table">' + uiCopy("ui.vertical_tableView", "جدول") + '</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="drafts">' + uiCopy("ui.vertical_drafts", "پیش‌نویس‌ها") + '</button>' +
-    '</div> +
+    '</div>' +
     viewState("کارت‌ها") +
     '</div>' +
     '<div class="phoenix-vwf-filter-row">' +
@@ -250,7 +250,7 @@ function renderPeople(model: VerticalWorkflowCanvasModel): string {
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="people">' + uiCopy("ui.vertical_teamMembers", "اعضا / افراد") + '</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="roles">' + uiCopy("ui.vertical_roles", "نقش‌ها") + '</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="relationships">' + uiCopy("ui.vertical_relationships", "رابطه‌ها") + '</button>' +
-    '</div> +
+    '</div>' +
     viewState("اعضا / افراد") +
     '</div>' +
     '<div class="phoenix-vwf-filter-row phoenix-vwf-lookup-row">' +
@@ -297,7 +297,7 @@ function renderCommerce(model: VerticalWorkflowCanvasModel): string {
       '<button type="button" role="tab" tabindex="0" class="active" aria-selected="true" data-vwf-tab="all">' + uiCopy("ui.vertical_all", "همه") + '</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="open">' + uiCopy("ui.vertical_open", "باز") + '</button>' +
       '<button type="button" role="tab" tabindex="-1" aria-selected="false" data-vwf-tab="action">' + uiCopy("ui.vertical_needsAction", "نیازمند اقدام") + '</button>' +
-    '</div> +
+    '</div>' +
     viewState("همه") +
     '</div>' +
     '<div class="phoenix-vwf-lookup-row">' +
