@@ -600,7 +600,22 @@
     "vertical_canvas": "Canvas",
     "vertical_stateContract": "State contract",
     "vertical_interactionMode": "Interaction mode",
-    "vertical_primaryAction": "Primary action"
+    "vertical_primaryAction": "Primary action",
+    "vertical_layoutCommand": "Command",
+    "vertical_layoutCalendar": "Calendar",
+    "vertical_layoutSupply": "Supply",
+    "vertical_layoutPeople": "People",
+    "vertical_layoutCommerce": "Commerce",
+    "vertical_layoutOperations": "Operations",
+    "vertical_layoutCommunication": "Communication",
+    "vertical_layoutCommandDescription": "Command layer; primary actions and the work queue without creating parallel state.",
+    "vertical_layoutCalendarDescription": "Time and capacity layer; slots and schedules are fed only by Availability/Booking.",
+    "vertical_layoutSupplyDescription": "Supply layer; products and services remain sourced from Catalog/Seller AI.",
+    "vertical_layoutPeopleDescription": "Relationship and team layer; identity, roles, and customer relationships come from canonical domains.",
+    "vertical_layoutCommerceDescription": "Transaction layer; Order, Billing, and Fulfillment are not stored again in Workspace.",
+    "vertical_layoutOperationsDescription": "Operations execution layer; operational queues connect to Cases/Fulfillment.",
+    "vertical_layoutCommunicationDescription": "Communication layer; conversations and notifications are read from the Communication boundary.",
+    "vertical_handoffTitle": "Input, current stage, and next output"
   },
   "canonical": {
     "identity": {
