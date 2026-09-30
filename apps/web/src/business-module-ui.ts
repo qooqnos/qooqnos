@@ -701,3 +701,66 @@ export function getVerticalModuleUiContract(vertical: string, module: string): V
     roleLenses,
   };
 }
+
+
+export type VerticalUiRegistryAudit = {
+  readonly vertical: string;
+  readonly moduleCount: number;
+  readonly modules: readonly string[];
+  readonly missingBlueprints: readonly string[];
+  readonly missingSlugs: readonly string[];
+  readonly missingCapabilityContracts: readonly string[];
+  readonly missingCanonicalTerms: readonly string[];
+  readonly ready: boolean;
+};
+
+/**
+ * Structural audit for the Vertical Workflow UI Framework.
+ *
+ * This is intentionally a registry-consistency check, not an authorization
+ * check. It makes it possible for tests/build tooling to detect when a
+ * vertical adds a module but forgets its shared UI contract pieces.
+ */
+export function auditVerticalUiRegistry(
+  verticals: Readonly<Record<string, { readonly modules: readonly string[] }>>,
+): readonly VerticalUiRegistryAudit[] {
+  return Object.entries(verticals).map(([vertical, definition]) => {
+    const missingBlueprints: string[] = [];
+    const missingSlugs: string[] = [];
+    const missingCapabilityContracts: string[] = [];
+    const missingCanonicalTerms: string[] = [];
+
+    for (const module of definition.modules) {
+      const blueprint = getVerticalModuleBlueprint(vertical, module);
+      if (!blueprint.blocks.length) missingBlueprints.push(module);
+
+      const slug = getVerticalModuleSlug(vertical, module);
+      if (!slug || slug === module) missingSlugs.push(module);
+
+      const capability = getVerticalModuleCapabilityContract(module);
+      if (!capability.requiredCapabilities.length && !capability.requiredPermissions.length) {
+        missingCapabilityContracts.push(module);
+      }
+
+      const canonicalTerms = blueprint.canonicalTermKeys.length
+        ? blueprint.canonicalTermKeys
+        : MODULE_CANONICAL_TERM_KEYS[module] ?? [];
+      if (!canonicalTerms.length) missingCanonicalTerms.push(module);
+    }
+
+    return {
+      vertical,
+      moduleCount: definition.modules.length,
+      modules: definition.modules,
+      missingBlueprints,
+      missingSlugs,
+      missingCapabilityContracts,
+      missingCanonicalTerms,
+      ready:
+        missingBlueprints.length === 0 &&
+        missingSlugs.length === 0 &&
+        missingCapabilityContracts.length === 0 &&
+        missingCanonicalTerms.length === 0,
+    };
+  });
+}
