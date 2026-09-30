@@ -1,3 +1,13 @@
+## 2026-09-30 — Shared Business Booking Queue Canvas
+
+- 🟢 Added a workspace/business-scoped canonical Booking reader: `GET /api/v1/booking?businessId=...&limit=...`, returning booking status plus appointment, resource and first offering context.
+- 🟢 Clinic `نوبت‌ها` / `تقویم`, Restaurant `رزرو`, and Salon `وقت‌های امروز` / `تقویم` now hydrate the same reusable Booking queue inside the Vertical Workflow Canvas.
+- 🟢 Selecting a booking card reuses the existing canonical `GET /api/v1/booking/:bookingId` detail surface; no local appointment store or scheduling state was added.
+- 🟢 Added shared capability-aware routing, repository/API/UI regression coverage and responsive styling for the booking queue.
+- 🟡 TypeScript build, full test suite, browser/device visual QA and production deployment verification remain pending after this slice.
+
+Implementation commits: `844de061`, `eabe4549`, `0995ee25`, `93b73945`, `95a00d60`, `78490bde`, `7a608a60`, plus the authored/served style commits recorded alongside this slice.
+
 ## 2026-09-30 — Shared Restaurant Fulfillment Canvas
 
 - 🟢 Added a workspace/business-scoped canonical Fulfillment reader: `GET /api/v1/fulfillment?businessId=...&limit=...`, backed by the existing Fulfillment domain and `fulfillment.get` authorization.
