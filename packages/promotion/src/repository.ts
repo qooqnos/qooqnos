@@ -89,6 +89,16 @@ export class PromotionRepository extends Repository {
     );
   }
 
+  async list(context: RequestContext, input: { readonly businessId: EntityId; readonly limit: number }): Promise<readonly PromotionRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const limit = Math.min(Math.max(Math.trunc(input.limit), 1), 50);
+    return this.database.all<PromotionRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, name, promotion_type AS promotionType, scope, status, current_version_id AS currentVersionId, created_at AS createdAt, updated_at AS updatedAt FROM promotions WHERE organization_id=? AND workspace_id=? AND business_id=? ORDER BY updated_at DESC LIMIT ?",
+      organizationId, workspaceId, input.businessId, limit,
+    );
+  }
+
   async getRequired(context: RequestContext, id: EntityId): Promise<PromotionRecord> {
     const record = await this.get(context, id);
     if (!record) throw new DatabaseError("Promotion not found");
