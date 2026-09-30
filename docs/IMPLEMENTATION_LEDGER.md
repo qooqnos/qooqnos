@@ -2851,3 +2851,10 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Completed the default Workspace registry's missing Overview route/capability contract.
 - This is a UI-architecture consistency layer only; backend authorization and domain sources remain authoritative.
 - Verification: static registry changes committed; full TypeScript/build/browser verification has not been run in this step.
+
+
+## 2026-09-30 — Vertical Workflow UI Framework audit enforcement
+- Added a regression test for `auditVerticalUiRegistry()` in `apps/web/src/business-module-ui.test.ts`.
+- The test now requires all five Workspace vertical registries (default, Clinic, Retail, Restaurant, Salon) to have blueprint coverage, stable semantic slugs, capability/permission metadata and canonical-term traceability for every visible module.
+- This strengthens the shared UI infrastructure without introducing a parallel domain store or authorization logic.
+- Verification: test assertion committed; full CI/build/browser verification has not been run in this step.
