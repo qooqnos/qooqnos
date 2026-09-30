@@ -3032,7 +3032,6 @@ function translateDictionaryFragments(value:string,locale:Locale):string{
     translated=translated.replace(pattern,(_match,prefix)=>prefix+targets[0]);
   }
   return translated;
-}  return value;
 }
 export function getDirection(locale:Locale):"ltr"|"rtl"{return locale==="fa"||locale==="ar"?"rtl":"ltr";}
 export function getLocaleFromPreference(preference:string,fallback:Locale="fa"):Locale{
