@@ -581,7 +581,26 @@
     "roleGuideDescription": "این راهنما صرفاً composition رابط است؛ مجوز واقعی را backend تعیین می‌کند.",
     "boardDefaultSupply": "عرضه را آماده کن",
     "workspaceStatusMine": "فضای کاری من",
-    "globalSearchPlaceholder": "جستجوی بخش‌ها، ابزارها و صفحات…"
+    "globalSearchPlaceholder": "جستجوی بخش‌ها، ابزارها و صفحات…",
+    "vertical_sharedComponent": "کامپوننت مشترک",
+    "vertical_liveWhenConnected": "فعال هنگام اتصال به منبع",
+    "vertical_primaryFlow": "جریان اصلی",
+    "vertical_canonicalSource": "منبع canonical",
+    "vertical_canonicalBusinessContext": "Context کاننیکال کسب‌وکار",
+    "vertical_canonicalData": "داده canonical",
+    "vertical_handoffContract": "قرارداد تحویل Workflow",
+    "vertical_handoffDescription": "این مسیر بین مرحله‌های مشترک، ورودی و خروجی را منتقل می‌کند و state اجرایی از دامنه canonical می‌آید.",
+    "vertical_currentStage": "مرحله فعلی",
+    "vertical_previousStage": "مرحله قبلی",
+    "vertical_nextStage": "مرحله بعدی",
+    "vertical_workflowEntry": "ورودی Workflow",
+    "vertical_canonicalOnly": "فقط canonical",
+    "vertical_backendAuthoritative": "مرجع اصلی در Backend",
+    "vertical_localFilterNote": "فیلتر محلی رابط؛ داده canonical تغییر نمی‌کند",
+    "vertical_canvas": "Canvas",
+    "vertical_stateContract": "قرارداد وضعیت",
+    "vertical_interactionMode": "حالت تعامل",
+    "vertical_primaryAction": "اقدام اصلی"
   },
   "canonical": {
     "identity": {
