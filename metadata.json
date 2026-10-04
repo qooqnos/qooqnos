@@ -1,0 +1,8 @@
+{
+  "name": "ققنوس | Phoenix Intelligence",
+  "description": "ققنوس؛ لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

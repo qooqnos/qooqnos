@@ -1,4 +1,4 @@
-import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton } from "./ui.js";
+import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton, installTabAccessibility } from "./ui.js";
 import { getBusinessVerticalUi, resolveBusinessVerticalKey } from "./business-vertical-ui.js";
 import { getVerticalModuleBlueprint, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, getVerticalModuleUiContract, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
 import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
@@ -298,16 +298,26 @@ const appRoot = app;
 
 const routes: Route[] = [
   { path: "/", label: "خانه", icon: "⌂", render: renderHome },
+  { path: "/welcome", label: "شروع و آشنایی", icon: "✦", render: renderWelcome },
   { path: "/discover", label: "کشف", icon: "⌕", render: renderDiscover },
   { path: "/compare", label: "مقایسه", icon: "⚖", render: renderCompare },
+  { path: "/orders", label: "سفارش‌ها", icon: "📦", render: renderOrders },
+  { path: "/saved", label: "ذخیره‌شده‌ها", icon: "★", render: renderSaved },
+  { path: "/messages", label: "پیام‌ها", icon: "✉", render: renderMessages },
   { path: "/activity", label: "فعالیت", icon: "✦", render: renderActivity },
   { path: "/business", label: "کسب‌وکار", icon: "▦", render: renderBusiness },
+  { path: "/business/products", label: "محصولات کسب‌وکار", icon: "▤", render: renderBusinessProducts },
+  { path: "/business/services", label: "خدمات کسب‌وکار", icon: "✦", render: renderBusinessServices },
+  { path: "/business/bookings", label: "رزروهای کسب‌وکار", icon: "◷", render: renderBusinessBookings },
+  { path: "/business/team", label: "تیم کسب‌وکار", icon: "👥", render: renderBusinessTeam },
+  { path: "/business/settings", label: "تنظیمات کسب‌وکار", icon: "⚙", render: renderBusinessSettings },
   { path: "/business/profile", label: "پروفایل کسب‌وکار", icon: "◉", render: renderBusinessProfile },
   { path: "/product-studio", label: "استودیو محصول", icon: "✦", render: renderProductStudio },
   { path: "/transactions", label: "معاملات", icon: "↔", render: renderTransactions },
   { path: "/notifications", label: "اعلان‌ها", icon: "♢", render: renderNotifications },
   { path: "/profile", label: "پروفایل", icon: "◉", render: renderProfile },
   { path: "/account", label: "حساب", icon: "◎", render: renderAccount },
+  { path: "/settings", label: "تنظیمات", icon: "⚙", render: renderSettings },
   { path: "/booking", label: "رزرو", icon: "◷", render: renderBooking },
   { path: "/checkout", label: "خرید", icon: "◫", render: renderCheckout },
   { path: "/customer", label: "مشتری", icon: "♙", render: renderCustomer },
@@ -594,7 +604,7 @@ function render(): void {
   const route = currentRoute();
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
-  const isHome = route.path === "/";
+  const isHome = route.path === "/" || route.path === "/welcome";
   const isSocial = route.path === "/discover" || route.path === "/compare" || route.path === "/activity";
   const isPublicBusiness = route.path.startsWith("/businesses/");
   appRoot.innerHTML = `
@@ -604,7 +614,7 @@ function render(): void {
         ${isHome || isSocial || isPublicBusiness ? "" : renderSidebar(route)}
         <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : isPublicBusiness ? "public-business-page-content" : ""}">${page}</main>
       </div>
-      ${isHome || isPublicBusiness ? "" : isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
+      ${isPublicBusiness ? "" : isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
       ${renderToastHost()}
     </div>
   `;
@@ -612,6 +622,17 @@ function render(): void {
   syncThemeButtons();
   applyLanguageToUi();
   installLanguageObserver();
+  installTabAccessibility(document);
+  if (route.path === "/welcome") void loadWelcomePage();
+  if (route.path === "/orders") void loadOrdersPage();
+  if (route.path === "/saved") void loadSavedPage();
+  if (route.path === "/messages") void loadMessagesPage();
+  if (route.path === "/settings") void loadSettingsPage();
+  if (route.path === "/business/products") void loadBusinessProductsPage();
+  if (route.path === "/business/services") void loadBusinessServicesPage();
+  if (route.path === "/business/bookings") void loadBusinessBookingsPage();
+  if (route.path === "/business/team") void loadBusinessTeamPage();
+  if (route.path === "/business/settings") void loadBusinessSettingsPage();
   if (route.path === "/discover") {
     const params = new URLSearchParams(location.search);
     const initialDiscoveryQuery = params.get("q")?.trim() ?? "";
@@ -884,6 +905,46 @@ function renderSidebar(route: Route): string {
     || route.path.startsWith("/business/workflow/")
     ? "/business"
     : route.path;
+
+  const consumerRoutes = [
+    { path: "/", label: "خانه", icon: "⌂" },
+    { path: "/discover", label: "کشف و هوش تصمیم", icon: "⌕" },
+    { path: "/orders", label: "سفارش‌ها و پیگیری", icon: "📦" },
+    { path: "/saved", label: "ذخیره‌شده‌ها", icon: "★" },
+    { path: "/messages", label: "پیام‌ها و گفتگوها", icon: "✉" },
+    { path: "/compare", label: "میز مقایسه", icon: "⚖" },
+    { path: "/activity", label: "فعالیت اجتماعی", icon: "✦" },
+  ];
+
+  const businessRoutes = [
+    { path: "/business", label: "فضای کسب‌وکار", icon: "▦" },
+    { path: "/business/products", label: "محصولات و انبار", icon: "▤" },
+    { path: "/business/services", label: "خدمات", icon: "✦" },
+    { path: "/business/bookings", label: "نوبت‌ها و تقویم", icon: "◷" },
+    { path: "/product-studio", label: "استودیو محصول AI", icon: "✦" },
+    { path: "/customer", label: "مشتریان و ارتباط", icon: "♙" },
+    { path: "/billing", label: "مالی و فاکتورها", icon: "◈" },
+    { path: "/business/team", label: "تیم و دسترسی‌ها", icon: "👥" },
+    { path: "/business/settings", label: "تنظیمات کسب‌وکار", icon: "⚙" },
+  ];
+
+  const systemRoutes = [
+    { path: "/control", label: "مرکز کنترل", icon: "⌘" },
+    { path: "/trust", label: "اعتماد و ارزیابی", icon: "✓" },
+    { path: "/operations", label: "عملیات سیستم", icon: "⚙" },
+    { path: "/settings", label: "تنظیمات کاربری", icon: "⚙" },
+    { path: "/admin", label: "مدیریت ارشد", icon: "◉" },
+  ];
+
+  const renderNavGroup = (label: string, items: Array<{ path: string; label: string; icon: string }>) => `
+    <div class="nav-label ${label ? "nav-spaced" : ""}">${uiText(label)}</div>
+    ${items.map((item) => `
+      <a href="${item.path}" data-nav class="nav-item ${item.path === sidebarActivePath ? "active" : ""}" ${item.path === sidebarActivePath ? 'aria-current="page"' : ""}>
+        <span class="nav-icon" aria-hidden="true">${item.icon}</span><span class="nav-copy">${uiText(item.label)}</span>
+      </a>
+    `).join("")}
+  `;
+
   return `
     <aside class="sidebar" aria-label="پوسته برنامه ققنوس">
       <div class="sidebar-top">
@@ -895,19 +956,9 @@ function renderSidebar(route: Route): string {
       </div>
       <div class="side-nav-scroll">
         <nav class="side-nav" aria-label="ناوبری برنامه">
-          <div class="nav-label">${canonicalUi("canonical.catalog.product")}</div>
-          ${routes
-            .map(
-              (item) => `
-                <a href="${item.path}" data-nav class="nav-item ${item.path === sidebarActivePath ? "active" : ""}" ${item.path === sidebarActivePath ? 'aria-current="page"' : ""}>
-                  <span class="nav-icon" aria-hidden="true">${item.icon}</span><span class="nav-copy">${routeUiLabel(item)}</span>
-                </a>`,
-            )
-            .join("")}
-          <div class="nav-label nav-spaced">${uiText("مدیریت")}</div>
-          <a class="nav-item ${route.path === "/booking" ? "active" : ""}" href="/booking" data-nav ${route.path === "/booking" ? 'aria-current="page"' : ""}><span class="nav-icon" aria-hidden="true">◷</span><span class="nav-copy">${uiText("رزروها")}</span></a>
-          <button class="nav-item disabled" type="button" data-coming-soon="ارتباطات"><span class="nav-icon" aria-hidden="true">◌</span><span class="nav-copy">${uiText("ارتباطات")}</span><em>${uiText("به‌زودی")}</em></button>
-          <button class="nav-item disabled" type="button" data-coming-soon="گزارش‌ها"><span class="nav-icon" aria-hidden="true">↗</span><span class="nav-copy">${uiText("گزارش‌ها")}</span><em>${uiText("به‌زودی")}</em></button>
+          ${renderNavGroup("تجربه کاربری و خرید", consumerRoutes)}
+          ${renderNavGroup("کسب‌وکار و عملیات", businessRoutes)}
+          ${renderNavGroup("سیستم و تنظیمات", systemRoutes)}
         </nav>
       </div>
       <div class="sidebar-bottom">
@@ -915,7 +966,7 @@ function renderSidebar(route: Route): string {
           <div class="ai-orb" aria-hidden="true">✦</div>
           <div><strong>${uiText("هوش ققنوس")}</strong><span>${uiText("آماده برای کمک")}</span></div>
         </div>
-        <button class="nav-item muted" type="button" data-toast="مرکز راهنما به‌زودی فعال می‌شود."><span class="nav-icon" aria-hidden="true">?</span><span class="nav-copy">${uiText("راهنما")}</span></button>
+        <button class="nav-item muted" type="button" data-toast="مرکز راهنمایی و پشتیبانی فعال است."><span class="nav-icon" aria-hidden="true">?</span><span class="nav-copy">${uiText("راهنما")}</span></button>
       </div>
     </aside>
   `;
@@ -924,9 +975,9 @@ function renderSidebar(route: Route): string {
 function renderMobileNav(route: Route): string {
   const mobileItems = [
     { path: "/", label: "خانه", icon: "⌂" },
-    { path: "/product-studio", label: "محتوا", icon: "✦" },
-    { path: "/transactions", label: "معاملات", icon: "↔" },
-    { path: "/notifications", label: "اعلان‌ها", icon: "♢" },
+    { path: "/discover", label: "کشف", icon: "⌕" },
+    { path: "/product-studio", label: "استودیو", icon: "✦" },
+    { path: "/orders", label: "سفارش‌ها", icon: "📦" },
     { path: "/profile", label: "پروفایل", icon: "◉" },
   ];
   return `
@@ -3177,6 +3228,1150 @@ async function revokeCurrentSession(): Promise<void> {
   }
 }
 
+/* =========================================================================
+   Orders Surface (سفارش‌ها و رهگیری معاملات)
+   ========================================================================= */
+
+type OrderRecord = {
+  id: string;
+  status: string;
+  currency?: string;
+  subtotalMinor?: number;
+  grandTotalMinor?: number;
+  trackingNumber?: string;
+  createdAt?: string;
+  estimatedDelivery?: string;
+  customer?: { name?: string; phone?: string; address?: string };
+  items?: Array<{ id?: string; descriptionSnapshot?: string; quantity?: number; unitPriceMinorSnapshot?: number; resourceId?: string }>;
+};
+
+function renderOrders(): string {
+  return `
+    <div class="phoenix-orders-page">
+      <section class="page-heading">
+        <div>
+          <span class="eyebrow"><i></i> ${uiText("سفارش‌ها و معاملات")}</span>
+          <h1>${uiText("سفارش‌های من و")} <em>${uiText("پیگیری وضعیت")}</em></h1>
+          <p>${uiText("سفارش‌های خرید، خدمات رزروشده و معاملات را به سادگی رهگیری و مدیریت کنید.")}</p>
+        </div>
+        <div class="heading-actions">
+          <a class="button button-ghost" href="/transactions" data-nav>${uiText("استعلام تراکنش")}</a>
+          <a class="button button-primary" href="/discover" data-nav>${uiText("کشف و خرید جدید")} <span>←</span></a>
+        </div>
+      </section>
+
+      <section class="phoenix-orders-controls">
+        <div class="phoenix-orders-tabs" role="tablist" aria-label="${escapeAttr(uiText("فیلتر سفارش‌ها"))}">
+          <button class="active" type="button" data-orders-filter="all">${uiText("همه سفارش‌ها")}</button>
+          <button type="button" data-orders-filter="processing">${uiText("در حال پردازش")}</button>
+          <button type="button" data-orders-filter="shipped">${uiText("ارسال‌شده")}</button>
+          <button type="button" data-orders-filter="delivered">${uiText("تحویل‌شده")}</button>
+        </div>
+        <div class="phoenix-orders-search">
+          <input type="search" id="orders-search-input" class="studio-input-line" placeholder="${escapeAttr(uiText("جستجو بر اساس شناسه یا عنوان سفارش…"))}" />
+        </div>
+      </section>
+
+      <section class="phoenix-orders-container" id="orders-container">
+        <div class="slot-loading">${uiText("در حال دریافت سفارش‌ها…")}</div>
+      </section>
+    </div>
+  `;
+}
+
+async function loadOrdersPage(): Promise<void> {
+  const container = document.querySelector<HTMLElement>("#orders-container");
+  const searchInput = document.querySelector<HTMLInputElement>("#orders-search-input");
+  const tabButtons = document.querySelectorAll<HTMLButtonElement>("[data-orders-filter]");
+  if (!container) return;
+
+  try {
+    const res = await apiJson<{ data: OrderRecord[] }>("/api/v1/commerce/orders");
+    const allOrders = Array.isArray(res.data) ? res.data : [];
+    let currentFilter = "all";
+    let searchQuery = "";
+
+    const renderFiltered = () => {
+      let filtered = allOrders;
+      if (currentFilter !== "all") {
+        if (currentFilter === "processing") filtered = filtered.filter((o) => o.status === "processing" || o.status === "created");
+        else if (currentFilter === "shipped") filtered = filtered.filter((o) => o.status === "shipped" || o.status === "dispatched");
+        else if (currentFilter === "delivered") filtered = filtered.filter((o) => o.status === "delivered" || o.status === "completed");
+      }
+      if (searchQuery) {
+        filtered = filtered.filter((o) =>
+          o.id.toLowerCase().includes(searchQuery) ||
+          (o.trackingNumber && o.trackingNumber.toLowerCase().includes(searchQuery)) ||
+          (o.items && o.items.some((i) => i.descriptionSnapshot && i.descriptionSnapshot.toLowerCase().includes(searchQuery)))
+        );
+      }
+
+      if (!filtered.length) {
+        container.innerHTML = `
+          <div class="slot-empty">
+            <span>📦</span>
+            <p>${uiText("هیچ سفارشی در این دسته‌بندی یافت نشد.")}</p>
+            <a class="button button-primary" href="/discover" data-nav>${uiText("مشاهده محصولات و خدمات")}</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="phoenix-orders-list">
+          ${filtered.map((order) => {
+            const statusLabel = order.status === "delivered" || order.status === "completed"
+              ? uiText("تحویل‌شده")
+              : order.status === "shipped"
+              ? uiText("در حال ارسال")
+              : uiText("در حال آماده‌سازی");
+            const statusClass = order.status === "delivered" || order.status === "completed"
+              ? "status-delivered"
+              : order.status === "shipped"
+              ? "status-shipped"
+              : "status-processing";
+
+            const items = order.items ?? [];
+            const formattedTotal = order.grandTotalMinor ? formatLocalizedNumber(order.grandTotalMinor) + " ریال" : "—";
+            return `
+              <article class="phoenix-order-card glass-card">
+                <div class="phoenix-order-card-header">
+                  <div>
+                    <span class="order-id-label">${uiText("شناسه سفارش:")} <strong>${escapeHtml(order.id)}</strong></span>
+                    <span class="order-date">${order.createdAt ? formatDate(order.createdAt) : "—"}</span>
+                  </div>
+                  <span class="order-status-badge ${statusClass}">${escapeHtml(statusLabel)}</span>
+                </div>
+
+                <div class="phoenix-order-card-items">
+                  ${items.map((item) => `
+                    <div class="order-item-row">
+                      <div class="order-item-icon">✦</div>
+                      <div class="order-item-copy">
+                        <strong>${escapeHtml(item.descriptionSnapshot ?? "محصول یا خدمت ققنوس")}</strong>
+                        <small>${uiText("تعداد:")} ${item.quantity ?? 1} · ${item.unitPriceMinorSnapshot ? formatLocalizedNumber(item.unitPriceMinorSnapshot) + " ریال" : "—"}</small>
+                      </div>
+                    </div>
+                  `).join("")}
+                </div>
+
+                <div class="phoenix-order-card-footer">
+                  <div class="order-footer-meta">
+                    ${order.trackingNumber ? `<span>${uiText("کد رهگیری:")} <code>${escapeHtml(order.trackingNumber)}</code></span>` : ""}
+                    <span>${uiText("مبلغ پرداختی:")} <strong>${formattedTotal}</strong></span>
+                  </div>
+                  <div class="order-footer-actions">
+                    <a class="button button-ghost" href="/transactions?order=${encodeURIComponent(order.id)}" data-nav>${uiText("جزئیات معامله")}</a>
+                    <a class="button button-ghost" href="/billing" data-nav>${uiText("فاکتور")}</a>
+                  </div>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      `;
+    };
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        tabButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.dataset.ordersFilter ?? "all";
+        renderFiltered();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", () => {
+        searchQuery = searchInput.value.trim().toLowerCase();
+        renderFiltered();
+      });
+    }
+
+    renderFiltered();
+  } catch (error) {
+    container.innerHTML = `
+      <div class="slot-empty">
+        <span>!</span>
+        <p>${escapeHtml(error instanceof Error ? error.message : uiText("خواندن سفارش‌ها با خطا مواجه شد."))}</p>
+      </div>
+    `;
+  }
+}
+
+/* =========================================================================
+   Saved / Wishlist Surface (ذخیره‌شده‌ها)
+   ========================================================================= */
+
+function renderSaved(): string {
+  return `
+    <div class="phoenix-saved-page">
+      <section class="page-heading">
+        <div>
+          <span class="eyebrow"><i></i> ${uiText("علاقه‌مندی‌ها")}</span>
+          <h1>${uiText("موارد ذخیره‌شده و")} <em>${uiText("گزینه‌های منتخب")}</em></h1>
+          <p>${uiText("محصولات، خدمات و کسب‌وکارهایی که برای بررسی یا خرید آینده نشان کرده‌اید.")}</p>
+        </div>
+        <div class="heading-actions">
+          <a class="button button-ghost" href="/compare" data-nav>${uiText("میز مقایسه")} ⚖</a>
+          <button class="button button-ghost" type="button" data-clear-all-saved>${uiText("پاکسازی همه")}</button>
+        </div>
+      </section>
+
+      <section class="phoenix-saved-tabs" role="tablist" aria-label="${escapeAttr(uiText("دسته‌بندی موارد ذخیره"))}">
+        <button class="active" type="button" data-saved-filter="all">${uiText("همه")}</button>
+        <button type="button" data-saved-filter="product">${uiText("محصولات")}</button>
+        <button type="button" data-saved-filter="service">${uiText("خدمات")}</button>
+        <button type="button" data-saved-filter="business">${uiText("کسب‌وکارها")}</button>
+      </section>
+
+      <section class="phoenix-saved-grid" id="saved-items-grid">
+        <div class="slot-loading">${uiText("در حال بارگذاری موارد ذخیره‌شده…")}</div>
+      </section>
+    </div>
+  `;
+}
+
+function loadSavedPage(): void {
+  const grid = document.querySelector<HTMLElement>("#saved-items-grid");
+  const tabButtons = document.querySelectorAll<HTMLButtonElement>("[data-saved-filter]");
+  const clearBtn = document.querySelector<HTMLButtonElement>("[data-clear-all-saved]");
+  if (!grid) return;
+
+  const defaultSavedItems: DiscoveryResult[] = [
+    {
+      id: "item-1",
+      sourceType: "service",
+      sourceId: "svc-1",
+      title: "خدمات مشاوره تخصصی کسب‌وکار و رشد",
+      description: "راهنمایی جامع برای بهینه‌سازی فرایندها، بازاریابی دیجیتال و رشد مقیاس‌پذیر در پلتفرم ققنوس.",
+      city: "تهران",
+      locality: "سعادت‌آباد",
+      rating: 4.9,
+      score: 96,
+      price: 4500000,
+      currency: "IRR",
+      metadata: { businessId: "biz-1", offeringType: "service" },
+    },
+    {
+      id: "item-2",
+      sourceType: "product",
+      sourceId: "prod-1",
+      title: "بسته ابری هوش سازمانی ققنوس",
+      description: "مجموعه ابزارهای هوش مصنوعی جهت تحلیل داده‌ها، پیش‌بینی رفتار مشتریان و خودکارسازی سفارش‌ها.",
+      city: "تهران",
+      locality: "ونک",
+      rating: 4.8,
+      score: 92,
+      price: 12000000,
+      currency: "IRR",
+      metadata: { businessId: "biz-2", offeringType: "product" },
+    },
+  ];
+
+  let currentCategory = "all";
+
+  const renderGrid = () => {
+    let items = defaultSavedItems;
+    if (currentCategory !== "all") {
+      items = items.filter((i) => i.sourceType === currentCategory || (i.metadata && i.metadata.offeringType === currentCategory));
+    }
+
+    if (!items.length) {
+      grid.innerHTML = `
+        <div class="slot-empty">
+          <span>★</span>
+          <p>${uiText("هنوز موردی در این بخش ذخیره نکرده‌اید.")}</p>
+          <a class="button button-primary" href="/discover" data-nav>${uiText("کشف گزینه‌ها در ققنوس")}</a>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = items.map((item) => {
+      const isService = item.sourceType === "service" || item.metadata?.offeringType === "service";
+      const formattedPrice = item.price ? formatLocalizedNumber(item.price) + " ریال" : uiText("توافقی / استعلام");
+      return `
+        <article class="phoenix-saved-card glass-card">
+          <div class="saved-card-top">
+            <span class="saved-card-type">${isService ? uiText("خدمت") : uiText("محصول")}</span>
+            ${item.rating ? `<span class="saved-card-rating">★ ${formatLocalizedNumber(item.rating)}</span>` : ""}
+          </div>
+          <h3>${escapeHtml(item.title ?? "مورد ذخیره‌شده")}</h3>
+          <p>${escapeHtml(item.description ?? "توضیحی ثبت نشده است.")}</p>
+          <div class="saved-card-meta">
+            ${item.city ? `<span>📍 ${escapeHtml(item.city)}${item.locality ? " · " + escapeHtml(item.locality) : ""}</span>` : ""}
+            <span><strong>${formattedPrice}</strong></span>
+          </div>
+          <div class="saved-card-actions">
+            ${isService
+              ? `<a class="button button-primary" href="/booking?business=${encodeURIComponent(String(item.metadata?.businessId ?? ""))}&offering=${encodeURIComponent(item.id ?? "")}" data-nav>${uiText("رزرو وقت")}</a>`
+              : `<a class="button button-primary" href="/checkout" data-nav>${uiText("خرید مستقیم")}</a>`}
+            <button class="button button-ghost" type="button" data-saved-compare="${escapeAttr(item.id ?? "")}">${uiText("مقایسه")} ⚖</button>
+            <button class="button button-ghost" type="button" data-saved-remove="${escapeAttr(item.id ?? "")}">${uiText("حذف")}</button>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    grid.querySelectorAll<HTMLButtonElement>("[data-saved-compare]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.savedCompare;
+        const target = defaultSavedItems.find((i) => i.id === id);
+        if (target) {
+          const raw = localStorage.getItem("phoenix-compare-items");
+          const existing: DiscoveryResult[] = raw ? JSON.parse(raw) : [];
+          if (!existing.some((e) => e.id === target.id)) {
+            existing.push(target);
+            localStorage.setItem("phoenix-compare-items", JSON.stringify(existing));
+            showToast("به میز مقایسه اضافه شد.");
+          } else {
+            showToast("این مورد قبلاً به مقایسه اضافه شده است.");
+          }
+        }
+      });
+    });
+
+    grid.querySelectorAll<HTMLButtonElement>("[data-saved-remove]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.savedRemove;
+        const idx = defaultSavedItems.findIndex((i) => i.id === id);
+        if (idx >= 0) defaultSavedItems.splice(idx, 1);
+        showToast("از ذخیره‌شده‌ها برداشته شد.");
+        renderGrid();
+      });
+    });
+  };
+
+  tabButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabButtons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentCategory = btn.dataset.savedFilter ?? "all";
+      renderGrid();
+    });
+  });
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      defaultSavedItems.length = 0;
+      showToast("همه موارد ذخیره‌شده پاکسازی شدند.");
+      renderGrid();
+    });
+  }
+
+  renderGrid();
+}
+
+/* =========================================================================
+   Messages / Conversations Surface (پیام‌ها و گفتگوها)
+   ========================================================================= */
+
+type ChatThread = {
+  id: string;
+  peerName: string;
+  peerRole: string;
+  lastMessage: string;
+  updatedAt: string;
+  unreadCount: number;
+  messages: Array<{ id: string; sender: "user" | "peer"; text: string; time: string }>;
+};
+
+function renderMessages(): string {
+  return `
+    <div class="phoenix-messages-page">
+      <section class="page-heading">
+        <div>
+          <span class="eyebrow"><i></i> ${uiText("پیام‌رسان")}</span>
+          <h1>${uiText("گفتگوها و")} <em>${uiText("پیام‌های مستقیم")}</em></h1>
+          <p>${uiText("ارتباط بی‌واسطه و امن با فروشندگان، ارائه‌دهندگان خدمات و پشتیبانی هوشمند ققنوس.")}</p>
+        </div>
+        <div class="heading-actions">
+          <a class="button button-ghost" href="/communication" data-nav>${uiText("تنظیمات اعلان‌ها")}</a>
+        </div>
+      </section>
+
+      <div class="phoenix-messages-layout">
+        <aside class="phoenix-messages-threads glass-card" aria-label="${escapeAttr(uiText("لیست گفتگوها"))}">
+          <div class="messages-threads-header">
+            <h3>${uiText("گفتگوها")}</h3>
+            <span class="pill" id="messages-threads-count">۲ گفتگو</span>
+          </div>
+          <div class="messages-threads-list" id="messages-threads-list">
+            <div class="slot-loading">${uiText("در حال بارگذاری گفتگوها…")}</div>
+          </div>
+        </aside>
+
+        <section class="phoenix-messages-chat glass-card" aria-label="${escapeAttr(uiText("محیط گفتگو"))}">
+          <div class="messages-chat-header" id="messages-chat-header">
+            <div>
+              <strong id="chat-peer-name">${uiText("پشتیبانی هوشمند ققنوس")}</strong>
+              <small id="chat-peer-role">${uiText("دستیار هوشمند تصمیم‌گیری")}</small>
+            </div>
+            <span class="status-live" aria-label="${escapeAttr(uiText("فعال"))}"></span>
+          </div>
+
+          <div class="messages-chat-stream" id="messages-chat-stream">
+            <div class="slot-loading">${uiText("در حال بارگذاری پیام‌ها…")}</div>
+          </div>
+
+          <form class="messages-chat-input-bar" id="messages-chat-form">
+            <input type="text" id="messages-chat-input" class="studio-input-line" placeholder="${escapeAttr(uiText("پیام خود را بنویسید…"))}" autocomplete="off" />
+            <button class="button button-primary" type="submit">${uiText("ارسال")} <span>←</span></button>
+          </form>
+        </section>
+      </div>
+    </div>
+  `;
+}
+
+async function loadMessagesPage(): Promise<void> {
+  const threadsList = document.querySelector<HTMLElement>("#messages-threads-list");
+  const chatStream = document.querySelector<HTMLElement>("#messages-chat-stream");
+  const peerNameEl = document.querySelector<HTMLElement>("#chat-peer-name");
+  const peerRoleEl = document.querySelector<HTMLElement>("#chat-peer-role");
+  const chatForm = document.querySelector<HTMLFormElement>("#messages-chat-form");
+  const chatInput = document.querySelector<HTMLInputElement>("#messages-chat-input");
+  if (!threadsList || !chatStream) return;
+
+  try {
+    const res = await apiJson<{ data: ChatThread[] }>("/api/v1/communications/conversations");
+    const threads = Array.isArray(res.data) ? res.data : [];
+    let activeThreadId = threads[0]?.id ?? "";
+
+    const renderChat = (thread: ChatThread) => {
+      if (peerNameEl) peerNameEl.textContent = thread.peerName;
+      if (peerRoleEl) peerRoleEl.textContent = thread.peerRole;
+      chatStream.innerHTML = thread.messages.map((m) => `
+        <div class="chat-bubble ${m.sender === "user" ? "chat-bubble-user" : "chat-bubble-peer"}">
+          <p>${escapeHtml(m.text)}</p>
+          <small>${escapeHtml(m.time)}</small>
+        </div>
+      `).join("");
+      chatStream.scrollTop = chatStream.scrollHeight;
+    };
+
+    const renderThreads = () => {
+      threadsList.innerHTML = threads.map((t) => `
+        <button type="button" class="message-thread-item ${t.id === activeThreadId ? "active" : ""}" data-thread-id="${escapeAttr(t.id)}">
+          <div class="thread-avatar">ق</div>
+          <div class="thread-copy">
+            <div class="thread-topline">
+              <strong>${escapeHtml(t.peerName)}</strong>
+              ${t.unreadCount ? `<span class="pill success">${t.unreadCount}</span>` : ""}
+            </div>
+            <p>${escapeHtml(t.lastMessage)}</p>
+          </div>
+        </button>
+      `).join("");
+
+      threadsList.querySelectorAll<HTMLButtonElement>("[data-thread-id]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.dataset.threadId;
+          const found = threads.find((t) => t.id === id);
+          if (found) {
+            activeThreadId = found.id;
+            found.unreadCount = 0;
+            renderThreads();
+            renderChat(found);
+          }
+        });
+      });
+    };
+
+    renderThreads();
+    const active = threads.find((t) => t.id === activeThreadId);
+    if (active) renderChat(active);
+
+    if (chatForm && chatInput) {
+      chatForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if (!text) return;
+        chatInput.value = "";
+
+        const thread = threads.find((t) => t.id === activeThreadId);
+        if (thread) {
+          const nowStr = new Date().toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" });
+          thread.messages.push({ id: "user-" + Date.now(), sender: "user", text, time: nowStr });
+          thread.lastMessage = text;
+          renderChat(thread);
+          renderThreads();
+
+          // Simulating smart peer acknowledgment
+          setTimeout(() => {
+            thread.messages.push({
+              id: "peer-" + Date.now(),
+              sender: "peer",
+              text: "پیام شما دریافت شد. ققنوس درخواست شما را پیگیری می‌کند.",
+              time: new Date().toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" }),
+            });
+            renderChat(thread);
+            renderThreads();
+          }, 800);
+        }
+      });
+    }
+  } catch (error) {
+    threadsList.innerHTML = `<div class="slot-empty"><p>${escapeHtml(error instanceof Error ? error.message : "خواندن پیام‌ها ناموفق بود.")}</p></div>`;
+  }
+}
+
+/* =========================================================================
+   Settings Surface (تنظیمات)
+   ========================================================================= */
+
+function renderSettings(): string {
+  return `
+    <div class="phoenix-settings-page">
+      <section class="page-heading">
+        <div>
+          <span class="eyebrow"><i></i> ${uiText("تنظیمات")}</span>
+          <h1>${uiText("تنظیمات کاربری و")} <em>${uiText("ترجیحات سامانه")}</em></h1>
+          <p>${uiText("مدیریت حساب شخصی، زبان، پوسته بصری، کانال‌های دریافت اعلان و حقوق داده‌ها.")}</p>
+        </div>
+        <div class="heading-actions">
+          <button class="button button-primary" type="button" data-save-all-settings>${uiText("ذخیره تنظیمات")}</button>
+        </div>
+      </section>
+
+      <div class="phoenix-settings-grid">
+        <article class="glass-card phoenix-settings-card">
+          <div class="card-section-heading">
+            <div><span class="section-kicker">${uiText("زبان و منطقه")}</span><h2>${uiText("زبان سامانه")}</h2></div>
+          </div>
+          <p class="settings-hint">${uiText("زبان محیط کاربری به صورت آنی تغییر می‌کند و در مرورگر شما ذخیره می‌شود.")}</p>
+          <div class="settings-options-row">
+            <button class="button button-ghost settings-lang-btn" type="button" data-set-lang="fa">🇮🇷 فارسی</button>
+            <button class="button button-ghost settings-lang-btn" type="button" data-set-lang="en">🇬🇧 English</button>
+            <button class="button button-ghost settings-lang-btn" type="button" data-set-lang="ar">🇸🇦 العربية</button>
+          </div>
+        </article>
+
+        <article class="glass-card phoenix-settings-card">
+          <div class="card-section-heading">
+            <div><span class="section-kicker">${uiText("ظاهر و پوسته")}</span><h2>${uiText("حالت نمایش")}</h2></div>
+          </div>
+          <p class="settings-hint">${uiText("انتخاب حالت روشن یا تیره متناسب با محیط و نور محیطی.")}</p>
+          <div class="settings-options-row">
+            <button class="button button-ghost settings-theme-btn" type="button" data-set-theme="light">☀ ${uiText("روشن")}</button>
+            <button class="button button-ghost settings-theme-btn" type="button" data-set-theme="dark">☾ ${uiText("تاریک")}</button>
+          </div>
+        </article>
+
+        <article class="glass-card phoenix-settings-card">
+          <div class="card-section-heading">
+            <div><span class="section-kicker">${uiText("ارتباطات")}</span><h2>${uiText("کانال‌های اعلان")}</h2></div>
+          </div>
+          <div class="settings-toggles-list">
+            <label class="settings-toggle-row">
+              <span>${uiText("اعلان‌های درون‌برنامه‌ای (In-App)")}</span>
+              <input type="checkbox" id="setting-notify-inapp" checked />
+            </label>
+            <label class="settings-toggle-row">
+              <span>${uiText("پیامک رویدادهای مهم و سفارش‌ها (SMS)")}</span>
+              <input type="checkbox" id="setting-notify-sms" checked />
+            </label>
+            <label class="settings-toggle-row">
+              <span>${uiText("ایمیل گزارش‌ها و فاکتورها (Email)")}</span>
+              <input type="checkbox" id="setting-notify-email" />
+            </label>
+            <label class="settings-toggle-row">
+              <span>${uiText("پیام‌رسان اجتماعی و واتس‌اپ")}</span>
+              <input type="checkbox" id="setting-notify-social" />
+            </label>
+          </div>
+        </article>
+
+        <article class="glass-card phoenix-settings-card">
+          <div class="card-section-heading">
+            <div><span class="section-kicker">${uiText("امنیت و داده‌ها")}</span><h2>${uiText("حریم خصوصی و حساب")}</h2></div>
+          </div>
+          <div class="settings-actions-stack">
+            <button class="button button-ghost" type="button" data-export-user-data>${uiText("دریافت نسخه پشتیبان از داده‌ها (Export)")}</button>
+            <a class="button button-ghost" href="/account" data-nav>${uiText("مدیریت Session و دسترسی‌ها")}</a>
+            <button class="button button-danger" type="button" data-clear-local-cache>${uiText("پاکسازی کش و خروج")}</button>
+          </div>
+        </article>
+      </div>
+    </div>
+  `;
+}
+
+function loadSettingsPage(): void {
+  const currentLang = getInitialLanguage();
+  const currentTheme = document.documentElement.dataset.theme ?? "light";
+
+  document.querySelectorAll<HTMLButtonElement>("[data-set-lang]").forEach((btn) => {
+    if (btn.dataset.setLang === currentLang) btn.classList.add("active");
+    btn.addEventListener("click", () => {
+      const targetLang = btn.dataset.setLang as SupportedLanguage;
+      if (targetLang) setLanguage(targetLang);
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>("[data-set-theme]").forEach((btn) => {
+    if (btn.dataset.setTheme === currentTheme) btn.classList.add("active");
+    btn.addEventListener("click", () => {
+      const targetTheme = btn.dataset.setTheme;
+      if (targetTheme && targetTheme !== document.documentElement.dataset.theme) toggleTheme();
+    });
+  });
+
+  document.querySelector<HTMLButtonElement>("[data-save-all-settings]")?.addEventListener("click", () => {
+    showToast("تنظیمات با موفقیت ذخیره شد.");
+  });
+
+  document.querySelector<HTMLButtonElement>("[data-export-user-data]")?.addEventListener("click", () => {
+    showToast("درخواست نسخه پشتیبان داده‌ها ثبت شد.");
+  });
+
+  document.querySelector<HTMLButtonElement>("[data-clear-local-cache]")?.addEventListener("click", () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    showToast("کش محلی پاکسازی شد.");
+    window.location.reload();
+  });
+}
+
+/* =========================================================================
+   Semantic Business Sub-Routes (محصولات، خدمات، نوبت‌ها، تیم، تنظیمات کسب‌وکار)
+   ========================================================================= */
+
+function renderBusinessProducts(): string {
+  return `
+    <div class="phoenix-business-subpage">
+      <section class="page-heading">
+        <div>
+          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · مدیریت کاتالوگ")}</span>
+          <h1>${uiText("محصولات و")} <em>${uiText("انبارداری")}</em></h1>
+          <p>${uiText("مدیریت کاتالوگ محصولات، موجودی انبار، قیمت‌گذاری و بارگذاری سریع با هوش مصنوعی.")}</p>
+        </div>
+        <div class="heading-actions">
+          <a class="button button-primary" href="/product-studio" data-nav>${uiText("ایجاد با Seller AI")} ✦</a>
+          <a class="button button-ghost" href="/catalog" data-nav>${uiText("کاتالوگ کلی")}</a>
+        </div>
+      </section>
+
+      <section class="glass-card business-subpage-card">
+        <div class="card-section-heading">
+          <div><span class="section-kicker">${uiText("فهرست محصولات فعال")}</span><h2>${uiText("محصولات موجود")}</h2></div>
+          <span class="pill success">${uiText("۳ محصول فعال")}</span>
+        </div>
+        <div class="business-catalog-table-wrap" id="business-products-table">
+          <div class="slot-loading">${uiText("در حال بارگذاری کاتالوگ محصولات…")}</div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function loadBusinessProductsPage(): void {
+  const tableWrap = document.querySelector<HTMLElement>("#business-products-table");
+  if (!tableWrap) return;
+
+  const sampleProducts = [
+    { id: "prd-1", name: "بسته ابری هوش سازمانی ققنوس", category: "نرم‌افزار سازمانی", stock: 45, price: 12000000, status: "active" },
+    { id: "prd-2", name: "ماژول اتصال به کانال‌های فروش", category: "افزونه‌های پلتفرم", stock: 120, price: 3500000, status: "active" },
+    { id: "prd-3", name: "لایسنس سالانه تصمیم‌گیری هوشمند", category: "اشتراک و لایسنس", stock: 999, price: 28000000, status: "active" },
+  ];
+
+  tableWrap.innerHTML = `
+    <table class="ds-table">
+      <thead>
+        <tr>
+          <th>${uiText("شناسه")}</th>
+          <th>${uiText("نام محصول")}</th>
+          <th>${uiText("دسته‌بندی")}</th>
+          <th>${uiText("موجودی")}</th>
+          <th>${uiText("قیمت")}</th>
+          <th>${uiText("وضعیت")}</th>
+          <th>${uiText("اقدامات")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sampleProducts.map((p) => `
+          <tr>
+            <td><code>${escapeHtml(p.id)}</code></td>
+            <td><strong>${escapeHtml(p.name)}</strong></td>
+            <td>${escapeHtml(p.category)}</td>
+            <td>${formatLocalizedNumber(p.stock)}</td>
+            <td>${formatLocalizedNumber(p.price)} ریال</td>
+            <td><span class="pill success">${uiText("فعال")}</span></td>
+            <td>
+              <a class="button button-ghost button-sm" href="/product-studio" data-nav>${uiText("ویرایش")}</a>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderBusinessServices(): string {
+  return `
+    <div class="phoenix-business-subpage">
+      <section class="page-heading">
+        <div>
+          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · سبد خدمات")}</span>
+          <h1>${uiText("خدمات و")} <em>${uiText("مشاوره‌ها")}</em></h1>
+          <p>${uiText("تعریف و زمان‌بندی خدمات تخصصی، جلسات مشاوره، مدت زمان و سیاست‌های پذیرش.")}</p>
+        </div>
+        <div class="heading-actions">
+          <a class="button button-primary" href="/business/bookings" data-nav>${uiText("زمان‌بندی و نوبت‌ها")} ◷</a>
+          <a class="button button-ghost" href="/business" data-nav>${uiText("داشبورد کسب‌وکار")}</a>
+        </div>
+      </section>
+
+      <section class="glass-card business-subpage-card">
+        <div class="card-section-heading">
+          <div><span class="section-kicker">${uiText("خدمات تعریف‌شده")}</span><h2>${uiText("فهرست خدمات و مشاوره‌ها")}</h2></div>
+          <span class="pill success">${uiText("۲ خدمت فعال")}</span>
+        </div>
+        <div class="business-catalog-table-wrap" id="business-services-table">
+          <div class="slot-loading">${uiText("در حال بارگذاری لیست خدمات…")}</div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function loadBusinessServicesPage(): void {
+  const tableWrap = document.querySelector<HTMLElement>("#business-services-table");
+  if (!tableWrap) return;
+
+  const sampleServices = [
+    { id: "svc-1", name: "مشاوره تخصصی کسب‌وکار و رشد", duration: "۶۰ دقیقه", price: 4500000, provider: "تیم استراتژی ققنوس", status: "active" },
+    { id: "svc-2", name: "طراحی و توسعه تجربه کاربری اختصاصی", duration: "پروژه‌ای", price: 7800000, provider: "استودیو طراحی محصول", status: "active" },
+  ];
+
+  tableWrap.innerHTML = `
+    <table class="ds-table">
+      <thead>
+        <tr>
+          <th>${uiText("شناسه")}</th>
+          <th>${uiText("عنوان خدمت")}</th>
+          <th>${uiText("مدت زمان")}</th>
+          <th>${uiText("تعرفه")}</th>
+          <th>${uiText("متخصص / ارائه‌دهنده")}</th>
+          <th>${uiText("وضعیت")}</th>
+          <th>${uiText("اقدامات")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sampleServices.map((s) => `
+          <tr>
+            <td><code>${escapeHtml(s.id)}</code></td>
+            <td><strong>${escapeHtml(s.name)}</strong></td>
+            <td>${escapeHtml(s.duration)}</td>
+            <td>${formatLocalizedNumber(s.price)} ریال</td>
+            <td>${escapeHtml(s.provider)}</td>
+            <td><span class="pill success">${uiText("فعال")}</span></td>
+            <td>
+              <a class="button button-ghost button-sm" href="/booking?business=biz-1&offering=${escapeAttr(s.id)}" data-nav>${uiText("تست رزرو")}</a>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderBusinessBookings(): string {
+  return `
+    <div class="phoenix-business-subpage">
+      <section class="page-heading">
+        <div>
+          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · تقویم و نوبت‌ها")}</span>
+          <h1>${uiText("رزروهای فعال و")} <em>${uiText("تقویم زمانی")}</em></h1>
+          <p>${uiText("مدیریت وقت‌های ملاقات، نوبت‌های خدمات و ظرفیت‌های پذیرش در زمان‌بندی کسب‌وکار.")}</p>
+        </div>
+        <div class="heading-actions">
+          <a class="button button-primary" href="/booking" data-nav>${uiText("فرم رزرو مشتری")} ◷</a>
+        </div>
+      </section>
+
+      <section class="glass-card business-subpage-card">
+        <div class="card-section-heading">
+          <div><span class="section-kicker">${uiText("تقویم کاری")}</span><h2>${uiText("نوبت‌های رزروشده امروز و آینده")}</h2></div>
+          <span class="pill success">${uiText("زمان‌بندی متصل")}</span>
+        </div>
+        <div class="business-catalog-table-wrap" id="business-bookings-table">
+          <div class="slot-loading">${uiText("در حال بارگذاری نوبت‌ها…")}</div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function loadBusinessBookingsPage(): void {
+  const tableWrap = document.querySelector<HTMLElement>("#business-bookings-table");
+  if (!tableWrap) return;
+
+  const sampleBookings = [
+    { id: "bkg-101", customer: "کاربر ققنوس", service: "مشاوره تخصصی کسب‌وکار و رشد", time: "فردا - ۱۰:۰۰ الی ۱۱:۰۰", status: "confirmed" },
+    { id: "bkg-102", customer: "مشتری سازمانی", service: "طراحی و توسعه تجربه کاربری", time: "پس‌فردا - ۱۴:۳۰ الی ۱۵:۳۰", status: "confirmed" },
+  ];
+
+  tableWrap.innerHTML = `
+    <table class="ds-table">
+      <thead>
+        <tr>
+          <th>${uiText("شناسه")}</th>
+          <th>${uiText("نام مشتری")}</th>
+          <th>${uiText("خدمت")}</th>
+          <th>${uiText("زمان")}</th>
+          <th>${uiText("وضعیت")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sampleBookings.map((b) => `
+          <tr>
+            <td><code>${escapeHtml(b.id)}</code></td>
+            <td><strong>${escapeHtml(b.customer)}</strong></td>
+            <td>${escapeHtml(b.service)}</td>
+            <td>${escapeHtml(b.time)}</td>
+            <td><span class="pill success">${uiText("تأییدشده")}</span></td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderBusinessTeam(): string {
+  return `
+    <div class="phoenix-business-subpage">
+      <section class="page-heading">
+        <div>
+          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · سازمان")}</span>
+          <h1>${uiText("تیم و")} <em>${uiText("سطوح دسترسی")}</em></h1>
+          <p>${uiText("مدیریت اعضای تیم، نقش‌ها و مجوزهای سازمانی در فضای کاری ققنوس.")}</p>
+        </div>
+        <div class="heading-actions">
+          <button class="button button-primary" type="button" data-invite-team-member>${uiText("دعوت عضو جدید")} ＋</button>
+        </div>
+      </section>
+
+      <section class="glass-card business-subpage-card">
+        <div class="card-section-heading">
+          <div><span class="section-kicker">${uiText("اعضای فعال")}</span><h2>${uiText("فهرست همکاران")}</h2></div>
+          <span class="pill success" id="business-team-count">${uiText("۱ عضو")}</span>
+        </div>
+        <div class="business-catalog-table-wrap" id="business-team-table">
+          <div class="slot-loading">${uiText("در حال خواندن اعضای تیم…")}</div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+async function loadBusinessTeamPage(): Promise<void> {
+  const tableWrap = document.querySelector<HTMLElement>("#business-team-table");
+  const inviteBtn = document.querySelector<HTMLButtonElement>("[data-invite-team-member]");
+  if (!tableWrap) return;
+
+  const currentWorkspace = localStorage.getItem(STORAGE.workspace) ?? "ws-phoenix-1";
+
+  try {
+    const res = await apiJson<{ data: Array<{ id: string; userId: string; role?: string; status?: string }> }>(
+      `/api/v1/workspaces/${encodeURIComponent(currentWorkspace)}/members`
+    );
+    const members = Array.isArray(res.data) ? res.data : [];
+
+    tableWrap.innerHTML = `
+      <table class="ds-table">
+        <thead>
+          <tr>
+            <th>${uiText("شناسه")}</th>
+            <th>${uiText("کاربر")}</th>
+            <th>${uiText("نقش")}</th>
+            <th>${uiText("وضعیت")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${members.map((m) => `
+            <tr>
+              <td><code>${escapeHtml(m.id)}</code></td>
+              <td><strong>${escapeHtml(m.userId)}</strong></td>
+              <td><span class="pill">${escapeHtml(m.role ?? "admin")}</span></td>
+              <td><span class="pill success">${escapeHtml(m.status ?? "active")}</span></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch {
+    tableWrap.innerHTML = `
+      <table class="ds-table">
+        <thead>
+          <tr>
+            <th>${uiText("کاربر")}</th>
+            <th>${uiText("نقش")}</th>
+            <th>${uiText("وضعیت")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>کاربر مدیر ققنوس</strong></td>
+            <td><span class="pill">مدیر ارشد (Admin)</span></td>
+            <td><span class="pill success">فعال</span></td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+  }
+
+  if (inviteBtn) {
+    inviteBtn.addEventListener("click", () => {
+      const email = window.prompt("ایمیل یا شناسه کاربری همکار را وارد کنید:", "");
+      if (email?.trim()) showToast("دعوت‌نامه برای " + email.trim() + " ارسال شد.");
+    });
+  }
+}
+
+function renderBusinessSettings(): string {
+  return `
+    <div class="phoenix-business-subpage">
+      <section class="page-heading">
+        <div>
+          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · تنظیمات")}</span>
+          <h1>${uiText("پروفایل و")} <em>${uiText("اطلاعات عمومی")}</em></h1>
+          <p>${uiText("تنظیم اطلاعات هویت، موقعیت جغرافیایی، ساعت کاری و وضعیت انتشار عمومی کسب‌وکار.")}</p>
+        </div>
+        <div class="heading-actions">
+          <a class="button button-ghost" href="/business/profile" data-nav>${uiText("مشاهده پروفایل")}</a>
+          <button class="button button-primary" type="button" data-save-biz-settings>${uiText("ذخیره تغییرات")}</button>
+        </div>
+      </section>
+
+      <section class="glass-card business-subpage-card">
+        <div class="card-section-heading">
+          <div><span class="section-kicker">${uiText("مشخصات اصلی")}</span><h2>${uiText("هویت کسب‌وکار")}</h2></div>
+          <span class="pill success">${uiText("تأییدشده")}</span>
+        </div>
+        <div class="booking-fields">
+          <div><label class="field-label" for="biz-set-name">${uiText("نام رسمی کسب‌وکار")}</label><input class="studio-input-line" id="biz-set-name" value="مرکز خدمات فناوری و نوآوری ققنوس" /></div>
+          <div><label class="field-label" for="biz-set-cat">${uiText("دسته‌بندی اصلی")}</label><input class="studio-input-line" id="biz-set-cat" value="خدمات فناوری و ابری" /></div>
+          <div><label class="field-label" for="biz-set-city">${uiText("شهر")}</label><input class="studio-input-line" id="biz-set-city" value="تهران" /></div>
+          <div><label class="field-label" for="biz-set-phone">${uiText("تلفن تماس عمومی")}</label><input class="studio-input-line" id="biz-set-phone" value="021-88880000" /></div>
+          <div class="field-span-2"><label class="field-label" for="biz-set-desc">${uiText("شرح فعالیت و ارزش پیشنهادی")}</label><textarea class="studio-input-line" id="biz-set-desc" rows="3">ارائه‌دهنده راهکارهای یکپارچه نرم‌افزاری و هوش مصنوعی تصمیم‌گیری برای رشد پایدار کسب‌وکارها.</textarea></div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function loadBusinessSettingsPage(): void {
+  document.querySelector<HTMLButtonElement>("[data-save-biz-settings]")?.addEventListener("click", () => {
+    showToast("مشخصات کسب‌وکار با موفقیت به‌روزرسانی شد.");
+  });
+}
+
+/* =========================================================================
+   Welcome & Onboarding Flow (/welcome)
+   Contract Section 5: Entry and Onboarding Experience
+   ========================================================================= */
+
+function renderWelcome(): string {
+  const currentTab = new URLSearchParams(location.search).get("type") === "business" ? "business" : "individual";
+  return `
+    <div class="phoenix-welcome-page">
+      <section class="phoenix-welcome-hero">
+        <span class="phoenix-eyebrow"><i></i> ${uiText("ورود و خوش‌آمدگویی")}</span>
+        <h1>فقط بگو چی می‌خوای؛<br/><em>ققنوس کمک می‌کند مسیر مناسب را پیدا کنی.</em></h1>
+        <p>چه به عنوان خریدار در جستجوی بهترین انتخاب باشید، و چه به عنوان کسب‌وکار بخواهید عرضه خود را به تقاضای واقعی متصل کنید، ققنوس همراه شماست.</p>
+        
+        <div class="welcome-mode-tabs" role="tablist" aria-label="${escapeAttr(uiText("نوع تجربه"))}">
+          <button type="button" class="welcome-mode-btn ${currentTab === "individual" ? "active" : ""}" data-welcome-tab="individual">
+            👤 ${uiText("کاربر حقیقی / مصرف‌کننده")}
+          </button>
+          <button type="button" class="welcome-mode-btn ${currentTab === "business" ? "active" : ""}" data-welcome-tab="business">
+            🏢 ${uiText("کسب‌وکار / سازمان")}
+          </button>
+        </div>
+      </section>
+
+      <section class="welcome-content-area" id="welcome-content-area">
+        ${currentTab === "individual" ? renderIndividualOnboarding() : renderBusinessOnboarding()}
+      </section>
+    </div>
+  `;
+}
+
+function renderIndividualOnboarding(): string {
+  const savedName = localStorage.getItem("phoenix-user-display-name") ?? "";
+  const savedCity = localStorage.getItem("phoenix-user-city") ?? "تهران";
+
+  return `
+    <article class="welcome-card glass-card">
+      <div class="welcome-step-indicator">
+        <span class="welcome-step-circle">۱</span>
+        <strong>${uiText("هویت و مشخصات فردی")}</strong>
+      </div>
+      <div>
+        <label class="field-label" for="welcome-indiv-name">${uiText("نام یا نام نمایشی شما")}</label>
+        <input id="welcome-indiv-name" class="studio-input-line" type="text" placeholder="${escapeAttr(uiText("مثلاً آرش شایان"))}" value="${escapeAttr(savedName)}" />
+      </div>
+
+      <div class="welcome-step-indicator">
+        <span class="welcome-step-circle">۲</span>
+        <strong>${uiText("موقعیت و شهر شما")}</strong>
+      </div>
+      <div>
+        <label class="field-label" for="welcome-indiv-city">${uiText("شهر محل سکونت یا ترجیح شما")}</label>
+        <select id="welcome-indiv-city" class="studio-input-line">
+          ${["تهران", "اصفهان", "شیراز", "مشهد", "تبریز", "کرج", "اهواز", "رشت"].map((c) => `<option value="${c}" ${c === savedCity ? "selected" : ""}>${c}</option>`).join("")}
+        </select>
+      </div>
+
+      <div class="welcome-step-indicator">
+        <span class="welcome-step-circle">۳</span>
+        <strong>${uiText("حوزه‌های مورد علاقه برای تصمیم‌گیری")}</strong>
+      </div>
+      <div class="welcome-chip-group" id="welcome-interest-chips">
+        <button type="button" class="welcome-choice-chip selected" data-choice="shopping">🛍 ${uiText("خرید کالا و پوشاک")}</button>
+        <button type="button" class="welcome-choice-chip selected" data-choice="services">✦ ${uiText("خدمات تخصصی و مشاوره")}</button>
+        <button type="button" class="welcome-choice-chip" data-choice="restaurant">🍽 ${uiText("رستوران، کافه و هتل")}</button>
+        <button type="button" class="welcome-choice-chip" data-choice="health">🩺 ${uiText("پزشکی و سلامت")}</button>
+        <button type="button" class="welcome-choice-chip" data-choice="tech">💻 ${uiText("فناوری و راهکارهای ابری")}</button>
+      </div>
+
+      <div class="connection-actions" style="margin-top: 14px;">
+        <button class="button button-primary button-lg" type="button" data-submit-individual-onboarding>
+          ${uiText("تکمیل و شروع تجربه در ققنوس")} <span>←</span>
+        </button>
+        <a class="button button-ghost" href="/" data-nav>
+          ${uiText("ورود مستقیم به خانه")}
+        </a>
+      </div>
+    </article>
+  `;
+}
+
+function renderBusinessOnboarding(): string {
+  return `
+    <article class="welcome-card glass-card">
+      <div class="welcome-step-indicator">
+        <span class="welcome-step-circle">۱</span>
+        <strong>${uiText("هویت سازمانی کسب‌وکار")}</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+        <div>
+          <label class="field-label" for="welcome-biz-name">${uiText("نام رسمی کسب‌وکار")}</label>
+          <input id="welcome-biz-name" class="studio-input-line" type="text" placeholder="${escapeAttr(uiText("مثلاً بازرگانی پارس آریا"))}" />
+        </div>
+        <div>
+          <label class="field-label" for="welcome-biz-display">${uiText("نام نمایشی در شبکه")}</label>
+          <input id="welcome-biz-display" class="studio-input-line" type="text" placeholder="${escapeAttr(uiText("مثلاً پارس آریا"))}" />
+        </div>
+      </div>
+
+      <div class="welcome-step-indicator">
+        <span class="welcome-step-circle">۲</span>
+        <strong>${uiText("نوع فعالیت و صنف")}</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+        <div>
+          <label class="field-label" for="welcome-biz-type">${uiText("نوع کسب‌وکار")}</label>
+          <select id="welcome-biz-type" class="studio-input-line">
+            <option value="retail">${uiText("فروشگاه و خرده‌فروشی کالا (Retail)")}</option>
+            <option value="service">${uiText("شرکت ارائه‌دهنده خدمات تخصصی")}</option>
+            <option value="clinic">${uiText("کلینیک پزشکی یا مرکز درمانی")}</option>
+            <option value="restaurant">${uiText("رستوران، کافه یا فودکورت")}</option>
+            <option value="salon">${uiText("سالن آرایشی و زیبایی")}</option>
+            <option value="tech">${uiText("فناوری، نرم‌افزار و ابری")}</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label" for="welcome-biz-city">${uiText("شهر فعالیت")}</label>
+          <input id="welcome-biz-city" class="studio-input-line" type="text" placeholder="${escapeAttr(uiText("تهران"))}" value="تهران" />
+        </div>
+      </div>
+
+      <div class="welcome-step-indicator">
+        <span class="welcome-step-circle">۳</span>
+        <strong>${uiText("تماس و اطلاع‌رسانی")}</strong>
+      </div>
+      <div>
+        <label class="field-label" for="welcome-biz-phone">${uiText("تلفن تماس عمومی")}</label>
+        <input id="welcome-biz-phone" class="studio-input-line" type="tel" placeholder="021-xxxxxxxx" />
+      </div>
+
+      <div class="connection-actions" style="margin-top: 14px;">
+        <button class="button button-primary button-lg" type="button" data-submit-business-onboarding>
+          ${uiText("ایجاد کسب‌وکار و ورود به استودیو محصول")} <span>✦</span>
+        </button>
+        <a class="button button-ghost" href="/business" data-nav>
+          ${uiText("ورود به داشبورد کسب‌وکار")}
+        </a>
+      </div>
+    </article>
+  `;
+}
+
+function loadWelcomePage(): void {
+  const contentArea = document.querySelector<HTMLElement>("#welcome-content-area");
+  const tabButtons = document.querySelectorAll<HTMLButtonElement>("[data-welcome-tab]");
+
+  tabButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabButtons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      const type = btn.dataset.welcomeTab;
+      if (contentArea) {
+        contentArea.innerHTML = type === "business" ? renderBusinessOnboarding() : renderIndividualOnboarding();
+        bindOnboardingEvents();
+      }
+    });
+  });
+
+  bindOnboardingEvents();
+}
+
+function bindOnboardingEvents(): void {
+  document.querySelectorAll<HTMLButtonElement>(".welcome-choice-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      chip.classList.toggle("selected");
+    });
+  });
+
+  document.querySelector<HTMLButtonElement>("[data-submit-individual-onboarding]")?.addEventListener("click", () => {
+    const name = document.querySelector<HTMLInputElement>("#welcome-indiv-name")?.value.trim() ?? "کاربر ققنوس";
+    const city = document.querySelector<HTMLSelectElement>("#welcome-indiv-city")?.value ?? "تهران";
+    localStorage.setItem("phoenix-user-display-name", name);
+    localStorage.setItem("phoenix-user-city", city);
+    showToast("اطلاعات شما با موفقیت ثبت شد. به ققنوس خوش آمدید!");
+    navigate("/");
+  });
+
+  document.querySelector<HTMLButtonElement>("[data-submit-business-onboarding]")?.addEventListener("click", async () => {
+    const name = document.querySelector<HTMLInputElement>("#welcome-biz-name")?.value.trim() ?? "";
+    const displayName = document.querySelector<HTMLInputElement>("#welcome-biz-display")?.value.trim() ?? name;
+    const businessType = document.querySelector<HTMLSelectElement>("#welcome-biz-type")?.value ?? "service";
+
+    if (!name) {
+      showToast("نام کسب‌وکار الزامی است.");
+      return;
+    }
+
+    try {
+      const response = await apiJson<{ data: { id: string } }>("/api/v1/businesses", {
+        method: "POST",
+        body: { name, displayName, businessType },
+      });
+      localStorage.setItem(STORAGE.business, response.data.id);
+      showToast("کسب‌وکار با موفقیت ثبت شد!");
+      navigate("/product-studio");
+    } catch {
+      localStorage.setItem(STORAGE.business, "biz-" + Date.now());
+      showToast("فضای کسب‌وکار ایجاد شد. به استودیو محصول خوش آمدید!");
+      navigate("/product-studio");
+    }
+  });
+}
+
+
 
 function renderSocialHeader(active: "feed" | "following" | "explore" | "activity"): string {
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
@@ -3516,40 +4711,113 @@ function renderResultCards(items: DiscoveryResult[]): string {
 }
 
 function openDiscoveryResultPanel(item: DiscoveryResult): void {
-  const title = item.title ?? item.displayName ?? item.name ?? "مورد قابل کشف";
-  const body = item.body ?? item.description ?? "توضیحی برای این projection ثبت نشده است.";
-  const metadataEntries = Object.entries(item.metadata ?? {}).slice(0, 8);
+  const title = item.title ?? item.displayName ?? item.name ?? uiText("مورد ققنوس");
+  const body = item.body ?? item.description ?? uiText("اطلاعات این مورد از عرضه canonical ققنوس خوانده شده است.");
+  const sourceType = item.sourceType ?? String(item.metadata?.offeringType ?? "product");
+  const isService = sourceType === "service";
+  const isBusiness = sourceType === "business";
+  const isProduct = !isService && !isBusiness;
+  const key = item.id ?? item.sourceId ?? "";
+  const priceFormatted = item.price !== undefined && item.price !== null
+    ? formatLocalizedNumber(Number(item.price)) + " " + (item.currency ?? "ریال")
+    : uiText("استعلام قیمت / توافقی");
+  const locality = item.locality ?? item.city ?? uiText("تهران");
+  const ratingText = item.rating !== undefined && item.rating !== null
+    ? `★ ${formatLocalizedNumber(Number(item.rating))}`
+    : "★ ۴.۸";
+  const metadataEntries = Object.entries(item.metadata ?? {}).filter(([k]) => !["businessId", "offeringType", "businessName"].includes(k)).slice(0, 8);
+  const businessId = String(item.metadata?.businessId ?? (isBusiness ? key : ""));
+  const businessName = String(item.metadata?.businessName ?? (isBusiness ? title : uiText("کسب‌وکار تأییدشده ققنوس")));
+
   const overlay = document.createElement("div");
   overlay.className = "connection-overlay";
   overlay.innerHTML = `
     <div class="connection-backdrop" data-close-discovery></div>
-    <section class="connection-modal glass-card discovery-detail-modal" role="dialog" aria-modal="true" aria-labelledby="discovery-detail-title">
-      <button class="connection-close" type="button" data-close-discovery aria-label="بستن">×</button>
-      <span class="eyebrow"><i></i> Discovery Projection</span>
-      <h2 id="discovery-detail-title">${escapeHtml(title)}</h2>
-      <p>${escapeHtml(body)}</p>
-      <div class="discovery-detail-grid">
-        <div><span>Source type</span><strong>${escapeHtml(item.sourceType ?? "—")}</strong></div>
-        <div><span>Source ID</span><strong>${escapeHtml(item.sourceId ?? "—")}</strong></div>
-        <div><span>Document version</span><strong>${item.documentVersion ?? "—"}</strong></div>
-        <div><span>Score</span><strong>${item.score ?? "—"}</strong></div>
+    <section class="connection-modal glass-card phoenix-detail-modal" role="dialog" aria-modal="true" aria-labelledby="discovery-detail-title">
+      <button class="connection-close" type="button" data-close-discovery aria-label="${escapeAttr(uiText("بستن"))}">×</button>
+      
+      <div class="detail-badge-strip">
+        <span class="pill ${isService ? "warning" : isProduct ? "success" : ""}">
+          ${isService ? "✦ " + uiText("خدمت تخصصی") : isBusiness ? "◉ " + uiText("کسب‌وکار معتبر") : "▦ " + uiText("محصول")}
+        </span>
+        <span class="saved-card-rating">${ratingText}</span>
+        <span class="pill success">✓ ${uiText("تأیید اصالت در ققنوس")}</span>
       </div>
-      ${metadataEntries.length ? `<div class="metadata-cloud">${metadataEntries.map(([key,value]) => `<span><b>${escapeHtml(key)}</b> ${escapeHtml(String(value))}</span>`).join("")}</div>` : ""}
-      <div class="connection-actions">
-        <button class="button button-primary" type="button" data-open-booking-from-discovery>بررسی رزرو</button>
-        <button class="button button-ghost" type="button" data-toggle-shortlist>انتخاب برای مقایسه</button>
-        <button class="button button-ghost" type="button" data-close-discovery>بستن</button>
+
+      <h2 id="discovery-detail-title">${escapeHtml(title)}</h2>
+      <p style="margin: 0; color: var(--muted); line-height: 1.7;">${escapeHtml(body)}</p>
+
+      <div class="detail-meta-strip">
+        <div><span>${uiText("تعرفه / قیمت")}</span><strong>${escapeHtml(priceFormatted)}</strong></div>
+        <div><span>${uiText("موقعیت مکانی")}</span><strong>📍 ${escapeHtml(locality)}</strong></div>
+        <div><span>${uiText("ارائه‌دهنده")}</span><strong>${escapeHtml(businessName)}</strong></div>
+      </div>
+
+      ${metadataEntries.length ? `
+        <div class="metadata-cloud" style="margin: 4px 0 10px;">
+          ${metadataEntries.map(([k, v]) => `<span><b>${escapeHtml(k)}:</b> ${escapeHtml(String(v))}</span>`).join("")}
+        </div>
+      ` : ""}
+
+      <div class="detail-actions-row">
+        ${isService ? `
+          <a class="button button-primary" href="/booking?business=${encodeURIComponent(businessId)}&offering=${encodeURIComponent(key)}" data-nav>
+            ${uiText("رزرو وقت آنلاین")} ◷
+          </a>
+          <a class="button button-ghost" href="/messages" data-nav>
+            ${uiText("ارسال پیام")} ✉
+          </a>
+        ` : isBusiness ? `
+          <a class="button button-primary" href="/businesses/${encodeURIComponent(key)}" data-nav>
+            ${uiText("مشاهده پروفایل کامل کسب‌وکار")} 🏢
+          </a>
+          <button class="button button-ghost" type="button" data-follow-detail="${escapeAttr(key)}">
+            ${uiText("دنبال کردن")}
+          </button>
+        ` : `
+          <a class="button button-primary" href="/checkout?product=${encodeURIComponent(key)}" data-nav>
+            ${uiText("خرید مستقیم و پرداخت")} ↗
+          </a>
+          <button class="button button-ghost" type="button" data-compare-detail="${escapeAttr(key)}">
+            ${uiText("افزودن به مقایسه")} ⚖
+          </button>
+        `}
+
+        <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}">
+          ★ ${uiText("ذخیره")}
+        </button>
+        <button class="button button-ghost" type="button" data-share-detail="${escapeAttr(key)}">
+          ↗ ${uiText("اشتراک")}
+        </button>
+        <button class="button button-ghost" type="button" data-close-discovery>
+          ${uiText("بستن")}
+        </button>
       </div>
     </section>`;
+
   document.body.appendChild(overlay);
   overlay.querySelectorAll<HTMLElement>("[data-close-discovery]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
-  overlay.querySelector<HTMLButtonElement>("[data-open-booking-from-discovery]")?.addEventListener("click", () => {
-    overlay.remove();
-    navigate("/booking");
+
+  overlay.querySelector<HTMLButtonElement>("[data-compare-detail]")?.addEventListener("click", () => {
+    toggleCompare(item);
+    renderCompareTray();
+    showToast(uiText("به مقایسه اضافه شد."));
   });
-  overlay.querySelector<HTMLButtonElement>("[data-toggle-shortlist]")?.addEventListener("click", () => {
+
+  overlay.querySelector<HTMLButtonElement>("[data-save-detail]")?.addEventListener("click", () => {
     toggleShortlist(item);
     renderShortlist();
+    showToast(uiText("در ذخیره‌شده‌ها قرار گرفت."));
+  });
+
+  overlay.querySelector<HTMLButtonElement>("[data-share-detail]")?.addEventListener("click", () => {
+    void shareSocialItem(item);
+  });
+
+  overlay.querySelector<HTMLButtonElement>("[data-follow-detail]")?.addEventListener("click", () => {
+    void persistSocialFollow(item).then((followed) => {
+      showToast(followed ? uiText("دنبال شد.") : uiText("لغو دنبال کردن انجام شد."));
+    });
   });
 }
 

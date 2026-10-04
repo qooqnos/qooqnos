@@ -162,7 +162,6 @@ const MODULE_CAPABILITY_CONTRACTS: Readonly<Record<string, VerticalModuleCapabil
   "پروفایل": { requiredCapabilities: ["business"], requiredPermissions: ["business.profile.read", "business.profile.update"], source: "runtime-registry-contract" },
   "گزارش‌ها": { requiredCapabilities: ["analytics"], requiredPermissions: ["analytics.read"], source: "runtime-registry-contract" },
   "معاملات": { requiredCapabilities: ["commerce"], requiredPermissions: ["commerce.order.read"], source: "runtime-registry-contract" },
-  "نمای کلی": { requiredCapabilities: ["business"], requiredPermissions: ["business.profile.read"], source: "runtime-registry-contract" },
 };
 
 const block = (

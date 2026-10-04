@@ -11,11 +11,11 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && npm --workspace=@qooqnos/web run build",
     "clean": "tsc -b --clean",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev": "tsx watch packages/runtime/src/index.ts",
+    "dev": "node scripts/serve.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",

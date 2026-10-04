@@ -12,6 +12,7 @@
     }
   },
   "dependencies": {
+    "@qooqnos/core": "*",
     "@qooqnos/runtime": "*",
     "@qooqnos/database": "*"
   },

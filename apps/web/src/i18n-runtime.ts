@@ -412,14 +412,14 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.runtime_homeIdentity": "هویت بصری و دستیار هوشمند ققنوس",
     "ui.vertical_businessManagement": "مدیریت Workspace",
     "ui.vertical_businessReports": "گزارش‌ها",
-        "ui.vertical_workspaceState": "وضعیت این Workspace",
+    "ui.vertical_workspaceState": "وضعیت این Workspace",
     "ui.vertical_businessContextDescription": "هویت و publication فقط از Business management خوانده می‌شود؛ صف یا metric محلی ساخته نمی‌شود.",
     "ui.vertical_canonicalCatalogVariants": "Canonical Catalog Variants",
     "ui.vertical_supplyDescription": "فقط Offeringهای متعلق به همین Business و Workspace در این بخش hydrate می‌شوند.",
     "ui.vertical_workspaceMember": "عضو Workspace",
     "ui.vertical_sharedNavigation": "ناوبری مشترک",
     "ui.vertical_workspaceModules": "ماژول‌های Workspace",
-"ui.vertical_contextRequired": "نیازمند Context",
+    "ui.vertical_contextRequired": "نیازمند Context",
     "ui.vertical_contextUnread": "Context خوانده نشد",
     "ui.vertical_event": "رویداد",
     "ui.vertical_crmInteraction": "تعامل ثبت‌شده در CRM",
@@ -1473,14 +1473,14 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.runtime_homeIdentity": "Phoenix visual identity and intelligent assistant",
     "ui.vertical_businessManagement": "Workspace management",
     "ui.vertical_businessReports": "Reports",
-        "ui.vertical_workspaceState": "This Workspace state",
+    "ui.vertical_workspaceState": "This Workspace state",
     "ui.vertical_businessContextDescription": "Identity and publication are read only from Business management; no local queue or metric is created.",
     "ui.vertical_canonicalCatalogVariants": "Canonical Catalog Variants",
     "ui.vertical_supplyDescription": "Only offerings belonging to this Business and Workspace are hydrated here.",
     "ui.vertical_workspaceMember": "Workspace member",
     "ui.vertical_sharedNavigation": "Shared navigation",
     "ui.vertical_workspaceModules": "Workspace modules",
-"ui.vertical_contextRequired": "Context required",
+    "ui.vertical_contextRequired": "Context required",
     "ui.vertical_contextUnread": "Context could not be read",
     "ui.vertical_event": "Event",
     "ui.vertical_crmInteraction": "CRM interaction recorded",
@@ -2534,14 +2534,14 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "ui.runtime_homeIdentity": "هوية ققنوس البصرية والمساعد الذكي",
     "ui.vertical_businessManagement": "إدارة مساحة العمل",
     "ui.vertical_businessReports": "التقارير",
-        "ui.vertical_workspaceState": "حالة مساحة العمل هذه",
+    "ui.vertical_workspaceState": "حالة مساحة العمل هذه",
     "ui.vertical_businessContextDescription": "تُقرأ الهوية والنشر من إدارة النشاط التجاري فقط؛ ولا يتم إنشاء قائمة انتظار أو مقياس محلي.",
     "ui.vertical_canonicalCatalogVariants": "تنويعات الكتالوج الأساسية",
     "ui.vertical_supplyDescription": "يتم تحميل العروض التابعة لهذا النشاط التجاري ومساحة العمل فقط في هذا القسم.",
     "ui.vertical_workspaceMember": "عضو مساحة العمل",
     "ui.vertical_sharedNavigation": "تنقل مشترك",
     "ui.vertical_workspaceModules": "وحدات مساحة العمل",
-"ui.vertical_contextRequired": "السياق مطلوب",
+    "ui.vertical_contextRequired": "السياق مطلوب",
     "ui.vertical_contextUnread": "تعذر قراءة السياق",
     "ui.vertical_event": "حدث",
     "ui.vertical_crmInteraction": "تم تسجيل تفاعل في CRM",
@@ -3246,7 +3246,6 @@ const keyPriority = (key: string): number => {
   if (key.startsWith("vertical.")) return 120;
   return 200;
 };
-
 const indexLanguage = (language: SupportedLanguage, canonicalOnly: boolean): void => {
   for (const [key, text] of Object.entries(translations[language])) {
     if (canonicalOnly !== key.startsWith("canonical.")) continue;
@@ -3272,12 +3271,12 @@ function resolveTextKey(value: string, locale: Locale): string | undefined {
 }
 
 const dictionaryFragmentEntries = (() => {
-  const sourceToKeys = new Map<string, Set<string>>();
+  const sourceToKeys = new Map();
   for (const language of ["fa", "en", "ar"] as const) {
     for (const [key, text] of Object.entries(translations[language])) {
       const source = text.trim();
       if (source.length < 3 && key !== "common.and" && key !== "common.or") continue;
-      const keys = sourceToKeys.get(source) ?? new Set<string>();
+      const keys = sourceToKeys.get(source) ?? new Set();
       keys.add(key);
       sourceToKeys.set(source, keys);
     }
@@ -3298,7 +3297,7 @@ function canonicalFragmentEntriesFor(locale: Locale): readonly [string, string][
     for (const [key, source] of Object.entries(canonicalTerms[language])) {
       const target = translations[locale][key] ?? translations.fa[key];
       if (!source || !target || source === target) continue;
-      const signature = source + " " + target;
+      const signature = source + "\u0000" + target;
       if (seen.has(signature)) continue;
       seen.add(signature);
       entries.push([source, target]);
@@ -3321,7 +3320,7 @@ function translateCanonicalFragments(value: string, locale: Locale): string {
 }
 
 function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^\u0024{}()|[\]\\]/g, "\\$&");
+  return value.replace(/[.*+?^${}()|[]\]/g, "\$&");
 }
 
 function translateDictionaryFragments(value: string, locale: Locale): string {

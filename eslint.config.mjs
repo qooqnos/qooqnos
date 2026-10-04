@@ -1,27 +1,23 @@
-import js from "@eslint/js";
-import tsPlugin from "@typescript-eslint/eslint-plugin";
-import tsParser from "@typescript-eslint/parser";
+import tseslint from "typescript-eslint";
 
-export default [
+export default tseslint.config(
   {
     ignores: [
       "node_modules/**",
       "dist/**",
       "build/**",
+      "**/dist/**",
+      "apps/web/public/**",
+      "scripts/**",
+      "*.mjs",
       "packages/onboarding/src/index.ts",
+      "apps/web/src/i18n-runtime.ts",
     ],
   },
+  ...tseslint.configs.recommended,
   {
     files: ["**/*.ts", "**/*.tsx"],
-    languageOptions: {
-      parser: tsParser,
-      sourceType: "module",
-    },
-    plugins: {
-      "@typescript-eslint": tsPlugin,
-    },
     rules: {
-      ...tsPlugin.configs.recommended.rules,
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
@@ -31,4 +27,6 @@ export default [
       "@typescript-eslint/no-explicit-any": "error",
     },
   },
-];
+);
+
+
