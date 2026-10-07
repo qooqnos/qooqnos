@@ -2,11 +2,14 @@ import {
   createAIRuntimeWithGovernance,
   createAIProviderGovernanceRegistry,
   createAIProviderRegistry,
+  createArvanAIProvider,
   createCloudflareAIProvider,
   type AIEconomicsSink,
   type AIRoutingPolicy,
   type AIRuntime,
   type AIRuntimePolicy,
+  type AIProviderAdapter,
+  type AIProviderRequest,
 } from "@qooqnos/runtime";
 import type { ApiEnv } from "./env";
 import { requireAI } from "./env";
@@ -19,6 +22,9 @@ const SELLER_EXTRACT_ROUTING_POLICY: AIRoutingPolicy = {
   allowFallback: true,
 };
 
+const CLOUDFLARE_PROVIDER_ID = "cloudflare-workers-ai";
+const ARVAN_PROVIDER_ID = "arvan-aiaas";
+
 export function createApiAIRuntime(
   env: ApiEnv,
   policy: AIRuntimePolicy,
@@ -28,22 +34,8 @@ export function createApiAIRuntime(
   if (!modelId) throw new Error("AI_SELLER_EXTRACT_MODEL_ID is not configured");
 
   const modelVersion = env.AI_SELLER_EXTRACT_MODEL_VERSION?.trim() || "1";
-  const providerId = "cloudflare-workers-ai";
-  const provider = {
-    async execute(request: Parameters<ReturnType<typeof createCloudflareAIProvider>["execute"]>[0]) {
-      const adapter = createCloudflareAIProvider(requireAI(env), {
-        providerId,
-        ...(env.AI_GATEWAY_ID?.trim() ? { gatewayId: env.AI_GATEWAY_ID.trim() } : {}),
-        buildInput: (providerRequest) => ({
-          operationType: providerRequest.operationType,
-          promptVersion: providerRequest.promptVersion,
-          input: providerRequest.input,
-          outputSchemaVersion: providerRequest.outputSchemaVersion,
-        }),
-      });
-      return adapter.execute(request);
-    },
-  };
+  const providerId = resolveProviderId(env);
+  const provider = createProvider(env, providerId);
 
   const providers = createAIProviderRegistry([
     {
@@ -54,6 +46,10 @@ export function createApiAIRuntime(
   ]);
 
   const governance = createAIProviderGovernanceRegistry();
+  const region = providerId === ARVAN_PROVIDER_ID
+    ? env.ARVAN_AI_REGION?.trim() || "IR"
+    : "US";
+
   governance.registerProvider({
     providerId,
     adapterVersion: "1",
@@ -61,10 +57,11 @@ export function createApiAIRuntime(
     health: "healthy",
     supportedOperationTypes: ["seller.product.extract"],
     supportedClassifications: ["public", "internal"],
-    regions: ["US"],
+    regions: [region],
     approved: true,
     version: "1",
   });
+
   governance.registerModel({
     modelId,
     providerId,
@@ -76,7 +73,7 @@ export function createApiAIRuntime(
     supportedClassifications: ["public", "internal"],
     structuredOutput: false,
     toolCalling: false,
-    regions: ["US"],
+    regions: [region],
     routingPriority: 100,
   });
 
@@ -88,4 +85,64 @@ export function createApiAIRuntime(
     undefined,
     economics,
   );
+}
+
+function resolveProviderId(env: ApiEnv): string {
+  const explicit = env.AI_PROVIDER_ID?.trim();
+  if (explicit) return explicit;
+
+  const hasArvan = Boolean(env.ARVAN_AI_ENDPOINT?.trim() && env.ARVAN_AI_API_KEY?.trim());
+  return hasArvan ? ARVAN_PROVIDER_ID : CLOUDFLARE_PROVIDER_ID;
+}
+
+function createProvider(env: ApiEnv, providerId: string): AIProviderAdapter {
+  if (providerId === ARVAN_PROVIDER_ID) {
+    const endpoint = env.ARVAN_AI_ENDPOINT?.trim();
+    const apiKey = env.ARVAN_AI_API_KEY?.trim();
+    if (!endpoint) throw new Error("ARVAN_AI_ENDPOINT is not configured");
+    if (!apiKey) throw new Error("ARVAN_AI_API_KEY is not configured");
+
+    const maxTokens = parsePositiveInteger(env.ARVAN_AI_MAX_TOKENS);
+    const temperature = parseFiniteNumber(env.ARVAN_AI_TEMPERATURE);
+
+    return createArvanAIProvider({
+      endpoint,
+      apiKey,
+      providerId: ARVAN_PROVIDER_ID,
+      ...(maxTokens !== undefined ? { maxTokens } : {}),
+      ...(temperature !== undefined ? { temperature } : {}),
+    });
+  }
+
+  if (providerId === CLOUDFLARE_PROVIDER_ID) {
+    return {
+      async execute(request: AIProviderRequest) {
+        const adapter = createCloudflareAIProvider(requireAI(env), {
+          providerId: CLOUDFLARE_PROVIDER_ID,
+          ...(env.AI_GATEWAY_ID?.trim() ? { gatewayId: env.AI_GATEWAY_ID.trim() } : {}),
+          buildInput: (providerRequest) => ({
+            operationType: providerRequest.operationType,
+            promptVersion: providerRequest.promptVersion,
+            input: providerRequest.input,
+            outputSchemaVersion: providerRequest.outputSchemaVersion,
+          }),
+        });
+        return adapter.execute(request);
+      },
+    };
+  }
+
+  throw new Error(`Unsupported AI_PROVIDER_ID: ${providerId}`);
+}
+
+function parsePositiveInteger(value: string | undefined): number | undefined {
+  if (!value?.trim()) return undefined;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function parseFiniteNumber(value: string | undefined): number | undefined {
+  if (!value?.trim()) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
