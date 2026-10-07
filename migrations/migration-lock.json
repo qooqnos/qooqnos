@@ -637,6 +637,13 @@
       "moduleId": "social-engagement",
       "checksum": "edc0407e890b39c9ed13603e342d4f20c7833a14cbe885707a448912acd5b545",
       "filename": "0094_social_engagement_graph.sql"
+    },
+    {
+      "id": "0095_billing_ai_wallet",
+      "version": 95,
+      "moduleId": "billing",
+      "checksum": "4f83d66bb5c1a18ea28502b2162d380969f19923584f8a37f70dc65491e0f8a4",
+      "filename": "0095_billing_ai_wallet.sql"
     }
   ]
 }
