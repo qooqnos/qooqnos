@@ -64,6 +64,9 @@ export interface AIRuntimeResult<TOutput = unknown> {
 }
 
 export interface AIProviderRequest {
+  readonly operationId?: string | undefined;
+  readonly idempotencyKey?: string | undefined;
+  readonly context?: RequestContext | undefined;
   readonly operationType: string;
   readonly promptVersion: string;
   readonly input: unknown;
@@ -210,6 +213,9 @@ function buildRuntime(
       try {
         const startedAt = Date.now();
         const providerRequest: AIProviderRequest = {
+          operationId: request.operationId,
+          idempotencyKey: request.idempotencyKey,
+          context: request.context,
           operationType: request.operationType,
           promptVersion: request.promptVersion,
           input: request.input,
