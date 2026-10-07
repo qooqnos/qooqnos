@@ -642,7 +642,7 @@
       "id": "0095_billing_ai_wallet",
       "version": 95,
       "moduleId": "billing",
-      "checksum": "4f83d66bb5c1a18ea28502b2162d380969f19923584f8a37f70dc65491e0f8a4",
+      "checksum": "c47f74cff598f2bab879e85c9261d64ec7aad9297712605a75066e32b3ee3805",
       "filename": "0095_billing_ai_wallet.sql"
     }
   ]
