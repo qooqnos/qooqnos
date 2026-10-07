@@ -215,7 +215,7 @@ export class AiWalletService extends Repository {
       reservedMinor: number;
       metadataJson: string | null;
     }>(
-      `SELECT id, wallet_id AS walletId, reserved_delta_minor * -1 AS reservedMinor, metadata_json AS metadataJson
+      `SELECT id, wallet_id AS walletId, reserved_delta_minor AS reservedMinor, metadata_json AS metadataJson
        FROM billing_ai_wallet_events
        WHERE wallet_id = ? AND idempotency_key = ? AND event_type = 'reservation'
        LIMIT 1`,
@@ -562,6 +562,18 @@ export class AiWalletService extends Repository {
     const id = this.options.id();
     const now = this.options.now();
     const pricingVersion = this.options.pricing.pricingVersion?.trim() || "arvan-config-v1";
+    await this.database.run(
+      `UPDATE billing_ai_model_prices
+       SET status = 'retired', effective_to = ?, updated_at = ?
+       WHERE provider_id = ? AND model_id = ? AND currency = ? AND status = 'active'
+         AND pricing_version <> ?`,
+      now,
+      now,
+      this.options.pricing.providerId,
+      modelId,
+      currency,
+      pricingVersion,
+    );
     await this.database.run(
       `INSERT OR IGNORE INTO billing_ai_model_prices
        (id, provider_id, model_id, currency, input_amount_per_million_minor,
