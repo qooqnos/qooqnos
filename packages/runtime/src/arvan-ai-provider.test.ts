@@ -54,7 +54,7 @@ describe("createArvanAIProvider", () => {
   it("accepts a custom message builder and parses fenced JSON", async () => {
     const fetchMock = vi.fn<typeof fetch>(async () =>
       new Response(JSON.stringify({
-        choices: [{ message: { content: "```json\\n{\"title\":\"کالا\"}\\n```" } }],
+        choices: [{ message: { content: "```json\n{\"title\":\"کالا\"}\n```" } }],
       }), { status: 200 }),
     );
 
