@@ -230,6 +230,13 @@ function createWalletAwareArvanProvider(
             error instanceof Error ? error.message : "AI execution failed",
           ).catch(() => undefined);
         }
+        if (error instanceof InsufficientAiWalletError) {
+          throw new AppError({
+            code: "UNPROCESSABLE",
+            message: "اعتبار کیف پول هوش مصنوعی کافی نیست. لطفاً کیف پول را شارژ کنید.",
+            requestId: request.context.requestId,
+          });
+        }
         throw error;
       }
     },
