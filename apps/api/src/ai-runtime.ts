@@ -1,7 +1,5 @@
-import {
-  AiWalletService,
-  type EntityId,
-} from "@qooqnos/billing";
+import { AiWalletService } from "@qooqnos/billing";
+import type { EntityId } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import {
   createAIRuntimeWithGovernance,
