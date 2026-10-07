@@ -101,6 +101,7 @@ export interface ApiEnv {
   readonly ARVAN_AI_INPUT_PRICE_PER_1M_IRR?: string;
   readonly ARVAN_AI_OUTPUT_PRICE_PER_1M_IRR?: string;
   readonly ARVAN_AI_MARKUP_BPS?: string;
+  readonly ARVAN_AI_PRICING_VERSION?: string;
   readonly AI_SELLER_EXTRACT_MODEL_ID?: string;
   readonly AI_SELLER_EXTRACT_MODEL_VERSION?: string;
   readonly AI_WORKER_ID?: string;
