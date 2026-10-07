@@ -111,7 +111,7 @@ SEO_SOCIAL_MAX_DELAY_MS = "5000"${seoAiEndpoint ? `\nSEO_AI_CITATION_ENDPOINT = 
 AI_PROVIDER_ID = "${aiProviderId}"
 AI_SELLER_EXTRACT_MODEL_ID = "${modelId}"
 AI_SELLER_EXTRACT_MODEL_VERSION = "${modelVersion}"${aiProviderId === "arvan-aiaas" ? `\nARVAN_AI_ENDPOINT = ${JSON.stringify(arvanAiEndpoint)}\nARVAN_AI_INPUT_PRICE_PER_1M_IRR = "${arvanAiInputPricePer1M}"\nARVAN_AI_OUTPUT_PRICE_PER_1M_IRR = "${arvanAiOutputPricePer1M}"\nARVAN_AI_MARKUP_BPS = "${arvanAiMarkupBps}"
-ARVAN_AI_PRICING_VERSION = "${arvanAiPricingVersion}"` : ""}${aiProviderId === "arvan-aiaas" ? `\nARVAN_AI_ENDPOINT = ${JSON.stringify(arvanAiEndpoint)}` : ""}${gatewayId ? `\nAI_GATEWAY_ID = "${gatewayId}"` : ""}
+ARVAN_AI_PRICING_VERSION = "${arvanAiPricingVersion}"` : ""}${gatewayId ? `\nAI_GATEWAY_ID = "${gatewayId}"` : ""}
 
 [env.production.triggers]
 crons = [ "17 * * * *", "41 2 * * *", "17 3 * * *" ]
