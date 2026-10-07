@@ -31,7 +31,16 @@ const bucketName = required("PHOENIX_PROD_R2_BUCKET_NAME");
 const queueName = required("PHOENIX_PROD_OUTBOX_QUEUE_NAME");
 const modelId = required("PHOENIX_PROD_AI_MODEL_ID");
 const modelVersion = process.env.PHOENIX_PROD_AI_MODEL_VERSION?.trim() || "1";
+const aiProviderId = process.env.PHOENIX_PROD_AI_PROVIDER_ID?.trim() || "cloudflare-workers-ai";
+const arvanAiEndpoint = process.env.PHOENIX_PROD_ARVAN_AI_ENDPOINT?.trim() || "";
 const gatewayId = process.env.PHOENIX_PROD_AI_GATEWAY_ID?.trim() || "";
+
+if (!["cloudflare-workers-ai", "arvan-aiaas"].includes(aiProviderId)) {
+  throw new Error("PHOENIX_PROD_AI_PROVIDER_ID must be cloudflare-workers-ai or arvan-aiaas");
+}
+if (aiProviderId === "arvan-aiaas" && !arvanAiEndpoint) {
+  throw new Error("PHOENIX_PROD_ARVAN_AI_ENDPOINT is required when using arvan-aiaas");
+}
 const seoAiEndpoint = process.env.SEO_AI_CITATION_ENDPOINT?.trim() || "";
 const seoAiModel = process.env.SEO_AI_CITATION_MODEL?.trim() || "";
 const seoAiAuthMode = process.env.SEO_AI_CITATION_AUTH_MODE?.trim() || "";
@@ -89,8 +98,9 @@ SEO_SOCIAL_MAX_ATTEMPTS = "3"
 SEO_SOCIAL_TIMEOUT_MS = "15000"
 SEO_SOCIAL_BASE_DELAY_MS = "500"
 SEO_SOCIAL_MAX_DELAY_MS = "5000"${seoAiEndpoint ? `\nSEO_AI_CITATION_ENDPOINT = "${seoAiEndpoint}"` : ""}${seoAiModel ? `\nSEO_AI_CITATION_MODEL = "${seoAiModel}"` : ""}${seoAiAuthMode ? `\nSEO_AI_CITATION_AUTH_MODE = "${seoAiAuthMode}"` : ""}${seoMerchantVars ? `\n${seoMerchantVars}` : ""}
+AI_PROVIDER_ID = "${aiProviderId}"
 AI_SELLER_EXTRACT_MODEL_ID = "${modelId}"
-AI_SELLER_EXTRACT_MODEL_VERSION = "${modelVersion}"${gatewayId ? `\nAI_GATEWAY_ID = "${gatewayId}"` : ""}
+AI_SELLER_EXTRACT_MODEL_VERSION = "${modelVersion}"${aiProviderId === "arvan-aiaas" ? `\nARVAN_AI_ENDPOINT = ${JSON.stringify(arvanAiEndpoint)}` : ""}${gatewayId ? `\nAI_GATEWAY_ID = "${gatewayId}"` : ""}
 
 [env.production.triggers]
 crons = [ "17 * * * *", "41 2 * * *", "17 3 * * *" ]
