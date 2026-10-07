@@ -111,9 +111,10 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 run_worker_first = [ "/*" ]
 
-[env.production.ai]
+${aiProviderId === "cloudflare-workers-ai" ? `[env.production.ai]
 binding = "AI"
 
+` : ""}
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "${databaseName}"
