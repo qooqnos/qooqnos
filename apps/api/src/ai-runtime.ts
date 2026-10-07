@@ -180,7 +180,7 @@ export function createApiAiWalletService(
       inputAmountPerMillionMinor: inputPrice,
       outputAmountPerMillionMinor: outputPrice,
       markupBps,
-      pricingVersion: "arvan-config-v1",
+      pricingVersion: env.ARVAN_AI_PRICING_VERSION?.trim() || "arvan-config-v1",
     },
     defaultOutputTokenReserve: parsePositiveInteger(env.ARVAN_AI_MAX_TOKENS) ?? 3000,
   });
