@@ -1,3 +1,25 @@
+## Prepaid Arvan AI wallet settlement — 2026-10-07
+
+For Arvan AIaaS operations, Billing now owns prepaid wallet funding and customer charging.
+
+Flow:
+
+`Wallet preflight → reservation → Arvan execution → actual token usage → settlement`
+
+Customer pricing is calculated as:
+
+`provider_cost = ceil((input_tokens × input_rate + output_tokens × output_rate) / 1,000,000)`
+
+`customer_charge = ceil(provider_cost × (1 + markup_bps / 10,000))`
+
+The default markup is **5,000 basis points (50%)**.
+
+The provider cost is recorded only in the Billing wallet event. Customer-facing APIs expose wallet balance and availability, not the provider's raw token cost or internal markup.
+
+Arvan input/output rates and the pricing version are configuration-driven and persisted into the Billing pricing table, so pricing changes can be versioned without rewriting historical charges. Production deployment refuses to start Arvan AI without configured input/output rates.
+
+
+
 # Phoenix AI Operation Economics Architecture
 
 **Status:** Canonical architecture contract
