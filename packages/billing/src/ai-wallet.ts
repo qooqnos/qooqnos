@@ -3,7 +3,7 @@ import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
 
 export const ARVAN_AI_PROVIDER_ID = "arvan-aiaas" as const;
 export const AI_WALLET_CURRENCY = "IRR" as const;
-export const DEFAULT_AI_WALLET_MARKUP_BPS = 5000 as const;
+export const DEFAULT_AI_WALLET_MARKUP_BPS: number = 5000;
 
 export interface AiWalletPricingConfig {
   readonly providerId: string;
@@ -513,6 +513,11 @@ export class AiWalletService extends Repository {
       markupMinor: Math.max(0, customerChargeMinor - providerCostMinor),
       customerChargeMinor,
     };
+  }
+
+  private requireActor(context: RequestContext): EntityId {
+    if (!context.actorId) throw new DatabaseError("Authenticated actor is required for AI wallet operations");
+    return context.actorId;
   }
 
   private async getOrCreatePricing(modelId: string): Promise<{
