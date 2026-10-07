@@ -1,14 +1,21 @@
-import { BillingInvoiceRepository, BillingRepository, BillingService } from "@qooqnos/billing";
+import {
+  AiWalletService,
+  BillingInvoiceRepository,
+  BillingRepository,
+  BillingService,
+} from "@qooqnos/billing";
 import type { AuthorizationRegistry } from "@qooqnos/runtime";
 import { AppError, type EntityId } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
+import type { ApiEnv } from "./env";
 
 export function registerBillingRoutes(
   router: ApiRouter,
   database: D1Database | undefined,
   _authorization: AuthorizationRegistry | undefined,
+  env?: ApiEnv,
 ): void {
   router.register({
     method: "GET",
@@ -30,6 +37,54 @@ export function registerBillingRoutes(
         ...(customerId ? { customerId: customerId as EntityId } : {}),
       });
       return json({ data: invoices }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/billing/ai-wallet",
+    module: "billing",
+    operation: "billing.ai_wallet.read",
+    permission: "billing.ai_wallet.read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context }) => {
+      if (!database) {
+        throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      }
+      if (!env) {
+        throw new AppError({ code: "INTERNAL_ERROR", message: "AI wallet pricing environment is not configured.", requestId: context.requestId });
+      }
+      const modelId = env.AI_SELLER_EXTRACT_MODEL_ID?.trim();
+      const inputPrice = Number(env.ARVAN_AI_INPUT_PRICE_PER_1M_IRR ?? "");
+      const outputPrice = Number(env.ARVAN_AI_OUTPUT_PRICE_PER_1M_IRR ?? "");
+      if (!modelId || !Number.isSafeInteger(inputPrice) || inputPrice <= 0 || !Number.isSafeInteger(outputPrice) || outputPrice <= 0) {
+        throw new AppError({ code: "SERVICE_UNAVAILABLE", message: "AI wallet pricing is not available.", requestId: context.requestId });
+      }
+      const wallet = new AiWalletService({
+        database,
+        id: () => crypto.randomUUID(),
+        now: () => new Date().toISOString(),
+        pricing: {
+          providerId: "arvan-aiaas",
+          modelId,
+          currency: "IRR",
+          inputAmountPerMillionMinor: inputPrice,
+          outputAmountPerMillionMinor: outputPrice,
+          markupBps: Number(env.ARVAN_AI_MARKUP_BPS ?? "5000"),
+          pricingVersion: "arvan-config-v1",
+        },
+      });
+      const balance = await wallet.ensureWallet(context);
+      return json({
+        data: {
+          currency: balance.currency,
+          balanceMinor: balance.balanceMinor,
+          reservedMinor: balance.reservedMinor,
+          availableMinor: balance.availableMinor,
+          status: balance.status,
+        },
+      }, 200, context.requestId);
     },
   });
 
