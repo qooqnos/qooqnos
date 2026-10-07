@@ -72,7 +72,7 @@ export function registerBillingRoutes(
           inputAmountPerMillionMinor: inputPrice,
           outputAmountPerMillionMinor: outputPrice,
           markupBps: Number(env.ARVAN_AI_MARKUP_BPS ?? "5000"),
-          pricingVersion: "arvan-config-v1",
+          pricingVersion: env.ARVAN_AI_PRICING_VERSION?.trim() || "arvan-config-v1",
         },
       });
       const balance = await wallet.ensureWallet(context);
