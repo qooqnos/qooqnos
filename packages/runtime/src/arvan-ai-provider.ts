@@ -69,7 +69,7 @@ export function createArvanAIProvider(options: ArvanAIProviderOptions): AIProvid
         const payload = parseJson<ArvanChatCompletionResponse>(rawText);
 
         if (!response.ok) {
-          const detail = extractErrorMessage(payload) ?? rawText.slice(0, 500) || `HTTP ${response.status}`;
+          const detail = extractErrorMessage(payload) ?? (rawText.slice(0, 500) || `HTTP ${response.status}`);
           throw new Error(`Arvan AI request failed (${response.status}): ${detail}`);
         }
 
