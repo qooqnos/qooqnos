@@ -1,4 +1,9 @@
 import {
+  AiWalletService,
+  type EntityId,
+} from "@qooqnos/billing";
+import type { D1Database } from "@qooqnos/database";
+import {
   createAIRuntimeWithGovernance,
   createAIProviderGovernanceRegistry,
   createAIProviderRegistry,
@@ -29,13 +34,14 @@ export function createApiAIRuntime(
   env: ApiEnv,
   policy: AIRuntimePolicy,
   economics?: AIEconomicsSink,
+  aiWallet?: AiWalletService,
 ): AIRuntime {
   const modelId = env.AI_SELLER_EXTRACT_MODEL_ID?.trim();
   if (!modelId) throw new Error("AI_SELLER_EXTRACT_MODEL_ID is not configured");
 
   const modelVersion = env.AI_SELLER_EXTRACT_MODEL_VERSION?.trim() || "1";
   const providerId = resolveProviderId(env);
-  const provider = createProvider(env, providerId);
+  const provider = createProvider(env, providerId, aiWallet);
 
   const providers = createAIProviderRegistry([
     {
@@ -87,7 +93,7 @@ export function createApiAIRuntime(
   );
 }
 
-function resolveProviderId(env: ApiEnv): string {
+export function resolveProviderId(env: ApiEnv): string {
   const explicit = env.AI_PROVIDER_ID?.trim();
   if (explicit) return explicit;
 
@@ -95,7 +101,7 @@ function resolveProviderId(env: ApiEnv): string {
   return hasArvan ? ARVAN_PROVIDER_ID : CLOUDFLARE_PROVIDER_ID;
 }
 
-function createProvider(env: ApiEnv, providerId: string): AIProviderAdapter {
+function createProvider(env: ApiEnv, providerId: string, aiWallet?: AiWalletService): AIProviderAdapter {
   if (providerId === ARVAN_PROVIDER_ID) {
     const endpoint = env.ARVAN_AI_ENDPOINT?.trim();
     const apiKey = env.ARVAN_AI_API_KEY?.trim();
@@ -105,13 +111,15 @@ function createProvider(env: ApiEnv, providerId: string): AIProviderAdapter {
     const maxTokens = parsePositiveInteger(env.ARVAN_AI_MAX_TOKENS);
     const temperature = parseFiniteNumber(env.ARVAN_AI_TEMPERATURE);
 
-    return createArvanAIProvider({
+    const provider = createArvanAIProvider({
       endpoint,
       apiKey,
       providerId: ARVAN_PROVIDER_ID,
       ...(maxTokens !== undefined ? { maxTokens } : {}),
       ...(temperature !== undefined ? { temperature } : {}),
     });
+    if (!aiWallet) throw new Error("Arvan AI requires a configured AI wallet");
+    return createWalletAwareArvanProvider(provider, aiWallet, maxTokens ?? 3000);
   }
 
   if (providerId === CLOUDFLARE_PROVIDER_ID) {
@@ -145,4 +153,99 @@ function parseFiniteNumber(value: string | undefined): number | undefined {
   if (!value?.trim()) return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+
+export function createApiAiWalletService(
+  env: ApiEnv,
+  database: D1Database,
+  id: () => EntityId,
+  now: () => string,
+): AiWalletService | undefined {
+  if (resolveProviderId(env) !== ARVAN_PROVIDER_ID) return undefined;
+  const modelId = env.AI_SELLER_EXTRACT_MODEL_ID?.trim();
+  if (!modelId) throw new Error("AI_SELLER_EXTRACT_MODEL_ID is not configured");
+  const inputPrice = parsePositiveInteger(env.ARVAN_AI_INPUT_PRICE_PER_1M_IRR);
+  const outputPrice = parsePositiveInteger(env.ARVAN_AI_OUTPUT_PRICE_PER_1M_IRR);
+  if (inputPrice === undefined || outputPrice === undefined) {
+    throw new Error("Arvan AI input/output token pricing must be configured before AI execution");
+  }
+  const markupBps = parseNonNegativeInteger(env.ARVAN_AI_MARKUP_BPS) ?? 5000;
+  return new AiWalletService({
+    database,
+    id,
+    now,
+    pricing: {
+      providerId: ARVAN_PROVIDER_ID,
+      modelId,
+      currency: "IRR",
+      inputAmountPerMillionMinor: inputPrice,
+      outputAmountPerMillionMinor: outputPrice,
+      markupBps,
+      pricingVersion: "arvan-config-v1",
+    },
+    defaultOutputTokenReserve: parsePositiveInteger(env.ARVAN_AI_MAX_TOKENS) ?? 3000,
+  });
+}
+
+function createWalletAwareArvanProvider(
+  provider: AIProviderAdapter,
+  wallet: AiWalletService,
+  defaultOutputTokenReserve: number,
+): AIProviderAdapter {
+  return {
+    async execute(request: AIProviderRequest) {
+      if (!request.context || !request.operationId || !request.idempotencyKey || !request.modelId) {
+        throw new Error("AI wallet billing context is missing from provider request");
+      }
+      const reservation = await wallet.reserveArvan(request.context, {
+        operationId: request.operationId,
+        idempotencyKey: request.idempotencyKey,
+        modelId: request.modelId,
+        estimatedInputTokens: estimateAiInputTokens(request.input),
+        estimatedOutputTokens: defaultOutputTokenReserve,
+      });
+      let settled = false;
+      try {
+        const response = await provider.execute(request);
+        const inputTokens = response.usage?.inputTokens;
+        const outputTokens = response.usage?.outputTokens;
+        if (inputTokens === undefined || outputTokens === undefined) {
+          throw new Error("Arvan AI response did not include token usage required for wallet settlement");
+        }
+        await wallet.settleArvan(
+          request.context,
+          reservation,
+          { inputTokens, outputTokens },
+          request.operationId,
+          request.idempotencyKey,
+        );
+        settled = true;
+        return response;
+      } catch (error) {
+        if (!settled) {
+          await wallet.releaseArvan(
+            request.context,
+            reservation,
+            request.operationId,
+            request.idempotencyKey,
+            error instanceof Error ? error.message : "AI execution failed",
+          ).catch(() => undefined);
+        }
+        throw error;
+      }
+    },
+  };
+}
+
+function estimateAiInputTokens(input: unknown): number {
+  const serialized = typeof input === "string" ? input : JSON.stringify(input);
+  const bytes = serialized ? new TextEncoder().encode(serialized).byteLength : 0;
+  return Math.max(1, Math.ceil(bytes / 3) + 512);
+}
+
+function parseNonNegativeInteger(value: string | undefined): number | undefined {
+  if (!value?.trim()) return undefined;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined;
 }
