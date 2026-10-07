@@ -89,6 +89,7 @@ import businessHours from "../../../migrations/0091_business_hours.sql";
 import businessPublicContactLinks from "../../../migrations/0092_business_public_contact_links.sql";
 import commerceFulfillmentPolicies from "../../../migrations/0093_commerce_fulfillment_policies.sql";
 import socialEngagementGraph from "../../../migrations/0094_social_engagement_graph.sql";
+import billingAiWallet from "../../../migrations/0095_billing_ai_wallet.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
