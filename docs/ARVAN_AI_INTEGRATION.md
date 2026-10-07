@@ -145,3 +145,66 @@ The recommended sequence is:
 ## 9. Operational rule
 
 Provider changes must be performed through AI Runtime governance. Do not add direct Arvan calls from Product Studio, Discovery, Commerce or UI code.
+
+
+## 10. Arvan Object Storage
+
+The provided Arvan Object Storage documentation confirms an S3-compatible object-storage workflow using an Access Key, Secret Key and an S3 endpoint. The documented Tehran endpoint is `https://s3.ir-thr-at1.arvanstorage.ir`.
+
+For Phoenix, Object Storage should be treated as a storage provider behind the Media boundary:
+
+```text
+Media API
+   |
+   +--> D1
+   |     metadata / ownership / checksum / status / provider
+   |
+   +--> Object Storage Provider
+         +--> Cloudflare R2
+         +--> Arvan Object Storage
+```
+
+The canonical `media_assets.storage_provider` value therefore needs to evolve from the current R2-only constraint to a provider-neutral enum such as:
+
+```text
+r2
+arvan-s3
+```
+
+Provider credentials remain runtime-only. For Arvan:
+
+```text
+ARVAN_OBJECT_STORAGE_ENDPOINT
+ARVAN_OBJECT_STORAGE_BUCKET
+ARVAN_OBJECT_STORAGE_ACCESS_KEY
+ARVAN_OBJECT_STORAGE_SECRET_KEY
+ARVAN_OBJECT_STORAGE_REGION
+```
+
+The API must never expose Access Key or Secret Key to browser clients.
+
+### Recommended Arvan Object Storage role in Phoenix
+
+Use Arvan Object Storage for:
+
+- product and business images;
+- user-uploaded documents;
+- generated PDF/export artifacts;
+- media derivatives;
+- future AI/RAG source files where policy permits.
+
+Keep D1 as the authoritative owner/scope/metadata store. Never use a public object URL as the authorization boundary.
+
+### Migration strategy
+
+Do not replace R2 in-place. Add Arvan as a second provider first:
+
+```text
+Phase A: provider abstraction
+Phase B: Arvan upload/read/delete adapter
+Phase C: dual-provider tests
+Phase D: selected media classes on Arvan
+Phase E: optional R2 -> Arvan migration
+```
+
+This keeps rollback possible and avoids coupling the application to a single storage vendor.
