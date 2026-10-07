@@ -3,6 +3,7 @@ import type { RuntimeModule } from "@qooqnos/runtime";
 export const BILLING_PERMISSIONS = [
   "billing.plan.read",
   "billing.invoice.read",
+  "billing.ai_wallet.read",
   "billing.subscription.read",
   "billing.subscription.manage",
   "billing.entitlement.read",
