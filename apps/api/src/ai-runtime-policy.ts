@@ -1,3 +1,4 @@
+import { AiWalletService, estimateAiInputTokens } from "@qooqnos/billing";
 import type { BillingAIEntitlementService } from "@qooqnos/billing";
 import type { RequestContext } from "@qooqnos/core";
 import type {
@@ -13,6 +14,9 @@ export interface SellerProductAIRuntimePolicyOptions {
   readonly billing: BillingAIEntitlementService;
   readonly validateOutput: AIRuntimePolicy["validateOutput"];
   readonly validateSafety: AIRuntimePolicy["validateSafety"];
+  readonly aiWallet?: AiWalletService | undefined;
+  readonly aiProviderId?: string | undefined;
+  readonly aiModelId?: string | undefined;
 }
 
 /**
@@ -42,6 +46,26 @@ export function createSellerProductAIRuntimePolicy(
         idempotencyKey: request.idempotencyKey,
         ...(request.budgetUnits !== undefined ? { budgetUnits: request.budgetUnits } : {}),
       });
+
+      if (decision.allowed
+        && options.aiWallet
+        && options.aiProviderId === "arvan-aiaas"
+        && options.aiModelId) {
+        const preflight = await options.aiWallet.preflightArvan(request.context, {
+          modelId: options.aiModelId,
+          estimatedInputTokens: estimateAiInputTokens(request.input),
+        });
+        if (!preflight.allowed) {
+          return {
+            allowed: false,
+            decision: "denied",
+            entitlementDecisionId: decision.entitlementDecisionId,
+            entitlementKey: decision.entitlementKey,
+            pricingVersion: decision.pricingVersion,
+            reason: preflight.reason ?? "AI wallet funding is insufficient",
+          };
+        }
+      }
 
       return {
         allowed: decision.allowed,
