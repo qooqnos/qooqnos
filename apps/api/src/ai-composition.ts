@@ -16,7 +16,7 @@ import type {
   AIRuntimePolicy,
   AuthorizationService,
 } from "@qooqnos/runtime";
-import { createApiAIRuntime } from "./ai-runtime";
+import { createApiAIRuntime, createApiAiWalletService, resolveProviderId } from "./ai-runtime";
 import { createSellerProductAIRuntimePolicy } from "./ai-runtime-policy";
 import type { ApiEnv } from "./env";
 
@@ -38,13 +38,17 @@ export async function processSellerProductAIRuntimeWork(
   const id = () => brandId<"EntityId">(crypto.randomUUID());
   const now = options.now ?? (() => new Date().toISOString());
 
+  const aiWallet = createApiAiWalletService(options.env, options.database, id, now);
   const policy = createSellerProductAIRuntimePolicy({
     authorization: options.authorization,
     billing: options.billing,
     validateOutput: options.validateOutput,
     validateSafety: options.validateSafety,
+    aiWallet,
+    aiProviderId: resolveProviderId(options.env),
+    aiModelId: options.env.AI_SELLER_EXTRACT_MODEL_ID,
   });
-  const runtime = createApiAIRuntime(options.env, policy);
+  const runtime = createApiAIRuntime(options.env, policy, undefined, aiWallet);
   const persistentRuntime = createPersistentAIRuntimeClient(
     createAIRuntimeClient(runtime.execute),
     new AiRuntimeRepository(options.database),
@@ -84,16 +88,19 @@ export interface SellerProductServiceCompositionOptions {
 export function createSellerProductService(
   options: SellerProductServiceCompositionOptions,
 ): SellerProductService {
+  const id = options.id ?? (() => brandId<"EntityId">(crypto.randomUUID()));
+  const now = options.now ?? (() => new Date().toISOString());
+  const aiWallet = createApiAiWalletService(options.env, options.database, id, now);
   const policy = createSellerProductAIRuntimePolicy({
     authorization: options.authorization,
     billing: options.billing,
     validateOutput: options.validateOutput,
     validateSafety: options.validateSafety,
+    aiWallet,
+    aiProviderId: resolveProviderId(options.env),
+    aiModelId: options.env.AI_SELLER_EXTRACT_MODEL_ID,
   });
-  const runtime = createApiAIRuntime(options.env, policy, options.economics);
-
-  const id = options.id ?? (() => brandId<"EntityId">(crypto.randomUUID()));
-  const now = options.now ?? (() => new Date().toISOString());
+  const runtime = createApiAIRuntime(options.env, policy, options.economics, aiWallet);
   const persistentRuntime = createPersistentAIRuntimeClient(
     createAIRuntimeClient(runtime.execute),
     new AiRuntimeRepository(options.database),

@@ -91,7 +91,17 @@ export interface ApiEnv {
   readonly AI?: CloudflareAIBinding;
   readonly MEDIA_BUCKET?: CloudflareR2Binding;
   readonly OUTBOX_QUEUE?: CloudflareQueueBinding;
+  readonly AI_PROVIDER_ID?: string;
   readonly AI_GATEWAY_ID?: string;
+  readonly ARVAN_AI_ENDPOINT?: string;
+  readonly ARVAN_AI_API_KEY?: string;
+  readonly ARVAN_AI_MAX_TOKENS?: string;
+  readonly ARVAN_AI_TEMPERATURE?: string;
+  readonly ARVAN_AI_REGION?: string;
+  readonly ARVAN_AI_INPUT_PRICE_PER_1M_IRR?: string;
+  readonly ARVAN_AI_OUTPUT_PRICE_PER_1M_IRR?: string;
+  readonly ARVAN_AI_MARKUP_BPS?: string;
+  readonly ARVAN_AI_PRICING_VERSION?: string;
   readonly AI_SELLER_EXTRACT_MODEL_ID?: string;
   readonly AI_SELLER_EXTRACT_MODEL_VERSION?: string;
   readonly AI_WORKER_ID?: string;

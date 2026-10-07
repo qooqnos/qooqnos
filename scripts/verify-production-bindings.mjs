@@ -28,7 +28,16 @@ requireBinding(/\[env\.production\.d1_databases\]/, "D1");
 requireBinding(/\[env\.production\.queues\.producers\]/, "Outbox Queue producer");
 requireBinding(/\[env\.production\.queues\.consumers\]/, "Outbox Queue consumer");
 requireBinding(/\[\[env\.production\.r2_buckets\]\]/, "Media R2 bucket");
-requireBinding(/\[env\.production\.ai\]/, "Workers AI");
+const providerMatch = wrangler.match(/AI_PROVIDER_ID\s*=\s*"([^"]+)"/);
+const providerId = providerMatch?.[1] || "cloudflare-workers-ai";
+if (!["cloudflare-workers-ai", "arvan-aiaas"].includes(providerId)) {
+  fail(`unsupported AI provider: ${providerId}`);
+}
+if (providerId === "cloudflare-workers-ai") {
+  requireBinding(/\[env\.production\.ai\]/, "Workers AI");
+} else {
+  requireBinding(/ARVAN_AI_ENDPOINT\s*=\s*"[^"<>\\s]+"/, "Arvan AI endpoint");
+}
 
 if (!/binding\s*=\s*"DB"/.test(wrangler)) fail("production D1 binding must be DB");
 if (!/binding\s*=\s*"OUTBOX_QUEUE"/.test(wrangler)) fail("production queue binding must be OUTBOX_QUEUE");

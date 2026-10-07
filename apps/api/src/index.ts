@@ -1322,7 +1322,7 @@ export default {
       }
     }
 
-    if (database && env.AI && env.AI_SELLER_EXTRACT_MODEL_ID) {
+    if (database && env.AI_SELLER_EXTRACT_MODEL_ID && (env.AI || env.AI_PROVIDER_ID === "arvan-aiaas" || (env.ARVAN_AI_ENDPOINT && env.ARVAN_AI_API_KEY))) {
       const authorizationRegistry = createApiAuthorizationRegistry();
       const authorization = createAuthorizationService(
         new AuthorizationRepository(database),

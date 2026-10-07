@@ -69,7 +69,7 @@ export class ApiRouter {
     registerAutomationRoutes(this, options.database, options.authorization);
     registerIntegrationRoutes(this, options.database, options.authorization);
     registerFulfillmentRoutes(this, options.database, options.authorization);
-    registerBillingRoutes(this, options.database, options.authorization);
+    registerBillingRoutes(this, options.database, options.authorization, options.seoEnvironment);
     registerCaseSupportRoutes(this, options.database, options.authorization);
     registerCustomerRoutes(this, options.database, options.authorization);
     registerSeoRoutes(this, options.database, options.seoCanonicalBaseUrl ?? "https://qooqnos.com", options.seoEnvironment);

@@ -16,3 +16,4 @@ export * from "./settlement-repository";
 export * from "./settlement-service";
 
 export * from "./reconciliation-repository";
+export * from "./ai-wallet";

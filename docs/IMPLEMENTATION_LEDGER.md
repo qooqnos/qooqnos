@@ -1,3 +1,14 @@
+## 2026-10-07 — Prepaid Arvan AI wallet and 50% customer markup
+
+- 🟢 Added a Billing-owned prepaid AI wallet scoped to authenticated user + organization/workspace, with append-only wallet events and idempotency.
+- 🟢 Added versioned per-model Arvan token pricing for input/output tokens, stored in Billing and initialized from deployment configuration.
+- 🟢 Arvan AI execution now performs a wallet preflight and atomic reservation before the provider call; provider failures release the reservation.
+- 🟢 Successful Arvan calls settle using the actual reported input/output token usage. Customer charge is provider token cost × 1.50 by default; the raw provider cost remains backend-only.
+- 🟢 Added authenticated `GET /api/v1/billing/ai-wallet` for wallet balance/available credit. No public credit-minting endpoint was added.
+- 🟢 Production deployment now requires Arvan input/output token prices before enabling the provider.
+- 🟡 The exact current Arvan model prices are intentionally configuration-driven rather than hard-coded; production variables must contain the current Arvan AIaaS price for the selected model.
+
+
 ## 2026-09-30 — Vertical Workflow UI registry audit gate
 
 - 🟢 Added `scripts/verify-vertical-workflow-ui.mjs` as a lightweight source-level guard for the shared Vertical Workflow UI registry.

@@ -10,5 +10,6 @@ export * from "./ai-provider-governance";
 export * from "./ai-provider-registry";
 export * from "./ai-runtime";
 export * from "./cloudflare-ai-provider";
+export * from "./arvan-ai-provider";
 
 export * from "./capabilities";
