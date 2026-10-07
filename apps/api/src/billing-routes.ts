@@ -59,7 +59,7 @@ export function registerBillingRoutes(
       const inputPrice = Number(env.ARVAN_AI_INPUT_PRICE_PER_1M_IRR ?? "");
       const outputPrice = Number(env.ARVAN_AI_OUTPUT_PRICE_PER_1M_IRR ?? "");
       if (!modelId || !Number.isSafeInteger(inputPrice) || inputPrice <= 0 || !Number.isSafeInteger(outputPrice) || outputPrice <= 0) {
-        throw new AppError({ code: "SERVICE_UNAVAILABLE", message: "AI wallet pricing is not available.", requestId: context.requestId });
+        throw new AppError({ code: "UNPROCESSABLE", message: "AI wallet pricing is not available.", requestId: context.requestId });
       }
       const wallet = new AiWalletService({
         database,
