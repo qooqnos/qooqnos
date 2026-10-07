@@ -36,7 +36,7 @@ if (!["cloudflare-workers-ai", "arvan-aiaas"].includes(providerId)) {
 if (providerId === "cloudflare-workers-ai") {
   requireBinding(/\[env\.production\.ai\]/, "Workers AI");
 } else {
-  requireBinding(/ARVAN_AI_ENDPOINT\s*=\s*"[^"<>s]+"/, "Arvan AI endpoint");
+  requireBinding(/ARVAN_AI_ENDPOINT\s*=\s*"[^"<>\\s]+"/, "Arvan AI endpoint");
 }
 
 if (!/binding\s*=\s*"DB"/.test(wrangler)) fail("production D1 binding must be DB");
