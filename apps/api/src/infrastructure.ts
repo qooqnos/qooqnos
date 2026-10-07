@@ -45,9 +45,12 @@ export function checkRuntimeInfrastructure(env: {
   const explicitProvider = env.AI_PROVIDER_ID?.trim();
   const arvanConfigured = Boolean(env.ARVAN_AI_ENDPOINT?.trim() && env.ARVAN_AI_API_KEY?.trim());
   const providerId = explicitProvider || (arvanConfigured ? "arvan-aiaas" : "cloudflare-workers-ai");
-  const ai = providerId === "arvan-aiaas"
-    ? (arvanConfigured ? "ok" : "missing")
-    : (env.AI ? "ok" : "missing");
+  const supportedProvider = providerId === "arvan-aiaas" || providerId === "cloudflare-workers-ai";
+  const ai = !supportedProvider
+    ? "missing"
+    : providerId === "arvan-aiaas"
+      ? (arvanConfigured ? "ok" : "missing")
+      : (env.AI ? "ok" : "missing");
   const aiProvider = ai === "ok"
     ? (providerId === "arvan-aiaas" ? "arvan-aiaas" : "cloudflare-workers-ai")
     : "missing";
