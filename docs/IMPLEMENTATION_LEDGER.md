@@ -1,3 +1,13 @@
+## 2026-10-09 — Three-mode Welcome and Consumer journey
+
+- 🟢 Extended `/welcome` from two experience choices to three clear modes: Individual, Business and Consumer, with keyboard-operable tabs and URL state via `?type=...`.
+- 🟢 Added a buyer-focused entry with natural-language demand input, localized in Persian, English and Arabic. Search reuses the canonical Discovery route; quick actions link to existing Discovery, Booking, Compare and Orders surfaces rather than creating parallel commerce state.
+- 🟢 Updated the welcome visual system and consumer entry styling in both authored and served web stylesheets. Styling reuses Phoenix semantic color/theme tokens and adapts the mode cards, search and shortcuts for mobile.
+- 🟢 Added browser i18n coverage for the new shared keys and all three locale dictionaries; regenerated `apps/web/src/i18n-runtime.ts` from the same locale source keys.
+- 🟡 Local build, focused tests, full test suite and browser/device visual QA have not yet been verified in this implementation turn. CI results are the next verification gate.
+
+Implementation commits: `d20edfb6` (three-mode flow), `6cd7d170` / `be898e4d` (authored/served styles), `d9b7f272` / `41ecc625` / `9e58ff67` / `aa1a8efb` (fa/en/ar and browser i18n), `17f5d26a` (localization tests).
+
 ## 2026-09-30 — Vertical Workflow UI registry audit gate
 
 - 🟢 Added `scripts/verify-vertical-workflow-ui.mjs` as a lightweight source-level guard for the shared Vertical Workflow UI registry.
