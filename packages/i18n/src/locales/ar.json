@@ -625,7 +625,27 @@
     "vertical_layoutCommerceDescription": "طبقة المعاملات؛ لا يتم تخزين Order وBilling وFulfillment مرة أخرى في مساحة العمل.",
     "vertical_layoutOperationsDescription": "طبقة تنفيذ العمليات؛ تتصل قوائم العمليات بـ Cases/Fulfillment.",
     "vertical_layoutCommunicationDescription": "طبقة الاتصالات؛ تُقرأ المحادثات والإشعارات من حدود Communication.",
-    "vertical_handoffTitle": "الإدخال والمرحلة الحالية والمخرج التالي"
+    "vertical_handoffTitle": "الإدخال والمرحلة الحالية والمخرج التالي",
+    "welcomeModeIndividualTitle": "مستخدم فردي",
+    "welcomeModeIndividualDescription": "اكتشف احتياجاتك وشارك وتابع",
+    "welcomeModeBusinessTitle": "نشاط تجاري",
+    "welcomeModeBusinessDescription": "اعرض خدماتك وأدر فريقك وبع",
+    "welcomeModeConsumerTitle": "المشتري",
+    "welcomeModeConsumerDescription": "اكتشف وقارن واشترِ واحجز",
+    "consumerKicker": "تجربة المشتري",
+    "consumerTitle": "مرحبًا! عمّ تبحث؟",
+    "consumerDescription": "صف ما تحتاجه ببساطة؛ يساعدك ققنوس في اكتشاف الخيارات المناسبة ومقارنتها واتخاذ الخطوة التالية.",
+    "consumerNeedLabel": "ما الذي تريد العثور عليه؟",
+    "consumerNeedPlaceholder": "مثل سيارة عائلية أو مستشار موثوق أو هدية مميزة...",
+    "consumerSearchAction": "ابحث في ققنوس",
+    "consumerExploreAction": "استكشف العروض",
+    "consumerQuickTitle": "من أين نبدأ؟",
+    "consumerCategoryProducts": "المنتجات والتسوق",
+    "consumerCategoryServices": "الخدمات والاستشارات",
+    "consumerCategoryBook": "الحجوزات والمواعيد",
+    "consumerCategoryCompare": "مقارنة الخيارات",
+    "consumerTrustHeading": "من الاكتشاف إلى الاختيار",
+    "consumerTrustCopy": "تصفّح العروض المسجلة في ققنوس؛ لا نعرض أسعارًا أو تقييمات مختلقة."
   },
   "canonical": {
     "identity": {
