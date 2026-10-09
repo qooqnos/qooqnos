@@ -4887,7 +4887,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
           </button>
         `}
 
-        <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}">
+        <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}" data-toggle-shortlist="${escapeAttr(key)}">
           ★ ${uiText("ذخیره")}
         </button>
         <button class="button button-ghost" type="button" data-share-detail="${escapeAttr(key)}">
