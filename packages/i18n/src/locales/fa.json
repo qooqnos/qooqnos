@@ -625,7 +625,27 @@
     "vertical_layoutCommerceDescription": "سطح معامله؛ Order، Billing و Fulfillment دوباره در Workspace ذخیره نمی‌شوند.",
     "vertical_layoutOperationsDescription": "سطح اجرای عملیات؛ صف‌های عملیاتی به Cases/Fulfillment متصل می‌شوند.",
     "vertical_layoutCommunicationDescription": "سطح ارتباط؛ گفتگو و notification از Communication boundary خوانده می‌شوند.",
-    "vertical_handoffTitle": "ورودی، مرحله فعلی و خروجی بعدی"
+    "vertical_handoffTitle": "ورودی، مرحله فعلی و خروجی بعدی",
+    "welcomeModeIndividualTitle": "کاربر حقیقی",
+    "welcomeModeIndividualDescription": "برای کشف نیازها، معرفی و دنبال‌کردن",
+    "welcomeModeBusinessTitle": "کسب‌وکار",
+    "welcomeModeBusinessDescription": "برای معرفی عرضه، مدیریت تیم و فروش",
+    "welcomeModeConsumerTitle": "خریدار نهایی",
+    "welcomeModeConsumerDescription": "برای جست‌وجو، مقایسه، خرید و رزرو",
+    "consumerKicker": "مسیر خریدار",
+    "consumerTitle": "سلام! دنبال چی می‌گردی؟",
+    "consumerDescription": "نیازت را ساده بگو؛ ققنوس گزینه‌های مناسب را برای کشف، مقایسه و اقدام پیش رویت می‌گذارد.",
+    "consumerNeedLabel": "چه چیزی می‌خواهی پیدا کنی؟",
+    "consumerNeedPlaceholder": "مثلاً یک خودروی خانوادگی، مشاور خوب یا هدیه‌ای خاص...",
+    "consumerSearchAction": "جست‌وجو در ققنوس",
+    "consumerExploreAction": "رفتن به اکسپلور",
+    "consumerQuickTitle": "از کجا شروع کنیم؟",
+    "consumerCategoryProducts": "کالا و خرید",
+    "consumerCategoryServices": "خدمات و مشاوره",
+    "consumerCategoryBook": "رزرو و نوبت",
+    "consumerCategoryCompare": "مقایسه گزینه‌ها",
+    "consumerTrustHeading": "از کشف تا انتخاب",
+    "consumerTrustCopy": "گزینه‌های ثبت‌شده در ققنوس را ببین؛ قیمت و امتیاز ساختگی نمایش داده نمی‌شود."
   },
   "canonical": {
     "identity": {
