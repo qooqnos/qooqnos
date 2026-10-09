@@ -258,6 +258,19 @@ await page.goto(baseURL + "/admin");
 await page.getByText("business.updated").waitFor();
 await page.getByText("seller.product.extract").waitFor();
 
+await page.goto(baseURL + "/welcome?type=consumer");
+assert.equal(await page.locator("[data-welcome-tab]").count(), 3);
+assert.equal(await page.locator("[data-welcome-tab='consumer']").getAttribute("aria-selected"), "true");
+await page.locator("[data-welcome-tab='individual']").click();
+assert.equal(await page.locator("[data-welcome-tab='individual']").getAttribute("aria-selected"), "true");
+await page.locator("[data-welcome-tab='business']").click();
+assert.equal(await page.locator("[data-welcome-tab='business']").getAttribute("aria-selected"), "true");
+await page.locator("[data-welcome-tab='consumer']").click();
+await page.locator("#welcome-consumer-need").fill("جستجوی خودرو خانوادگی");
+await page.locator("[data-consumer-search-form] [type=submit]").click();
+await page.waitForURL(/\\/discover\\?q=/);
+assert.equal(await page.locator("#discover-query").inputValue(), "جستجوی خودرو خانوادگی");
+
 await page.goto(baseURL + "/design-system");
 await page.getByText("Primitiveهای مشترک").waitFor();
 await page.locator(".ds-table").waitFor();
