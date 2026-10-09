@@ -4837,7 +4837,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
   overlay.className = "connection-overlay";
   overlay.innerHTML = `
     <div class="connection-backdrop" data-close-discovery></div>
-    <section class="connection-modal glass-card phoenix-detail-modal" role="dialog" aria-modal="true" aria-labelledby="discovery-detail-title">
+    <section class="connection-modal glass-card phoenix-detail-modal discovery-detail-modal" role="dialog" aria-modal="true" aria-labelledby="discovery-detail-title">
       <button class="connection-close" type="button" data-close-discovery aria-label="${escapeAttr(uiText("بستن"))}">×</button>
       
       <div class="detail-badge-strip">
