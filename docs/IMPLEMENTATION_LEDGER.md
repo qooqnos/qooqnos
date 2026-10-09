@@ -4,9 +4,12 @@
 - 🟢 Added a buyer-focused entry with natural-language demand input, localized in Persian, English and Arabic. Search reuses the canonical Discovery route; quick actions link to existing Discovery, Booking, Compare and Orders surfaces rather than creating parallel commerce state.
 - 🟢 Updated the welcome visual system and consumer entry styling in both authored and served web stylesheets. Styling reuses Phoenix semantic color/theme tokens and adapts the mode cards, search and shortcuts for mobile.
 - 🟢 Added browser i18n coverage for the new shared keys and all three locale dictionaries; regenerated `apps/web/src/i18n-runtime.ts` from the same locale source keys.
-- 🟡 Local build, focused tests, full test suite and browser/device visual QA have not yet been verified in this implementation turn. CI results are the next verification gate.
+- 🟢 GitHub CI passed on the final app/styles commit: TypeScript typecheck, build, Cloudflare Worker dry run and unit tests succeeded.
+- 🟢 Phoenix verification and Playwright web UI smoke passed, including three-mode selection, consumer demand search navigation and existing detail-save/shortlist behavior.
+- 🟢 Preview Worker deployment previously returned HTTP 200 for the deployed SPA route. A final mirrored-stylesheet preview run is queued.
+- 🟡 Manual pixel-by-pixel review on physical devices has not been performed; browser smoke is the current visual/interaction gate.
 
-Implementation commits: `d20edfb6` (three-mode flow), `6cd7d170` / `be898e4d` (authored/served styles), `d9b7f272` / `41ecc625` / `9e58ff67` / `aa1a8efb` (fa/en/ar and browser i18n), `17f5d26a` (localization tests).
+Implementation commits: `d20edfb6` (three-mode flow), `6cd7d170` / `be898e4d` / `7ac5f1b4` / `df727a3a` (responsive styles, charcoal dark palette and served asset), `d9b7f272` / `41ecc625` / `9e58ff67` / `aa1a8efb` (fa/en/ar browser i18n), `17f5d26a` (translation coverage), `b1ea11dd` / `32ba4dca` (detail-save compatibility), `2aa9a0c8` / `281feff4` (consumer journey E2E smoke).
 
 ## 2026-09-30 — Vertical Workflow UI registry audit gate
 
