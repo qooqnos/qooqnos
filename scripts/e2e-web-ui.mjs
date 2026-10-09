@@ -268,7 +268,7 @@ assert.equal(await page.locator("[data-welcome-tab='business']").getAttribute("a
 await page.locator("[data-welcome-tab='consumer']").click();
 await page.locator("#welcome-consumer-need").fill("جستجوی خودرو خانوادگی");
 await page.locator("[data-consumer-search-form] [type=submit]").click();
-await page.waitForURL(/\\/discover\\?q=/);
+await page.waitForURL((url) => url.pathname === "/discover" && url.searchParams.has("q"));
 assert.equal(await page.locator("#discover-query").inputValue(), "جستجوی خودرو خانوادگی");
 
 await page.goto(baseURL + "/design-system");
