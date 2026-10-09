@@ -4174,29 +4174,93 @@ function loadBusinessSettingsPage(): void {
    ========================================================================= */
 
 function renderWelcome(): string {
-  const currentTab = new URLSearchParams(location.search).get("type") === "business" ? "business" : "individual";
-  return `
-    <div class="phoenix-welcome-page">
-      <section class="phoenix-welcome-hero">
-        <span class="phoenix-eyebrow"><i></i> ${uiText("ورود و خوش‌آمدگویی")}</span>
-        <h1>فقط بگو چی می‌خوای؛<br/><em>ققنوس کمک می‌کند مسیر مناسب را پیدا کنی.</em></h1>
-        <p>چه به عنوان خریدار در جستجوی بهترین انتخاب باشید، و چه به عنوان کسب‌وکار بخواهید عرضه خود را به تقاضای واقعی متصل کنید، ققنوس همراه شماست.</p>
-        
-        <div class="welcome-mode-tabs" role="tablist" aria-label="${escapeAttr(uiText("نوع تجربه"))}">
-          <button type="button" class="welcome-mode-btn ${currentTab === "individual" ? "active" : ""}" data-welcome-tab="individual">
-            👤 ${uiText("کاربر حقیقی / مصرف‌کننده")}
-          </button>
-          <button type="button" class="welcome-mode-btn ${currentTab === "business" ? "active" : ""}" data-welcome-tab="business">
-            🏢 ${uiText("کسب‌وکار / سازمان")}
-          </button>
-        </div>
-      </section>
+  const requestedType = new URLSearchParams(location.search).get("type");
+  const currentTab = requestedType === "business" || requestedType === "consumer" ? requestedType : "individual";
+  const copy = (key: string): string => escapeHtml(defaultI18n.t(key));
+  const modes: Array<{ id: "individual" | "business" | "consumer"; icon: string; titleKey: string; descriptionKey: string }> = [
+    { id: "individual", icon: "♙", titleKey: "ui.welcomeModeIndividualTitle", descriptionKey: "ui.welcomeModeIndividualDescription" },
+    { id: "business", icon: "▦", titleKey: "ui.welcomeModeBusinessTitle", descriptionKey: "ui.welcomeModeBusinessDescription" },
+    { id: "consumer", icon: "⌕", titleKey: "ui.welcomeModeConsumerTitle", descriptionKey: "ui.welcomeModeConsumerDescription" },
+  ];
+  const modeButtons = modes.map((mode) => {
+    const selected = currentTab === mode.id;
+    return '<button type="button" role="tab" id="welcome-tab-' + mode.id + '" class="welcome-mode-btn' + (selected ? ' active' : '') + '" data-welcome-tab="' + mode.id + '" aria-selected="' + String(selected) + '" aria-controls="welcome-content-area" tabindex="' + (selected ? "0" : "-1") + '">' +
+      '<span class="welcome-mode-icon" aria-hidden="true">' + mode.icon + '</span>' +
+      '<span class="welcome-mode-copy"><strong>' + copy(mode.titleKey) + '</strong><small>' + copy(mode.descriptionKey) + '</small></span>' +
+      '<span class="welcome-mode-arrow" aria-hidden="true">↗</span>' +
+    '</button>';
+  }).join("");
+  const activeContent = currentTab === "business"
+    ? renderBusinessOnboarding()
+    : currentTab === "consumer"
+      ? renderConsumerExperience()
+      : renderIndividualOnboarding();
 
-      <section class="welcome-content-area" id="welcome-content-area">
-        ${currentTab === "individual" ? renderIndividualOnboarding() : renderBusinessOnboarding()}
-      </section>
-    </div>
-  `;
+  return '<div class="phoenix-welcome-page">' +
+    '<section class="phoenix-welcome-hero">' +
+      '<div class="welcome-hero-copy">' +
+        '<span class="phoenix-eyebrow"><i></i> ' + copy("ui.home_homeHeroEyebrow") + '</span>' +
+        '<h1>' + copy("ui.home_homeHeroTitle1") + '<br/><em>' + copy("ui.home_homeHeroTitle2") + '</em></h1>' +
+        '<p>' + copy("ui.home_homeHeroDescription") + '</p>' +
+      '</div>' +
+      '<div class="welcome-hero-brand" aria-hidden="true">' +
+        '<div class="welcome-hero-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
+        '<strong>' + copy("common.appName") + '</strong>' +
+        '<small>' + copy("ui.home_homeIdentity") + '</small>' +
+      '</div>' +
+    '</section>' +
+    '<div class="welcome-mode-tabs" role="tablist" aria-label="' + copy("ui.home_homeExperience") + '">' + modeButtons + '</div>' +
+    '<section class="welcome-content-area" id="welcome-content-area" aria-live="polite">' + activeContent + '</section>' +
+  '</div>';
+}
+
+function renderConsumerExperience(): string {
+  const copy = (key: string): string => escapeHtml(defaultI18n.t(key));
+  const actions: Array<{ icon: string; labelKey: string; path?: string; queryKey?: string }> = [
+    { icon: "▤", labelKey: "ui.consumerCategoryProducts", queryKey: "ui.ui030" },
+    { icon: "✦", labelKey: "ui.consumerCategoryServices", queryKey: "ui.ui038" },
+    { icon: "◷", labelKey: "ui.consumerCategoryBook", path: "/booking" },
+    { icon: "⚖", labelKey: "ui.consumerCategoryCompare", path: "/compare" },
+    { icon: "▣", labelKey: "ui.ui012", path: "/orders" },
+  ];
+  const actionMarkup = actions.map((action) =>
+    '<button type="button" class="welcome-consumer-action" ' +
+      (action.path
+        ? 'data-consumer-path="' + escapeAttr(action.path) + '"'
+        : 'data-consumer-query="' + escapeAttr(defaultI18n.t(action.queryKey ?? "")) + '"') + '>' +
+      '<span class="welcome-consumer-action-icon" aria-hidden="true">' + action.icon + '</span>' +
+      '<strong>' + copy(action.labelKey) + '</strong><b aria-hidden="true">↗</b>' +
+    '</button>'
+  ).join("");
+
+  return '<article class="welcome-card glass-card welcome-consumer-card">' +
+    '<header class="welcome-consumer-intro">' +
+      '<div class="welcome-consumer-intro-copy">' +
+        '<span class="phoenix-eyebrow"><i></i> ' + copy("ui.consumerKicker") + '</span>' +
+        '<h2>' + copy("ui.consumerTitle") + '</h2>' +
+        '<p>' + copy("ui.consumerDescription") + '</p>' +
+      '</div>' +
+      '<div class="welcome-consumer-art" aria-hidden="true"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
+    '</header>' +
+    '<form class="welcome-consumer-search" data-consumer-search-form role="search">' +
+      '<label class="field-label" for="welcome-consumer-need">' + copy("ui.consumerNeedLabel") + '</label>' +
+      '<div class="welcome-consumer-search-control">' +
+        '<span class="welcome-consumer-search-icon" aria-hidden="true">⌕</span>' +
+        '<input id="welcome-consumer-need" name="need" type="search" autocomplete="off" placeholder="' + escapeAttr(defaultI18n.t("ui.consumerNeedPlaceholder")) + '" />' +
+        '<button class="button button-primary" type="submit">' + copy("ui.consumerSearchAction") + '<span aria-hidden="true">←</span></button>' +
+      '</div>' +
+      '<small class="welcome-consumer-search-hint">' + copy("ui.home_homeStartHint") + '</small>' +
+    '</form>' +
+    '<section class="welcome-consumer-quick">' +
+      '<div class="welcome-consumer-section-heading"><h3>' + copy("ui.consumerQuickTitle") + '</h3><span>' + copy("ui.consumerTrustHeading") + '</span></div>' +
+      '<div class="welcome-consumer-actions">' + actionMarkup + '</div>' +
+    '</section>' +
+    '<footer class="welcome-consumer-trust">' +
+      '<span class="welcome-consumer-trust-icon" aria-hidden="true">✓</span>' +
+      '<div><strong>' + copy("ui.consumerTrustHeading") + '</strong><p>' + copy("ui.consumerTrustCopy") + '</p></div>' +
+      '<button type="button" class="button button-ghost" data-consumer-path="/discover?tab=explore">' + copy("ui.consumerExploreAction") + '<span aria-hidden="true">←</span></button>' +
+    '</footer>' +
+  '</article>';
 }
 
 function renderIndividualOnboarding(): string {
@@ -4312,17 +4376,39 @@ function renderBusinessOnboarding(): string {
 
 function loadWelcomePage(): void {
   const contentArea = document.querySelector<HTMLElement>("#welcome-content-area");
-  const tabButtons = document.querySelectorAll<HTMLButtonElement>("[data-welcome-tab]");
+  const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-welcome-tab]"));
 
-  tabButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      tabButtons.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      const type = btn.dataset.welcomeTab;
-      if (contentArea) {
-        contentArea.innerHTML = type === "business" ? renderBusinessOnboarding() : renderIndividualOnboarding();
-        bindOnboardingEvents();
-      }
+  const selectExperience = (type: string | undefined): void => {
+    if (type !== "individual" && type !== "business" && type !== "consumer") return;
+    for (const button of tabButtons) {
+      const selected = button.dataset.welcomeTab === type;
+      button.classList.toggle("active", selected);
+      button.setAttribute("aria-selected", String(selected));
+      button.tabIndex = selected ? 0 : -1;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set("type", type);
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    if (contentArea) {
+      contentArea.innerHTML = type === "business"
+        ? renderBusinessOnboarding()
+        : type === "consumer"
+          ? renderConsumerExperience()
+          : renderIndividualOnboarding();
+      bindOnboardingEvents();
+    }
+  };
+
+  tabButtons.forEach((btn, index) => {
+    btn.addEventListener("click", () => selectExperience(btn.dataset.welcomeTab));
+    btn.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      const rtl = document.documentElement.dir === "rtl";
+      const step = event.key === "ArrowRight" ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
+      const next = tabButtons[(index + step + tabButtons.length) % tabButtons.length];
+      next?.focus();
+      next?.click();
     });
   });
 
@@ -4330,6 +4416,24 @@ function loadWelcomePage(): void {
 }
 
 function bindOnboardingEvents(): void {
+  const consumerSearchForm = document.querySelector<HTMLFormElement>("[data-consumer-search-form]");
+  consumerSearchForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const query = consumerSearchForm.querySelector<HTMLInputElement>("#welcome-consumer-need")?.value.trim() ?? "";
+    navigate(query ? "/discover?q=" + encodeURIComponent(query) : "/discover?tab=explore");
+  });
+
+  document.querySelectorAll<HTMLButtonElement>("[data-consumer-path],[data-consumer-query]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (button.dataset.consumerPath) {
+        navigate(button.dataset.consumerPath);
+        return;
+      }
+      const query = button.dataset.consumerQuery?.trim() ?? "";
+      navigate(query ? "/discover?q=" + encodeURIComponent(query) : "/discover?tab=explore");
+    });
+  });
+
   document.querySelectorAll<HTMLButtonElement>(".welcome-choice-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       chip.classList.toggle("selected");
