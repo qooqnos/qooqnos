@@ -625,7 +625,27 @@
     "vertical_layoutCommerceDescription": "Transaction layer; Order, Billing, and Fulfillment are not stored again in Workspace.",
     "vertical_layoutOperationsDescription": "Operations execution layer; operational queues connect to Cases/Fulfillment.",
     "vertical_layoutCommunicationDescription": "Communication layer; conversations and notifications are read from the Communication boundary.",
-    "vertical_handoffTitle": "Input, current stage, and next output"
+    "vertical_handoffTitle": "Input, current stage, and next output",
+    "welcomeModeIndividualTitle": "Individual",
+    "welcomeModeIndividualDescription": "Discover needs, share ideas and follow",
+    "welcomeModeBusinessTitle": "Business",
+    "welcomeModeBusinessDescription": "Publish offers, manage a team and sell",
+    "welcomeModeConsumerTitle": "Buyer",
+    "welcomeModeConsumerDescription": "Discover, compare, buy and book",
+    "consumerKicker": "Buyer experience",
+    "consumerTitle": "Hi! What are you looking for?",
+    "consumerDescription": "Describe what you need. Phoenix helps you discover relevant options, compare them and take the next step.",
+    "consumerNeedLabel": "What would you like to find?",
+    "consumerNeedPlaceholder": "For example, a family car, a trusted consultant or a special gift...",
+    "consumerSearchAction": "Search Phoenix",
+    "consumerExploreAction": "Explore offers",
+    "consumerQuickTitle": "Where would you like to start?",
+    "consumerCategoryProducts": "Products & shopping",
+    "consumerCategoryServices": "Services & advice",
+    "consumerCategoryBook": "Bookings",
+    "consumerCategoryCompare": "Compare options",
+    "consumerTrustHeading": "From discovery to decision",
+    "consumerTrustCopy": "Explore offers recorded in Phoenix. Prices and ratings are never made up."
   },
   "canonical": {
     "identity": {
