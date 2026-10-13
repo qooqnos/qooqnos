@@ -20,7 +20,7 @@ import {
 } from "./buyer-portal.js";
 import { BUSINESS_TAXONOMY, resolveBusinessType, mapBusinessTypeToVerticalAnchor, type BusinessType } from "./business-taxonomy.js";
 import { getBusinessTypeSchema, BUSINESS_TYPE_SCHEMAS } from "./business-schema.js";
-import { renderDynamicBusinessDashboard, renderDynamicBusinessProfile, renderTaxonomyRegistrationSelector } from "./business-dynamic-renderer.js";
+import { renderDynamicBusinessProfile, renderTaxonomyRegistrationSelector } from "./business-dynamic-renderer.js";
 import {
   openAuthModal,
   getStoredAuth,
@@ -5845,10 +5845,96 @@ function renderBusinessModule(vertical: string, module: string): string {
     '</div></section>' +
   '</div>';
 }
+function renderSellerWorkspaceHome(): string {
+  const params = new URLSearchParams(location.search);
+  const storedVertical = params.get("vertical")
+    || localStorage.getItem(STORAGE.businessVertical)
+    || localStorage.getItem(STORAGE.businessType)
+    || localStorage.getItem(STORAGE.businessOccupation)
+    || localStorage.getItem(STORAGE.businessIndustry)
+    || "default";
+  const ui = getBusinessVerticalUi(storedVertical);
+  const businessName = localStorage.getItem("phoenix-business-name")?.trim() ?? "";
+  const businessId = localStorage.getItem(STORAGE.business) ?? "";
+  const primaryLabel = businessName || uiText("نام کسب‌وکار خود را اضافه کنید");
+  const actionPath = (label: string): string => {
+    if (/محصول|موجودی|عرضه/.test(label)) return "/business/products";
+    if (/خدمت/.test(label)) return "/business/services";
+    if (/نوبت|رزرو|تقویم|زمان‌بندی/.test(label)) return "/business/bookings";
+    if (/معامله|سفارش/.test(label)) return "/orders";
+    if (/محتوا/.test(label)) return "/business/create";
+    if (/مشتری|مراجع/.test(label)) return "/customer";
+    if (/تیم|عضو/.test(label)) return "/business/team";
+    return "/business/profile";
+  };
+  const actions = ui.actions.map((label, index) => {
+    const href = actionPath(label);
+    const icon = ["＋", "▦", "↗", "◇"][index % 4];
+    return '<a class="phoenix-seller-action ' + (index === 0 ? "primary" : "") + '" href="' + href + '" data-nav>' +
+      '<span class="phoenix-seller-action-icon" aria-hidden="true">' + icon + '</span>' +
+      '<span>' + localizedUi(label) + '</span><span class="phoenix-seller-action-arrow" aria-hidden="true">←</span></a>';
+  }).join("");
+  const businessPublicHref = businessId ? "/businesses/" + encodeURIComponent(businessId) : "/business/profile";
+
+  return '<div class="phoenix-business-page phoenix-seller-reset" data-business-vertical="' + escapeAttr(ui.key) + '">' +
+    '<section class="phoenix-seller-hero">' +
+      '<div class="phoenix-seller-hero-copy">' +
+        '<span class="phoenix-seller-kicker">' + localizedUi("فضای کسب‌وکار") + '</span>' +
+        '<h1 id="business-vertical-title">' + localizedUi(ui.label) + '</h1>' +
+        '<p id="business-vertical-subtitle">' + localizedUi(ui.subtitle) + '</p>' +
+        '<div class="phoenix-seller-hero-meta"><span class="phoenix-seller-mark" aria-hidden="true">' + ui.icon + '</span>' +
+          '<span>' + (businessName ? escapeHtml(businessName) : localizedUi("نام کسب‌وکار هنوز ثبت نشده است")) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="phoenix-seller-hero-actions">' +
+        '<a class="button button-primary" href="/product-studio" data-nav><span aria-hidden="true">＋</span> ' + localizedUi("افزودن کالا یا خدمت") + '</a>' +
+        '<a class="button button-ghost" href="/business/profile" data-nav>' + localizedUi("تکمیل پروفایل") + '</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-seller-next-step" aria-labelledby="business-next-action">' +
+      '<div class="phoenix-seller-next-icon" aria-hidden="true">✦</div>' +
+      '<div class="phoenix-seller-next-copy"><span class="phoenix-seller-kicker">' + localizedUi("گام بعدی") + '</span>' +
+        '<h2 id="business-next-action">' + businessUi("todayPrimaryTask") + '</h2>' +
+        '<p id="business-next-detail">' + businessUi("workspaceComposition") + '</p>' +
+      '</div>' +
+      '<a class="button button-primary" href="/business/profile" data-nav>' + localizedUi("تنظیم فضای کسب‌وکار") + ' <span aria-hidden="true">←</span></a>' +
+    '</section>' +
+    '<section class="phoenix-seller-section">' +
+      '<div class="phoenix-seller-section-heading"><div><span class="phoenix-seller-kicker">' + localizedUi("برای شروع") + '</span>' +
+        '<h2>' + localizedUi("اقدام‌های سریع") + '</h2></div>' +
+        '<a href="/business/settings" data-nav class="phoenix-seller-text-link">' + localizedUi("همه تنظیمات") + ' <span aria-hidden="true">←</span></a></div>' +
+      '<div class="phoenix-seller-actions-grid">' + actions + '</div>' +
+    '</section>' +
+    '<section class="phoenix-seller-setup-grid">' +
+      '<article class="phoenix-seller-setup-card">' +
+        '<div class="phoenix-seller-setup-icon" aria-hidden="true">▣</div>' +
+        '<h2>' + localizedUi("اطلاعات کسب‌وکار") + '</h2>' +
+        '<p>' + localizedUi("نام، نوع فعالیت و اطلاعات تماس خود را کامل کن تا خریداران بهتر با تو آشنا شوند.") + '</p>' +
+        '<label class="phoenix-seller-field-label" for="seller-business-name">' + localizedUi("نام کسب‌وکار") + '</label>' +
+        '<input id="seller-business-name" class="phoenix-seller-name-input" type="text" value="' + escapeAttr(businessName) + '" placeholder="' + escapeAttr(localizedUi("نام کسب‌وکار خود را وارد کن")) + '" readonly />' +
+        '<a class="button button-ghost" href="/business/profile" data-nav>' + localizedUi("ویرایش اطلاعات") + '</a>' +
+      '</article>' +
+      '<article class="phoenix-seller-setup-card">' +
+        '<div class="phoenix-seller-setup-icon" aria-hidden="true">⌖</div>' +
+        '<h2>' + localizedUi("مکان‌ها و ساعات کاری") + '</h2>' +
+        '<p>' + localizedUi("موقعیت، راه‌های تماس و ساعات پاسخ‌گویی را ثبت کن؛ فقط اطلاعات ذخیره‌شده به خریدار نمایش داده می‌شود.") + '</p>' +
+        '<a class="button button-ghost" href="/business/profile" data-nav>' + localizedUi("مدیریت مکان‌ها") + '</a>' +
+      '</article>' +
+      '<article class="phoenix-seller-setup-card">' +
+        '<div class="phoenix-seller-setup-icon" aria-hidden="true">◉</div>' +
+        '<h2>' + localizedUi("نمای عمومی کسب‌وکار") + '</h2>' +
+        '<p>' + localizedUi("نمایی را ببین که خریداران برای شناختن کسب‌وکار و عرضه‌های تو مشاهده می‌کنند.") + '</p>' +
+        '<a class="button button-ghost" href="' + businessPublicHref + '" data-nav>' + localizedUi("کاربر این کسب‌وکار را چگونه می‌بیند؟") + '</a>' +
+      '</article>' +
+    '</section>' +
+  '</div>';
+}
+
 function renderBusiness(): string {
   const params = new URLSearchParams(location.search);
-  // The seller workspace now uses the schema-driven dashboard on its default route too.
-  // Do not fall back to the legacy dashboard with hard-coded activity and metric counts.
+  if (!params.has("module") && !params.has("workflow") && !params.has("stage")) {
+    return renderSellerWorkspaceHome();
+  }
   const businessId = localStorage.getItem(STORAGE.business) ?? "";
   const vertical = params.get("vertical")?.trim() || localStorage.getItem(STORAGE.businessVertical) || "default";
   const requestedModule = params.get("module")?.trim();

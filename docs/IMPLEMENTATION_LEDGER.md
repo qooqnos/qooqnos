@@ -2894,3 +2894,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added an explicit import-map entry to both source and served HTML documents and a build step that copies only the browser-safe, dependency-free `account-tiers.js` module into the web asset output.
 - The full commerce barrel remains server/domain-only; browser code does not load its D1/runtime modules.
 - Re-run the web UI E2E on the current commit before considering the reset ready. Production payment remains explicitly unverified until the canonical checkout flow is connected.
+
+
+
+## 2026-10-13 — Seller workspace reset: action-led dashboard
+
+- Replaced the old sample-metrics business home (fixed team/transaction/content counts) with a calm, role-aware workspace entry.
+- The new default seller surface uses the selected business vertical's real navigation/capability registry, offers clear actions, and links to business profile, locations, and the public-facing view.
+- No fixed sales figures, fake live activity, or unsupported verification badge are shown. Operational data remains owned by canonical domain APIs.
+- Added responsive desktop/tablet/mobile composition. Seller workspace still uses the business shell; customer routes use the separate social shell.
