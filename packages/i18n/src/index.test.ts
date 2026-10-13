@@ -16,6 +16,10 @@ describe("@qooqnos/i18n", () => {
 
   it("translates shared UI text from the canonical dictionary", () => {
     expect(translateUiText("نیازت را بگو", "en")).toBe("Tell Phoenix what you need");
+    expect(translations.en["common.addProductOrService"]).toBe("Add a product or service");
+    expect(translations.ar["common.addProductOrService"]).toBe("إضافة منتج أو خدمة");
+    expect(translateUiText("افزودن کالا یا خدمت", "en")).toBe("Add a product or service");
+    expect(translateUiText("افزودن کالا یا خدمت", "ar")).toBe("إضافة منتج أو خدمة");
     expect(translateUiText("نیازت را بگو", "ar")).toBe("أخبر ققنوس بما تحتاج");
     expect(translateUiText("Tell Phoenix what you need", "fa")).toBe("نیازت را بگو");
     expect(translateUiText("أخبر ققنوس بما تحتاج", "en")).toBe("Tell Phoenix what you need");
