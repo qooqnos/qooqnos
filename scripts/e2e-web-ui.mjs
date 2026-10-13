@@ -23,6 +23,16 @@ await new Promise((resolve, reject) => {
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext();
 const page = await context.newPage();
+const runtimeErrors = [];
+const failedRequests = [];
+page.on("pageerror", (error) => runtimeErrors.push(String(error.stack || error)));
+page.on("console", (message) => {
+  if (message.type() === "error") runtimeErrors.push("console: " + message.text());
+});
+page.on("requestfailed", (request) => failedRequests.push({
+  url: request.url(),
+  error: request.failure()?.errorText ?? "request failed",
+}));
 
 await page.route("**/api/v1/**", async (route) => {
   const request = route.request();
@@ -110,7 +120,12 @@ await page.addInitScript(() => {
 
 const shellStartedAt = Date.now();
 await page.goto(baseURL + "/");
-await page.waitForSelector(".app-shell");
+try {
+  await page.waitForSelector(".app-shell", { timeout: 10000 });
+} catch (error) {
+  process.stderr.write("Phoenix UI bootstrap diagnostics: " + JSON.stringify({ runtimeErrors, failedRequests }, null, 2) + "\n");
+  throw error;
+}
 const shellMs = Date.now() - shellStartedAt;
 assert.ok(shellMs < 1500, `Phoenix shell render budget exceeded: ${shellMs}ms`);
 assert.equal(await page.locator(".phoenix-public-brand strong").first().innerText(), "ققنوس");
