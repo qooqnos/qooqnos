@@ -1,22 +1,23 @@
-const CACHE_NAME = "phoenix-web-v3";
+const CACHE_NAME = "phoenix-web-v20261012";
 const STATIC_ASSETS = [
   "/",
-  "/styles.css",
-  "/dist/main.js",
+  "/styles.css?v=20261012",
+  "/dist/main.js?v=20261012",
   "/manifest.webmanifest",
   "/fonts/Vazirmatn-RD[wght].woff2",
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)).then(() => self.skipWaiting()),
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)).catch(() => undefined),
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
       .then(() => self.clients.claim()),
   );
 });
@@ -42,11 +43,16 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Network-First strategy to ensure fresh preview and avoid stale cached assets
   event.respondWith(
-    caches.match(event.request).then((cached) => cached ?? fetch(event.request).then((response) => {
-      const copy = response.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-      return response;
-    })),
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request)),
   );
 });

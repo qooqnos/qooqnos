@@ -12,6 +12,179 @@ export function registerCommerceRoutes(
   authorization: AuthorizationRegistry | undefined,
 ): void {
   router.register({
+    method: "GET",
+    path: "/api/v1/commerce/offers/resolve",
+    module: "commerce",
+    operation: "commerce.offer.resolve",
+    requireAuthentication: false,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const url = new URL(request.url);
+      const sellerId = requiredParam(url.searchParams.get("sellerId") ?? undefined, context.requestId);
+      const productId = requiredParam(url.searchParams.get("productId") ?? undefined, context.requestId);
+      const variantId = url.searchParams.get("variantId") ?? undefined;
+      const customerId = url.searchParams.get("customerId") ?? (context.actorId ? String(context.actorId) : undefined);
+      const customerGroup = url.searchParams.get("customerGroup") ?? undefined;
+      const asOf = url.searchParams.get("asOf") ?? undefined;
+
+      const service = createService(database, authorization, context.requestId);
+      try {
+        var result = await service.resolveOffer(context, {
+        sellerId: brandId<"EntityId">(sellerId),
+        productId: brandId<"EntityId">(productId),
+        ...(variantId ? { variantId: brandId<"EntityId">(variantId) } : {}),
+        ...(customerId ? { customerId: brandId<"EntityId">(customerId) } : {}),
+        ...(customerGroup ? { customerGroup } : {}),
+        ...(asOf ? { asOf } : {}),
+      });
+
+      } catch (err) {
+        console.error("Resolve error:", err);
+        throw err;
+      }
+      if (!result || !result.offer) {
+        return json({ data: null, message: "No available offer found for the specified context." }, 404, context.requestId);
+      }
+
+      return json({ data: result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/commerce/offers/resolve",
+    module: "commerce",
+    operation: "commerce.offer.resolve",
+    requireAuthentication: false,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const body = await bodyObject(request, context.requestId);
+      const sellerId = requiredId(body.sellerId, "sellerId", context.requestId);
+      const productId = requiredId(body.productId, "productId", context.requestId);
+      const variantId = body.variantId !== undefined ? requiredId(body.variantId, "variantId", context.requestId) : undefined;
+      const customerId = body.customerId !== undefined ? requiredId(body.customerId, "customerId", context.requestId) : (context.actorId ? brandId<"EntityId">(String(context.actorId)) : undefined);
+      const customerGroup = typeof body.customerGroup === "string" ? body.customerGroup : undefined;
+      const asOf = typeof body.asOf === "string" ? body.asOf : undefined;
+
+      const service = createService(database, authorization, context.requestId);
+      const result = await service.resolveOffer(context, {
+        sellerId,
+        productId,
+        ...(variantId ? { variantId } : {}),
+        ...(customerId ? { customerId } : {}),
+        ...(customerGroup ? { customerGroup } : {}),
+        ...(asOf ? { asOf } : {}),
+      });
+
+      if (!result || !result.offer) {
+        return json({ data: null, message: "No available offer found for the specified context." }, 404, context.requestId);
+      }
+
+      return json({ data: result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/commerce/offers",
+    module: "commerce",
+    operation: "commerce.offer.manage",
+    permission: "commerce.offer.manage",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const body = await bodyObject(request, context.requestId);
+      const sellerId = requiredId(body.sellerId, "sellerId", context.requestId);
+      const productId = requiredId(body.productId, "productId", context.requestId);
+      const priceAmountMinor = requiredInteger(body.priceAmountMinor, "priceAmountMinor", context.requestId);
+
+      const offer = await service.createOffer(context, {
+        sellerId,
+        productId,
+        ...(body.variantId !== undefined ? { variantId: requiredId(body.variantId, "variantId", context.requestId) } : {}),
+        ...(body.customerGroup !== undefined ? { customerGroup: String(body.customerGroup) } : {}),
+        ...(body.customerId !== undefined ? { customerId: requiredId(body.customerId, "customerId", context.requestId) } : {}),
+        ...(body.audienceType !== undefined ? { audienceType: body.audienceType as any } : {}),
+        priceAmountMinor,
+        ...(body.currency !== undefined ? { currency: String(body.currency) } : {}),
+        ...(body.available !== undefined ? { available: Boolean(body.available) } : {}),
+        ...(body.validFrom !== undefined ? { validFrom: String(body.validFrom) } : {}),
+        ...(body.validTo !== undefined ? { validTo: String(body.validTo) } : {}),
+        ...(body.status !== undefined ? { status: String(body.status) as any } : {}),
+      });
+
+      return json({ data: offer }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "PUT",
+    path: "/api/v1/commerce/offers/:offerId",
+    module: "commerce",
+    operation: "commerce.offer.manage",
+    permission: "commerce.offer.manage",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const offerId = requiredId(params.offerId, "offerId", context.requestId);
+      const body = await bodyObject(request, context.requestId);
+
+      const offer = await service.updateOffer(context, offerId, {
+        ...(body.priceAmountMinor !== undefined ? { priceAmountMinor: Number(body.priceAmountMinor) } : {}),
+        ...(body.currency !== undefined ? { currency: String(body.currency) } : {}),
+        ...(body.available !== undefined ? { available: Boolean(body.available) } : {}),
+        ...(body.validFrom !== undefined ? { validFrom: String(body.validFrom) } : {}),
+        ...(body.validTo !== undefined ? { validTo: String(body.validTo) } : {}),
+        ...(body.status !== undefined ? { status: String(body.status) as any } : {}),
+      });
+
+      return json({ data: offer }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "DELETE",
+    path: "/api/v1/commerce/offers/:offerId",
+    module: "commerce",
+    operation: "commerce.offer.manage",
+    permission: "commerce.offer.manage",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const offerId = requiredId(params.offerId, "offerId", context.requestId);
+      const url = new URL(request.url);
+      const setInactiveStatus = url.searchParams.get("setInactiveStatus") === "true";
+
+      const offer = await service.disableOffer(context, offerId, {
+        setInactiveStatus,
+      });
+
+      return json({ data: offer, message: "Offer disabled successfully." }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/commerce/offers/:offerId",
+    module: "commerce",
+    operation: "commerce.offer.get",
+    requireAuthentication: false,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const offerId = requiredId(params.offerId, "offerId", context.requestId);
+      const offer = await service.getOffer(context, offerId);
+      if (!offer) {
+        return json({ data: null, message: `Offer with ID "${offerId}" was not found.` }, 404, context.requestId);
+      }
+      return json({ data: offer }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "POST",
     path: "/api/v1/commerce/carts",
     module: "commerce",
@@ -177,18 +350,32 @@ export function registerCommerceRoutes(
     operation: "commerce.order.list",
     permission: "commerce.order.get",
     requireAuthentication: true,
-    requireWorkspace: true,
+    requireWorkspace: false,
     handler: async ({ context, request }) => {
       const repository = createRepository(database, context.requestId);
       const url = new URL(request.url);
       const businessId = url.searchParams.get("businessId")?.trim();
-      if (!businessId) {
-        throw new AppError({ code: "VALIDATION_ERROR", message: "businessId query parameter is required.", requestId: context.requestId });
-      }
+      const customerId = url.searchParams.get("customerId")?.trim();
       const requestedLimit = Number(url.searchParams.get("limit") ?? "20");
       const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(Math.trunc(requestedLimit), 1), 50) : 20;
-      const orders = await repository.listOrders(context, brandId<"EntityId">(businessId), limit);
-      return json({ data: orders }, 200, context.requestId);
+
+      if (customerId) {
+        const orders = await repository.listCustomerOrders(context, brandId<"EntityId">(customerId), limit);
+        return json({ data: orders }, 200, context.requestId);
+      }
+      if (businessId) {
+        const orders = await repository.listOrders(context, brandId<"EntityId">(businessId), limit);
+        return json({ data: orders }, 200, context.requestId);
+      }
+
+      // Default fallback: if customer or business context exists
+      const targetCustomer = context.actorId ? brandId<"EntityId">(context.actorId) : undefined;
+      if (targetCustomer) {
+        const orders = await repository.listCustomerOrders(context, targetCustomer, limit);
+        return json({ data: orders }, 200, context.requestId);
+      }
+
+      throw new AppError({ code: "VALIDATION_ERROR", message: "businessId or customerId query parameter is required.", requestId: context.requestId });
     },
   });
 
@@ -199,7 +386,7 @@ export function registerCommerceRoutes(
     operation: "commerce.order.get",
     permission: "commerce.order.get",
     requireAuthentication: true,
-    requireWorkspace: true,
+    requireWorkspace: false,
     handler: async ({ context, params }) => {
       const repository = createRepository(database, context.requestId);
       const orderId = brandId<"EntityId">(requiredParam(params.orderId, context.requestId));

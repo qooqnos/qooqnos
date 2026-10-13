@@ -4,26 +4,296 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f4f7fb" />
-    <meta name="description" content="ققنوس؛ لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار." />
-    <meta name="robots" content="index,follow" />
+    <meta name="description" content="ققنوس؛ پلتفرم یکپارچه هوش تجاری، عرضه، قیمت‌گذاری و اتصال هوشمند مشتریان و کسب‌وکارها." />
+    <meta name="keywords" content="ققنوس, هوش تجاری, پلتفرم تصمیم‌گیری, قیمت‌گذاری هوشمند, خدمات کسب‌وکار, تجارت اجتماعی, مدیریت عرضه کاتالوگ, اتصال مشتری و کسب‌وکار, اتوماسیون تجاری, Phoenix Intelligence, Decision Intelligence, Social Commerce, Business Services, Offer Resolution, Intelligent Marketplace" />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <link rel="canonical" href="https://qooqnos.com/" />
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
     <meta name="color-scheme" content="dark light" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta property="og:locale" content="fa_IR" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ققنوس | Phoenix Intelligence" />
     <meta property="og:title" content="ققنوس | Phoenix Intelligence" />
-    <meta property="og:description" content="ققنوس؛ لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار." />
+    <meta property="og:description" content="ققنوس؛ پلتفرم یکپارچه هوش تجاری، عرضه، قیمت‌گذاری و اتصال هوشمند مشتریان و کسب‌وکارها." />
     <meta property="og:url" content="https://qooqnos.com/" />
+    <meta property="og:image" content="https://qooqnos.com/phoenix-mark.svg" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="لوگوی نشان ققنوس" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@qooqnos" />
     <meta name="twitter:title" content="ققنوس | Phoenix Intelligence" />
-    <meta name="twitter:description" content="ققنوس؛ لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار." />
+    <meta name="twitter:description" content="ققنوس؛ پلتفرم یکپارچه هوش تجاری، عرضه، قیمت‌گذاری و اتصال هوشمند مشتریان و کسب‌وکارها." />
+    <meta name="twitter:image" content="https://qooqnos.com/phoenix-mark.svg" />
+    <meta name="twitter:image:alt" content="لوگوی نشان ققنوس" />
+    <link rel="icon" type="image/svg+xml" href="/phoenix-mark.svg" />
+    <link rel="apple-touch-icon" href="/phoenix-mark.svg" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ققنوس | Phoenix Intelligence",
+      "url": "https://qooqnos.com",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "All",
+      "description": "ققنوس؛ پلتفرم یکپارچه هوش تجاری، عرضه، قیمت‌گذاری و اتصال هوشمند مشتریان و کسب‌وکارها.",
+      "image": "https://qooqnos.com/phoenix-mark.svg"
+    }
+    </script>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <script>
+      (function() {
+        var FLUSH_KEY = "phx_cache_flush_20261012";
+        if (window.localStorage && localStorage.getItem("phx_last_flush") !== FLUSH_KEY) {
+          try {
+            if ("caches" in window) {
+              caches.keys().then(function(names) {
+                return Promise.all(names.map(function(n) { return caches.delete(n); }));
+              });
+            }
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function(regs) {
+                regs.forEach(function(r) { r.unregister(); });
+              });
+            }
+            localStorage.setItem("phx_last_flush", FLUSH_KEY);
+          } catch(e) {}
+        }
+      })();
+    </script>
     <title>ققنوس | Phoenix Intelligence</title>
-    <link rel="stylesheet" href="/styles.css?v=4" />
+    <link rel="stylesheet" href="/styles.css?v=20261012" />
   </head>
   <body>
     <a class="skip-link" href="#main">پرش به محتوای اصلی</a>
-    <div id="app"></div>
-    <script type="module" src="/dist/main.js?v=4"></script>
+    <div id="app">
+      <!-- Phoenix Unified Experience Initial Shell -->
+      <header class="phoenix-public-header phoenix-unified-header" id="phoenix-initial-header">
+        <div class="phoenix-public-header-inner container-wide">
+          <a class="phoenix-public-brand" href="/" aria-label="ققنوس">
+            <span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=2" alt="" /></span>
+            <span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
+          </a>
+          <div class="phoenix-header-center-area">
+            <nav class="phoenix-persona-switcher" aria-label="انتخاب تجربه کاربری ققنوس">
+              <button type="button" class="phoenix-persona-btn active" data-switch-persona="individual" aria-pressed="true">
+                <span aria-hidden="true">👤</span>
+                <span>حساب من</span>
+              </button>
+              <button type="button" class="phoenix-persona-btn" data-switch-persona="business" aria-pressed="false">
+                <span aria-hidden="true">🏢</span>
+                <span>فروشگاه من</span>
+              </button>
+              <button type="button" class="phoenix-persona-btn" data-switch-persona="consumer" aria-pressed="false">
+                <span aria-hidden="true">🛍️</span>
+                <span>بازارگاه و خرید</span>
+              </button>
+            </nav>
+            <nav class="phoenix-persona-quick-nav" aria-label="مسیرهای نقش فعال">
+              <a href="/" class="phoenix-nav-pill active">⌂ داشبورد</a>
+              <a href="/create" class="phoenix-nav-pill">📤 آپلود محتوا</a>
+              <a href="/transactions" class="phoenix-nav-pill">↔ معاملات</a>
+              <a href="/welcome" class="phoenix-nav-pill">✦ شروع و آشنایی</a>
+            </nav>
+          </div>
+          <div class="phoenix-public-actions">
+            <button type="button" class="button button-primary phoenix-register-btn" id="phoenix-header-register-btn" data-open-register aria-label="ثبت‌نام در ققنوس">
+              <span class="btn-sparkle" aria-hidden="true">✦</span>
+              <span>ثبت‌نام</span>
+            </button>
+            <button type="button" class="button button-outline button-sm phoenix-seller-register-btn" id="phoenix-header-seller-btn" data-open-seller-register style="font-size:12px;display:inline-flex;align-items:center;gap:4px;">
+              <span aria-hidden="true">🏪</span>
+              <span>ثبت‌نام فروشنده</span>
+            </button>
+            <button type="button" class="button button-ghost phoenix-login-btn" data-open-login>ورود</button>
+          </div>
+        </div>
+      </header>
+      <main id="main" class="page-content home-page-content">
+        <div class="phoenix-portal-layout container-wide">
+          <div class="phoenix-screen-wrapper">
+            <div class="phoenix-welcome-banner">
+              <div class="phoenix-greet-info">
+                <div class="phoenix-user-avatar">
+                  <span>س</span>
+                  <span class="phoenix-online-dot"></span>
+                </div>
+                <div class="phoenix-greet-texts">
+                  <strong>سلام سارا، به ققنوس خوش آمدید</strong>
+                  <small>پلتفرم یکپارچه هوش تجاری، عرضه، کشف و اتصال هوشمند مشتریان و کسب‌وکارها</small>
+                </div>
+              </div>
+              <div class="phoenix-banner-actions">
+                <a href="/notifications" class="phoenix-bell-btn" aria-label="اعلان‌ها">
+                  <span aria-hidden="true">🔔</span>
+                  <span class="phoenix-bell-badge"></span>
+                </a>
+              </div>
+            </div>
+
+            <div class="phoenix-screen-content">
+              <!-- Prominent Platform Pathways: Users & Sellers -->
+              <div class="phoenix-pathways-grid">
+                <div class="phoenix-pathway-card">
+                  <div class="phoenix-pathway-header">
+                    <span class="phoenix-pathway-icon" aria-hidden="true">🛍️</span>
+                    <div>
+                      <strong>کشف، خرید و استفاده از خدمات</strong>
+                      <span>دسترسی آزاد و محترمانه به خدمات، محصولات و محتوا برای همه اعضا</span>
+                    </div>
+                  </div>
+                  <div class="phoenix-pathway-btns">
+                    <a href="/discover" class="button button-outline button-sm">مرور بازارگاه</a>
+                    <button type="button" class="button button-ghost button-sm" data-open-register>✦ ثبت‌نام در پلتفرم</button>
+                  </div>
+                </div>
+
+                <div class="phoenix-pathway-card seller-highlight">
+                  <div class="phoenix-pathway-header">
+                    <span class="phoenix-pathway-icon" aria-hidden="true">🏪</span>
+                    <div>
+                      <strong style="color:var(--primary);">مسیر فروشندگان و ارائه‌دهندگان</strong>
+                      <span>فروش کالا یا ارائه خدمت؛ شروع سریع و مدیریت آسان فروش</span>
+                    </div>
+                  </div>
+                  <div class="phoenix-pathway-btns">
+                    <button type="button" class="button button-primary button-sm" data-open-seller-register>🏪 ثبت‌نام فروشنده</button>
+                    <button type="button" class="button button-outline button-sm" data-activate-seller>فعال‌سازی فروشندگی</button>
+                  </div>
+                </div>
+              </div>
+
+              <form class="phoenix-search-bar" id="individual-search-form">
+                <span style="color: var(--primary); font-size: 16px;" aria-hidden="true">⌕</span>
+                <input type="text" id="individual-search-input" placeholder="بگو چی می‌خوای انجام بدی؟ (جستجوی کالا، خدمات یا کسب‌وکار)" />
+                <button type="submit" class="button button-primary button-sm" style="padding: 4px 12px; font-size: 12px;">جستجو</button>
+              </form>
+
+              <div class="phoenix-action-grid">
+                <a href="/create" class="phoenix-action-card">
+                  <div class="phoenix-action-icon" aria-hidden="true">📤</div>
+                  <span class="phoenix-action-label">آپلود محتوا</span>
+                </a>
+                <a href="/discover?intent=buy" class="phoenix-action-card">
+                  <div class="phoenix-action-icon" aria-hidden="true">🛒</div>
+                  <span class="phoenix-action-label">خرید</span>
+                </a>
+                <a href="/discover?intent=services" class="phoenix-action-card">
+                  <div class="phoenix-action-icon" aria-hidden="true">⚙️</div>
+                  <span class="phoenix-action-label">خدمات</span>
+                </a>
+                <a href="/discover?intent=education" class="phoenix-action-card">
+                  <div class="phoenix-action-icon" aria-hidden="true">🎓</div>
+                  <span class="phoenix-action-label">آموزش</span>
+                </a>
+                <a href="/discover?intent=rentals" class="phoenix-action-card">
+                  <div class="phoenix-action-icon" aria-hidden="true">🔑</div>
+                  <span class="phoenix-action-label">اجاره</span>
+                </a>
+                <a href="/transactions" class="phoenix-action-card">
+                  <div class="phoenix-action-icon" aria-hidden="true">🔄</div>
+                  <span class="phoenix-action-label">خرید و فروش</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <!-- Single Consistent Site Footer -->
+      <footer class="phoenix-site-footer">
+        <div class="phoenix-site-footer-inner container-wide">
+          <div class="phoenix-footer-brand">
+            <a class="phoenix-public-brand" href="/" aria-label="ققنوس">
+              <span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=2" alt="" /></span>
+              <span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
+            </a>
+            <p class="phoenix-footer-desc">پلتفرم یکپارچه هوش تجاری، عرضه، قیمت‌گذاری و اتصال هوشمند مشتریان و کسب‌وکارها.</p>
+          </div>
+          <div class="phoenix-footer-columns">
+            <div class="phoenix-footer-col">
+              <strong>بخش‌های اصلی</strong>
+              <nav aria-label="پیوندهای اصلی فوتر">
+                <a href="/">داشبورد اصلی</a>
+                <a href="/discover">بازارگاه و کشف</a>
+                <a href="/welcome">شروع و آشنایی</a>
+                <a href="/transactions">معاملات و سفارش‌ها</a>
+              </nav>
+            </div>
+            <div class="phoenix-footer-col">
+              <strong>برای فروشندگان</strong>
+              <nav aria-label="پیوندهای فروشندگان">
+                <button type="button" class="phoenix-footer-btn-link" data-open-seller-register>ثبت‌نام فروشنده</button>
+                <button type="button" class="phoenix-footer-btn-link" data-activate-seller>فعال‌سازی فروشندگی</button>
+                <a href="/business">پنل کسب‌وکار</a>
+                <a href="/create">آپلود و معرفی محصول</a>
+              </nav>
+            </div>
+            <div class="phoenix-footer-col">
+              <strong>توسعه و پشتیبانی</strong>
+              <nav aria-label="پیوندهای توسعه و پشتیبانی">
+                <a href="/qooqnos-phoenix-github.zip" download="qooqnos-phoenix-github.zip" style="color:#f97316;font-weight:600;">📥 دانلود خروجی گیت‌هاب (ZIP)</a>
+                <a href="/privacy">حریم خصوصی</a>
+                <a href="/terms">قوانین و مقررات</a>
+                <a href="/support">مرکز پشتیبانی</a>
+              </nav>
+            </div>
+          </div>
+        </div>
+        <div class="phoenix-footer-bottom container-wide">
+          <span>© ۱۴۰۳ ققنوس (Phoenix Intelligence). تمامی حقوق محفوظ است.</span>
+          <div class="phoenix-footer-bottom-links">
+            <span class="phoenix-footer-tag">امنیت و شفافیت تضمین‌شده</span>
+            <span class="phoenix-footer-dot">·</span>
+            <span>تجارت هوشمند بدون واسطه</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script>
+      // Immediate delegated event handler for registration and login modal
+      document.addEventListener("click", function(e) {
+        var regBtn = e.target && e.target.closest && e.target.closest("[data-open-register]");
+        if (regBtn) {
+          e.preventDefault();
+          if (window.openPhoenixAuthModal) {
+            window.openPhoenixAuthModal({ initialMode: "choice" });
+          } else {
+            import("/dist/auth-modal.js?v=20261012").then(function(mod) {
+              mod.openAuthModal({ initialMode: "choice" });
+            });
+          }
+          return;
+        }
+        var sellerRegBtn = e.target && e.target.closest && (e.target.closest("[data-open-seller-register]") || e.target.closest("[data-activate-seller]"));
+        if (sellerRegBtn) {
+          e.preventDefault();
+          if (window.openPhoenixAuthModal) {
+            window.openPhoenixAuthModal({ initialMode: "seller_business" });
+          } else {
+            import("/dist/auth-modal.js?v=20261012").then(function(mod) {
+              mod.openAuthModal({ initialMode: "seller_business" });
+            });
+          }
+          return;
+        }
+        var loginBtn = e.target && e.target.closest && e.target.closest("[data-open-login]");
+        if (loginBtn) {
+          e.preventDefault();
+          if (window.openPhoenixAuthModal) {
+            window.openPhoenixAuthModal({ initialMode: "buyer_mobile" });
+          } else {
+            import("/dist/auth-modal.js?v=20261012").then(function(mod) {
+              mod.openAuthModal({ initialMode: "buyer_mobile" });
+            });
+          }
+          return;
+        }
+      });
+    </script>
+    <script type="module" src="/dist/main.js?v=20261012"></script>
   </body>
 </html>

@@ -1,21 +1,162 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
-<title id="title">Phoenix</title>
-<desc id="desc">Abstract orange phoenix mark</desc>
-<defs>
-  <linearGradient id="g" x1="0" y1="1" x2="1" y2="0">
-    <stop offset="0" stop-color="#f04f00"/>
-    <stop offset=".48" stop-color="#ff7a18"/>
-    <stop offset="1" stop-color="#ffc36b"/>
-  </linearGradient>
-  <radialGradient id="glow">
-    <stop offset="0" stop-color="#ffb347" stop-opacity=".8"/>
-    <stop offset="1" stop-color="#ff6a00" stop-opacity="0"/>
-  </radialGradient>
-</defs>
-<circle cx="128" cy="126" r="98" fill="url(#glow)" opacity=".5"/>
-<path d="M129 40c-7 29-4 50 8 67 12-18 26-35 50-47-13 24-14 47-2 68 16-18 31-27 48-31-13 21-18 45-11 68-18-12-35-16-52-12 5 18 18 35 38 49-31 1-57-9-76-30-16 22-38 35-70 37 21-19 35-38 41-58-24 2-43 9-61 23 7-24 25-45 51-58-20-16-30-34-34-54 20 15 39 24 58 26 0-15 4-31 12-48z" fill="url(#g)"/>
-<path d="M126 88c-9 24-11 44-5 61 5 14 4 25-4 38 24-12 37-26 39-42 2-14-4-33-14-57-3-8-8-10-16 0z" fill="#fff2d3" opacity=".92"/>
-<path d="M132 129c15 9 28 22 39 40-16-5-30-13-40-25-4-5-4-10 1-15z" fill="#f15a10"/>
-<circle cx="145" cy="84" r="4" fill="#23140d"/>
-<path d="M148 82l15 4-15 4z" fill="#ffb04e"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" role="img" aria-labelledby="title desc">
+  <title id="title">ققنوس | Phoenix Intelligence</title>
+  <desc id="desc">نشان ققنوس با پرهای آتشین، طیف‌های زرد، نارنجی، ارغوانی و بنفش</desc>
+  <defs>
+    <!-- Gradient for Main Head Crest & Beak -->
+    <linearGradient id="goldHead" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF275"/>
+      <stop offset="45%" stop-color="#FFB300"/>
+      <stop offset="100%" stop-color="#FF6F00"/>
+    </linearGradient>
+
+    <!-- Gradient for Crown Plumes -->
+    <linearGradient id="crestPlume" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF1744"/>
+      <stop offset="50%" stop-color="#FF5252"/>
+      <stop offset="100%" stop-color="#FF9100"/>
+    </linearGradient>
+
+    <!-- Main Graceful Body Curve -->
+    <linearGradient id="bodyFlow" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#FFF176"/>
+      <stop offset="25%" stop-color="#FFB300"/>
+      <stop offset="55%" stop-color="#FF5722"/>
+      <stop offset="85%" stop-color="#E91E63"/>
+      <stop offset="100%" stop-color="#8E24AA"/>
+    </linearGradient>
+
+    <!-- Left Wing Upper Layer (Golden-Orange) -->
+    <linearGradient id="wingLeftUpper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD54F"/>
+      <stop offset="40%" stop-color="#FF9100"/>
+      <stop offset="100%" stop-color="#F44336"/>
+    </linearGradient>
+
+    <!-- Left Wing Mid Layer (Crimson-Purple) -->
+    <linearGradient id="wingLeftMid" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF3D00"/>
+      <stop offset="45%" stop-color="#D81B60"/>
+      <stop offset="100%" stop-color="#7B1FA2"/>
+    </linearGradient>
+
+    <!-- Left Wing Lower Feathers (Deep Violet) -->
+    <linearGradient id="wingLeftDeep" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E91E63"/>
+      <stop offset="50%" stop-color="#8E24AA"/>
+      <stop offset="100%" stop-color="#4A148C"/>
+    </linearGradient>
+
+    <!-- Right Wing Outer Plumes -->
+    <linearGradient id="wingRightOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE082"/>
+      <stop offset="50%" stop-color="#FF7043"/>
+      <stop offset="100%" stop-color="#E91E63"/>
+    </linearGradient>
+
+    <!-- Right Wing Inner Plumes -->
+    <linearGradient id="wingRightInner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5252"/>
+      <stop offset="50%" stop-color="#AB47BC"/>
+      <stop offset="100%" stop-color="#5E35B1"/>
+    </linearGradient>
+
+    <!-- Swirling Flowing Tail 1 (Golden Orange) -->
+    <linearGradient id="tailGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFCA28"/>
+      <stop offset="50%" stop-color="#FF6F00"/>
+      <stop offset="100%" stop-color="#E64A19"/>
+    </linearGradient>
+
+    <!-- Swirling Flowing Tail 2 (Vibrant Violet / Magenta) -->
+    <linearGradient id="tailMagenta" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FF4081"/>
+      <stop offset="50%" stop-color="#AB47BC"/>
+      <stop offset="100%" stop-color="#4A148C"/>
+    </linearGradient>
+
+    <!-- Ambient Glow / Aura -->
+    <radialGradient id="phoenixAura" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#FFF9C4" stop-opacity="0.6"/>
+      <stop offset="45%" stop-color="#FFE082" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#FF6F00" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Drop Filter for Depth -->
+    <filter id="softGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Ambient Golden Radiance -->
+  <circle cx="270" cy="240" r="210" fill="url(#phoenixAura)"/>
+
+  <!-- ==================== TAIL FEATHERS (BACK LAYER) ==================== -->
+  <!-- Tail Feather 1 (Bottom Left Loop) -->
+  <path d="M235 305 C180 340 160 410 220 440 C205 410 215 370 260 330 Z" fill="url(#tailMagenta)"/>
+
+  <!-- Tail Feather 2 (Bottom Middle Violet S-Curve) -->
+  <path d="M260 315 C210 390 230 460 315 480 C290 440 280 390 295 340 Z" fill="url(#wingLeftDeep)"/>
+
+  <!-- ==================== LEFT WING (BEHIND BODY) ==================== -->
+  <!-- Left Wing Outer Major Feather -->
+  <path d="M175 45 C150 110 130 190 220 250 C185 190 190 110 175 45 Z" fill="url(#wingLeftUpper)"/>
+
+  <!-- Left Wing Top Secondary Feather -->
+  <path d="M125 105 C105 160 120 225 210 260 C170 215 155 160 125 105 Z" fill="url(#wingLeftUpper)"/>
+
+  <!-- Left Wing Mid Feather 1 (Pink/Coral) -->
+  <path d="M95 165 C85 220 120 265 195 275 C150 245 130 205 95 165 Z" fill="url(#wingLeftMid)"/>
+
+  <!-- Left Wing Mid Feather 2 (Purple) -->
+  <path d="M110 230 C110 270 145 295 190 290 C155 275 140 250 110 230 Z" fill="url(#wingLeftDeep)"/>
+
+  <!-- Left Wing Bottom Feather (Deep Violet Tip) -->
+  <path d="M140 270 C145 300 175 310 205 295 C175 295 160 285 140 270 Z" fill="url(#wingLeftDeep)"/>
+
+  <!-- ==================== RIGHT WING ==================== -->
+  <!-- Right Wing Outer Primary Feather (Golden Coral) -->
+  <path d="M415 125 C430 170 380 230 310 265 C365 210 395 170 415 125 Z" fill="url(#wingRightOuter)"/>
+
+  <!-- Right Wing Secondary Feather (Pinkish Magenta) -->
+  <path d="M425 200 C430 240 375 285 305 280 C360 255 385 225 425 200 Z" fill="url(#wingRightInner)"/>
+
+  <!-- Right Wing Lower Feather (Deep Purple) -->
+  <path d="M400 255 C395 295 345 310 295 290 C345 285 375 265 400 255 Z" fill="url(#wingLeftDeep)"/>
+
+  <!-- ==================== SWIRLING FLOWING TAIL (FRONT LAYER) ==================== -->
+  <!-- Swirling Tail Arc (Golden Orange Sweep) -->
+  <path d="M265 275 C215 320 240 380 320 380 C360 380 355 425 330 445 C370 415 380 360 315 345 C270 335 250 310 265 275 Z" fill="url(#tailGold)"/>
+
+  <!-- Outer Tail Flame Tip (Crimson/Pink) -->
+  <path d="M320 380 C355 410 355 440 330 445 C355 430 355 410 320 380 Z" fill="url(#crestPlume)"/>
+
+  <!-- ==================== PHOENIX BODY & NECK ==================== -->
+  <!-- Majestic Torso and Dynamic Neck -->
+  <path d="M288 120 C270 170 295 240 265 300 C240 310 230 290 245 255 C265 210 245 165 275 120 Z" fill="url(#bodyFlow)"/>
+
+  <!-- Breast / Front Chest Light Highlight -->
+  <path d="M285 125 C265 170 290 230 265 285 C275 240 260 180 292 135 Z" fill="url(#goldHead)"/>
+
+  <!-- ==================== HEAD, CREST & BEAK ==================== -->
+  <!-- Crown / Head Crest Plumes -->
+  <path d="M230 85 C220 100 245 125 275 110 C250 110 235 95 230 85 Z" fill="url(#crestPlume)"/>
+  <path d="M245 65 C230 80 255 105 285 95 C265 95 250 80 245 65 Z" fill="url(#wingLeftUpper)"/>
+
+  <!-- Phoenix Head Form -->
+  <path d="M270 95 C280 80 310 80 325 100 C335 115 325 140 300 145 C280 145 265 125 270 95 Z" fill="url(#goldHead)"/>
+
+  <!-- Cute Beak -->
+  <path d="M325 105 C345 112 342 118 322 122 Z" fill="#FF8F00"/>
+  <path d="M322 108 C335 113 333 117 321 119 Z" fill="#FFE082"/>
+
+  <!-- Expressive Big Cute Eye -->
+  <ellipse cx="302" cy="108" rx="10" ry="13" fill="#211019"/>
+  <!-- Iris color ring -->
+  <ellipse cx="301" cy="110" rx="8" ry="10" fill="#4A148C"/>
+  <ellipse cx="301" cy="111" rx="6" ry="8" fill="#1A0914"/>
+  <!-- Primary Eye Highlight -->
+  <circle cx="304" cy="103" r="4.5" fill="#FFFFFF"/>
+  <!-- Secondary Catchlight -->
+  <circle cx="298" cy="113" r="2.2" fill="#FFFFFF"/>
 </svg>

@@ -18,9 +18,8 @@ export function resolveLocale(options: {
   if (options.userPreference) {
     return { locale: getLocaleFromPreference(options.userPreference, fallback), source: "user" };
   }
-  if (options.browserPreference) {
-    return { locale: getLocaleFromPreference(options.browserPreference, fallback), source: "browser" };
-  }
+  // Phoenix default language is strictly Persian (fa). Initial load must never open with
+  // another language without prior explicit user choice.
   return { locale: fallback, source: "default" };
 }
 

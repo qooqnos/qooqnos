@@ -44,3 +44,6 @@ export * from "./merchant-api";
 export * from "./social-intelligence";
 
 export * from "./social-signal-ingestion";
+export * from "./automated-sitemap";
+export * from "./scheduled-sitemap";
+export * from "./schema";

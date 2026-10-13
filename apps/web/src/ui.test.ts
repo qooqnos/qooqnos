@@ -1,5 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton, uiAlert, nextTabIndex } from "./ui";
+import {
+  uiButton,
+  uiField,
+  uiSelect,
+  uiTabs,
+  uiTable,
+  uiDropdown,
+  uiDialog,
+  uiEmpty,
+  uiSkeleton,
+  uiAlert,
+  uiBadge,
+  uiDrawer,
+  uiLoadingState,
+  uiErrorState,
+  uiTimeline,
+  uiKpiCard,
+  nextTabIndex,
+} from "./ui";
 
 describe("Phoenix shared UI primitives", () => {
   it("renders accessible button/input/select/tab primitives", () => {
@@ -31,5 +49,32 @@ describe("Phoenix shared UI primitives", () => {
     expect(uiAlert("Failed", "Try again", "danger")).toContain('role="alert"');
     expect(uiAlert("Heads up", "Check input", "warning")).toContain('role="alert"');
     expect(uiAlert("Saved", "Done", "success")).toContain('role="status"');
+  });
+
+  it("renders badge, drawer, loading, error, timeline, and KPI cards", () => {
+    expect(uiBadge("جدید", "success", "✦")).toContain("ds-badge-success");
+    expect(uiDrawer("cart-drawer", "سبد خرید", "<p>محتوا</p>")).toContain('id="cart-drawer"');
+    expect(uiLoadingState("بارگذاری", "لطفاً صبر کنید")).toContain('role="status"');
+    expect(uiErrorState("خطا", "سرور پاسخ نداد")).toContain('role="alert"');
+
+    const timelineHtml = uiTimeline([
+      { id: "1", label: "ثبت سفارش", status: "completed" },
+      { id: "2", label: "آماده‌سازی", status: "current" },
+      { id: "3", label: "تحویل", status: "upcoming" },
+    ]);
+    expect(timelineHtml).toContain("ds-timeline-container");
+    expect(timelineHtml).toContain("ds-timeline-completed");
+    expect(timelineHtml).toContain("ds-timeline-current");
+
+    const kpiHtml = uiKpiCard({
+      title: "سفارش‌های فعال",
+      value: "۲",
+      subtitle: "در حال پردازش",
+      icon: "📦",
+      trend: { direction: "up", label: "+۱۲٪" },
+    });
+    expect(kpiHtml).toContain("ds-kpi-card");
+    expect(kpiHtml).toContain("سفارش‌های فعال");
+    expect(kpiHtml).toContain("ds-kpi-trend-up");
   });
 });

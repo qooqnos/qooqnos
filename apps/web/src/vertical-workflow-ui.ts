@@ -1,6 +1,7 @@
 import { getVerticalModuleBlueprint, getVerticalModuleCapabilityContract, getVerticalModuleRoleFit, getVerticalModuleUiContract, resolveVerticalRoleLens, VERTICAL_MODULE_SLUGS, type VerticalModuleBlueprint, type VerticalModuleLayout } from "./business-module-ui.js";
 import { defaultI18n, translateUiText } from "./i18n-runtime.js";
 import { getVerticalWorkflowStageContext, getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
+import { formatDateTime } from "./calendar-service.js";
 
 type VerticalWorkflowEntityRecord = Record<string, unknown>;
 
@@ -1289,7 +1290,7 @@ async function hydrateCustomerLookup(host: HTMLElement, customerId: string): Pro
       const occurredAtRaw = String(event.occurredAt ?? event.receivedAt ?? "");
       const date = occurredAtRaw ? new Date(occurredAtRaw) : null;
       const occurredAt = date && !Number.isNaN(date.getTime())
-        ? date.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" })
+        ? formatDateTime(date)
         : "—";
       const payload = event.payload && typeof event.payload === "object" && !Array.isArray(event.payload)
         ? Object.entries(event.payload as Record<string, unknown>).slice(0, 2).map(([key, value]) => escapeHtml(key) + ": " + escapeHtml(String(value))).join(" · ")
@@ -1336,7 +1337,7 @@ async function hydrateFulfillmentLookup(detail: HTMLElement, fulfillmentId: stri
     const dateLabel = (value?: string | null): string => {
       if (!value) return "—";
       const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" });
+      return Number.isNaN(date.getTime()) ? value : formatDateTime(date);
     };
     detail.innerHTML = '<div class="phoenix-vwf-fulfillment-card">' +
       '<div class="phoenix-vwf-fulfillment-top"><span class="pill ' + (fulfillment.status === "completed" ? "success" : "") + '">' + escapeHtml(fulfillment.status) + '</span><span class="phoenix-vwf-source-chip">' + escapeHtml(fulfillment.fulfillmentType) + '</span></div>' +
@@ -1466,7 +1467,7 @@ async function hydrateOrdersCanvas(canvas: HTMLElement, businessId: string): Pro
       const createdAt = new Date(order.createdAt);
       const created = Number.isNaN(createdAt.getTime())
         ? "—"
-        : createdAt.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" });
+        : formatDateTime(createdAt);
       return '<article class="phoenix-vwf-live-order-card" data-vwf-item>' +
         '<div class="phoenix-vwf-live-order-top"><strong>' + escapeHtml(order.id) + '</strong><span class="pill ' + statusClass + '">' + escapeHtml(order.status) + '</span></div>' +
         '<div class="phoenix-vwf-live-order-facts">' +
@@ -1535,7 +1536,7 @@ async function hydratePromotionsCanvas(canvas: HTMLElement, businessId: string):
       const statusClass = promotion.status === "active" ? "success" : promotion.status === "paused" ? "warning" : "";
       const updatedAt = promotion.updatedAt ? new Date(promotion.updatedAt) : null;
       const updatedLabel = updatedAt && !Number.isNaN(updatedAt.getTime())
-        ? updatedAt.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" })
+        ? formatDateTime(updatedAt)
         : "—";
       return '<article class="phoenix-vwf-live-promotion-card" data-vwf-item>' +
         '<div class="phoenix-vwf-live-promotion-top"><div><span class="section-kicker">' + escapeHtml(promotion.promotionType) + '</span><h4>' + escapeHtml(promotion.name) + '</h4></div><span class="pill ' + statusClass + '">' + escapeHtml(promotion.status) + '</span></div>' +
@@ -1830,7 +1831,7 @@ async function hydrateFulfillmentCanvas(canvas: HTMLElement, businessId: string)
       const date = new Date(value);
       return Number.isNaN(date.getTime())
         ? value
-        : date.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" });
+        : formatDateTime(date);
     };
 
     container.innerHTML = fulfillments.map((item) => {
@@ -1902,7 +1903,7 @@ async function hydrateBusinessBookingQueue(canvas: HTMLElement, businessId: stri
       const date = new Date(value);
       return Number.isNaN(date.getTime())
         ? value
-        : date.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" });
+        : formatDateTime(date);
     };
 
     container.innerHTML = bookings.map((booking) => {
@@ -1998,7 +1999,7 @@ async function hydrateCommunicationCanvas(canvas: HTMLElement): Promise<void> {
     }
     container.innerHTML = items.map((item) => {
       const createdAt = item.createdAt ? new Date(item.createdAt) : null;
-      const createdLabel = createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toLocaleString("fa-IR", { dateStyle: "short", timeStyle: "short" }) : "—";
+      const createdLabel = createdAt && !Number.isNaN(createdAt.getTime()) ? formatDateTime(createdAt) : "—";
       return '<article class="phoenix-vwf-live-notification">' +
         '<div class="phoenix-vwf-live-notification-icon">◇</div>' +
         '<div class="phoenix-vwf-live-notification-copy"><div class="phoenix-vwf-live-notification-top"><strong>' + escapeHtml(item.intent ?? "communication") + '</strong><span class="pill">' + escapeHtml(item.status ?? "—") + '</span></div>' +

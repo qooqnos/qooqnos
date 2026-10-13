@@ -1,0 +1,74 @@
+// Prisma Schema Definition for Qooqnos Platform Database
+// Generator & Datasource configuration
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum OfferAudienceType {
+  general
+  group
+  customer
+}
+
+enum OfferAvailabilityStatus {
+  available
+  unavailable
+  restricted
+}
+
+enum OfferStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  DRAFT
+}
+
+/// Unified Commercial Offer Model
+/// Consolidates Product/Variant Association, Customer Group/Audience,
+/// Availability Status, Pricing, Validation Logic (validFrom/validTo), and Conditions.
+model Offer {
+  id                    String                  @id @default(cuid())
+  organizationId        String                  @map("organization_id")
+  workspaceId           String                  @map("workspace_id")
+  sellerId              String                  @map("seller_id")
+  productId             String                  @map("product_id")
+  variantId             String?                 @map("variant_id")
+  
+  // Audience Targeting
+  audienceType          OfferAudienceType       @map("audience_type")
+  customerGroup         String?                 @map("customer_group")
+  customerId            String?                 @map("customer_id")
+  
+  // Availability & Commercials
+  availabilityStatus    OfferAvailabilityStatus @default(available) @map("availability_status")
+  available             Boolean                 @default(true)
+  priceAmountMinor      Int                     @map("price_amount_minor")
+  currency              String                  @default("IRR")
+  
+  // Active Period Date Range & Validation
+  validFrom             DateTime?               @map("valid_from")
+  validTo               DateTime?               @map("valid_to")
+  
+  // Purchase Conditions & Constraints
+  minQuantity           Int?                    @map("min_quantity")
+  maxQuantity           Int?                    @map("max_quantity")
+  effectiveFrom         DateTime?               @map("effective_from")
+  effectiveTo           DateTime?               @map("effective_to")
+  digitalEntitlementId  String?                 @map("digital_entitlement_id")
+  conditionsJson        String?                 @map("conditions_json")
+  
+  status                OfferStatus             @default(ACTIVE)
+  createdAt             DateTime                @default(now()) @map("created_at")
+  updatedAt             DateTime                @updatedAt @map("updated_at")
+
+  @@index([sellerId, productId, variantId, status], name: "idx_commerce_offers_seller_product")
+  @@index([audienceType, customerGroup, customerId, status], name: "idx_commerce_offers_audience")
+  @@index([validFrom, validTo, status], name: "idx_commerce_offers_validity")
+  @@map("commerce_offers")
+}

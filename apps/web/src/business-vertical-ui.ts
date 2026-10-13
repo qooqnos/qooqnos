@@ -73,10 +73,10 @@ export const BUSINESS_VERTICAL_UI: Readonly<Record<BusinessVerticalKey, Business
 
 export function resolveBusinessVerticalKey(value: unknown): BusinessVerticalKey {
   const raw = String(value ?? "").trim().toLowerCase();
-  if (/(clinic|doctor|medical|مطب|کلینیک|پزشک)/.test(raw)) return "clinic";
-  if (/(shoe|retail|store|shop|فروشگاه|کفش|خرده)/.test(raw)) return "retail";
-  if (/(restaurant|cafe|food|رستوران|کافه|غذا)/.test(raw)) return "restaurant";
-  if (/(salon|beauty|hair|سالن|زیبایی|آرایش)/.test(raw)) return "salon";
+  if (/(clinic|doctor|medical|health|pharmacy|consulting|مطب|کلینیک|پزشک|درمان|دارو|مشاور)/.test(raw)) return "clinic";
+  if (/(shoe|retail|store|shop|clothing|digital|apparel|repair|tech|فروشگاه|کفش|خرده|پوشاک|دیجیتال|تعمیر)/.test(raw)) return "retail";
+  if (/(restaurant|cafe|food|dining|bakery|رستوران|کافه|غذا)/.test(raw)) return "restaurant";
+  if (/(salon|beauty|hair|spa|academy|education|hotel|hospitality|service_company|سالن|زیبایی|آرایش|آموزش|هتل)/.test(raw)) return "salon";
   return "default";
 }
 

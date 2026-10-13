@@ -1,3 +1,11 @@
+import type { Offer } from "./types/offer";
+import { OfferResolver } from "./services/offerResolver";
+import {
+  OfferController,
+  type CreateOfferPayload,
+  type UpdateOfferPayload,
+  type DisableOfferPayload,
+} from "./controllers/offerController";
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import type { AuthorizationService } from "@qooqnos/runtime";
 import {
@@ -20,6 +28,21 @@ export interface CommerceServiceOptions {
   readonly authorization: AuthorizationService;
   readonly id: () => EntityId;
   readonly now: () => string;
+}
+
+export interface ResolveOfferCommand {
+  readonly customerId?: EntityId | string | undefined;
+  readonly sellerId: EntityId | string;
+  readonly productId: EntityId | string;
+  readonly variantId?: EntityId | string | undefined;
+  readonly customerGroup?: string | undefined;
+  readonly asOf?: string | undefined;
+}
+
+export interface ResolveOfferResponse {
+  readonly offer: Offer | null;
+  readonly precedenceMatched?: "customer" | "group" | "general" | undefined;
+  readonly isInheritedFromProduct?: boolean | undefined;
 }
 
 export interface CreateCartCommand {
@@ -154,6 +177,80 @@ export class CommerceService {
     });
   }
 
+    /**
+   * Endpoint / Service method to resolve the optimal Offer for a given product and customer context.
+   * Accepts: customerId, sellerId, productId, and optional variantId.
+   * Adheres to precedence rules: Customer > Group > General.
+   */
+  async resolveOffer(
+    context: RequestContext,
+    params: ResolveOfferCommand,
+  ): Promise<ResolveOfferResponse> {
+    // Public storefront resolution requires no assert if unauthenticated
+    const resolver = new OfferResolver({ repository: this.options.repository, now: this.options.now });
+    const detailed = await resolver.resolveOfferDetailed(context, params);
+    if (!detailed) {
+      return { offer: null };
+    }
+    return {
+      offer: detailed.offer,
+      precedenceMatched: detailed.precedenceMatched,
+      isInheritedFromProduct: detailed.isInheritedFromProduct,
+    };
+  }
+
+  private getOfferController(): OfferController {
+    return new OfferController({
+      repository: this.options.repository,
+      idGenerator: this.options.id,
+      now: this.options.now,
+    });
+  }
+
+  async createOffer(context: RequestContext, payload: CreateOfferPayload): Promise<Offer> {
+    await this.options.authorization.assert({
+      context,
+      permission: "commerce.offer.manage",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    return this.getOfferController().createOffer(context, payload);
+  }
+
+  async updateOffer(
+    context: RequestContext,
+    offerId: EntityId | string,
+    payload: UpdateOfferPayload,
+  ): Promise<Offer> {
+    await this.options.authorization.assert({
+      context,
+      permission: "commerce.offer.manage",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    return this.getOfferController().updateOffer(context, offerId, payload);
+  }
+
+  async disableOffer(
+    context: RequestContext,
+    offerId: EntityId | string,
+    payload?: DisableOfferPayload,
+  ): Promise<Offer> {
+    await this.options.authorization.assert({
+      context,
+      permission: "commerce.offer.manage",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    return this.getOfferController().disableOffer(context, offerId, payload);
+  }
+
+  async getOffer(
+    context: RequestContext,
+    offerId: EntityId | string,
+  ): Promise<Offer | null> {
+    return this.getOfferController().getOffer(context, offerId);
+  }
   async setOrderStatus(
     context: RequestContext,
     id: EntityId,
@@ -194,4 +291,6 @@ export const COMMERCE_PERMISSIONS = [
   "commerce.order.request_refund",
   "commerce.order.complete",
   "commerce.fulfillment_policy.manage",
+  "commerce.offer.resolve",
+  "commerce.offer.manage",
 ] as const;

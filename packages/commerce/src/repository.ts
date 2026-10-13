@@ -507,6 +507,17 @@ export class CommerceRepository extends Repository {
     );
   }
 
+  async listCustomerOrders(context: RequestContext, customerId: EntityId, limit = 20): Promise<readonly OrderRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 50);
+    return this.database.all<OrderRecord>(
+      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, business_id AS businessId, customer_id AS customerId, match_request_id AS matchRequestId, match_candidate_id AS matchCandidateId, price_snapshot_id AS priceSnapshotId, status, currency, subtotal_minor AS subtotalMinor, adjustment_total_minor AS adjustmentTotalMinor, tax_total_minor AS taxTotalMinor, fee_total_minor AS feeTotalMinor, grand_total_minor AS grandTotalMinor, payment_status_ref AS paymentStatusRef, fulfillment_status_ref AS fulfillmentStatusRef, source_channel AS sourceChannel, policy_version AS policyVersion, idempotency_key AS idempotencyKey, correlation_id AS correlationId, created_at AS createdAt, updated_at AS updatedAt, confirmed_at AS confirmedAt, completed_at AS completedAt FROM commerce_orders WHERE organization_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT ?",
+      organizationId,
+      customerId,
+      safeLimit,
+    );
+  }
+
   async addOrderLine(context: RequestContext, input: AddOrderLineInput): Promise<OrderLineRecord> {
     const order = await this.getOrder(context, input.orderId);
     if (!order) throw new DatabaseError("Commerce order not found");
@@ -903,6 +914,264 @@ export class CommerceRepository extends Repository {
       input.now,
     );
   }
+
+  
+  async getCustomerRelationshipType(
+    context: RequestContext,
+    customerId: EntityId,
+    businessId: EntityId,
+  ): Promise<string | null> {
+    const row = await this.database.first<{ relationship_type: string }>(
+      "SELECT relationship_type FROM customer_relationships WHERE customer_id = ? AND business_id = ? LIMIT 1",
+      customerId,
+      businessId,
+    );
+    return row?.relationship_type ?? null;
+  }
+
+
+  async getOfferById(
+    context: RequestContext,
+    offerId: EntityId,
+  ): Promise<CommerceOfferRow | null> {
+    const organizationId = context.tenantId ?? null;
+    const workspaceId = context.workspaceId ?? null;
+
+    if (organizationId && workspaceId) {
+      return this.database.first<CommerceOfferRow>(
+        `SELECT * FROM commerce_offers WHERE id = ? AND organization_id = ? AND workspace_id = ? LIMIT 1`,
+        offerId,
+        organizationId,
+        workspaceId,
+      );
+    }
+
+    return this.database.first<CommerceOfferRow>(
+      `SELECT * FROM commerce_offers WHERE id = ? LIMIT 1`,
+      offerId,
+    );
+  }
+
+  async insertOffer(
+    context: RequestContext,
+    row: CommerceOfferRow,
+  ): Promise<CommerceOfferRow> {
+    await this.database.run(
+      `INSERT INTO commerce_offers (
+        id, organization_id, workspace_id, seller_id, product_id, variant_id,
+        audience_type, customer_group, customer_id, available, price_amount_minor,
+        currency, min_quantity, max_quantity, effective_from, effective_to,
+        valid_from, valid_to, digital_entitlement_id, conditions_json, status,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      row.id,
+      row.organization_id,
+      row.workspace_id,
+      row.seller_id,
+      row.product_id,
+      row.variant_id ?? null,
+      row.audience_type,
+      row.customer_group ?? null,
+      row.customer_id ?? null,
+      row.available,
+      row.price_amount_minor,
+      row.currency,
+      row.min_quantity ?? null,
+      row.max_quantity ?? null,
+      row.effective_from ?? null,
+      row.effective_to ?? null,
+      row.valid_from ?? null,
+      row.valid_to ?? null,
+      row.digital_entitlement_id ?? null,
+      row.conditions_json ?? null,
+      row.status,
+      row.created_at,
+      row.updated_at,
+    );
+
+    const fetched = await this.getOfferById(context, row.id as EntityId);
+    if (!fetched) {
+      return row;
+    }
+    return fetched;
+  }
+
+  async updateOfferRow(
+    context: RequestContext,
+    offerId: EntityId,
+    updates: Partial<CommerceOfferRow> & { updated_at: string },
+  ): Promise<CommerceOfferRow | null> {
+    const existing = await this.getOfferById(context, offerId);
+    if (!existing) return null;
+
+    const merged: CommerceOfferRow = {
+      ...existing,
+      ...updates,
+      id: existing.id,
+      organization_id: existing.organization_id,
+      workspace_id: existing.workspace_id,
+      updated_at: updates.updated_at,
+    };
+
+    await this.database.run(
+      `UPDATE commerce_offers SET
+        seller_id = ?, product_id = ?, variant_id = ?, audience_type = ?,
+        customer_group = ?, customer_id = ?, available = ?, price_amount_minor = ?,
+        currency = ?, min_quantity = ?, max_quantity = ?, effective_from = ?,
+        effective_to = ?, valid_from = ?, valid_to = ?, digital_entitlement_id = ?,
+        conditions_json = ?, status = ?, updated_at = ?
+      WHERE id = ?`,
+      merged.seller_id,
+      merged.product_id,
+      merged.variant_id ?? null,
+      merged.audience_type,
+      merged.customer_group ?? null,
+      merged.customer_id ?? null,
+      merged.available,
+      merged.price_amount_minor,
+      merged.currency,
+      merged.min_quantity ?? null,
+      merged.max_quantity ?? null,
+      merged.effective_from ?? null,
+      merged.effective_to ?? null,
+      merged.valid_from ?? null,
+      merged.valid_to ?? null,
+      merged.digital_entitlement_id ?? null,
+      merged.conditions_json ?? null,
+      merged.status,
+      merged.updated_at,
+      offerId,
+    );
+
+    return this.getOfferById(context, offerId);
+  }
+
+  async listProductOffers(
+    context: RequestContext,
+    sellerId: EntityId,
+    productId: EntityId,
+    variantId?: EntityId | undefined,
+  ): Promise<readonly CommerceOfferRow[]> {
+    const organizationId = context.tenantId ?? null;
+    const workspaceId = context.workspaceId ?? null;
+    if (organizationId && workspaceId) {
+      if (variantId) {
+        return this.database.all<CommerceOfferRow>(
+          `SELECT * FROM commerce_offers
+            WHERE organization_id = ? AND workspace_id = ? AND seller_id = ? AND product_id = ?
+              AND (variant_id = ? OR variant_id IS NULL)
+            ORDER BY variant_id DESC, created_at DESC`,
+          organizationId, workspaceId, sellerId, productId, variantId,
+        );
+      }
+      return this.database.all<CommerceOfferRow>(
+        `SELECT * FROM commerce_offers
+          WHERE organization_id = ? AND workspace_id = ? AND seller_id = ? AND product_id = ?
+          ORDER BY created_at DESC`,
+        organizationId, workspaceId, sellerId, productId,
+      );
+    }
+    // Public storefront querying by seller and product
+    if (variantId) {
+      return this.database.all<CommerceOfferRow>(
+        `SELECT * FROM commerce_offers
+          WHERE seller_id = ? AND product_id = ?
+            AND (variant_id = ? OR variant_id IS NULL)
+          ORDER BY variant_id DESC, created_at DESC`,
+        sellerId, productId, variantId,
+      );
+    }
+    return this.database.all<CommerceOfferRow>(
+      `SELECT * FROM commerce_offers
+        WHERE seller_id = ? AND product_id = ?
+        ORDER BY created_at DESC`,
+      sellerId, productId,
+    );
+  }
+
+  async getOffer(context: RequestContext, id: EntityId): Promise<CommerceOfferRow | null> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    return this.database.first<CommerceOfferRow>(
+      "SELECT * FROM commerce_offers WHERE id = ? AND organization_id = ? AND workspace_id = ? LIMIT 1",
+      id, organizationId, workspaceId,
+    );
+  }
+
+  async createOffer(context: RequestContext, input: CreateOfferInput): Promise<CommerceOfferRow> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    await this.database.run(
+      `INSERT INTO commerce_offers (
+        id, organization_id, workspace_id, seller_id, product_id, variant_id,
+        audience_type, customer_group, customer_id, available, price_amount_minor,
+        currency, min_quantity, max_quantity, effective_from, effective_to,
+        digital_entitlement_id, conditions_json, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      input.id,
+      organizationId,
+      workspaceId,
+      input.sellerId,
+      input.productId,
+      input.variantId ?? null,
+      input.audienceType,
+      input.customerGroup ?? null,
+      input.customerId ?? null,
+      input.available ? 1 : 0,
+      input.priceAmountMinor,
+      input.currency,
+      input.minQuantity ?? null,
+      input.maxQuantity ?? null,
+      input.effectiveFrom ?? null,
+      input.effectiveTo ?? null,
+      input.digitalEntitlementId ?? null,
+      input.conditionsJson ?? null,
+      input.status ?? "active",
+      input.now,
+      input.now,
+    );
+    const created = await this.getOffer(context, input.id);
+    if (!created) throw new DatabaseError("Failed to fetch newly created offer");
+    return created;
+  }
+
+  async updateOffer(context: RequestContext, id: EntityId, input: UpdateOfferInput): Promise<CommerceOfferRow> {
+    const existing = await this.getOffer(context, id);
+    if (!existing) throw new DatabaseError("Offer not found");
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    await this.database.run(
+      `UPDATE commerce_offers SET
+        available = COALESCE(?, available),
+        price_amount_minor = COALESCE(?, price_amount_minor),
+        currency = COALESCE(?, currency),
+        min_quantity = COALESCE(?, min_quantity),
+        max_quantity = COALESCE(?, max_quantity),
+        effective_from = COALESCE(?, effective_from),
+        effective_to = COALESCE(?, effective_to),
+        conditions_json = COALESCE(?, conditions_json),
+        status = COALESCE(?, status),
+        updated_at = ?
+      WHERE id = ? AND organization_id = ? AND workspace_id = ?`,
+      input.available !== undefined ? (input.available ? 1 : 0) : null,
+      input.priceAmountMinor ?? null,
+      input.currency ?? null,
+      input.minQuantity ?? null,
+      input.maxQuantity ?? null,
+      input.effectiveFrom ?? null,
+      input.effectiveTo ?? null,
+      input.conditionsJson ?? null,
+      input.status ?? null,
+      input.now,
+      id,
+      organizationId,
+      workspaceId,
+    );
+    const updated = await this.getOffer(context, id);
+    if (!updated) throw new DatabaseError("Failed to fetch updated offer");
+    return updated;
+  }
+
 }
 
 interface CheckoutSessionRow {
@@ -1046,4 +1315,67 @@ function validateMoney(value: number, field: string, allowNegative = false): voi
 
 function isTerminalOrderStatus(status: OrderStatus): boolean {
   return status === "completed" || status === "cancelled" || status === "refunded";
+}
+export interface CommerceOfferRow {
+  readonly id: EntityId;
+  readonly organization_id: EntityId;
+  readonly workspace_id: EntityId;
+  readonly seller_id: EntityId;
+  readonly product_id: EntityId;
+  readonly variant_id: EntityId | null;
+  readonly audience_type: "general" | "group" | "customer";
+  readonly customer_group: string | null;
+  readonly customer_id: EntityId | null;
+  readonly available: number;
+  readonly price_amount_minor: number;
+  readonly currency: string;
+  readonly min_quantity: number | null;
+  readonly max_quantity: number | null;
+  readonly effective_from: string | null;
+  readonly effective_to: string | null;
+  readonly digital_entitlement_id: string | null;
+  readonly conditions_json: string | null;
+  readonly valid_from?: string | null;
+  readonly valid_to?: string | null;
+  readonly status: "ACTIVE" | "INACTIVE" | "EXPIRED" | "DRAFT" | "draft" | "active" | "inactive" | "archived";
+  readonly created_at: string;
+  readonly updated_at: string;
+}
+
+export interface CreateOfferInput {
+  readonly id: EntityId;
+  readonly sellerId: EntityId;
+  readonly productId: EntityId;
+  readonly variantId?: EntityId | undefined;
+  readonly audienceType: "general" | "group" | "customer";
+  readonly customerGroup?: string | undefined;
+  readonly customerId?: EntityId | undefined;
+  readonly available: boolean;
+  readonly priceAmountMinor: number;
+  readonly currency: string;
+  readonly minQuantity?: number | undefined;
+  readonly maxQuantity?: number | undefined;
+  readonly effectiveFrom?: string | undefined;
+  readonly effectiveTo?: string | undefined;
+  readonly digitalEntitlementId?: string | undefined;
+  readonly conditionsJson?: string | undefined;
+  readonly validFrom?: string | undefined;
+  readonly validTo?: string | undefined;
+  readonly status?: "ACTIVE" | "INACTIVE" | "EXPIRED" | "DRAFT" | "draft" | "active" | "inactive" | "archived" | undefined;
+  readonly now: string;
+}
+
+export interface UpdateOfferInput {
+  readonly available?: boolean | undefined;
+  readonly priceAmountMinor?: number | undefined;
+  readonly currency?: string | undefined;
+  readonly minQuantity?: number | undefined;
+  readonly maxQuantity?: number | undefined;
+  readonly effectiveFrom?: string | undefined;
+  readonly effectiveTo?: string | undefined;
+  readonly conditionsJson?: string | undefined;
+  readonly validFrom?: string | undefined;
+  readonly validTo?: string | undefined;
+  readonly status?: "ACTIVE" | "INACTIVE" | "EXPIRED" | "DRAFT" | "draft" | "active" | "inactive" | "archived" | undefined;
+  readonly now: string;
 }

@@ -2,7 +2,7 @@ import type { RequestContext } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
-import { buildRobotsTxt, buildSitemapIndexXml, buildSitemapXml, buildImageSitemapXml, buildMerchantProductFeedXml, projectMerchantProductFeed, SITEMAP_URL_LIMIT, type RobotsAiPolicy, SeoObservabilityRepository, parseGoogleSearchConsoleExport, parseBingAiPerformanceExport, DataForSeoSearchIntelligenceClient, GooglePlacesClient, GoogleRoutesClient, YouTubeSearchClient, searchIntelligenceVerticals, type SearchIntelligenceVertical, FacebookPageClient, InstagramGraphClient, XApiClient, PinterestClient, LinkedInClient, TikTokClient, RedditClient, ingestSocialSignals } from "@qooqnos/seo";
+import { buildRobotsTxt, buildSitemapXml, buildImageSitemapXml, buildMerchantProductFeedXml, projectMerchantProductFeed, SITEMAP_URL_LIMIT, type RobotsAiPolicy, SeoObservabilityRepository, parseGoogleSearchConsoleExport, parseBingAiPerformanceExport, DataForSeoSearchIntelligenceClient, GooglePlacesClient, GoogleRoutesClient, YouTubeSearchClient, searchIntelligenceVerticals, type SearchIntelligenceVertical, FacebookPageClient, InstagramGraphClient, XApiClient, PinterestClient, LinkedInClient, TikTokClient, RedditClient, ingestSocialSignals, generateCatalogSitemapXml, generateCategorizedCatalogSitemaps } from "@qooqnos/seo";
 import { crawlStoredSeoRepresentation } from "./seo-production-crawler";
 import { evaluateSeoProductionReadiness } from "./seo-production-readiness";
 import type { ApiEnv } from "./env";
@@ -683,19 +683,77 @@ export function registerSeoRoutes(router: ApiRouter, database: D1Database | unde
     operation: "sitemap.read",
     handler: async () => {
       if (!database) return new Response("Database is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
-      const canonicalPrefix = canonicalBaseUrl.replace(/\/$/, "") + "/";
-      const countRow = await database.first<{ total: number }>(
-        `SELECT COUNT(DISTINCT canonical_url) AS total
-           FROM seo_entity_representations
-          WHERE indexability='index' AND publication_state='published' AND visibility='public' AND canonical_url LIKE ?`,
-        canonicalPrefix + "%",
-      );
-      const total = countRow?.total ?? 0;
-      const shardCount = Math.max(1, Math.ceil(total / SITEMAP_URL_LIMIT));
-      const xml = total > SITEMAP_URL_LIMIT
-        ? buildSitemapIndexXml(Array.from({ length: shardCount }, (_, index) => canonicalBaseUrl.replace(/\/$/, "") + "/sitemap-" + (index + 1) + ".xml"))
-        : buildSitemapXml(await readSitemapShardRows(database, canonicalPrefix, 0));
-      return new Response(xml, { status: 200, headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300, s-maxage=300" } });
+      const dynamicSitemap = await generateCatalogSitemapXml(database, {
+        baseUrl: canonicalBaseUrl,
+        defaultLocale: "fa",
+      });
+      return new Response(dynamicSitemap.xml, {
+        status: 200,
+        headers: {
+          "content-type": "application/xml; charset=utf-8",
+          "cache-control": "public, max-age=300, s-maxage=300",
+        },
+      });
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/sitemap-business.xml",
+    module: "seo",
+    operation: "sitemap.business.read",
+    handler: async () => {
+      if (!database) return new Response("Database is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
+      const bundle = await generateCategorizedCatalogSitemaps(database, {
+        baseUrl: canonicalBaseUrl,
+        defaultLocale: "fa",
+      });
+      const sub = bundle.subSitemaps.get("sitemap-business.xml");
+      const xml = sub ? sub.xml : buildSitemapXml([]);
+      return new Response(xml, {
+        status: 200,
+        headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300, s-maxage=300" },
+      });
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/sitemap-products.xml",
+    module: "seo",
+    operation: "sitemap.products.read",
+    handler: async () => {
+      if (!database) return new Response("Database is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
+      const bundle = await generateCategorizedCatalogSitemaps(database, {
+        baseUrl: canonicalBaseUrl,
+        defaultLocale: "fa",
+      });
+      const sub = bundle.subSitemaps.get("sitemap-products.xml");
+      const xml = sub ? sub.xml : buildSitemapXml([]);
+      return new Response(xml, {
+        status: 200,
+        headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300, s-maxage=300" },
+      });
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/sitemap-articles.xml",
+    module: "seo",
+    operation: "sitemap.articles.read",
+    handler: async () => {
+      if (!database) return new Response("Database is not configured.", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
+      const bundle = await generateCategorizedCatalogSitemaps(database, {
+        baseUrl: canonicalBaseUrl,
+        defaultLocale: "fa",
+      });
+      const sub = bundle.subSitemaps.get("sitemap-articles.xml");
+      const xml = sub ? sub.xml : buildSitemapXml([]);
+      return new Response(xml, {
+        status: 200,
+        headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300, s-maxage=300" },
+      });
     },
   });
 

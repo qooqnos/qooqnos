@@ -182,4 +182,76 @@ describe("CommerceRepository", () => {
       now: "2026-09-22T00:00:01.000Z",
     })).rejects.toThrow("snapshot is invalid");
   });
+
+  it("creates and retrieves a unified commerce offer", async () => {
+    const store = new Map<string, unknown>();
+    let boundParams: readonly unknown[] = [];
+    const statement: D1PreparedStatementLike = {
+      bind(...params: readonly unknown[]) {
+        boundParams = params;
+        return this;
+      },
+      async first<T>(): Promise<T | null> {
+        const id = boundParams[0] as string | undefined;
+        return (id ? (store.get(id) ?? null) : null) as T | null;
+      },
+      async all<T>(): Promise<{ results: T[] }> {
+        return { results: Array.from(store.values()) as T[] };
+      },
+      async run(): Promise<{ success: boolean }> {
+        const p = boundParams;
+        if (p && p.length > 5) {
+          const row = {
+            id: p[0],
+            organization_id: p[1],
+            workspace_id: p[2],
+            seller_id: p[3],
+            product_id: p[4],
+            variant_id: p[5],
+            audience_type: p[6],
+            customer_group: p[7],
+            customer_id: p[8],
+            available: p[9],
+            price_amount_minor: p[10],
+            currency: p[11],
+            min_quantity: p[12],
+            max_quantity: p[13],
+            effective_from: p[14],
+            effective_to: p[15],
+            digital_entitlement_id: p[16],
+            conditions_json: p[17],
+            status: p[18],
+            created_at: p[19],
+            updated_at: p[20],
+          };
+          store.set(String(row.id), row);
+        }
+        return { success: true };
+      },
+    };
+    const raw: D1DatabaseLike = {
+      prepare() { return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CommerceRepository(new D1Database(raw));
+
+    const offer = await repository.createOffer(context(), {
+      id: brandId<"EntityId">("offer-1"),
+      sellerId: brandId<"EntityId">("business-1"),
+      productId: brandId<"EntityId">("product-1"),
+      audienceType: "group",
+      customerGroup: "partner",
+      available: true,
+      priceAmountMinor: 2150000,
+      currency: "IRR",
+      minQuantity: 1,
+      now: "2026-01-01T00:00:00Z",
+    });
+
+    expect(offer.id).toBe("offer-1");
+    expect(offer.seller_id).toBe("business-1");
+    expect(offer.price_amount_minor).toBe(2150000);
+    expect(offer.customer_group).toBe("partner");
+    expect(offer.available).toBe(1);
+  });
 });

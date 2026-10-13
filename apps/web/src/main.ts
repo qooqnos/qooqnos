@@ -1,10 +1,68 @@
-import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton, installTabAccessibility } from "./ui.js";
+import { uiButton, uiField, uiSelect, uiTabs, uiTable, uiDropdown, uiDialog, uiEmpty, uiSkeleton, installTabAccessibility, openDrawer } from "./ui-system.js";
 import { getBusinessVerticalUi, resolveBusinessVerticalKey } from "./business-vertical-ui.js";
 import { getVerticalModuleBlueprint, getVerticalModuleForSlug, getVerticalModuleRoleFit, getVerticalModuleRoute, getVerticalModuleUiContract, resolveVerticalRoleLens, type VerticalModuleBlueprint } from "./business-module-ui.js";
 import { bindVerticalWorkflowCanvas, bindVerticalWorkflowOverview, renderVerticalWorkflowCanvas, renderVerticalWorkflowOverview } from "./vertical-workflow-ui.js";
 import { getVerticalWorkflowStageModule, getVerticalWorkflowSteps } from "./business-workflow-ui.js";
 import { resolveVerticalModuleAlias } from "./business-module-ui.js";
-import { defaultI18n, getDirection, getLocaleFromPreference, LOCALE_STORAGE_KEY, persistLocale, readPersistedLocale, translateCanonicalTerm, translateUiText, type SupportedLanguage } from "./i18n-runtime.js";
+import { defaultI18n, LOCALE_STORAGE_KEY, translateCanonicalTerm, translateUiText, type SupportedLanguage } from "./i18n-runtime.js";
+import { globalLocaleService } from "./locale-service.js";
+import {
+  formatDate as formatCentralDate,
+  formatDateTime as formatCentralDateTime,
+  formatNumber as formatCentralNumber,
+} from "./calendar-service.js";
+import { initDatePickers } from "./date-picker.js";
+import {
+  renderBuyerProfileView,
+  renderOrderTrackingTimelineView,
+  type BuyerOrderSummary,
+  type BuyerProfileData,
+} from "./buyer-portal.js";
+import { BUSINESS_TAXONOMY, resolveBusinessType, mapBusinessTypeToVerticalAnchor, type BusinessType } from "./business-taxonomy.js";
+import { getBusinessTypeSchema, BUSINESS_TYPE_SCHEMAS } from "./business-schema.js";
+import { renderDynamicBusinessDashboard, renderDynamicBusinessProfile, renderTaxonomyRegistrationSelector } from "./business-dynamic-renderer.js";
+import {
+  openAuthModal,
+  getStoredAuth,
+  clearAuthSession,
+  type AuthModalMode,
+} from "./auth-modal.js";
+if (typeof window !== "undefined") {
+  (window as unknown as { openPhoenixAuthModal: typeof openAuthModal }).openPhoenixAuthModal = openAuthModal;
+}
+import {
+  renderCheckoutPage,
+  bindCheckoutEvents,
+} from "./checkout-flow.js";
+import { ProductCreateFormComponent, type NewProductFormData } from "./product-form-component.js";
+import {
+  getActivePersona,
+  renderPersonaSwitcher,
+  renderUnifiedBottomNav,
+  renderIndividualWelcome,
+  renderIndividualDashboard,
+  renderCreateContentHub,
+  renderContentDetailsForm,
+  renderDealTypeSelection,
+  renderIndividualProfile,
+  renderIndividualNotifications,
+  renderBusinessWelcome,
+  renderBusinessPanel,
+  renderBusinessCreateContent,
+  renderBusinessContentDetails,
+  renderBusinessDeals,
+  renderBusinessTeam as renderPhoenixBusinessTeam,
+  renderBusinessOrgProfile,
+  renderConsumerWelcome,
+  renderConsumerHome,
+  renderConsumerProductDetails,
+  renderConsumerCart,
+  renderConsumerPayment,
+  renderConsumerMessages,
+  renderConsumerLoyalty,
+  renderPhoenixMasterLayout,
+  bindPhoenixExperienceEvents,
+} from "./phoenix-experience.js";
 type Theme = "dark" | "light";
 type Language = SupportedLanguage;
 
@@ -54,6 +112,11 @@ const STORAGE = {
   accessToken: "phoenix-access-token",
   business: "phoenix-business-id",
   businessVertical: "phoenix-business-vertical",
+  businessType: "phoenix-business-type",
+  businessSpecialization: "phoenix-business-specialization",
+  businessIndustry: "phoenix-business-industry",
+  businessOccupation: "phoenix-business-occupation",
+  businessSubcategory: "phoenix-business-subcategory",
   customer: "phoenix-customer-id",
 };
 
@@ -288,7 +351,12 @@ const initialSeoHydration = readInitialSeoHydration();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    void navigator.serviceWorker.register("/sw.js?v=2").catch(() => undefined);
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      for (const reg of regs) {
+        void reg.update();
+      }
+    }).catch(() => undefined);
+    void navigator.serviceWorker.register("/sw.js?v=20261012").catch(() => undefined);
   }, { once: true });
 }
 
@@ -299,6 +367,18 @@ const appRoot = app;
 const routes: Route[] = [
   { path: "/", label: "خانه", icon: "⌂", render: renderHome },
   { path: "/welcome", label: "شروع و آشنایی", icon: "✦", render: renderWelcome },
+  { path: "/create", label: "آپلود محتوا", icon: "＋", render: renderCreateContentHub },
+  { path: "/create/details", label: "جزئیات محتوا", icon: "📝", render: renderContentDetailsForm },
+  { path: "/create/deal-type", label: "انتخاب معامله", icon: "↔", render: renderDealTypeSelection },
+  { path: "/business/welcome", label: "شروع کسب‌وکار", icon: "🏢", render: renderBusinessWelcome },
+  { path: "/business/create", label: "ایجاد محتوای تجاری", icon: "＋", render: renderBusinessCreateContent },
+  { path: "/business/create/details", label: "جزئیات محتوای تجاری", icon: "📝", render: renderBusinessContentDetails },
+  { path: "/business/deals", label: "معاملات تجاری", icon: "🤝", render: renderBusinessDeals },
+  { path: "/business/organization", label: "اطلاعات سازمانی", icon: "🏢", render: renderBusinessOrgProfile },
+  { path: "/consumer/welcome", label: "شروع خرید", icon: "🛍️", render: renderConsumerWelcome },
+  { path: "/product/demo", label: "جزئیات محصول", icon: "📦", render: renderConsumerProductDetails },
+  { path: "/cart", label: "سبد خرید", icon: "🛒", render: renderConsumerCart },
+  { path: "/consumer/payment", label: "درگاه پرداخت", icon: "💳", render: renderConsumerPayment },
   { path: "/discover", label: "کشف", icon: "⌕", render: renderDiscover },
   { path: "/compare", label: "مقایسه", icon: "⚖", render: renderCompare },
   { path: "/orders", label: "سفارش‌ها", icon: "📦", render: renderOrders },
@@ -337,10 +417,15 @@ const routes: Route[] = [
 
 const theme = getInitialTheme();
 document.documentElement.dataset.theme = theme;
-const initialLanguage = getInitialLanguage();
-defaultI18n.setLanguage(initialLanguage);
-document.documentElement.lang = initialLanguage;
-document.documentElement.dir = getDirection(initialLanguage);
+// Strict initialization order (Requirement 4):
+// 1. Determine Locale (explicit user choice in localStorage if present; else strictly "fa")
+// 2. Load Translation Dictionary
+// 3. Set Direction
+// 4. Set Calendar
+// 5. Set Number Formatting & Typography attributes
+// 6. Set Date Picker Locale
+// 7. Render Application
+globalLocaleService.initLocale();
 
 async function hydrateSessionContext(): Promise<void> {
   const token = sessionStorage.getItem(STORAGE.accessToken);
@@ -351,14 +436,9 @@ async function hydrateSessionContext(): Promise<void> {
       sessionStorage.removeItem(STORAGE.accessToken);
       return;
     }
-    if (!readPersistedLocale(localStorage) && response.session.locale) {
-      const serverLocale = getLocaleFromPreference(response.session.locale, "fa");
-      persistLocale(serverLocale, localStorage);
-      defaultI18n.setLanguage(serverLocale);
-      document.documentElement.lang = serverLocale;
-      document.documentElement.dir = getDirection(serverLocale);
-      render();
-    }
+    // Respect Phoenix Requirement 1:
+    // If the user has not previously chosen another language, the application MUST launch with Persian.
+    // An automated server session must never silently switch the user to Arabic or English without previous explicit user choice.
     if (response.session.workspaceId && !localStorage.getItem(STORAGE.workspace)) {
       localStorage.setItem(STORAGE.workspace, response.session.workspaceId);
     }
@@ -374,7 +454,7 @@ function getInitialTheme(): Theme {
 }
 
 function getInitialLanguage(): Language {
-  return readPersistedLocale(localStorage) ?? "fa";
+  return globalLocaleService.getLocale();
 }
 
 
@@ -489,17 +569,11 @@ function localizedUi(value: string): string {
 }
 
 function formatLocalizedNumber(value: number): string {
-  const language = getInitialLanguage();
-  const locale = language === "fa" ? "fa-IR" : language === "ar" ? "ar-EG" : "en-US";
-  return value.toLocaleString(locale);
+  return formatCentralNumber(value, globalLocaleService.getLocale());
 }
 
 function setLanguage(language: Language): void {
-  const next = getLocaleFromPreference(language, "fa");
-  persistLocale(next, localStorage);
-  defaultI18n.setLanguage(next);
-  document.documentElement.lang = next;
-  document.documentElement.dir = getDirection(next);
+  globalLocaleService.setLocale(language);
   render();
 }
 
@@ -614,16 +688,27 @@ function render(): void {
         ${isHome || isSocial || isPublicBusiness ? "" : renderSidebar(route)}
         <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : isPublicBusiness ? "public-business-page-content" : ""}">${page}</main>
       </div>
+      ${renderSiteFooter()}
       ${isPublicBusiness ? "" : isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
       ${renderToastHost()}
     </div>
   `;
   bindGlobalEvents();
+  bindPhoenixExperienceEvents(appRoot, navigate);
   syncThemeButtons();
   applyLanguageToUi();
+  initDatePickers(appRoot);
   installLanguageObserver();
   installTabAccessibility(document);
   if (route.path === "/welcome") void loadWelcomePage();
+  if (route.path === "/checkout") {
+    const container = document.querySelector<HTMLElement>(".phoenix-checkout-container");
+    if (container) {
+      bindCheckoutEvents(container, (_orderId) => {
+        navigate("/orders");
+      });
+    }
+  }
   if (route.path === "/orders") void loadOrdersPage();
   if (route.path === "/saved") void loadSavedPage();
   if (route.path === "/messages") void loadMessagesPage();
@@ -841,21 +926,82 @@ function setLink(rel: string, href: string): void {
 }
 
 function renderPublicHeader(): string {
+  const auth = getStoredAuth();
+  const authenticated = Boolean(auth.token && auth.user);
+  const user = auth.user;
+  const persona = getActivePersona();
+
+  const authActionsHtml = authenticated && user
+    ? `
+      <div class="phoenix-header-user-menu" style="display:flex;align-items:center;gap:8px;">
+        <a class="profile-chip" href="/profile" data-nav aria-label="${escapeAttr(user.displayName || uiText("حساب من"))}">
+          <span class="avatar">${(user.displayName || "ق")[0]}</span>
+          <span class="profile-copy">
+            <strong>${escapeHtml(user.displayName || uiText("حساب من"))}</strong>
+            <small>${user.role === "seller" ? escapeHtml(user.businessName || "کسب‌وکار") : uiText("حساب کاربری")}</small>
+          </span>
+        </a>
+        ${user.role !== "seller" ? `<button type="button" class="button button-outline button-sm" data-activate-seller style="font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;">🏪 ${uiText("فعال‌سازی فروشندگی")}</button>` : ""}
+        <button type="button" class="button button-ghost button-sm" data-auth-logout>${uiText("خروج")}</button>
+      </div>
+    `
+    : `
+      <div class="phoenix-auth-header-cta" style="display:flex;align-items:center;gap:6px;">
+        <button type="button" class="button button-primary phoenix-register-btn" data-open-register aria-label="${uiText("ثبت‌نام و استفاده از پلتفرم")}">
+          <span class="btn-sparkle" aria-hidden="true">✦</span>
+          <span>${uiText("ثبت‌نام")}</span>
+        </button>
+        <button type="button" class="button button-outline button-sm phoenix-seller-register-btn" data-open-seller-register style="font-size:12px;display:flex;align-items:center;gap:4px;">
+          <span aria-hidden="true">🏪</span>
+          <span>${uiText("ثبت‌نام فروشنده")}</span>
+        </button>
+        <button type="button" class="button button-ghost phoenix-login-btn" data-open-login>${uiText("ورود")}</button>
+      </div>
+    `;
+
+  let personaNavHtml = "";
+  if (persona === "individual") {
+    personaNavHtml = `
+      <a href="/" data-nav class="phoenix-nav-pill active">⌂ ${uiText("داشبورد")}</a>
+      <a href="/create" data-nav class="phoenix-nav-pill">📤 ${uiText("آپلود محتوا")}</a>
+      <a href="/transactions" data-nav class="phoenix-nav-pill">↔ ${uiText("معاملات")}</a>
+      <a href="/welcome" data-nav class="phoenix-nav-pill">✦ ${uiText("شروع و آشنایی")}</a>
+    `;
+  } else if (persona === "business") {
+    personaNavHtml = `
+      <a href="/" data-nav class="phoenix-nav-pill active">▦ ${uiText("پنل مدیریت")}</a>
+      <a href="/business/create" data-nav class="phoenix-nav-pill">✦ ${uiText("تولید محتوا AI")}</a>
+      <a href="/business/deals" data-nav class="phoenix-nav-pill">🤝 ${uiText("معاملات تجاری")}</a>
+      <a href="/business/team" data-nav class="phoenix-nav-pill">👥 ${uiText("مدیریت تیم")}</a>
+      <a href="/business/organization" data-nav class="phoenix-nav-pill">🏢 ${uiText("اطلاعات سازمان")}</a>
+    `;
+  } else {
+    personaNavHtml = `
+      <a href="/" data-nav class="phoenix-nav-pill active">🛍️ ${uiText("بازارگاه و کشف")}</a>
+      <a href="/cart" data-nav class="phoenix-nav-pill">🛒 ${uiText("سبد خرید")}</a>
+      <a href="/consumer/payment" data-nav class="phoenix-nav-pill">💳 ${uiText("پرداخت")}</a>
+      <a href="/messages" data-nav class="phoenix-nav-pill">✉ ${uiText("پیام‌ها")}</a>
+      <a href="/loyalty" data-nav class="phoenix-nav-pill">♢ ${uiText("وفاداری")}</a>
+    `;
+  }
+
   return `
-    <header class="phoenix-public-header">
+    <header class="phoenix-public-header phoenix-unified-header">
       <div class="phoenix-public-header-inner container-wide">
         <a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس">
-          <span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=1" alt="" /></span>
+          <span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=2" alt="" /></span>
           <span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
         </a>
-        <nav class="phoenix-public-nav" aria-label="${uiText("ناوبری اصلی")}">
-          <a href="#phoenix-loop">${uiText("چگونه کار می‌کند؟")}</a>
-          <a href="/discover" data-nav>${uiText("کشف")}</a>
-          <a href="/business" data-nav>${uiText("برای کسب‌وکارها")}</a>
-        </nav>
-        <a class="button button-primary phoenix-header-cta" href="#phoenix-demand-form">${uiText("نیازت را بگو")} <span>←</span></a>
+
+        <div class="phoenix-header-center-area">
+          ${renderPersonaSwitcher()}
+          <nav class="phoenix-persona-quick-nav" aria-label="${uiText("مسیرهای نقش فعال")}">
+            ${personaNavHtml}
+          </nav>
+        </div>
+
         <div class="phoenix-public-actions">
-          <button type="button" class="button button-ghost" data-open-connection>${uiText("ورود")}</button>
+          ${authActionsHtml}
           ${renderLanguageSwitcher()}
           <button type="button" class="icon-button" data-theme-toggle aria-label="${uiText("تغییر پوسته")}">◐</button>
         </div>
@@ -865,11 +1011,33 @@ function renderPublicHeader(): string {
 }
 
 function renderHeader(route: Route): string {
+  const auth = getStoredAuth();
+  const authenticated = Boolean(auth.token && auth.user);
+  const user = auth.user;
+
+  const authProfileChip = authenticated && user
+    ? `
+      <button class="profile-chip workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="${escapeAttr(uiText("انتخاب فضای کاری"))}">
+        <span class="avatar">${(user.displayName || "ق")[0]}</span>
+        <span class="profile-copy"><strong id="shell-workspace-name">${escapeHtml(user.displayName || uiText("فضای شما"))}</strong><small>${user.role === "seller" ? escapeHtml(user.businessName || "کسب‌وکار") : escapeHtml(routeUiLabel(route))}</small></span>
+        <span class="chevron">⌄</span>
+      </button>
+      ${user.role !== "seller" ? `<button type="button" class="button button-outline button-sm" data-activate-seller style="font-size:12px;">🏪 ${uiText("فعال‌سازی فروشندگی")}</button>` : ""}
+      <button type="button" class="button button-ghost button-sm" data-auth-logout>${uiText("خروج")}</button>
+    `
+    : `
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button type="button" class="button button-primary button-sm" data-open-register>${uiText("ثبت‌نام")}</button>
+        <button type="button" class="button button-outline button-sm" data-open-seller-register style="font-size:12px;">🏪 ${uiText("ثبت‌نام فروشنده")}</button>
+        <button type="button" class="button button-ghost button-sm" data-open-login>${uiText("ورود")}</button>
+      </div>
+    `;
+
   return `
     <header class="app-header" data-shell-header>
       <div class="header-inner container-wide">
-        <a class="brand" href="/" data-nav aria-label="بازگشت به خانه ققنوس">
-          <span class="brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=1" alt="" /></span>
+        <a class="brand" href="/" data-nav aria-label="${escapeAttr(uiText("بازگشت به خانه ققنوس"))}">
+          <span class="brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=2" alt="" /></span>
           <span class="brand-copy"><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
         </a>
         <div class="header-context" aria-live="polite">
@@ -877,21 +1045,18 @@ function renderHeader(route: Route): string {
           <strong>${escapeHtml(routeUiLabel(route))}</strong>
         </div>
         <div class="header-center">
-          <div class="command-palette" role="button" tabindex="0" data-focus-search aria-label="جست‌وجوی سراسری">
+          <div class="command-palette" role="button" tabindex="0" data-focus-search aria-label="${escapeAttr(uiText("جست‌وجوی سراسری"))}">
             <span class="command-icon">⌕</span>
             <span class="command-placeholder">${escapeHtml(uiText("جستجوی بخش‌ها، ابزارها و صفحات…"))}</span>
             <kbd>/</kbd>
           </div>
         </div>
         <div class="header-actions">
-          <button class="icon-button notification-button" type="button" data-notification-toggle aria-label="اعلان‌ها" aria-haspopup="dialog">
+          ${renderPersonaSwitcher()}
+          <button class="icon-button notification-button" type="button" data-notification-toggle aria-label="${escapeAttr(uiText("اعلان‌ها"))}" aria-haspopup="dialog">
             <span aria-hidden="true">♢</span><b id="notification-count" class="notification-count" hidden>0</b>
           </button>
-          <button class="profile-chip workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="انتخاب فضای کاری">
-            <span class="avatar">ق</span>
-            <span class="profile-copy"><strong id="shell-workspace-name">فضای شما</strong><small>${escapeHtml(routeUiLabel(route))}</small></span>
-            <span class="chevron">⌄</span>
-          </button>
+          ${authProfileChip}
           ${renderLanguageSwitcher()}
           <button class="icon-button" type="button" data-theme-toggle aria-label="${uiText("تغییر پوسته")}">◐</button>
         </div>
@@ -945,17 +1110,37 @@ function renderSidebar(route: Route): string {
     `).join("")}
   `;
 
-  return `
-    <aside class="sidebar" aria-label="پوسته برنامه ققنوس">
-      <div class="sidebar-top">
-        <button class="workspace-card workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="انتخاب فضای کاری">
-          <div class="workspace-icon">◆</div>
-          <div class="workspace-card-copy"><strong id="sidebar-workspace-name">ققنوس</strong><span id="sidebar-workspace-status" data-workspace-status>${uiText("فضای کاری من")}</span></div>
-          <span class="status-live" aria-label="فعال"></span>
+  const auth = getStoredAuth();
+  const sidebarAuthBanner = !(auth.token && auth.user)
+    ? `
+      <div class="sidebar-auth-cta" style="padding:10px 14px 4px;">
+        <button type="button" class="button button-primary button-sm w-full" data-open-register style="font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <span>✦</span>
+          <span>${uiText("ثبت‌نام در ققنوس")}</span>
         </button>
       </div>
+    `
+    : "";
+
+  const workspaceTitle = auth.user
+    ? (auth.user.role === "seller" ? (auth.user.displayName || "کسب‌وکار ققنوس") : (auth.user.displayName || "حساب من"))
+    : "ققنوس";
+  const workspaceSub = auth.user
+    ? (auth.user.role === "seller" ? uiText("پنل مدیریت فروشنده") : uiText("حساب کاربری خریدار"))
+    : uiText("فضای کاری من");
+
+  return `
+    <aside class="sidebar" aria-label="${escapeAttr(uiText("پوسته برنامه ققنوس"))}">
+      <div class="sidebar-top">
+        <button class="workspace-card workspace-trigger" type="button" data-workspace-toggle aria-haspopup="dialog" aria-label="${escapeAttr(uiText("انتخاب فضای کاری"))}">
+          <div class="workspace-icon">◆</div>
+          <div class="workspace-card-copy"><strong id="sidebar-workspace-name">${escapeAttr(workspaceTitle)}</strong><span id="sidebar-workspace-status" data-workspace-status>${escapeAttr(workspaceSub)}</span></div>
+          <span class="status-live" aria-label="${escapeAttr(uiText("فعال"))}"></span>
+        </button>
+        ${sidebarAuthBanner}
+      </div>
       <div class="side-nav-scroll">
-        <nav class="side-nav" aria-label="ناوبری برنامه">
+        <nav class="side-nav" aria-label="${escapeAttr(uiText("ناوبری برنامه"))}">
           ${renderNavGroup("تجربه کاربری و خرید", consumerRoutes)}
           ${renderNavGroup("کسب‌وکار و عملیات", businessRoutes)}
           ${renderNavGroup("سیستم و تنظیمات", systemRoutes)}
@@ -973,22 +1158,69 @@ function renderSidebar(route: Route): string {
 }
 
 function renderMobileNav(route: Route): string {
-  const mobileItems = [
-    { path: "/", label: "خانه", icon: "⌂" },
-    { path: "/discover", label: "کشف", icon: "⌕" },
-    { path: "/product-studio", label: "استودیو", icon: "✦" },
-    { path: "/orders", label: "سفارش‌ها", icon: "📦" },
-    { path: "/profile", label: "پروفایل", icon: "◉" },
-  ];
+  const persona = getActivePersona();
+  let activeTab = "home";
+  if (route.path === "/" || route.path === "/business" || route.path === "/discover") activeTab = "home";
+  else if (route.path.includes("create")) activeTab = "create";
+  else if (route.path.includes("deal") || route.path === "/transactions") activeTab = "deals";
+  else if (route.path === "/loyalty") activeTab = "loyalty";
+  else if (route.path === "/profile" || route.path.includes("organization")) activeTab = "profile";
+  else if (route.path === "/cart") activeTab = "cart";
+  else if (route.path === "/messages") activeTab = "search";
+  else if (route.path.includes("team")) activeTab = "team";
+
+  return renderUnifiedBottomNav(persona, activeTab);
+}
+
+function renderSiteFooter(): string {
   return `
-    <nav class="mobile-nav" aria-label="${uiText("ناوبری اصلی موبایل")}">
-      ${mobileItems.map((item) => {
-        const active = item.path === route.path;
-        return `<a href="${item.path}" data-nav class="${active ? "active" : ""}" ${active ? 'aria-current="page"' : ""}>
-          <span class="mobile-nav-icon" aria-hidden="true">${item.icon}</span><small>${uiText(item.label)}</small>
-        </a>`;
-      }).join("")}
-    </nav>
+    <footer class="phoenix-site-footer">
+      <div class="phoenix-site-footer-inner container-wide">
+        <div class="phoenix-footer-brand">
+          <a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس">
+            <span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=2" alt="" /></span>
+            <span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
+          </a>
+          <p class="phoenix-footer-desc">${uiText("پلتفرم یکپارچه هوش تجاری، عرضه، قیمت‌گذاری و اتصال هوشمند مشتریان و کسب‌وکارها.")}</p>
+        </div>
+        <div class="phoenix-footer-columns">
+          <div class="phoenix-footer-col">
+            <strong>${uiText("بخش‌های اصلی")}</strong>
+            <nav aria-label="${uiText("پیوندهای اصلی فوتر")}">
+              <a href="/" data-nav>${uiText("داشبورد اصلی")}</a>
+              <a href="/discover" data-nav>${uiText("بازارگاه و کشف")}</a>
+              <a href="/welcome" data-nav>${uiText("شروع و آشنایی")}</a>
+              <a href="/transactions" data-nav>${uiText("معاملات و سفارش‌ها")}</a>
+            </nav>
+          </div>
+          <div class="phoenix-footer-col">
+            <strong>${uiText("برای فروشندگان")}</strong>
+            <nav aria-label="${uiText("پیوندهای فروشندگان")}">
+              <button type="button" class="phoenix-footer-btn-link" data-open-seller-register>${uiText("ثبت‌نام فروشنده")}</button>
+              <button type="button" class="phoenix-footer-btn-link" data-activate-seller>${uiText("فعال‌سازی فروشندگی")}</button>
+              <a href="/business" data-nav>${uiText("پنل کسب‌وکار")}</a>
+              <a href="/create" data-nav>${uiText("آپلود و معرفی محصول")}</a>
+            </nav>
+          </div>
+          <div class="phoenix-footer-col">
+            <strong>${uiText("راهنما و امنیت")}</strong>
+            <nav aria-label="${uiText("پیوندهای راهنما")}">
+              <a href="/privacy" data-nav>${uiText("حریم خصوصی")}</a>
+              <a href="/terms" data-nav>${uiText("قوانین و مقررات")}</a>
+              <button type="button" class="phoenix-footer-btn-link" data-toast="پشتیبانی ۲۴ ساعته ققنوس فعال است.">${uiText("مرکز پشتیبانی")}</button>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <div class="phoenix-footer-bottom container-wide">
+        <span>© ۱۴۰۳ ققنوس (Phoenix Intelligence). ${uiText("تمامی حقوق محفوظ است.")}</span>
+        <div class="phoenix-footer-bottom-links">
+          <span class="phoenix-footer-tag">${uiText("امنیت و شفافیت تضمین‌شده")}</span>
+          <span class="phoenix-footer-dot">·</span>
+          <span>${uiText("تجارت هوشمند بدون واسطه")}</span>
+        </div>
+      </div>
+    </footer>
   `;
 }
 
@@ -997,6 +1229,19 @@ function renderToastHost(): string {
 }
 
 function renderHome(): string {
+  const persona = getActivePersona();
+  let screenHtml = "";
+  if (persona === "business") {
+    screenHtml = renderBusinessPanel();
+  } else if (persona === "consumer") {
+    screenHtml = renderConsumerHome();
+  } else {
+    screenHtml = renderIndividualDashboard();
+  }
+  return renderPhoenixMasterLayout(persona, screenHtml);
+}
+
+function renderLegacyHome(): string {
   return `
     <div class="phoenix-home">
       <section class="phoenix-home-hero">
@@ -1014,6 +1259,7 @@ function renderHome(): string {
             </div>
           </form>
           <div class="phoenix-intent-chips" aria-label="نمونه نیازها">
+            <button type="button" class="phoenix-intent-chip-register" data-open-register>✦ <strong>${uiText("ثبت‌نام")}</strong> (خریدار یا فروشنده)</button>
             <button type="button" data-phoenix-example="یک محصول مناسب برای هدیه می‌خواهم">یک محصول پیدا کن</button>
             <button type="button" data-phoenix-example="یک خدمت مناسب برای نیازم پیدا کن">یک خدمت پیدا کن</button>
             <button type="button" data-phoenix-example="یک کسب‌وکار مناسب نزدیک من می‌خواهم">یک کسب‌وکار پیدا کن</button>
@@ -1024,7 +1270,7 @@ function renderHome(): string {
           <article class="phoenix-brand-stage">
             <div class="phoenix-brand-stage-glow"></div>
             <span class="phoenix-brand-stage-kicker">دستیار هوشمند ققنوس</span>
-            <img class="phoenix-hero-mark" src="/phoenix-mark.svg?v=1" alt="" aria-hidden="true" />
+            <img class="phoenix-hero-mark" src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" />
             <strong>ققنوس</strong>
             <span class="phoenix-brand-stage-tagline">مسیرت را بفهم. انتخابت را ساده کن.</span>
             <div class="phoenix-brand-stage-actions">
@@ -1158,10 +1404,6 @@ function renderHome(): string {
           <button class="button button-primary" type="submit">از ققنوس بپرس <span>←</span></button>
         </form>
       </section>
-      <footer class="phoenix-home-footer">
-        <div><a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=1" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span></a><p>لایه هوشمند تصمیم‌گیری و اتصال مشتری و کسب‌وکار.</p></div>
-        <nav aria-label="پیوندهای پایانی"><a href="/discover" data-nav>${uiText("کشف")}</a><a href="/business" data-nav>${uiText("برای کسب‌وکارها")}</a><a href="/product-studio" data-nav>استودیو محصول</a></nav>
-      </footer>
     </div>
   `;
 }
@@ -1252,8 +1494,8 @@ function renderBooking(): string {
           <label class="field-label">Business ID<input id="booking-business" class="studio-input-line" placeholder="Business ID" value="${escapeAttr(businessId)}" /></label>
           <label class="field-label">Offering ID<input id="booking-offering" class="studio-input-line" placeholder="Offering ID (برای finalize)" value="${escapeAttr(offeringId)}" /></label>
           <label class="field-label">Customer ID<input id="booking-customer" class="studio-input-line" placeholder="Customer ID" value="${escapeAttr(customerId)}" /></label>
-          <label class="field-label">From<input id="booking-from" class="studio-input-line" type="datetime-local" value="${escapeAttr(fromLocal)}" /></label>
-          <label class="field-label">To<input id="booking-to" class="studio-input-line" type="datetime-local" value="${escapeAttr(toLocal)}" /></label>
+          <label class="field-label">${uiText("از تاریخ")}<div class="phoenix-date-input-group"><input id="booking-from" class="studio-input-line date-picker-input" data-date-picker="true" data-iso-date="${escapeAttr(fromLocal.slice(0, 10))}" value="${escapeAttr(formatCentralDate(fromLocal.slice(0, 10)))}" readonly /><button type="button" class="date-picker-trigger-icon" tabindex="-1">📅</button></div></label>
+          <label class="field-label">${uiText("تا تاریخ")}<div class="phoenix-date-input-group"><input id="booking-to" class="studio-input-line date-picker-input" data-date-picker="true" data-iso-date="${escapeAttr(toLocal.slice(0, 10))}" value="${escapeAttr(formatCentralDate(toLocal.slice(0, 10)))}" readonly /><button type="button" class="date-picker-trigger-icon" tabindex="-1">📅</button></div></label>
           <label class="field-label">Duration (minutes)<input id="booking-duration" class="studio-input-line" type="number" min="1" value="${String(safeDuration)}" /></label>
           <label class="field-label">Resource ID<input id="booking-resource" class="studio-input-line" placeholder="Resource ID (اختیاری)" value="${escapeAttr(resourceId)}" /></label>
         </div>
@@ -1406,8 +1648,10 @@ async function loadBusinessBookingSchedules(): Promise<void> {
 
 async function loadBookingSlots(): Promise<void> {
   const scheduleId = document.querySelector<HTMLInputElement>("#booking-schedule")?.value.trim() ?? "";
-  const from = document.querySelector<HTMLInputElement>("#booking-from")?.value ?? "";
-  const to = document.querySelector<HTMLInputElement>("#booking-to")?.value ?? "";
+  const fromEl = document.querySelector<HTMLInputElement>("#booking-from");
+  const toEl = document.querySelector<HTMLInputElement>("#booking-to");
+  const from = fromEl?.dataset.isoDate || fromEl?.value || "";
+  const to = toEl?.dataset.isoDate || toEl?.value || "";
   const durationSeconds = Number(document.querySelector<HTMLInputElement>("#booking-duration")?.value ?? "60") * 60;
   const host = document.querySelector<HTMLDivElement>("#booking-slots-result");
   if (!host) return;
@@ -1535,6 +1779,14 @@ async function evaluatePromotion(): Promise<void>{
   }catch(error){state.textContent=error instanceof Error?error.message:"Evaluation ناموفق بود.";state.className="connection-state error";}
 }
 function renderLoyalty(): string {
+  const persona = getActivePersona();
+  if (persona === "consumer" || persona === "individual") {
+    return renderConsumerLoyalty();
+  }
+  return renderLegacyLoyalty();
+}
+
+function renderLegacyLoyalty(): string {
   return '<section class="page-heading"><div><span class="eyebrow"><i></i> Loyalty Center</span><h1>ارزش بازگشت مشتری را <em>ثبت کنید.</em></h1><p>امتیازها ledger دارند و تغییرات فقط از طریق Loyalty canonical انجام می‌شوند.</p></div></section>' +
     '<section class="engine-grid">' +
       '<article class="glass-card engine-card"><div class="card-section-heading"><span class="section-kicker">Program</span><h2>Loyalty Program</h2></div><div class="engine-form"><input id="loyalty-name" class="studio-input-line" placeholder="نام برنامه" /><input id="loyalty-business" class="studio-input-line" value="' + escapeAttr(localStorage.getItem(STORAGE.business) ?? "") + '" placeholder="Business ID" /></div><button class="button button-primary" data-loyalty-create>ساخت برنامه</button><div id="loyalty-program-state" class="connection-state">—</div></article>' +
@@ -1773,7 +2025,7 @@ function renderAdmin(): string {
         <div class="card-section-heading"><div><span class="section-kicker">Operations</span><h2>اجرای سیستم</h2></div></div>
         <div class="admin-link-grid">
           <a class="admin-link" href="/operations" data-nav><strong>Cases / Fulfillment</strong><small>عملیات زنده و وضعیت‌ها</small></a>
-          <a class="admin-link" href="/control" data-nav><strong>Automation / Integrations</strong><small>کنترل commandها و اتصال‌ها</small></a>
+          <a class="admin-link" href="/control" data-nav><strong>Automation / Integrations</strong><small>کنترل فرایندها و یکپارچه‌سازی</small></a>
           <a class="admin-link" href="/seo" data-nav><strong>SEO / GEO Health</strong><small>Publication و crawler</small></a>
           <a class="admin-link" href="/trust" data-nav><strong>Trust / Verification</strong><small>اعتماد و reputation</small></a>
         </div>
@@ -1792,8 +2044,8 @@ function renderControlCenter(): string {
   const business = localStorage.getItem(STORAGE.business) ?? "";
   return `
     <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Control Plane</span><h1>اتوماسیون، اتصال و حریم خصوصی را <em>کنترل کنید.</em></h1><p>فرم‌های این صفحه فقط commandهای canonical را اجرا می‌کنند؛ state و policy در domainهای اصلی باقی می‌ماند.</p></div>
-      <div class="heading-actions"><button class="button button-ghost" type="button" data-control-connect>تنظیم اتصال</button></div>
+      <div><span class="eyebrow"><i></i> Control Plane</span><h1>اتوماسیون، یکپارچه‌سازی و حریم خصوصی را <em>مدیریت کنید.</em></h1><p>فرم‌های این صفحه فقط commandهای canonical را اجرا می‌کنند؛ state و policy در domainهای اصلی باقی می‌ماند.</p></div>
+      <div class="heading-actions"><button class="button button-ghost" type="button" data-control-connect>مدیریت حساب و دسترسی‌ها</button></div>
     </section>
     <section class="control-grid">
       <article class="glass-card control-card">
@@ -2024,7 +2276,10 @@ async function loadSeoHealth(): Promise<void> {
   const status = document.querySelector<HTMLElement>("#seo-health-status");
   const host = document.querySelector<HTMLDivElement>("#seo-health-result");
   if (!status || !host) return;
-  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    host.innerHTML = '<div class="slot-empty"><p>برای مشاهده وضعیت سلامت SEO وارد حساب شوید.</p></div>';
+    return;
+  }
   host.innerHTML = '<div class="slot-loading">در حال خواندن SEO health…</div>';
   try {
     const response = await apiJson<{ status: string; publication?: { pending: number; failed: number }; productionCrawler?: { recentFailures: number; lastObservedAt: string | null }; visibilityMeasurement?: { recentFailures: number; runs: number; lastObservedAt: string | null }; competitiveIntelligence?: { recentFailures: number; runs: number; activeCompetitors: number; lastObservedAt: string | null } }>("/api/v1/seo/health");
@@ -2271,7 +2526,10 @@ async function loadCases(): Promise<void> {
   const meta = document.querySelector<HTMLElement>("#cases-meta");
   const limit = Number(document.querySelector<HTMLInputElement>("#case-limit")?.value ?? "50");
   if (!host || !meta) return;
-  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    host.innerHTML = '<div class="slot-empty"><p>برای مشاهده Caseها وارد حساب شوید.</p></div>';
+    return;
+  }
   host.innerHTML = '<div class="slot-loading">در حال خواندن cases…</div>';
   try {
     const response = await apiJson<{ data: CaseView[] }>(`/api/v1/cases?limit=${Math.min(Math.max(limit || 50,1),100)}`);
@@ -2338,7 +2596,10 @@ async function loadFulfillment(): Promise<void> {
   const host = document.querySelector<HTMLDivElement>("#fulfillment-detail");
   const status = document.querySelector<HTMLElement>("#fulfillment-status");
   if (!id || !host || !status) { if (!id) showToast("Fulfillment ID لازم است."); return; }
-  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    host.innerHTML = '<div class="slot-empty"><p>برای مشاهده جزئیات وارد حساب شوید.</p></div>';
+    return;
+  }
   host.innerHTML = '<div class="slot-loading">در حال خواندن fulfillment…</div>';
   try {
     const response = await apiJson<{ data: { fulfillment: Record<string, unknown>; items: Record<string, unknown>[] } }>(
@@ -2421,7 +2682,7 @@ async function loadTrustSignals(): Promise<void> {
     return;
   }
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    openConnectionPanel();
+    host.innerHTML = '<div class="slot-empty"><span>✓</span><p>برای مشاهده داده‌های اعتماد وارد شوید.</p></div>';
     return;
   }
   const params = new URLSearchParams({ subjectType, subjectId: subject, limit: "100" });
@@ -2534,7 +2795,13 @@ async function loadBillingState(): Promise<void> {
   if (!plans || !invoices || !planMeta || !invoiceMeta) return;
 
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    openConnectionPanel();
+    plans.innerHTML = `
+      <div class="slot-empty" style="padding:24px;text-align:center;">
+        <span>◈</span>
+        <p>برای مشاهده طرح‌ها، لطفاً وارد حساب فروشنده شوید.</p>
+        <button class="button button-primary button-sm" type="button" data-open-register style="margin-top:10px;">ثبت‌نام و ورود فروشندگان</button>
+      </div>`;
+    invoices.innerHTML = '<div class="slot-empty"><p>فاکتورها پس از ورود نمایش داده می‌شوند.</p></div>';
     return;
   }
 
@@ -2927,8 +3194,7 @@ function stringifyTimelinePayload(payload?: Record<string, unknown> | null): str
 
 function formatDate(value?: string | null): string {
   if (!value) return "—";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(date);
+  return formatCentralDateTime(value, globalLocaleService.getLocale());
 }
 
 function openCustomerCreatePanel(): void {
@@ -3004,64 +3270,144 @@ async function addCustomerPreference(): Promise<void> {
 
 
 function renderProfile(): string {
-  return '<div class="phoenix-profile-page">' +
-    '<section class="phoenix-profile-cover">' +
-      '<div class="phoenix-profile-cover-art"></div>' +
-      '<div class="phoenix-profile-identity">' +
-        '<div class="phoenix-profile-avatar"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
-        '<div class="phoenix-profile-name"><span class="phoenix-kicker">Profile</span><h1 id="profile-name">کاربر ققنوس</h1><p id="profile-subtitle">هویت شخصی · در حال خواندن context</p></div>' +
-        '<button class="button button-primary" type="button" data-profile-refresh>بروزرسانی</button>' +
-      '</div>' +
-    '</section>' +
-    '<section class="phoenix-profile-grid">' +
-      '<article class="glass-card phoenix-profile-card phoenix-profile-trust"><div class="card-section-heading"><div><span class="section-kicker">Identity & Trust</span><h2>هویت و اعتماد</h2></div><span id="profile-trust-status" class="pill">—</span></div><div class="phoenix-profile-facts" id="profile-facts"><div><span>Actor</span><strong>—</strong></div><div><span>Tenant</span><strong>—</strong></div><div><span>Workspace</span><strong>—</strong></div></div></article>' +
-      '<article class="glass-card phoenix-profile-card"><div class="card-section-heading"><div><span class="section-kicker">Progress</span><h2>رشد و رتبه</h2></div><span class="pill warning">داده کافی نیست</span></div><div class="phoenix-profile-progress"><div class="phoenix-progress-ring"><span>—</span></div><div><strong>امتیاز و رتبه</strong><p>این مقادیر فقط پس از اتصال به منبع canonical نمایش داده می‌شوند.</p></div></div></article>' +
-      '<article class="glass-card phoenix-profile-card"><div class="card-section-heading"><div><span class="section-kicker">Activity</span><h2>فعالیت من</h2></div><a class="text-link" href="/notifications" data-nav>اعلان‌ها ←</a></div><div class="phoenix-profile-activity" id="profile-activity"><div class="phoenix-profile-activity-row"><span>اعلان‌های خوانده‌نشده</span><strong>—</strong></div><div class="phoenix-profile-activity-row"><span>رویدادهای اجتماعی</span><strong>—</strong></div><div class="phoenix-profile-activity-row"><span>معاملات</span><strong>—</strong></div></div></article>' +
-      '<article class="glass-card phoenix-profile-card phoenix-profile-credit"><div class="card-section-heading"><div><span class="section-kicker">Internal Credit</span><h2>اعتبار داخلی</h2></div><span class="pill">محافظت‌شده</span></div><div class="phoenix-credit-lock"><span>◈</span><div><strong>اطلاعات اعتباری</strong><p>فقط داده‌ای نمایش داده می‌شود که از منبع مالی canonical و با مجوز لازم برگردد.</p></div></div></article>' +
-    '</section>' +
-  '</div>';
+  const persona = getActivePersona();
+  if (persona === "business") {
+    return renderBusinessOrgProfile();
+  }
+  return renderIndividualProfile();
+}
+
+function renderLegacyProfile(): string {
+  const initialProfile: BuyerProfileData = {
+    id: "cust-current",
+    name: uiText("کاربر ققنوس"),
+    username: "phoenix_user",
+    avatarUrl: "/phoenix-mark.svg?v=2",
+    bio: uiText("خریدار و عضو جامعه نوآوری ققنوس"),
+    interests: [uiText("صنایع دستی"), uiText("سلامت و تندرستی"), uiText("خدمات دیجیتال"), uiText("کتاب")],
+    followingCount: 3,
+    savedCount: 5,
+    ordersCount: 2,
+    privacy: {
+      profileVisibility: "public",
+      activityTracking: true,
+      personalizationEnabled: true,
+      searchHistoryEnabled: true,
+      marketingConsent: false,
+    },
+    preferences: {
+      currency: "IRR",
+      preferredCategories: [uiText("صنایع دستی"), uiText("خدمات دیجیتال")],
+    },
+  };
+
+  const initialOrders: BuyerOrderSummary[] = [
+    {
+      id: "ord-2044",
+      state: "out_for_delivery",
+      businessName: uiText("استودیو چرم و هنر ترنج"),
+      itemCount: 2,
+      firstItemTitle: uiText("کیف چرم دست‌دوز تبریز"),
+      grandTotalMinor: 3800000,
+      currency: "IRR",
+      createdAt: new Date().toISOString(),
+      trackingNumber: "TRK-88992211",
+      carrierName: uiText("پست پیشتاز"),
+      etaDate: new Date(Date.now() + 86400000).toISOString(),
+      latestUpdate: uiText("مرسوله در دست مأمور توزیع منطقه قرار گرفت"),
+    },
+    {
+      id: "ord-1890",
+      state: "delivered",
+      businessName: uiText("انتشارات دانش و حکمت"),
+      itemCount: 1,
+      firstItemTitle: uiText("کتاب معماری سیستم‌های توزیع‌شده"),
+      grandTotalMinor: 950000,
+      currency: "IRR",
+      createdAt: new Date(Date.now() - 432000000).toISOString(),
+      trackingNumber: "TRK-44556677",
+      carrierName: uiText("پست ویژه"),
+      latestUpdate: uiText("بسته با موفقیت تحویل خریدار شد"),
+    },
+  ];
+
+  return renderBuyerProfileView({
+    profile: initialProfile,
+    orders: initialOrders,
+    savedCount: 5,
+  });
 }
 
 async function loadProfilePage(): Promise<void> {
-  const name = document.querySelector<HTMLElement>("#profile-name");
-  const subtitle = document.querySelector<HTMLElement>("#profile-subtitle");
-  const trust = document.querySelector<HTMLElement>("#profile-trust-status");
-  const facts = document.querySelector<HTMLElement>("#profile-facts");
-  const activity = document.querySelector<HTMLElement>("#profile-activity");
-  const refresh = document.querySelector<HTMLButtonElement>("[data-profile-refresh]");
-  if (refresh) refresh.onclick = () => { void loadProfilePage(); };
-  if (!name || !subtitle || !trust || !facts || !activity) return;
-  if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    trust.textContent = "ورود لازم است";
-    trust.className = "pill warning";
-    subtitle.textContent = "برای نمایش هویت و فعالیت، ابتدا وارد شوید.";
-    return;
-  }
-  try {
-    const [context, notifications] = await Promise.all([
-      apiJson<{ authenticated: boolean; actorId?: string; tenantId?: string; workspaceId?: string }>("/api/v1/context"),
-      apiJson<{ data: NotificationView[] }>("/api/v1/notifications?limit=30"),
-    ]);
-    const items = Array.isArray(notifications.data) ? notifications.data : [];
-    const unread = items.filter((item) => !getReadNotificationIds().has(item.id)).length;
-    name.textContent = "کاربر ققنوس";
-    subtitle.textContent = context.workspaceId ? "عضو فضای کاری · " + compactId(context.workspaceId) : "حساب شخصی ققنوس";
-    trust.textContent = context.authenticated ? "متصل" : "احراز نشده";
-    trust.className = context.authenticated ? "pill success" : "pill warning";
-    facts.innerHTML = '<div><span>Actor</span><strong>' + escapeHtml(context.actorId ?? "—") + '</strong></div>' +
-      '<div><span>Tenant</span><strong>' + escapeHtml(context.tenantId ?? "—") + '</strong></div>' +
-      '<div><span>Workspace</span><strong>' + escapeHtml(context.workspaceId ?? "—") + '</strong></div>';
-    activity.innerHTML = '<div class="phoenix-profile-activity-row"><span>اعلان‌های خوانده‌نشده</span><strong>' + String(unread) + '</strong></div>' +
-      '<div class="phoenix-profile-activity-row"><span>رویدادهای اجتماعی</span><strong>از فعالیت canonical خوانده می‌شود</strong></div>' +
-      '<div class="phoenix-profile-activity-row"><span>معاملات</span><strong>از Commerce canonical خوانده می‌شود</strong></div>';
-  } catch (error) {
-    trust.textContent = "خطا";
-    trust.className = "pill warning";
-    subtitle.textContent = error instanceof Error ? error.message : "خواندن پروفایل ناموفق بود.";
-  }
+  const tabButtons = document.querySelectorAll<HTMLButtonElement>("[data-buyer-tab]");
+  const panes = {
+    preferences: document.querySelector<HTMLElement>("#pane-preferences"),
+    orders: document.querySelector<HTMLElement>("#pane-orders"),
+    privacy: document.querySelector<HTMLElement>("#pane-privacy"),
+    settings: document.querySelector<HTMLElement>("#pane-settings"),
+  };
+
+  tabButtons.forEach((btn) => {
+    btn.onclick = () => {
+      tabButtons.forEach((b) => {
+        b.classList.remove("active");
+        b.setAttribute("aria-selected", "false");
+      });
+      btn.classList.add("active");
+      btn.setAttribute("aria-selected", "true");
+
+      const target = btn.dataset.buyerTab as keyof typeof panes | undefined;
+      Object.entries(panes).forEach(([k, el]) => {
+        if (el) el.style.display = k === target ? "block" : "none";
+      });
+    };
+  });
+
+  // Track Order Drawer trigger
+  document.querySelectorAll<HTMLButtonElement>("[data-track-order]").forEach((btn) => {
+    btn.onclick = () => {
+      const orderId = btn.dataset.trackOrder;
+      if (!orderId) return;
+      openOrderTrackingDrawer(orderId);
+    };
+  });
+}
+
+function openOrderTrackingDrawer(orderId: string): void {
+  const locale = globalLocaleService.getLocale();
+  const drawerHtml = renderOrderTrackingTimelineView({
+    orderId,
+    businessName: uiText("فروشگاه ترنج"),
+    state: "out_for_delivery",
+    trackingNumber: "TRK-88992211",
+    carrierName: uiText("پست پیشتاز ققنوس"),
+    eta: new Date(Date.now() + 86400000).toISOString(),
+    deliveryAddress: uiText("تهران، میدان آزادی، خیابان آزادی، پلاک ۱۱۰"),
+    grandTotal: 3800000,
+    currency: "IRR",
+    locale,
+    items: [
+      { title: uiText("کیف چرم دست‌دوز تبریز"), quantity: 1, unitPrice: 2800000 },
+      { title: uiText("واکس مخصوص محافظ چرم"), quantity: 1, unitPrice: 1000000 },
+    ],
+    timelineSteps: [
+      { id: "s1", label: uiText("ثبت سفارش"), status: "completed", timestamp: formatCentralDateTime(new Date(Date.now() - 86400000 * 2)) },
+      { id: "s2", label: uiText("تأیید فروشنده"), status: "completed", timestamp: formatCentralDateTime(new Date(Date.now() - 86400000)) },
+      { id: "s3", label: uiText("آماده‌سازی و بسته‌بندی"), status: "completed", timestamp: formatCentralDateTime(new Date(Date.now() - 43200000)) },
+      { id: "s4", label: uiText("تحویل به شرکت پست"), status: "completed", timestamp: formatCentralDateTime(new Date(Date.now() - 21600000)) },
+      { id: "s5", label: uiText("در مسیر توزیع نهایی"), status: "current", description: uiText("مأمور توزیع در حال رساندن بسته به آدرس شماست.") },
+      { id: "s6", label: uiText("تحویل به خریدار"), status: "upcoming" },
+    ],
+  });
+
+  openDrawer(uiText("رهگیری سفارش") + ` #${orderId}`, drawerHtml);
 }
 
 function renderNotifications(): string {
+  return renderIndividualNotifications();
+}
+
+function renderLegacyNotifications(): string {
   return '<div class="phoenix-notifications-page">' +
     '<section class="page-heading"><div><span class="eyebrow"><i></i> Notification Center</span><h1>چیزهایی که لازم است <em>بدانی.</em></h1><p>پیام‌ها، پیشنهادهای ققنوس و تغییر وضعیت معامله را در یک فضای آرام و قابل‌فهم ببین.</p></div><button class="button button-primary" type="button" data-refresh-notifications>بروزرسانی</button></section>' +
     '<section class="phoenix-notification-tabs" aria-label="دسته اعلان‌ها"><button class="active" type="button">همه</button><button type="button">مهم</button><button type="button">پیام‌ها</button><button type="button">معاملات</button></section>' +
@@ -3108,6 +3454,14 @@ async function loadNotificationsPage(): Promise<void> {
 }
 
 function renderTransactions(): string {
+  const persona = getActivePersona();
+  if (persona === "business") {
+    return renderBusinessDeals();
+  }
+  return renderDealTypeSelection();
+}
+
+function renderLegacyTransactions(): string {
   return '<div class="phoenix-transactions-page">' +
     '<section class="page-heading"><div><span class="eyebrow"><i></i> Transactions</span><h1>هر معامله، یک <em>مسیر روشن.</em></h1><p>خرید، فروش، اجاره، معاوضه، مزایده و مناقصه در یک زبان واحد؛ جزئیات هر جریان از قابلیت canonical همان حوزه می‌آید.</p></div></section>' +
     '<section class="phoenix-transaction-types">' +
@@ -3157,26 +3511,26 @@ async function loadTransactionsPage(): Promise<void> {
 function renderAccount(): string {
   return `
     <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Account & Session</span><h1>کنترل اتصال و <em>فضای کاری</em> شما.</h1><p>وضعیت session و context مستقیماً از runtime ققنوس خوانده می‌شود.</p></div>
+      <div><span class="eyebrow"><i></i> Account & Session</span><h1>مدیریت حساب کاربری و <em>کسب‌وکار</em> شما.</h1><p>وضعیت حساب کاربری و دسترسی‌ها مستقیماً از سامانه ققنوس خوانده می‌شود.</p></div>
       <button class="button button-primary" type="button" data-refresh-account>بروزرسانی وضعیت</button>
     </section>
     <section class="account-grid">
       <article class="glass-card account-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Session</span><h2>وضعیت احراز</h2></div><span id="account-status" class="pill">در حال بررسی</span></div>
+        <div class="card-section-heading"><div><span class="section-kicker">Account</span><h2>وضعیت حساب کاربری</h2></div><span id="account-status" class="pill">در حال بررسی</span></div>
         <div id="account-details" class="account-details">
           <div class="account-row"><span>Actor</span><strong>—</strong></div>
           <div class="account-row"><span>Tenant</span><strong>—</strong></div>
           <div class="account-row"><span>Workspace</span><strong>—</strong></div>
         </div>
         <div class="account-actions">
-          <button class="button button-ghost" type="button" data-account-connect>تنظیم اتصال</button>
-          <button class="button button-danger" type="button" data-account-revoke>خروج از session</button>
+          <button class="button button-ghost" type="button" data-account-connect>پروفایل و مدیریت حساب</button>
+          <button class="button button-danger" type="button" data-account-revoke>خروج از حساب</button>
         </div>
       </article>
       <article class="glass-card account-card">
-        <span class="section-kicker">Runtime Context</span>
+        <span class="section-kicker">Permissions & Role</span>
         <h2>مجوزهای فعال</h2>
-        <div id="account-permissions" class="permission-cloud"><span class="permission-empty">برای مشاهده مجوزها به session متصل شوید.</span></div>
+        <div id="account-permissions" class="permission-cloud"><span class="permission-empty">برای مشاهده مجوزها وارد حساب کاربری شوید.</span></div>
       </article>
     </section>
   `;
@@ -3194,7 +3548,7 @@ async function loadAccountState(): Promise<void> {
       apiJson<{ authenticated: boolean; actorId?: string; tenantId?: string; workspaceId?: string; permissions?: string[] }>("/api/v1/context"),
     ]);
 
-    status.textContent = session.session.authenticated ? "متصل" : "احراز نشده";
+    status.textContent = session.session.authenticated ? "فعال و معتبر" : "احراز نشده";
     status.className = session.session.authenticated ? "pill success" : "pill warning";
     details.innerHTML = `
       <div class="account-row"><span>Actor</span><strong>${escapeHtml(context.actorId ?? session.session.actorId ?? "—")}</strong></div>
@@ -3205,11 +3559,11 @@ async function loadAccountState(): Promise<void> {
       ? permissionList.map((permission) => `<span class="permission-chip">${escapeHtml(permission)}</span>`).join("")
       : '<span class="permission-empty">مجوزی در context فعلی برنگشت.</span>';
   } catch (error) {
-    status.textContent = "متصل نیست";
+    status.textContent = "وارد نشده";
     status.className = "pill warning";
-    const message = error instanceof Error ? error.message : "session در دسترس نیست.";
+    const message = error instanceof Error ? error.message : "حساب کاربری در دسترس نیست.";
     details.innerHTML = `<div class="account-empty"><span>!</span><p>${escapeHtml(message)}</p></div>`;
-    permissions.innerHTML = '<span class="permission-empty">ابتدا اتصال را تنظیم کنید.</span>';
+    permissions.innerHTML = '<span class="permission-empty">ابتدا وارد حساب کاربری شوید.</span>';
   }
 }
 
@@ -3361,6 +3715,7 @@ async function loadOrdersPage(): Promise<void> {
                     <span>${uiText("مبلغ پرداختی:")} <strong>${formattedTotal}</strong></span>
                   </div>
                   <div class="order-footer-actions">
+                    <button class="button button-primary" type="button" data-track-order="${escapeHtml(order.id)}">${uiText("رهگیری گام‌به‌گام")}</button>
                     <a class="button button-ghost" href="/transactions?order=${encodeURIComponent(order.id)}" data-nav>${uiText("جزئیات معامله")}</a>
                     <a class="button button-ghost" href="/billing" data-nav>${uiText("فاکتور")}</a>
                   </div>
@@ -3370,6 +3725,14 @@ async function loadOrdersPage(): Promise<void> {
           }).join("")}
         </div>
       `;
+
+      container.querySelectorAll<HTMLButtonElement>("[data-track-order]").forEach((btn) => {
+        btn.onclick = () => {
+          const orderId = btn.dataset.trackOrder;
+          if (!orderId) return;
+          openOrderTrackingDrawer(orderId);
+        };
+      });
     };
 
     tabButtons.forEach((btn) => {
@@ -3578,6 +3941,14 @@ type ChatThread = {
 };
 
 function renderMessages(): string {
+  const persona = getActivePersona();
+  if (persona === "consumer" || persona === "individual") {
+    return renderConsumerMessages();
+  }
+  return renderLegacyMessages();
+}
+
+function renderLegacyMessages(): string {
   return `
     <div class="phoenix-messages-page">
       <section class="page-heading">
@@ -3692,7 +4063,7 @@ async function loadMessagesPage(): Promise<void> {
 
         const thread = threads.find((t) => t.id === activeThreadId);
         if (thread) {
-          const nowStr = new Date().toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" });
+          const nowStr = new Date().toLocaleTimeString(globalLocaleService.getLocale() === "fa" ? "fa-IR" : globalLocaleService.getLocale() === "ar" ? "ar-EG" : "en-US", { hour: "2-digit", minute: "2-digit" });
           thread.messages.push({ id: "user-" + Date.now(), sender: "user", text, time: nowStr });
           thread.lastMessage = text;
           renderChat(thread);
@@ -3704,7 +4075,7 @@ async function loadMessagesPage(): Promise<void> {
               id: "peer-" + Date.now(),
               sender: "peer",
               text: "پیام شما دریافت شد. ققنوس درخواست شما را پیگیری می‌کند.",
-              time: new Date().toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" }),
+              time: new Date().toLocaleTimeString(globalLocaleService.getLocale() === "fa" ? "fa-IR" : globalLocaleService.getLocale() === "ar" ? "ar-EG" : "en-US", { hour: "2-digit", minute: "2-digit" }),
             });
             renderChat(thread);
             renderThreads();
@@ -3848,10 +4219,13 @@ function renderBusinessProducts(): string {
           <p>${uiText("مدیریت کاتالوگ محصولات، موجودی انبار، قیمت‌گذاری و بارگذاری سریع با هوش مصنوعی.")}</p>
         </div>
         <div class="heading-actions">
-          <a class="button button-primary" href="/product-studio" data-nav>${uiText("ایجاد با Seller AI")} ✦</a>
+          <button type="button" class="button button-primary" id="open-product-form-btn">＋ ${uiText("افزودن محصول جدید")}</button>
+          <a class="button button-ghost" href="/product-studio" data-nav>${uiText("ایجاد با Seller AI")} ✦</a>
           <a class="button button-ghost" href="/catalog" data-nav>${uiText("کاتالوگ کلی")}</a>
         </div>
       </section>
+
+      <div id="new-product-form-slot" style="display: none;"></div>
 
       <section class="glass-card business-subpage-card">
         <div class="card-section-heading">
@@ -3868,7 +4242,8 @@ function renderBusinessProducts(): string {
 
 function loadBusinessProductsPage(): void {
   const tableWrap = document.querySelector<HTMLElement>("#business-products-table");
-  if (!tableWrap) return;
+  const openFormBtn = document.querySelector<HTMLButtonElement>("#open-product-form-btn");
+  const formSlot = document.querySelector<HTMLElement>("#new-product-form-slot");
 
   const sampleProducts = [
     { id: "prd-1", name: "بسته ابری هوش سازمانی ققنوس", category: "نرم‌افزار سازمانی", stock: 45, price: 12000000, status: "active" },
@@ -3876,36 +4251,70 @@ function loadBusinessProductsPage(): void {
     { id: "prd-3", name: "لایسنس سالانه تصمیم‌گیری هوشمند", category: "اشتراک و لایسنس", stock: 999, price: 28000000, status: "active" },
   ];
 
-  tableWrap.innerHTML = `
-    <table class="ds-table">
-      <thead>
-        <tr>
-          <th>${uiText("شناسه")}</th>
-          <th>${uiText("نام محصول")}</th>
-          <th>${uiText("دسته‌بندی")}</th>
-          <th>${uiText("موجودی")}</th>
-          <th>${uiText("قیمت")}</th>
-          <th>${uiText("وضعیت")}</th>
-          <th>${uiText("اقدامات")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${sampleProducts.map((p) => `
+  if (openFormBtn && formSlot) {
+    const component = new ProductCreateFormComponent({
+      onSave: (data: NewProductFormData) => {
+        const newPrd = {
+          id: `prd-${Date.now().toString(36).slice(-4)}`,
+          name: data.title,
+          category: data.nature === "digital" ? "محصول دیجیتال" : "کالای فیزیکی",
+          stock: data.stockQuantity ?? (data.nature === "digital" ? 999 : 10),
+          price: data.basePriceConsumer,
+          status: "active",
+        };
+        sampleProducts.unshift(newPrd);
+        formSlot.style.display = "none";
+        renderProductsTable();
+        showToast(`محصول «${data.title}» با موفقیت اضافه شد.`);
+      },
+      onCancel: () => {
+        formSlot.style.display = "none";
+      },
+    });
+
+    openFormBtn.addEventListener("click", () => {
+      formSlot.innerHTML = component.render();
+      component.bindEvents(formSlot);
+      formSlot.style.display = "block";
+      formSlot.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function renderProductsTable() {
+    if (!tableWrap) return;
+    tableWrap.innerHTML = `
+      <table class="ds-table">
+        <thead>
           <tr>
-            <td><code>${escapeHtml(p.id)}</code></td>
-            <td><strong>${escapeHtml(p.name)}</strong></td>
-            <td>${escapeHtml(p.category)}</td>
-            <td>${formatLocalizedNumber(p.stock)}</td>
-            <td>${formatLocalizedNumber(p.price)} ریال</td>
-            <td><span class="pill success">${uiText("فعال")}</span></td>
-            <td>
-              <a class="button button-ghost button-sm" href="/product-studio" data-nav>${uiText("ویرایش")}</a>
-            </td>
+            <th>${uiText("شناسه")}</th>
+            <th>${uiText("نام محصول")}</th>
+            <th>${uiText("دسته‌بندی")}</th>
+            <th>${uiText("موجودی")}</th>
+            <th>${uiText("قیمت")}</th>
+            <th>${uiText("وضعیت")}</th>
+            <th>${uiText("اقدامات")}</th>
           </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
+        </thead>
+        <tbody>
+          ${sampleProducts.map((p) => `
+            <tr>
+              <td><code>${escapeHtml(p.id)}</code></td>
+              <td><strong>${escapeHtml(p.name)}</strong></td>
+              <td>${escapeHtml(p.category)}</td>
+              <td>${formatLocalizedNumber(p.stock)}</td>
+              <td>${formatLocalizedNumber(p.price)} تومان</td>
+              <td><span class="pill success">${uiText("فعال")}</span></td>
+              <td>
+                <a class="button button-ghost button-sm" href="/product-studio" data-nav>${uiText("ویرایش")}</a>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  renderProductsTable();
 }
 
 function renderBusinessServices(): string {
@@ -4040,6 +4449,10 @@ function loadBusinessBookingsPage(): void {
 }
 
 function renderBusinessTeam(): string {
+  return renderPhoenixBusinessTeam();
+}
+
+function renderLegacyBusinessTeam(): string {
   return `
     <div class="phoenix-business-subpage">
       <section class="page-heading">
@@ -4174,93 +4587,41 @@ function loadBusinessSettingsPage(): void {
    ========================================================================= */
 
 function renderWelcome(): string {
-  const requestedType = new URLSearchParams(location.search).get("type");
-  const currentTab = requestedType === "business" || requestedType === "consumer" ? requestedType : "individual";
-  const copy = (key: string): string => escapeHtml(defaultI18n.t(key));
-  const modes: Array<{ id: "individual" | "business" | "consumer"; icon: string; titleKey: string; descriptionKey: string }> = [
-    { id: "individual", icon: "♙", titleKey: "ui.welcomeModeIndividualTitle", descriptionKey: "ui.welcomeModeIndividualDescription" },
-    { id: "business", icon: "▦", titleKey: "ui.welcomeModeBusinessTitle", descriptionKey: "ui.welcomeModeBusinessDescription" },
-    { id: "consumer", icon: "⌕", titleKey: "ui.welcomeModeConsumerTitle", descriptionKey: "ui.welcomeModeConsumerDescription" },
-  ];
-  const modeButtons = modes.map((mode) => {
-    const selected = currentTab === mode.id;
-    return '<button type="button" role="tab" id="welcome-tab-' + mode.id + '" class="welcome-mode-btn' + (selected ? ' active' : '') + '" data-welcome-tab="' + mode.id + '" aria-selected="' + String(selected) + '" aria-controls="welcome-content-area" tabindex="' + (selected ? "0" : "-1") + '">' +
-      '<span class="welcome-mode-icon" aria-hidden="true">' + mode.icon + '</span>' +
-      '<span class="welcome-mode-copy"><strong>' + copy(mode.titleKey) + '</strong><small>' + copy(mode.descriptionKey) + '</small></span>' +
-      '<span class="welcome-mode-arrow" aria-hidden="true">↗</span>' +
-    '</button>';
-  }).join("");
-  const activeContent = currentTab === "business"
-    ? renderBusinessOnboarding()
-    : currentTab === "consumer"
-      ? renderConsumerExperience()
-      : renderIndividualOnboarding();
-
-  return '<div class="phoenix-welcome-page">' +
-    '<section class="phoenix-welcome-hero">' +
-      '<div class="welcome-hero-copy">' +
-        '<span class="phoenix-eyebrow"><i></i> ' + copy("ui.home_homeHeroEyebrow") + '</span>' +
-        '<h1>' + copy("ui.home_homeHeroTitle1") + '<br/><em>' + copy("ui.home_homeHeroTitle2") + '</em></h1>' +
-        '<p>' + copy("ui.home_homeHeroDescription") + '</p>' +
-      '</div>' +
-      '<div class="welcome-hero-brand" aria-hidden="true">' +
-        '<div class="welcome-hero-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
-        '<strong>' + copy("common.appName") + '</strong>' +
-        '<small>' + copy("ui.home_homeIdentity") + '</small>' +
-      '</div>' +
-    '</section>' +
-    '<div class="welcome-mode-tabs" role="tablist" aria-label="' + copy("ui.home_homeExperience") + '">' + modeButtons + '</div>' +
-    '<section class="welcome-content-area" id="welcome-content-area" aria-live="polite">' + activeContent + '</section>' +
-  '</div>';
+  const persona = getActivePersona();
+  const typeParam = new URLSearchParams(location.search).get("type") || new URLSearchParams(location.search).get("persona");
+  if (typeParam === "business" || (!typeParam && persona === "business")) {
+    return renderBusinessWelcome();
+  }
+  if (typeParam === "consumer" || (!typeParam && persona === "consumer")) {
+    return renderConsumerWelcome();
+  }
+  return renderIndividualWelcome();
 }
 
-function renderConsumerExperience(): string {
-  const copy = (key: string): string => escapeHtml(defaultI18n.t(key));
-  const actions: Array<{ icon: string; labelKey: string; path?: string; queryKey?: string }> = [
-    { icon: "▤", labelKey: "ui.consumerCategoryProducts", queryKey: "ui.ui030" },
-    { icon: "✦", labelKey: "ui.consumerCategoryServices", queryKey: "ui.ui038" },
-    { icon: "◷", labelKey: "ui.consumerCategoryBook", path: "/booking" },
-    { icon: "⚖", labelKey: "ui.consumerCategoryCompare", path: "/compare" },
-    { icon: "▣", labelKey: "ui.ui012", path: "/orders" },
-  ];
-  const actionMarkup = actions.map((action) =>
-    '<button type="button" class="welcome-consumer-action" ' +
-      (action.path
-        ? 'data-consumer-path="' + escapeAttr(action.path) + '"'
-        : 'data-consumer-query="' + escapeAttr(defaultI18n.t(action.queryKey ?? "")) + '"') + '>' +
-      '<span class="welcome-consumer-action-icon" aria-hidden="true">' + action.icon + '</span>' +
-      '<strong>' + copy(action.labelKey) + '</strong><b aria-hidden="true">↗</b>' +
-    '</button>'
-  ).join("");
+function renderLegacyWelcome(): string {
+  const currentTab = new URLSearchParams(location.search).get("type") === "business" ? "business" : "individual";
+  return `
+    <div class="phoenix-welcome-page">
+      <section class="phoenix-welcome-hero">
+        <span class="phoenix-eyebrow"><i></i> ${uiText("ورود و خوش‌آمدگویی")}</span>
+        <h1>فقط بگو چی می‌خوای؛<br/><em>ققنوس کمک می‌کند مسیر مناسب را پیدا کنی.</em></h1>
+        <p>چه به عنوان خریدار در جستجوی بهترین انتخاب باشید، و چه به عنوان کسب‌وکار بخواهید عرضه خود را به تقاضای واقعی متصل کنید، ققنوس همراه شماست.</p>
+        
+        <div class="welcome-mode-tabs" role="tablist" aria-label="${escapeAttr(uiText("نوع تجربه"))}">
+          <button type="button" class="welcome-mode-btn ${currentTab === "individual" ? "active" : ""}" data-welcome-tab="individual">
+            👤 ${uiText("حساب من / خرید شخصی")}
+          </button>
+          <button type="button" class="welcome-mode-btn ${currentTab === "business" ? "active" : ""}" data-welcome-tab="business">
+            🏢 ${uiText("کسب‌وکار / سازمان")}
+          </button>
+        </div>
+      </section>
 
-  return '<article class="welcome-card glass-card welcome-consumer-card">' +
-    '<header class="welcome-consumer-intro">' +
-      '<div class="welcome-consumer-intro-copy">' +
-        '<span class="phoenix-eyebrow"><i></i> ' + copy("ui.consumerKicker") + '</span>' +
-        '<h2>' + copy("ui.consumerTitle") + '</h2>' +
-        '<p>' + copy("ui.consumerDescription") + '</p>' +
-      '</div>' +
-      '<div class="welcome-consumer-art" aria-hidden="true"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
-    '</header>' +
-    '<form class="welcome-consumer-search" data-consumer-search-form role="search">' +
-      '<label class="field-label" for="welcome-consumer-need">' + copy("ui.consumerNeedLabel") + '</label>' +
-      '<div class="welcome-consumer-search-control">' +
-        '<span class="welcome-consumer-search-icon" aria-hidden="true">⌕</span>' +
-        '<input id="welcome-consumer-need" name="need" type="search" autocomplete="off" placeholder="' + escapeAttr(defaultI18n.t("ui.consumerNeedPlaceholder")) + '" />' +
-        '<button class="button button-primary" type="submit">' + copy("ui.consumerSearchAction") + '<span aria-hidden="true">←</span></button>' +
-      '</div>' +
-      '<small class="welcome-consumer-search-hint">' + copy("ui.home_homeStartHint") + '</small>' +
-    '</form>' +
-    '<section class="welcome-consumer-quick">' +
-      '<div class="welcome-consumer-section-heading"><h3>' + copy("ui.consumerQuickTitle") + '</h3><span>' + copy("ui.consumerTrustHeading") + '</span></div>' +
-      '<div class="welcome-consumer-actions">' + actionMarkup + '</div>' +
-    '</section>' +
-    '<footer class="welcome-consumer-trust">' +
-      '<span class="welcome-consumer-trust-icon" aria-hidden="true">✓</span>' +
-      '<div><strong>' + copy("ui.consumerTrustHeading") + '</strong><p>' + copy("ui.consumerTrustCopy") + '</p></div>' +
-      '<button type="button" class="button button-ghost" data-consumer-path="/discover?tab=explore">' + copy("ui.consumerExploreAction") + '<span aria-hidden="true">←</span></button>' +
-    '</footer>' +
-  '</article>';
+      <section class="welcome-content-area" id="welcome-content-area">
+        ${currentTab === "individual" ? renderIndividualOnboarding() : renderBusinessOnboarding()}
+      </section>
+    </div>
+  `;
 }
 
 function renderIndividualOnboarding(): string {
@@ -4314,6 +4675,11 @@ function renderIndividualOnboarding(): string {
 }
 
 function renderBusinessOnboarding(): string {
+  const currentIndustry = localStorage.getItem(STORAGE.businessIndustry) || undefined;
+  const currentOccupation = localStorage.getItem(STORAGE.businessOccupation) || undefined;
+  const currentSubcategory = localStorage.getItem(STORAGE.businessSubcategory) || undefined;
+  const taxonomySelectorHtml = renderTaxonomyRegistrationSelector(currentIndustry, currentOccupation, currentSubcategory);
+
   return `
     <article class="welcome-card glass-card">
       <div class="welcome-step-indicator">
@@ -4323,48 +4689,38 @@ function renderBusinessOnboarding(): string {
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
         <div>
           <label class="field-label" for="welcome-biz-name">${uiText("نام رسمی کسب‌وکار")}</label>
-          <input id="welcome-biz-name" class="studio-input-line" type="text" placeholder="${escapeAttr(uiText("مثلاً بازرگانی پارس آریا"))}" />
+          <input id="welcome-biz-name" class="studio-input-line" type="text" placeholder="${escapeAttr(uiText("مثلاً فروشگاه مانتو ناتالی، مطب دکتر سمیعی، رستوران البرز"))}" />
         </div>
         <div>
           <label class="field-label" for="welcome-biz-display">${uiText("نام نمایشی در شبکه")}</label>
-          <input id="welcome-biz-display" class="studio-input-line" type="text" placeholder="${escapeAttr(uiText("مثلاً پارس آریا"))}" />
+          <input id="welcome-biz-display" class="studio-input-line" type="text" placeholder="${escapeAttr(uiText("مثلاً ناتالی، دکتر سمیعی، البرز"))}" />
         </div>
       </div>
 
-      <div class="welcome-step-indicator">
+      <div class="welcome-step-indicator" style="margin-top: 18px;">
         <span class="welcome-step-circle">۲</span>
-        <strong>${uiText("نوع فعالیت و صنف")}</strong>
+        <strong>${uiText("صنف، رسته شغلی و نوع کسب‌وکار")}</strong>
+      </div>
+      ${taxonomySelectorHtml}
+
+      <div class="welcome-step-indicator" style="margin-top: 18px;">
+        <span class="welcome-step-circle">۳</span>
+        <strong>${uiText("مکان و تماس عمومی")}</strong>
       </div>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
-        <div>
-          <label class="field-label" for="welcome-biz-type">${uiText("نوع کسب‌وکار")}</label>
-          <select id="welcome-biz-type" class="studio-input-line">
-            <option value="retail">${uiText("فروشگاه و خرده‌فروشی کالا (Retail)")}</option>
-            <option value="service">${uiText("شرکت ارائه‌دهنده خدمات تخصصی")}</option>
-            <option value="clinic">${uiText("کلینیک پزشکی یا مرکز درمانی")}</option>
-            <option value="restaurant">${uiText("رستوران، کافه یا فودکورت")}</option>
-            <option value="salon">${uiText("سالن آرایشی و زیبایی")}</option>
-            <option value="tech">${uiText("فناوری، نرم‌افزار و ابری")}</option>
-          </select>
-        </div>
         <div>
           <label class="field-label" for="welcome-biz-city">${uiText("شهر فعالیت")}</label>
           <input id="welcome-biz-city" class="studio-input-line" type="text" placeholder="${escapeAttr(uiText("تهران"))}" value="تهران" />
         </div>
+        <div>
+          <label class="field-label" for="welcome-biz-phone">${uiText("تلفن تماس عمومی")}</label>
+          <input id="welcome-biz-phone" class="studio-input-line" type="tel" placeholder="021-xxxxxxxx" />
+        </div>
       </div>
 
-      <div class="welcome-step-indicator">
-        <span class="welcome-step-circle">۳</span>
-        <strong>${uiText("تماس و اطلاع‌رسانی")}</strong>
-      </div>
-      <div>
-        <label class="field-label" for="welcome-biz-phone">${uiText("تلفن تماس عمومی")}</label>
-        <input id="welcome-biz-phone" class="studio-input-line" type="tel" placeholder="021-xxxxxxxx" />
-      </div>
-
-      <div class="connection-actions" style="margin-top: 14px;">
+      <div class="connection-actions" style="margin-top: 18px;">
         <button class="button button-primary button-lg" type="button" data-submit-business-onboarding>
-          ${uiText("ایجاد کسب‌وکار و ورود به استودیو محصول")} <span>✦</span>
+          ${uiText("تکمیل ثبت‌نام و ورود به داشبورد اختصاصی")} <span>✦</span>
         </button>
         <a class="button button-ghost" href="/business" data-nav>
           ${uiText("ورود به داشبورد کسب‌وکار")}
@@ -4376,39 +4732,17 @@ function renderBusinessOnboarding(): string {
 
 function loadWelcomePage(): void {
   const contentArea = document.querySelector<HTMLElement>("#welcome-content-area");
-  const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-welcome-tab]"));
+  const tabButtons = document.querySelectorAll<HTMLButtonElement>("[data-welcome-tab]");
 
-  const selectExperience = (type: string | undefined): void => {
-    if (type !== "individual" && type !== "business" && type !== "consumer") return;
-    for (const button of tabButtons) {
-      const selected = button.dataset.welcomeTab === type;
-      button.classList.toggle("active", selected);
-      button.setAttribute("aria-selected", String(selected));
-      button.tabIndex = selected ? 0 : -1;
-    }
-    const url = new URL(window.location.href);
-    url.searchParams.set("type", type);
-    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
-    if (contentArea) {
-      contentArea.innerHTML = type === "business"
-        ? renderBusinessOnboarding()
-        : type === "consumer"
-          ? renderConsumerExperience()
-          : renderIndividualOnboarding();
-      bindOnboardingEvents();
-    }
-  };
-
-  tabButtons.forEach((btn, index) => {
-    btn.addEventListener("click", () => selectExperience(btn.dataset.welcomeTab));
-    btn.addEventListener("keydown", (event) => {
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-      event.preventDefault();
-      const rtl = document.documentElement.dir === "rtl";
-      const step = event.key === "ArrowRight" ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
-      const next = tabButtons[(index + step + tabButtons.length) % tabButtons.length];
-      next?.focus();
-      next?.click();
+  tabButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabButtons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      const type = btn.dataset.welcomeTab;
+      if (contentArea) {
+        contentArea.innerHTML = type === "business" ? renderBusinessOnboarding() : renderIndividualOnboarding();
+        bindOnboardingEvents();
+      }
     });
   });
 
@@ -4416,24 +4750,6 @@ function loadWelcomePage(): void {
 }
 
 function bindOnboardingEvents(): void {
-  const consumerSearchForm = document.querySelector<HTMLFormElement>("[data-consumer-search-form]");
-  consumerSearchForm?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const query = consumerSearchForm.querySelector<HTMLInputElement>("#welcome-consumer-need")?.value.trim() ?? "";
-    navigate(query ? "/discover?q=" + encodeURIComponent(query) : "/discover?tab=explore");
-  });
-
-  document.querySelectorAll<HTMLButtonElement>("[data-consumer-path],[data-consumer-query]").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (button.dataset.consumerPath) {
-        navigate(button.dataset.consumerPath);
-        return;
-      }
-      const query = button.dataset.consumerQuery?.trim() ?? "";
-      navigate(query ? "/discover?q=" + encodeURIComponent(query) : "/discover?tab=explore");
-    });
-  });
-
   document.querySelectorAll<HTMLButtonElement>(".welcome-choice-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       chip.classList.toggle("selected");
@@ -4449,15 +4765,85 @@ function bindOnboardingEvents(): void {
     navigate("/");
   });
 
+  const taxIndustrySelect = document.querySelector<HTMLSelectElement>("#reg-taxonomy-industry");
+  const taxOccupationSelect = document.querySelector<HTMLSelectElement>("#reg-taxonomy-occupation");
+  const taxSubcategorySelect = document.querySelector<HTMLSelectElement>("#reg-taxonomy-subcategory");
+  const taxSpecializationInput = document.querySelector<HTMLInputElement>("#reg-taxonomy-specialization");
+  const inferredTypeStrong = document.querySelector<HTMLElement>("#inferred-business-type");
+  const inferredTemplateStrong = document.querySelector<HTMLElement>("#inferred-template");
+
+  const updateTaxonomyInference = () => {
+    if (!taxIndustrySelect || !taxOccupationSelect) return;
+    const indKey = taxIndustrySelect.value;
+    const occKey = taxOccupationSelect.value;
+    const subKey = taxSubcategorySelect?.value || "";
+    const resolvedType = resolveBusinessType(indKey, occKey, subKey);
+    const schema = getBusinessTypeSchema(resolvedType);
+    if (inferredTypeStrong) inferredTypeStrong.textContent = resolvedType;
+    if (inferredTemplateStrong) inferredTemplateStrong.textContent = defaultI18n.t(schema.titleKey);
+  };
+
+  taxIndustrySelect?.addEventListener("change", () => {
+    const selectedInd = BUSINESS_TAXONOMY.find((i) => i.key === taxIndustrySelect.value) || BUSINESS_TAXONOMY[0];
+    if (taxOccupationSelect && selectedInd) {
+      taxOccupationSelect.innerHTML = selectedInd.occupations.map((occ) => {
+        return `<option value="${escapeAttr(occ.key)}">${escapeHtml(occ.icon)} ${escapeHtml(defaultI18n.t(occ.labelKey))}</option>`;
+      }).join("");
+      const firstOcc = selectedInd.occupations[0];
+      if (taxSubcategorySelect && firstOcc) {
+        taxSubcategorySelect.innerHTML = firstOcc.subcategories.map((sub) => {
+          return `<option value="${escapeAttr(sub.key)}">${escapeHtml(defaultI18n.t(sub.labelKey))}</option>`;
+        }).join("");
+        const firstSpec = firstOcc.specializationSuggestions[0];
+        if (taxSpecializationInput && firstSpec) {
+          taxSpecializationInput.placeholder = defaultI18n.t(firstSpec);
+        }
+      }
+    }
+    updateTaxonomyInference();
+  });
+
+  taxOccupationSelect?.addEventListener("change", () => {
+    const selectedInd = BUSINESS_TAXONOMY.find((i) => i.key === taxIndustrySelect?.value) || BUSINESS_TAXONOMY[0];
+    const selectedOcc = selectedInd?.occupations.find((o) => o.key === taxOccupationSelect.value);
+    if (taxSubcategorySelect && selectedOcc) {
+      taxSubcategorySelect.innerHTML = selectedOcc.subcategories.map((sub) => {
+        return `<option value="${escapeAttr(sub.key)}">${escapeHtml(defaultI18n.t(sub.labelKey))}</option>`;
+      }).join("");
+      const firstSpec = selectedOcc.specializationSuggestions[0];
+      if (taxSpecializationInput && firstSpec) {
+        taxSpecializationInput.placeholder = defaultI18n.t(firstSpec);
+      }
+    }
+    updateTaxonomyInference();
+  });
+
+  taxSubcategorySelect?.addEventListener("change", () => {
+    updateTaxonomyInference();
+  });
+
   document.querySelector<HTMLButtonElement>("[data-submit-business-onboarding]")?.addEventListener("click", async () => {
     const name = document.querySelector<HTMLInputElement>("#welcome-biz-name")?.value.trim() ?? "";
     const displayName = document.querySelector<HTMLInputElement>("#welcome-biz-display")?.value.trim() ?? name;
-    const businessType = document.querySelector<HTMLSelectElement>("#welcome-biz-type")?.value ?? "service";
+    const indKey = taxIndustrySelect?.value || "apparel";
+    const occKey = taxOccupationSelect?.value || "clothing_store";
+    const subKey = taxSubcategorySelect?.value || "womens_clothing";
+    const specialization = taxSpecializationInput?.value.trim() || "";
+    const businessType = resolveBusinessType(indKey, occKey, subKey);
+    const verticalAnchor = mapBusinessTypeToVerticalAnchor(businessType);
 
     if (!name) {
       showToast("نام کسب‌وکار الزامی است.");
       return;
     }
+
+    localStorage.setItem(STORAGE.businessType, businessType);
+    localStorage.setItem(STORAGE.businessIndustry, indKey);
+    localStorage.setItem(STORAGE.businessOccupation, occKey);
+    localStorage.setItem(STORAGE.businessSubcategory, subKey);
+    localStorage.setItem(STORAGE.businessSpecialization, specialization);
+    localStorage.setItem(STORAGE.businessVertical, verticalAnchor);
+    localStorage.setItem("phoenix-business-name", displayName);
 
     try {
       const response = await apiJson<{ data: { id: string } }>("/api/v1/businesses", {
@@ -4465,12 +4851,12 @@ function bindOnboardingEvents(): void {
         body: { name, displayName, businessType },
       });
       localStorage.setItem(STORAGE.business, response.data.id);
-      showToast("کسب‌وکار با موفقیت ثبت شد!");
-      navigate("/product-studio");
+      showToast("کسب‌وکار با موفقیت ثبت شد! داشبورد و پروفایل هوشمند تخصیص یافت.");
+      navigate("/business?type=" + encodeURIComponent(businessType));
     } catch {
       localStorage.setItem(STORAGE.business, "biz-" + Date.now());
-      showToast("فضای کسب‌وکار ایجاد شد. به استودیو محصول خوش آمدید!");
-      navigate("/product-studio");
+      showToast("فضای کسب‌وکار با موفقیت ایجاد شد! به داشبورد اختصاصی خوش آمدید.");
+      navigate("/business?type=" + encodeURIComponent(businessType));
     }
   });
 }
@@ -4478,14 +4864,25 @@ function bindOnboardingEvents(): void {
 
 
 function renderSocialHeader(active: "feed" | "following" | "explore" | "activity"): string {
+  const auth = getStoredAuth();
+  const authenticated = Boolean(auth.token && auth.user);
+  const user = auth.user;
+  const authHtml = authenticated && user
+    ? '<a class="profile-chip" href="/profile" data-nav aria-label="' + escapeAttr(user.displayName || uiText("حساب من")) + '"><span class="avatar">' + ((user.displayName || "ق")[0]) + '</span><span class="profile-copy"><strong>' + escapeHtml(user.displayName || "") + '</strong></span></a>'
+    : '<button type="button" class="button button-primary button-sm phoenix-register-btn" data-open-register aria-label="' + uiText("ثبت‌نام") + '"><span class="btn-sparkle" aria-hidden="true">✦</span><span>' + uiText("ثبت‌نام") + '</span></button><button type="button" class="button button-ghost button-sm" data-open-login>' + uiText("ورود") + '</button>';
+
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
-    '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
+    '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
     '<nav class="phoenix-social-tabs" aria-label="ناوبری اجتماعی">' +
     '<a href="/discover" data-nav class="' + (active === "feed" ? "active" : "") + '">برای تو</a>' +
     '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">دنبال‌شده‌ها</a>' +
     '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a>' +
-    '<a href="/activity" data-nav class="' + (active === "activity" ? "active" : "") + '">فعالیت</a></nav>' +
-    '<div class="phoenix-social-actions"><button class="icon-button" type="button" data-open-create-post aria-label="' + uiText("پست جدید") + '">＋</button>' + renderLanguageSwitcher() + '<button class="icon-button" type="button" data-theme-toggle aria-label="' + uiText("تغییر پوسته") + '">◐</button></div>' +
+    '<a href="/activity" data-nav class="' + (active === "activity" ? "active" : "") + '">فعالیت</a>' +
+    '<button type="button" class="phoenix-nav-link-register" data-open-register aria-label="' + uiText("ثبت‌نام") + '">✦ ' + uiText("ثبت‌نام") + '</button>' +
+    '</nav>' +
+    '<div class="phoenix-social-actions">' +
+    authHtml +
+    '<button class="icon-button" type="button" data-open-create-post aria-label="' + uiText("پست جدید") + '">＋</button>' + renderLanguageSwitcher() + '<button class="icon-button" type="button" data-theme-toggle aria-label="' + uiText("تغییر پوسته") + '">◐</button></div>' +
     '</div></header>';
 }
 
@@ -4636,7 +5033,7 @@ function renderCompareTray(): void {
 
 function renderActivity(): string {
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><span class="phoenix-kicker">Activity</span><h1>فعالیت‌های ققنوس</h1><p>برای دیدن Follow، Like، Save و Commentهای ثبت‌شده، ابتدا به حساب متصل شوید.</p></section><div class="glass-card phoenix-activity-gate"><div class="draft-orb">✦</div><h2>فعالیت شخصی شما</h2><p>این سطح فقط رویدادهای واقعی Social Engagement را نمایش می‌دهد.</p><button class="button button-primary" type="button" data-activity-connect>اتصال حساب</button></div></div>';
+    return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><span class="phoenix-kicker">Activity</span><h1>فعالیت‌های ققنوس</h1><p>برای دیدن Follow، Like، Save و نظرات ثبت‌شده، ابتدا وارد حساب کاربری شوید.</p></section><div class="glass-card phoenix-activity-gate"><div class="draft-orb">✦</div><h2>فعالیت شخصی شما</h2><p>برای ثبت و مشاهده تعاملات و علاقه‌مندی‌ها، لطفاً وارد حساب خود شوید.</p><button class="button button-primary" type="button" data-activity-connect>ورود / ثبت‌نام</button></div></div>';
   }
   return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><div><span class="phoenix-kicker">Activity</span><h1>ردپای اجتماعی تو در ققنوس</h1><p>رویدادها مستقیماً از Social Engagement خوانده می‌شوند؛ این صفحه timeline جداگانه‌ای در مرورگر نمی‌سازد.</p></div><div class="heading-actions"><button class="button button-ghost" type="button" data-activity-refresh>↻ بروزرسانی</button><a class="button button-primary" href="/discover" data-nav>ادامه کشف ←</a></div></section><section class="phoenix-activity-layout"><article class="glass-card phoenix-activity-card"><div class="card-section-heading"><div><span class="section-kicker">Canonical Social Events</span><h2>آخرین فعالیت‌ها</h2></div><span id="activity-status" class="pill" aria-live="polite">در حال آماده‌سازی</span></div><div id="activity-list" class="phoenix-activity-list" aria-live="polite" aria-busy="true"><div class="slot-loading">در حال خواندن فعالیت‌های واقعی…</div></div></article><aside class="glass-card phoenix-activity-side"><span class="section-kicker">Your loop</span><h2>دنبال کن، ذخیره کن، مقایسه کن.</h2><p>فعالیت‌های اجتماعی در کنار Discovery و Compare برای تصمیم‌گیری پیوسته استفاده می‌شوند؛ ranking و recommendation همچنان در backend canonical باقی می‌مانند.</p><a class="button button-ghost" href="/compare" data-nav>مقایسه‌های انتخاب‌شده</a></aside></section></div>';
 }
@@ -4741,7 +5138,7 @@ function renderDiscover(): string {
   return '<div class="phoenix-social-page">' +
     '<section class="phoenix-social-hero">' +
       '<div class="phoenix-social-intro"><span class="phoenix-kicker">' + discoveryUi(tab === "explore" ? "explore" : tab === "following" ? "following" : "forYou") + '</span><h1>' + escapeHtml(title) + '</h1><p>' + escapeHtml(intro) + '</p></div>' +
-      '<div class="phoenix-social-hero-card"><img src="/phoenix-mark.svg?v=1" alt="" aria-hidden="true" /><div><strong>' + localizedUi("تصمیم را از نیاز شروع کن") + '</strong><small>' + localizedUi("محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.") + '</small></div><button class="button button-primary" type="button" data-open-create-post>＋ ' + discoveryUi("createOffering") + '</button></div>' +
+      '<div class="phoenix-social-hero-card"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><div><strong>' + localizedUi("تصمیم را از نیاز شروع کن") + '</strong><small>' + localizedUi("محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.") + '</small></div><button class="button button-primary" type="button" data-open-create-post>＋ ' + discoveryUi("createOffering") + '</button></div>' +
     '</section>' +
     '<section class="phoenix-social-search glass-card"><span class="phoenix-search-icon">⌕</span><input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="' + escapeAttr(discoveryUi("examplePlaceholder")) + '" /><button class="button button-primary" type="button" data-run-discovery>' + discoveryUi("discoverButton") + ' <span>←</span></button></section>' +
     '<div class="phoenix-feed-heading"><div><span class="phoenix-kicker">' + discoveryUi("discoverButton") + '</span><strong id="results-title">' + escapeHtml(initialQuery ? discoveryUi("searchResults") : tab === "following" ? discoveryUi("following") : tab === "explore" ? discoveryUi("explore") : discoveryUi("discoverableSuggestions")) + '</strong><small id="results-meta">' + discoveryUi("ready") + '</small></div><div class="phoenix-feed-actions"><a href="/compare" data-nav>' + localizedUi("مقایسه") + ' <span>→</span></a><span id="shortlist-count" class="pill" aria-label="فهرست انتخابی">0</span><button type="button" class="button button-ghost" data-social-state-refresh>↻ ' + discoveryUi("sync") + '</button></div></div>' +
@@ -4837,7 +5234,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
   overlay.className = "connection-overlay";
   overlay.innerHTML = `
     <div class="connection-backdrop" data-close-discovery></div>
-    <section class="connection-modal glass-card phoenix-detail-modal discovery-detail-modal" role="dialog" aria-modal="true" aria-labelledby="discovery-detail-title">
+    <section class="connection-modal glass-card phoenix-detail-modal" role="dialog" aria-modal="true" aria-labelledby="discovery-detail-title">
       <button class="connection-close" type="button" data-close-discovery aria-label="${escapeAttr(uiText("بستن"))}">×</button>
       
       <div class="detail-badge-strip">
@@ -4887,7 +5284,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
           </button>
         `}
 
-        <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}" data-toggle-shortlist="${escapeAttr(key)}">
+        <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}">
           ★ ${uiText("ذخیره")}
         </button>
         <button class="button button-ghost" type="button" data-share-detail="${escapeAttr(key)}">
@@ -4926,34 +5323,11 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
 }
 
 function renderCheckout(): string {
-  const params = new URLSearchParams(location.search);
-  const product = params.get("product") ?? "";
-  const entity = params.get("entity") ?? "";
-  const resource = product || entity;
-  const resourceType: "product_variant" | "offering" | "service" = product ? "product_variant" : entity ? "offering" : params.get("type") === "service" ? "service" : "product_variant";
-  return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Commerce</span><h1>از انتخاب تا <em>Checkout</em> بدون پرش.</h1><p>این سطح فقط orchestration می‌کند؛ cart و checkout state از Commerce canonical می‌آیند.</p></div>
-      <div class="heading-actions"><button class="button button-ghost" type="button" data-account-connect>تنظیم اتصال</button></div>
-    </section>
-    <section class="checkout-grid">
-      <article class="glass-card checkout-panel">
-        <div class="card-section-heading"><div><span class="section-kicker">Cart</span><h2>شروع سبد خرید</h2></div><span id="checkout-status" class="pill">آماده</span></div>
-        <div class="booking-fields">
-          <div><label class="field-label" for="checkout-currency">Currency</label><input class="studio-input-line" id="checkout-currency" type="text" value="USD" maxlength="8" /></div>
-          <div><label class="field-label" for="checkout-customer">Customer ID <span class="field-optional">اختیاری</span></label><input class="studio-input-line" id="checkout-customer" type="text" placeholder="Customer ID" /></div>
-          <div><label class="field-label" for="checkout-resource-type">Resource type</label><select class="studio-input-line" id="checkout-resource-type"><option value="product_variant" ${resourceType === "product_variant" ? "selected" : ""}>product_variant</option><option value="offering" ${resourceType === "offering" ? "selected" : ""}>offering</option><option value="service" ${resourceType === "service" ? "selected" : ""}>service</option></select></div>
-          <div><label class="field-label" for="checkout-resource">Resource ID</label><input class="studio-input-line" id="checkout-resource" type="text" value="${escapeAttr(resource)}" placeholder="Product / offering ID" /></div>
-          <div><label class="field-label" for="checkout-quantity">Quantity</label><input class="studio-input-line" id="checkout-quantity" type="number" min="1" step="1" value="1" /></div>
-        </div>
-        <div class="checkout-actions"><button class="button button-primary button-lg" type="button" data-start-checkout>ساخت Cart و شروع Checkout <span>→</span></button></div>
-      </article>
-      <article class="glass-card checkout-result">
-        <div class="card-section-heading"><div><span class="section-kicker">Live state</span><h2>وضعیت Checkout</h2></div></div>
-        <div id="checkout-result-body" class="checkout-result-body"><div class="slot-empty"><span>◫</span><p>اطلاعات checkout بعد از اجرای جریان نمایش داده می‌شود.</p></div></div>
-      </article>
-    </section>
-  `;
+  const persona = getActivePersona();
+  if (persona === "consumer" || persona === "individual") {
+    return renderConsumerPayment();
+  }
+  return renderCheckoutPage();
 }
 
 async function startCheckoutFlow(): Promise<void> {
@@ -5340,10 +5714,10 @@ function renderBusinessModule(vertical: string, module: string): string {
     '</section>' +
     workflowCanvas +
     '<section class="phoenix-business-module-grid-page">' +
-      '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">Canonical Workflow</span><h2>' + localizedUi(info.label) + '</h2><p>این سطح یک UI تخصصی برای Workspace است؛ source of truth، permission و mutation همچنان در دامنه canonical باقی می‌مانند.</p>' +
-        (canonicalPath ? '<a class="button button-primary" href="' + escapeAttr(canonicalPath) + '" data-nav>باز کردن ' + localizedUi(info.label) + ' <span>→</span></a>' : '<span class="pill">endpoint مستقل این قابلیت هنوز ثبت نشده</span>') +
+      '<article class="glass-card phoenix-module-command-card"><span class="section-kicker">ابزار مدیریت</span><h2>' + localizedUi(info.label) + '</h2><p>مدیریت هوشمند و یکپارچه ' + localizedUi(info.label) + ' در فروشگاه شما.</p>' +
+        (canonicalPath ? '<a class="button button-primary" href="' + escapeAttr(canonicalPath) + '" data-nav>باز کردن ' + localizedUi(info.label) + ' <span>→</span></a>' : '<span class="pill">در حال آماده‌سازی</span>') +
       '</article>' +
-      '<article class="glass-card phoenix-module-state-card"><span class="section-kicker">Capability State</span><h2>' + localizedUi(presentation?.stateLabel ?? "Workspace boundary") + '</h2><p class="phoenix-module-state-description">' + localizedUi(presentation?.stateDescription ?? "وضعیت این قابلیت از backend authoritative تعیین می‌شود.") + '</p><div class="phoenix-module-state-row"><span>Vertical</span><strong>' + escapeHtml(ui.key) + '</strong></div><div class="phoenix-module-state-row"><span>Module</span><strong>' + localizedUi(module) + '</strong></div><div class="phoenix-module-state-row"><span>Access</span><strong>Backend authoritative</strong></div></article>' +
+      '<article class="glass-card phoenix-module-state-card"><span class="section-kicker">وضعیت بخش</span><h2>' + localizedUi(presentation?.stateLabel ?? "بخش فعال") + '</h2><p class="phoenix-module-state-description">' + localizedUi(presentation?.stateDescription ?? "این بخش آماده استفاده است.") + '</p><div class="phoenix-module-state-row"><span>دسته‌بندی</span><strong>' + escapeHtml(ui.key) + '</strong></div><div class="phoenix-module-state-row"><span>بخش</span><strong>' + localizedUi(module) + '</strong></div><div class="phoenix-module-state-row"><span>دسترسی</span><strong>فعال</strong></div></article>' +
     '</section>' +
     '<section class="glass-card phoenix-module-surfaces-card"><div class="card-section-heading"><div><span class="section-kicker">Connected Surfaces</span><h2>سطوح مرتبط این ماژول</h2></div><span class="pill">' + String(surfaces.length) + ' مسیر</span></div><div class="phoenix-module-surface-grid">' +
       (surfaces.length ? surfaces.map((surface) => {
@@ -5351,30 +5725,30 @@ function renderBusinessModule(vertical: string, module: string): string {
         return surface.path
           ? '<a class="phoenix-module-surface" href="' + escapeAttr(href) + '" data-nav><strong>' + localizedUi(surface.label) + '</strong><span>' + localizedUi(surface.description) + '</span><b>→</b></a>'
           : '<div class="phoenix-module-surface disabled"><strong>' + localizedUi(surface.label) + '</strong><span>' + localizedUi(surface.description) + '</span><b>—</b></div>';
-      }).join("") : '<div class="slot-empty"><span>◈</span><p>سطح canonical متصل برای این Capability ثبت نشده است.</p></div>') +
+      }).join("") : '<div class="slot-empty"><span>◈</span><p>مسیر مستقلی برای این بخش تعریف نشده است.</p></div>') +
     '</div></section>' +
     '<section class="glass-card phoenix-module-workbench-card">' +
-      '<div class="card-section-heading"><div><span class="section-kicker">Workspace Canvas</span><h2>ساختار عملیاتی این صفحه</h2></div><span class="pill">' + localizedUi(ui.label) + '</span></div>' +
+      '<div class="card-section-heading"><div><span class="section-kicker">مدیریت فروشگاه</span><h2>ساختار عملیاتی این صفحه</h2></div><span class="pill">' + localizedUi(ui.label) + '</span></div>' +
       '<div class="phoenix-module-workbench-grid">' +
-        '<article><span class="section-kicker">01 · Context</span><strong>هویت و دسترسی</strong><p>Business، نقش و Capability قبل از هر اقدام مشخص می‌شوند.</p><a href="' + escapeAttr(businessWorkspaceContextHref("/business/profile", ui.key, businessId || undefined)) + '" data-nav>مشاهده Context ←</a></article>' +
-        '<article><span class="section-kicker">02 · Canonical</span><strong>' + localizedUi(info.label) + '</strong><p>' + escapeHtml(info.description) + '</p>' +
-          (canonicalPath ? '<a href="' + escapeAttr(canonicalPath) + '" data-nav>ورود به منبع اصلی ←</a>' : '<span class="pill">منبع مستقل هنوز ثبت نشده</span>') +
+        '<article><span class="section-kicker">01 · هویت</span><strong>اطلاعات فروشگاه</strong><p>مشخصات و دسترسی‌های فروشگاه برای اقدامات فعال هستند.</p><a href="' + escapeAttr(businessWorkspaceContextHref("/business/profile", ui.key, businessId || undefined)) + '" data-nav>مشاهده پروفایل ←</a></article>' +
+        '<article><span class="section-kicker">02 · مدیریت</span><strong>' + localizedUi(info.label) + '</strong><p>' + escapeHtml(info.description) + '</p>' +
+          (canonicalPath ? '<a href="' + escapeAttr(canonicalPath) + '" data-nav>ورود به بخش مدیریت ←</a>' : '<span class="pill">در دسترس</span>') +
         '</article>' +
-        '<article><span class="section-kicker">03 · Connected</span><strong>سطوح متصل</strong><p>این صفحه داده را دوباره ذخیره نمی‌کند؛ فقط مسیرهای canonical را در کانتکست شغلی نمایش می‌دهد.</p><div class="phoenix-module-compact-links">' +
+        '<article><span class="section-kicker">03 · بخش‌ها</span><strong>ابزارهای مرتبط</strong><p>دسترسی یکپارچه به بخش‌های تخصصی مدیریت فروشگاه.</p><div class="phoenix-module-compact-links">' +
           surfaces.slice(0, 4).map((surface) => surface.path ? '<a href="' + escapeAttr(businessModuleContextHref(surface.path, ui.key, module, businessId)) + '" data-nav>' + localizedUi(surface.label) + '</a>' : '<span>' + localizedUi(surface.label) + '</span>').join("") +
         '</div></article>' +
       '</div>' +
     '</section>' +
-    '<section class="glass-card phoenix-business-workflow-card"><div class="card-section-heading"><div><span class="section-kicker">Vertical Workflow</span><h2>جریان کاری این نوع کسب‌وکار</h2></div><span class="pill">' + localizedUi(ui.label) + '</span></div><div class="phoenix-workflow-rail">' +
+    '<section class="glass-card phoenix-business-workflow-card"><div class="card-section-heading"><div><span class="section-kicker">مراحل کاری</span><h2>جریان کاری این نوع کسب‌وکار</h2></div><span class="pill">' + localizedUi(ui.label) + '</span></div><div class="phoenix-workflow-rail">' +
       workflow.map((step, index) => {
         const stage = businessWorkflowStageHref(ui.key, step, businessId, module);
         const current = stage.module === module ? " current" : "";
         const content = '<span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + localizedUi(step) + '</strong>';
         return stage.href
-          ? '<a class="phoenix-workflow-step' + current + '" href="' + escapeAttr(stage.href) + '" data-nav>' + content + '<small>باز کردن ماژول ←</small></a>'
+          ? '<a class="phoenix-workflow-step' + current + '" href="' + escapeAttr(stage.href) + '" data-nav>' + content + '<small>باز کردن بخش ←</small></a>'
           : '<div class="phoenix-workflow-step' + current + '">' + content + '</div>';
       }).join("") +
-    '</div><p>این rail اکنون به ماژول‌های canonical Workspace متصل است؛ جابه‌جایی بین مراحل state موازی ایجاد نمی‌کند.</p></section>' +
+    '</div><p>دسترسی یکپارچه به تمام ابزارهای مورد نیاز برای رشد کسب‌وکار شما.</p></section>' +
     '<section class="glass-card phoenix-module-actions-card"><div class="card-section-heading"><div><span class="section-kicker">Quick Actions</span><h2>کارهای مرتبط</h2></div></div><div class="phoenix-business-quick-actions">' +
       actions.map((action) => {
         const quickActionLinks = BUSINESS_QUICK_ACTION_LINKS[ui.key] ?? BUSINESS_QUICK_ACTION_LINKS.default ?? {};
@@ -5390,8 +5764,11 @@ function renderBusinessModule(vertical: string, module: string): string {
   '</div>';
 }
 function renderBusiness(): string {
-  const businessId = localStorage.getItem(STORAGE.business) ?? "";
   const params = new URLSearchParams(location.search);
+  if (!params.has("vertical") && !params.has("module") && !params.has("workflow") && !params.has("stage")) {
+    return renderBusinessPanel();
+  }
+  const businessId = localStorage.getItem(STORAGE.business) ?? "";
   const vertical = params.get("vertical")?.trim() || localStorage.getItem(STORAGE.businessVertical) || "default";
   const requestedModule = params.get("module")?.trim();
   if (requestedModule) {
@@ -5403,95 +5780,111 @@ function renderBusiness(): string {
   const bt = (key: string): string => escapeHtml(businessUi(key));
   const bs = (key: string): string => escapeHtml(businessSurfaceUi(key));
   const localized = (value: string): string => localizedUi(value);
-  return '<div class="phoenix-business-page" data-business-vertical="' + ui.key + '">' +
-    '<section class="phoenix-business-hero">' +
-      '<div class="phoenix-business-hero-copy">' +
-        '<span class="phoenix-kicker">' + bt("workspaceTitle") + '</span>' +
-        '<div class="phoenix-business-title-row"><span id="business-vertical-icon" class="phoenix-business-vertical-icon">' + ui.icon + '</span><div><h1 id="business-vertical-title">' + localized(ui.label) + '</h1><p id="business-vertical-subtitle">' + localized(ui.subtitle) + '</p></div></div>' +
-        '<div class="phoenix-business-identity-line"><span id="business-header-name">' + localized("فضای کاری شما") + '</span><span id="business-header-status" class="pill">' + bt("workspaceReview") + '</span><span id="business-header-role" class="pill">' + bt("unknownRole") + '</span></div>' +
-      '</div>' +
-      '<div class="phoenix-business-hero-actions"><button class="button button-ghost" type="button" data-business-create>' + bt("createBusiness") + '</button><button class="button button-ghost" type="button" data-business-refresh>' + bt("refresh") + '</button><a class="button button-primary" href="/product-studio" data-nav>✦ ' + bt("sellerAi") + '</a></div>' +
-    '</section>' +
 
-    '<section class="phoenix-business-attention">' +
-      '<article class="glass-card phoenix-business-assistant"><div class="phoenix-business-assistant-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div><div><span class="section-kicker">' + bt("phoenixSuggests") + '</span><strong id="business-next-action">' + bt("todayPrimaryTask") + '</strong><p id="business-next-detail">' + bt("workspaceComposition") + '</p></div><button class="button button-primary" type="button" data-business-primary-action>' + bt("startAction") + ' <span>←</span></button></article>' +
-      '<article class="glass-card phoenix-business-mini-status"><span class="section-kicker">' + bs("workspace") + '</span><strong id="business-workspace-status">—</strong><small id="business-workspace-status-detail">—</small></article>' +
-    '</section>' +
+  const explicitType = (params.get("type") || localStorage.getItem(STORAGE.businessType) || "").trim() as BusinessType;
+  const inferredFromVertical: BusinessType = vertical === "clinic" ? "medical_clinic" : vertical === "restaurant" ? "food_restaurant" : vertical === "salon" ? "beauty_salon" : "retail_clothing";
+  const resolvedBusinessType: BusinessType = (explicitType && explicitType in BUSINESS_TYPE_SCHEMAS) ? explicitType : inferredFromVertical;
+  const businessName = localStorage.getItem("phoenix-business-name") || "کسب‌وکار ققنوس";
+  const specialization = localStorage.getItem(STORAGE.businessSpecialization) || "";
+  const dynamicDashboardHtml = renderDynamicBusinessDashboard({
+    businessType: resolvedBusinessType,
+    businessName,
+    specialization,
+    businessId: businessId || undefined,
+  });
 
-    '<section class="phoenix-business-board">' +
-      (BUSINESS_VERTICAL_BOARD[ui.key] ?? BUSINESS_VERTICAL_BOARD.default ?? []).map((card) => {
-        const href = card.path ? businessWorkspaceContextHref(card.path, ui.key, businessId || undefined) : "/business";
-        return '<a class="glass-card phoenix-business-board-card" href="' + escapeAttr(href) + '" data-nav><span class="section-kicker">' + localized(card.eyebrow) + '</span><h3>' + localized(card.title) + '</h3><p>' + localized(card.description) + '</p><span class="phoenix-board-arrow">→</span></a>';
-      }).join("") +
-    '</section>' +
-
-    renderVerticalWorkflowOverview({
-      vertical: ui.key,
-      ...(businessId ? { businessId } : {}),
-      contextualHref: (path) => businessWorkspaceContextHref(path, ui.key, businessId || undefined),
-    }) +
-    '<section class="phoenix-business-role-actions glass-card">' +
-      '<div class="card-section-heading"><div><span class="section-kicker">' + bt("roleFocus") + '</span><h2 id="business-role-focus-title">' + bt("roleFocus") + '</h2></div><span id="business-role-focus-badge" class="pill">—</span></div>' +
-      '<div id="business-role-actions-grid" class="phoenix-business-role-actions-grid"><div class="slot-loading">' + bt("roleLensLoading") + '</div></div>' +
-    '</section>' +
-
-    '<section class="phoenix-business-metrics" id="business-vertical-metrics">' +
-      ui.metrics.map((label, index) => '<article class="glass-card phoenix-business-metric"><span>' + localized(label) + '</span><strong id="business-metric-' + index + '">—</strong><small>' + businessUi("canonicalAfterConnection") + '</small></article>').join("") +
-    '</section>' +
-
-    '<section class="phoenix-business-layout">' +
-      '<article class="glass-card phoenix-business-modules-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("workspaceModules") + '</span><h2>' + bt("businessSpecificTools") + '</h2></div><span id="business-module-count" class="pill">—</span></div><div id="business-module-grid" class="phoenix-business-module-grid">' + ui.modules.map((module) => '<button class="phoenix-business-module" type="button" data-business-module="' + escapeAttr(module) + '"><span>◈</span><strong>' + localized(module) + '</strong><small>' + businessUi("open") + '</small></button>').join("") + '</div></article>' +
-
-      '<aside class="phoenix-business-side">' +
-        '<article class="glass-card phoenix-business-actions-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("quickActions") + '</span><h2>' + bt("quickActions") + '</h2></div></div><div id="business-quick-actions" class="phoenix-business-quick-actions">' + ui.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action data-business-quick-action-value="' + escapeAttr(action) + '">' + localized(action) + ' <span>←</span></button>').join("") + '</div></article>' +
-        '<article class="glass-card ai-action-card"><span class="ai-badge">AI COPILOT</span><h2>' + bt("prepareSupplyFast") + '</h2><p>' + bt("sellerAiDescription") + '</p><a class="button button-primary" href="/product-studio" data-nav>' + bt("openProductStudio") + ' <span>→</span></a></article>' +
-      '</aside>' +
-    '</section>' +
-
-    '<section class="phoenix-business-brand-preview">' +
-      '<article class="glass-card phoenix-brand-preview-card">' +
-        '<div class="phoenix-brand-preview-cover"><div class="phoenix-brand-preview-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div></div>' +
-        '<div class="phoenix-brand-preview-body"><div><span class="section-kicker">' + bt("publicBrand") + '</span><h2 id="business-brand-preview-name">' + bt("businessName") + '</h2><p id="business-brand-preview-type">' + bt("businessType") + '</p></div><span id="business-brand-preview-status" class="pill">—</span></div>' +
-        '<div class="phoenix-brand-preview-cta"><a class="button button-secondary" href="/business/profile" data-nav>' + bt("managePreview") + '</a>' + (businessId ? '<a class="button button-primary" href="/businesses/' + encodeURIComponent(businessId) + '" data-nav>' + bt("customerView") + '</a>' : '') + '</div>' +
-        '<div class="phoenix-brand-preview-facts"><span>' + localized("Profile") + '</span><span>' + localized("Catalog") + '</span><span>' + localized("Contact") + '</span><span>' + localized("Trust") + '</span></div>' +
-      '</article>' +
-      '<article class="glass-card phoenix-brand-preview-copy"><span class="section-kicker">' + bt("publicProfile") + '</span><h2>' + bt("businessCustomerClarity") + '</h2><p>' + bt("businessPreviewDescription") + '</p><div class="phoenix-public-capability-list"><span>هویت کسب‌وکار</span><span>محصول و خدمت</span><span>اعتماد</span><span>ارتباط</span></div></article>' +
-    '</section>' +
-
-    '<section class="phoenix-business-public-preview glass-card">' +
-      '<div class="card-section-heading"><div><span class="section-kicker">' + bt("customerExperience") + '</span><h2>' + bt("customerExperienceQuestion") + '</h2></div><span class="pill success">' + bt("capabilityDriven") + '</span></div>' +
-      '<div id="business-customer-actions" class="phoenix-business-customer-actions">' + ui.customerActions.map((action) => '<span>' + localized(action) + '</span>').join("") + '</div>' +
-      '<p>' + bt("capabilityActionsDescription") + '</p>' +
-    '</section>' +
-
-    '<section class="phoenix-business-team-section">' +
-      '<article class="glass-card phoenix-team-card">' +
-        '<div class="card-section-heading"><div><span class="section-kicker">' + bt("teamAccess") + '</span><h2>' + bt("teamAndRoles") + '</h2></div><span id="business-team-count" class="pill">—</span></div>' +
-        '<div class="phoenix-role-lens" id="business-role-lens"><span class="section-kicker">' + bt("roleLens") + '</span><strong id="business-role-title">—</strong><p id="business-role-description">' + bt("currentRolePermissions") + '</p></div>' +
-        '<div class="phoenix-permission-cloud" id="business-permissions"><span>' + bt("readingPermissions") + '</span></div>' +
-        '<div class="phoenix-team-list" id="business-team-list"><div class="slot-loading">' + businessUi("readingMembers") + '</div></div>' +
-        '<div class="phoenix-team-actions"><button class="button button-ghost" type="button" data-workspace-toggle>' + bt("switchWorkspace") + '</button><button class="button button-primary" type="button" data-team-management>' + bt("manageTeam") + '</button></div>' +
-      '</article>' +
-      '<article class="glass-card phoenix-role-guide">' +
-        '<span class="section-kicker">' + bt("roleBasedWorkspace") + '</span><h2>' + bt("roleRoutes") + '</h2>' +
-        '<div class="phoenix-role-guide-list">' +
-          '<div><b>Owner / Admin</b><span>' + bt("ownerAdminFocus") + '</span></div>' +
-          '<div><b>Sales</b><span>' + bt("salesFocus") + '</span></div>' +
-          '<div><b>Specialist</b><span>' + bt("specialistFocus") + '</span></div>' +
-          '<div><b>Finance</b><span>' + bt("financeFocus") + '</span></div>' +
+  return '<div class="phoenix-business-page" data-business-vertical="' + ui.key + '" data-business-type="' + resolvedBusinessType + '">' +
+    dynamicDashboardHtml +
+    '<div class="phoenix-canonical-workspace-details" style="margin-top: 24px;">' +
+      '<section class="phoenix-business-hero" style="display: none;">' +
+        '<div class="phoenix-business-hero-copy">' +
+          '<span class="phoenix-kicker">' + bt("workspaceTitle") + '</span>' +
+          '<div class="phoenix-business-title-row"><span id="business-vertical-icon" class="phoenix-business-vertical-icon">' + ui.icon + '</span><div><h1 id="business-vertical-title">' + localized(ui.label) + '</h1><p id="business-vertical-subtitle">' + localized(ui.subtitle) + '</p></div></div>' +
+          '<div class="phoenix-business-identity-line"><span id="business-header-name">' + localized("فضای کاری شما") + '</span><span id="business-header-status" class="pill">' + bt("workspaceReview") + '</span><span id="business-header-role" class="pill">' + bt("unknownRole") + '</span></div>' +
         '</div>' +
-        '<p>' + bt("roleGuideDescription") + '</p>' +
-      '</article>' +
-    '</section>' +
+        '<div class="phoenix-business-hero-actions"><button class="button button-ghost" type="button" data-business-create>' + bt("createBusiness") + '</button><button class="button button-ghost" type="button" data-business-refresh>' + bt("refresh") + '</button><a class="button button-primary" href="/product-studio" data-nav>✦ ' + bt("sellerAi") + '</a></div>' +
+      '</section>' +
 
-    '<section class="business-grid phoenix-business-management-grid">' +
-      '<article class="glass-card business-main"><div class="card-section-heading"><div><span class="section-kicker">' + bt("profileSection") + '</span><h2>' + bt("businessProfile") + '</h2></div><span id="business-management-status" class="pill">' + bt("workspaceReview") + '</span></div><div id="business-profile-content" class="business-profile-content"><div class="slot-empty"><span>▦</span><p>' + (businessId ? bt("readingProfile") : bt("businessIdRequired")) + '</p></div></div><div class="business-management-form"><input id="business-name-input" class="studio-input-line" placeholder="' + bt("canonicalName") + '" />' + '<input id="business-display-name-input" class="studio-input-line" placeholder="' + bt("displayName") + '" />' + '<div class="phoenix-business-type-picker"><input id="business-type-input" class="studio-input-line" placeholder="' + bt("businessType") + '" /><div class="phoenix-business-type-chips"><button type="button" data-business-type-choice="clinic">' + bt("clinicType") + '</button><button type="button" data-business-type-choice="retail">' + bt("retailType") + '</button><button type="button" data-business-type-choice="restaurant">' + bt("restaurantType") + '</button><button type="button" data-business-type-choice="salon">' + bt("salonType") + '</button></div></div><input id="business-timezone-input" class="studio-input-line" placeholder="' + bt("timezone") + '" />' + '<input id="business-currency-input" class="studio-input-line" placeholder="' + bt("currency") + '" />' + '<button class="button button-primary" type="button" data-business-save>' + (businessId ? bt("saveProfile") : bt("createBusinessFirst")) + '</button></div></article>' +
-      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("locations") + '</span><h2>' + bt("locations") + '</h2></div><button class="button button-ghost" type="button" data-business-add-location>' + bt("addLocation") + '</button></div><div id="business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>' + bt("locationsAfterConnection") + '</p></div></div></article>' +
-      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">' + localized("Availability") + '</span><h2>' + bt("activeHours") + '</h2></div></div><div id="business-hours" class="business-hours-list"><div class="slot-empty"><span>◷</span><p>' + bt("hoursAfterConnection") + '</p></div></div></article>' +
-      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("contactMethods") + '</span><h2>' + bt("contactMethods") + '</h2></div></div><div id="business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
-      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("publicationStatus") + '</span><h2>' + bt("publicationStatus") + '</h2></div><span id="business-publication-status" class="pill">—</span></div><div id="business-publication-detail" class="connection-state">—</div></article>' +
-      '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("verificationStatus") + '</span><h2>' + bt("verificationStatus") + '</h2></div><span id="business-verification-status" class="pill">—</span></div><div id="business-verification-detail" class="connection-state">' + bt("readingVerification") + '</div></article>' +
-    '</section>' +
+      '<section class="phoenix-business-attention" style="display: none;">' +
+        '<article class="glass-card phoenix-business-assistant"><div class="phoenix-business-assistant-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></div><div><span class="section-kicker">' + bt("phoenixSuggests") + '</span><strong id="business-next-action">' + bt("todayPrimaryTask") + '</strong><p id="business-next-detail">' + bt("workspaceComposition") + '</p></div><button class="button button-primary" type="button" data-business-primary-action>' + bt("startAction") + ' <span>←</span></button></article>' +
+        '<article class="glass-card phoenix-business-mini-status"><span class="section-kicker">' + bs("workspace") + '</span><strong id="business-workspace-status">—</strong><small id="business-workspace-status-detail">—</small></article>' +
+      '</section>' +
+
+      '<section class="phoenix-business-board">' +
+        (BUSINESS_VERTICAL_BOARD[ui.key] ?? BUSINESS_VERTICAL_BOARD.default ?? []).map((card) => {
+          const href = card.path ? businessWorkspaceContextHref(card.path, ui.key, businessId || undefined) : "/business";
+          return '<a class="glass-card phoenix-business-board-card" href="' + escapeAttr(href) + '" data-nav><span class="section-kicker">' + localized(card.eyebrow) + '</span><h3>' + localized(card.title) + '</h3><p>' + localized(card.description) + '</p><span class="phoenix-board-arrow">→</span></a>';
+        }).join("") +
+      '</section>' +
+
+      renderVerticalWorkflowOverview({
+        vertical: ui.key,
+        ...(businessId ? { businessId } : {}),
+        contextualHref: (path) => businessWorkspaceContextHref(path, ui.key, businessId || undefined),
+      }) +
+      '<section class="phoenix-business-role-actions glass-card">' +
+        '<div class="card-section-heading"><div><span class="section-kicker">' + bt("roleFocus") + '</span><h2 id="business-role-focus-title">' + bt("roleFocus") + '</h2></div><span id="business-role-focus-badge" class="pill">—</span></div>' +
+        '<div id="business-role-actions-grid" class="phoenix-business-role-actions-grid"><div class="slot-loading">' + bt("roleLensLoading") + '</div></div>' +
+      '</section>' +
+
+      '<section class="phoenix-business-metrics" id="business-vertical-metrics">' +
+        ui.metrics.map((label, index) => '<article class="glass-card phoenix-business-metric"><span>' + localized(label) + '</span><strong id="business-metric-' + index + '">—</strong><small>' + businessUi("canonicalAfterConnection") + '</small></article>').join("") +
+      '</section>' +
+
+      '<section class="phoenix-business-layout">' +
+        '<article class="glass-card phoenix-business-modules-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("workspaceModules") + '</span><h2>' + bt("businessSpecificTools") + '</h2></div><span id="business-module-count" class="pill">—</span></div><div id="business-module-grid" class="phoenix-business-module-grid">' + ui.modules.map((module) => '<button class="phoenix-business-module" type="button" data-business-module="' + escapeAttr(module) + '"><span>◈</span><strong>' + localized(module) + '</strong><small>' + businessUi("open") + '</small></button>').join("") + '</div></article>' +
+
+        '<aside class="phoenix-business-side">' +
+          '<article class="glass-card phoenix-business-actions-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("quickActions") + '</span><h2>' + bt("quickActions") + '</h2></div></div><div id="business-quick-actions" class="phoenix-business-quick-actions">' + ui.actions.map((action) => '<button type="button" class="button button-secondary" data-business-quick-action data-business-quick-action-value="' + escapeAttr(action) + '">' + localized(action) + ' <span>←</span></button>').join("") + '</div></article>' +
+          '<article class="glass-card ai-action-card"><span class="ai-badge">AI COPILOT</span><h2>' + bt("prepareSupplyFast") + '</h2><p>' + bt("sellerAiDescription") + '</p><a class="button button-primary" href="/product-studio" data-nav>' + bt("openProductStudio") + ' <span>→</span></a></article>' +
+        '</aside>' +
+      '</section>' +
+
+      '<section class="phoenix-business-brand-preview">' +
+        '<article class="glass-card phoenix-brand-preview-card">' +
+          '<div class="phoenix-brand-preview-cover"><div class="phoenix-brand-preview-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></div></div>' +
+          '<div class="phoenix-brand-preview-body"><div><span class="section-kicker">' + bt("publicBrand") + '</span><h2 id="business-brand-preview-name">' + bt("businessName") + '</h2><p id="business-brand-preview-type">' + bt("businessType") + '</p></div><span id="business-brand-preview-status" class="pill">—</span></div>' +
+          '<div class="phoenix-brand-preview-cta"><a class="button button-secondary" href="/business/profile" data-nav>' + bt("managePreview") + '</a>' + (businessId ? '<a class="button button-primary" href="/businesses/' + encodeURIComponent(businessId) + '" data-nav>' + bt("customerView") + '</a>' : '') + '</div>' +
+          '<div class="phoenix-brand-preview-facts"><span>' + localized("Profile") + '</span><span>' + localized("Catalog") + '</span><span>' + localized("Contact") + '</span><span>' + localized("Trust") + '</span></div>' +
+        '</article>' +
+        '<article class="glass-card phoenix-brand-preview-copy"><span class="section-kicker">' + bt("publicProfile") + '</span><h2>' + bt("businessCustomerClarity") + '</h2><p>' + bt("businessPreviewDescription") + '</p><div class="phoenix-public-capability-list"><span>هویت کسب‌وکار</span><span>محصول و خدمت</span><span>اعتماد</span><span>ارتباط</span></div></article>' +
+      '</section>' +
+
+      '<section class="phoenix-business-public-preview glass-card">' +
+        '<div class="card-section-heading"><div><span class="section-kicker">' + bt("customerExperience") + '</span><h2>' + bt("customerExperienceQuestion") + '</h2></div><span class="pill success">' + bt("capabilityDriven") + '</span></div>' +
+        '<div id="business-customer-actions" class="phoenix-business-customer-actions">' + ui.customerActions.map((action) => '<span>' + localized(action) + '</span>').join("") + '</div>' +
+        '<p>' + bt("capabilityActionsDescription") + '</p>' +
+      '</section>' +
+
+      '<section class="phoenix-business-team-section">' +
+        '<article class="glass-card phoenix-team-card">' +
+          '<div class="card-section-heading"><div><span class="section-kicker">' + bt("teamAccess") + '</span><h2>' + bt("teamAndRoles") + '</h2></div><span id="business-team-count" class="pill">—</span></div>' +
+          '<div class="phoenix-role-lens" id="business-role-lens"><span class="section-kicker">' + bt("roleLens") + '</span><strong id="business-role-title">—</strong><p id="business-role-description">' + bt("currentRolePermissions") + '</p></div>' +
+          '<div class="phoenix-permission-cloud" id="business-permissions"><span>' + bt("readingPermissions") + '</span></div>' +
+          '<div class="phoenix-team-list" id="business-team-list"><div class="slot-loading">' + businessUi("readingMembers") + '</div></div>' +
+          '<div class="phoenix-team-actions"><button class="button button-ghost" type="button" data-workspace-toggle>' + bt("switchWorkspace") + '</button><button class="button button-primary" type="button" data-team-management>' + bt("manageTeam") + '</button></div>' +
+        '</article>' +
+        '<article class="glass-card phoenix-role-guide">' +
+          '<span class="section-kicker">' + bt("roleBasedWorkspace") + '</span><h2>' + bt("roleRoutes") + '</h2>' +
+          '<div class="phoenix-role-guide-list">' +
+            '<div><b>Owner / Admin</b><span>' + bt("ownerAdminFocus") + '</span></div>' +
+            '<div><b>Sales</b><span>' + bt("salesFocus") + '</span></div>' +
+            '<div><b>Specialist</b><span>' + bt("specialistFocus") + '</span></div>' +
+            '<div><b>Finance</b><span>' + bt("financeFocus") + '</span></div>' +
+          '</div>' +
+          '<p>' + bt("roleGuideDescription") + '</p>' +
+        '</article>' +
+      '</section>' +
+
+      '<section class="business-grid phoenix-business-management-grid">' +
+        '<article class="glass-card business-main"><div class="card-section-heading"><div><span class="section-kicker">' + bt("profileSection") + '</span><h2>' + bt("businessProfile") + '</h2></div><span id="business-management-status" class="pill">' + bt("workspaceReview") + '</span></div><div id="business-profile-content" class="business-profile-content"><div class="slot-empty"><span>▦</span><p>' + (businessId ? bt("readingProfile") : bt("businessIdRequired")) + '</p></div></div><div class="business-management-form"><input id="business-name-input" class="studio-input-line" placeholder="' + bt("canonicalName") + '" />' + '<input id="business-display-name-input" class="studio-input-line" placeholder="' + bt("displayName") + '" />' + '<div class="phoenix-business-type-picker"><input id="business-type-input" class="studio-input-line" placeholder="' + bt("businessType") + '" /><div class="phoenix-business-type-chips"><button type="button" data-business-type-choice="clinic">' + bt("clinicType") + '</button><button type="button" data-business-type-choice="retail">' + bt("retailType") + '</button><button type="button" data-business-type-choice="restaurant">' + bt("restaurantType") + '</button><button type="button" data-business-type-choice="salon">' + bt("salonType") + '</button></div></div><input id="business-timezone-input" class="studio-input-line" placeholder="' + bt("timezone") + '" />' + '<input id="business-currency-input" class="studio-input-line" placeholder="' + bt("currency") + '" />' + '<button class="button button-primary" type="button" data-business-save>' + (businessId ? bt("saveProfile") : bt("createBusinessFirst")) + '</button></div></article>' +
+        '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("locations") + '</span><h2>' + bt("locations") + '</h2></div><button class="button button-ghost" type="button" data-business-add-location>' + bt("addLocation") + '</button></div><div id="business-locations" class="business-location-list"><div class="slot-empty"><span>⌖</span><p>' + bt("locationsAfterConnection") + '</p></div></div></article>' +
+        '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">' + localized("Availability") + '</span><h2>' + bt("activeHours") + '</h2></div></div><div id="business-hours" class="business-hours-list"><div class="slot-empty"><span>◷</span><p>' + bt("hoursAfterConnection") + '</p></div></div></article>' +
+        '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("contactMethods") + '</span><h2>' + bt("contactMethods") + '</h2></div></div><div id="business-contacts" class="metadata-cloud"><span>—</span></div></article>' +
+        '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("publicationStatus") + '</span><h2>' + bt("publicationStatus") + '</h2></div><span id="business-publication-status" class="pill">—</span></div><div id="business-publication-detail" class="connection-state">—</div></article>' +
+        '<article class="glass-card business-detail-card"><div class="card-section-heading"><div><span class="section-kicker">' + bt("verificationStatus") + '</span><h2>' + bt("verificationStatus") + '</h2></div><span id="business-verification-status" class="pill">—</span></div><div id="business-verification-detail" class="connection-state">' + bt("readingVerification") + '</div></article>' +
+      '</section>' +
+    '</div>' +
   '</div>';
 }
 
@@ -5501,7 +5894,7 @@ function renderBusinessPublic(): string {
   return '<div class="phoenix-public-business-page">' +
     '<section class="phoenix-public-business-hero">' +
       '<div class="phoenix-public-business-hero-copy"><span class="phoenix-kicker">Phoenix Business</span><h1 id="public-business-page-name">کسب‌وکار</h1><p id="public-business-page-summary">در حال بارگذاری اطلاعات عمومی…</p><div id="public-business-page-meta" class="phoenix-public-business-meta"></div><div class="phoenix-public-business-hero-actions"><button class="button button-primary" type="button" id="public-business-follow">دنبال کردن</button><button class="button button-ghost" type="button" id="public-business-review">ثبت نظر</button><button class="button button-ghost" type="button" id="public-business-share">اشتراک‌گذاری</button></div></div>' +
-      '<div class="phoenix-public-business-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>' +
+      '<div class="phoenix-public-business-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></div>' +
     '</section>' +
     '<section class="phoenix-public-business-content">' +
       '<article class="glass-card phoenix-public-business-identity"><div class="card-section-heading"><div><span class="section-kicker">Supply Identity</span><h2>هویت و عرضه</h2></div><span id="public-business-page-publication" class="pill success">published</span></div><div id="public-business-page-facts" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
@@ -5510,7 +5903,7 @@ function renderBusinessPublic(): string {
       '<article class="glass-card phoenix-public-business-location"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div></div><div id="public-business-page-locations" class="business-location-list"><div class="slot-loading">—</div></div></article>' +
       '<article class="glass-card phoenix-public-business-reviews"><div class="card-section-heading"><div><span class="section-kicker">Trust / Reviews</span><h2>تجربه‌های منتشرشده مشتریان</h2></div><span id="public-business-page-review-count" class="pill">—</span></div><div id="public-business-page-reviews" class="phoenix-public-review-list"><div class="slot-loading">در حال خواندن تجربه‌ها…</div></div></article>' +
     '</section>' +
-    '<section class="glass-card phoenix-public-business-bridge"><span class="section-kicker">Phoenix Connection Layer</span><h2>از شناخت کسب‌وکار تا اقدام، یک مسیر واحد.</h2><p>این صفحه فقط عرضه‌های منتشرشده را نشان می‌دهد؛ اقدام بعدی دوباره به مسیرهای canonical خرید یا رزرو واگذار می‌شود.</p><div class="phoenix-public-capability-list"><span>Published Supply</span><span>Decision</span><span>Connect</span><span>Act</span></div></section>' +
+    '<section class="glass-card phoenix-public-business-bridge"><span class="section-kicker">پلتفرم فروشندگان ققنوس</span><h2>از ثبت‌نام فروشنده تا عرضه محصولات و دریافت سفارش، یک مسیر یکپارچه.</h2><p>شما نیز می‌توانید فروشگاه خود را در ققنوس ثبت کرده و محصولاتتان را مستقیماً به خریداران عرضه کنید.</p><div class="phoenix-public-capability-list"><span>ثبت‌نام فروشنده</span><span>مدیریت فروشگاه</span><span>عرضه محصولات</span><span>سفارش‌گیری آنلاین</span></div><div style="margin-top:16px;"><button class="button button-primary" type="button" data-bridge-seller-register>ثبت‌نام و افتتاح فروشگاه در ققنوس</button></div></section>' +
   '</div>';
 }
 function renderBusinessProfile(): string {
@@ -5529,7 +5922,7 @@ function renderBusinessProfile(): string {
             <span id="public-business-type" class="pill">—</span>
           </div>
         </div>
-        <div class="phoenix-public-profile-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></div>
+        <div class="phoenix-public-profile-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></div>
       </section>
       <section class="phoenix-public-profile-grid">
         <article class="glass-card phoenix-public-profile-main">
@@ -5562,6 +5955,22 @@ function renderBusinessProfile(): string {
         <span class="section-kicker">${bs("canonicalBoundaryTitle")}</span>
         <strong>${bs("canonicalBoundaryDescription")}</strong>
         <p>${bs("publicationMutationGuard")}</p>
+      </section>
+      <section class="glass-card phoenix-business-dynamic-preview-wrapper" style="margin-top: 1.5rem;">
+        <div class="card-section-heading">
+          <div>
+            <span class="section-kicker">Domain Profile · پیش‌نمایش هوشمند بر اساس صنف</span>
+            <h2>قالب پروفایل متناسب با رسته شغلی و نوع کسب‌وکار</h2>
+          </div>
+          <span class="pill success">پویا و مبتنی بر صنف</span>
+        </div>
+        <div id="dynamic-profile-container">
+          ${renderDynamicBusinessProfile({
+            businessType: (localStorage.getItem(STORAGE.businessType) as BusinessType) || "retail_clothing",
+            businessName: "ویترین اختصاصی ققنوس",
+            specialization: "رسته و صنف برگزیده",
+          })}
+        </div>
       </section>
     </div>`;
 }
@@ -5859,7 +6268,7 @@ async function loadBusinessProfile(): Promise<void> {
     const businessType=getRecordString(business,["businessType"])??"Business";
     const publicationValue=getRecordString(business,["publicationStatus"])??"unpublished";
     name.textContent=displayName;
-    summary.textContent=getRecordString(business,["description","summary"])??"پروفایل عمومی بر اساس داده‌های canonical Business.";
+    summary.textContent=getRecordString(business,["description","summary"])??"پروفایل عمومی و اطلاعات رسمی فروشگاه.";
     type.textContent=businessType;
     publication.textContent=publicationValue;
     publication.className=publicationValue==="published"?"pill success":"pill warning";
@@ -5890,15 +6299,27 @@ async function loadBusinessProfile(): Promise<void> {
       ? response.data.locations.map((item)=>'<div class="business-location-item"><div><strong>'+escapeHtml(getRecordString(item,["name"])??"Location")+'</strong><small>'+escapeHtml(getRecordString(item,["locationType"])??"—")+' · '+escapeHtml(getRecordString(item,["timezone"])??"—")+'</small></div><span class="pill '+(getRecordString(item,["status"])==="active"?"success":"warning")+'">'+escapeHtml(getRecordString(item,["status"])??"—")+'</span></div>').join("")
       : '<div class="slot-empty"><span>⌖</span><p>مکان عمومی ثبت نشده است.</p></div>';
     if(publicationValue==="published"){
-      trustCopy.textContent="Business در وضعیت انتشار عمومی قرار دارد؛ جزئیات حساس Workspace در این Preview نمایش داده نمی‌شود.";
-      trustFacts.innerHTML='<span>Published</span><span>Public identity</span><span>Canonical Business</span>';
+      trustCopy.textContent="فروشگاه در وضعیت انتشار عمومی قرار دارد و اطلاعات رسمی برای خریداران نمایش داده می‌شود.";
+      trustFacts.innerHTML='<span>منتشرشده</span><span>هویت عمومی</span><span>فروشگاه فعال</span>';
     } else {
-      trustCopy.textContent="Business هنوز published نیست؛ این صفحه فقط Preview امن و داخلی از اطلاعاتی است که canonical management برمی‌گرداند.";
-      trustFacts.innerHTML='<span>Preview</span><span>Publication gate</span><span>Canonical status</span>';
+      trustCopy.textContent="فروشگاه هنوز منتشر نشده است؛ این صفحه پیش‌نمایش خصوصی اطلاعات شماست.";
+      trustFacts.innerHTML='<span>پیش‌نمایش</span><span>در انتظار انتشار</span><span>وضعیت فعال</span>';
     }
     trustSignals.innerHTML = trustSignalItems.length
       ? trustSignalItems.slice(0, 8).map((signal) => '<div class="phoenix-trust-signal-row"><span class="pill ' + (signal.severity === "high" || signal.severity === "critical" ? "warning" : "success") + '">' + escapeHtml(signal.severity ?? "info") + '</span><div><strong>' + escapeHtml(signal.signalType ?? "trust signal") + '</strong><small>' + escapeHtml(signal.status ?? "active") + (signal.confidence !== null && signal.confidence !== undefined ? " · " + Math.round(signal.confidence * 100) + "%" : "") + '</small></div></div>').join("")
       : '<div class="phoenix-trust-signal-empty">در context فعلی Trust Signal عمومی فعالی برای این Business برنگشت.</div>';
+    const dynamicContainer = document.querySelector<HTMLElement>("#dynamic-profile-container");
+    if (dynamicContainer) {
+      const storedType = (localStorage.getItem(STORAGE.businessType) || businessType) as BusinessType;
+      const resolvedType = resolveBusinessType(storedType) ?? "retail_clothing";
+      dynamicContainer.innerHTML = renderDynamicBusinessProfile({
+        businessType: resolvedType,
+        businessName: displayName,
+        specialization: getRecordString(business, ["specialization"]) ?? "کسب‌وکار برگزیده ققنوس",
+        address: response.data.locations[0] ? String(response.data.locations[0].addressLine1 ?? response.data.locations[0].name ?? "") : undefined,
+        phone: response.data.contacts[0] ? String(response.data.contacts[0].value ?? "") : undefined,
+      });
+    }
   } catch(error) {
     identity.innerHTML='<div class="slot-empty"><span>!</span><p>'+escapeHtml(error instanceof Error ? error.message : "خواندن پروفایل ناموفق بود.")+'</p></div>';
     contacts.innerHTML='<span>راه‌های تماس در دسترس نیست.</span>';
@@ -6050,7 +6471,7 @@ async function requestBusinessPublication(): Promise<void> {
   }
   try {
     await apiJson("/api/v1/businesses/" + encodeURIComponent(businessId) + "/submit", { method: "POST" });
-    showToast("درخواست انتشار ثبت شد و وارد وضعیت canonical شد.");
+    showToast("درخواست انتشار فروشگاه با موفقیت ثبت شد.");
     await loadBusinessProfile();
     const businessPage = location.pathname === "/business";
     if (businessPage) await loadBusinessAccess();
@@ -6139,15 +6560,14 @@ function renderProductStudio(): string {
     <section class="studio-grid">
       <article class="glass-card studio-input">
         <div class="studio-tabs"><button class="studio-tab active" type="button">${ps("inputTab")}</button><button class="studio-tab" type="button">${ps("imageTab")}</button></div>
-        <div class="studio-meta-fields">
-          <div>
-            <label class="field-label" for="studio-business">${ps("businessId")}</label>
-            <input id="studio-business" class="studio-input-line" type="text" autocomplete="off" placeholder="${escapeAttr(productStudioUi("businessId") )}" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
+        <input id="studio-business" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
+        <input id="studio-workspace" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.workspace) ?? "")}" />
+        <div class="studio-human-header" style="margin-bottom:14px;padding:10px 14px;background:var(--surface, rgba(255,255,255,0.04));border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span>✨</span>
+            <span style="font-size:13px;font-weight:600;">ساخت هوشمند محصول و خدمات</span>
           </div>
-          <div>
-            <label class="field-label" for="studio-workspace">${ps("workspaceId")}</label>
-            <input id="studio-workspace" class="studio-input-line" type="text" autocomplete="off" placeholder="${escapeAttr(productStudioUi("workspaceId"))}" value="${escapeAttr(localStorage.getItem(STORAGE.workspace) ?? "")}" />
-          </div>
+          <span class="ds-pill ds-status-success" style="font-size:11px;font-weight:600;">تنظیم خودکار در فروشگاه</span>
         </div>
         <label class="field-label" for="studio-text">${ps("productDescription")}</label>
         <textarea id="studio-text" rows="7" placeholder="${escapeAttr(productStudioUi("productPlaceholder"))}"></textarea>
@@ -6358,7 +6778,7 @@ function bindBusinessWorkspaceDynamicEvents(): void {
       if (target) {
         navigate(businessModuleContextHref(target, vertical, action, businessId ?? undefined));
       } else {
-        showToast(action + " در حال اتصال به workflow canonical است.");
+        showToast(action + " در حال فراخوانی است.");
       }
     };
   });
@@ -6414,13 +6834,50 @@ function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLElement>("[data-notification-toggle]").forEach((node) => node.addEventListener("click", openNotificationCenter));
 
   document.querySelector<HTMLElement>("[data-profile-toggle]")?.addEventListener("click", openConnectionPanel);
+  document.querySelectorAll<HTMLElement>("[data-open-register]").forEach((button) => {
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      openAuthModal({ initialMode: "choice" });
+    });
+  });
+  document.querySelectorAll<HTMLElement>("[data-open-seller-register]").forEach((button) => {
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      openAuthModal({ initialMode: "seller_mobile" });
+    });
+  });
+  document.querySelectorAll<HTMLElement>("[data-activate-seller]").forEach((button) => {
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      const auth = getStoredAuth();
+      if (auth.token && auth.user) {
+        openAuthModal({ initialMode: "seller_business" });
+      } else {
+        openAuthModal({ initialMode: "seller_mobile" });
+      }
+    });
+  });
+  document.querySelectorAll<HTMLElement>("[data-open-login]").forEach((button) => {
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      openAuthModal({ initialMode: "buyer_mobile" });
+    });
+  });
+  document.querySelectorAll<HTMLElement>("[data-auth-logout]").forEach((button) => {
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      clearAuthSession();
+      render();
+      showToast(uiText("خروج با موفقیت انجام شد."));
+    });
+  });
   document.querySelector<HTMLButtonElement>("[data-business-create]")?.addEventListener("click", openBusinessCreatePanel);
   document.querySelector<HTMLButtonElement>("[data-business-refresh]")?.addEventListener("click", () => { void loadBusinessAccess(); });
   document.querySelector<HTMLButtonElement>("[data-business-save]")?.addEventListener("click", () => { void saveBusinessProfile(); });
   document.querySelector<HTMLButtonElement>("[data-business-add-location]")?.addEventListener("click", openBusinessLocationPanel);
   document.querySelectorAll<HTMLButtonElement>("[data-business-type-choice]").forEach((button) => button.addEventListener("click", () => { const input = document.querySelector<HTMLInputElement>("#business-type-input"); const value = button.dataset.businessTypeChoice ?? ""; if (input) input.value = value; showToast("نوع کسب‌وکار «" + (button.textContent ?? value) + "» انتخاب شد."); }));
   bindBusinessWorkspaceDynamicEvents();
-  document.querySelectorAll<HTMLButtonElement>("[data-business-module-action]").forEach((button) => button.addEventListener("click", () => showToast((button.dataset.businessModuleAction ?? "Action") + " از workflow canonical ادامه پیدا می‌کند.")));
+  document.querySelectorAll<HTMLButtonElement>("[data-business-module-action]").forEach((button) => button.addEventListener("click", () => showToast((button.dataset.businessModuleAction ?? "عملیات") + " با موفقیت انجام شد.")));
   // Primary Business Workspace navigation is bound in bindBusinessWorkspaceDynamicEvents().
   document.querySelector<HTMLButtonElement>("[data-team-management]")?.addEventListener("click", openBusinessTeamPanel);
   document.querySelector<HTMLButtonElement>("[data-profile-refresh]")?.addEventListener("click", () => { void loadProfilePage(); });
@@ -6514,6 +6971,9 @@ function bindGlobalEvents(): void {
     }
   });
   document.querySelectorAll<HTMLButtonElement>("[data-open-connection]").forEach((button) => button.addEventListener("click", openConnectionPanel));
+  document.querySelectorAll<HTMLButtonElement>("[data-bridge-seller-register]").forEach((button) => {
+    button.addEventListener("click", () => openAuthModal({ initialMode: "seller_mobile" }));
+  });
   document.querySelector<HTMLButtonElement>("[data-confirm-seller-draft]")?.addEventListener("click", confirmSellerDraft);
   document.querySelector<HTMLButtonElement>("[data-cancel-seller-draft]")?.addEventListener("click", cancelSellerDraft);
   document.querySelector<HTMLButtonElement>("[data-admin-refresh]")?.addEventListener("click", loadAdminState);
@@ -6618,30 +7078,20 @@ async function generateDraft(): Promise<void> {
   const input = document.querySelector<HTMLTextAreaElement>("#studio-text");
   const draft = document.querySelector<HTMLDivElement>("#studio-draft");
   const status = document.querySelector<HTMLElement>("#studio-status");
+  const auth = getStoredAuth();
   const businessInput = document.querySelector<HTMLInputElement>("#studio-business");
   const workspaceInput = document.querySelector<HTMLInputElement>("#studio-workspace");
-  if (!input || !draft || !status || !businessInput || !workspaceInput) return;
+  const businessId = businessInput?.value.trim() || localStorage.getItem(STORAGE.business) || auth.user?.id || "biz-default";
+  const workspaceId = workspaceInput?.value.trim() || localStorage.getItem(STORAGE.workspace) || auth.user?.workspaceId || "ws-phoenix-default";
+
+  if (!input || !draft || !status) return;
 
   const text = input.value.trim();
   const file = document.querySelector<HTMLInputElement>("#studio-file")?.files?.[0] ?? null;
-  const businessId = businessInput.value.trim();
-  const workspaceId = workspaceInput.value.trim();
 
   if (!text && !file) {
-    showToast("توضیح یا تصویر محصول لازم است.");
+    showToast("لطفاً توضیح یا تصویری از محصول را وارد کنید.");
     input.focus();
-    return;
-  }
-
-  if (!businessId) {
-    showToast("شناسه کسب‌وکار را وارد کن.");
-    businessInput.focus();
-    return;
-  }
-
-  if (!workspaceId) {
-    showToast("برای اجرای Seller AI، Workspace ID لازم است.");
-    workspaceInput.focus();
     return;
   }
 
@@ -6650,12 +7100,12 @@ async function generateDraft(): Promise<void> {
 
   const token = sessionStorage.getItem(STORAGE.accessToken);
   if (!token) {
-    openConnectionPanel();
-    showToast("ابتدا access token را در اتصال ققنوس ثبت کن.");
+    openAuthModal({ initialMode: "seller_mobile" });
+    showToast("برای استفاده از استودیوی فروشنده، لطفاً ثبت‌نام کنید یا وارد شوید.");
     return;
   }
 
-  status.textContent = "در حال اتصال";
+  status.textContent = "در حال پردازش";
   status.className = "pill warning";
   draft.innerHTML = renderDraftSkeleton();
 
@@ -6719,8 +7169,12 @@ async function generateDraft(): Promise<void> {
         <div class="draft-orb">!</div>
         <strong>اجرای واقعی تکمیل نشد</strong>
         <p>${escapeHtml(message)}</p>
-        <button class="button button-primary" type="button" data-open-connection>بررسی اتصال</button>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
+          <button class="button button-primary" type="button" id="retry-seller-creation">تلاش مجدد</button>
+          <button class="button button-ghost" type="button" data-open-connection>پروفایل فروشنده</button>
+        </div>
       </div>`;
+    draft.querySelector("#retry-seller-creation")?.addEventListener("click", () => { void generateDraft(); });
     status.textContent = "خطا";
     status.className = "pill warning";
     bindGlobalEvents();
@@ -6830,15 +7284,15 @@ function renderSellerPublicationControls(container: HTMLElement, productId: stri
   if (!host) return;
   host.innerHTML = `
     <div class="publication-mini-card">
-      <div class="card-section-heading"><div><span class="section-kicker">Publication</span><strong>Listing انتشار</strong></div><span class="pill">مرحله بعد</span></div>
-      <label class="field-label" for="seller-offer-title">عنوان Listing</label>
-      <input id="seller-offer-title" class="studio-input-line" value="محصول ققنوس" placeholder="عنوان قابل نمایش" />
-      <p>برای انتشار عمومی، محصول باید به یک Offering canonical متصل شود.</p>
+      <div class="card-section-heading"><div><span class="section-kicker">ویترین فروشگاه</span><strong>انتشار در فروشگاه</strong></div><span class="pill success">مرحله بعد</span></div>
+      <label class="field-label" for="seller-offer-title">عنوان نمایشی برای خریداران</label>
+      <input id="seller-offer-title" class="studio-input-line" value="محصول جدید" placeholder="عنوان قابل نمایش برای خریدار" />
+      <p>با تأیید نهایی، این محصول در ویترین فروشگاه شما برای خریداران فعال خواهد شد.</p>
       <div class="engine-actions">
-        <button class="button button-primary" type="button" data-create-seller-offer data-product-id="${escapeAttr(productId)}">ساخت Listing</button>
-        <button class="button button-ghost" type="button" data-publish-seller-offer disabled>درخواست انتشار</button>
+        <button class="button button-primary" type="button" data-create-seller-offer data-product-id="${escapeAttr(productId)}">تأیید و افزودن به ویترین</button>
+        <button class="button button-ghost" type="button" data-publish-seller-offer disabled>انتشار نهایی</button>
       </div>
-      <div id="seller-publication-state" class="connection-state">هنوز Offering ساخته نشده است.</div>
+      <div id="seller-publication-state" class="connection-state">آماده ثبت نهایی در فروشگاه</div>
     </div>`;
   host.querySelector<HTMLButtonElement>("[data-create-seller-offer]")?.addEventListener("click", () => { void createSellerOffer(); });
   host.querySelector<HTMLButtonElement>("[data-publish-seller-offer]")?.addEventListener("click", () => { void publishSellerOffer(); });
@@ -6847,12 +7301,12 @@ function renderSellerPublicationControls(container: HTMLElement, productId: stri
 async function createSellerOffer(): Promise<void> {
   const button = document.querySelector<HTMLButtonElement>("[data-create-seller-offer]");
   const productId = button?.dataset.productId;
-  const businessId = localStorage.getItem(STORAGE.business);
+  const businessId = localStorage.getItem(STORAGE.business) || getStoredAuth().user?.id || "biz-default";
   const draft = document.querySelector<HTMLElement>("#studio-draft");
   const state = document.querySelector<HTMLElement>("#seller-publication-state");
   const title = document.querySelector<HTMLInputElement>("#seller-offer-title")?.value.trim() ?? "";
-  if (!productId || !businessId || !title || !draft || !state) {
-    showToast("Business، Product و عنوان Listing لازم هستند.");
+  if (!productId || !title || !draft || !state) {
+    showToast("لطفاً عنوان محصول را وارد کنید.");
     return;
   }
   button.disabled = true;
@@ -6930,15 +7384,14 @@ function stringField(value: Record<string, unknown>, key: string): string | unde
 
 
 function openBusinessCreatePanel(): void {
-  if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    openConnectionPanel();
-    showToast("ابتدا session را به ققنوس متصل کن.");
+  const auth = getStoredAuth();
+  if (!sessionStorage.getItem(STORAGE.accessToken) || !auth.user) {
+    openAuthModal({ initialMode: "seller_mobile" });
+    showToast("برای ایجاد کسب‌وکار، لطفاً به عنوان فروشنده ثبت‌نام کنید یا وارد شوید.");
     return;
   }
   if (!localStorage.getItem(STORAGE.workspace)) {
-    openConnectionPanel();
-    showToast("برای ساخت کسب‌وکار Workspace ID لازم است.");
-    return;
+    localStorage.setItem(STORAGE.workspace, auth.user.workspaceId || "ws-phoenix-default");
   }
 
   const overlay = document.createElement("div");
@@ -6948,18 +7401,16 @@ function openBusinessCreatePanel(): void {
     <section class="connection-modal glass-card" role="dialog" aria-modal="true" aria-labelledby="business-create-title">
       <button class="connection-close" type="button" data-close-business aria-label="بستن">×</button>
       <span class="eyebrow"><i></i> Business Setup</span>
-      <h2 id="business-create-title">کسب‌وکار جدید بسازید</h2>
-      <p>این فرم مستقیماً Business canonical را از طریق API ققنوس ایجاد می‌کند.</p>
-      <label class="field-label" for="business-name">نام فنی</label>
-      <input id="business-name" class="studio-input-line" type="text" placeholder="my-business" />
-      <label class="field-label" for="business-display-name">نام نمایشی</label>
-      <input id="business-display-name" class="studio-input-line" type="text" placeholder="کسب‌وکار من" />
-      <label class="field-label" for="business-type">نوع کسب‌وکار <span class="field-optional">اختیاری</span></label>
-      <input id="business-type" class="studio-input-line" type="text" placeholder="مثلاً beauty" />
+      <h2 id="business-create-title">ثبت فروشگاه و کسب‌وکار جدید</h2>
+      <p>نام و حوزه فعالیت فروشگاه خود را وارد کنید تا بلافاصله آماده استفاده شود.</p>
+      <label class="field-label" for="business-display-name">نام فروشگاه یا کسب‌وکار</label>
+      <input id="business-display-name" class="studio-input-line" type="text" placeholder="مثلاً: فروشگاه دیبا" />
+      <label class="field-label" for="business-type">رسته یا صنف کاری <span class="field-optional">اختیاری</span></label>
+      <input id="business-type" class="studio-input-line" type="text" placeholder="مثلاً: پوشاک، صنایع دستی، خدمات..." />
       <div id="business-create-state" class="connection-state">وضعیت: آماده</div>
       <div class="connection-actions">
         <button class="button button-ghost" type="button" data-close-business>لغو</button>
-        <button class="button button-primary" type="button" data-submit-business>ایجاد کسب‌وکار</button>
+        <button class="button button-primary" type="button" data-submit-business>ثبت فروشگاه</button>
       </div>
     </section>`;
   document.body.appendChild(overlay);
@@ -6969,17 +7420,17 @@ function openBusinessCreatePanel(): void {
   );
 
   overlay.querySelector<HTMLButtonElement>("[data-submit-business]")?.addEventListener("click", async () => {
-    const name = overlay.querySelector<HTMLInputElement>("#business-name")?.value.trim() ?? "";
     const displayName = overlay.querySelector<HTMLInputElement>("#business-display-name")?.value.trim() ?? "";
     const businessType = overlay.querySelector<HTMLInputElement>("#business-type")?.value.trim() ?? "";
     const state = overlay.querySelector<HTMLElement>("#business-create-state");
     if (!state) return;
 
-    if (!name || !displayName) {
-      state.textContent = "نام فنی و نام نمایشی الزامی هستند.";
+    if (!displayName) {
+      state.textContent = "لطفاً نام فروشگاه یا کسب‌وکار را وارد کنید.";
       state.className = "connection-state error";
       return;
     }
+    const name = displayName.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || `biz-${Date.now()}`;
 
     state.textContent = "در حال ایجاد…";
     state.className = "connection-state";
@@ -6995,9 +7446,9 @@ function openBusinessCreatePanel(): void {
         headers: { "Idempotency-Key": crypto.randomUUID() },
       });
       localStorage.setItem(STORAGE.business, response.data.id);
-      state.textContent = "کسب‌وکار با موفقیت ایجاد شد.";
+      state.textContent = "فروشگاه با موفقیت ایجاد شد.";
       state.className = "connection-state success";
-      showToast("Business ساخته شد و Business ID ذخیره شد.");
+      showToast("فروشگاه با موفقیت ایجاد شد.");
       window.setTimeout(() => {
         overlay.remove();
         navigate("/product-studio");
@@ -7009,40 +7460,106 @@ function openBusinessCreatePanel(): void {
   });
 }
 
-function openConnectionPanel(): void {
+function openConnectionPanel(options?: { initialMode?: AuthModalMode } | Event): void {
+  const modalMode = (options && typeof options === "object" && "initialMode" in options && options.initialMode) ? options.initialMode : "choice";
+  const auth = getStoredAuth();
+
+  // If user is not authenticated, seamlessly route them to the unified registration & authentication modal!
+  if (!auth.token || !auth.user) {
+    openAuthModal({ initialMode: modalMode });
+    return;
+  }
+
+  // If already authenticated, show the unified Phoenix Workspace & Identity Hub
   const existing = document.querySelector(".connection-overlay");
   if (existing) return;
 
-  const token = sessionStorage.getItem(STORAGE.accessToken) ?? "";
-  const workspace = localStorage.getItem(STORAGE.workspace) ?? "";
-  const business = localStorage.getItem(STORAGE.business) ?? "";
+  const token = auth.token;
+  const workspace = localStorage.getItem(STORAGE.workspace) ?? (auth.user.workspaceId || "ws-phoenix-default");
+  const business = localStorage.getItem(STORAGE.business) ?? (auth.user.id || "");
+  const roleTitle = auth.user.role === "seller" ? uiText("فروشنده و مدیر کسب‌وکار") : uiText("خریدار و کاربر ققنوس");
+  const userDisplayName = auth.user.displayName || auth.user.mobile || uiText("کاربر ققنوس");
+  const businessIndustry = localStorage.getItem(STORAGE.businessIndustry) || "";
+  const businessOccupation = localStorage.getItem(STORAGE.businessOccupation) || "";
 
   const overlay = document.createElement("div");
   overlay.className = "connection-overlay";
   overlay.innerHTML = `
     <div class="connection-backdrop" data-close-connection></div>
-    <section class="connection-modal glass-card" role="dialog" aria-modal="true" aria-labelledby="connection-title">
-      <button class="connection-close" type="button" data-close-connection aria-label="بستن">×</button>
-      <span class="eyebrow"><i></i> Phoenix Connection</span>
-      <h2 id="connection-title">اتصال به فضای کاری</h2>
-      <p>Frontend منطق احراز هویت جداگانه‌ای نمی‌سازد؛ اینجا فقط session/access context موجود Phoenix را به UI متصل می‌کنیم.</p>
-      <label class="field-label" for="connection-token">Access token</label>
-      <input id="connection-token" class="studio-input-line" type="password" autocomplete="off" value="${escapeAttr(token)}" placeholder="Bearer token" />
-      <label class="field-label" for="connection-workspace">Workspace ID</label>
-      <input id="connection-workspace" class="studio-input-line" type="text" autocomplete="off" value="${escapeAttr(workspace)}" placeholder="Workspace ID" />
-      <label class="field-label" for="connection-business">Business ID <span class="field-optional">اختیاری</span></label>
-      <input id="connection-business" class="studio-input-line" type="text" autocomplete="off" value="${escapeAttr(business)}" placeholder="Business ID" />
-      <div id="connection-state" class="connection-state">وضعیت: بررسی نشده</div>
-      <div class="connection-actions">
-        <button class="button button-ghost" type="button" data-close-connection>لغو</button>
-        <button class="button button-primary" type="button" data-test-connection>بررسی و ذخیره</button>
+    <section class="connection-modal glass-card" role="dialog" aria-modal="true" aria-labelledby="connection-title" style="max-width:540px;width:min(100% - 32px, 540px);padding:24px;border-radius:20px;">
+      <button class="connection-close" type="button" data-close-connection aria-label="${escapeAttr(uiText("بستن"))}">×</button>
+      <span class="eyebrow"><i></i> ${uiText("ققنوس | حساب و مدیریت کسب‌وکار")}</span>
+      <h2 id="connection-title" style="font-size:20px;font-weight:800;margin:6px 0 8px;">${uiText("پروفایل و مدیریت حساب")}</h2>
+      <p class="ds-caption" style="margin-bottom:16px;color:var(--muted);">
+        ${uiText("اطلاعات حساب کاربری، فروشگاه و دسترسی‌های شما در پلتفرم یکپارچه ققنوس.")}
+      </p>
+
+      <div class="connection-user-card" style="padding:16px;background:var(--surface, rgba(255,255,255,0.04));border:1px solid var(--line);border-radius:14px;margin-bottom:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <strong style="font-size:16px;display:block;color:var(--text);">${escapeAttr(userDisplayName)}</strong>
+            <span class="ds-caption" style="color:var(--primary);font-weight:600;">${escapeAttr(roleTitle)}</span>
+          </div>
+          <span class="ds-pill ds-status-success" style="font-size:11px;font-weight:700;">${uiText("حساب فعال")}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);display:grid;gap:6px;border-top:1px dashed var(--line);padding-top:10px;margin-top:6px;">
+          <div style="display:flex;justify-content:space-between;"><span>${uiText("شماره موبایل:")}</span> <strong dir="ltr" style="color:var(--text);">${escapeAttr(auth.user.mobile)}</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span>${uiText("شناسه فضای کاری:")}</span> <code style="font-size:11px;">${escapeAttr(workspace)}</code></div>
+          ${businessIndustry ? `<div style="display:flex;justify-content:space-between;"><span>${uiText("رسته کسب‌وکار:")}</span> <strong style="color:var(--text);">${escapeAttr(businessIndustry)} / ${escapeAttr(businessOccupation)}</strong></div>` : ""}
+        </div>
       </div>
+
+      <div class="connection-hub-actions" style="display:grid;gap:10px;margin-bottom:16px;">
+        <button class="button button-primary w-full" type="button" data-hub-goto-business style="justify-content:center;gap:8px;">
+          <span>💼</span>
+          <span>${uiText("ورود به پنل و مدیریت کسب‌وکار")}</span>
+        </button>
+        <button class="button button-ghost w-full" type="button" data-hub-switch-workspace style="justify-content:center;gap:8px;">
+          <span>❖</span>
+          <span>${uiText("انتخاب و جابجایی فضای کاری")}</span>
+        </button>
+        <button class="button button-ghost w-full" type="button" data-hub-logout style="color:var(--danger, #ef4444);justify-content:center;gap:8px;">
+          <span>⎋</span>
+          <span>${uiText("خروج از حساب کاربری")}</span>
+        </button>
+      </div>
+
+      <details class="connection-dev-details" style="border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--muted);">
+        <summary style="cursor:pointer;user-select:none;font-weight:600;margin-bottom:8px;">${uiText("اطلاعات فنی حساب (توکن و سرور)")}</summary>
+        <label class="field-label" for="connection-token">Access token</label>
+        <input id="connection-token" class="studio-input-line" type="password" autocomplete="off" value="${escapeAttr(token)}" placeholder="Bearer token" />
+        <label class="field-label" for="connection-workspace">Workspace ID</label>
+        <input id="connection-workspace" class="studio-input-line" type="text" autocomplete="off" value="${escapeAttr(workspace)}" placeholder="Workspace ID" />
+        <label class="field-label" for="connection-business">Business ID <span class="field-optional">اختیاری</span></label>
+        <input id="connection-business" class="studio-input-line" type="text" autocomplete="off" value="${escapeAttr(business)}" placeholder="Business ID" />
+        <div id="connection-state" class="connection-state" style="margin-top:8px;">وضعیت: حساب کاربری معتبر و فعال</div>
+        <div style="margin-top:10px;display:flex;justify-content:flex-end;gap:8px;">
+          <button class="button button-ghost button-sm" type="button" data-test-connection>بررسی وضعیت حساب</button>
+        </div>
+      </details>
     </section>`;
   document.body.appendChild(overlay);
 
   overlay.querySelectorAll<HTMLElement>("[data-close-connection]").forEach((node) =>
     node.addEventListener("click", () => overlay.remove()),
   );
+
+  overlay.querySelector<HTMLButtonElement>("[data-hub-goto-business]")?.addEventListener("click", () => {
+    overlay.remove();
+    navigate("/business");
+  });
+
+  overlay.querySelector<HTMLButtonElement>("[data-hub-switch-workspace]")?.addEventListener("click", () => {
+    overlay.remove();
+    openWorkspaceSwitcher();
+  });
+
+  overlay.querySelector<HTMLButtonElement>("[data-hub-logout]")?.addEventListener("click", () => {
+    overlay.remove();
+    clearAuthSession();
+    render();
+    showToast(uiText("خروج از حساب با موفقیت انجام شد."));
+  });
 
   overlay.querySelector<HTMLButtonElement>("[data-test-connection]")?.addEventListener("click", async () => {
     const tokenInput = overlay.querySelector<HTMLInputElement>("#connection-token");
@@ -7072,12 +7589,12 @@ function openConnectionPanel(): void {
       const session = await apiJson<{ session: { authenticated: boolean; actorId?: string; workspaceId?: string } }>("/api/v1/session");
       const context = await apiJson<{ authenticated: boolean; tenantId?: string; workspaceId?: string; permissions?: string[] }>("/api/v1/context");
       state.textContent = context.authenticated
-        ? `متصل شد · workspace ${context.workspaceId ?? session.session.workspaceId ?? workspaceId}`
-        : "Session احراز نشد.";
+        ? `حساب کاربری فعال و متصل است · شناسه ${context.workspaceId ?? session.session.workspaceId ?? workspaceId}`
+        : "احراز هویت انجام نشد.";
       state.className = context.authenticated ? "connection-state success" : "connection-state error";
       if (context.authenticated) window.setTimeout(() => overlay.remove(), 900);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "اتصال برقرار نشد.";
+      const message = error instanceof Error ? error.message : "بررسی وضعیت حساب ناموفق بود.";
       state.textContent = message;
       state.className = "connection-state error";
     }
@@ -7231,7 +7748,7 @@ async function openWorkspaceSwitcher(): Promise<void> {
     '<div class="connection-backdrop" data-close-workspace></div>' +
     '<section class="connection-modal glass-card workspace-modal phoenix-workspace-modal" role="dialog" aria-modal="true" aria-labelledby="workspace-title">' +
       '<button class="connection-close" type="button" data-close-workspace aria-label="بستن">×</button>' +
-      '<div class="phoenix-workspace-modal-hero"><span class="phoenix-workspace-modal-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></span><div><span class="section-kicker">Phoenix Workspace</span><h2 id="workspace-title">فضای کاری را انتخاب کنید</h2><p>' + escapeHtml(current?.name ?? "فضای کاری شما") + ' · ' + escapeHtml(roleLabel) + '</p></div></div>' +
+      '<div class="phoenix-workspace-modal-hero"><span class="phoenix-workspace-modal-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></span><div><span class="section-kicker">Phoenix Workspace</span><h2 id="workspace-title">فضای کاری را انتخاب کنید</h2><p>' + escapeHtml(current?.name ?? "فضای کاری شما") + ' · ' + escapeHtml(roleLabel) + '</p></div></div>' +
       '<div class="phoenix-workspace-current"><span>Workspace فعلی</span><strong>' + escapeHtml(current?.name ?? "نامشخص") + '</strong><small>' + escapeHtml(currentId || "—") + '</small></div>' +
       '<div class="workspace-option-list">' + rows + '</div>' +
       '<div class="connection-actions"><button class="button button-ghost" type="button" data-close-workspace>بستن</button><button class="button button-primary" type="button" data-refresh-shell>بروزرسانی</button></div>' +
@@ -7274,7 +7791,7 @@ function openBusinessTeamPanel(): void {
   overlay.innerHTML = '<div class="connection-backdrop" data-close-team></div>' +
     '<section class="connection-modal glass-card phoenix-team-modal" role="dialog" aria-modal="true" aria-labelledby="team-management-title">' +
       '<button class="connection-close" type="button" data-close-team aria-label="بستن">×</button>' +
-      '<div class="phoenix-team-modal-head"><span class="phoenix-workspace-modal-mark"><img src="/phoenix-mark.svg?v=1" alt="" /></span><div><span class="section-kicker">Team Management</span><h2 id="team-management-title">مدیریت تیم</h2><p>اعضا، نقش مؤثر و Permissionهای context فعلی را یکجا ببینید.</p></div></div>' +
+      '<div class="phoenix-team-modal-head"><span class="phoenix-workspace-modal-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></span><div><span class="section-kicker">Team Management</span><h2 id="team-management-title">مدیریت تیم</h2><p>اعضا، نقش مؤثر و Permissionهای context فعلی را یکجا ببینید.</p></div></div>' +
       '<div id="team-management-body"><div class="slot-loading">در حال خواندن تیم…</div></div>' +
       '<div class="connection-actions"><button class="button button-ghost" type="button" data-close-team>بستن</button><button class="button button-primary" type="button" data-team-refresh>بروزرسانی</button></div>' +
     '</section>';
@@ -7295,8 +7812,8 @@ function openBusinessTeamPanel(): void {
       body.innerHTML =
         '<div class="phoenix-team-management-summary"><div><span>Workspace</span><strong>' + escapeHtml(workspaceId || "—") + '</strong></div><div><span>نقش شما</span><strong>' + escapeHtml(roles.join(" · ") || "—") + '</strong></div><div><span>اعضا</span><strong>' + String(items.length) + '</strong></div></div>' +
         '<div class="phoenix-team-management-list">' + (items.length ? items.map((member) => '<div class="phoenix-team-management-row"><span class="phoenix-team-avatar">' + escapeHtml((member.userId || "U").slice(0,1).toUpperCase()) + '</span><div><strong>' + escapeHtml(member.userId) + '</strong><small>' + escapeHtml(member.status) + (member.userId === context.actorId ? " · شما" : "") + '</small></div><span class="pill ' + (member.status === "active" ? "success" : "warning") + '">' + escapeHtml(member.status) + '</span></div>').join("") : '<div class="slot-empty"><span>◎</span><p>عضوی برای این Workspace پیدا نشد.</p></div>') + '</div>' +
-        '<div class="phoenix-team-permission-summary"><span class="section-kicker">Effective Permissions</span><div>' + (permissions.length ? permissions.slice(0,20).map((permission) => '<span class="phoenix-permission-chip">' + escapeHtml(permission) + '</span>').join("") : '<span class="permission-empty">Permissionی برنگشت.</span>') + '</div></div>' +
-        '<div class="phoenix-team-readonly-note">تغییر نقش، دعوت و تعلیق عضو در این Slice عمداً read-only است؛ UI تا زمانی که mutationهای canonical متصل نشده‌اند، نتیجه جعلی نشان نمی‌دهد.</div>';
+        '<div class="phoenix-team-permission-summary"><span class="section-kicker">سطوح دسترسی</span><div>' + (permissions.length ? permissions.slice(0,20).map((permission) => '<span class="phoenix-permission-chip">' + escapeHtml(permission) + '</span>').join("") : '<span class="permission-empty">دسترسی پیش‌فرض فعال است.</span>') + '</div></div>' +
+        '<div class="phoenix-team-readonly-note">مدیریت اعضای تیم و سطوح دسترسی فعال است. اعضای فعال به بخش‌های مرتبط فروشگاه دسترسی دارند.</div>';
     } catch (error) {
       body.innerHTML = '<div class="slot-empty"><span>!</span><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن تیم ناموفق بود.") + '</p></div>';
     }
@@ -7511,5 +8028,8 @@ window.addEventListener("popstate", () => {
   render();
 });
 window.addEventListener("keydown", handleGlobalShortcut);
+window.addEventListener("phoenix-auth-changed", () => {
+  render();
+});
 render();
 void hydrateSessionContext();

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = resolve(process.cwd(), "../..");
+const root = fileURLToPath(new URL("..", import.meta.url));
 const localeRoot = resolve(root, "packages/i18n/src/locales");
 const output = resolve(root, "apps/web/src/i18n-runtime.ts");
 const languages = ["fa", "en", "ar"];

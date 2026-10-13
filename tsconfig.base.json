@@ -39,6 +39,9 @@
       "@qooqnos/customer": [
         "packages/customer/src"
       ],
+      "@qooqnos/commerce": [
+        "packages/commerce/src"
+      ],
       "@qooqnos/documents": [
         "packages/documents/src"
       ]
