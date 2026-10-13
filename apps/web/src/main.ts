@@ -20,7 +20,7 @@ import {
 } from "./buyer-portal.js";
 import { BUSINESS_TAXONOMY, resolveBusinessType, mapBusinessTypeToVerticalAnchor, type BusinessType } from "./business-taxonomy.js";
 import { getBusinessTypeSchema, BUSINESS_TYPE_SCHEMAS } from "./business-schema.js";
-import { renderDynamicBusinessProfile, renderTaxonomyRegistrationSelector } from "./business-dynamic-renderer.js";
+import { renderDynamicBusinessDashboard, renderDynamicBusinessProfile, renderTaxonomyRegistrationSelector } from "./business-dynamic-renderer.js";
 import {
   openAuthModal,
   getStoredAuth,
