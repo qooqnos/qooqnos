@@ -200,7 +200,7 @@ await page.locator("[data-language-option='en']").click();
 await page.waitForTimeout(100);
 const businessEnglishText = await page.locator(".phoenix-business-page").innerText();
 assert.ok(businessEnglishText.includes("General business"));
-assert.ok(businessEnglishText.includes("Create business"));
+assert.ok(businessEnglishText.includes("Add a product or service"));
 assert.ok(businessEnglishText.includes("Quick actions"));
 assert.ok(businessEnglishText.includes("Business name"));
 assert.ok(businessEnglishText.includes("Locations"));
