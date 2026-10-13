@@ -5915,15 +5915,15 @@ function renderSellerWorkspaceHome(): string {
       '</article>' +
       '<article class="phoenix-seller-setup-card">' +
         '<div class="phoenix-seller-setup-icon" aria-hidden="true">⌖</div>' +
-        '<h2>' + localizedUi("مکان‌ها و ساعات کاری") + '</h2>' +
-        '<p>' + localizedUi("موقعیت، راه‌های تماس و ساعات پاسخ‌گویی را ثبت کن؛ فقط اطلاعات ذخیره‌شده به خریدار نمایش داده می‌شود.") + '</p>' +
+        '<h2>' + businessUi("locations") + '</h2>' +
+        '<p>' + businessUi("sellerLocationsDescription") + '</p>' +
         '<a class="button button-ghost" href="/business/profile" data-nav>' + localizedUi("مدیریت مکان‌ها") + '</a>' +
       '</article>' +
       '<article class="phoenix-seller-setup-card">' +
         '<div class="phoenix-seller-setup-icon" aria-hidden="true">◉</div>' +
         '<h2>' + localizedUi("نمای عمومی کسب‌وکار") + '</h2>' +
         '<p>' + localizedUi("نمایی را ببین که خریداران برای شناختن کسب‌وکار و عرضه‌های تو مشاهده می‌کنند.") + '</p>' +
-        '<a class="button button-ghost" href="' + businessPublicHref + '" data-nav>' + localizedUi("کاربر این کسب‌وکار را چگونه می‌بیند؟") + '</a>' +
+        '<a class="button button-ghost" href="' + businessPublicHref + '" data-nav>' + businessUi("customerExperienceQuestion") + '</a>' +
       '</article>' +
     '</section>' +
   '</div>';

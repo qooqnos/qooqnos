@@ -1046,7 +1046,8 @@
     "unreadMe": " · You",
     "nameField": "Name",
     "statusField": "Status",
-    "localeField": "Default language"
+    "localeField": "Default language",
+    "sellerLocationsDescription": "Add your location, contact methods, and operating hours. Only saved information is shown to buyers."
   },
   "businessSurface": {
     "loadingPublicData": "Loading public information…",

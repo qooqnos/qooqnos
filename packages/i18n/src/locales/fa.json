@@ -1046,7 +1046,8 @@
     "unreadMe": " · شما",
     "nameField": "نام",
     "statusField": "وضعیت",
-    "localeField": "زبان پیش‌فرض"
+    "localeField": "زبان پیش‌فرض",
+    "sellerLocationsDescription": "موقعیت، راه‌های تماس و ساعات پاسخ‌گویی را ثبت کن؛ فقط اطلاعات ذخیره‌شده به خریدار نمایش داده می‌شود."
   },
   "businessSurface": {
     "loadingPublicData": "در حال بارگذاری اطلاعات عمومی…",

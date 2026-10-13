@@ -1046,7 +1046,8 @@
     "unreadMe": " · أنت",
     "nameField": "الاسم",
     "statusField": "الحالة",
-    "localeField": "اللغة الافتراضية"
+    "localeField": "اللغة الافتراضية",
+    "sellerLocationsDescription": "أضف موقعك وطرق التواصل وساعات العمل. لا تظهر للمشترين إلا المعلومات المحفوظة."
   },
   "businessSurface": {
     "loadingPublicData": "جارٍ تحميل المعلومات العامة…",
