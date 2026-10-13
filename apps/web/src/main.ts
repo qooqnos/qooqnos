@@ -4889,7 +4889,7 @@ function renderSocialHeader(active: "feed" | "following" | "explore" | "activity
     '<div class="phoenix-social-actions">' +
     '<nav class="phoenix-social-quick-links" aria-label="' + escapeAttr(uiText("میان‌برهای اجتماعی")) + '">' + quickLinks + '</nav>' +
     authHtml +
-    '<button class="icon-button" type="button" data-open-create-post aria-label="' + uiText("پست جدید") + '">＋</button>' + renderLanguageSwitcher() + '<button class="icon-button" type="button" data-theme-toggle aria-label="' + uiText("تغییر پوسته") + '">◐</button></div>' +
+    '<button class="icon-button" type="button" data-open-create-post aria-label="' + escapeAttr(socialCommerceUi("createOffer")) + '" title="' + escapeAttr(socialCommerceUi("createOffer")) + '">＋</button>' + renderLanguageSwitcher() + '<button class="icon-button" type="button" data-theme-toggle aria-label="' + uiText("تغییر پوسته") + '">◐</button></div>' +
     '</div></header>';
 }
 
