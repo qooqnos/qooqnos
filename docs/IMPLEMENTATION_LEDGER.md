@@ -2868,3 +2868,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The test now requires all five Workspace vertical registries (default, Clinic, Retail, Restaurant, Salon) to have blueprint coverage, stable semantic slugs, capability/permission metadata and canonical-term traceability for every visible module.
 - This strengthens the shared UI infrastructure without introducing a parallel domain store or authorization logic.
 - Verification: test assertion committed; full CI/build/browser verification has not been run in this step.
+
+
+## 2026-10-13 — Approved Social Commerce Interface Reset (initial implementation)
+
+- Added `docs/PHOENIX_SOCIAL_COMMERCE_INTERFACE_RESET.md` as the design decision record; the previous visual design is not treated as approved.
+- Repaired commerce route test registration and the stale migration import; fixed lint and workspace build issues reported by CI.
+- Initial design implementation: the root home is now the social-commerce discovery feed; added new feed composition and dedicated Persian, English, and Arabic copy.
+- Feed cards use actual image/avatar metadata when available and no longer invent a default city, seller rating, or verification badge.
+- A product card opens its details rather than the legacy sample-payment screen. Production purchase remains incomplete until canonical cart/checkout/payment is integrated and verified.
+- Verification status: follow the active PR checks at https://github.com/qooqnos/qooqnos/pull/11; do not mark complete until build, lint, migrations, tests, UI E2E and preview deployment are green.
