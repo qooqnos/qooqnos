@@ -2886,3 +2886,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Extended the social-commerce header, mobile navigation, and no-sidebar shell to buyer-facing Messages, Orders, Saved, Profile, and Notifications surfaces.
 - Added desktop shortcuts to messages, orders, saved items, and notifications. Operational Business routes remain in their dedicated workspace shell.
 - Verification is being run against the latest branch head; production deployment remains blocked until all current checks pass.
+
+
+## 2026-10-13 — Browser ESM dependency resolution
+
+- The browser E2E smoke test exposed a real boot failure: a frontend module imported the bare specifier `@qooqnos/commerce`, which the static web server returned as HTML instead of JavaScript.
+- Added an explicit import-map entry to both source and served HTML documents and a build step that copies only the browser-safe, dependency-free `account-tiers.js` module into the web asset output.
+- The full commerce barrel remains server/domain-only; browser code does not load its D1/runtime modules.
+- Re-run the web UI E2E on the current commit before considering the reset ready. Production payment remains explicitly unverified until the canonical checkout flow is connected.
