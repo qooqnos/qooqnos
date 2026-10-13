@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { brandId, type RequestContext } from "@qooqnos/core";
 import { D1Database, type D1DatabaseLike, type D1PreparedStatementLike } from "@qooqnos/database";
 import { ApiRouter } from "./router";
 import { registerCommerceRoutes } from "./commerce-routes";
@@ -62,7 +61,7 @@ describe("GET & POST /api/v1/commerce/offers/resolve endpoint", () => {
   function createRouter() {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
-      async first<T>() { return null; },
+      async first<T>() { return null as T | null; },
       async all<T>() { return { results: rows as T[] }; },
       async run() { return { success: true }; },
     };
@@ -73,6 +72,7 @@ describe("GET & POST /api/v1/commerce/offers/resolve endpoint", () => {
     const database = new D1Database(raw);
     const authorization = createAuthorizationRegistry();
     const router = new ApiRouter({ database, authorization });
+    registerCommerceRoutes(router, database, authorization);
     return router;
   }
 
@@ -85,7 +85,7 @@ describe("GET & POST /api/v1/commerce/offers/resolve endpoint", () => {
     const response = await router.handle(request);
     expect(response.status).toBe(200);
 
-    const body: any = await response.json();
+    const body = (await response.json()) as { data: { offer: { id: string; priceAmountMinor: number }; precedenceMatched: string } };
     expect(body.data.offer.id).toBe("off-customer-ali");
     expect(body.data.offer.priceAmountMinor).toBe(850000);
     expect(body.data.precedenceMatched).toBe("customer");
@@ -104,7 +104,7 @@ describe("GET & POST /api/v1/commerce/offers/resolve endpoint", () => {
     const response = await router.handle(request);
     expect(response.status).toBe(200);
 
-    const body: any = await response.json();
+    const body = (await response.json()) as { data: { offer: { id: string; priceAmountMinor: number }; precedenceMatched: string } };
     expect(body.data.offer.id).toBe("off-general");
     expect(body.data.offer.priceAmountMinor).toBe(1000000);
     expect(body.data.precedenceMatched).toBe("general");
