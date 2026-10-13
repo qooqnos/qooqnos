@@ -22,7 +22,8 @@
     "update": "Update",
     "submit": "Submit",
     "and": "and",
-    "or": "or"
+    "or": "or",
+    "addProductOrService": "Add a product or service"
   },
   "nav": {
     "home": "Home",
