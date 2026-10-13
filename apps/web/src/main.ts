@@ -5268,7 +5268,7 @@ function renderShortlist(): void {
   }
 }
 
-function renderResultCards(items: DiscoveryResult[]): string {
+function _renderResultCards(items: DiscoveryResult[]): string {
   activeDiscoveryItems = items;
   return items.map((item,index) => {
     const title = escapeHtml(item.title ?? item.displayName ?? item.name ?? "مورد قابل کشف");
