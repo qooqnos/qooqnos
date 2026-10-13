@@ -5263,7 +5263,7 @@ function renderShortlist(): void {
   });
   if (activeDiscoveryItems.length) {
     const host = document.querySelector<HTMLElement>("#discovery-results");
-    if (host) host.innerHTML = renderResultCards(activeDiscoveryItems);
+    if (host) host.innerHTML = renderSocialPosts(activeDiscoveryItems);
     bindDiscoveryResultEvents();
   }
 }
@@ -6817,7 +6817,7 @@ function bindDiscoveryResultEvents(): void {
           const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
           if (type === "service") navigate("/booking?offering=" + encodeURIComponent(id) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : ""));
           else if (type === "business") navigate("/businesses/" + encodeURIComponent(id));
-          else navigate("/checkout?product=" + encodeURIComponent(id));
+          else openDiscoveryResultPanel(item);
           active = true;
         } else {
           await persistSocialComment(item);
