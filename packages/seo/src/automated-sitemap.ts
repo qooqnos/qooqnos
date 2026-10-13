@@ -1,6 +1,6 @@
 import type { D1Database } from "@qooqnos/database";
-import { buildSitemapXml, buildSitemapIndexXml, type SitemapEntry, SITEMAP_URL_LIMIT } from "./sitemap";
-import { canonicalEntityUrl, slugify } from "./url";
+import { buildSitemapXml, buildSitemapIndexXml, type SitemapEntry } from "./sitemap";
+import { canonicalEntityUrl } from "./url";
 import type { SeoEntity } from "./types";
 
 export interface SitemapCrawlerCatalogItem {
@@ -65,6 +65,10 @@ function normalizeLastMod(timestamp?: string | null): string | undefined {
  * Automated Sitemap Generator Service that crawls catalog items and active business profiles.
  * Maintains search engine indexing freshness and builds standard XML sitemaps or sitemap indexes.
  */
+function isD1Database(value: SitemapCrawlerDataSource | D1Database): value is D1Database {
+  return "all" in value && typeof value.all === "function";
+}
+
 export class AutomatedSitemapGeneratorService {
   constructor(
     private readonly dataSource?: SitemapCrawlerDataSource | D1Database | undefined,
@@ -84,7 +88,7 @@ export class AutomatedSitemapGeneratorService {
     const entriesMap = new Map<string, SitemapEntry>();
 
     // Case 1: Custom DataSource provider
-    if (this.dataSource && !("all" in this.dataSource && typeof (this.dataSource as any).all === "function")) {
+    if (this.dataSource && !isD1Database(this.dataSource)) {
       const ds = this.dataSource as SitemapCrawlerDataSource;
 
       // 1. Crawl Active Business Profiles
@@ -186,8 +190,8 @@ export class AutomatedSitemapGeneratorService {
     }
 
     // Case 2: D1 Database queries
-    else if (this.dataSource && "all" in this.dataSource && typeof (this.dataSource as any).all === "function") {
-      const db = this.dataSource as D1Database;
+    else if (this.dataSource && isD1Database(this.dataSource)) {
+      const db = this.dataSource;
 
       // 1. Crawl Active Businesses & Profiles
       try {

@@ -299,7 +299,6 @@ export async function generateCategorizedCatalogSitemaps(
 ): Promise<CategorizedSitemapsResult> {
   const baseUrl = options.baseUrl.replace(/\/+$/, "");
   const defaultLocale = options.defaultLocale || "fa";
-  const limit = options.maxUrlsPerShard || SITEMAP_URL_LIMIT;
   const now = options.now ? options.now() : new Date().toISOString();
 
   const businessEntries: SitemapEntry[] = [];
@@ -318,7 +317,7 @@ export async function generateCategorizedCatalogSitemaps(
   };
 
   // Case 1: Custom In-Memory Provider
-  if (!("all" in provider && typeof (provider as any).all === "function")) {
+  if (!("all" in provider && typeof provider.all === "function")) {
     const p = provider as DynamicSitemapCatalogProvider;
 
     // 1. Crawl Businesses -> /sitemap-business.xml
@@ -376,7 +375,7 @@ export async function generateCategorizedCatalogSitemaps(
           const type = off.offeringType === "service" ? "Service" : "Product";
           const entity: SeoEntity = {
             id: off.id,
-            type: type as any,
+            type: type as SeoEntity["type"],
             sourceModule: "catalog",
             sourceVersion: "1.0",
             publicationState: "published",
@@ -516,7 +515,7 @@ export async function generateCategorizedCatalogSitemaps(
         const type = off.offeringType === "service" ? "Service" : "Product";
         const entity: SeoEntity = {
           id: off.id,
-          type: type as any,
+          type: type as SeoEntity["type"],
           sourceModule: "catalog",
           sourceVersion: "1.0",
           publicationState: "published",
@@ -643,29 +642,12 @@ export async function generateCatalogSitemapXml(
   options: DynamicSitemapGeneratorOptions,
   staticEntries: readonly (string | SitemapEntry)[] = [],
 ): Promise<DynamicSitemapResult> {
-  const baseUrl = options.baseUrl.replace(/\/+$/, "");
-  const limit = options.maxUrlsPerShard || SITEMAP_URL_LIMIT;
   const now = options.now ? options.now() : new Date().toISOString();
 
   // Generate categorized sub-sitemaps
   const categorized = await generateCategorizedCatalogSitemaps(provider, options);
 
-  // If total URLs fit within a single sitemap and no sub-sitemap splitting is strictly required,
-  // return combined entries; but also provide categorized bundle for individual sub-sitemap serving.
-  const allEntriesMap = new Map<string, SitemapEntry>();
-  for (const sub of categorized.subSitemapList) {
-    // Extract entries
-  }
-
-  // Also build all entries together
-  for (const sub of categorized.subSitemapList) {
-    const list = sub.category === "business"
-      ? categorized.subSitemaps.get("sitemap-business.xml")
-      : sub.category === "products"
-      ? categorized.subSitemaps.get("sitemap-products.xml")
-      : categorized.subSitemaps.get("sitemap-articles.xml");
-  }
-
+  // Static entries are kept in the legacy response shape; canonical sitemap entries live in categorized.
   const allEntriesList: SitemapEntry[] = [];
   for (const s of staticEntries) {
     allEntriesList.push(typeof s === "string" ? { url: s } : s);
