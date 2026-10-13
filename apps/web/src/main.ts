@@ -4895,14 +4895,15 @@ function renderSocialMobileNav(): string {
 
 function renderSocialPosts(items: DiscoveryResult[]): string {
   activeDiscoveryItems = items;
-  if (!items.length) return '<div class="glass-card social-empty-state"><div class="draft-orb">⌕</div><h3>' + discoveryUi("emptyResultsTitle") + '</h3><p>' + discoveryUi("emptyResultsDescription") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' + discoveryUi("goExplore") + '</a></div>';
+  if (!items.length) return '<div class="glass-card social-empty-state phoenix-reset-empty"><div class="draft-orb">⌕</div><h3>' + socialCommerceUi("emptyFeedTitle") + '</h3><p>' + socialCommerceUi("emptyFeedBody") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' + discoveryUi("goExplore") + '</a></div>';
   return items.map((item, index) => {
     const titleRaw = item.title ?? item.displayName ?? item.name ?? discoveryUi("productOrService");
     const title = escapeHtml(titleRaw);
     const description = escapeHtml(item.description ?? item.body ?? discoveryUi("offeringRegistered"));
-    const locality = escapeHtml(item.locality ?? item.city ?? discoveryUi("networkLocality"));
+    const localityRaw = item.locality ?? item.city;
+    const locality = localityRaw ? escapeHtml(localityRaw) : "";
     const key = item.id ?? item.sourceId ?? "";
-    const sourceType = item.sourceType ?? String(item.metadata?.offeringType ?? "product");
+    const sourceType = String(item.sourceType ?? item.metadata?.offeringType ?? "product").toLowerCase();
     const compared = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key && Boolean(key));
     const followed = isSocialActive("follow", item);
     const liked = isSocialActive("like", item);
@@ -4913,330 +4914,41 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
       : discoveryUi("askPrice");
     const typeLabel = sourceType === "service" ? discoveryUi("service") : sourceType === "business" ? discoveryUi("business") : discoveryUi("product");
     const authorName = item.metadata && typeof item.metadata.businessName === "string" ? item.metadata.businessName : sourceType === "business" ? titleRaw : discoveryUi("seller");
+    const avatarInitial = escapeHtml(authorName.trim().slice(0, 1) || "ق");
     const canFollow = Boolean(item.metadata && typeof item.metadata.businessId === "string") || sourceType === "business";
     const followLabel = followed ? discoveryUi("followActive") : discoveryUi("follow");
-    const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
+    const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ?? item.metadata?.thumbnailUrl ??
+      (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
+    const mediaUrl = typeof mediaCandidate === "string" && (mediaCandidate.startsWith("/") || /^https?:\/\//i.test(mediaCandidate)) ? mediaCandidate : "";
+    const avatarCandidate = item.metadata?.businessAvatarUrl ?? item.metadata?.businessLogoUrl ?? item.metadata?.logoUrl;
+    const avatarUrl = typeof avatarCandidate === "string" && (avatarCandidate.startsWith("/") || /^https?:\/\//i.test(avatarCandidate)) ? avatarCandidate : "";
+    const media = mediaUrl
+      ? '<img class="phoenix-post-image" src="' + escapeAttr(mediaUrl) + '" alt="' + title + '" loading="lazy" />'
+      : '<span class="phoenix-post-placeholder"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("imageUnavailable") + '</span></span>';
+    const localityMarkup = locality ? '<span>⌖ ' + locality + '</span>' : "";
     const publicAction = sourceType === "business"
       ? '<a class="button button-primary post-buy" href="/businesses/' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>' + discoveryUi("viewBusiness") + ' <span>←</span></a>'
       : sourceType === "service"
-        ? '<a class="button button-primary post-buy" href="/booking?offering=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + (businessId ? '&businessId=' + encodeURIComponent(businessId) : '') + '" data-nav>' + discoveryUi("checkBooking") + ' <span>←</span></a>'
-        : '<a class="button button-primary post-buy" href="/checkout?product=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>' + discoveryUi("instantBuy") + ' <span>←</span></a>';
+        ? '<a class="button button-primary post-buy" href="/booking?offering=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + (item.metadata && typeof item.metadata.businessId === "string" ? '&businessId=' + encodeURIComponent(item.metadata.businessId) : '') + '" data-nav>' + discoveryUi("checkBooking") + ' <span>←</span></a>'
+        : '<button type="button" class="button button-primary post-buy" data-open-view="' + escapeAttr(key) + '">' + discoveryUi("detailsAndDecision") + ' <span>←</span></button>';
     const followButton = canFollow
       ? '<button type="button" class="post-follow' + (followed ? ' selected' : '') + '" data-follow="' + escapeAttr(key) + '">' + followLabel + '</button>'
       : '<span class="post-follow post-follow-disabled">' + discoveryUi("viewSeller") + '</span>';
     return '<article class="phoenix-post-card">' +
-      '<header class="phoenix-post-author"><span class="phoenix-avatar phoenix-avatar-image">' + (index % 2 ? "س" : "ق") + '</span><div><strong>' + escapeHtml(authorName) + '</strong><small>' + locality + ' · ' + escapeHtml(typeLabel) + '</small></div>' + followButton + '</header>' +
-      '<button type="button" class="phoenix-post-media media-'+(index%3)+'" data-discovery-index="' + index + '" aria-label="' + title + '"><span class="post-media-badge">' + typeLabel + '</span><strong>' + title + '</strong><small>' + discoveryUi("detailsAndDecision") + '</small></button>' +
-      '<div class="phoenix-post-body"><div class="phoenix-post-meta"><span class="phoenix-post-type">' + typeLabel + '</span><span>⌖ ' + locality + '</span></div><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + price + '</div>' +
+      '<header class="phoenix-post-author">' +
+        (avatarUrl ? '<span class="phoenix-avatar phoenix-avatar-image"><img src="' + escapeAttr(avatarUrl) + '" alt="" loading="lazy" /></span>' : '<span class="phoenix-avatar phoenix-avatar-image">' + avatarInitial + '</span>') +
+        '<div class="phoenix-post-author-copy"><strong>' + escapeHtml(authorName) + '</strong><small>' + (locality ? locality + ' · ' : '') + escapeHtml(typeLabel) + '</small></div>' + followButton +
+      '</header>' +
+      '<button type="button" class="phoenix-post-media media-' + (index % 3) + '" data-discovery-index="' + index + '" aria-label="' + title + '">' + media + '<span class="post-media-badge">' + typeLabel + '</span><span class="phoenix-post-media-copy"><strong>' + title + '</strong><small>' + discoveryUi("detailsAndDecision") + '</small></span></button>' +
+      '<div class="phoenix-post-body"><div class="phoenix-post-meta"><span class="phoenix-post-type">' + typeLabel + '</span>' + localityMarkup + '</div><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + price + '</div>' +
       '<div class="phoenix-post-actions">' +
       '<button type="button" class="social-action' + (liked ? ' selected' : '') + '" data-like="' + escapeAttr(key) + '">♡ <span>' + (liked ? discoveryUi("likeActive") : discoveryUi("like")) + '</span></button>' +
       '<button type="button" class="social-action" data-comment="' + escapeAttr(key) + '">◌ <span>' + discoveryUi("comment") + '</span></button>' +
       '<button type="button" class="social-action' + (saved ? ' selected' : '') + '" data-save="' + escapeAttr(key) + '">⌑ <span>' + (saved ? discoveryUi("saveActive") : discoveryUi("save")) + '</span></button>' +
       '<button type="button" class="social-action" data-share="' + escapeAttr(key) + '">↗ <span>' + discoveryUi("share") + '</span></button>' +
       (sourceType === "product" ? '<button type="button" class="social-action ' + (compared ? "selected" : "") + '" data-compare="' + escapeAttr(key) + '">⚖ <span>' + (compared ? discoveryUi("selected") : discoveryUi("compare")) + '</span></button>' : '') +
-      (sourceType === "service" ? '<button type="button" class="social-action" data-open-view="' + escapeAttr(key) + '">◉ <span>' + discoveryUi("view") + '</span></button>' : '') +
       publicAction + '</div></div></article>';
   }).join("");
-}
-function isComparableProduct(item: DiscoveryResult): boolean {
-  return (item.sourceType ?? "product") === "product" && Boolean(item.sourceId ?? item.id);
-}
-
-function getCompareItems(): DiscoveryResult[] {
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem("phoenix-compare-items") ?? "[]");
-    const items = Array.isArray(parsed) ? parsed.filter((item): item is DiscoveryResult => Boolean(item) && typeof item === "object") : [];
-    return items.filter(isComparableProduct).slice(0, 4);
-  } catch { return []; }
-}
-
-function saveCompareItems(items: DiscoveryResult[]): void {
-  localStorage.setItem("phoenix-compare-items", JSON.stringify(items.filter(isComparableProduct).slice(-4)));
-}
-
-function toggleCompare(item: DiscoveryResult): void {
-  if (!isComparableProduct(item)) { showToast("فقط محصولات قابل مقایسه هستند."); return; }
-  const key = item.id ?? item.sourceId ?? "";
-  const current = getCompareItems();
-  const exists = current.some((entry) => (entry.id ?? entry.sourceId) === key);
-  if (exists) saveCompareItems(current.filter((entry) => (entry.id ?? entry.sourceId) !== key));
-  else if (current.length < 4) saveCompareItems([...current, item]);
-  else showToast("مقایسه حداکثر ۴ محصول را پشتیبانی می‌کند.");
-}
-
-function toggleCompareByKey(key: string): void {
-  const item = activeDiscoveryItems.find((entry) => (entry.id ?? entry.sourceId) === key);
-  if (item) toggleCompare(item);
-}
-
-async function shareSocialItem(item: DiscoveryResult): Promise<void> {
-  const title = item.title ?? item.displayName ?? item.name ?? "مورد ققنوس";
-  const type = item.sourceType ?? String(item.metadata?.offeringType ?? "product");
-  const id = item.sourceId ?? item.id ?? "";
-  const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
-  const url = type === "business" && id
-    ? new URL("/businesses/" + encodeURIComponent(id), location.origin).toString()
-    : type === "service" && id
-      ? new URL("/booking?offering=" + encodeURIComponent(id) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : ""), location.origin).toString()
-      : id
-        ? new URL("/checkout?product=" + encodeURIComponent(id), location.origin).toString()
-        : location.href;
-  const payload = { title, text: "این گزینه را در ققنوس ببین.", url };
-  try {
-    if (navigator.share) {
-      await navigator.share(payload);
-      showToast("صفحه برای اشتراک‌گذاری آماده شد.");
-      return;
-    }
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url);
-      showToast("لینک ققنوس کپی شد.");
-    } else {
-      window.prompt("لینک ققنوس را کپی کنید:", url);
-    }
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") return;
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
-        showToast("لینک ققنوس کپی شد.");
-      } else {
-        window.prompt("لینک ققنوس را کپی کنید:", url);
-      }
-    } catch {
-      showToast("اشتراک‌گذاری این مورد در مرورگر فعلی ممکن نیست.");
-    }
-  }
-}
-
-function renderCompareTray(): void {
-  const host = document.querySelector<HTMLElement>("#phoenix-compare-tray");
-  if (!host) return;
-  const items = getCompareItems();
-  if (items.length < 2) {
-    host.innerHTML = items.length === 1
-      ? '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items"><span>' + escapeHtml(items[0]?.title ?? items[0]?.name ?? "محصول") + '</span></div><span class="compare-tray-hint">یک محصول دیگر انتخاب کن.</span></div>'
-      : "";
-    return;
-  }
-  host.innerHTML = '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items">' +
-    items.map((item) => '<span>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '<button type="button" data-remove-compare="' + escapeAttr(item.id ?? item.sourceId ?? "") + '" aria-label="حذف از مقایسه">×</button></span>').join("") +
-    '</div><button class="button button-primary" type="button" data-open-compare>⚖ مقایسه ' + items.length + ' محصول</button></div>';
-  host.querySelectorAll<HTMLButtonElement>("[data-remove-compare]").forEach((button) => button.addEventListener("click", (event) => {
-    event.stopPropagation();
-    toggleCompareByKey(button.dataset.removeCompare ?? "");
-    renderCompareTray();
-    refreshSocialFeed();
-  }));
-  host.querySelector<HTMLButtonElement>("[data-open-compare]")?.addEventListener("click", () => navigate("/compare"));
-}
-
-
-function renderActivity(): string {
-  if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><span class="phoenix-kicker">Activity</span><h1>فعالیت‌های ققنوس</h1><p>برای دیدن Follow، Like، Save و نظرات ثبت‌شده، ابتدا وارد حساب کاربری شوید.</p></section><div class="glass-card phoenix-activity-gate"><div class="draft-orb">✦</div><h2>فعالیت شخصی شما</h2><p>برای ثبت و مشاهده تعاملات و علاقه‌مندی‌ها، لطفاً وارد حساب خود شوید.</p><button class="button button-primary" type="button" data-activity-connect>ورود / ثبت‌نام</button></div></div>';
-  }
-  return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><div><span class="phoenix-kicker">Activity</span><h1>ردپای اجتماعی تو در ققنوس</h1><p>رویدادها مستقیماً از Social Engagement خوانده می‌شوند؛ این صفحه timeline جداگانه‌ای در مرورگر نمی‌سازد.</p></div><div class="heading-actions"><button class="button button-ghost" type="button" data-activity-refresh>↻ بروزرسانی</button><a class="button button-primary" href="/discover" data-nav>ادامه کشف ←</a></div></section><section class="phoenix-activity-layout"><article class="glass-card phoenix-activity-card"><div class="card-section-heading"><div><span class="section-kicker">Canonical Social Events</span><h2>آخرین فعالیت‌ها</h2></div><span id="activity-status" class="pill" aria-live="polite">در حال آماده‌سازی</span></div><div id="activity-list" class="phoenix-activity-list" aria-live="polite" aria-busy="true"><div class="slot-loading">در حال خواندن فعالیت‌های واقعی…</div></div></article><aside class="glass-card phoenix-activity-side"><span class="section-kicker">Your loop</span><h2>دنبال کن، ذخیره کن، مقایسه کن.</h2><p>فعالیت‌های اجتماعی در کنار Discovery و Compare برای تصمیم‌گیری پیوسته استفاده می‌شوند؛ ranking و recommendation همچنان در backend canonical باقی می‌مانند.</p><a class="button button-ghost" href="/compare" data-nav>مقایسه‌های انتخاب‌شده</a></aside></section></div>';
-}
-
-async function loadActivityPage(): Promise<void> {
-  const connect = document.querySelector<HTMLButtonElement>("[data-activity-connect]");
-  if (connect) {
-    connect.addEventListener("click", () => openConnectionPanel());
-    return;
-  }
-  const host = document.querySelector<HTMLElement>("#activity-list");
-  const status = document.querySelector<HTMLElement>("#activity-status");
-  const refresh = document.querySelector<HTMLButtonElement>("[data-activity-refresh]");
-  if (!host || !status) return;
-
-  const renderRows = (items: unknown[]): void => {
-    host.setAttribute("aria-busy", "false");
-    if (!items.length) {
-      host.innerHTML = '<div class="social-empty-state"><div class="draft-orb">✦</div><h3>هنوز فعالیتی ثبت نشده است.</h3><p>از Discover یک کسب‌وکار را دنبال کن یا یک محصول را Like/Save کن تا رویداد واقعی اینجا دیده شود.</p><a class="button button-ghost" href="/discover?tab=explore" data-nav>رفتن به اکسپلور</a></div>';
-      status.textContent = "خالی";
-      status.className = "pill";
-      return;
-    }
-    host.innerHTML = items.map((item) => {
-      const event = item && typeof item === "object" ? item as Record<string, unknown> : {};
-      const eventType = String(event.eventType ?? "social.event");
-      let payload: Record<string, unknown> = {};
-      const rawPayload = event.payloadJson ?? event.payload;
-      if (typeof rawPayload === "string") {
-        try { const parsed = JSON.parse(rawPayload); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) payload = parsed as Record<string, unknown>; } catch { /* ignore */ }
-      } else if (rawPayload && typeof rawPayload === "object" && !Array.isArray(rawPayload)) {
-        payload = rawPayload as Record<string, unknown>;
-      }
-      const targetType = String(payload.targetType ?? event.aggregateType ?? "");
-      const targetId = String(payload.targetId ?? event.aggregateId ?? "");
-      const occurredAt = String(event.occurredAt ?? event.createdAt ?? "");
-      const targetLabel = targetType && targetId ? targetType + " · " + targetId : "رویداد اجتماعی ققنوس";
-      const businessId = String(payload.businessId ?? "");
-      const targetHref = targetType === "business" && targetId
-        ? "/businesses/" + encodeURIComponent(targetId)
-        : targetType === "service" && targetId
-          ? "/booking?offering=" + encodeURIComponent(targetId) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : "")
-          : targetType === "product" && targetId
-            ? "/checkout?product=" + encodeURIComponent(targetId)
-            : "";
-      return '<article class="phoenix-activity-row"><div class="phoenix-activity-icon">✦</div><div class="phoenix-activity-copy"><strong>' + escapeHtml(socialActivityLabel(eventType)) + '</strong><p>' + escapeHtml(targetLabel) + '</p><small>' + escapeHtml(formatDate(occurredAt)) + '</small></div>' + (targetHref ? '<a class="button button-ghost" href="' + escapeAttr(targetHref) + '" data-nav>باز کردن</a>' : '') + '</article>';
-    }).join("");
-    status.textContent = String(items.length) + " رویداد";
-    status.className = "pill success";
-  };
-
-  const load = async (): Promise<void> => {
-    host.setAttribute("aria-busy", "true");
-    host.innerHTML = '<div class="slot-loading">در حال همگام‌سازی Social Activity…</div>';
-    status.textContent = "در حال خواندن";
-    status.className = "pill";
-    try {
-      const items = await loadSocialActivity();
-      renderRows(items);
-    } catch (error) {
-      status.textContent = "خطا";
-      status.className = "pill warning";
-      host.innerHTML = '<div class="social-error-state"><div class="draft-orb">!</div><h3>Activity در دسترس نیست.</h3><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Activity ناموفق بود.") + '</p><button class="button button-ghost" type="button" data-activity-retry>تلاش دوباره</button></div>';
-      host.querySelector<HTMLButtonElement>("[data-activity-retry]")?.addEventListener("click", () => void load());
-    }
-  };
-
-  refresh?.addEventListener("click", () => void load());
-  await load();
-}
-
-function renderCompare(): string {
-  const items = getCompareItems();
-  if (items.length < 2) return '<div class="phoenix-compare-page"><div class="phoenix-section-heading"><span class="phoenix-kicker">Compare</span><h1>مقایسه محصولات</h1><p>حداقل دو محصول واقعی را از فید انتخاب کن.</p></div><div class="glass-card phoenix-compare-empty"><strong>هنوز محصول کافی برای مقایسه انتخاب نشده است.</strong><p>به اکسپلور برگرد و روی «مقایسه» محصولات موردنظر بزن.</p><a class="button button-primary" href="/discover?tab=explore" data-nav>بازگشت به اکسپلور</a></div></div>';
-  const metadataKeys = Array.from(new Set(items.flatMap((item) => Object.keys(item.metadata ?? {})))).filter((key) => !["businessId","businessName","offeringType"].includes(key)).slice(0, 8);
-  const rows: Array<[string, (item: DiscoveryResult) => unknown]> = [
-    ["نوع", (item) => item.sourceType ?? "product"],
-    ["قیمت", (item) => item.price !== undefined && item.price !== null ? formatLocalizedNumber(Number(item.price)) + " " + (item.currency ?? "") : "استعلام قیمت"],
-    ["امتیاز", (item) => item.rating !== undefined && item.rating !== null ? Number(item.rating).toFixed(1) : "—"],
-    ["موقعیت", (item) => item.locality ?? item.city ?? "—"],
-    ["توضیح", (item) => item.description ?? item.body ?? "—"],
-    ...metadataKeys.map((key) => [key, (item: DiscoveryResult) => item.metadata?.[key] ?? "—"] as [string, (item: DiscoveryResult) => unknown]),
-  ];
-  return '<div class="phoenix-compare-page">' +
-    '<div class="phoenix-section-heading"><span class="phoenix-kicker">Compare · 2–4</span><h1>مقایسه شفاف محصولات</h1><p>فقط داده‌ای را می‌بینی که در Discovery/Catalog آمده است؛ ققنوس ویژگی نامشخص را حدس نمی‌زند.</p></div>' +
-    '<div class="phoenix-compare-table"><div class="compare-row compare-head"><span>ویژگی</span>' + items.map((item) => '<strong>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '</strong>').join("") + '</div>' +
-    rows.map(([label, getter]) => '<div class="compare-row"><span>' + escapeHtml(label) + '</span>' + items.map((item) => '<span>' + escapeHtml(String(getter(item))) + '</span>').join("") + '</div>').join("") +
-    '</div><div class="phoenix-compare-actions">' +
-    items.map((item) => '<a class="button button-primary" href="/checkout?product=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>خرید «' + escapeHtml(item.title ?? item.name ?? "محصول") + '»</a>').join("") +
-    '<a class="button button-ghost" href="/discover" data-nav>ادامه کشف</a><button class="button button-ghost" type="button" data-clear-compare>پاک کردن مقایسه</button></div></div>';
-}
-function renderDiscover(): string {
-  const params = new URLSearchParams(location.search);
-  const initialQuery = params.get("q") ?? "";
-  const tab = params.get("tab") ?? "for-you";
-  const title = tab === "following" ? discoveryUi("followingTitle") : tab === "explore" ? discoveryUi("exploreTitle") : socialCommerceUi("feedTitle");
-  const intro = tab === "following"
-    ? discoveryUi("followingIntro")
-    : tab === "explore"
-      ? discoveryUi("exploreIntro")
-      : socialCommerceUi("feedDescription");
-  const tabLink = (key: "for-you" | "following" | "explore", href: string, label: string): string =>
-    '<a class="phoenix-reset-tab' + (tab === key ? ' active' : '') + '" href="' + href + '" data-nav' +
-    (tab === key ? ' aria-current="page"' : '') + '>' + label + '</a>';
-
-  return '<div class="phoenix-reset-page">' +
-    '<section class="phoenix-reset-hero">' +
-      '<div class="phoenix-reset-hero-copy">' +
-        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("eyebrow") + '</span></div>' +
-        '<h1>' + socialCommerceUi("title") + '</h1>' +
-        '<p>' + socialCommerceUi("intro") + '</p>' +
-      '</div>' +
-      '<button class="button button-primary phoenix-reset-hero-cta" type="button" data-open-create-post><span aria-hidden="true">＋</span> ' + socialCommerceUi("createOffer") + '</button>' +
-    '</section>' +
-    '<section class="phoenix-reset-search" role="search">' +
-      '<span class="phoenix-reset-search-icon" aria-hidden="true">⌕</span>' +
-      '<input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="' + escapeAttr(socialCommerceUi("searchPlaceholder")) + '" aria-label="' + escapeAttr(socialCommerceUi("searchPlaceholder")) + '" />' +
-      '<button class="button button-primary" type="button" data-run-discovery>' + socialCommerceUi("searchButton") + '</button>' +
-      '<button class="button button-ghost phoenix-reset-add-button" type="button" data-open-create-post aria-label="' + escapeAttr(socialCommerceUi("createOffer")) + '">＋</button>' +
-    '</section>' +
-    '<div class="phoenix-reset-discover-grid">' +
-      '<section class="phoenix-reset-main-column" aria-label="' + escapeAttr(socialCommerceUi("feedTitle")) + '">' +
-        '<nav class="phoenix-reset-feed-tabs" aria-label="' + escapeAttr(socialCommerceUi("feedTabs")) + '">' +
-          tabLink("for-you", "/", socialCommerceUi("tabForYou")) +
-          tabLink("following", "/discover?tab=following", socialCommerceUi("tabFollowing")) +
-          tabLink("explore", "/discover?tab=explore", socialCommerceUi("tabExplore")) +
-        '</nav>' +
-        '<div class="phoenix-reset-feed-heading">' +
-          '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("sectionKicker") + '</span><h2 id="results-title">' + escapeHtml(title) + '</h2><p>' + escapeHtml(intro) + '</p><small id="results-meta">' + discoveryUi("preparing") + '</small></div>' +
-          '<div class="phoenix-reset-feed-tools">' +
-            '<a href="/compare" data-nav class="phoenix-reset-compare-link">⚖ <span>' + socialCommerceUi("compare") + '</span></a>' +
-            '<span id="shortlist-count" class="phoenix-reset-shortlist-count" aria-label="' + escapeAttr(socialCommerceUi("shortlist")) + '">0</span>' +
-            '<button type="button" class="phoenix-reset-refresh" data-social-state-refresh aria-label="' + escapeAttr(socialCommerceUi("refresh")) + '">↻</button>' +
-          '</div>' +
-        '</div>' +
-        '<div id="discovery-results" class="phoenix-social-feed phoenix-reset-posts"><div class="slot-loading">' + discoveryUi("preparing") + '</div></div>' +
-        '<div id="discovery-pagination" class="phoenix-reset-pagination"></div>' +
-      '</section>' +
-      '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
-        '<section class="phoenix-reset-side-card phoenix-reset-intent-card">' +
-          '<span class="phoenix-reset-side-icon" aria-hidden="true">⌕</span>' +
-          '<h2>' + socialCommerceUi("needTitle") + '</h2>' +
-          '<p>' + socialCommerceUi("needBody") + '</p>' +
-          '<button class="button button-primary" type="button" data-focus-discover>' + socialCommerceUi("focusSearch") + '</button>' +
-        '</section>' +
-        '<section class="phoenix-reset-side-card">' +
-          '<span class="phoenix-reset-side-icon" aria-hidden="true">◇</span>' +
-          '<h2>' + socialCommerceUi("trustTitle") + '</h2>' +
-          '<p>' + socialCommerceUi("trustBody") + '</p>' +
-          '<a href="/compare" data-nav class="phoenix-reset-side-link">' + socialCommerceUi("compare") + ' <span aria-hidden="true">←</span></a>' +
-        '</section>' +
-        '<section class="phoenix-reset-side-card phoenix-reset-seller-card">' +
-          '<span class="phoenix-reset-side-icon" aria-hidden="true">＋</span>' +
-          '<h2>' + socialCommerceUi("sellerTitle") + '</h2>' +
-          '<p>' + socialCommerceUi("sellerBody") + '</p>' +
-          '<button class="button button-ghost" type="button" data-open-create-post>' + socialCommerceUi("createOffer") + '</button>' +
-        '</section>' +
-      '</aside>' +
-    '</div>' +
-    '<div id="phoenix-compare-tray"></div>' +
-  '</div>';
-}
-
-function getShortlist(): DiscoveryResult[] {
-  try {
-    const raw = localStorage.getItem("phoenix-shortlist");
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((item): item is DiscoveryResult => Boolean(item) && typeof item === "object") : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveShortlist(items: DiscoveryResult[]): void {
-  localStorage.setItem("phoenix-shortlist", JSON.stringify(items.slice(-20)));
-}
-
-function toggleShortlist(item: DiscoveryResult): void {
-  const key = item.id ?? item.sourceId ?? "";
-  if (!key) {
-    showToast("این نتیجه شناسه قابل نگهداری ندارد.");
-    return;
-  }
-  const current = getShortlist();
-  const exists = current.some((entry) => (entry.id ?? entry.sourceId) === key);
-  saveShortlist(exists ? current.filter((entry) => (entry.id ?? entry.sourceId) !== key) : [...current, item]);
-}
-
-function renderShortlist(): void {
-  const count = getShortlist().length;
-  document.querySelectorAll<HTMLElement>("#shortlist-count").forEach((node) => {
-    node.textContent = String(count);
-  });
-  document.querySelectorAll<HTMLElement>("[data-shortlist-count]").forEach((node) => {
-    node.textContent = String(count);
-  });
-  if (activeDiscoveryItems.length) {
-    const host = document.querySelector<HTMLElement>("#discovery-results");
-    if (host) host.innerHTML = renderResultCards(activeDiscoveryItems);
-    bindDiscoveryResultEvents();
-  }
 }
 
 function renderResultCards(items: DiscoveryResult[]): string {
@@ -5275,13 +4987,13 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
   const priceFormatted = item.price !== undefined && item.price !== null
     ? formatLocalizedNumber(Number(item.price)) + " " + (item.currency ?? "ریال")
     : uiText("استعلام قیمت / توافقی");
-  const locality = item.locality ?? item.city ?? uiText("تهران");
+  const locality = item.locality ?? item.city ?? "";
   const ratingText = item.rating !== undefined && item.rating !== null
-    ? `★ ${formatLocalizedNumber(Number(item.rating))}`
-    : "★ ۴.۸";
+    ? "★ " + formatLocalizedNumber(Number(item.rating))
+    : "";
   const metadataEntries = Object.entries(item.metadata ?? {}).filter(([k]) => !["businessId", "offeringType", "businessName"].includes(k)).slice(0, 8);
   const businessId = String(item.metadata?.businessId ?? (isBusiness ? key : ""));
-  const businessName = String(item.metadata?.businessName ?? (isBusiness ? title : uiText("کسب‌وکار تأییدشده ققنوس")));
+  const businessName = String(item.metadata?.businessName ?? (isBusiness ? title : uiText("فروشنده")));
 
   const overlay = document.createElement("div");
   overlay.className = "connection-overlay";
@@ -5294,8 +5006,8 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
         <span class="pill ${isService ? "warning" : isProduct ? "success" : ""}">
           ${isService ? "✦ " + uiText("خدمت تخصصی") : isBusiness ? "◉ " + uiText("کسب‌وکار معتبر") : "▦ " + uiText("محصول")}
         </span>
-        <span class="saved-card-rating">${ratingText}</span>
-        <span class="pill success">✓ ${uiText("تأیید اصالت در ققنوس")}</span>
+        ${ratingText ? '<span class="saved-card-rating">' + escapeHtml(ratingText) + '</span>' : ""}
+        ${item.metadata?.verified === true || item.metadata?.verificationStatus === "verified" ? '<span class="pill success">✓ ' + uiText("تأییدشده") + '</span>' : ""}
       </div>
 
       <h2 id="discovery-detail-title">${escapeHtml(title)}</h2>
@@ -5303,7 +5015,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
 
       <div class="detail-meta-strip">
         <div><span>${uiText("تعرفه / قیمت")}</span><strong>${escapeHtml(priceFormatted)}</strong></div>
-        <div><span>${uiText("موقعیت مکانی")}</span><strong>📍 ${escapeHtml(locality)}</strong></div>
+        ${locality ? '<div><span>' + uiText("موقعیت مکانی") + '</span><strong>📍 ' + escapeHtml(locality) + '</strong></div>' : ""}
         <div><span>${uiText("ارائه‌دهنده")}</span><strong>${escapeHtml(businessName)}</strong></div>
       </div>
 
@@ -5329,8 +5041,8 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
             ${uiText("دنبال کردن")}
           </button>
         ` : `
-          <a class="button button-primary" href="/checkout?product=${encodeURIComponent(key)}" data-nav>
-            ${uiText("خرید مستقیم و پرداخت")} ↗
+          <a class="button button-primary" href="/messages" data-nav>
+            ${uiText("پرسش از فروشنده")} ↗
           </a>
           <button class="button button-ghost" type="button" data-compare-detail="${escapeAttr(key)}">
             ${uiText("افزودن به مقایسه")} ⚖
@@ -6704,7 +6416,7 @@ function bindDiscoveryResultEvents(): void {
           const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
           if (type === "service") navigate("/booking?offering=" + encodeURIComponent(id) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : ""));
           else if (type === "business") navigate("/businesses/" + encodeURIComponent(id));
-          else navigate("/checkout?product=" + encodeURIComponent(id));
+          else openDiscoveryResultPanel(item);
           active = true;
         } else {
           await persistSocialComment(item);
@@ -7061,18 +6773,11 @@ async function runDiscovery(reset = true): Promise<void> {
   const query = input.value.trim();
 
   if (reset) discoveryOffset = 0;
-  if (tab !== "following" && !query && tab === "for-you") {
-    resultHost.innerHTML = '<div class="social-empty-state glass-card"><div class="draft-orb">✦</div><h3>' + discoveryUi("noNeedTitle") + '</h3><p>' + discoveryUi("noNeedDescription") + '</p></div>';
-    meta.textContent = discoveryUi("waitingForNeed");
-    if (pagination) pagination.innerHTML = "";
-    return;
-  }
-
   if (title) {
       const displayQuery = query.length > 48 ? query.slice(0, 48) + "…" : query;
       title.textContent = query
         ? discoveryUi("resultsFor", { query: displayQuery })
-        : tab === "following" ? discoveryUi("followingResults") : discoveryUi("exploreResults");
+        : tab === "following" ? discoveryUi("followingResults") : tab === "explore" ? discoveryUi("exploreResults") : socialCommerceUi("feedTitle");
     }
   if (reset) resultHost.innerHTML = renderSkeletonCards(3);
   meta.textContent = discoveryUi("analyzing");
