@@ -5856,7 +5856,6 @@ function renderSellerWorkspaceHome(): string {
   const ui = getBusinessVerticalUi(storedVertical);
   const businessName = localStorage.getItem("phoenix-business-name")?.trim() ?? "";
   const businessId = localStorage.getItem(STORAGE.business) ?? "";
-  const primaryLabel = businessName || uiText("نام کسب‌وکار خود را اضافه کنید");
   const actionPath = (label: string): string => {
     if (/محصول|موجودی|عرضه/.test(label)) return "/business/products";
     if (/خدمت/.test(label)) return "/business/services";
