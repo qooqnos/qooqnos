@@ -10815,3 +10815,27 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-seller-setup-grid { grid-template-columns: minmax(0, 1fr); gap: 11px; }
   .phoenix-seller-setup-card { padding: 17px; border-radius: 17px; }
 }
+
+
+/* Prevent the wide seller/workspace controls from overlapping the global search. */
+@media (min-width: 1181px) {
+  .app-shell .header-inner {
+    grid-template-columns: minmax(140px, max-content) minmax(110px, max-content) minmax(220px, 1fr) max-content;
+    gap: 16px;
+  }
+  .app-shell .header-context,
+  .app-shell .header-center,
+  .app-shell .header-actions {
+    min-width: 0;
+  }
+  .app-shell .header-center {
+    width: 100%;
+  }
+  .app-shell .header-center .command-palette {
+    width: 100%;
+    max-width: 520px;
+  }
+  .app-shell .header-actions {
+    white-space: nowrap;
+  }
+}
