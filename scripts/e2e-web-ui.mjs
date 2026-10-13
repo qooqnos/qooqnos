@@ -292,8 +292,17 @@ await page.getByText("Primitiveهای مشترک").waitFor();
 await page.locator(".ds-table").waitFor();
 
 await page.goto(baseURL + "/product-studio");
-await page.locator("#studio-business").fill("biz-1");
-await page.locator("#studio-workspace").fill("ws-2");
+// Seed internal workspace context as test data without exposing IDs in the end-user form.
+await page.locator("#studio-business").evaluate((element) => {
+  element.value = "biz-1";
+  element.dispatchEvent(new Event("input", { bubbles: true }));
+  element.dispatchEvent(new Event("change", { bubbles: true }));
+});
+await page.locator("#studio-workspace").evaluate((element) => {
+  element.value = "ws-2";
+  element.dispatchEvent(new Event("input", { bubbles: true }));
+  element.dispatchEvent(new Event("change", { bubbles: true }));
+});
 await page.locator("#studio-text").fill("محصول تست برای E2E");
 await page.locator("[data-generate-draft]").click();
 await page.getByText("محصول تست").waitFor();
