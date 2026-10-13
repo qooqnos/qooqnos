@@ -680,11 +680,17 @@ function render(): void {
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/welcome";
-  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/compare" || route.path === "/activity";
+  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications";
   const isPublicBusiness = route.path.startsWith("/businesses/");
+  const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
+    route.path === "/" ? "feed"
+      : route.path === "/activity" || route.path === "/notifications" ? "activity"
+        : route.path === "/discover"
+          ? (new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : new URLSearchParams(location.search).get("tab") === "following" ? "following" : "feed")
+          : "none";
   appRoot.innerHTML = `
     <div class="app-shell ${isHome ? "home-shell" : ""} ${isSocial ? "social-shell" : ""} ${isPublicBusiness ? "public-business-shell" : ""}">
-      ${isHome || isPublicBusiness ? renderPublicHeader() : isSocial ? renderSocialHeader(route.path === "/activity" ? "activity" : route.path === "/discover" ? (new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : new URLSearchParams(location.search).get("tab") === "following" ? "following" : "feed") : "feed") : renderHeader(route)}
+      ${isHome || isPublicBusiness ? renderPublicHeader() : isSocial ? renderSocialHeader(socialActive) : renderHeader(route)}
       <div class="app-body">
         ${isHome || isSocial || isPublicBusiness ? "" : renderSidebar(route)}
         <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : isPublicBusiness ? "public-business-page-content" : ""}">${page}</main>
@@ -4852,13 +4858,25 @@ function bindOnboardingEvents(): void {
 
 
 
-function renderSocialHeader(active: "feed" | "following" | "explore" | "activity"): string {
+function renderSocialHeader(active: "feed" | "following" | "explore" | "activity" | "none"): string {
   const auth = getStoredAuth();
   const authenticated = Boolean(auth.token && auth.user);
   const user = auth.user;
   const authHtml = authenticated && user
     ? '<a class="profile-chip" href="/profile" data-nav aria-label="' + escapeAttr(user.displayName || uiText("حساب من")) + '"><span class="avatar">' + ((user.displayName || "ق")[0]) + '</span><span class="profile-copy"><strong>' + escapeHtml(user.displayName || "") + '</strong></span></a>'
     : '<button type="button" class="button button-primary button-sm phoenix-register-btn" data-open-register aria-label="' + uiText("ثبت‌نام") + '"><span class="btn-sparkle" aria-hidden="true">✦</span><span>' + uiText("ثبت‌نام") + '</span></button><button type="button" class="button button-ghost button-sm" data-open-login>' + uiText("ورود") + '</button>';
+
+  const currentPath = normalizePath(location.pathname);
+  const quickLinks = [
+    { path: "/messages", label: uiText("پیام‌ها"), icon: "✉" },
+    { path: "/orders", label: uiText("سفارش‌ها"), icon: "▣" },
+    { path: "/saved", label: uiText("ذخیره‌شده‌ها"), icon: "★" },
+    { path: "/notifications", label: uiText("اعلان‌ها"), icon: "♢" },
+  ].map((item) =>
+    '<a href="' + item.path + '" data-nav class="' + (currentPath === item.path ? "active" : "") + '"' +
+    (currentPath === item.path ? ' aria-current="page"' : "") +
+    ' aria-label="' + escapeAttr(item.label) + '" title="' + escapeAttr(item.label) + '">' + item.icon + '</a>'
+  ).join("");
 
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
     '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
@@ -4870,6 +4888,7 @@ function renderSocialHeader(active: "feed" | "following" | "explore" | "activity
     '<button type="button" class="phoenix-nav-link-register" data-open-register aria-label="' + uiText("ثبت‌نام") + '">✦ ' + uiText("ثبت‌نام") + '</button>' +
     '</nav>' +
     '<div class="phoenix-social-actions">' +
+    '<nav class="phoenix-social-quick-links" aria-label="' + escapeAttr(uiText("میان‌برهای اجتماعی")) + '">' + quickLinks + '</nav>' +
     authHtml +
     '<button class="icon-button" type="button" data-open-create-post aria-label="' + uiText("پست جدید") + '">＋</button>' + renderLanguageSwitcher() + '<button class="icon-button" type="button" data-theme-toggle aria-label="' + uiText("تغییر پوسته") + '">◐</button></div>' +
     '</div></header>';

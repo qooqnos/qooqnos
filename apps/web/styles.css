@@ -10531,3 +10531,42 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-reset-sidebar { grid-template-columns: minmax(0, 1fr); }
   .phoenix-reset-side-card { padding: 16px; border-radius: 18px; }
 }
+
+
+
+/* Persistent social shortcuts for the authenticated customer shell. */
+.phoenix-social-quick-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.phoenix-social-quick-links a {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: var(--muted);
+  background: transparent;
+  text-decoration: none;
+  font-size: 16px;
+  transition: color .18s ease, background .18s ease, border-color .18s ease;
+}
+.phoenix-social-quick-links a:hover,
+.phoenix-social-quick-links a.active {
+  color: var(--primary-strong);
+  border-color: var(--line);
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+@media (max-width: 980px) {
+  .phoenix-social-quick-links { display: none; }
+}
+@media (max-width: 720px) {
+  .social-shell .page-content.social-page-content > .phoenix-orders-page,
+  .social-shell .page-content.social-page-content > .phoenix-saved-page,
+  .social-shell .page-content.social-page-content > .phoenix-messages-page {
+    padding-top: 22px;
+    padding-bottom: 104px;
+  }
+}

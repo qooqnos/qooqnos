@@ -2878,3 +2878,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Feed cards use actual image/avatar metadata when available and no longer invent a default city, seller rating, or verification badge.
 - A product card opens its details rather than the legacy sample-payment screen. Production purchase remains incomplete until canonical cart/checkout/payment is integrated and verified.
 - Verification status: follow the active PR checks at https://github.com/qooqnos/qooqnos/pull/11; do not mark complete until build, lint, migrations, tests, UI E2E and preview deployment are green.
+
+
+
+## 2026-10-13 — Shared customer social shell
+
+- Extended the social-commerce header, mobile navigation, and no-sidebar shell to buyer-facing Messages, Orders, Saved, Profile, and Notifications surfaces.
+- Added desktop shortcuts to messages, orders, saved items, and notifications. Operational Business routes remain in their dedicated workspace shell.
+- Verification is being run against the latest branch head; production deployment remains blocked until all current checks pass.
