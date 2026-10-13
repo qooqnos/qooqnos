@@ -25,9 +25,28 @@ const context = await browser.newContext();
 const page = await context.newPage();
 const runtimeErrors = [];
 const failedRequests = [];
+const moduleResponses = [];
 page.on("pageerror", (error) => runtimeErrors.push(String(error.stack || error)));
 page.on("console", (message) => {
-  if (message.type() === "error") runtimeErrors.push("console: " + message.text());
+  if (message.type() === "error") {
+    const location = message.location();
+    runtimeErrors.push("console: " + message.text() + " @ " + (location.url || "") + ":" + location.lineNumber);
+  }
+});
+page.on("request", (request) => {
+  if (request.resourceType() === "script" || /\\.js(?:\\?|$)/.test(request.url())) {
+    moduleResponses.push({ event: "request", url: request.url() });
+  }
+});
+page.on("response", (response) => {
+  if (response.request().resourceType() === "script" || /\\.js(?:\\?|$)/.test(response.url())) {
+    moduleResponses.push({
+      event: "response",
+      url: response.url(),
+      status: response.status(),
+      contentType: response.headers()["content-type"] ?? "",
+    });
+  }
 });
 page.on("requestfailed", (request) => failedRequests.push({
   url: request.url(),
@@ -123,7 +142,7 @@ await page.goto(baseURL + "/");
 try {
   await page.waitForSelector(".app-shell", { timeout: 10000 });
 } catch (error) {
-  process.stderr.write("Phoenix UI bootstrap diagnostics: " + JSON.stringify({ runtimeErrors, failedRequests }, null, 2) + "\n");
+  process.stderr.write("Phoenix UI bootstrap diagnostics: " + JSON.stringify({ runtimeErrors, failedRequests, moduleResponses }, null, 2) + "\n");
   throw error;
 }
 const shellMs = Date.now() - shellStartedAt;
