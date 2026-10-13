@@ -541,7 +541,7 @@ function canonicalUi(key: string): string {
 }
 
 function pageUi(
-  namespace: "businessPage" | "businessSurface" | "discoveryPage" | "productStudio",
+  namespace: "businessPage" | "businessSurface" | "discoveryPage" | "productStudio" | "socialCommercePage",
   key: string,
   variables?: Readonly<Record<string, string>>,
 ): string {
@@ -558,6 +558,10 @@ function businessSurfaceUi(key: string, variables?: Readonly<Record<string, stri
 
 function discoveryUi(key: string, variables?: Readonly<Record<string, string>>): string {
   return pageUi("discoveryPage", key, variables);
+}
+
+function socialCommerceUi(key: string, variables?: Readonly<Record<string, string>>): string {
+  return pageUi("socialCommercePage", key, variables);
 }
 
 function productStudioUi(key: string, variables?: Readonly<Record<string, string>>): string {
@@ -678,8 +682,8 @@ function render(): void {
   const route = currentRoute();
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
-  const isHome = route.path === "/" || route.path === "/welcome";
-  const isSocial = route.path === "/discover" || route.path === "/compare" || route.path === "/activity";
+  const isHome = route.path === "/welcome";
+  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/compare" || route.path === "/activity";
   const isPublicBusiness = route.path.startsWith("/businesses/");
   appRoot.innerHTML = `
     <div class="app-shell ${isHome ? "home-shell" : ""} ${isSocial ? "social-shell" : ""} ${isPublicBusiness ? "public-business-shell" : ""}">
@@ -688,7 +692,7 @@ function render(): void {
         ${isHome || isSocial || isPublicBusiness ? "" : renderSidebar(route)}
         <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : isPublicBusiness ? "public-business-page-content" : ""}">${page}</main>
       </div>
-      ${renderSiteFooter()}
+      ${isSocial ? "" : renderSiteFooter()}
       ${isPublicBusiness ? "" : isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
       ${renderToastHost()}
     </div>
@@ -718,11 +722,8 @@ function render(): void {
   if (route.path === "/business/bookings") void loadBusinessBookingsPage();
   if (route.path === "/business/team") void loadBusinessTeamPage();
   if (route.path === "/business/settings") void loadBusinessSettingsPage();
-  if (route.path === "/discover") {
-    const params = new URLSearchParams(location.search);
-    const initialDiscoveryQuery = params.get("q")?.trim() ?? "";
-    const socialTab = params.get("tab") ?? "for-you";
-    if (initialDiscoveryQuery || socialTab === "explore" || socialTab === "following") void runDiscovery();
+  if (route.path === "/" || route.path === "/discover") {
+    void runDiscovery();
     bindDiscoveryResultEvents();
     renderCompareTray();
     renderShortlist();
@@ -733,7 +734,6 @@ function render(): void {
   }
   if (route.path === "/activity") void loadActivityPage();
   void loadShellContext();
-  if (route.path === "/") bindHomeEvents();
   if (route.path === "/account") void loadAccountState();
   if (route.path === "/booking") {
     const bookingParams = new URLSearchParams(location.search);
@@ -1229,16 +1229,7 @@ function renderToastHost(): string {
 }
 
 function renderHome(): string {
-  const persona = getActivePersona();
-  let screenHtml = "";
-  if (persona === "business") {
-    screenHtml = renderBusinessPanel();
-  } else if (persona === "consumer") {
-    screenHtml = renderConsumerHome();
-  } else {
-    screenHtml = renderIndividualDashboard();
-  }
-  return renderPhoenixMasterLayout(persona, screenHtml);
+  return renderDiscover();
 }
 
 // Retained temporarily for visual comparison during the approved interface reset.
@@ -4875,7 +4866,7 @@ function renderSocialHeader(active: "feed" | "following" | "explore" | "activity
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
     '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
     '<nav class="phoenix-social-tabs" aria-label="ناوبری اجتماعی">' +
-    '<a href="/discover" data-nav class="' + (active === "feed" ? "active" : "") + '">برای تو</a>' +
+    '<a href="/" data-nav class="' + (active === "feed" ? "active" : "") + '">برای تو</a>' +
     '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">دنبال‌شده‌ها</a>' +
     '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a>' +
     '<a href="/activity" data-nav class="' + (active === "activity" ? "active" : "") + '">فعالیت</a>' +
@@ -4888,9 +4879,18 @@ function renderSocialHeader(active: "feed" | "following" | "explore" | "activity
 }
 
 function renderSocialMobileNav(): string {
-  return '<nav class="phoenix-social-mobile-nav" aria-label="ناوبری اجتماعی موبایل">' +
-    '<a href="/discover" data-nav>⌂<small>خانه</small></a><a href="/discover?tab=explore" data-nav>⌕<small>اکسپلور</small></a>' +
-    '<button type="button" data-open-create-post aria-label="ایجاد">＋</button><a href="/activity" data-nav>✦<small>فعالیت</small></a><a href="/profile" data-nav>◉<small>پروفایل</small></a></nav>';
+  const path = normalizePath(location.pathname);
+  const tab = new URLSearchParams(location.search).get("tab") ?? "for-you";
+  const feedActive = (path === "/" || path === "/discover") && tab !== "explore" && tab !== "following";
+  const exploreActive = path === "/discover" && tab === "explore";
+  const activityActive = path === "/activity";
+  const profileActive = path === "/profile";
+  return '<nav class="phoenix-social-mobile-nav" aria-label="' + escapeAttr(socialCommerceUi("mobileNavigation")) + '">' +
+    '<a href="/" data-nav class="' + (feedActive ? "active" : "") + '"' + (feedActive ? ' aria-current="page"' : '') + '>⌂<small>' + socialCommerceUi("tabForYou") + '</small></a>' +
+    '<a href="/discover?tab=explore" data-nav class="' + (exploreActive ? "active" : "") + '"' + (exploreActive ? ' aria-current="page"' : '') + '>⌕<small>' + socialCommerceUi("tabExplore") + '</small></a>' +
+    '<button type="button" data-open-create-post aria-label="' + escapeAttr(socialCommerceUi("createOffer")) + '">＋</button>' +
+    '<a href="/activity" data-nav class="' + (activityActive ? "active" : "") + '"' + (activityActive ? ' aria-current="page"' : '') + '>✦<small>' + localizedUi("فعالیت") + '</small></a>' +
+    '<a href="/profile" data-nav class="' + (profileActive ? "active" : "") + '"' + (profileActive ? ' aria-current="page"' : '') + '>◉<small>' + localizedUi("پروفایل") + '</small></a></nav>';
 }
 
 function renderSocialPosts(items: DiscoveryResult[]): string {
@@ -5130,22 +5130,74 @@ function renderDiscover(): string {
   const params = new URLSearchParams(location.search);
   const initialQuery = params.get("q") ?? "";
   const tab = params.get("tab") ?? "for-you";
-  const title = tab === "following" ? discoveryUi("followingTitle") : tab === "explore" ? discoveryUi("exploreTitle") : discoveryUi("forYouTitle");
+  const title = tab === "following" ? discoveryUi("followingTitle") : tab === "explore" ? discoveryUi("exploreTitle") : socialCommerceUi("feedTitle");
   const intro = tab === "following"
     ? discoveryUi("followingIntro")
     : tab === "explore"
       ? discoveryUi("exploreIntro")
-      : discoveryUi("forYouIntro");
-  return '<div class="phoenix-social-page">' +
-    '<section class="phoenix-social-hero">' +
-      '<div class="phoenix-social-intro"><span class="phoenix-kicker">' + discoveryUi(tab === "explore" ? "explore" : tab === "following" ? "following" : "forYou") + '</span><h1>' + escapeHtml(title) + '</h1><p>' + escapeHtml(intro) + '</p></div>' +
-      '<div class="phoenix-social-hero-card"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><div><strong>' + localizedUi("تصمیم را از نیاز شروع کن") + '</strong><small>' + localizedUi("محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.") + '</small></div><button class="button button-primary" type="button" data-open-create-post>＋ ' + discoveryUi("createOffering") + '</button></div>' +
+      : socialCommerceUi("feedDescription");
+  const tabLink = (key: "for-you" | "following" | "explore", href: string, label: string): string =>
+    '<a class="phoenix-reset-tab' + (tab === key ? ' active' : '') + '" href="' + href + '" data-nav' +
+    (tab === key ? ' aria-current="page"' : '') + '>' + label + '</a>';
+
+  return '<div class="phoenix-reset-page">' +
+    '<section class="phoenix-reset-hero">' +
+      '<div class="phoenix-reset-hero-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("eyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("title") + '</h1>' +
+        '<p>' + socialCommerceUi("intro") + '</p>' +
+      '</div>' +
+      '<button class="button button-primary phoenix-reset-hero-cta" type="button" data-open-create-post><span aria-hidden="true">＋</span> ' + socialCommerceUi("createOffer") + '</button>' +
     '</section>' +
-    '<section class="phoenix-social-search glass-card"><span class="phoenix-search-icon">⌕</span><input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="' + escapeAttr(discoveryUi("examplePlaceholder")) + '" /><button class="button button-primary" type="button" data-run-discovery>' + discoveryUi("discoverButton") + ' <span>←</span></button></section>' +
-    '<div class="phoenix-feed-heading"><div><span class="phoenix-kicker">' + discoveryUi("discoverButton") + '</span><strong id="results-title">' + escapeHtml(initialQuery ? discoveryUi("searchResults") : tab === "following" ? discoveryUi("following") : tab === "explore" ? discoveryUi("explore") : discoveryUi("discoverableSuggestions")) + '</strong><small id="results-meta">' + discoveryUi("ready") + '</small></div><div class="phoenix-feed-actions"><a href="/compare" data-nav>' + localizedUi("مقایسه") + ' <span>→</span></a><span id="shortlist-count" class="pill" aria-label="فهرست انتخابی">0</span><button type="button" class="button button-ghost" data-social-state-refresh>↻ ' + discoveryUi("sync") + '</button></div></div>' +
-    '<div id="discovery-results" class="phoenix-social-feed">' + (initialQuery ? '<div class="slot-loading">' + discoveryUi("preparing") + '</div>' : '<div class="social-empty-state glass-card"><div class="draft-orb">✦</div><h3>' + discoveryUi("startWithNeedTitle") + '</h3><p>' + discoveryUi("writeSentence") + '</p><div class="connection-actions"><button class="button button-primary" type="button" data-focus-discover>' + discoveryUi("startSearch") + '</button><a class="button button-ghost" href="/discover?tab=explore" data-nav>' + discoveryUi("explore") + '</a></div></div>') + '</div>' +
-    '<div id="phoenix-compare-tray"></div><div id="discovery-pagination"></div></div>';
+    '<section class="phoenix-reset-search" role="search">' +
+      '<span class="phoenix-reset-search-icon" aria-hidden="true">⌕</span>' +
+      '<input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="' + escapeAttr(socialCommerceUi("searchPlaceholder")) + '" aria-label="' + escapeAttr(socialCommerceUi("searchPlaceholder")) + '" />' +
+      '<button class="button button-primary" type="button" data-run-discovery>' + socialCommerceUi("searchButton") + '</button>' +
+      '<button class="button button-ghost phoenix-reset-add-button" type="button" data-open-create-post aria-label="' + escapeAttr(socialCommerceUi("createOffer")) + '">＋</button>' +
+    '</section>' +
+    '<div class="phoenix-reset-discover-grid">' +
+      '<section class="phoenix-reset-main-column" aria-label="' + escapeAttr(socialCommerceUi("feedTitle")) + '">' +
+        '<nav class="phoenix-reset-feed-tabs" aria-label="' + escapeAttr(socialCommerceUi("feedTabs")) + '">' +
+          tabLink("for-you", "/", socialCommerceUi("tabForYou")) +
+          tabLink("following", "/discover?tab=following", socialCommerceUi("tabFollowing")) +
+          tabLink("explore", "/discover?tab=explore", socialCommerceUi("tabExplore")) +
+        '</nav>' +
+        '<div class="phoenix-reset-feed-heading">' +
+          '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("sectionKicker") + '</span><h2 id="results-title">' + escapeHtml(title) + '</h2><p>' + escapeHtml(intro) + '</p><small id="results-meta">' + discoveryUi("preparing") + '</small></div>' +
+          '<div class="phoenix-reset-feed-tools">' +
+            '<a href="/compare" data-nav class="phoenix-reset-compare-link">⚖ <span>' + socialCommerceUi("compare") + '</span></a>' +
+            '<span id="shortlist-count" class="phoenix-reset-shortlist-count" aria-label="' + escapeAttr(socialCommerceUi("shortlist")) + '">0</span>' +
+            '<button type="button" class="phoenix-reset-refresh" data-social-state-refresh aria-label="' + escapeAttr(socialCommerceUi("refresh")) + '">↻</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="discovery-results" class="phoenix-social-feed phoenix-reset-posts"><div class="slot-loading">' + discoveryUi("preparing") + '</div></div>' +
+        '<div id="discovery-pagination" class="phoenix-reset-pagination"></div>' +
+      '</section>' +
+      '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
+        '<section class="phoenix-reset-side-card phoenix-reset-intent-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">⌕</span>' +
+          '<h2>' + socialCommerceUi("needTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("needBody") + '</p>' +
+          '<button class="button button-primary" type="button" data-focus-discover>' + socialCommerceUi("focusSearch") + '</button>' +
+        '</section>' +
+        '<section class="phoenix-reset-side-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">◇</span>' +
+          '<h2>' + socialCommerceUi("trustTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("trustBody") + '</p>' +
+          '<a href="/compare" data-nav class="phoenix-reset-side-link">' + socialCommerceUi("compare") + ' <span aria-hidden="true">←</span></a>' +
+        '</section>' +
+        '<section class="phoenix-reset-side-card phoenix-reset-seller-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">＋</span>' +
+          '<h2>' + socialCommerceUi("sellerTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("sellerBody") + '</p>' +
+          '<button class="button button-ghost" type="button" data-open-create-post>' + socialCommerceUi("createOffer") + '</button>' +
+        '</section>' +
+      '</aside>' +
+    '</div>' +
+    '<div id="phoenix-compare-tray"></div>' +
+  '</div>';
 }
+
 function getShortlist(): DiscoveryResult[] {
   try {
     const raw = localStorage.getItem("phoenix-shortlist");
