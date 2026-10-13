@@ -96,14 +96,14 @@ describe("OfferResolver in services/offerResolver.ts", () => {
     },
   ];
 
-  function createMockRepo(rows: typeof databaseRows) {
+  function createMockRepo(rows: readonly Record<string, unknown>[]) {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
       async first<T>(): Promise<T | null> {
         return null;
       },
       async all<T>(): Promise<{ results: T[] }> {
-        return { results: rows as T[] };
+        return { results: rows as unknown as T[] };
       },
       async run() {
         return { success: true };

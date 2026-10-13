@@ -1,5 +1,5 @@
 import type { D1Database } from "@qooqnos/database";
-import { buildSitemapXml, buildSitemapIndexXml, type SitemapEntry } from "./sitemap";
+import { buildSitemapXml, buildSitemapIndexXml, type SitemapEntry, SITEMAP_URL_LIMIT } from "./sitemap";
 import { canonicalEntityUrl } from "./url";
 import type { SeoEntity } from "./types";
 
