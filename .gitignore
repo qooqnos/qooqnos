@@ -43,7 +43,13 @@ Thumbs.db
 *.sln
 *.sw?
 
+# Git Worktrees & AI Assistant Temporary Workspaces
+*.worktrees/
+.worktrees/
+*worktrees/
+
 # Large Export Archives
 apps/web/public/*.zip
 *.zip
+
 
