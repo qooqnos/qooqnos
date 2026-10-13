@@ -184,5 +184,4 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0092_business_public_contact_links.sql", sql: businessPublicContactLinks },
   { path: "migrations/0093_commerce_fulfillment_policies.sql", sql: commerceFulfillmentPolicies },
   { path: "migrations/0094_social_engagement_graph.sql", sql: socialEngagementGraph },
-  { path: "migrations/0095_commerce_offers.sql", sql: commerceOffers },
   ];
