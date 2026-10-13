@@ -9,15 +9,8 @@ import {
   accountTierService,
   validateNationalCode,
   BUYER_ROLE_LABELS_FA,
-  type AccountTier,
-  type CorporateVerificationStatus,
   type OfferingType,
   type StoreBuyerRole,
-  type StoreProductItem,
-  type CustomerAddressItem,
-  type AccountOrderRecord,
-  type TimedDiscount,
-  type StoreCustomerRelationship,
 } from "./account-tier-service";
 
 export type PhoenixPersona = "individual" | "business" | "consumer";

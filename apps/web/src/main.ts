@@ -1241,7 +1241,8 @@ function renderHome(): string {
   return renderPhoenixMasterLayout(persona, screenHtml);
 }
 
-function renderLegacyHome(): string {
+// Retained temporarily for visual comparison during the approved interface reset.
+function _renderLegacyHome(): string {
   return `
     <div class="phoenix-home">
       <section class="phoenix-home-hero">
@@ -3277,7 +3278,7 @@ function renderProfile(): string {
   return renderIndividualProfile();
 }
 
-function renderLegacyProfile(): string {
+function _renderLegacyProfile(): string {
   const initialProfile: BuyerProfileData = {
     id: "cust-current",
     name: uiText("کاربر ققنوس"),
@@ -3407,7 +3408,7 @@ function renderNotifications(): string {
   return renderIndividualNotifications();
 }
 
-function renderLegacyNotifications(): string {
+function _renderLegacyNotifications(): string {
   return '<div class="phoenix-notifications-page">' +
     '<section class="page-heading"><div><span class="eyebrow"><i></i> Notification Center</span><h1>چیزهایی که لازم است <em>بدانی.</em></h1><p>پیام‌ها، پیشنهادهای ققنوس و تغییر وضعیت معامله را در یک فضای آرام و قابل‌فهم ببین.</p></div><button class="button button-primary" type="button" data-refresh-notifications>بروزرسانی</button></section>' +
     '<section class="phoenix-notification-tabs" aria-label="دسته اعلان‌ها"><button class="active" type="button">همه</button><button type="button">مهم</button><button type="button">پیام‌ها</button><button type="button">معاملات</button></section>' +
@@ -3461,7 +3462,7 @@ function renderTransactions(): string {
   return renderDealTypeSelection();
 }
 
-function renderLegacyTransactions(): string {
+function _renderLegacyTransactions(): string {
   return '<div class="phoenix-transactions-page">' +
     '<section class="page-heading"><div><span class="eyebrow"><i></i> Transactions</span><h1>هر معامله، یک <em>مسیر روشن.</em></h1><p>خرید، فروش، اجاره، معاوضه، مزایده و مناقصه در یک زبان واحد؛ جزئیات هر جریان از قابلیت canonical همان حوزه می‌آید.</p></div></section>' +
     '<section class="phoenix-transaction-types">' +
@@ -4452,7 +4453,7 @@ function renderBusinessTeam(): string {
   return renderPhoenixBusinessTeam();
 }
 
-function renderLegacyBusinessTeam(): string {
+function _renderLegacyBusinessTeam(): string {
   return `
     <div class="phoenix-business-subpage">
       <section class="page-heading">
@@ -4598,7 +4599,7 @@ function renderWelcome(): string {
   return renderIndividualWelcome();
 }
 
-function renderLegacyWelcome(): string {
+function _renderLegacyWelcome(): string {
   const currentTab = new URLSearchParams(location.search).get("type") === "business" ? "business" : "individual";
   return `
     <div class="phoenix-welcome-page">

@@ -3,7 +3,6 @@ import {
   createBusinessOffer,
   isBusinessOfferPurchasable,
   BusinessOfferStatus,
-  type BusinessOffer,
 } from "./offer";
 
 describe("BusinessOffer Model (Unified Commercial Entity)", () => {
