@@ -11,7 +11,7 @@ import {
   BUYER_ROLE_LABELS_FA,
   type OfferingType,
   type StoreBuyerRole,
-} from "./account-tier-service";
+} from "./account-tier-service.js";
 
 export type PhoenixPersona = "individual" | "business" | "consumer";
 
