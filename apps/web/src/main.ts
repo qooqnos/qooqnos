@@ -46,7 +46,6 @@ import {
   renderIndividualProfile,
   renderIndividualNotifications,
   renderBusinessWelcome,
-  renderBusinessPanel,
   renderBusinessCreateContent,
   renderBusinessContentDetails,
   renderBusinessDeals,
@@ -5848,9 +5847,8 @@ function renderBusinessModule(vertical: string, module: string): string {
 }
 function renderBusiness(): string {
   const params = new URLSearchParams(location.search);
-  if (!params.has("vertical") && !params.has("module") && !params.has("workflow") && !params.has("stage")) {
-    return renderBusinessPanel();
-  }
+  // The seller workspace now uses the schema-driven dashboard on its default route too.
+  // Do not fall back to the legacy dashboard with hard-coded activity and metric counts.
   const businessId = localStorage.getItem(STORAGE.business) ?? "";
   const vertical = params.get("vertical")?.trim() || localStorage.getItem(STORAGE.businessVertical) || "default";
   const requestedModule = params.get("module")?.trim();
