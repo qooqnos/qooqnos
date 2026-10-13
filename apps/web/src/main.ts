@@ -40,7 +40,6 @@ import {
   renderPersonaSwitcher,
   renderUnifiedBottomNav,
   renderIndividualWelcome,
-  renderIndividualDashboard,
   renderCreateContentHub,
   renderContentDetailsForm,
   renderDealTypeSelection,
@@ -54,13 +53,11 @@ import {
   renderBusinessTeam as renderPhoenixBusinessTeam,
   renderBusinessOrgProfile,
   renderConsumerWelcome,
-  renderConsumerHome,
   renderConsumerProductDetails,
   renderConsumerCart,
   renderConsumerPayment,
   renderConsumerMessages,
   renderConsumerLoyalty,
-  renderPhoenixMasterLayout,
   bindPhoenixExperienceEvents,
 } from "./phoenix-experience.js";
 type Theme = "dark" | "light";
@@ -1400,7 +1397,7 @@ function _renderLegacyHome(): string {
   `;
 }
 
-function bindHomeEvents(): void {
+function _bindHomeEvents(): void {
   const draftKey = "phoenix-home-demand-draft";
   const primaryInput = document.querySelector<HTMLTextAreaElement>("#phoenix-demand-input");
   const savedDraft = sessionStorage.getItem(draftKey);
