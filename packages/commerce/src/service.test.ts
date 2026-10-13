@@ -3,6 +3,7 @@ import { brandId, type RequestContext } from "@qooqnos/core";
 import { D1Database, type D1DatabaseLike, type D1PreparedStatementLike } from "@qooqnos/database";
 import { CommerceService } from "./service";
 import { CommerceRepository } from "./repository";
+import type { AuthorizationService } from "@qooqnos/runtime";
 
 function context(): RequestContext {
   return {
@@ -75,7 +76,7 @@ describe("CommerceService resolveOffer endpoint logic", () => {
   function createService() {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
-      async first<T>() { return null; },
+      async first<T>() { return null as T | null; },
       async all<T>() { return { results: rows as T[] }; },
       async run() { return { success: true }; },
     };
@@ -84,9 +85,7 @@ describe("CommerceService resolveOffer endpoint logic", () => {
       async batch() { return []; },
     };
     const repository = new CommerceRepository(new D1Database(raw));
-    const mockAuth: any = {
-      assert: async () => {},
-    };
+    const mockAuth = { assert: async () => undefined } as unknown as AuthorizationService;
     return new CommerceService({
       repository,
       authorization: mockAuth,

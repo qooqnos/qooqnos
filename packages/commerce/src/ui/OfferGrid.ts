@@ -240,16 +240,24 @@ export function renderOfferGridHtml(props: OfferGridProps): string {
   `;
 }
 
+export interface OfferGridEvent {
+  readonly target?: {
+    getAttribute?: (name: string) => string | null;
+    checked?: boolean;
+    value?: string;
+  } | null;
+}
+
 export interface OfferGridDomContainer {
   innerHTML: string;
   querySelectorAll: (selector: string) => Iterable<{
     getAttribute: (name: string) => string | null;
     checked?: boolean;
     value?: string;
-    addEventListener: (event: string, handler: (e: any) => void) => void;
+    addEventListener: (event: string, handler: (e: OfferGridEvent) => void) => void;
   }>;
   querySelector: (selector: string) => {
-    addEventListener: (event: string, handler: (e: any) => void) => void;
+    addEventListener: (event: string, handler: (e: OfferGridEvent) => void) => void;
   } | null;
 }
 
@@ -273,7 +281,7 @@ export function mountOfferGridComponent(
   function bindEvents() {
     const toggleInputs = container.querySelectorAll(".offer-avail-toggle");
     for (const input of toggleInputs) {
-      input.addEventListener("change", (e: any) => {
+      input.addEventListener("change", (e: OfferGridEvent) => {
         const group = (e.target?.getAttribute?.("data-group") ?? input.getAttribute("data-group")) as CustomerGroup;
         const checked = Boolean(e.target?.checked ?? input.checked);
         currentProps.onToggleAvailability(group, checked);
@@ -282,7 +290,7 @@ export function mountOfferGridComponent(
 
     const priceInputs = container.querySelectorAll(".offer-price-input");
     for (const input of priceInputs) {
-      input.addEventListener("change", (e: any) => {
+      input.addEventListener("change", (e: OfferGridEvent) => {
         const group = (e.target?.getAttribute?.("data-group") ?? input.getAttribute("data-group")) as CustomerGroup;
         const rawVal = e.target?.value ?? input.value;
         const val = Number.parseInt(String(rawVal), 10);

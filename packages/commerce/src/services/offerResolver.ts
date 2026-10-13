@@ -7,7 +7,6 @@ import {
 import type {
   Offer,
   OfferAudienceType,
-  OfferAvailabilityStatus,
   OfferStatus,
   CustomerGroup,
 } from "../types/offer";

@@ -1,9 +1,15 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { brandId, type RequestContext, AppError } from "@qooqnos/core";
+import { brandId, type RequestContext } from "@qooqnos/core";
 import { D1Database, type D1DatabaseLike, type D1PreparedStatementLike } from "@qooqnos/database";
 import { OfferController } from "./offerController";
 import { CommerceRepository, type CommerceOfferRow } from "../repository";
 import { OfferStatus } from "../types/offer";
+
+type MockD1Statement = D1PreparedStatementLike & { _bound?: unknown[] };
+
+function asCommerceOfferRow(value: Record<string, unknown>): CommerceOfferRow {
+  return value as unknown as CommerceOfferRow;
+}
 
 function createMockContext(): RequestContext {
   return {
@@ -27,11 +33,11 @@ describe("OfferController (API Controller for Offer Lifecycle)", () => {
     mockRows = [];
     const statement: D1PreparedStatementLike = {
       bind(...params: unknown[]) {
-        (this as any)._bound = params;
+        (this as MockD1Statement)._bound = params;
         return this;
       },
       async first<T>() {
-        const bound = (this as any)._bound || [];
+        const bound = (this as MockD1Statement)._bound || [];
         const id = bound[0];
         const found = mockRows.find((r) => r.id === id);
         return (found as T) ?? null;
@@ -40,10 +46,10 @@ describe("OfferController (API Controller for Offer Lifecycle)", () => {
         return { results: mockRows as T[] };
       },
       async run() {
-        const bound = (this as any)._bound || [];
+        const bound = (this as MockD1Statement)._bound || [];
         if (bound.length >= 21) {
           // INSERT
-          const row: CommerceOfferRow = {
+          const row = asCommerceOfferRow({
             id: bound[0],
             organization_id: bound[1],
             workspace_id: bound[2],
@@ -67,14 +73,14 @@ describe("OfferController (API Controller for Offer Lifecycle)", () => {
             status: bound[20],
             created_at: bound[21],
             updated_at: bound[22],
-          };
+          });
           mockRows.push(row);
         } else if (bound.length > 0) {
           // UPDATE
           const id = bound[bound.length - 1];
           const idx = mockRows.findIndex((r) => r.id === id);
           if (idx !== -1) {
-            mockRows[idx] = {
+            mockRows[idx] = asCommerceOfferRow({
               ...mockRows[idx]!,
               seller_id: bound[0],
               product_id: bound[1],
@@ -95,7 +101,7 @@ describe("OfferController (API Controller for Offer Lifecycle)", () => {
               conditions_json: bound[16],
               status: bound[17],
               updated_at: bound[18],
-            };
+            });
           }
         }
         return { success: true };
@@ -146,7 +152,7 @@ describe("OfferController (API Controller for Offer Lifecycle)", () => {
         sellerId: "seller-alpha",
         productId: "prod-laptop-x",
         priceAmountMinor: 1000,
-        status: "INVALID_STATUS" as any,
+        status: "INVALID_STATUS",
       }),
     ).rejects.toThrowError(/Invalid offer status/);
   });

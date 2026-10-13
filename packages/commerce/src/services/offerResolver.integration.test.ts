@@ -32,7 +32,7 @@ describe("OfferResolver Integration Suite (Precedence & Lifecycle Validity)", ()
   function createDatabaseMock(mockRows: CommerceOfferRow[]) {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
-      async first<T>() { return null; },
+      async first<T>() { return null as T | null; },
       async all<T>() { return { results: mockRows as T[] }; },
       async run() { return { success: true }; },
     };
