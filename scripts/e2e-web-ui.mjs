@@ -72,7 +72,11 @@ await page.route("**/api/v1/**", async (route) => {
     "/api/v1/business-access": { status: "authorized", tenantId: "tenant-1", workspaceId: workspace },
     "/api/v1/ai/usage": { data: [{ operationId: "op-1", operationType: "seller.product.extract", meterUnit: "provider_units", quantity: 17, modelId: "test-model", billingUsageReference: "bill-1", createdAt: new Date().toISOString() }] },
     "/api/v1/audit": { data: [{ id: "audit-1", action: "business.updated", targetType: "business", targetId: "biz-1", outcome: "succeeded", createdAt: new Date().toISOString() }] },
-    "/api/v1/discovery/search": { data: [{ id: "result-1", sourceType: "business", sourceId: "biz-1", title: "موجودیت واقعی تست", description: "نتیجهٔ canonical برای تست UI", locality: "مرکز شهر", score: 88, rating: 4.8 }] },
+    "/api/v1/discovery/search": { data: [
+      { id: "result-1", sourceType: "business", sourceId: "biz-1", title: "موجودیت واقعی تست", description: "نتیجهٔ canonical برای تست UI", locality: "مرکز شهر", score: 88, rating: 4.8 },
+      { id: "result-product-1", sourceType: "product", sourceId: "prod-1", title: "میز چوبی", description: "کالای تست برای مقایسه", price: 25000000, currency: "ریال", metadata: { offeringType: "product", businessId: "biz-1" } },
+      { id: "result-product-2", sourceType: "product", sourceId: "prod-2", title: "صندلی چوبی", description: "کالای دوم برای مقایسه", price: 12000000, currency: "ریال", metadata: { offeringType: "product", businessId: "biz-1" } },
+    ] },
     "/api/v1/public/businesses/biz-1": { data: {
       profile: { id: "biz-1", name: "فروشگاه ترنج", displayName: "ترنج", status: "active", publicationStatus: "published", businessType: "retail", primaryCategoryId: "handmade", defaultLocale: "fa-IR", timezone: "Asia/Tehran", defaultCurrency: "IRR", updatedAt: new Date().toISOString() },
       contacts: [{ contactType: "phone", value: "02100000000", isPrimary: true }],
@@ -141,6 +145,8 @@ await page.route("**/api/v1/**", async (route) => {
 await page.addInitScript(() => {
   sessionStorage.setItem("phoenix-access-token", "ui-test-token");
   localStorage.setItem("phoenix-workspace-id", "ws-1");
+  localStorage.removeItem("phoenix-compare-items");
+  localStorage.removeItem("phoenix-shortlist");
   localStorage.setItem("qooqnos.locale", "fa");
 });
 
@@ -318,6 +324,12 @@ assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
 await page.locator("#discover-query").fill("یک کسب‌وکار نزدیک برای رزرو");
 await page.locator("[data-run-discovery]").click();
 await page.getByRole("heading", { name: "موجودیت واقعی تست" }).waitFor();
+assert.equal(await page.locator(".phoenix-reset-compare-link").isVisible(), false);
+await page.locator('[data-compare="result-product-1"]').click();
+assert.equal(await page.locator(".phoenix-reset-compare-link").isVisible(), false);
+await page.locator('[data-compare="result-product-2"]').click();
+assert.equal(await page.locator(".phoenix-reset-compare-link").isVisible(), true);
+assert.equal(await page.locator("#compare-count").innerText(), "۲");
 await page.locator("[data-discovery-index='0']").click();
 await page.locator(".connection-modal [data-save-detail]").click();
 await page.locator(".connection-modal [data-close-discovery]").first().click();
