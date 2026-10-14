@@ -335,6 +335,25 @@ assert.equal(new URL(sharedPayload.url).pathname, "/discover");
 assert.equal(new URL(sharedPayload.url).searchParams.get("q"), "میز چوبی");
 assert.ok(!sharedPayload.url.includes("/checkout"));
 
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='en']").click();
+await page.waitForTimeout(50);
+await page.locator(".phoenix-post-card [data-comment]").first().click();
+assert.equal(await page.locator("#phoenix-social-comment-title").innerText(), "Write a comment");
+assert.ok((await page.locator("#phoenix-social-comment-body").getAttribute("placeholder")).includes("What would you like others to know"));
+await page.locator("[data-cancel-social-comment]").last().click();
+
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='ar']").click();
+await page.waitForTimeout(50);
+await page.locator(".phoenix-post-card [data-comment]").first().click();
+assert.equal(await page.locator("#phoenix-social-comment-title").innerText(), "اكتب تعليقًا");
+await page.locator("[data-cancel-social-comment]").last().click();
+
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='fa']").click();
+await page.waitForTimeout(50);
+
 const initialTheme = await page.locator("html").getAttribute("data-theme");
 await page.locator("[data-theme-toggle]").click();
 assert.notEqual(await page.locator("html").getAttribute("data-theme"), initialTheme);
