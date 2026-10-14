@@ -368,7 +368,8 @@ assert.ok(!personalProfileText.includes("معامله"));
 await page.goto(baseURL + "/messages");
 const messagesText = await page.locator(".phoenix-reset-messages-page").innerText();
 assert.ok(messagesText.includes("پیام‌ها و گفت‌وگوها"));
-assert.ok(messagesText.includes("پاسخ ساختگی"));
+assert.ok(messagesText.includes("این بخش فقط گفت‌وگوهای ثبت‌شده را نمایش می‌دهد"));
+assert.ok(!messagesText.includes("پاسخ ساختگی"));
 assert.ok(!messagesText.includes("در خدمت شما هستیم"));
 assert.ok(!messagesText.includes("سفارش کالا رسید و تأیید شد"));
 
