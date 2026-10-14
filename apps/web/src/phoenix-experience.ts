@@ -1947,6 +1947,7 @@ export function renderConsumerCart(): string {
       </div>
 
       <div class="phoenix-screen-content">
+        <p class="phoenix-checkout-preview-note">${ui("این صفحه فقط پیش‌نمایش سبد محلی را نشان می‌دهد؛ این اقلام هنوز به سفارش ثبت‌شده متصل نیستند.")}</p>
         ${items.length === 0 ? `
           <div style="text-align:center; padding: 48px 20px; color: var(--muted);">
             <div style="font-size: 48px; margin-bottom: 12px;">🛒</div>
