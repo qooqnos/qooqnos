@@ -185,3 +185,17 @@
 - هیچ داده یا قابلیت نمایشی به‌عنوان واقعیت عملیاتی جا زده نشود.
 
 **قاعدهٔ تداوم:** در هر مرحله این سند و `docs/IMPLEMENTATION_LEDGER.md` به‌روزرسانی شوند. قبل از شروع کار بعدی، وضعیت آخرین commit و آزمون‌های آن از نو بررسی شود. کار نیمه‌تمام باید در این سند یا ledger با وضعیت روشن ثبت شود.
+
+
+## 11. Payment and checkout boundary — explicit review-only state
+
+The legacy consumer cart stores local preview items and is **not** a canonical order. Until the real commerce checkout, a verified payment provider, and server-confirmed payment results are integrated:
+
+- Cart prices are labeled as estimates from local preview items; shipping is not described as free.
+- Checkout shows a review-only state and clearly says no order is placed and no money is taken.
+- There is no payment-method selector that implies bank gateway, credit, or cash-on-delivery support is active.
+- There is no local submit handler that clears the cart, creates an apparent order, or claims payment succeeded.
+- Cancelling/leaving checkout keeps the local preview cart intact.
+- A successful-payment state may only be shown after canonical order/payment state confirms it.
+
+This is intentional honesty, not a claim that checkout is complete. Real purchase flow remains a separate delivery milestone and must be wired to canonical cart/order/payment APIs before it can be presented as available.
