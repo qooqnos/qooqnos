@@ -223,7 +223,7 @@ function socialActivityLabel(eventType: string): string {
 
 async function persistSocialAction(action: "like" | "save", item: DiscoveryResult): Promise<boolean> {
   const target = socialTarget(item);
-  if (!target) throw new Error(socialCommerceUi("commentTargetMissing"));
+  if (!target) throw new Error(socialCommerceUi("socialActionUnavailable"));
   const key = action + ":" + socialKey(target.targetType, target.targetId);
   const existingId = socialState.engagements.get(key) ?? socialActionIds.get(key);
   if (existingId) {
@@ -329,7 +329,7 @@ function requestSocialComment(item: DiscoveryResult): Promise<string | null> {
 
 async function persistSocialComment(item: DiscoveryResult): Promise<boolean> {
   const target = socialTarget(item);
-  if (!target) throw new Error(socialCommerceUi("socialActionUnavailable"));
+  if (!target) throw new Error(socialCommerceUi("commentTargetMissing"));
   const body = await requestSocialComment(item);
   if (!body) return false;
   await apiJson("/api/v1/social/comments", {
