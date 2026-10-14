@@ -4092,7 +4092,7 @@ function renderMessages(): string {
     '<section class="phoenix-reset-messages-empty">' +
       '<div class="phoenix-reset-messages-icon" aria-hidden="true">◌</div>' +
       '<h2>' + uiText(token ? "گفت‌وگوها هنوز در این صفحه در دسترس نیستند." : "برای پیگیری ارتباط‌ها وارد حساب شو.") + '</h2>' +
-      '<p>' + uiText("برای شروع، کالا یا خدمت موردنظرت را در اکسپلور پیدا کن و اطلاعات عرضه و فروشنده را بررسی کن. ققنوس پیام یا پاسخ ساختگی نشان نمی‌دهد.") + '</p>' +
+      '<p>' + socialCommerceUi("messagesIntegrityDescription") + '</p>' +
       '<div class="phoenix-reset-messages-actions">' +
         (token ? '' : '<button class="button button-ghost" type="button" data-open-login>' + uiText("ورود به حساب") + '</button>') +
         '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("رفتن به اکسپلور") + ' <span aria-hidden="true">←</span></a>' +
