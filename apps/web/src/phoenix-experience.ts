@@ -2039,15 +2039,15 @@ export function renderConsumerPayment(): string {
                   <span class="phoenix-checkout-review-item-icon" aria-hidden="true">▦</span>
                   <div class="phoenix-checkout-review-item-copy">
                     <strong>${escapeHtml(item.title)}</strong>
-                    <small>${escapeHtml(item.category)} · ${ui("تعداد")} ${formatNumber(item.quantity)}</small>
+                    <small>${escapeHtml(item.category)} · ${ui("تعداد")} ${item.quantity.toLocaleString("fa-IR")}</small>
                   </div>
-                  <span class="phoenix-checkout-review-item-total">${formatNumber(item.price * item.quantity)} ${ui("تومان")}</span>
+                  <span class="phoenix-checkout-review-item-total">${(item.price * item.quantity).toLocaleString("fa-IR")} ${ui("تومان")}</span>
                 </article>
               `).join("")}
             </div>
             <div class="phoenix-checkout-review-total">
               <span>${ui("مجموع تقریبی اقلام محلی")}</span>
-              <strong>${formatNumber(estimatedSubtotal)} ${ui("تومان")}</strong>
+              <strong>${estimatedSubtotal.toLocaleString("fa-IR")} ${ui("تومان")}</strong>
             </div>
           ` : `
             <div class="phoenix-checkout-review-empty">
