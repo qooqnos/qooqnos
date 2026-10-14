@@ -3814,26 +3814,26 @@ function renderSaved(): string {
   const compareCount = getCompareItems().length;
   return '<div class="phoenix-reset-saved-page">' +
     '<section class="phoenix-reset-saved-hero">' +
-      '<div><span class="phoenix-reset-section-kicker">' + uiText("برای برگشتن") + '</span>' +
-        '<h1>' + uiText("ذخیره‌شده‌های تو") + '</h1>' +
-        '<p>' + uiText("کالاها و خدماتی را که خودت نشان کرده‌ای یک‌جا نگه دار و هر وقت آماده بودی دوباره بررسی‌شان کن.") + '</p></div>' +
+      '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("savedEyebrow") + '</span>' +
+        '<h1>' + socialCommerceUi("savedTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("savedIntro") + '</p></div>' +
       '<div class="phoenix-reset-saved-hero-actions">' +
-        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("کشف گزینه‌های تازه") + ' <span aria-hidden="true">←</span></a>' +
-        '<a class="button button-ghost" href="/compare" data-nav' + (compareCount < 2 ? ' hidden' : '') + '>' + uiText("مقایسه") + ' · ' + formatLocalizedNumber(compareCount) + '</a>' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("discoverSaved") + ' <span aria-hidden="true">←</span></a>' +
+        '<a class="button button-ghost" href="/compare" data-nav' + (compareCount < 2 ? ' hidden' : '') + '>' + socialCommerceUi("compare") + ' · ' + formatLocalizedNumber(compareCount) + '</a>' +
       '</div>' +
     '</section>' +
     '<section class="phoenix-reset-saved-toolbar">' +
-      '<nav class="phoenix-reset-saved-tabs" role="tablist" aria-label="' + escapeAttr(uiText("دسته‌بندی موارد ذخیره")) + '">' +
-        '<button class="active" type="button" data-saved-filter="all" aria-selected="true">' + uiText("همه") + '</button>' +
-        '<button type="button" data-saved-filter="product" aria-selected="false">' + uiText("کالاها") + '</button>' +
-        '<button type="button" data-saved-filter="service" aria-selected="false">' + uiText("خدمات") + '</button>' +
-        '<button type="button" data-saved-filter="business" aria-selected="false">' + uiText("کسب‌وکارها") + '</button>' +
+      '<nav class="phoenix-reset-saved-tabs" role="tablist" aria-label="' + escapeAttr(socialCommerceUi("savedCategories")) + '">' +
+        '<button class="active" type="button" data-saved-filter="all" aria-selected="true">' + socialCommerceUi("allItems") + '</button>' +
+        '<button type="button" data-saved-filter="product" aria-selected="false">' + socialCommerceUi("productsPlural") + '</button>' +
+        '<button type="button" data-saved-filter="service" aria-selected="false">' + socialCommerceUi("servicesPlural") + '</button>' +
+        '<button type="button" data-saved-filter="business" aria-selected="false">' + socialCommerceUi("businessesPlural") + '</button>' +
       '</nav>' +
-      '<div class="phoenix-reset-saved-toolbar-meta"><span id="saved-items-count">' + formatLocalizedNumber(savedItems.length) + '</span><span>' + uiText("مورد ذخیره‌شده") + '</span>' +
-        '<button class="button button-ghost" type="button" data-clear-all-saved' + (savedItems.length ? '' : ' disabled') + '>' + uiText("پاک کردن همه") + '</button></div>' +
+      '<div class="phoenix-reset-saved-toolbar-meta"><span id="saved-items-count">' + formatLocalizedNumber(savedItems.length) + '</span><span>' + socialCommerceUi("savedItemsLabel") + '</span>' +
+        '<button class="button button-ghost" type="button" data-clear-all-saved' + (savedItems.length ? '' : ' disabled') + '>' + socialCommerceUi("clearSavedItems") + '</button></div>' +
     '</section>' +
     '<section class="phoenix-reset-saved-grid" id="saved-items-grid" aria-live="polite">' +
-      '<div class="slot-loading">' + uiText("در حال بارگذاری موارد ذخیره‌شده…") + '</div>' +
+      '<div class="slot-loading">' + socialCommerceUi("loadingSavedItems") + '</div>' +
     '</section>' +
   '</div>';
 }
@@ -3882,9 +3882,9 @@ function loadSavedPage(): void {
 
     if (!filtered.length) {
       grid.innerHTML = '<div class="phoenix-reset-saved-empty"><div class="phoenix-reset-saved-empty-icon" aria-hidden="true">☆</div>' +
-        '<h2>' + uiText(savedItems.length ? "در این دسته موردی ذخیره نکرده‌ای." : "هنوز چیزی ذخیره نکرده‌ای.") + '</h2>' +
-        '<p>' + uiText(savedItems.length ? "دستهٔ دیگری را ببین یا به فید برگرد و گزینه‌ای را برای بعد نگه دار." : "از فید کالا یا خدمت را ذخیره کن تا همین‌جا برای بررسی بعدی باقی بماند.") + '</p>' +
-        '<button class="button button-primary" type="button" data-saved-explore>' + uiText("رفتن به اکسپلور") + ' <span aria-hidden="true">←</span></button></div>';
+        '<h2>' + socialCommerceUi(savedItems.length ? "savedEmptyFilteredTitle" : "savedEmptyTitle") + '</h2>' +
+        '<p>' + socialCommerceUi(savedItems.length ? "savedEmptyFilteredBody" : "savedEmptyBody") + '</p>' +
+        '<button class="button button-primary" type="button" data-saved-explore>' + socialCommerceUi("goExploreFromSaved") + ' <span aria-hidden="true">←</span></button></div>';
       grid.querySelector<HTMLButtonElement>("[data-saved-explore]")?.addEventListener("click", () => navigate("/discover?tab=explore"));
       return;
     }
@@ -3897,7 +3897,7 @@ function loadSavedPage(): void {
       const description = item.description ?? item.body ?? "";
       const price = item.price !== undefined && item.price !== null
         ? formatLocalizedNumber(Number(item.price)) + (item.currency ? " " + item.currency : "")
-        : uiText("استعلام قیمت");
+        : discoveryUi("askPrice");
       const locationLabel = [item.city, item.locality].filter((part) => Boolean(part?.trim())).join(" · ");
       const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ??
         item.metadata?.thumbnailUrl ?? (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
@@ -3915,15 +3915,15 @@ function loadSavedPage(): void {
           ? "/booking?offering=" + encodeURIComponent(item.sourceId ?? item.id ?? "") + (metadataBusiness ? "&businessId=" + encodeURIComponent(metadataBusiness) : "")
           : "";
       return '<article class="phoenix-reset-saved-card">' +
-        '<button class="phoenix-reset-saved-media" type="button" data-saved-open="' + escapeAttr(key) + '" aria-label="' + escapeAttr(uiText("مشاهده جزئیات")) + '">' + media + '<span class="phoenix-reset-saved-kind">' + kindLabel + '</span></button>' +
+        '<button class="phoenix-reset-saved-media" type="button" data-saved-open="' + escapeAttr(key) + '" aria-label="' + escapeAttr(socialCommerceUi("viewDetailsSaved")) + '">' + media + '<span class="phoenix-reset-saved-kind">' + kindLabel + '</span></button>' +
         '<div class="phoenix-reset-saved-card-body"><div class="phoenix-reset-saved-card-kicker">' + kindLabel + (locationLabel ? ' · ' + escapeHtml(locationLabel) : '') + '</div>' +
           '<h2>' + escapeHtml(title) + '</h2>' + (description ? '<p>' + escapeHtml(description) + '</p>' : '') +
           '<div class="phoenix-reset-saved-card-price">' + escapeHtml(price) + '</div>' +
           '<div class="phoenix-reset-saved-card-actions">' +
             '<button class="button button-primary" type="button" data-saved-open="' + escapeAttr(key) + '">' + uiText("مشاهده جزئیات") + '</button>' +
-            (routePath ? '<button class="button button-ghost" type="button" data-saved-route="' + escapeAttr(routePath) + '">' + (kind === "service" ? uiText("بررسی رزرو") : uiText("مشاهده فروشنده")) + '</button>' : '') +
+            (routePath ? '<button class="button button-ghost" type="button" data-saved-route="' + escapeAttr(routePath) + '">' + (kind === "service" ? socialCommerceUi("bookingSavedAction") : socialCommerceUi("viewSellerSaved")) + '</button>' : '') +
             compareButton +
-            '<button class="button button-ghost" type="button" data-saved-remove="' + escapeAttr(key) + '">' + uiText("حذف از ذخیره‌شده‌ها") + '</button>' +
+            '<button class="button button-ghost" type="button" data-saved-remove="' + escapeAttr(key) + '">' + socialCommerceUi("removeFromSaved") + '</button>' +
           '</div></div></article>';
     }).join("");
 
@@ -3946,7 +3946,7 @@ function loadSavedPage(): void {
         if (!alreadySelected) toggleCompare(item);
         const selected = getCompareItems().length;
         if (selected >= 2) navigate("/compare");
-        else showToast(uiText("یک کالای دیگر هم برای مقایسه انتخاب کن."));
+        else showToast(socialCommerceUi("compareAddHint"));
       });
     });
     grid.querySelectorAll<HTMLButtonElement>("[data-saved-remove]").forEach((button) => {
@@ -3959,10 +3959,10 @@ function loadSavedPage(): void {
           await removeSavedItem(item);
           savedItems = getShortlist();
           renderGrid();
-          showToast(uiText("از ذخیره‌شده‌ها برداشته شد."));
+          showToast(socialCommerceUi("savedRemovedToast"));
         } catch (error) {
           button.disabled = false;
-          showToast(error instanceof Error ? error.message : uiText("حذف از ذخیره‌شده‌ها ممکن نشد."));
+          showToast(error instanceof Error ? error.message : socialCommerceUi("savedRemoveFailedToast"));
         }
       });
     });
@@ -3988,7 +3988,7 @@ function loadSavedPage(): void {
     savedItems = failed;
     saveShortlist(failed);
     renderGrid();
-    showToast(uiText(failed.length ? "بعضی موارد حذف نشدند؛ دوباره تلاش کن." : "فهرست ذخیره‌شده‌ها پاک شد."));
+    showToast(socialCommerceUi(failed.length ? "savedClearFailedToast" : "savedClearedToast"));
   });
 
   const token = sessionStorage.getItem(STORAGE.accessToken);
