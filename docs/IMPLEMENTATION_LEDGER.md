@@ -2916,3 +2916,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 
 - Follow-up verification: regression smoke now covers comparison with multiple actual selected-item records, suppresses unrecognized/internal metadata, asserts no demo-checkout links, and verifies the clear-selection action.
 - Responsive comparison grid column count is derived from the selected-item count (2–4) rather than hard-coded to two.
+
+
+
+## 2026-10-14 — Personal profile and messages reset
+
+- Replaced the old profile's fixed points, membership badge, and service/transaction/content counters with a single personal-account surface using the signed-in user's actual name and mobile when available.
+- The profile deliberately avoids labeling people as public “ordinary users.” Seller activation is a capability on the same account; active sellers get a link to their business workspace.
+- Replaced hard-coded example conversations and the local-only simulated seller acknowledgement with a clear, responsive messages landing surface. The current API supports conversation/message creation but does not yet expose a listing/read conversation route, so the UI does not pretend to show persisted threads.
+- Added E2E assertions that profile figures are not fabricated and example message threads are absent.

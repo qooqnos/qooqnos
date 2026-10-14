@@ -43,7 +43,6 @@ import {
   renderCreateContentHub,
   renderContentDetailsForm,
   renderDealTypeSelection,
-  renderIndividualProfile,
   renderIndividualNotifications,
   renderBusinessWelcome,
   renderBusinessCreateContent,
@@ -55,7 +54,6 @@ import {
   renderConsumerProductDetails,
   renderConsumerCart,
   renderConsumerPayment,
-  renderConsumerMessages,
   renderConsumerLoyalty,
   bindPhoenixExperienceEvents,
 } from "./phoenix-experience.js";
@@ -717,7 +715,6 @@ function render(): void {
   }
   if (route.path === "/orders") void loadOrdersPage();
   if (route.path === "/saved") void loadSavedPage();
-  if (route.path === "/messages") void loadMessagesPage();
   if (route.path === "/settings") void loadSettingsPage();
   if (route.path === "/business/products") void loadBusinessProductsPage();
   if (route.path === "/business/services") void loadBusinessServicesPage();
@@ -764,7 +761,7 @@ function render(): void {
     else if (bookingBusiness && bookingOffering) void loadBusinessBookingSchedules();
   }
   if (route.path === "/notifications") void loadNotificationsPage();
-  if (route.path === "/profile") void loadProfilePage();
+  if (route.path === "/profile" && document.querySelector("[data-buyer-tab]")) void loadProfilePage();
   if (route.path === "/transactions") void loadTransactionsPage();
   if (route.path === "/customer") void loadCustomerState();
   if (route.path === "/communication") void loadCommunicationState();
@@ -3281,11 +3278,46 @@ async function addCustomerPreference(): Promise<void> {
 
 
 function renderProfile(): string {
-  const persona = getActivePersona();
-  if (persona === "business") {
-    return renderBusinessOrgProfile();
-  }
-  return renderIndividualProfile();
+  const { token, user } = getStoredAuth();
+  const displayName = user?.displayName?.trim()
+    || [user?.firstName, user?.lastName].filter((part) => Boolean(part?.trim())).join(" ").trim()
+    || uiText("حساب من");
+  const mobile = user?.mobile?.trim() ?? "";
+  const initial = displayName.slice(0, 1) || "ق";
+  const isSeller = user?.role === "seller";
+  const menuItems = [
+    { href: "/orders", icon: "▣", title: "سفارش‌ها و پیگیری", description: "وضعیت خریدها و مراحل تحویل" },
+    { href: "/saved", icon: "☆", title: "ذخیره‌شده‌ها", description: "کالاها و خدماتی که برای بعد نگه داشته‌ای" },
+    { href: "/messages", icon: "✉", title: "پیام‌ها و ارتباطات", description: "مسیر ارتباط دربارهٔ کالا و خدمت" },
+    { href: "/activity", icon: "✦", title: "فعالیت اجتماعی", description: "تعامل‌ها و دنبال‌کردن‌ها" },
+    { href: "/notifications", icon: "♢", title: "اعلان‌ها", description: "خبرهای مربوط به حساب و فعالیت‌ها" },
+    { href: "/account", icon: "◎", title: "حساب و اطلاعات شخصی", description: "اطلاعات حساب و دسترسی‌ها" },
+    { href: "/settings", icon: "⚙", title: "زبان و ترجیحات", description: "زبان، پوسته و تنظیمات" },
+  ];
+  const menuHtml = menuItems.map((item) =>
+    '<a class="phoenix-reset-profile-link" href="' + item.href + '" data-nav>' +
+      '<span class="phoenix-reset-profile-link-icon" aria-hidden="true">' + item.icon + '</span>' +
+      '<span class="phoenix-reset-profile-link-copy"><strong>' + uiText(item.title) + '</strong><small>' + uiText(item.description) + '</small></span>' +
+      '<span class="phoenix-reset-profile-arrow" aria-hidden="true">←</span></a>'
+  ).join("");
+
+  return '<div class="phoenix-reset-profile-page">' +
+    '<section class="phoenix-reset-profile-hero">' +
+      '<div class="phoenix-reset-profile-avatar" aria-hidden="true">' + escapeHtml(initial) + '</div>' +
+      '<div class="phoenix-reset-profile-identity"><span class="phoenix-reset-section-kicker">' + uiText("پروفایل شخصی") + '</span>' +
+        '<h1>' + escapeHtml(displayName) + '</h1>' +
+        (mobile ? '<p class="phoenix-reset-profile-mobile">' + uiText("شماره موبایل") + ' · <bdi>' + escapeHtml(mobile) + '</bdi></p>' : '<p>' + uiText("اطلاعات حساب و ارتباطات خود را از این بخش مدیریت کن.") + '</p>') +
+      '</div>' +
+      '<div class="phoenix-reset-profile-hero-actions">' +
+        (token ? '<a class="button button-ghost" href="/account" data-nav>' + uiText("اطلاعات حساب") + '</a>' : '<button class="button button-primary" type="button" data-open-login>' + uiText("ورود به حساب") + '</button>') +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-profile-section"><div class="phoenix-reset-profile-section-heading"><div><span class="phoenix-reset-section-kicker">' + uiText("حساب تو") + '</span><h2>' + uiText("دسترسی‌های روزمره") + '</h2></div></div>' +
+      '<div class="phoenix-reset-profile-links">' + menuHtml + '</div></section>' +
+    (isSeller
+      ? '<section class="phoenix-reset-profile-seller"><div><span class="phoenix-reset-section-kicker">' + uiText("فضای کسب‌وکار") + '</span><h2>' + uiText("مدیریت عرضه‌ها و ارتباط با مشتریان") + '</h2><p>' + uiText("امکانات فروشندگی از همین حساب در دسترس توست.") + '</p></div><a class="button button-primary" href="/business" data-nav>' + uiText("ورود به فضای کسب‌وکار") + ' <span aria-hidden="true">←</span></a></section>'
+      : '<section class="phoenix-reset-profile-seller"><div><span class="phoenix-reset-section-kicker">' + uiText("برای ارائه‌دهندگان") + '</span><h2>' + uiText("کالا یا خدمتی برای عرضه داری؟") + '</h2><p>' + uiText("فعالیت فروشندگی را به همین حساب اضافه کن؛ نیازی به ساخت حساب جداگانه نیست.") + '</p></div><button class="button button-primary" type="button" data-activate-seller>' + uiText("فعال‌سازی فروشندگی") + ' <span aria-hidden="true">←</span></button></section>') +
+    '</div>';
 }
 
 function _renderLegacyProfile(): string {
@@ -3941,162 +3973,23 @@ function loadSavedPage(): void {
    Messages / Conversations Surface (پیام‌ها و گفتگوها)
    ========================================================================= */
 
-type ChatThread = {
-  id: string;
-  peerName: string;
-  peerRole: string;
-  lastMessage: string;
-  updatedAt: string;
-  unreadCount: number;
-  messages: Array<{ id: string; sender: "user" | "peer"; text: string; time: string }>;
-};
-
 function renderMessages(): string {
-  const persona = getActivePersona();
-  if (persona === "consumer" || persona === "individual") {
-    return renderConsumerMessages();
-  }
-  return renderLegacyMessages();
-}
-
-function renderLegacyMessages(): string {
-  return `
-    <div class="phoenix-messages-page">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("پیام‌رسان")}</span>
-          <h1>${uiText("گفتگوها و")} <em>${uiText("پیام‌های مستقیم")}</em></h1>
-          <p>${uiText("ارتباط بی‌واسطه و امن با فروشندگان، ارائه‌دهندگان خدمات و پشتیبانی هوشمند ققنوس.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-ghost" href="/communication" data-nav>${uiText("تنظیمات اعلان‌ها")}</a>
-        </div>
-      </section>
-
-      <div class="phoenix-messages-layout">
-        <aside class="phoenix-messages-threads glass-card" aria-label="${escapeAttr(uiText("لیست گفتگوها"))}">
-          <div class="messages-threads-header">
-            <h3>${uiText("گفتگوها")}</h3>
-            <span class="pill" id="messages-threads-count">۲ گفتگو</span>
-          </div>
-          <div class="messages-threads-list" id="messages-threads-list">
-            <div class="slot-loading">${uiText("در حال بارگذاری گفتگوها…")}</div>
-          </div>
-        </aside>
-
-        <section class="phoenix-messages-chat glass-card" aria-label="${escapeAttr(uiText("محیط گفتگو"))}">
-          <div class="messages-chat-header" id="messages-chat-header">
-            <div>
-              <strong id="chat-peer-name">${uiText("پشتیبانی هوشمند ققنوس")}</strong>
-              <small id="chat-peer-role">${uiText("دستیار هوشمند تصمیم‌گیری")}</small>
-            </div>
-            <span class="status-live" aria-label="${escapeAttr(uiText("فعال"))}"></span>
-          </div>
-
-          <div class="messages-chat-stream" id="messages-chat-stream">
-            <div class="slot-loading">${uiText("در حال بارگذاری پیام‌ها…")}</div>
-          </div>
-
-          <form class="messages-chat-input-bar" id="messages-chat-form">
-            <input type="text" id="messages-chat-input" class="studio-input-line" placeholder="${escapeAttr(uiText("پیام خود را بنویسید…"))}" autocomplete="off" />
-            <button class="button button-primary" type="submit">${uiText("ارسال")} <span>←</span></button>
-          </form>
-        </section>
-      </div>
-    </div>
-  `;
-}
-
-async function loadMessagesPage(): Promise<void> {
-  const threadsList = document.querySelector<HTMLElement>("#messages-threads-list");
-  const chatStream = document.querySelector<HTMLElement>("#messages-chat-stream");
-  const peerNameEl = document.querySelector<HTMLElement>("#chat-peer-name");
-  const peerRoleEl = document.querySelector<HTMLElement>("#chat-peer-role");
-  const chatForm = document.querySelector<HTMLFormElement>("#messages-chat-form");
-  const chatInput = document.querySelector<HTMLInputElement>("#messages-chat-input");
-  if (!threadsList || !chatStream) return;
-
-  try {
-    const res = await apiJson<{ data: ChatThread[] }>("/api/v1/communications/conversations");
-    const threads = Array.isArray(res.data) ? res.data : [];
-    let activeThreadId = threads[0]?.id ?? "";
-
-    const renderChat = (thread: ChatThread) => {
-      if (peerNameEl) peerNameEl.textContent = thread.peerName;
-      if (peerRoleEl) peerRoleEl.textContent = thread.peerRole;
-      chatStream.innerHTML = thread.messages.map((m) => `
-        <div class="chat-bubble ${m.sender === "user" ? "chat-bubble-user" : "chat-bubble-peer"}">
-          <p>${escapeHtml(m.text)}</p>
-          <small>${escapeHtml(m.time)}</small>
-        </div>
-      `).join("");
-      chatStream.scrollTop = chatStream.scrollHeight;
-    };
-
-    const renderThreads = () => {
-      threadsList.innerHTML = threads.map((t) => `
-        <button type="button" class="message-thread-item ${t.id === activeThreadId ? "active" : ""}" data-thread-id="${escapeAttr(t.id)}">
-          <div class="thread-avatar">ق</div>
-          <div class="thread-copy">
-            <div class="thread-topline">
-              <strong>${escapeHtml(t.peerName)}</strong>
-              ${t.unreadCount ? `<span class="pill success">${t.unreadCount}</span>` : ""}
-            </div>
-            <p>${escapeHtml(t.lastMessage)}</p>
-          </div>
-        </button>
-      `).join("");
-
-      threadsList.querySelectorAll<HTMLButtonElement>("[data-thread-id]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const id = btn.dataset.threadId;
-          const found = threads.find((t) => t.id === id);
-          if (found) {
-            activeThreadId = found.id;
-            found.unreadCount = 0;
-            renderThreads();
-            renderChat(found);
-          }
-        });
-      });
-    };
-
-    renderThreads();
-    const active = threads.find((t) => t.id === activeThreadId);
-    if (active) renderChat(active);
-
-    if (chatForm && chatInput) {
-      chatForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const text = chatInput.value.trim();
-        if (!text) return;
-        chatInput.value = "";
-
-        const thread = threads.find((t) => t.id === activeThreadId);
-        if (thread) {
-          const nowStr = new Date().toLocaleTimeString(globalLocaleService.getLocale() === "fa" ? "fa-IR" : globalLocaleService.getLocale() === "ar" ? "ar-EG" : "en-US", { hour: "2-digit", minute: "2-digit" });
-          thread.messages.push({ id: "user-" + Date.now(), sender: "user", text, time: nowStr });
-          thread.lastMessage = text;
-          renderChat(thread);
-          renderThreads();
-
-          // Simulating smart peer acknowledgment
-          setTimeout(() => {
-            thread.messages.push({
-              id: "peer-" + Date.now(),
-              sender: "peer",
-              text: "پیام شما دریافت شد. ققنوس درخواست شما را پیگیری می‌کند.",
-              time: new Date().toLocaleTimeString(globalLocaleService.getLocale() === "fa" ? "fa-IR" : globalLocaleService.getLocale() === "ar" ? "ar-EG" : "en-US", { hour: "2-digit", minute: "2-digit" }),
-            });
-            renderChat(thread);
-            renderThreads();
-          }, 800);
-        }
-      });
-    }
-  } catch (error) {
-    threadsList.innerHTML = `<div class="slot-empty"><p>${escapeHtml(error instanceof Error ? error.message : "خواندن پیام‌ها ناموفق بود.")}</p></div>`;
-  }
+  const { token } = getStoredAuth();
+  return '<div class="phoenix-reset-messages-page">' +
+    '<section class="phoenix-reset-messages-hero"><div><span class="phoenix-reset-section-kicker">' + uiText("ارتباط در ققنوس") + '</span>' +
+      '<h1>' + uiText("پیام‌ها و گفت‌وگوها") + '</h1>' +
+      '<p>' + uiText("ارتباط دربارهٔ مشخصات، قیمت و شرایط کالا یا خدمت باید در ادامهٔ مسیر انتخاب تو قرار بگیرد.") + '</p></div>' +
+      '<span class="phoenix-reset-messages-mark" aria-hidden="true">✉</span></section>' +
+    '<section class="phoenix-reset-messages-empty">' +
+      '<div class="phoenix-reset-messages-icon" aria-hidden="true">◌</div>' +
+      '<h2>' + uiText(token ? "گفت‌وگوها هنوز در این صفحه در دسترس نیستند." : "برای پیگیری ارتباط‌ها وارد حساب شو.") + '</h2>' +
+      '<p>' + uiText("برای شروع، کالا یا خدمت موردنظرت را در اکسپلور پیدا کن و اطلاعات عرضه و فروشنده را بررسی کن. ققنوس پیام یا پاسخ ساختگی نشان نمی‌دهد.") + '</p>' +
+      '<div class="phoenix-reset-messages-actions">' +
+        (token ? '' : '<button class="button button-ghost" type="button" data-open-login>' + uiText("ورود به حساب") + '</button>') +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("رفتن به اکسپلور") + ' <span aria-hidden="true">←</span></a>' +
+        '<a class="button button-ghost" href="/orders" data-nav>' + uiText("پیگیری سفارش‌ها") + '</a>' +
+      '</div>' +
+    '</section></div>';
 }
 
 /* =========================================================================

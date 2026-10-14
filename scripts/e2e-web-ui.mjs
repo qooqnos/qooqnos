@@ -210,6 +210,20 @@ const initialTheme = await page.locator("html").getAttribute("data-theme");
 await page.locator("[data-theme-toggle]").click();
 assert.notEqual(await page.locator("html").getAttribute("data-theme"), initialTheme);
 
+await page.goto(baseURL + "/profile");
+const personalProfileText = await page.locator(".phoenix-reset-profile-page").innerText();
+assert.ok(personalProfileText.includes("دسترسی‌های روزمره"));
+assert.ok(personalProfileText.includes("سفارش‌ها و پیگیری"));
+assert.ok(!personalProfileText.includes("۲۸۰"));
+assert.ok(!personalProfileText.includes("۵ خدمت"));
+assert.ok(!personalProfileText.includes("معامله"));
+await page.goto(baseURL + "/messages");
+const messagesText = await page.locator(".phoenix-reset-messages-page").innerText();
+assert.ok(messagesText.includes("پیام‌ها و گفت‌وگوها"));
+assert.ok(messagesText.includes("پاسخ ساختگی"));
+assert.ok(!messagesText.includes("در خدمت شما هستیم"));
+assert.ok(!messagesText.includes("سفارش کالا رسید و تأیید شد"));
+
 await page.goto(baseURL + "/business");
 assert.equal(await page.locator("[data-language-toggle]").count(), 1);
 await page.locator("[data-language-toggle]").click();
