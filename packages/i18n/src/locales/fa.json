@@ -1708,6 +1708,13 @@
     "savedRemoveFailedToast": "حذف از ذخیره‌شده‌ها ممکن نشد.",
     "savedClearFailedToast": "بعضی موارد حذف نشدند؛ دوباره تلاش کن.",
     "savedClearedToast": "فهرست ذخیره‌شده‌ها پاک شد.",
-    "compareAddHint": "یک کالای دیگر هم برای مقایسه انتخاب کن."
+    "compareAddHint": "یک کالای دیگر هم برای مقایسه انتخاب کن.",
+    "commentDialogTitle": "دیدگاهت را بنویس",
+    "commentDialogDescription": "دیدگاه تو پیش از نمایش بررسی می‌شود. اطلاعات شخصی یا راه‌های تماس را در متن ننویس.",
+    "commentDialogPlaceholder": "دربارهٔ این کالا یا خدمت چه نظری داری؟",
+    "commentDialogCancel": "انصراف",
+    "commentDialogSubmit": "ثبت دیدگاه",
+    "commentDialogRequired": "برای ثبت، متن دیدگاه را بنویس.",
+    "commentSent": "دیدگاه برای بررسی ثبت شد."
   }
 }
