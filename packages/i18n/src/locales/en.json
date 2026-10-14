@@ -1715,6 +1715,7 @@
     "commentDialogCancel": "Cancel",
     "commentDialogSubmit": "Submit comment",
     "commentDialogRequired": "Write a comment before submitting.",
-    "commentSent": "Your comment was submitted for review."
+    "commentSent": "Your comment was submitted for review.",
+    "messagesIntegrityDescription": "To get started, find the product or service in Explore and review the offer and seller. This area is for recorded conversations only."
   }
 }
