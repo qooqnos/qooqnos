@@ -5216,7 +5216,7 @@ function renderCompare(): string {
     '<section class="phoenix-reset-compare-products" aria-label="' + escapeAttr(uiText("کالاهای انتخاب‌شده")) + '">' + columns + '</section>' +
     '<section class="phoenix-reset-compare-table-wrap"><div class="phoenix-reset-compare-table-heading"><div><span class="phoenix-reset-section-kicker">' + uiText("مقایسهٔ مشخصات") + '</span><h2>' + uiText("تفاوت‌ها در یک نگاه") + '</h2></div>' +
       '<span class="phoenix-reset-compare-factual-note">✓ ' + uiText("اطلاعات ثبت‌شده") + '</span></div>' +
-      '<div class="phoenix-reset-compare-table" role="table" aria-label="' + escapeAttr(uiText("مقایسهٔ مشخصات کالاها")) + '">' +
+      '<div class="phoenix-reset-compare-table" style="--compare-count:' + items.length + ';" role="table" aria-label="' + escapeAttr(uiText("مقایسهٔ مشخصات کالاها")) + '">' +
       '<div class="phoenix-reset-compare-row phoenix-reset-compare-row-head" role="row"><span role="columnheader">' + uiText("ویژگی") + '</span>' +
         items.map((item) => '<strong role="columnheader">' + escapeHtml(titleOf(item)) + '</strong>').join("") + '</div>' +
       rows.map((row) => '<div class="phoenix-reset-compare-row" role="row"><span role="rowheader">' + escapeHtml(row.label) + '</span>' +

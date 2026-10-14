@@ -2912,3 +2912,7 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The comparison details are limited to recognized product attributes and values actually present in canonical discovery data. Missing facts are labelled as unavailable; arbitrary metadata fields are not exposed.
 - Removed purchase-to-demo-checkout links from comparison. The page opens the existing product detail panel and sends users back to discovery to continue; checkout is not claimed as verified.
 - Added direct remove-item and clear-selection handlers for the redesigned comparison screen.
+
+
+- Follow-up verification: regression smoke now covers comparison with multiple actual selected-item records, suppresses unrecognized/internal metadata, asserts no demo-checkout links, and verifies the clear-selection action.
+- Responsive comparison grid column count is derived from the selected-item count (2–4) rather than hard-coded to two.

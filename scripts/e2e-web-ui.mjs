@@ -166,6 +166,23 @@ await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);
 assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
 
+// Comparison is data-led, responsive, and must not expose arbitrary internal metadata.
+await page.evaluate(() => localStorage.setItem("phoenix-compare-items", JSON.stringify([
+  { id: "compare-one", sourceId: "compare-one", title: "محصول مقایسه یک", sourceType: "product", price: 125, currency: "ریال", description: "توضیح اول", metadata: { brand: "برند نمونه", privateToken: "internal-secret" } },
+  { id: "compare-two", sourceId: "compare-two", title: "محصول مقایسه دو", sourceType: "product", price: 180, currency: "ریال", description: "توضیح دوم", metadata: { color: "آبی", businessId: "internal-business" } }
+])));
+await page.goto(baseURL + "/compare");
+const compareText = await page.locator(".phoenix-reset-compare-page").innerText();
+assert.ok(compareText.includes("محصول مقایسه یک"));
+assert.ok(compareText.includes("محصول مقایسه دو"));
+assert.ok(compareText.includes("برند نمونه"));
+assert.ok(!compareText.includes("internal-secret"));
+assert.ok(!compareText.includes("internal-business"));
+assert.equal(await page.locator(".phoenix-reset-compare-row-head strong").count(), 2);
+assert.equal(await page.locator("a[href*='/checkout']").count(), 0);
+await page.locator("[data-clear-compare]").click();
+assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("phoenix-compare-items") || "[]").length), 0);
+
 await page.goto(baseURL + "/business");
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='en']").click();
