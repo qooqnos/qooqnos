@@ -323,6 +323,18 @@ assert.equal(mockSocialComments.length, 1);
 assert.equal(mockSocialComments[0].body, "توضیحات محصول روشن و کاربردی است.");
 assert.equal(mockSocialComments[0].targetType, "product");
 
+await page.evaluate(() => {
+  Object.defineProperty(navigator, "share", {
+    configurable: true,
+    value: async (payload) => { window.__phoenixSharedPayload = payload; },
+  });
+});
+await page.locator(".phoenix-post-card [data-share]").nth(1).click();
+const sharedPayload = await page.evaluate(() => window.__phoenixSharedPayload);
+assert.ok(sharedPayload.url.includes("/discover?q="));
+assert.ok(!sharedPayload.url.includes("/checkout"));
+assert.ok(sharedPayload.url.includes(encodeURIComponent("میز چوبی")));
+
 const initialTheme = await page.locator("html").getAttribute("data-theme");
 await page.locator("[data-theme-toggle]").click();
 assert.notEqual(await page.locator("html").getAttribute("data-theme"), initialTheme);
