@@ -5166,74 +5166,77 @@ function renderCompare(): string {
   const display = (value: unknown): string => {
     if (value === null || value === undefined || value === "") return uiText("اطلاعات موجود نیست");
     if (typeof value === "boolean") return value ? uiText("بله") : uiText("خیر");
-    if (Array.isArray(value)) return value.map((entry) => String(entry)).join("، ");
+    if (Array.isArray(value)) return value.map((entry) => String(entry)).join(", ");
     if (typeof value === "object") return uiText("اطلاعات موجود نیست");
     return String(value);
   };
-  const titleOf = (item: DiscoveryResult): string => item.title ?? item.displayName ?? item.name ?? uiText("محصول");
+  const titleOf = (item: DiscoveryResult): string => item.title ?? item.displayName ?? item.name ?? socialCommerceUi("product");
   const keyOf = (item: DiscoveryResult): string => item.id ?? item.sourceId ?? "";
   const priceOf = (item: DiscoveryResult): string =>
     item.price !== undefined && item.price !== null
       ? formatLocalizedNumber(Number(item.price)) + (item.currency ? " " + item.currency : "")
-      : uiText("استعلام قیمت");
+      : socialCommerceUi("askPrice");
   if (items.length < 2) {
     const single = items[0];
     return '<div class="phoenix-reset-compare-page">' +
-      '<section class="phoenix-reset-compare-hero"><div><span class="phoenix-reset-section-kicker">' + uiText("مقایسهٔ هوشمند") + '</span>' +
-        '<h1>' + uiText("انتخاب آگاهانه، با مقایسهٔ روشن") + '</h1>' +
-        '<p>' + uiText("قیمت و مشخصات واقعی محصولات را کنار هم ببین و تفاوت‌ها را پیش از تصمیم‌گیری بررسی کن.") + '</p></div>' +
-        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("کشف کالاها") + ' <span aria-hidden="true">←</span></a></section>' +
+      '<section class="phoenix-reset-compare-hero"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("compareEyebrow") + '</span>' +
+        '<h1>' + socialCommerceUi("compareHeadline") + '</h1>' +
+        '<p>' + socialCommerceUi("compareDescription") + '</p></div>' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("compareDiscoverProducts") + ' <span aria-hidden="true">←</span></a></section>' +
       (single
-        ? '<section class="phoenix-reset-compare-selected"><span class="phoenix-reset-compare-number">۱</span><div><strong>' + escapeHtml(titleOf(single)) + '</strong><p>' + uiText("یک محصول انتخاب شده؛ برای شروع مقایسه، محصول دیگری اضافه کن.") + '</p></div><button class="button button-ghost" type="button" data-remove-compare="' + escapeAttr(keyOf(single)) + '">' + uiText("حذف انتخاب") + '</button></section>'
+        ? '<section class="phoenix-reset-compare-selected"><span class="phoenix-reset-compare-number">' + formatLocalizedNumber(1) + '</span><div><strong>' + escapeHtml(titleOf(single)) + '</strong><p>' + socialCommerceUi("compareOneSelectedHint") + '</p></div><button class="button button-ghost" type="button" data-remove-compare="' + escapeAttr(keyOf(single)) + '">' + socialCommerceUi("compareRemoveSelection") + '</button></section>'
         : '') +
       '<section class="phoenix-reset-compare-empty"><div class="phoenix-reset-compare-empty-icon" aria-hidden="true">⚖</div>' +
-        '<h2>' + uiText("هنوز محصول کافی برای مقایسه انتخاب نشده است.") + '</h2>' +
-        '<p>' + uiText("از فید یا اکسپلور، دست‌کم دو کالای قابل مقایسه انتخاب کن. انتخاب‌ها تا وقتی خودت حذفشان نکنی حفظ می‌شوند.") + '</p>' +
-        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("رفتن به اکسپلور") + ' <span aria-hidden="true">←</span></a></section></div>';
+        '<h2>' + socialCommerceUi("compareEmptyTitle") + '</h2>' +
+        '<p>' + socialCommerceUi("compareEmptyBody") + '</p>' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("tabExplore") + ' <span aria-hidden="true">←</span></a></section></div>';
   }
 
   const knownAttributes: Array<[string, string]> = [
-    ["brand", "برند"], ["model", "مدل"], ["color", "رنگ"], ["size", "اندازه"],
-    ["material", "جنس"], ["weight", "وزن"], ["dimensions", "ابعاد"], ["warranty", "گارانتی"],
-    ["condition", "وضعیت کالا"], ["availability", "موجودی"], ["stockStatus", "وضعیت موجودی"],
-    ["variant", "گونه"], ["deliveryMethod", "روش تحویل"], ["format", "قالب دیجیتال"],
+    ["brand", "attributeBrand"], ["model", "attributeModel"], ["color", "attributeColor"], ["size", "attributeSize"],
+    ["material", "attributeMaterial"], ["weight", "attributeWeight"], ["dimensions", "attributeDimensions"], ["warranty", "attributeWarranty"],
+    ["condition", "attributeCondition"], ["availability", "attributeAvailability"], ["stockStatus", "attributeStockStatus"],
+    ["variant", "attributeVariant"], ["deliveryMethod", "attributeDeliveryMethod"], ["format", "attributeDigitalFormat"],
   ];
   const metadataRows = knownAttributes.filter(([key]) =>
     items.some((item) => item.metadata && item.metadata[key] !== undefined && item.metadata[key] !== null && item.metadata[key] !== "")
   );
   const rows: Array<{ label: string; value: (item: DiscoveryResult) => unknown }> = [
-    { label: uiText("نوع عرضه"), value: (item) => item.sourceType ?? item.metadata?.offeringType ?? "product" },
-    { label: uiText("قیمت"), value: (item) => priceOf(item) },
+    { label: socialCommerceUi("compareOfferTypeLabel"), value: (item) => {
+      const type = item.sourceType ?? item.metadata?.offeringType;
+      return type === "service" ? socialCommerceUi("service") : type === "business" ? socialCommerceUi("business") : socialCommerceUi("product");
+    } },
+    { label: socialCommerceUi("comparePriceLabel"), value: (item) => priceOf(item) },
     ...(items.some((item) => item.rating !== undefined && item.rating !== null)
-      ? [{ label: uiText("امتیاز ثبت‌شده"), value: (item: DiscoveryResult) => item.rating !== undefined && item.rating !== null ? "★ " + formatLocalizedNumber(Number(item.rating)) : undefined }]
+      ? [{ label: socialCommerceUi("compareRecordedRating"), value: (item: DiscoveryResult) => item.rating !== undefined && item.rating !== null ? "★ " + formatLocalizedNumber(Number(item.rating)) : undefined }]
       : []),
-    ...metadataRows.map(([key, label]) => ({ label: uiText(label), value: (item: DiscoveryResult) => item.metadata?.[key] })),
-    { label: uiText("موقعیت"), value: (item) => item.locality ?? item.city },
-    { label: uiText("توضیحات"), value: (item) => item.description ?? item.body },
+    ...metadataRows.map(([key, labelKey]) => ({ label: socialCommerceUi(labelKey), value: (item: DiscoveryResult) => item.metadata?.[key] })),
+    { label: socialCommerceUi("compareLocation"), value: (item) => item.locality ?? item.city },
+    { label: socialCommerceUi("compareDescriptionRow"), value: (item) => item.description ?? item.body },
   ];
   const columns = items.map((item) =>
-    '<article class="phoenix-reset-compare-product"><span class="phoenix-reset-compare-product-type">' + uiText("کالا") + '</span>' +
+    '<article class="phoenix-reset-compare-product"><span class="phoenix-reset-compare-product-type">' + socialCommerceUi("product") + '</span>' +
       '<h2>' + escapeHtml(titleOf(item)) + '</h2><strong class="phoenix-reset-compare-price">' + escapeHtml(priceOf(item)) + '</strong>' +
-      '<div class="phoenix-reset-compare-product-actions"><button class="button button-ghost" type="button" data-open-compare-detail="' + escapeAttr(keyOf(item)) + '">' + uiText("مشاهده جزئیات") + '</button>' +
-      '<button class="phoenix-reset-compare-remove" type="button" data-remove-compare="' + escapeAttr(keyOf(item)) + '">' + uiText("حذف") + '</button></div></article>'
+      '<div class="phoenix-reset-compare-product-actions"><button class="button button-ghost" type="button" data-open-compare-detail="' + escapeAttr(keyOf(item)) + '">' + socialCommerceUi("compareViewDetails") + '</button>' +
+      '<button class="phoenix-reset-compare-remove" type="button" data-remove-compare="' + escapeAttr(keyOf(item)) + '">' + socialCommerceUi("compareRemove") + '</button></div></article>'
   ).join("");
   return '<div class="phoenix-reset-compare-page">' +
-    '<section class="phoenix-reset-compare-hero"><div><span class="phoenix-reset-section-kicker">' + uiText("مقایسهٔ هوشمند") + ' · ' + formatLocalizedNumber(items.length) + ' ' + uiText("کالا") + '</span>' +
-      '<h1>' + uiText("انتخاب آگاهانه، با مقایسهٔ روشن") + '</h1>' +
-      '<p>' + uiText("مشخصات موجود را کنار هم بررسی کن. اگر اطلاعاتی ثبت نشده باشد، ققنوس آن را حدس نمی‌زند.") + '</p></div>' +
-      '<a class="button button-ghost" href="/discover?tab=explore" data-nav>' + uiText("افزودن کالا") + ' <span aria-hidden="true">＋</span></a></section>' +
-    '<section class="phoenix-reset-compare-products" aria-label="' + escapeAttr(uiText("کالاهای انتخاب‌شده")) + '">' + columns + '</section>' +
-    '<section class="phoenix-reset-compare-table-wrap"><div class="phoenix-reset-compare-table-heading"><div><span class="phoenix-reset-section-kicker">' + uiText("مقایسهٔ مشخصات") + '</span><h2>' + uiText("تفاوت‌ها در یک نگاه") + '</h2></div>' +
-      '<span class="phoenix-reset-compare-factual-note">✓ ' + uiText("اطلاعات ثبت‌شده") + '</span></div>' +
-      '<div class="phoenix-reset-compare-table" style="--compare-count:' + items.length + ';" role="table" aria-label="' + escapeAttr(uiText("مقایسهٔ مشخصات کالاها")) + '">' +
-      '<div class="phoenix-reset-compare-row phoenix-reset-compare-row-head" role="row"><span role="columnheader">' + uiText("ویژگی") + '</span>' +
+    '<section class="phoenix-reset-compare-hero"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("compareEyebrow") + ' · ' + socialCommerceUi("compareCountLabel", { count: formatLocalizedNumber(items.length) }) + '</span>' +
+      '<h1>' + socialCommerceUi("compareHeadline") + '</h1>' +
+      '<p>' + socialCommerceUi("compareFactualDescription") + '</p></div>' +
+      '<a class="button button-ghost" href="/discover?tab=explore" data-nav>' + socialCommerceUi("compareAddProduct") + ' <span aria-hidden="true">＋</span></a></section>' +
+    '<section class="phoenix-reset-compare-products" aria-label="' + escapeAttr(socialCommerceUi("compareSelectedProducts")) + '">' + columns + '</section>' +
+    '<section class="phoenix-reset-compare-table-wrap"><div class="phoenix-reset-compare-table-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("compareSpecifications") + '</span><h2>' + socialCommerceUi("compareAtGlance") + '</h2></div>' +
+      '<span class="phoenix-reset-compare-factual-note">✓ ' + socialCommerceUi("compareRecordedFacts") + '</span></div>' +
+      '<div class="phoenix-reset-compare-table" style="--compare-count:' + items.length + ';" role="table" aria-label="' + escapeAttr(socialCommerceUi("compareAriaLabel")) + '">' +
+      '<div class="phoenix-reset-compare-row phoenix-reset-compare-row-head" role="row"><span role="columnheader">' + socialCommerceUi("compareAttribute") + '</span>' +
         items.map((item) => '<strong role="columnheader">' + escapeHtml(titleOf(item)) + '</strong>').join("") + '</div>' +
       rows.map((row) => '<div class="phoenix-reset-compare-row" role="row"><span role="rowheader">' + escapeHtml(row.label) + '</span>' +
         items.map((item) => '<span role="cell">' + escapeHtml(display(row.value(item))) + '</span>').join("") + '</div>').join("") +
       '</div></section>' +
-    '<footer class="phoenix-reset-compare-footer"><p>' + uiText("خرید یا رزرو فقط از مسیر معتبر همان کالا یا خدمت انجام می‌شود.") + '</p>' +
-      '<button class="button button-ghost" type="button" data-clear-compare>' + uiText("پاک کردن مقایسه") + '</button>' +
-      '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("ادامهٔ کشف") + ' <span aria-hidden="true">←</span></a></footer></div>';
+    '<footer class="phoenix-reset-compare-footer"><p>' + socialCommerceUi("compareActionDisclaimer") + '</p>' +
+      '<button class="button button-ghost" type="button" data-clear-compare>' + socialCommerceUi("compareClear") + '</button>' +
+      '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("continueDiscovering") + ' <span aria-hidden="true">←</span></a></footer></div>';
 }
 
 function renderDiscover(): string {

@@ -14,6 +14,13 @@ describe("@qooqnos/i18n", () => {
     expect(translations.ar["ui.tellNeed"]).toBe("أخبر ققنوس بما تحتاج");
   });
 
+  it("localizes compare labels and product attributes for all supported locales", () => {
+    expect(translations.en["socialCommercePage.compareHeadline"]).toBe("Choose confidently with a clear comparison");
+    expect(translations.en["socialCommercePage.attributeBrand"]).toBe("Brand");
+    expect(translations.ar["socialCommercePage.attributeBrand"]).toBe("العلامة التجارية");
+    expect(translations.en["socialCommercePage.compareCountLabel"]).toBe("Compare {{count}} products");
+  });
+
   it("keeps checkout-unavailable copy honest and translated", () => {
     expect(translations.fa["common.checkoutNotConnectedTitle"]).toBe("پرداخت امن هنوز متصل نشده است.");
     expect(translations.en["common.checkoutNotConnectedTitle"]).toBe("Secure checkout is not connected yet.");
