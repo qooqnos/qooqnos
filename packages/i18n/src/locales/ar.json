@@ -1715,6 +1715,7 @@
     "commentDialogCancel": "إلغاء",
     "commentDialogSubmit": "إرسال التعليق",
     "commentDialogRequired": "اكتب تعليقًا قبل الإرسال.",
-    "commentSent": "تم إرسال تعليقك للمراجعة."
+    "commentSent": "تم إرسال تعليقك للمراجعة.",
+    "messagesIntegrityDescription": "للبدء، ابحث عن المنتج أو الخدمة في «استكشف» وراجع العرض والبائع. يعرض هذا القسم المحادثات المسجّلة فقط."
   }
 }
