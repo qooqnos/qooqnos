@@ -2956,3 +2956,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Updated the social-commerce label for saved items across Persian, English and Arabic.
 - Synchronized the social feed, seller workspace and responsive public-business refinements from the authored stylesheet into `apps/web/public/styles.css`, the file actually served by the static web shell.
 - Extended Playwright smoke coverage with two product fixtures and assertions for the compare threshold; verification on the newest branch head is required before calling this complete.
+
+
+## 2026-10-14 — Social comment dialog
+
+- Replaced the browser-native `window.prompt` comment flow with an accessible, responsive dialog that matches the new social-commerce UI.
+- The dialog supports keyboard Escape, backdrop/cancel dismissal, Ctrl/Cmd+Enter submit, empty-text validation, visible character limit, and focus placement.
+- Cancellation and empty input do not send an API request and do not show a success toast. A success toast is shown only after the canonical comment endpoint accepts the comment for moderation.
+- Added Persian, English, and Arabic copy, responsive styles, and browser E2E coverage for validation, cancellation, and successful submission.
+- CI status for this change: see https://github.com/qooqnos/qooqnos/actions/runs/38542506671, https://github.com/qooqnos/qooqnos/actions/runs/38542506610, and https://github.com/qooqnos/qooqnos/actions/runs/38542506684.
