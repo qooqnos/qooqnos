@@ -29,6 +29,7 @@ const moduleResponses = [];
 const discoveryRequests = [];
 const mockSocialFollows = new Map();
 const mockSocialEngagements = new Map();
+const mockSocialComments = [];
 let socialSequence = 0;
 page.on("pageerror", (error) => runtimeErrors.push(String(error.stack || error)));
 page.on("console", (message) => {
@@ -150,6 +151,16 @@ await page.route("**/api/v1/**", async (route) => {
     const id = path.split("/").pop();
     for (const [key, engagement] of mockSocialEngagements.entries()) if (engagement.id === id) mockSocialEngagements.delete(key);
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { id, removed: true } }) });
+    return;
+  }
+  if (path === "/api/v1/social/comments" && request.method() === "POST") {
+    const body = request.postDataJSON();
+    mockSocialComments.push(body);
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ data: { id: "comment-" + (++socialSequence), ...body, moderationStatus: "pending" } }),
+    });
     return;
   }
 
@@ -291,6 +302,26 @@ await page.locator("#discover-query").fill("یک کسب‌وکار مناسب ن
 await page.locator("[data-run-discovery]").click();
 assert.equal(await page.locator("#discover-query").inputValue(), "یک کسب‌وکار مناسب نزدیک من می‌خواهم");
 await page.getByRole("heading", { name: "موجودیت واقعی تست" }).waitFor();
+
+const commentButton = page.locator(".phoenix-post-card [data-comment]").nth(1);
+await commentButton.waitFor();
+await commentButton.click();
+await page.locator(".phoenix-social-comment-dialog").waitFor();
+assert.equal(await page.locator(".phoenix-social-comment-dialog").getAttribute("role"), "dialog");
+await page.locator("[data-submit-social-comment]").click();
+assert.ok((await page.locator("#phoenix-social-comment-error").innerText()).includes("متن دیدگاه را بنویس"));
+assert.equal(mockSocialComments.length, 0);
+await page.locator("[data-cancel-social-comment]").last().click();
+assert.equal(await page.locator(".phoenix-social-comment-dialog").count(), 0);
+assert.equal(mockSocialComments.length, 0);
+
+await page.locator(".phoenix-post-card [data-comment]").nth(1).click();
+await page.locator("#phoenix-social-comment-body").fill("توضیحات محصول روشن و کاربردی است.");
+await page.locator("[data-submit-social-comment]").click();
+await page.getByText("دیدگاه برای بررسی ثبت شد.").waitFor();
+assert.equal(mockSocialComments.length, 1);
+assert.equal(mockSocialComments[0].body, "توضیحات محصول روشن و کاربردی است.");
+assert.equal(mockSocialComments[0].targetType, "product");
 
 const initialTheme = await page.locator("html").getAttribute("data-theme");
 await page.locator("[data-theme-toggle]").click();
