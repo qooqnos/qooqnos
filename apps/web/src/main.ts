@@ -4952,6 +4952,13 @@ function renderCompareTray(): void {
   const host = document.querySelector<HTMLElement>("#phoenix-compare-tray");
   if (!host) return;
   const items = getCompareItems();
+  const compareLink = document.querySelector<HTMLAnchorElement>(".phoenix-reset-compare-link");
+  const compareCount = document.querySelector<HTMLElement>("#compare-count");
+  if (compareCount) compareCount.textContent = formatLocalizedNumber(items.length);
+  if (compareLink) {
+    compareLink.hidden = items.length < 2;
+    compareLink.setAttribute("aria-label", socialCommerceUi("compare") + " " + formatLocalizedNumber(items.length));
+  }
   if (items.length < 2) {
     host.innerHTML = items.length === 1
       ? '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items"><span>' + escapeHtml(items[0]?.title ?? items[0]?.name ?? "محصول") + '</span></div><span class="compare-tray-hint">یک محصول دیگر انتخاب کن.</span></div>'
@@ -5159,8 +5166,8 @@ function renderDiscover(): string {
         '<div class="phoenix-reset-feed-heading">' +
           '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("sectionKicker") + '</span><h2 id="results-title">' + escapeHtml(title) + '</h2><p>' + escapeHtml(intro) + '</p><small id="results-meta">' + discoveryUi("preparing") + '</small></div>' +
           '<div class="phoenix-reset-feed-tools">' +
-            '<a href="/compare" data-nav class="phoenix-reset-compare-link">⚖ <span>' + socialCommerceUi("compare") + '</span></a>' +
-            '<span id="shortlist-count" class="phoenix-reset-shortlist-count" aria-label="' + escapeAttr(socialCommerceUi("shortlist")) + '">0</span>' +
+            '<a href="/saved" data-nav class="phoenix-reset-saved-link">★ <span>' + socialCommerceUi("shortlist") + '</span><span id="shortlist-count" class="phoenix-reset-shortlist-count" aria-label="' + escapeAttr(socialCommerceUi("shortlist")) + '">0</span></a>' +
+            '<a href="/compare" data-nav class="phoenix-reset-compare-link" hidden>⚖ <span>' + socialCommerceUi("compare") + '</span><span id="compare-count" class="phoenix-reset-shortlist-count">0</span></a>'
             '<button type="button" class="phoenix-reset-refresh" data-social-state-refresh aria-label="' + escapeAttr(socialCommerceUi("refresh")) + '">↻</button>' +
           '</div>' +
         '</div>' +
@@ -7084,7 +7091,19 @@ function bindGlobalEvents(): void {
 
   document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", () => void runDiscovery(true));
   document.querySelectorAll<HTMLButtonElement>("[data-open-create-post]").forEach((button) => button.addEventListener("click", openCreatePostPanel));
-  document.querySelectorAll<HTMLButtonElement>("[data-social-state-refresh]").forEach((button) => button.addEventListener("click", () => void loadSocialState()));
+  document.querySelectorAll<HTMLButtonElement>("[data-social-state-refresh]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (button.disabled) return;
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      try {
+        await Promise.all([runDiscovery(true), loadSocialState()]);
+      } finally {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+      }
+    });
+  });
   document.querySelectorAll<HTMLButtonElement>("[data-load-more-discovery]").forEach((button) => button.addEventListener("click", () => void runDiscovery(false)));
   document.querySelectorAll<HTMLButtonElement>("[data-focus-discover]").forEach((button) => button.addEventListener("click", () => document.querySelector<HTMLInputElement>("#discover-query")?.focus()));
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
