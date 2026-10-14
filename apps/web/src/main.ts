@@ -5247,16 +5247,6 @@ function saveShortlist(items: DiscoveryResult[]): void {
   localStorage.setItem("phoenix-shortlist", JSON.stringify(items.slice(-20)));
 }
 
-function toggleShortlist(item: DiscoveryResult): void {
-  const key = item.id ?? item.sourceId ?? "";
-  if (!key) {
-    showToast("این نتیجه شناسه قابل نگهداری ندارد.");
-    return;
-  }
-  const exists = getShortlist().some((entry) => (entry.id ?? entry.sourceId) === key);
-  setShortlistItem(item, !exists);
-}
-
 function setShortlistItem(item: DiscoveryResult, shouldBeSaved: boolean): void {
   const key = item.id ?? item.sourceId ?? "";
   if (!key) return;
