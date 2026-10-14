@@ -1716,6 +1716,21 @@
     "commentDialogSubmit": "Submit comment",
     "commentDialogRequired": "Write a comment before submitting.",
     "commentSent": "Your comment was submitted for review.",
-    "messagesIntegrityDescription": "To get started, find the product or service in Explore and review the offer and seller. This area is for recorded conversations only."
+    "messagesIntegrityDescription": "To get started, find the product or service in Explore and review the offer and seller. This area is for recorded conversations only.",
+    "socialActionSaved": "Social interaction saved.",
+    "socialActionRemoved": "Social interaction removed.",
+    "socialActionUnavailable": "This item does not support social interactions yet.",
+    "followTargetMissing": "There is not enough seller information to follow this seller.",
+    "sharePromptText": "Take a look at this on Phoenix.",
+    "shareReady": "The item is ready to share.",
+    "shareLinkCopied": "Phoenix link copied.",
+    "shareUnavailable": "Sharing is not supported in this browser.",
+    "copyShareLinkPrompt": "Copy the Phoenix link:",
+    "compareProductsOnly": "Only comparable products can be selected.",
+    "compareMaxProducts": "You can compare up to 4 products.",
+    "compareNeedOneMore": "Choose one more product.",
+    "compareButtonLabel": "Compare {{count}} products",
+    "removeFromCompare": "Remove from comparison",
+    "commentTargetMissing": "There is not enough information to comment on this item."
   }
 }
