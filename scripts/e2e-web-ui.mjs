@@ -372,6 +372,17 @@ assert.ok(messagesText.includes("این بخش فقط گفت‌وگوهای ثب
 assert.ok(!messagesText.includes("پاسخ ساختگی"));
 assert.ok(!messagesText.includes("در خدمت شما هستیم"));
 assert.ok(!messagesText.includes("سفارش کالا رسید و تأیید شد"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='en']").click();
+await page.waitForTimeout(50);
+assert.ok((await page.locator(".phoenix-reset-messages-page").innerText()).includes("This area is for recorded conversations only."));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='ar']").click();
+await page.waitForTimeout(50);
+assert.ok((await page.locator(".phoenix-reset-messages-page").innerText()).includes("يعرض هذا القسم المحادثات المسجّلة فقط."));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='fa']").click();
+await page.waitForTimeout(50);
 
 await page.goto(baseURL + "/business");
 assert.equal(await page.locator("[data-language-toggle]").count(), 1);
