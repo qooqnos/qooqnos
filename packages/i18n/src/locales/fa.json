@@ -23,7 +23,22 @@
     "submit": "ثبت",
     "and": "و",
     "or": "یا",
-    "addProductOrService": "افزودن کالا یا خدمت"
+    "addProductOrService": "افزودن کالا یا خدمت",
+    "checkoutReview": "بررسی پرداخت",
+    "checkoutFinalStep": "مرحلهٔ نهایی خرید",
+    "checkoutNotConnectedTitle": "پرداخت امن هنوز متصل نشده است.",
+    "checkoutNotConnectedBody": "تا زمان اتصال درگاه معتبر و تأیید سرویس پرداخت، سفارشی ثبت نمی‌شود و مبلغی کسر نخواهد شد.",
+    "localCartPreview": "پیش‌نمایش سبد محلی",
+    "selectedCartItems": "اقلام انتخاب‌شده",
+    "editCart": "ویرایش سبد",
+    "localCartDisclaimer": "این صفحه فقط پیش‌نمایش سبد محلی را نشان می‌دهد؛ این اقلام هنوز به سفارش ثبت‌شده متصل نیستند.",
+    "estimatedLocalSubtotal": "مجموع تقریبی اقلام محلی",
+    "shippingCalculatedLater": "هزینهٔ ارسال پس از بررسی سفارش مشخص می‌شود.",
+    "localCartEmpty": "سبد محلی خالی است.",
+    "discoverProductsAndServices": "کشف کالاها و خدمات",
+    "backToCart": "بازگشت به سبد خرید",
+    "continueDiscovering": "ادامهٔ کشف کالاها و خدمات",
+    "continueToCheckoutReview": "ادامه به بررسی پرداخت"
   },
   "nav": {
     "home": "خانه",
