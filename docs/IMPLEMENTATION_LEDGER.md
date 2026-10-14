@@ -2984,3 +2984,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added Persian, English, and Arabic copy for the review-only state and unit/E2E tests to ensure the cart remains intact after opening checkout and no false success is shown.
 - Build, typecheck, unit tests, and browser E2E passed on commit `eb5b6153cf948b9b0617f7a69e211cddae9d491c`; see https://github.com/qooqnos/qooqnos/actions/runs/38544797878, https://github.com/qooqnos/qooqnos/actions/runs/38544798003, and https://github.com/qooqnos/qooqnos/actions/runs/38544798141.
 - Production checkout/payment is still not complete; the current consumer screen is explicitly review-only until canonical payment integration is implemented and verified.
+
+
+## 2026-10-14 — Localized comparison surface
+
+- Migrated the comparison page's heading, empty/single-selection states, product-type label, price/rating/location/description rows, specification attributes, remove/clear actions and footer guidance to the dedicated social-commerce locale namespace.
+- The item count and the single-selected count use locale-aware number formatting; raw `product`/`service` values are translated before display.
+- Added unit/E2E coverage for English and Arabic compare copy while protecting against exposing arbitrary internal metadata.
+- Build, typecheck, unit tests, worker dry-run, and browser E2E passed on commit `c2bc20a974b58617fcc1f6e5031924fb39329d25`: https://github.com/qooqnos/qooqnos/actions/runs/38545676101, https://github.com/qooqnos/qooqnos/actions/runs/38545676124, https://github.com/qooqnos/qooqnos/actions/runs/38545676283.

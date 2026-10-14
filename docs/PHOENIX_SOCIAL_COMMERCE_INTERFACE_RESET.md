@@ -199,3 +199,8 @@ The legacy consumer cart stores local preview items and is **not** a canonical o
 - A successful-payment state may only be shown after canonical order/payment state confirms it.
 
 This is intentional honesty, not a claim that checkout is complete. Real purchase flow remains a separate delivery milestone and must be wired to canonical cart/order/payment APIs before it can be presented as available.
+
+
+## 12. Comparison is part of the multilingual social flow
+
+The comparison screen uses the same `socialCommercePage` dictionary as the feed. The heading, minimum-selection state, product attributes, row labels, item counts, remove/clear actions, and next-step links must be localized in Persian, English, and Arabic. Raw backend identifiers such as `product` and `service` must be presented as human-readable localized labels. Missing fields remain explicitly missing rather than inferred.
