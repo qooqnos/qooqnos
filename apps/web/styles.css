@@ -11653,3 +11653,45 @@ button[aria-busy="true"] .btn-spinner {
   .social-shell .phoenix-public-offer-card { border-radius: 15px; }
   .social-shell .phoenix-public-offer-action .button { width: 100%; justify-content: center; }
 }
+
+
+/* Saved items — responsive, token-driven, and based on the user's actual saved list. */
+.phoenix-reset-saved-page{width:min(1240px,calc(100% - 48px));margin:0 auto;padding:28px 0 92px;color:var(--text)}
+.phoenix-reset-saved-hero{display:flex;align-items:center;justify-content:space-between;gap:26px;padding:clamp(24px,4vw,38px);border:1px solid var(--line);border-radius:26px;background:radial-gradient(circle at 6% 0%,color-mix(in srgb,var(--primary) 12%,transparent),transparent 18rem),linear-gradient(130deg,var(--surface),color-mix(in srgb,var(--surface-2) 50%,var(--surface)));box-shadow:0 18px 50px rgba(55,35,22,.045)}
+.phoenix-reset-saved-hero>div:first-child{min-width:0;max-width:740px}
+.phoenix-reset-saved-hero h1{margin:4px 0 7px;font-size:clamp(25px,3vw,36px);line-height:1.5;font-weight:850}
+.phoenix-reset-saved-hero p{margin:0;color:var(--muted);font-size:13px;line-height:1.95}
+.phoenix-reset-saved-hero-actions{display:flex;flex:0 0 auto;flex-wrap:wrap;gap:9px;align-items:center}
+.phoenix-reset-saved-hero-actions .button{min-height:43px;border-radius:13px;white-space:nowrap}
+.phoenix-reset-saved-hero-actions [hidden]{display:none!important}
+.phoenix-reset-saved-toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:26px 0 18px}
+.phoenix-reset-saved-tabs{display:flex;align-items:center;gap:7px;overflow-x:auto;scrollbar-width:none}
+.phoenix-reset-saved-tabs::-webkit-scrollbar{display:none}
+.phoenix-reset-saved-tabs button{min-height:40px;padding:8px 15px;border:1px solid var(--line);border-radius:13px;color:var(--muted);background:var(--surface);font:inherit;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer;transition:color .18s ease,background .18s ease,border-color .18s ease}
+.phoenix-reset-saved-tabs button:hover,.phoenix-reset-saved-tabs button.active{border-color:color-mix(in srgb,var(--primary) 36%,var(--line));color:var(--primary-strong);background:color-mix(in srgb,var(--primary) 8%,var(--surface))}
+.phoenix-reset-saved-toolbar-meta{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px;white-space:nowrap}
+.phoenix-reset-saved-toolbar-meta>span:first-child{display:inline-grid;place-items:center;min-width:28px;height:28px;padding:0 6px;border-radius:9px;color:var(--primary-strong);background:color-mix(in srgb,var(--primary) 10%,var(--surface));font-weight:850}
+.phoenix-reset-saved-toolbar-meta .button{min-height:34px;margin-inline-start:5px;padding:6px 10px;border-radius:10px;font-size:11px}
+.phoenix-reset-saved-toolbar-meta .button:disabled{opacity:.45;cursor:not-allowed}
+.phoenix-reset-saved-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:17px}
+.phoenix-reset-saved-card{display:flex;flex-direction:column;min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:21px;background:var(--surface);box-shadow:0 10px 30px rgba(55,35,22,.035);transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.phoenix-reset-saved-card:hover{transform:translateY(-2px);border-color:var(--line-strong);box-shadow:0 16px 38px rgba(55,35,22,.065)}
+.phoenix-reset-saved-media{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:16/10;overflow:hidden;padding:0;border:0;border-bottom:1px solid var(--line);background:radial-gradient(circle at 74% 18%,color-mix(in srgb,var(--primary) 19%,transparent),transparent 13rem),linear-gradient(145deg,var(--surface-2),var(--surface-3));cursor:pointer}
+.phoenix-reset-saved-media>img{width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
+.phoenix-reset-saved-card:hover .phoenix-reset-saved-media>img{transform:scale(1.025)}
+.phoenix-reset-saved-media-placeholder{color:color-mix(in srgb,var(--primary-strong) 74%,var(--muted));font-size:42px;font-weight:750}
+.phoenix-reset-saved-kind{position:absolute;top:12px;inset-inline-start:12px;padding:5px 9px;border:1px solid rgba(255,255,255,.3);border-radius:9px;color:#fff;background:rgba(35,24,18,.6);font-size:10px;font-weight:850;backdrop-filter:blur(8px)}
+.phoenix-reset-saved-card-body{display:flex;flex:1;flex-direction:column;align-items:flex-start;min-width:0;padding:17px}
+.phoenix-reset-saved-card-kicker{color:var(--primary-strong);font-size:10px;font-weight:850;line-height:1.7}
+.phoenix-reset-saved-card h2{margin:5px 0;font-size:16px;font-weight:850;line-height:1.7}
+.phoenix-reset-saved-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.9;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.phoenix-reset-saved-card-price{margin-top:15px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;color:var(--text);background:var(--bg);font-size:12px;font-weight:850}
+.phoenix-reset-saved-card-actions{display:flex;flex-wrap:wrap;gap:7px;width:100%;margin-top:auto;padding-top:17px}
+.phoenix-reset-saved-card-actions .button{min-height:36px;padding:7px 10px;border-radius:10px;font-size:11px}
+.phoenix-reset-saved-card-actions .button-primary{flex:1 1 auto}
+.phoenix-reset-saved-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;padding:42px 22px;border:1px dashed var(--line-strong);border-radius:22px;background:color-mix(in srgb,var(--surface) 78%,transparent);text-align:center}
+.phoenix-reset-saved-empty-icon{display:grid;place-items:center;width:54px;height:54px;border-radius:17px;color:var(--primary-strong);background:color-mix(in srgb,var(--primary) 10%,var(--surface));font-size:27px}
+.phoenix-reset-saved-empty h2{margin:12px 0 4px;font-size:18px;font-weight:850}
+.phoenix-reset-saved-empty p{max-width:520px;margin:0 0 17px;color:var(--muted);font-size:12px;line-height:1.9}
+@media(max-width:1050px){.phoenix-reset-saved-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.phoenix-reset-saved-hero{align-items:flex-start;flex-direction:column}}
+@media(max-width:720px){.phoenix-reset-saved-page{width:calc(100% - 24px);padding:15px 0 104px}.phoenix-reset-saved-hero{gap:17px;padding:22px 17px;border-radius:22px}.phoenix-reset-saved-hero h1{font-size:25px}.phoenix-reset-saved-hero p{font-size:12px}.phoenix-reset-saved-hero-actions{display:grid;grid-template-columns:minmax(0,1fr);width:100%}.phoenix-reset-saved-hero-actions .button{width:100%;justify-content:center}.phoenix-reset-saved-toolbar{align-items:flex-start;flex-direction:column;gap:12px;margin:19px 0 14px}.phoenix-reset-saved-tabs{max-width:100%;width:100%}.phoenix-reset-saved-tabs button{padding-inline:12px;min-height:38px}.phoenix-reset-saved-toolbar-meta{flex-wrap:wrap}.phoenix-reset-saved-grid{grid-template-columns:minmax(0,1fr);gap:13px}.phoenix-reset-saved-card{display:grid;grid-template-columns:118px minmax(0,1fr);border-radius:17px}.phoenix-reset-saved-media{grid-row:1;grid-column:1;align-self:stretch;aspect-ratio:auto;min-height:100%;border-bottom:0;border-inline-end:1px solid var(--line)}.phoenix-reset-saved-kind{top:7px;inset-inline-start:6px;padding:4px 6px;font-size:9px}.phoenix-reset-saved-card-body{grid-row:1;grid-column:2;padding:12px}.phoenix-reset-saved-card h2{font-size:14px;line-height:1.6}.phoenix-reset-saved-card p{font-size:11px;-webkit-line-clamp:2}.phoenix-reset-saved-card-price{margin-top:10px;font-size:11px}.phoenix-reset-saved-card-actions{padding-top:12px;gap:5px}.phoenix-reset-saved-card-actions .button{padding:6px 8px;min-height:32px;font-size:10px}}
