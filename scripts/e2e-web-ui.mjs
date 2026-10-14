@@ -77,6 +77,11 @@ await page.route("**/api/v1/**", async (route) => {
       { id: "result-product-1", sourceType: "product", sourceId: "prod-1", title: "میز چوبی", description: "کالای تست برای مقایسه", price: 25000000, currency: "ریال", metadata: { offeringType: "product", businessId: "biz-1" } },
       { id: "result-product-2", sourceType: "product", sourceId: "prod-2", title: "صندلی چوبی", description: "کالای دوم برای مقایسه", price: 12000000, currency: "ریال", metadata: { offeringType: "product", businessId: "biz-1" } },
     ] },
+    "/api/v1/discovery/following": { data: [
+      { id: "followed-product", sourceType: "product", sourceId: "followed-product", title: "عرضهٔ کسب‌وکار دنبال‌شده", description: "عرضهٔ ثبت‌شده در فید دنبال‌شده‌ها", metadata: { offeringType: "product", businessId: "biz-1", businessName: "فروشگاه دنبال‌شده" } },
+    ] },
+    "/api/v1/social/state": { data: { follows: [], engagements: [] } },
+    "/api/v1/social/follows": { data: { id: "follow-1" } },
     "/api/v1/public/businesses/biz-1": { data: {
       profile: { id: "biz-1", name: "فروشگاه ترنج", displayName: "ترنج", status: "active", publicationStatus: "published", businessType: "retail", primaryCategoryId: "handmade", defaultLocale: "fa-IR", timezone: "Asia/Tehran", defaultCurrency: "IRR", updatedAt: new Date().toISOString() },
       contacts: [{ contactType: "phone", value: "02100000000", isPrimary: true }],
@@ -328,10 +333,15 @@ assert.equal(await page.locator(".phoenix-reset-compare-link").isVisible(), fals
 await page.locator('[data-compare="result-product-2"]').click();
 assert.equal(await page.locator(".phoenix-reset-compare-link").isVisible(), true);
 assert.equal(await page.locator("#compare-count").innerText(), "۲");
+await page.locator('[data-follow="result-product-1"]').click();
+await page.locator('[data-follow="result-product-1"].selected').waitFor();
 await page.locator("[data-discovery-index='0']").click();
 await page.locator(".connection-modal [data-save-detail]").click();
 await page.locator(".connection-modal [data-close-discovery]").first().click();
 assert.equal(await page.locator("#shortlist-count").innerText(), "1");
+
+await page.goto(baseURL + "/discover?tab=following");
+await page.getByRole("heading", { name: "عرضهٔ کسب‌وکار دنبال‌شده" }).waitFor();
 
 await page.goto(baseURL + "/business");
 await page.locator("[data-workspace-toggle]").first().click();
