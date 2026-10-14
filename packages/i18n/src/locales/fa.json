@@ -1716,6 +1716,21 @@
     "commentDialogSubmit": "ثبت دیدگاه",
     "commentDialogRequired": "برای ثبت، متن دیدگاه را بنویس.",
     "commentSent": "دیدگاه برای بررسی ثبت شد.",
-    "messagesIntegrityDescription": "برای شروع، کالا یا خدمت موردنظرت را در اکسپلور پیدا کن و اطلاعات عرضه و فروشنده را بررسی کن. این بخش فقط گفت‌وگوهای ثبت‌شده را نمایش می‌دهد."
+    "messagesIntegrityDescription": "برای شروع، کالا یا خدمت موردنظرت را در اکسپلور پیدا کن و اطلاعات عرضه و فروشنده را بررسی کن. این بخش فقط گفت‌وگوهای ثبت‌شده را نمایش می‌دهد.",
+    "socialActionSaved": "تعامل اجتماعی ثبت شد.",
+    "socialActionRemoved": "تعامل اجتماعی برداشته شد.",
+    "socialActionUnavailable": "این محتوا فعلاً امکان تعامل ندارد.",
+    "followTargetMissing": "اطلاعات فروشنده برای دنبال‌کردن کافی نیست.",
+    "sharePromptText": "این گزینه را در ققنوس ببین.",
+    "shareReady": "گزینه برای اشتراک‌گذاری آماده شد.",
+    "shareLinkCopied": "لینک ققنوس کپی شد.",
+    "shareUnavailable": "اشتراک‌گذاری در این مرورگر پشتیبانی نمی‌شود.",
+    "copyShareLinkPrompt": "لینک ققنوس را کپی کن:",
+    "compareProductsOnly": "فقط کالاهای قابل مقایسه را می‌توان انتخاب کرد.",
+    "compareMaxProducts": "حداکثر ۴ کالا را می‌توان مقایسه کرد.",
+    "compareNeedOneMore": "یک کالای دیگر انتخاب کن.",
+    "compareButtonLabel": "مقایسهٔ {{count}} کالا",
+    "removeFromCompare": "حذف از مقایسه",
+    "commentTargetMissing": "اطلاعات این مورد برای ثبت دیدگاه در دسترس نیست."
   }
 }
