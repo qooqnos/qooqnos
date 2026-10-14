@@ -26,6 +26,7 @@ const page = await context.newPage();
 const runtimeErrors = [];
 const failedRequests = [];
 const moduleResponses = [];
+const discoveryRequests = [];
 page.on("pageerror", (error) => runtimeErrors.push(String(error.stack || error)));
 page.on("console", (message) => {
   if (message.type() === "error") {
@@ -57,6 +58,9 @@ await page.route("**/api/v1/**", async (route) => {
   const request = route.request();
   const url = new URL(request.url());
   const path = url.pathname;
+  if (path.startsWith("/api/v1/discovery/")) {
+    discoveryRequests.push({ path, method: request.method(), url: request.url() });
+  }
   const workspace = request.headers()["x-workspace-id"] ?? "ws-1";
 
   const payloads = {
@@ -341,7 +345,13 @@ await page.locator(".connection-modal [data-close-discovery]").first().click();
 assert.equal(await page.locator("#shortlist-count").innerText(), "1");
 
 await page.goto(baseURL + "/discover?tab=following");
-await page.getByRole("heading", { name: "عرضهٔ کسب‌وکار دنبال‌شده" }).waitFor();
+try {
+  await page.getByRole("heading", { name: "عرضهٔ کسب‌وکار دنبال‌شده" }).waitFor({ timeout: 7000 });
+} catch (error) {
+  const visibleText = await page.locator(".phoenix-reset-page").innerText().catch(() => "");
+  process.stderr.write("Phoenix following-feed diagnostics: " + JSON.stringify({ discoveryRequests, visibleText, runtimeErrors, failedRequests }, null, 2) + "\\n");
+  throw error;
+}
 
 await page.goto(baseURL + "/business");
 await page.locator("[data-workspace-toggle]").first().click();
