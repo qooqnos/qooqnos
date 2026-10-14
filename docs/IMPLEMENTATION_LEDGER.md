@@ -2903,3 +2903,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The new default seller surface uses the selected business vertical's real navigation/capability registry, offers clear actions, and links to business profile, locations, and the public-facing view.
 - No fixed sales figures, fake live activity, or unsupported verification badge are shown. Operational data remains owned by canonical domain APIs.
 - Added responsive desktop/tablet/mobile composition. Seller workspace still uses the business shell; customer routes use the separate social shell.
+
+
+
+## 2026-10-14 — Redesigned product comparison surface
+
+- Replaced the previous table-first comparison page with a decision-focused experience: selection summary, one card per selected item, horizontal comparison rows, clear empty/single-item states, and responsive mobile layout.
+- The comparison details are limited to recognized product attributes and values actually present in canonical discovery data. Missing facts are labelled as unavailable; arbitrary metadata fields are not exposed.
+- Removed purchase-to-demo-checkout links from comparison. The page opens the existing product detail panel and sends users back to discovery to continue; checkout is not claimed as verified.
+- Added direct remove-item and clear-selection handlers for the redesigned comparison screen.

@@ -732,7 +732,24 @@ function render(): void {
     void loadSocialState();
   }
   if (route.path === "/compare") {
-    document.querySelector<HTMLButtonElement>("[data-clear-compare]")?.addEventListener("click", () => { localStorage.removeItem("phoenix-compare-items"); render(); });
+    document.querySelector<HTMLButtonElement>("[data-clear-compare]")?.addEventListener("click", () => {
+      localStorage.removeItem("phoenix-compare-items");
+      render();
+    });
+    document.querySelectorAll<HTMLButtonElement>("[data-remove-compare]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.removeCompare ?? "";
+        saveCompareItems(getCompareItems().filter((item) => (item.id ?? item.sourceId) !== key));
+        render();
+      });
+    });
+    document.querySelectorAll<HTMLButtonElement>("[data-open-compare-detail]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.openCompareDetail ?? "";
+        const item = getCompareItems().find((entry) => (entry.id ?? entry.sourceId) === key);
+        if (item) openDiscoveryResultPanel(item);
+      });
+    });
   }
   if (route.path === "/activity") void loadActivityPage();
   void loadShellContext();
@@ -5137,24 +5154,79 @@ async function loadActivityPage(): Promise<void> {
 
 function renderCompare(): string {
   const items = getCompareItems();
-  if (items.length < 2) return '<div class="phoenix-compare-page"><div class="phoenix-section-heading"><span class="phoenix-kicker">Compare</span><h1>مقایسه محصولات</h1><p>حداقل دو محصول واقعی را از فید انتخاب کن.</p></div><div class="glass-card phoenix-compare-empty"><strong>هنوز محصول کافی برای مقایسه انتخاب نشده است.</strong><p>به اکسپلور برگرد و روی «مقایسه» محصولات موردنظر بزن.</p><a class="button button-primary" href="/discover?tab=explore" data-nav>بازگشت به اکسپلور</a></div></div>';
-  const metadataKeys = Array.from(new Set(items.flatMap((item) => Object.keys(item.metadata ?? {})))).filter((key) => !["businessId","businessName","offeringType"].includes(key)).slice(0, 8);
-  const rows: Array<[string, (item: DiscoveryResult) => unknown]> = [
-    ["نوع", (item) => item.sourceType ?? "product"],
-    ["قیمت", (item) => item.price !== undefined && item.price !== null ? formatLocalizedNumber(Number(item.price)) + " " + (item.currency ?? "") : "استعلام قیمت"],
-    ["امتیاز", (item) => item.rating !== undefined && item.rating !== null ? Number(item.rating).toFixed(1) : "—"],
-    ["موقعیت", (item) => item.locality ?? item.city ?? "—"],
-    ["توضیح", (item) => item.description ?? item.body ?? "—"],
-    ...metadataKeys.map((key) => [key, (item: DiscoveryResult) => item.metadata?.[key] ?? "—"] as [string, (item: DiscoveryResult) => unknown]),
+  const display = (value: unknown): string => {
+    if (value === null || value === undefined || value === "") return uiText("اطلاعات موجود نیست");
+    if (typeof value === "boolean") return value ? uiText("بله") : uiText("خیر");
+    if (Array.isArray(value)) return value.map((entry) => String(entry)).join("، ");
+    if (typeof value === "object") return uiText("اطلاعات موجود نیست");
+    return String(value);
+  };
+  const titleOf = (item: DiscoveryResult): string => item.title ?? item.displayName ?? item.name ?? uiText("محصول");
+  const keyOf = (item: DiscoveryResult): string => item.id ?? item.sourceId ?? "";
+  const priceOf = (item: DiscoveryResult): string =>
+    item.price !== undefined && item.price !== null
+      ? formatLocalizedNumber(Number(item.price)) + (item.currency ? " " + item.currency : "")
+      : uiText("استعلام قیمت");
+  if (items.length < 2) {
+    const single = items[0];
+    return '<div class="phoenix-reset-compare-page">' +
+      '<section class="phoenix-reset-compare-hero"><div><span class="phoenix-reset-section-kicker">' + uiText("مقایسهٔ هوشمند") + '</span>' +
+        '<h1>' + uiText("انتخاب آگاهانه، با مقایسهٔ روشن") + '</h1>' +
+        '<p>' + uiText("قیمت و مشخصات واقعی محصولات را کنار هم ببین و تفاوت‌ها را پیش از تصمیم‌گیری بررسی کن.") + '</p></div>' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("کشف کالاها") + ' <span aria-hidden="true">←</span></a></section>' +
+      (single
+        ? '<section class="phoenix-reset-compare-selected"><span class="phoenix-reset-compare-number">۱</span><div><strong>' + escapeHtml(titleOf(single)) + '</strong><p>' + uiText("یک محصول انتخاب شده؛ برای شروع مقایسه، محصول دیگری اضافه کن.") + '</p></div><button class="button button-ghost" type="button" data-remove-compare="' + escapeAttr(keyOf(single)) + '">' + uiText("حذف انتخاب") + '</button></section>'
+        : '') +
+      '<section class="phoenix-reset-compare-empty"><div class="phoenix-reset-compare-empty-icon" aria-hidden="true">⚖</div>' +
+        '<h2>' + uiText("هنوز محصول کافی برای مقایسه انتخاب نشده است.") + '</h2>' +
+        '<p>' + uiText("از فید یا اکسپلور، دست‌کم دو کالای قابل مقایسه انتخاب کن. انتخاب‌ها تا وقتی خودت حذفشان نکنی حفظ می‌شوند.") + '</p>' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("رفتن به اکسپلور") + ' <span aria-hidden="true">←</span></a></section></div>';
+  }
+
+  const knownAttributes: Array<[string, string]> = [
+    ["brand", "برند"], ["model", "مدل"], ["color", "رنگ"], ["size", "اندازه"],
+    ["material", "جنس"], ["weight", "وزن"], ["dimensions", "ابعاد"], ["warranty", "گارانتی"],
+    ["condition", "وضعیت کالا"], ["availability", "موجودی"], ["stockStatus", "وضعیت موجودی"],
+    ["variant", "گونه"], ["deliveryMethod", "روش تحویل"], ["format", "قالب دیجیتال"],
   ];
-  return '<div class="phoenix-compare-page">' +
-    '<div class="phoenix-section-heading"><span class="phoenix-kicker">Compare · 2–4</span><h1>مقایسه شفاف محصولات</h1><p>فقط داده‌ای را می‌بینی که در Discovery/Catalog آمده است؛ ققنوس ویژگی نامشخص را حدس نمی‌زند.</p></div>' +
-    '<div class="phoenix-compare-table"><div class="compare-row compare-head"><span>ویژگی</span>' + items.map((item) => '<strong>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '</strong>').join("") + '</div>' +
-    rows.map(([label, getter]) => '<div class="compare-row"><span>' + escapeHtml(label) + '</span>' + items.map((item) => '<span>' + escapeHtml(String(getter(item))) + '</span>').join("") + '</div>').join("") +
-    '</div><div class="phoenix-compare-actions">' +
-    items.map((item) => '<a class="button button-primary" href="/checkout?product=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>خرید «' + escapeHtml(item.title ?? item.name ?? "محصول") + '»</a>').join("") +
-    '<a class="button button-ghost" href="/discover" data-nav>ادامه کشف</a><button class="button button-ghost" type="button" data-clear-compare>پاک کردن مقایسه</button></div></div>';
+  const metadataRows = knownAttributes.filter(([key]) =>
+    items.some((item) => item.metadata && item.metadata[key] !== undefined && item.metadata[key] !== null && item.metadata[key] !== "")
+  );
+  const rows: Array<{ label: string; value: (item: DiscoveryResult) => unknown }> = [
+    { label: uiText("نوع عرضه"), value: (item) => item.sourceType ?? item.metadata?.offeringType ?? "product" },
+    { label: uiText("قیمت"), value: (item) => priceOf(item) },
+    ...(items.some((item) => item.rating !== undefined && item.rating !== null)
+      ? [{ label: uiText("امتیاز ثبت‌شده"), value: (item: DiscoveryResult) => item.rating !== undefined && item.rating !== null ? "★ " + formatLocalizedNumber(Number(item.rating)) : undefined }]
+      : []),
+    ...metadataRows.map(([key, label]) => ({ label: uiText(label), value: (item: DiscoveryResult) => item.metadata?.[key] })),
+    { label: uiText("موقعیت"), value: (item) => item.locality ?? item.city },
+    { label: uiText("توضیحات"), value: (item) => item.description ?? item.body },
+  ];
+  const columns = items.map((item) =>
+    '<article class="phoenix-reset-compare-product"><span class="phoenix-reset-compare-product-type">' + uiText("کالا") + '</span>' +
+      '<h2>' + escapeHtml(titleOf(item)) + '</h2><strong class="phoenix-reset-compare-price">' + escapeHtml(priceOf(item)) + '</strong>' +
+      '<div class="phoenix-reset-compare-product-actions"><button class="button button-ghost" type="button" data-open-compare-detail="' + escapeAttr(keyOf(item)) + '">' + uiText("مشاهده جزئیات") + '</button>' +
+      '<button class="phoenix-reset-compare-remove" type="button" data-remove-compare="' + escapeAttr(keyOf(item)) + '">' + uiText("حذف") + '</button></div></article>'
+  ).join("");
+  return '<div class="phoenix-reset-compare-page">' +
+    '<section class="phoenix-reset-compare-hero"><div><span class="phoenix-reset-section-kicker">' + uiText("مقایسهٔ هوشمند") + ' · ' + formatLocalizedNumber(items.length) + ' ' + uiText("کالا") + '</span>' +
+      '<h1>' + uiText("انتخاب آگاهانه، با مقایسهٔ روشن") + '</h1>' +
+      '<p>' + uiText("مشخصات موجود را کنار هم بررسی کن. اگر اطلاعاتی ثبت نشده باشد، ققنوس آن را حدس نمی‌زند.") + '</p></div>' +
+      '<a class="button button-ghost" href="/discover?tab=explore" data-nav>' + uiText("افزودن کالا") + ' <span aria-hidden="true">＋</span></a></section>' +
+    '<section class="phoenix-reset-compare-products" aria-label="' + escapeAttr(uiText("کالاهای انتخاب‌شده")) + '">' + columns + '</section>' +
+    '<section class="phoenix-reset-compare-table-wrap"><div class="phoenix-reset-compare-table-heading"><div><span class="phoenix-reset-section-kicker">' + uiText("مقایسهٔ مشخصات") + '</span><h2>' + uiText("تفاوت‌ها در یک نگاه") + '</h2></div>' +
+      '<span class="phoenix-reset-compare-factual-note">✓ ' + uiText("اطلاعات ثبت‌شده") + '</span></div>' +
+      '<div class="phoenix-reset-compare-table" role="table" aria-label="' + escapeAttr(uiText("مقایسهٔ مشخصات کالاها")) + '">' +
+      '<div class="phoenix-reset-compare-row phoenix-reset-compare-row-head" role="row"><span role="columnheader">' + uiText("ویژگی") + '</span>' +
+        items.map((item) => '<strong role="columnheader">' + escapeHtml(titleOf(item)) + '</strong>').join("") + '</div>' +
+      rows.map((row) => '<div class="phoenix-reset-compare-row" role="row"><span role="rowheader">' + escapeHtml(row.label) + '</span>' +
+        items.map((item) => '<span role="cell">' + escapeHtml(display(row.value(item))) + '</span>').join("") + '</div>').join("") +
+      '</div></section>' +
+    '<footer class="phoenix-reset-compare-footer"><p>' + uiText("خرید یا رزرو فقط از مسیر معتبر همان کالا یا خدمت انجام می‌شود.") + '</p>' +
+      '<button class="button button-ghost" type="button" data-clear-compare>' + uiText("پاک کردن مقایسه") + '</button>' +
+      '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("ادامهٔ کشف") + ' <span aria-hidden="true">←</span></a></footer></div>';
 }
+
 function renderDiscover(): string {
   const params = new URLSearchParams(location.search);
   const initialQuery = params.get("q") ?? "";
