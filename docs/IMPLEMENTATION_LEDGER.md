@@ -2973,3 +2973,14 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Business shares still open the public business profile, and service shares still open the booking surface.
 - Social header tab labels now use the dedicated social-commerce locale dictionary rather than fixed Persian strings.
 - Added E2E assertions for the shared product URL so the feed cannot silently regress into linking products to checkout before checkout is actually wired and verified.
+
+
+## 2026-10-14 — Prevent false checkout/payment success
+
+- Removed the legacy consumer payment submit handler that cleared local cart state and displayed “order and payment succeeded” without contacting a payment provider.
+- Replaced the mock payment-method list with a responsive checkout review surface. It shows the locally stored cart as a preview, labels the subtotal as an estimate, and explicitly states that no order is placed and no money is taken.
+- The cart page no longer claims free shipping or calls a local preview subtotal “amount payable”.
+- Checkout does not expose the fake `#consumer-payment-form`, bank/credit/cash-on-delivery claims, or a final-payment submit action.
+- Added Persian, English, and Arabic copy for the review-only state and unit/E2E tests to ensure the cart remains intact after opening checkout and no false success is shown.
+- Build, typecheck, unit tests, and browser E2E passed on commit `eb5b6153cf948b9b0617f7a69e211cddae9d491c`; see https://github.com/qooqnos/qooqnos/actions/runs/38544797878, https://github.com/qooqnos/qooqnos/actions/runs/38544798003, and https://github.com/qooqnos/qooqnos/actions/runs/38544798141.
+- Production checkout/payment is still not complete; the current consumer screen is explicitly review-only until canonical payment integration is implemented and verified.
