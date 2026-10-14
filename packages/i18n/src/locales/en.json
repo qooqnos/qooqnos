@@ -1708,6 +1708,13 @@
     "savedRemoveFailedToast": "Could not remove this saved item.",
     "savedClearFailedToast": "Some items could not be removed. Try again.",
     "savedClearedToast": "Saved items cleared.",
-    "compareAddHint": "Select one more product to compare."
+    "compareAddHint": "Select one more product to compare.",
+    "commentDialogTitle": "Write a comment",
+    "commentDialogDescription": "Your comment is reviewed before it appears. Avoid including personal or contact details.",
+    "commentDialogPlaceholder": "What would you like others to know about this product or service?",
+    "commentDialogCancel": "Cancel",
+    "commentDialogSubmit": "Submit comment",
+    "commentDialogRequired": "Write a comment before submitting.",
+    "commentSent": "Your comment was submitted for review."
   }
 }
