@@ -2925,3 +2925,9 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The profile deliberately avoids labeling people as public “ordinary users.” Seller activation is a capability on the same account; active sellers get a link to their business workspace.
 - Replaced hard-coded example conversations and the local-only simulated seller acknowledgement with a clear, responsive messages landing surface. The current API supports conversation/message creation but does not yet expose a listing/read conversation route, so the UI does not pretend to show persisted threads.
 - Added E2E assertions that profile figures are not fabricated and example message threads are absent.
+
+
+## 2026-10-14 — Buyer orders and saved items styling
+
+- Unified the visual treatment of data-backed Orders and Saved pages with the new social feed: softer headers, quieter selected filters, card hierarchy, mobile-first filter scrolling and more consistent spacing.
+- Existing canonical order/saved data handlers remain in place; this pass changes layout and tokens, not the business rules or state source.

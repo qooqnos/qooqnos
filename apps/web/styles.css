@@ -11252,3 +11252,187 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-reset-messages-actions { width: 100%; flex-direction: column; }
   .phoenix-reset-messages-actions .button { width: 100%; justify-content: center; }
 }
+
+
+
+/* Buyer order tracking and saved offerings — align existing data-backed pages with the reset. */
+.social-shell .phoenix-orders-page,
+.social-shell .phoenix-saved-page {
+  width: min(1160px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 28px 0 108px;
+}
+.social-shell .phoenix-orders-page > .page-heading,
+.social-shell .phoenix-saved-page > .page-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0;
+  padding: clamp(22px, 3.5vw, 34px);
+  border: 1px solid var(--line);
+  border-radius: 25px;
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--primary) 11%, transparent), transparent 17rem),
+    linear-gradient(130deg, var(--surface), color-mix(in srgb, var(--surface-2) 48%, var(--surface)));
+  box-shadow: 0 15px 45px rgba(47, 32, 22, .04);
+}
+.social-shell .phoenix-orders-page .page-heading h1,
+.social-shell .phoenix-saved-page .page-heading h1 {
+  margin: 5px 0;
+  font-size: clamp(23px, 2.8vw, 32px);
+  font-weight: 850;
+  line-height: 1.5;
+}
+.social-shell .phoenix-orders-page .page-heading p,
+.social-shell .phoenix-saved-page .page-heading p {
+  max-width: 660px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.9;
+}
+.social-shell .phoenix-orders-page .heading-actions,
+.social-shell .phoenix-saved-page .heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.social-shell .phoenix-orders-page .heading-actions .button,
+.social-shell .phoenix-saved-page .heading-actions .button {
+  min-height: 40px;
+  padding-inline: 13px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+.social-shell .phoenix-orders-controls {
+  align-items: center;
+  margin: 22px 0 16px;
+  gap: 10px;
+}
+.social-shell .phoenix-orders-tabs,
+.social-shell .phoenix-saved-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+}
+.social-shell .phoenix-orders-tabs button,
+.social-shell .phoenix-saved-tabs button {
+  min-height: 39px;
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 11px;
+  font-weight: 800;
+  transition: border-color .18s ease, color .18s ease, background .18s ease;
+}
+.social-shell .phoenix-orders-tabs button.active,
+.social-shell .phoenix-saved-tabs button.active {
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--line));
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+.social-shell .phoenix-orders-search { min-width: 220px; }
+.social-shell .phoenix-orders-search input {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 12px;
+}
+.social-shell .phoenix-orders-list { gap: 13px; }
+.social-shell .phoenix-order-card,
+.social-shell .phoenix-saved-card {
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 9px 28px rgba(47, 32, 22, .035);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.social-shell .phoenix-order-card:hover,
+.social-shell .phoenix-saved-card:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--primary) 24%, var(--line));
+  box-shadow: 0 15px 38px rgba(47, 32, 22, .06);
+}
+.social-shell .phoenix-order-card { padding: 20px; gap: 15px; }
+.social-shell .phoenix-order-card-header {
+  align-items: flex-start;
+  padding-bottom: 13px;
+}
+.social-shell .phoenix-order-card-items {
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--surface-2) 54%, var(--surface));
+}
+.social-shell .phoenix-order-card-footer {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.social-shell .phoenix-order-card-footer .button,
+.social-shell .phoenix-saved-card .button {
+  min-height: 37px;
+  padding: 7px 12px;
+  border-radius: 11px;
+  font-size: 11px;
+}
+.social-shell .phoenix-saved-page .heading-actions { align-self: center; }
+.social-shell .phoenix-saved-tabs { margin: 21px 0 16px; }
+.social-shell .phoenix-saved-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: 13px;
+}
+.social-shell .phoenix-saved-card {
+  padding: 19px;
+  border-radius: 19px;
+  gap: 12px;
+}
+.social-shell .phoenix-saved-card h3 {
+  font-size: 15px;
+  font-weight: 850;
+  line-height: 1.65;
+}
+.social-shell .phoenix-saved-card p { font-size: 12px; line-height: 1.85; }
+.social-shell .saved-card-type {
+  padding: 5px 9px;
+  border-radius: 9px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+.social-shell .saved-card-actions { gap: 7px; }
+@media (max-width: 760px) {
+  .social-shell .phoenix-orders-page,
+  .social-shell .phoenix-saved-page {
+    width: calc(100% - 24px);
+    padding: 15px 0 102px;
+  }
+  .social-shell .phoenix-orders-page > .page-heading,
+  .social-shell .phoenix-saved-page > .page-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px 16px;
+    border-radius: 21px;
+  }
+  .social-shell .phoenix-orders-page .page-heading h1,
+  .social-shell .phoenix-saved-page .page-heading h1 { font-size: 23px; }
+  .social-shell .phoenix-orders-page .heading-actions,
+  .social-shell .phoenix-saved-page .heading-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .social-shell .phoenix-orders-page .heading-actions .button,
+  .social-shell .phoenix-saved-page .heading-actions .button { width: 100%; justify-content: center; }
+  .social-shell .phoenix-orders-controls { align-items: stretch; flex-direction: column; }
+  .social-shell .phoenix-orders-tabs,
+  .social-shell .phoenix-saved-tabs { flex-wrap: nowrap; overflow-x: auto; padding: 1px 1px 7px; scrollbar-width: thin; }
+  .social-shell .phoenix-orders-tabs button,
+  .social-shell .phoenix-saved-tabs button { flex: 0 0 auto; }
+  .social-shell .phoenix-orders-search { max-width: none; min-width: 0; width: 100%; }
+  .social-shell .phoenix-order-card { padding: 15px; border-radius: 17px; }
+  .social-shell .phoenix-order-card-header { flex-direction: column; align-items: stretch; }
+  .social-shell .phoenix-saved-grid { grid-template-columns: minmax(0, 1fr); }
+  .social-shell .phoenix-saved-card { padding: 16px; }
+}
