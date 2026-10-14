@@ -3810,163 +3810,196 @@ async function loadOrdersPage(): Promise<void> {
    ========================================================================= */
 
 function renderSaved(): string {
-  return `
-    <div class="phoenix-saved-page">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("علاقه‌مندی‌ها")}</span>
-          <h1>${uiText("موارد ذخیره‌شده و")} <em>${uiText("گزینه‌های منتخب")}</em></h1>
-          <p>${uiText("محصولات، خدمات و کسب‌وکارهایی که برای بررسی یا خرید آینده نشان کرده‌اید.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-ghost" href="/compare" data-nav>${uiText("میز مقایسه")} ⚖</a>
-          <button class="button button-ghost" type="button" data-clear-all-saved>${uiText("پاکسازی همه")}</button>
-        </div>
-      </section>
+  const savedItems = getShortlist();
+  const compareCount = getCompareItems().length;
+  return '<div class="phoenix-reset-saved-page">' +
+    '<section class="phoenix-reset-saved-hero">' +
+      '<div><span class="phoenix-reset-section-kicker">' + uiText("برای برگشتن") + '</span>' +
+        '<h1>' + uiText("ذخیره‌شده‌های تو") + '</h1>' +
+        '<p>' + uiText("کالاها و خدماتی را که خودت نشان کرده‌ای یک‌جا نگه دار و هر وقت آماده بودی دوباره بررسی‌شان کن.") + '</p></div>' +
+      '<div class="phoenix-reset-saved-hero-actions">' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("کشف گزینه‌های تازه") + ' <span aria-hidden="true">←</span></a>' +
+        '<a class="button button-ghost" href="/compare" data-nav' + (compareCount < 2 ? ' hidden' : '') + '>' + uiText("مقایسه") + ' · ' + formatLocalizedNumber(compareCount) + '</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-saved-toolbar">' +
+      '<nav class="phoenix-reset-saved-tabs" role="tablist" aria-label="' + escapeAttr(uiText("دسته‌بندی موارد ذخیره")) + '">' +
+        '<button class="active" type="button" data-saved-filter="all" aria-selected="true">' + uiText("همه") + '</button>' +
+        '<button type="button" data-saved-filter="product" aria-selected="false">' + uiText("کالاها") + '</button>' +
+        '<button type="button" data-saved-filter="service" aria-selected="false">' + uiText("خدمات") + '</button>' +
+        '<button type="button" data-saved-filter="business" aria-selected="false">' + uiText("کسب‌وکارها") + '</button>' +
+      '</nav>' +
+      '<div class="phoenix-reset-saved-toolbar-meta"><span id="saved-items-count">' + formatLocalizedNumber(savedItems.length) + '</span><span>' + uiText("مورد ذخیره‌شده") + '</span>' +
+        '<button class="button button-ghost" type="button" data-clear-all-saved' + (savedItems.length ? '' : ' disabled') + '>' + uiText("پاک کردن همه") + '</button></div>' +
+    '</section>' +
+    '<section class="phoenix-reset-saved-grid" id="saved-items-grid" aria-live="polite">' +
+      '<div class="slot-loading">' + uiText("در حال بارگذاری موارد ذخیره‌شده…") + '</div>' +
+    '</section>' +
+  '</div>';
+}
 
-      <section class="phoenix-saved-tabs" role="tablist" aria-label="${escapeAttr(uiText("دسته‌بندی موارد ذخیره"))}">
-        <button class="active" type="button" data-saved-filter="all">${uiText("همه")}</button>
-        <button type="button" data-saved-filter="product">${uiText("محصولات")}</button>
-        <button type="button" data-saved-filter="service">${uiText("خدمات")}</button>
-        <button type="button" data-saved-filter="business">${uiText("کسب‌وکارها")}</button>
-      </section>
-
-      <section class="phoenix-saved-grid" id="saved-items-grid">
-        <div class="slot-loading">${uiText("در حال بارگذاری موارد ذخیره‌شده…")}</div>
-      </section>
-    </div>
-  `;
+async function removeSavedItem(item: DiscoveryResult): Promise<void> {
+  const target = socialTarget(item);
+  if (sessionStorage.getItem(STORAGE.accessToken) && target) {
+    const socialIdKey = "save:" + socialKey(target.targetType, target.targetId);
+    const engagementId = socialState.engagements.get(socialIdKey) ?? socialActionIds.get(socialIdKey);
+    if (engagementId) {
+      await apiJson("/api/v1/social/saves/" + encodeURIComponent(engagementId), { method: "DELETE" });
+      socialState.engagements.delete(socialIdKey);
+      socialActionIds.delete(socialIdKey);
+    }
+  }
+  setShortlistItem(item, false);
 }
 
 function loadSavedPage(): void {
   const grid = document.querySelector<HTMLElement>("#saved-items-grid");
   const tabButtons = document.querySelectorAll<HTMLButtonElement>("[data-saved-filter]");
   const clearBtn = document.querySelector<HTMLButtonElement>("[data-clear-all-saved]");
+  const countNode = document.querySelector<HTMLElement>("#saved-items-count");
   if (!grid) return;
 
-  const defaultSavedItems: DiscoveryResult[] = [
-    {
-      id: "item-1",
-      sourceType: "service",
-      sourceId: "svc-1",
-      title: "خدمات مشاوره تخصصی کسب‌وکار و رشد",
-      description: "راهنمایی جامع برای بهینه‌سازی فرایندها، بازاریابی دیجیتال و رشد مقیاس‌پذیر در پلتفرم ققنوس.",
-      city: "تهران",
-      locality: "سعادت‌آباد",
-      rating: 4.9,
-      score: 96,
-      price: 4500000,
-      currency: "IRR",
-      metadata: { businessId: "biz-1", offeringType: "service" },
-    },
-    {
-      id: "item-2",
-      sourceType: "product",
-      sourceId: "prod-1",
-      title: "بسته ابری هوش سازمانی ققنوس",
-      description: "مجموعه ابزارهای هوش مصنوعی جهت تحلیل داده‌ها، پیش‌بینی رفتار مشتریان و خودکارسازی سفارش‌ها.",
-      city: "تهران",
-      locality: "ونک",
-      rating: 4.8,
-      score: 92,
-      price: 12000000,
-      currency: "IRR",
-      metadata: { businessId: "biz-2", offeringType: "product" },
-    },
-  ];
-
   let currentCategory = "all";
+  let savedItems = getShortlist();
 
-  const renderGrid = () => {
-    let items = defaultSavedItems;
-    if (currentCategory !== "all") {
-      items = items.filter((i) => i.sourceType === currentCategory || (i.metadata && i.metadata.offeringType === currentCategory));
-    }
+  const classify = (item: DiscoveryResult): "product" | "service" | "business" => {
+    const kind = item.sourceType ?? item.metadata?.offeringType;
+    if (kind === "business") return "business";
+    if (kind === "service") return "service";
+    return "product";
+  };
 
-    if (!items.length) {
-      grid.innerHTML = `
-        <div class="slot-empty">
-          <span>★</span>
-          <p>${uiText("هنوز موردی در این بخش ذخیره نکرده‌اید.")}</p>
-          <a class="button button-primary" href="/discover" data-nav>${uiText("کشف گزینه‌ها در ققنوس")}</a>
-        </div>
-      `;
+  const renderGrid = (): void => {
+    const filtered = currentCategory === "all" ? savedItems : savedItems.filter((item) => classify(item) === currentCategory);
+    if (countNode) countNode.textContent = formatLocalizedNumber(savedItems.length);
+    if (clearBtn) clearBtn.disabled = savedItems.length === 0;
+
+    tabButtons.forEach((button) => {
+      const active = (button.dataset.savedFilter ?? "all") === currentCategory;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+
+    if (!filtered.length) {
+      grid.innerHTML = '<div class="phoenix-reset-saved-empty"><div class="phoenix-reset-saved-empty-icon" aria-hidden="true">☆</div>' +
+        '<h2>' + uiText(savedItems.length ? "در این دسته موردی ذخیره نکرده‌ای." : "هنوز چیزی ذخیره نکرده‌ای.") + '</h2>' +
+        '<p>' + uiText(savedItems.length ? "دستهٔ دیگری را ببین یا به فید برگرد و گزینه‌ای را برای بعد نگه دار." : "از فید کالا یا خدمت را ذخیره کن تا همین‌جا برای بررسی بعدی باقی بماند.") + '</p>' +
+        '<button class="button button-primary" type="button" data-saved-explore>' + uiText("رفتن به اکسپلور") + ' <span aria-hidden="true">←</span></button></div>';
+      grid.querySelector<HTMLButtonElement>("[data-saved-explore]")?.addEventListener("click", () => navigate("/discover?tab=explore"));
       return;
     }
 
-    grid.innerHTML = items.map((item) => {
-      const isService = item.sourceType === "service" || item.metadata?.offeringType === "service";
-      const formattedPrice = item.price ? formatLocalizedNumber(item.price) + " ریال" : uiText("توافقی / استعلام");
-      return `
-        <article class="phoenix-saved-card glass-card">
-          <div class="saved-card-top">
-            <span class="saved-card-type">${isService ? uiText("خدمت") : uiText("محصول")}</span>
-            ${item.rating ? `<span class="saved-card-rating">★ ${formatLocalizedNumber(item.rating)}</span>` : ""}
-          </div>
-          <h3>${escapeHtml(item.title ?? "مورد ذخیره‌شده")}</h3>
-          <p>${escapeHtml(item.description ?? "توضیحی ثبت نشده است.")}</p>
-          <div class="saved-card-meta">
-            ${item.city ? `<span>📍 ${escapeHtml(item.city)}${item.locality ? " · " + escapeHtml(item.locality) : ""}</span>` : ""}
-            <span><strong>${formattedPrice}</strong></span>
-          </div>
-          <div class="saved-card-actions">
-            ${isService
-              ? `<a class="button button-primary" href="/booking?business=${encodeURIComponent(String(item.metadata?.businessId ?? ""))}&offering=${encodeURIComponent(item.id ?? "")}" data-nav>${uiText("رزرو وقت")}</a>`
-              : `<a class="button button-primary" href="/checkout" data-nav>${uiText("خرید مستقیم")}</a>`}
-            <button class="button button-ghost" type="button" data-saved-compare="${escapeAttr(item.id ?? "")}">${uiText("مقایسه")} ⚖</button>
-            <button class="button button-ghost" type="button" data-saved-remove="${escapeAttr(item.id ?? "")}">${uiText("حذف")}</button>
-          </div>
-        </article>
-      `;
+    grid.innerHTML = filtered.map((item) => {
+      const key = item.id ?? item.sourceId ?? "";
+      const kind = classify(item);
+      const kindLabel = kind === "service" ? uiText("خدمت") : kind === "business" ? uiText("کسب‌وکار") : uiText("کالا");
+      const title = item.title ?? item.displayName ?? item.name ?? uiText("مورد ذخیره‌شده");
+      const description = item.description ?? item.body ?? "";
+      const price = item.price !== undefined && item.price !== null
+        ? formatLocalizedNumber(Number(item.price)) + (item.currency ? " " + item.currency : "")
+        : uiText("استعلام قیمت");
+      const locationLabel = [item.city, item.locality].filter((part) => Boolean(part?.trim())).join(" · ");
+      const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ??
+        item.metadata?.thumbnailUrl ?? (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
+      const mediaUrl = typeof mediaCandidate === "string" && (mediaCandidate.startsWith("/") || /^https?:\/\//i.test(mediaCandidate)) ? mediaCandidate : "";
+      const media = mediaUrl
+        ? '<img src="' + escapeAttr(mediaUrl) + '" alt="' + escapeAttr(title) + '" loading="lazy" />'
+        : '<span class="phoenix-reset-saved-media-placeholder" aria-hidden="true">◇</span>';
+      const metadataBusiness = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
+      const compareButton = kind === "product"
+        ? '<button class="button button-ghost" type="button" data-saved-compare="' + escapeAttr(key) + '">' + uiText("مقایسه") + ' ⚖</button>'
+        : "";
+      const routePath = kind === "business"
+        ? "/businesses/" + encodeURIComponent(item.sourceId ?? item.id ?? "")
+        : kind === "service"
+          ? "/booking?offering=" + encodeURIComponent(item.sourceId ?? item.id ?? "") + (metadataBusiness ? "&businessId=" + encodeURIComponent(metadataBusiness) : "")
+          : "";
+      return '<article class="phoenix-reset-saved-card">' +
+        '<button class="phoenix-reset-saved-media" type="button" data-saved-open="' + escapeAttr(key) + '" aria-label="' + escapeAttr(uiText("مشاهده جزئیات")) + '">' + media + '<span class="phoenix-reset-saved-kind">' + kindLabel + '</span></button>' +
+        '<div class="phoenix-reset-saved-card-body"><div class="phoenix-reset-saved-card-kicker">' + kindLabel + (locationLabel ? ' · ' + escapeHtml(locationLabel) : '') + '</div>' +
+          '<h2>' + escapeHtml(title) + '</h2>' + (description ? '<p>' + escapeHtml(description) + '</p>' : '') +
+          '<div class="phoenix-reset-saved-card-price">' + escapeHtml(price) + '</div>' +
+          '<div class="phoenix-reset-saved-card-actions">' +
+            '<button class="button button-primary" type="button" data-saved-open="' + escapeAttr(key) + '">' + uiText("مشاهده جزئیات") + '</button>' +
+            (routePath ? '<button class="button button-ghost" type="button" data-saved-route="' + escapeAttr(routePath) + '">' + (kind === "service" ? uiText("بررسی رزرو") : uiText("مشاهده فروشنده")) + '</button>' : '') +
+            compareButton +
+            '<button class="button button-ghost" type="button" data-saved-remove="' + escapeAttr(key) + '">' + uiText("حذف از ذخیره‌شده‌ها") + '</button>' +
+          '</div></div></article>';
     }).join("");
 
-    grid.querySelectorAll<HTMLButtonElement>("[data-saved-compare]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.dataset.savedCompare;
-        const target = defaultSavedItems.find((i) => i.id === id);
-        if (target) {
-          const raw = localStorage.getItem("phoenix-compare-items");
-          const existing: DiscoveryResult[] = raw ? JSON.parse(raw) : [];
-          if (!existing.some((e) => e.id === target.id)) {
-            existing.push(target);
-            localStorage.setItem("phoenix-compare-items", JSON.stringify(existing));
-            showToast("به میز مقایسه اضافه شد.");
-          } else {
-            showToast("این مورد قبلاً به مقایسه اضافه شده است.");
-          }
-        }
+    grid.querySelectorAll<HTMLButtonElement>("[data-saved-open]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.savedOpen ?? "";
+        const item = savedItems.find((entry) => (entry.id ?? entry.sourceId ?? "") === key);
+        if (item) openDiscoveryResultPanel(item);
       });
     });
-
-    grid.querySelectorAll<HTMLButtonElement>("[data-saved-remove]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.dataset.savedRemove;
-        const idx = defaultSavedItems.findIndex((i) => i.id === id);
-        if (idx >= 0) defaultSavedItems.splice(idx, 1);
-        showToast("از ذخیره‌شده‌ها برداشته شد.");
-        renderGrid();
+    grid.querySelectorAll<HTMLButtonElement>("[data-saved-route]").forEach((button) => {
+      button.addEventListener("click", () => navigate(button.dataset.savedRoute ?? "/discover"));
+    });
+    grid.querySelectorAll<HTMLButtonElement>("[data-saved-compare]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.savedCompare ?? "";
+        const item = savedItems.find((entry) => (entry.id ?? entry.sourceId ?? "") === key);
+        if (!item) return;
+        const alreadySelected = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key);
+        if (!alreadySelected) toggleCompare(item);
+        const selected = getCompareItems().length;
+        if (selected >= 2) navigate("/compare");
+        else showToast(uiText("یک کالای دیگر هم برای مقایسه انتخاب کن."));
+      });
+    });
+    grid.querySelectorAll<HTMLButtonElement>("[data-saved-remove]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const key = button.dataset.savedRemove ?? "";
+        const item = savedItems.find((entry) => (entry.id ?? entry.sourceId ?? "") === key);
+        if (!item) return;
+        button.disabled = true;
+        try {
+          await removeSavedItem(item);
+          savedItems = getShortlist();
+          renderGrid();
+          showToast(uiText("از ذخیره‌شده‌ها برداشته شد."));
+        } catch (error) {
+          button.disabled = false;
+          showToast(error instanceof Error ? error.message : uiText("حذف از ذخیره‌شده‌ها ممکن نشد."));
+        }
       });
     });
   };
 
-  tabButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      tabButtons.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentCategory = btn.dataset.savedFilter ?? "all";
-      renderGrid();
-    });
+  tabButtons.forEach((button) => button.addEventListener("click", () => {
+    currentCategory = button.dataset.savedFilter ?? "all";
+    renderGrid();
+  }));
+
+  clearBtn?.addEventListener("click", async () => {
+    if (!savedItems.length || clearBtn.disabled) return;
+    clearBtn.disabled = true;
+    const failed: DiscoveryResult[] = [];
+    if (sessionStorage.getItem(STORAGE.accessToken)) await loadSocialState();
+    for (const item of savedItems) {
+      try {
+        await removeSavedItem(item);
+      } catch {
+        failed.push(item);
+      }
+    }
+    savedItems = failed;
+    saveShortlist(failed);
+    renderGrid();
+    showToast(uiText(failed.length ? "بعضی موارد حذف نشدند؛ دوباره تلاش کن." : "فهرست ذخیره‌شده‌ها پاک شد."));
   });
 
-  if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      defaultSavedItems.length = 0;
-      showToast("همه موارد ذخیره‌شده پاکسازی شدند.");
+  const token = sessionStorage.getItem(STORAGE.accessToken);
+  if (token) {
+    void loadSocialState().finally(() => {
+      savedItems = getShortlist();
       renderGrid();
     });
+  } else {
+    renderGrid();
   }
-
-  renderGrid();
 }
 
 /* =========================================================================
@@ -5220,24 +5253,26 @@ function toggleShortlist(item: DiscoveryResult): void {
     showToast("این نتیجه شناسه قابل نگهداری ندارد.");
     return;
   }
+  const exists = getShortlist().some((entry) => (entry.id ?? entry.sourceId) === key);
+  setShortlistItem(item, !exists);
+}
+
+function setShortlistItem(item: DiscoveryResult, shouldBeSaved: boolean): void {
+  const key = item.id ?? item.sourceId ?? "";
+  if (!key) return;
   const current = getShortlist();
-  const exists = current.some((entry) => (entry.id ?? entry.sourceId) === key);
-  saveShortlist(exists ? current.filter((entry) => (entry.id ?? entry.sourceId) !== key) : [...current, item]);
+  const withoutItem = current.filter((entry) => (entry.id ?? entry.sourceId) !== key);
+  saveShortlist(shouldBeSaved ? [...withoutItem, item] : withoutItem);
 }
 
 function renderShortlist(): void {
   const count = getShortlist().length;
   document.querySelectorAll<HTMLElement>("#shortlist-count").forEach((node) => {
-    node.textContent = String(count);
+    node.textContent = formatLocalizedNumber(count);
   });
   document.querySelectorAll<HTMLElement>("[data-shortlist-count]").forEach((node) => {
-    node.textContent = String(count);
+    node.textContent = formatLocalizedNumber(count);
   });
-  if (activeDiscoveryItems.length) {
-    const host = document.querySelector<HTMLElement>("#discovery-results");
-    if (host) host.innerHTML = renderSocialPosts(activeDiscoveryItems);
-    bindDiscoveryResultEvents();
-  }
 }
 
 function _renderResultCards(items: DiscoveryResult[]): string {
@@ -6799,7 +6834,11 @@ function bindDiscoveryResultEvents(): void {
         let active = false;
         if (button.dataset.follow !== undefined) active = await persistSocialFollow(item);
         else if (button.dataset.like !== undefined) active = await persistSocialAction("like", item);
-        else if (button.dataset.save !== undefined) active = await persistSocialAction("save", item);
+        else if (button.dataset.save !== undefined) {
+          active = await persistSocialAction("save", item);
+          setShortlistItem(item, active);
+          renderShortlist();
+        }
         else if (button.dataset.share !== undefined) {
           await shareSocialItem(item);
           active = true;
