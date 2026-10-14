@@ -4898,11 +4898,11 @@ function renderSocialHeader(active: "feed" | "following" | "explore" | "activity
 
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
     '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
-    '<nav class="phoenix-social-tabs" aria-label="ناوبری اجتماعی">' +
-    '<a href="/" data-nav class="' + (active === "feed" ? "active" : "") + '">برای تو</a>' +
-    '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">دنبال‌شده‌ها</a>' +
-    '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a>' +
-    '<a href="/activity" data-nav class="' + (active === "activity" ? "active" : "") + '">فعالیت</a>' +
+    '<nav class="phoenix-social-tabs" aria-label="' + escapeAttr(socialCommerceUi("mobileNavigation")) + '">' +
+    '<a href="/" data-nav class="' + (active === "feed" ? "active" : "") + '">' + socialCommerceUi("tabForYou") + '</a>' +
+    '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">' + socialCommerceUi("tabFollowing") + '</a>' +
+    '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">' + socialCommerceUi("tabExplore") + '</a>' +
+    '<a href="/activity" data-nav class="' + (active === "activity" ? "active" : "") + '">' + localizedUi("فعالیت") + '</a>' +
     '<button type="button" class="phoenix-nav-link-register" data-open-register aria-label="' + uiText("ثبت‌نام") + '">✦ ' + uiText("ثبت‌نام") + '</button>' +
     '</nav>' +
     '<div class="phoenix-social-actions">' +
