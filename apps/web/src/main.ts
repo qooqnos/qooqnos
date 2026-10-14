@@ -5027,7 +5027,7 @@ async function shareSocialItem(item: DiscoveryResult): Promise<void> {
     : type === "service" && id
       ? new URL("/booking?offering=" + encodeURIComponent(id) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : ""), location.origin).toString()
       : id
-        ? new URL("/checkout?product=" + encodeURIComponent(id), location.origin).toString()
+        ? new URL("/discover?" + new URLSearchParams({ q: title }).toString(), location.origin).toString()
         : location.href;
   const payload = { title, text: "این گزینه را در ققنوس ببین.", url };
   try {
