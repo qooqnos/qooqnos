@@ -255,12 +255,88 @@ async function persistSocialFollow(item: DiscoveryResult): Promise<boolean> {
   return true;
 }
 
-async function persistSocialComment(item: DiscoveryResult): Promise<void> {
+function requestSocialComment(item: DiscoveryResult): Promise<string | null> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "phoenix-social-comment-backdrop";
+    const offerTitle = item.title ?? item.displayName ?? item.name ?? socialCommerceUi("feedTitle");
+    overlay.innerHTML =
+      '<section class="phoenix-social-comment-dialog" role="dialog" aria-modal="true" aria-labelledby="phoenix-social-comment-title" aria-describedby="phoenix-social-comment-description">' +
+        '<header class="phoenix-social-comment-head">' +
+          '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("eyebrow") + '</span><h2 id="phoenix-social-comment-title">' + socialCommerceUi("commentDialogTitle") + '</h2></div>' +
+          '<button type="button" class="phoenix-social-comment-close" data-cancel-social-comment aria-label="' + escapeAttr(socialCommerceUi("commentDialogCancel")) + '">×</button>' +
+        '</header>' +
+        '<p id="phoenix-social-comment-description">' + socialCommerceUi("commentDialogDescription") + '</p>' +
+        '<div class="phoenix-social-comment-offer">' + escapeHtml(offerTitle) + '</div>' +
+        '<label for="phoenix-social-comment-body">' + discoveryUi("comment") + '</label>' +
+        '<textarea id="phoenix-social-comment-body" rows="4" maxlength="2000" placeholder="' + escapeAttr(socialCommerceUi("commentDialogPlaceholder")) + '"></textarea>' +
+        '<p class="phoenix-social-comment-error" id="phoenix-social-comment-error" aria-live="polite"></p>' +
+        '<footer class="phoenix-social-comment-actions">' +
+          '<button type="button" class="button button-ghost" data-cancel-social-comment>' + socialCommerceUi("commentDialogCancel") + '</button>' +
+          '<button type="button" class="button button-primary" data-submit-social-comment>' + socialCommerceUi("commentDialogSubmit") + '</button>' +
+        '</footer>' +
+      '</section>';
+    document.body.appendChild(overlay);
+
+    const textarea = overlay.querySelector<HTMLTextAreaElement>("#phoenix-social-comment-body");
+    const error = overlay.querySelector<HTMLElement>("#phoenix-social-comment-error");
+    const submit = overlay.querySelector<HTMLButtonElement>("[data-submit-social-comment]");
+    let settled = false;
+    const finish = (value: string | null): void => {
+      if (settled) return;
+      settled = true;
+      document.removeEventListener("keydown", onDocumentKeydown);
+      overlay.remove();
+      resolve(value);
+    };
+    const cancel = (): void => finish(null);
+    const onDocumentKeydown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancel();
+      }
+    };
+
+    overlay.querySelectorAll<HTMLButtonElement>("[data-cancel-social-comment]").forEach((button) =>
+      button.addEventListener("click", cancel),
+    );
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) cancel();
+    });
+    const submitComment = (): void => {
+      const body = textarea?.value.trim() ?? "";
+      if (!body) {
+        if (error) error.textContent = socialCommerceUi("commentDialogRequired");
+        textarea?.focus();
+        return;
+      }
+      finish(body);
+    };
+    submit?.addEventListener("click", submitComment);
+    textarea?.addEventListener("input", () => {
+      if (error) error.textContent = "";
+    });
+    textarea?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        submitComment();
+      }
+    });
+    document.addEventListener("keydown", onDocumentKeydown);
+    window.requestAnimationFrame(() => textarea?.focus());
+  });
+}
+
+async function persistSocialComment(item: DiscoveryResult): Promise<boolean> {
   const target = socialTarget(item);
   if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
-  const body = window.prompt("نظر شما چیست؟", "");
-  if (!body?.trim()) return;
-  await apiJson("/api/v1/social/comments", { method: "POST", body: { ...target, body: body.trim(), idempotencyKey: crypto.randomUUID() } });
+  const body = await requestSocialComment(item);
+  if (!body) return false;
+  await apiJson("/api/v1/social/comments", {
+    method: "POST",
+    body: { ...target, body, idempotencyKey: crypto.randomUUID() },
+  });
+  return true;
 }
 
 type PublicSeoHydration = {
@@ -6867,12 +6943,11 @@ function bindDiscoveryResultEvents(): void {
           else if (type === "business") navigate("/businesses/" + encodeURIComponent(id));
           else openDiscoveryResultPanel(item);
           active = true;
-        } else {
-          await persistSocialComment(item);
-          active = true;
+        } else if (button.dataset.comment !== undefined) {
+          active = await persistSocialComment(item);
         }
         if (button.dataset.comment !== undefined) {
-          if (active) showToast("نظر برای moderation ثبت شد.");
+          if (active) showToast(socialCommerceUi("commentSent"));
         } else if (button.dataset.share === undefined && button.dataset.openView === undefined) {
           showToast(active ? "تعامل اجتماعی ثبت شد." : "تعامل اجتماعی برداشته شد.");
           refreshSocialFeed();
