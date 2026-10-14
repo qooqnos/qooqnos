@@ -1708,6 +1708,13 @@
     "savedRemoveFailedToast": "تعذرت إزالة هذا العنصر المحفوظ.",
     "savedClearFailedToast": "تعذرت إزالة بعض العناصر. حاول مرة أخرى.",
     "savedClearedToast": "تم مسح العناصر المحفوظة.",
-    "compareAddHint": "اختر منتجاً آخر للمقارنة."
+    "compareAddHint": "اختر منتجاً آخر للمقارنة.",
+    "commentDialogTitle": "اكتب تعليقًا",
+    "commentDialogDescription": "ستتم مراجعة تعليقك قبل ظهوره. تجنّب تضمين بيانات شخصية أو معلومات اتصال.",
+    "commentDialogPlaceholder": "ما رأيك في هذا المنتج أو الخدمة؟",
+    "commentDialogCancel": "إلغاء",
+    "commentDialogSubmit": "إرسال التعليق",
+    "commentDialogRequired": "اكتب تعليقًا قبل الإرسال.",
+    "commentSent": "تم إرسال تعليقك للمراجعة."
   }
 }
