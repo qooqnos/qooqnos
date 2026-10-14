@@ -5397,12 +5397,39 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
     renderCompareTray();
     showToast(uiText(wasSelected ? "از مقایسه حذف شد." : "به مقایسه اضافه شد."));
   });
-  overlay.querySelector<HTMLButtonElement>("[data-save-detail]")?.addEventListener("click", () => {
-    const wasSaved = getShortlist().some((entry) => (entry.id ?? entry.sourceId) === key);
-    toggleShortlist(item);
-    renderShortlist();
-    showToast(uiText(wasSaved ? "از ذخیره‌شده‌ها حذف شد." : "به ذخیره‌شده‌ها اضافه شد."));
-  });
+  const saveDetailButton = overlay.querySelector<HTMLButtonElement>("[data-save-detail]");
+  if (saveDetailButton) {
+    const isSaved = (): boolean =>
+      getShortlist().some((entry) => (entry.id ?? entry.sourceId) === key) || isSocialActive("save", item);
+    const updateSaveButton = (): void => {
+      const active = isSaved();
+      saveDetailButton.innerHTML = (active ? "★ " : "☆ ") + uiText("ذخیره");
+      saveDetailButton.setAttribute("aria-pressed", String(active));
+    };
+    updateSaveButton();
+    saveDetailButton.addEventListener("click", async () => {
+      const signedIn = Boolean(sessionStorage.getItem(STORAGE.accessToken));
+      saveDetailButton.disabled = true;
+      try {
+        let active: boolean;
+        if (signedIn) {
+          await loadSocialState();
+          active = await persistSocialAction("save", item);
+        } else {
+          active = !getShortlist().some((entry) => (entry.id ?? entry.sourceId) === key);
+        }
+        setShortlistItem(item, active);
+        updateSaveButton();
+        renderShortlist();
+        refreshSocialFeed();
+        showToast(uiText(active ? "به ذخیره‌شده‌ها اضافه شد." : "از ذخیره‌شده‌ها حذف شد."));
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : uiText("ذخیره‌کردن این مورد ممکن نشد."));
+      } finally {
+        saveDetailButton.disabled = false;
+      }
+    });
+  }
   overlay.querySelector<HTMLButtonElement>("[data-share-detail]")?.addEventListener("click", () => {
     void shareSocialItem(item);
   });
