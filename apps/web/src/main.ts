@@ -5259,113 +5259,110 @@ function _renderResultCards(items: DiscoveryResult[]): string {
 }
 
 function openDiscoveryResultPanel(item: DiscoveryResult): void {
-  const title = item.title ?? item.displayName ?? item.name ?? uiText("مورد ققنوس");
-  const body = item.body ?? item.description ?? uiText("اطلاعات این مورد از عرضه canonical ققنوس خوانده شده است.");
+  const title = item.title ?? item.displayName ?? item.name ?? uiText("عرض ققنوس");
+  const description = item.description ?? item.body ?? "";
   const sourceType = item.sourceType ?? String(item.metadata?.offeringType ?? "product");
   const isService = sourceType === "service";
   const isBusiness = sourceType === "business";
   const isProduct = !isService && !isBusiness;
   const key = item.id ?? item.sourceId ?? "";
   const priceFormatted = item.price !== undefined && item.price !== null
-    ? formatLocalizedNumber(Number(item.price)) + " " + (item.currency ?? "ریال")
-    : uiText("استعلام قیمت / توافقی");
+    ? formatLocalizedNumber(Number(item.price)) + (item.currency ? " " + item.currency : "")
+    : uiText("استعلام قیمت");
   const locality = item.locality ?? item.city ?? "";
   const ratingText = item.rating !== undefined && item.rating !== null
     ? "★ " + formatLocalizedNumber(Number(item.rating))
     : "";
-  const metadataEntries = Object.entries(item.metadata ?? {}).filter(([k]) => !["businessId", "offeringType", "businessName"].includes(k)).slice(0, 8);
-  const businessId = String(item.metadata?.businessId ?? (isBusiness ? key : ""));
-  const businessName = String(item.metadata?.businessName ?? (isBusiness ? title : uiText("فروشنده")));
+  const businessId = typeof item.metadata?.businessId === "string" ? item.metadata.businessId : "";
+  const businessName = typeof item.metadata?.businessName === "string" && item.metadata.businessName.trim()
+    ? item.metadata.businessName
+    : isBusiness ? title : uiText("نام فروشنده در اطلاعات این عرضه ثبت نشده است");
+  const typeLabel = isService ? uiText("خدمت") : isBusiness ? uiText("کسب‌وکار") : uiText("کالا");
+  const verified = item.metadata?.verified === true || item.metadata?.verificationStatus === "verified";
+  const visibleFields: Array<[string, string]> = [
+    ["brand", "برند"], ["model", "مدل"], ["color", "رنگ"], ["size", "اندازه"],
+    ["material", "جنس"], ["weight", "وزن"], ["dimensions", "ابعاد"], ["warranty", "گارانتی"],
+    ["condition", "وضعیت کالا"], ["availability", "موجودی"], ["stockStatus", "وضعیت موجودی"],
+    ["variant", "گونه"], ["deliveryMethod", "روش تحویل"], ["format", "قالب دیجیتال"],
+  ];
+  const displayMetadataValue = (value: unknown): string => {
+    if (value === null || value === undefined || value === "") return "";
+    if (typeof value === "object") return Array.isArray(value) ? value.map(String).join("، ") : "";
+    if (typeof value === "boolean") return value ? uiText("بله") : uiText("خیر");
+    return String(value);
+  };
+  const metadataEntries = visibleFields
+    .map(([keyName, label]) => [label, displayMetadataValue(item.metadata?.[keyName])] as [string, string])
+    .filter((entry) => Boolean(entry[1]));
+  const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ??
+    item.metadata?.thumbnailUrl ?? (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
+  const mediaUrl = typeof mediaCandidate === "string" &&
+    (mediaCandidate.startsWith("/") || /^https?:\/\//i.test(mediaCandidate))
+    ? mediaCandidate : "";
+  const mediaHtml = mediaUrl
+    ? '<img class="phoenix-detail-media-image" src="' + escapeAttr(mediaUrl) + '" alt="' + escapeAttr(title) + '" />'
+    : '<div class="phoenix-detail-media-placeholder"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + uiText("تصویر این عرضه ثبت نشده است") + '</span></div>';
+  const bookingQuery = new URLSearchParams({ offering: key });
+  if (businessId) bookingQuery.set("business", businessId);
+  const mainAction = isService
+    ? '<a class="button button-primary" href="/booking?' + bookingQuery.toString() + '" data-nav>' + uiText("بررسی زمان‌های رزرو") + ' <span aria-hidden="true">←</span></a>'
+    : isBusiness
+      ? '<a class="button button-primary" href="/businesses/' + encodeURIComponent(key) + '" data-nav>' + uiText("مشاهده پروفایل کسب‌وکار") + ' <span aria-hidden="true">←</span></a>'
+      : businessId
+        ? '<a class="button button-primary" href="/businesses/' + encodeURIComponent(businessId) + '" data-nav>' + uiText("شناخت فروشنده") + ' <span aria-hidden="true">←</span></a>'
+        : '<span class="phoenix-detail-contact-note">' + uiText("اطلاعات عمومی فروشنده در این عرضه موجود نیست.") + '</span>';
 
   const overlay = document.createElement("div");
-  overlay.className = "connection-overlay";
+  overlay.className = "connection-overlay phoenix-detail-overlay";
   overlay.innerHTML = `
     <div class="connection-backdrop" data-close-discovery></div>
     <section class="connection-modal glass-card phoenix-detail-modal" role="dialog" aria-modal="true" aria-labelledby="discovery-detail-title">
       <button class="connection-close" type="button" data-close-discovery aria-label="${escapeAttr(uiText("بستن"))}">×</button>
-      
-      <div class="detail-badge-strip">
-        <span class="pill ${isService ? "warning" : isProduct ? "success" : ""}">
-          ${isService ? "✦ " + uiText("خدمت تخصصی") : isBusiness ? "◉ " + uiText("کسب‌وکار معتبر") : "▦ " + uiText("محصول")}
-        </span>
-        ${ratingText ? '<span class="saved-card-rating">' + escapeHtml(ratingText) + '</span>' : ""}
-        ${item.metadata?.verified === true || item.metadata?.verificationStatus === "verified" ? '<span class="pill success">✓ ' + uiText("تأییدشده") + '</span>' : ""}
-      </div>
-
-      <h2 id="discovery-detail-title">${escapeHtml(title)}</h2>
-      <p style="margin: 0; color: var(--muted); line-height: 1.7;">${escapeHtml(body)}</p>
-
-      <div class="detail-meta-strip">
-        <div><span>${uiText("تعرفه / قیمت")}</span><strong>${escapeHtml(priceFormatted)}</strong></div>
-        ${locality ? '<div><span>' + uiText("موقعیت مکانی") + '</span><strong>📍 ' + escapeHtml(locality) + '</strong></div>' : ""}
-        <div><span>${uiText("ارائه‌دهنده")}</span><strong>${escapeHtml(businessName)}</strong></div>
-      </div>
-
-      ${metadataEntries.length ? `
-        <div class="metadata-cloud" style="margin: 4px 0 10px;">
-          ${metadataEntries.map(([k, v]) => `<span><b>${escapeHtml(k)}:</b> ${escapeHtml(String(v))}</span>`).join("")}
+      <div class="phoenix-detail-layout">
+        <div class="phoenix-detail-media" aria-label="${escapeAttr(uiText("تصویر عرضه"))}">
+          ${mediaHtml}
+          <span class="phoenix-detail-type-badge">${escapeHtml(typeLabel)}</span>
         </div>
-      ` : ""}
-
-      <div class="detail-actions-row">
-        ${isService ? `
-          <a class="button button-primary" href="/booking?business=${encodeURIComponent(businessId)}&offering=${encodeURIComponent(key)}" data-nav>
-            ${uiText("رزرو وقت آنلاین")} ◷
-          </a>
-          <a class="button button-ghost" href="/messages" data-nav>
-            ${uiText("ارسال پیام")} ✉
-          </a>
-        ` : isBusiness ? `
-          <a class="button button-primary" href="/businesses/${encodeURIComponent(key)}" data-nav>
-            ${uiText("مشاهده پروفایل کامل کسب‌وکار")} 🏢
-          </a>
-          <button class="button button-ghost" type="button" data-follow-detail="${escapeAttr(key)}">
-            ${uiText("دنبال کردن")}
-          </button>
-        ` : `
-          <a class="button button-primary" href="/messages" data-nav>
-            ${uiText("پرسش از فروشنده")} ↗
-          </a>
-          <button class="button button-ghost" type="button" data-compare-detail="${escapeAttr(key)}">
-            ${uiText("افزودن به مقایسه")} ⚖
-          </button>
-        `}
-
-        <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}">
-          ★ ${uiText("ذخیره")}
-        </button>
-        <button class="button button-ghost" type="button" data-share-detail="${escapeAttr(key)}">
-          ↗ ${uiText("اشتراک")}
-        </button>
-        <button class="button button-ghost" type="button" data-close-discovery>
-          ${uiText("بستن")}
-        </button>
+        <div class="phoenix-detail-content">
+          <div class="phoenix-detail-badges">
+            <span class="phoenix-detail-type-label">${escapeHtml(typeLabel)}</span>
+            ${ratingText ? '<span class="phoenix-detail-rating">' + escapeHtml(ratingText) + '</span>' : ""}
+            ${verified ? '<span class="phoenix-detail-verified">✓ ' + uiText("تأییدشده") + '</span>' : ""}
+          </div>
+          <h2 id="discovery-detail-title">${escapeHtml(title)}</h2>
+          ${description ? '<p class="phoenix-detail-description">' + escapeHtml(description) + '</p>' : ""}
+          <div class="phoenix-detail-price-block"><span>${uiText("قیمت")}</span><strong>${escapeHtml(priceFormatted)}</strong></div>
+          <div class="phoenix-detail-seller">
+            <span class="phoenix-detail-seller-avatar" aria-hidden="true">◉</span>
+            <div><small>${uiText("ارائه‌دهنده")}</small><strong>${escapeHtml(businessName)}</strong>${locality ? '<span>' + escapeHtml(locality) + '</span>' : ""}</div>
+          </div>
+          ${metadataEntries.length ? '<section class="phoenix-detail-attributes"><h3>' + uiText("مشخصات ثبت‌شده") + '</h3><dl>' + metadataEntries.map(([label, value]) => '<div><dt>' + escapeHtml(uiText(label)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>').join("") + '</dl></section>' : ""}
+          <div class="phoenix-detail-actions">
+            ${mainAction}
+            ${isProduct ? '<button class="button button-ghost" type="button" data-compare-detail="' + escapeAttr(key) + '">⚖ ' + uiText("مقایسه") + '</button>' : ""}
+            <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}">☆ ${uiText("ذخیره")}</button>
+            <button class="button button-ghost" type="button" data-share-detail="${escapeAttr(key)}">↗ ${uiText("اشتراک‌گذاری")}</button>
+          </div>
+        </div>
       </div>
     </section>`;
 
   document.body.appendChild(overlay);
   overlay.querySelectorAll<HTMLElement>("[data-close-discovery]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
-
   overlay.querySelector<HTMLButtonElement>("[data-compare-detail]")?.addEventListener("click", () => {
+    const wasSelected = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key);
     toggleCompare(item);
     renderCompareTray();
-    showToast(uiText("به مقایسه اضافه شد."));
+    showToast(uiText(wasSelected ? "از مقایسه حذف شد." : "به مقایسه اضافه شد."));
   });
-
   overlay.querySelector<HTMLButtonElement>("[data-save-detail]")?.addEventListener("click", () => {
+    const wasSaved = getShortlist().some((entry) => (entry.id ?? entry.sourceId) === key);
     toggleShortlist(item);
     renderShortlist();
-    showToast(uiText("در ذخیره‌شده‌ها قرار گرفت."));
+    showToast(uiText(wasSaved ? "از ذخیره‌شده‌ها حذف شد." : "به ذخیره‌شده‌ها اضافه شد."));
   });
-
   overlay.querySelector<HTMLButtonElement>("[data-share-detail]")?.addEventListener("click", () => {
     void shareSocialItem(item);
-  });
-
-  overlay.querySelector<HTMLButtonElement>("[data-follow-detail]")?.addEventListener("click", () => {
-    void persistSocialFollow(item).then((followed) => {
-      showToast(followed ? uiText("دنبال شد.") : uiText("لغو دنبال کردن انجام شد."));
-    });
   });
 }
 

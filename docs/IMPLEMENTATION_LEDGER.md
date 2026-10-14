@@ -2931,3 +2931,10 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 
 - Unified the visual treatment of data-backed Orders and Saved pages with the new social feed: softer headers, quieter selected filters, card hierarchy, mobile-first filter scrolling and more consistent spacing.
 - Existing canonical order/saved data handlers remain in place; this pass changes layout and tokens, not the business rules or state source.
+
+
+## 2026-10-14 — Offer detail decision panel
+
+- The detail overlay is now media-led and uses only real image, price, rating, location, verification, seller and recognized product-attribute fields when those fields are present.
+- Removed generic “verified business” assumptions, invented default currency, and arbitrary metadata rendering; products without a seller reference no longer offer a misleading direct message path.
+- Comparison and saved-item toast messages now reflect whether an item was added or removed.
