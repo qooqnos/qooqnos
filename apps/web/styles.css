@@ -11836,3 +11836,173 @@ button[aria-busy="true"] .btn-spinner {
     animation: none;
   }
 }
+
+
+/* Checkout review — never imply a payment/order succeeded before canonical confirmation. */
+.phoenix-checkout-review .phoenix-screen-content {
+  gap: 16px;
+}
+.phoenix-checkout-review-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  padding: clamp(22px, 4vw, 30px);
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--line));
+  border-radius: 23px;
+  background:
+    radial-gradient(circle at 6% 0%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 16rem),
+    linear-gradient(135deg, var(--surface), color-mix(in srgb, var(--surface-2) 45%, var(--surface)));
+}
+.phoenix-checkout-review-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 11%, var(--surface));
+  font-size: 22px;
+}
+.phoenix-checkout-review-hero h2 {
+  margin: 0;
+  font-size: clamp(20px, 3vw, 27px);
+  line-height: 1.55;
+  font-weight: 850;
+  color: var(--text);
+}
+.phoenix-checkout-review-hero p {
+  margin: 0;
+  max-width: 680px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 2;
+}
+.phoenix-checkout-local-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  min-width: 0;
+  padding: clamp(17px, 3vw, 23px);
+  border: 1px solid var(--line);
+  border-radius: 21px;
+  background: var(--surface);
+}
+.phoenix-checkout-local-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.phoenix-checkout-local-preview-head h2 {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 850;
+}
+.phoenix-checkout-edit-link {
+  color: var(--primary-strong);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.phoenix-checkout-preview-note {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  color: var(--muted);
+  background: var(--bg);
+  font-size: 11px;
+  line-height: 1.9;
+}
+.phoenix-checkout-review-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.phoenix-checkout-review-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+.phoenix-checkout-review-item:last-child { border-bottom: 0; }
+.phoenix-checkout-review-item-icon {
+  display: grid;
+  place-items: center;
+  width: 39px;
+  height: 39px;
+  border-radius: 12px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface));
+}
+.phoenix-checkout-review-item-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.phoenix-checkout-review-item-copy strong {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.phoenix-checkout-review-item-copy small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.phoenix-checkout-review-item-total {
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: end;
+  white-space: nowrap;
+}
+.phoenix-checkout-review-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+.phoenix-checkout-review-total strong {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 900;
+}
+.phoenix-checkout-review-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 12px;
+  color: var(--muted);
+  text-align: center;
+}
+.phoenix-checkout-review-empty > span { font-size: 34px; }
+.phoenix-checkout-review-empty p { margin: 0; font-size: 12px; }
+.phoenix-checkout-review-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.phoenix-checkout-review-actions .button {
+  min-height: 45px;
+  justify-content: center;
+  border-radius: 13px;
+  text-align: center;
+}
+@media (max-width: 560px) {
+  .phoenix-checkout-review .phoenix-screen-content { gap: 12px; }
+  .phoenix-checkout-review-hero { border-radius: 19px; }
+  .phoenix-checkout-review-item { grid-template-columns: auto minmax(0, 1fr); }
+  .phoenix-checkout-review-item-total { grid-column: 2; text-align: start; }
+  .phoenix-checkout-review-actions { grid-template-columns: minmax(0, 1fr); }
+}
