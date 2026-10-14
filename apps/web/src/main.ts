@@ -223,7 +223,7 @@ function socialActivityLabel(eventType: string): string {
 
 async function persistSocialAction(action: "like" | "save", item: DiscoveryResult): Promise<boolean> {
   const target = socialTarget(item);
-  if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
+  if (!target) throw new Error(socialCommerceUi("commentTargetMissing"));
   const key = action + ":" + socialKey(target.targetType, target.targetId);
   const existingId = socialState.engagements.get(key) ?? socialActionIds.get(key);
   if (existingId) {
@@ -240,7 +240,7 @@ async function persistSocialAction(action: "like" | "save", item: DiscoveryResul
 
 async function persistSocialFollow(item: DiscoveryResult): Promise<boolean> {
   const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : item.sourceType === "business" ? item.sourceId ?? item.id : undefined;
-  if (!businessId) throw new Error("شناسه کسب‌وکار این محتوا هنوز canonical نشده است.");
+  if (!businessId) throw new Error(socialCommerceUi("followTargetMissing"));
   const key = socialKey("business", businessId);
   const existingId = socialState.follows.get(key) ?? socialActionIds.get("follow:" + key);
   if (existingId) {
@@ -329,7 +329,7 @@ function requestSocialComment(item: DiscoveryResult): Promise<string | null> {
 
 async function persistSocialComment(item: DiscoveryResult): Promise<boolean> {
   const target = socialTarget(item);
-  if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
+  if (!target) throw new Error(socialCommerceUi("socialActionUnavailable"));
   const body = await requestSocialComment(item);
   if (!body) return false;
   await apiJson("/api/v1/social/comments", {
@@ -5003,13 +5003,13 @@ function saveCompareItems(items: DiscoveryResult[]): void {
 }
 
 function toggleCompare(item: DiscoveryResult): void {
-  if (!isComparableProduct(item)) { showToast("فقط محصولات قابل مقایسه هستند."); return; }
+  if (!isComparableProduct(item)) { showToast(socialCommerceUi("compareProductsOnly")); return; }
   const key = item.id ?? item.sourceId ?? "";
   const current = getCompareItems();
   const exists = current.some((entry) => (entry.id ?? entry.sourceId) === key);
   if (exists) saveCompareItems(current.filter((entry) => (entry.id ?? entry.sourceId) !== key));
   else if (current.length < 4) saveCompareItems([...current, item]);
-  else showToast("مقایسه حداکثر ۴ محصول را پشتیبانی می‌کند.");
+  else showToast(socialCommerceUi("compareMaxProducts"));
 }
 
 function toggleCompareByKey(key: string): void {
@@ -5029,30 +5029,30 @@ async function shareSocialItem(item: DiscoveryResult): Promise<void> {
       : id
         ? new URL("/discover?" + new URLSearchParams({ q: title }).toString(), location.origin).toString()
         : location.href;
-  const payload = { title, text: "این گزینه را در ققنوس ببین.", url };
+  const payload = { title, text: socialCommerceUi("sharePromptText"), url };
   try {
     if (navigator.share) {
       await navigator.share(payload);
-      showToast("صفحه برای اشتراک‌گذاری آماده شد.");
+      showToast(socialCommerceUi("shareReady"));
       return;
     }
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(url);
-      showToast("لینک ققنوس کپی شد.");
+      showToast(socialCommerceUi("shareLinkCopied"));
     } else {
-      window.prompt("لینک ققنوس را کپی کنید:", url);
+      window.prompt(socialCommerceUi("copyShareLinkPrompt"), url);
     }
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") return;
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(url);
-        showToast("لینک ققنوس کپی شد.");
+        showToast(socialCommerceUi("shareLinkCopied"));
       } else {
-        window.prompt("لینک ققنوس را کپی کنید:", url);
+        window.prompt(socialCommerceUi("copyShareLinkPrompt"), url);
       }
     } catch {
-      showToast("اشتراک‌گذاری این مورد در مرورگر فعلی ممکن نیست.");
+      showToast(socialCommerceUi("shareUnavailable"));
     }
   }
 }
@@ -5070,13 +5070,13 @@ function renderCompareTray(): void {
   }
   if (items.length < 2) {
     host.innerHTML = items.length === 1
-      ? '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items"><span>' + escapeHtml(items[0]?.title ?? items[0]?.name ?? "محصول") + '</span></div><span class="compare-tray-hint">یک محصول دیگر انتخاب کن.</span></div>'
+      ? '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items"><span>' + escapeHtml(items[0]?.title ?? items[0]?.name ?? "محصول") + '</span></div><span class="compare-tray-hint">' + socialCommerceUi("compareNeedOneMore") + '</span></div>'
       : "";
     return;
   }
   host.innerHTML = '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items">' +
-    items.map((item) => '<span>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '<button type="button" data-remove-compare="' + escapeAttr(item.id ?? item.sourceId ?? "") + '" aria-label="حذف از مقایسه">×</button></span>').join("") +
-    '</div><button class="button button-primary" type="button" data-open-compare>⚖ مقایسه ' + items.length + ' محصول</button></div>';
+    items.map((item) => '<span>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '<button type="button" data-remove-compare="' + escapeAttr(item.id ?? item.sourceId ?? "") + '" aria-label="' + escapeAttr(socialCommerceUi("removeFromCompare")) + '">×</button></span>').join("") +
+    '</div><button class="button button-primary" type="button" data-open-compare>⚖ ' + socialCommerceUi("compareButtonLabel", { count: formatLocalizedNumber(items.length) }) + '</button></div>';
   host.querySelectorAll<HTMLButtonElement>("[data-remove-compare]").forEach((button) => button.addEventListener("click", (event) => {
     event.stopPropagation();
     toggleCompareByKey(button.dataset.removeCompare ?? "");
@@ -6949,7 +6949,7 @@ function bindDiscoveryResultEvents(): void {
         if (button.dataset.comment !== undefined) {
           if (active) showToast(socialCommerceUi("commentSent"));
         } else if (button.dataset.share === undefined && button.dataset.openView === undefined) {
-          showToast(active ? "تعامل اجتماعی ثبت شد." : "تعامل اجتماعی برداشته شد.");
+          showToast(active ? socialCommerceUi("socialActionSaved") : socialCommerceUi("socialActionRemoved"));
           refreshSocialFeed();
         }
       } catch (error) {
