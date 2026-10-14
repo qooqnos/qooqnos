@@ -23,7 +23,22 @@
     "submit": "Submit",
     "and": "and",
     "or": "or",
-    "addProductOrService": "Add a product or service"
+    "addProductOrService": "Add a product or service",
+    "checkoutReview": "Checkout review",
+    "checkoutFinalStep": "Final purchase step",
+    "checkoutNotConnectedTitle": "Secure checkout is not connected yet.",
+    "checkoutNotConnectedBody": "No order will be placed and no payment will be taken until a verified payment provider is connected and confirms the result.",
+    "localCartPreview": "Local cart preview",
+    "selectedCartItems": "Selected items",
+    "editCart": "Edit cart",
+    "localCartDisclaimer": "This screen is only a preview of the local cart. These items are not linked to a placed order.",
+    "estimatedLocalSubtotal": "Estimated local item subtotal",
+    "shippingCalculatedLater": "Shipping is calculated after the order is validated.",
+    "localCartEmpty": "The local cart is empty.",
+    "discoverProductsAndServices": "Discover products and services",
+    "backToCart": "Back to cart",
+    "continueDiscovering": "Continue discovering products and services",
+    "continueToCheckoutReview": "Continue to checkout review"
   },
   "nav": {
     "home": "Home",
