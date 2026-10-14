@@ -6576,9 +6576,9 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
           sourceId: offer.id,
           sourceType: offer.offeringType,
           title: offer.title,
-          description: offer.description,
-          price: price ?? undefined,
-          currency: offer.currency ?? undefined,
+          ...(offer.description !== null ? { description: offer.description } : {}),
+          ...(price !== null ? { price } : {}),
+          ...(offer.currency ? { currency: offer.currency } : {}),
           metadata: {
             businessId,
             businessName: profile.displayName || profile.name,
