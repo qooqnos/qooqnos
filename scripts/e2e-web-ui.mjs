@@ -308,7 +308,7 @@ await page.locator("[data-generate-draft]").click();
 await page.getByText("محصول تست").waitFor();
 await page.locator("[data-confirm-seller-draft]").click();
 await page.getByText("محصول Catalog ساخته شد").waitFor();
-await page.getByText("ساخت Listing").waitFor();
+await page.getByRole("button", { name: "تأیید و افزودن به ویترین" }).waitFor();
 await page.locator("[data-create-seller-offer]").click();
 await page.getByText("Listing ساخته شد").waitFor();
 await page.locator("[data-publish-seller-offer]").click();
