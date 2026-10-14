@@ -2946,3 +2946,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Public seller profiles now use the same social header, desktop shortcuts and mobile navigation as the feed, so opening a seller no longer feels like switching to a separate public microsite.
 - Public profile offers open the factual offer-detail panel instead of linking to a demo checkout. The detail panel receives only the public offer's actual ID, price, currency, title, description and known seller identity.
 - E2E now seeds a public business response, verifies the seller page is within the social shell and checks that offer details do not advertise a checkout action.
+
+
+## 2026-10-14 — Social feed compare threshold, refresh, and served CSS sync
+
+- Separated Saved items and Compare in the feed toolbar; the saved counter remains tied to the saved shortlist, while the comparison counter reflects the selected comparable products.
+- The Compare link is hidden until two or more comparable products are selected. Selecting or removing comparison items refreshes both the tray and toolbar count.
+- The feed refresh action now reloads Discovery results and the currently available social-interaction state, with an accessible busy state.
+- Updated the social-commerce label for saved items across Persian, English and Arabic.
+- Synchronized the social feed, seller workspace and responsive public-business refinements from the authored stylesheet into `apps/web/public/styles.css`, the file actually served by the static web shell.
+- Extended Playwright smoke coverage with two product fixtures and assertions for the compare threshold; verification on the newest branch head is required before calling this complete.
