@@ -27,6 +27,9 @@ const runtimeErrors = [];
 const failedRequests = [];
 const moduleResponses = [];
 const discoveryRequests = [];
+const mockSocialFollows = new Map();
+const mockSocialEngagements = new Map();
+let socialSequence = 0;
 page.on("pageerror", (error) => runtimeErrors.push(String(error.stack || error)));
 page.on("console", (message) => {
   if (message.type() === "error") {
@@ -99,6 +102,56 @@ await page.route("**/api/v1/**", async (route) => {
     "/api/v1/catalog/offers": { data: { id: "offer-1", status: "active", publicationStatus: "unpublished" } },
     "/api/v1/catalog/offers/offer-1/publish": { data: { id: "offer-1", publicationStatus: "pending" } },
   };
+
+  if (path === "/api/v1/social/state" && request.method() === "GET") {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ data: {
+        follows: [...mockSocialFollows.values()],
+        engagements: [...mockSocialEngagements.values()],
+      } }),
+    });
+    return;
+  }
+  if (path === "/api/v1/social/follows" && request.method() === "POST") {
+    const body = request.postDataJSON();
+    const key = String(body.targetType) + ":" + String(body.targetId);
+    const follow = mockSocialFollows.get(key) ?? {
+      id: "follow-" + (++socialSequence),
+      targetType: body.targetType,
+      targetId: body.targetId,
+    };
+    mockSocialFollows.set(key, follow);
+    await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ data: follow }) });
+    return;
+  }
+  if (path.startsWith("/api/v1/social/follows/") && request.method() === "DELETE") {
+    const id = path.split("/").pop();
+    for (const [key, follow] of mockSocialFollows.entries()) if (follow.id === id) mockSocialFollows.delete(key);
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { id, removed: true } }) });
+    return;
+  }
+  if ((path === "/api/v1/social/saves" || path === "/api/v1/social/likes") && request.method() === "POST") {
+    const body = request.postDataJSON();
+    const engagementType = path.endsWith("/likes") ? "like" : "save";
+    const key = engagementType + ":" + String(body.targetType) + ":" + String(body.targetId);
+    const engagement = mockSocialEngagements.get(key) ?? {
+      id: engagementType + "-" + (++socialSequence),
+      targetType: body.targetType,
+      targetId: body.targetId,
+      engagementType,
+    };
+    mockSocialEngagements.set(key, engagement);
+    await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ data: engagement }) });
+    return;
+  }
+  if ((path.startsWith("/api/v1/social/saves/") || path.startsWith("/api/v1/social/likes/")) && request.method() === "DELETE") {
+    const id = path.split("/").pop();
+    for (const [key, engagement] of mockSocialEngagements.entries()) if (engagement.id === id) mockSocialEngagements.delete(key);
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { id, removed: true } }) });
+    return;
+  }
 
   if (path.endsWith("/run") && path.includes("/api/v1/ai/seller/product-creation-sessions/")) {
     await route.fulfill({
@@ -341,8 +394,9 @@ await page.locator('[data-follow="result-product-1"]').click();
 await page.locator('[data-follow="result-product-1"].selected').waitFor();
 await page.locator("[data-discovery-index='0']").click();
 await page.locator(".connection-modal [data-save-detail]").click();
+await page.waitForFunction(() => document.querySelector("#shortlist-count")?.textContent === "۱");
 await page.locator(".connection-modal [data-close-discovery]").first().click();
-assert.equal(await page.locator("#shortlist-count").innerText(), "1");
+assert.equal(await page.locator("#shortlist-count").innerText(), "۱");
 
 await page.goto(baseURL + "/discover?tab=following");
 try {
@@ -352,6 +406,14 @@ try {
   process.stderr.write("Phoenix following-feed diagnostics: " + JSON.stringify({ discoveryRequests, visibleText, runtimeErrors, failedRequests }, null, 2) + "\\n");
   throw error;
 }
+
+await page.goto(baseURL + "/saved");
+await page.getByRole("heading", { name: "ذخیره‌شده‌های تو" }).waitFor();
+await page.getByRole("heading", { name: "موجودیت واقعی تست" }).waitFor();
+assert.ok(!(await page.locator("#saved-items-grid").innerText()).includes("خدمات مشاوره تخصصی کسب‌وکار و رشد"));
+await page.locator('[data-saved-remove="result-1"]').click();
+await page.getByRole("heading", { name: "هنوز چیزی ذخیره نکرده‌ای." }).waitFor();
+assert.equal(await page.locator("#saved-items-count").innerText(), "۰");
 
 await page.goto(baseURL + "/business");
 await page.locator("[data-workspace-toggle]").first().click();
