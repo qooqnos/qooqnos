@@ -2965,3 +2965,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Cancellation and empty input do not send an API request and do not show a success toast. A success toast is shown only after the canonical comment endpoint accepts the comment for moderation.
 - Added Persian, English, and Arabic copy, responsive styles, and browser E2E coverage for validation, cancellation, and successful submission.
 - CI status for this change: see https://github.com/qooqnos/qooqnos/actions/runs/38542506671, https://github.com/qooqnos/qooqnos/actions/runs/38542506610, and https://github.com/qooqnos/qooqnos/actions/runs/38542506684.
+
+
+## 2026-10-14 — Safe product sharing and localized social navigation
+
+- Product share links now return to the canonical discovery surface using the product title as a search query; they no longer point to the unfinished checkout flow.
+- Business shares still open the public business profile, and service shares still open the booking surface.
+- Social header tab labels now use the dedicated social-commerce locale dictionary rather than fixed Persian strings.
+- Added E2E assertions for the shared product URL so the feed cannot silently regress into linking products to checkout before checkout is actually wired and verified.
