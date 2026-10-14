@@ -14,6 +14,16 @@ describe("@qooqnos/i18n", () => {
     expect(translations.ar["ui.tellNeed"]).toBe("أخبر ققنوس بما تحتاج");
   });
 
+  it("keeps checkout-unavailable copy honest and translated", () => {
+    expect(translations.fa["common.checkoutNotConnectedTitle"]).toBe("پرداخت امن هنوز متصل نشده است.");
+    expect(translations.en["common.checkoutNotConnectedTitle"]).toBe("Secure checkout is not connected yet.");
+    expect(translations.ar["common.checkoutNotConnectedTitle"]).toBe("لم يتم ربط الدفع الآمن بعد.");
+    expect(translateUiText("پرداخت امن هنوز متصل نشده است.", "en")).toBe("Secure checkout is not connected yet.");
+    expect(translateUiText("پرداخت امن هنوز متصل نشده است.", "ar")).toBe("لم يتم ربط الدفع الآمن بعد.");
+    expect(translateUiText("مجموع تقریبی اقلام محلی", "en")).toBe("Estimated local item subtotal");
+    expect(translateUiText("مجموع تقریبی اقلام محلی", "ar")).toBe("المجموع التقديري للعناصر المحلية");
+  });
+
   it("translates shared UI text from the canonical dictionary", () => {
     expect(translateUiText("نیازت را بگو", "en")).toBe("Tell Phoenix what you need");
     expect(translations.en["common.addProductOrService"]).toBe("Add a product or service");
