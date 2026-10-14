@@ -1980,16 +1980,16 @@ export function renderConsumerCart(): string {
             </div>
             <div class="phoenix-cart-row">
               <span>${ui("هزینه ارسال")}</span>
-              <span style="color: var(--success); font-weight: 700;">${ui("رایگان")}</span>
+              <span>${ui("هزینهٔ ارسال پس از بررسی سفارش مشخص می‌شود.")}</span>
             </div>
             <div class="phoenix-cart-row phoenix-cart-total">
-              <span>${ui("قابل پرداخت")}</span>
+              <span>${ui("مجموع تقریبی اقلام محلی")}</span>
               <span style="color: var(--primary);">${total.toLocaleString("fa-IR")} ${ui("تومان")}</span>
             </div>
           </div>
 
           <a href="/checkout" data-nav class="phoenix-primary-cta" style="margin-top: 8px;">
-            <span>${ui("پرداخت")}</span>
+            <span>${ui("ادامه به بررسی پرداخت")}</span>
             <span aria-hidden="true">←</span>
           </a>
         `}
@@ -2003,61 +2003,66 @@ export function renderConsumerCart(): string {
  */
 export function renderConsumerPayment(): string {
   const items = getCartItems();
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const estimatedSubtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return `
-    <div class="phoenix-screen-wrapper">
+    <div class="phoenix-screen-wrapper phoenix-checkout-review">
       <div class="phoenix-screen-top">
         <a href="/cart" data-nav class="phoenix-screen-back-btn" aria-label="${ui("بازگشت")}">→</a>
         <div class="phoenix-screen-title-wrap">
-          <h1 class="phoenix-screen-title">${ui("پرداخت")}</h1>
+          <h1 class="phoenix-screen-title">${ui("بررسی پرداخت")}</h1>
         </div>
         <div style="width: 38px;"></div>
       </div>
 
-      <form class="phoenix-screen-content" id="consumer-payment-form">
-        <!-- Payment Methods Stack -->
-        <div class="phoenix-deal-list" id="payment-methods-stack">
-          <label class="phoenix-deal-card selected" style="cursor: pointer;">
-            <input type="radio" name="pay-method" value="gateway" checked style="accent-color: var(--primary);" />
-            <div class="phoenix-deal-card-icon" aria-hidden="true">💳</div>
-            <div class="phoenix-deal-card-copy">
-              <strong>${ui("درگاه بانکی")}</strong>
-              <small>${ui("اتصال امن به درگاه بانکی شاپرک با تمام کارت‌های عضو شتاب")}</small>
-            </div>
-          </label>
+      <div class="phoenix-screen-content">
+        <section class="phoenix-checkout-review-hero" role="status" aria-live="polite">
+          <span class="phoenix-checkout-review-icon" aria-hidden="true">⏸</span>
+          <span class="phoenix-reset-section-kicker">${ui("مرحلهٔ نهایی خرید")}</span>
+          <h2>${ui("پرداخت امن هنوز متصل نشده است.")}</h2>
+          <p>${ui("تا زمان اتصال درگاه معتبر و تأیید سرویس پرداخت، سفارشی ثبت نمی‌شود و مبلغی کسر نخواهد شد.")}</p>
+        </section>
 
-          <label class="phoenix-deal-card" style="cursor: pointer;">
-            <input type="radio" name="pay-method" value="credit" style="accent-color: var(--primary);" />
-            <div class="phoenix-deal-card-icon" aria-hidden="true">⭐</div>
-            <div class="phoenix-deal-card-copy">
-              <strong>${ui("اعتبار ققنوس")}</strong>
-              <small style="color: var(--primary-strong);">${ui("با خرید از ققنوس، اعتبار بگیر و از تخفیف‌های ویژه استفاده کن")}</small>
+        <section class="phoenix-checkout-local-preview">
+          <div class="phoenix-checkout-local-preview-head">
+            <div>
+              <span class="phoenix-reset-section-kicker">${ui("پیش‌نمایش سبد محلی")}</span>
+              <h2>${ui("اقلام انتخاب‌شده")}</h2>
             </div>
-          </label>
-
-          <label class="phoenix-deal-card" style="cursor: pointer;">
-            <input type="radio" name="pay-method" value="cod" style="accent-color: var(--primary);" />
-            <div class="phoenix-deal-card-icon" aria-hidden="true">🚚</div>
-            <div class="phoenix-deal-card-copy">
-              <strong>${ui("پرداخت در محل")}</strong>
-              <small>${ui("تسویه پس از تحویل و بررسی نهایی کالا")}</small>
-            </div>
-          </label>
-        </div>
-
-        <div style="background:var(--surface-2); padding:14px 16px; border-radius:16px; border:1px solid var(--line); margin-top:8px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:13px; font-weight:700;">${ui("مبلغ قابل پرداخت:")}</span>
-            <span style="font-size:18px; font-weight:800; color:var(--primary);">${total.toLocaleString("fa-IR")} ${ui("تومان")}</span>
+            <a href="/cart" data-nav class="phoenix-checkout-edit-link">${ui("ویرایش سبد")}</a>
           </div>
-        </div>
+          <p class="phoenix-checkout-preview-note">${ui("این صفحه فقط پیش‌نمایش سبد محلی را نشان می‌دهد؛ این اقلام هنوز به سفارش ثبت‌شده متصل نیستند.")}</p>
+          ${items.length ? `
+            <div class="phoenix-checkout-review-items">
+              ${items.map((item) => `
+                <article class="phoenix-checkout-review-item">
+                  <span class="phoenix-checkout-review-item-icon" aria-hidden="true">▦</span>
+                  <div class="phoenix-checkout-review-item-copy">
+                    <strong>${escapeHtml(item.title)}</strong>
+                    <small>${escapeHtml(item.category)} · ${ui("تعداد")} ${formatNumber(item.quantity)}</small>
+                  </div>
+                  <span class="phoenix-checkout-review-item-total">${formatNumber(item.price * item.quantity)} ${ui("تومان")}</span>
+                </article>
+              `).join("")}
+            </div>
+            <div class="phoenix-checkout-review-total">
+              <span>${ui("مجموع تقریبی اقلام محلی")}</span>
+              <strong>${formatNumber(estimatedSubtotal)} ${ui("تومان")}</strong>
+            </div>
+          ` : `
+            <div class="phoenix-checkout-review-empty">
+              <span aria-hidden="true">🛒</span>
+              <p>${ui("سبد محلی خالی است.")}</p>
+              <a class="button button-ghost" href="/discover?tab=explore" data-nav>${ui("کشف کالاها و خدمات")}</a>
+            </div>
+          `}
+        </section>
 
-        <button type="submit" class="phoenix-primary-cta" style="margin-top: 10px;">
-          <span>${ui("پرداخت نهایی")}</span>
-          <span aria-hidden="true">✓</span>
-        </button>
-      </form>
+        <div class="phoenix-checkout-review-actions">
+          <a href="/cart" data-nav class="button button-ghost">${ui("بازگشت به سبد خرید")}</a>
+          <a href="/discover?tab=explore" data-nav class="button button-primary">${ui("ادامهٔ کشف کالاها و خدمات")} <span aria-hidden="true">←</span></a>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -2392,16 +2397,8 @@ export function bindPhoenixExperienceEvents(container: HTMLElement, onNavigate: 
     };
   }
 
-  // Consumer payment form submit
-  const payForm = container.querySelector<HTMLFormElement>("#consumer-payment-form");
-  if (payForm) {
-    payForm.onsubmit = (e) => {
-      e.preventDefault();
-      saveCartItems([]);
-      showToast(ui("سفارش با موفقیت ثبت و پرداخت شد!"));
-      onNavigate("/orders");
-    };
-  }
+  // Consumer checkout is intentionally review-only until canonical payment confirmation is wired.
+  // Never clear the local cart or announce an order/payment success from the legacy demo flow.
 
   // Seller activation button from individual profile
   const activateSellerBtns = container.querySelectorAll<HTMLButtonElement>("[data-activate-seller]");
