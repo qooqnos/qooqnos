@@ -5167,7 +5167,7 @@ function renderDiscover(): string {
           '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("sectionKicker") + '</span><h2 id="results-title">' + escapeHtml(title) + '</h2><p>' + escapeHtml(intro) + '</p><small id="results-meta">' + discoveryUi("preparing") + '</small></div>' +
           '<div class="phoenix-reset-feed-tools">' +
             '<a href="/saved" data-nav class="phoenix-reset-saved-link">★ <span>' + socialCommerceUi("shortlist") + '</span><span id="shortlist-count" class="phoenix-reset-shortlist-count" aria-label="' + escapeAttr(socialCommerceUi("shortlist")) + '">0</span></a>' +
-            '<a href="/compare" data-nav class="phoenix-reset-compare-link" hidden>⚖ <span>' + socialCommerceUi("compare") + '</span><span id="compare-count" class="phoenix-reset-shortlist-count">0</span></a>'
+            '<a href="/compare" data-nav class="phoenix-reset-compare-link" hidden>⚖ <span>' + socialCommerceUi("compare") + '</span><span id="compare-count" class="phoenix-reset-shortlist-count">0</span></a>' +
             '<button type="button" class="phoenix-reset-refresh" data-social-state-refresh aria-label="' + escapeAttr(socialCommerceUi("refresh")) + '">↻</button>' +
           '</div>' +
         '</div>' +
