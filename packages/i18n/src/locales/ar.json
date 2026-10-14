@@ -23,7 +23,22 @@
     "submit": "إرسال",
     "and": "و",
     "or": "أو",
-    "addProductOrService": "إضافة منتج أو خدمة"
+    "addProductOrService": "إضافة منتج أو خدمة",
+    "checkoutReview": "مراجعة الدفع",
+    "checkoutFinalStep": "الخطوة الأخيرة للشراء",
+    "checkoutNotConnectedTitle": "لم يتم ربط الدفع الآمن بعد.",
+    "checkoutNotConnectedBody": "لن يتم إنشاء طلب ولن يتم خصم أي مبلغ حتى يتم ربط مزوّد دفع موثوق وتأكيد النتيجة.",
+    "localCartPreview": "معاينة السلة المحلية",
+    "selectedCartItems": "العناصر المختارة",
+    "editCart": "تعديل السلة",
+    "localCartDisclaimer": "تعرض هذه الشاشة معاينة للسلة المحلية فقط؛ هذه العناصر غير مرتبطة بطلب مسجّل.",
+    "estimatedLocalSubtotal": "المجموع التقديري للعناصر المحلية",
+    "shippingCalculatedLater": "تُحدّد تكلفة الشحن بعد التحقق من الطلب.",
+    "localCartEmpty": "السلة المحلية فارغة.",
+    "discoverProductsAndServices": "اكتشف المنتجات والخدمات",
+    "backToCart": "العودة إلى السلة",
+    "continueDiscovering": "مواصلة استكشاف المنتجات والخدمات",
+    "continueToCheckoutReview": "المتابعة إلى مراجعة الدفع"
   },
   "nav": {
     "home": "الرئيسية",
