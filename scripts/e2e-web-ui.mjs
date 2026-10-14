@@ -331,9 +331,9 @@ await page.evaluate(() => {
 });
 await page.locator(".phoenix-post-card [data-share]").nth(1).click();
 const sharedPayload = await page.evaluate(() => window.__phoenixSharedPayload);
-assert.ok(sharedPayload.url.includes("/discover?q="));
+assert.equal(new URL(sharedPayload.url).pathname, "/discover");
+assert.equal(new URL(sharedPayload.url).searchParams.get("q"), "میز چوبی");
 assert.ok(!sharedPayload.url.includes("/checkout"));
-assert.ok(sharedPayload.url.includes(encodeURIComponent("میز چوبی")));
 
 const initialTheme = await page.locator("html").getAttribute("data-theme");
 await page.locator("[data-theme-toggle]").click();
