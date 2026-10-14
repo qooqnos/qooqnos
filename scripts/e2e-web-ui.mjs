@@ -82,7 +82,7 @@ await page.route("**/api/v1/**", async (route) => {
       { id: "result-product-2", sourceType: "product", sourceId: "prod-2", title: "صندلی چوبی", description: "کالای دوم برای مقایسه", price: 12000000, currency: "ریال", metadata: { offeringType: "product", businessId: "biz-1" } },
     ] },
     "/api/v1/discovery/following": { data: [
-      { id: "followed-product", sourceType: "product", sourceId: "followed-product", title: "عرضهٔ کسب‌وکار دنبال‌شده", description: "عرضهٔ ثبت‌شده در فید دنبال‌شده‌ها", metadata: { offeringType: "product", businessId: "biz-1", businessName: "فروشگاه دنبال‌شده" } },
+      { id: "followed-product", sourceType: "product", sourceId: "followed-product", title: "کالای فروشگاه دنبال‌شده", description: "کالای منتشرشده در فید دنبال‌شده‌ها", metadata: { offeringType: "product", businessId: "biz-1", businessName: "فروشگاه دنبال‌شده" } },
     ] },
     "/api/v1/social/state": { data: { follows: [], engagements: [] } },
     "/api/v1/social/follows": { data: { id: "follow-1" } },
@@ -346,7 +346,7 @@ assert.equal(await page.locator("#shortlist-count").innerText(), "1");
 
 await page.goto(baseURL + "/discover?tab=following");
 try {
-  await page.getByRole("heading", { name: "عرضهٔ کسب‌وکار دنبال‌شده" }).waitFor({ timeout: 7000 });
+  await page.getByRole("heading", { name: "کالای فروشگاه دنبال‌شده" }).waitFor({ timeout: 7000 });
 } catch (error) {
   const visibleText = await page.locator(".phoenix-reset-page").innerText().catch(() => "");
   process.stderr.write("Phoenix following-feed diagnostics: " + JSON.stringify({ discoveryRequests, visibleText, runtimeErrors, failedRequests }, null, 2) + "\\n");
