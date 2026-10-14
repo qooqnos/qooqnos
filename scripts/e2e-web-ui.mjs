@@ -384,6 +384,45 @@ await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);
 
+// Legacy local cart and checkout must never pretend a payment or order succeeded.
+await page.evaluate(() => {
+  localStorage.setItem("phoenix.active_persona", "consumer");
+  localStorage.setItem("phoenix.cart_items", JSON.stringify([
+    { id: "local-preview-item", title: "محصول نمایشی محلی", category: "پیش‌نمایش", price: 1234, quantity: 2 },
+  ]));
+});
+await page.goto(baseURL + "/cart");
+const cartPreviewText = await page.locator(".phoenix-screen-wrapper").innerText();
+assert.ok(cartPreviewText.includes("پیش‌نمایش سبد محلی"));
+assert.ok(cartPreviewText.includes("مجموع تقریبی اقلام محلی"));
+assert.ok(cartPreviewText.includes("هزینهٔ ارسال پس از بررسی سفارش مشخص می‌شود."));
+assert.ok(!cartPreviewText.includes("رایگان"));
+await page.goto(baseURL + "/checkout");
+await page.locator(".phoenix-checkout-review").waitFor();
+assert.equal(await page.locator("#consumer-payment-form").count(), 0);
+assert.equal(await page.locator(".phoenix-checkout-review button[type='submit']").count(), 0);
+const checkoutPreviewFa = await page.locator(".phoenix-checkout-review").innerText();
+assert.ok(checkoutPreviewFa.includes("پرداخت امن هنوز متصل نشده است."));
+assert.ok(checkoutPreviewFa.includes("مبلغی کسر نخواهد شد"));
+assert.ok(checkoutPreviewFa.includes("محصول نمایشی محلی"));
+assert.ok(!checkoutPreviewFa.includes("سفارش با موفقیت ثبت و پرداخت شد"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='en']").click();
+await page.waitForTimeout(50);
+const checkoutPreviewEn = await page.locator(".phoenix-checkout-review").innerText();
+assert.ok(checkoutPreviewEn.includes("Secure checkout is not connected yet."));
+assert.ok(checkoutPreviewEn.includes("no payment will be taken"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='ar']").click();
+await page.waitForTimeout(50);
+const checkoutPreviewAr = await page.locator(".phoenix-checkout-review").innerText();
+assert.ok(checkoutPreviewAr.includes("لم يتم ربط الدفع الآمن بعد."));
+assert.ok(checkoutPreviewAr.includes("لن يتم إنشاء طلب"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='fa']").click();
+await page.waitForTimeout(50);
+assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("phoenix.cart_items") || "[]").length), 1);
+
 await page.goto(baseURL + "/business");
 assert.equal(await page.locator("[data-language-toggle]").count(), 1);
 await page.locator("[data-language-toggle]").click();
