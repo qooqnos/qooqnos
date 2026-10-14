@@ -1716,6 +1716,21 @@
     "commentDialogSubmit": "إرسال التعليق",
     "commentDialogRequired": "اكتب تعليقًا قبل الإرسال.",
     "commentSent": "تم إرسال تعليقك للمراجعة.",
-    "messagesIntegrityDescription": "للبدء، ابحث عن المنتج أو الخدمة في «استكشف» وراجع العرض والبائع. يعرض هذا القسم المحادثات المسجّلة فقط."
+    "messagesIntegrityDescription": "للبدء، ابحث عن المنتج أو الخدمة في «استكشف» وراجع العرض والبائع. يعرض هذا القسم المحادثات المسجّلة فقط.",
+    "socialActionSaved": "تم حفظ التفاعل الاجتماعي.",
+    "socialActionRemoved": "تم إلغاء التفاعل الاجتماعي.",
+    "socialActionUnavailable": "لا يدعم هذا العنصر التفاعلات الاجتماعية حتى الآن.",
+    "followTargetMissing": "معلومات البائع غير كافية لمتابعته.",
+    "sharePromptText": "ألقِ نظرة على هذا الخيار في ققنوس.",
+    "shareReady": "أصبح العنصر جاهزًا للمشاركة.",
+    "shareLinkCopied": "تم نسخ رابط ققنوس.",
+    "shareUnavailable": "المشاركة غير مدعومة في هذا المتصفح.",
+    "copyShareLinkPrompt": "انسخ رابط ققنوس:",
+    "compareProductsOnly": "يمكن اختيار المنتجات القابلة للمقارنة فقط.",
+    "compareMaxProducts": "يمكنك مقارنة أربعة منتجات كحد أقصى.",
+    "compareNeedOneMore": "اختر منتجًا آخر.",
+    "compareButtonLabel": "مقارنة {{count}} منتجات",
+    "removeFromCompare": "إزالة من المقارنة",
+    "commentTargetMissing": "لا تتوفر معلومات كافية للتعليق على هذا العنصر."
   }
 }
