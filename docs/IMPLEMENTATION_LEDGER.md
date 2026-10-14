@@ -2938,3 +2938,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The detail overlay is now media-led and uses only real image, price, rating, location, verification, seller and recognized product-attribute fields when those fields are present.
 - Removed generic “verified business” assumptions, invented default currency, and arbitrary metadata rendering; products without a seller reference no longer offer a misleading direct message path.
 - Comparison and saved-item toast messages now reflect whether an item was added or removed.
+
+
+
+## 2026-10-14 — Public seller profile in the social journey
+
+- Public seller profiles now use the same social header, desktop shortcuts and mobile navigation as the feed, so opening a seller no longer feels like switching to a separate public microsite.
+- Public profile offers open the factual offer-detail panel instead of linking to a demo checkout. The detail panel receives only the public offer's actual ID, price, currency, title, description and known seller identity.
+- E2E now seeds a public business response, verifies the seller page is within the social shell and checks that offer details do not advertise a checkout action.

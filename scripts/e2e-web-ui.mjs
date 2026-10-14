@@ -73,6 +73,13 @@ await page.route("**/api/v1/**", async (route) => {
     "/api/v1/ai/usage": { data: [{ operationId: "op-1", operationType: "seller.product.extract", meterUnit: "provider_units", quantity: 17, modelId: "test-model", billingUsageReference: "bill-1", createdAt: new Date().toISOString() }] },
     "/api/v1/audit": { data: [{ id: "audit-1", action: "business.updated", targetType: "business", targetId: "biz-1", outcome: "succeeded", createdAt: new Date().toISOString() }] },
     "/api/v1/discovery/search": { data: [{ id: "result-1", sourceType: "business", sourceId: "biz-1", title: "موجودیت واقعی تست", description: "نتیجهٔ canonical برای تست UI", locality: "مرکز شهر", score: 88, rating: 4.8 }] },
+    "/api/v1/public/businesses/biz-1": { data: {
+      profile: { id: "biz-1", name: "فروشگاه ترنج", displayName: "ترنج", status: "active", publicationStatus: "published", businessType: "retail", primaryCategoryId: "handmade", defaultLocale: "fa-IR", timezone: "Asia/Tehran", defaultCurrency: "IRR", updatedAt: new Date().toISOString() },
+      contacts: [{ contactType: "phone", value: "02100000000", isPrimary: true }],
+      locations: [{ name: "شعبه مرکزی", locationType: "store", timezone: "Asia/Tehran" }],
+      reviews: [{ id: "review-1", customerId: "customer-1", ratingValue: 5, content: "تجربهٔ منتشرشدهٔ آزمایشی", publishedAt: new Date().toISOString(), createdAt: new Date().toISOString() }],
+      offers: [{ id: "offering-1", businessId: "biz-1", offeringType: "product", title: "کیف دست‌دوز", description: "نمونهٔ کالای منتشرشده", productId: "product-1", serviceId: null, priceAmountMinor: 1250000, currency: "IRR", pricingType: "fixed" }]
+    } },
     "/api/v1/ai/seller/product-creation-sessions": { session: { id: "seller-session-1" } },
     "/api/v1/ai/seller/product-creation-sessions/seller-session-1": { session: { id: "seller-session-1", currentDraftVersion: 1 }, draft: {} },
     "/api/v1/ai/seller/product-creation-sessions/seller-session-1/inputs": { accepted: true },
@@ -198,6 +205,19 @@ await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(100);
 assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
+
+await page.goto(baseURL + "/businesses/biz-1");
+await page.locator(".social-shell").waitFor();
+assert.equal(await page.locator(".phoenix-social-tabs").count(), 1);
+assert.equal(await page.locator(".phoenix-social-mobile-nav").count(), 1);
+assert.equal(await page.locator("#public-business-page-name").innerText(), "ترنج");
+assert.ok((await page.locator("#public-business-page-offers").innerText()).includes("کیف دست‌دوز"));
+assert.equal(await page.locator("#public-business-page-offers a[href*='/checkout']").count(), 0);
+await page.locator("[data-public-offer-detail='0']").click();
+await page.locator(".phoenix-detail-modal").waitFor();
+assert.ok((await page.locator(".phoenix-detail-modal").innerText()).includes("کیف دست‌دوز"));
+assert.equal(await page.locator(".phoenix-detail-modal a[href*='/checkout']").count(), 0);
+await page.locator(".phoenix-detail-modal [data-close-discovery]").first().click();
 
 await page.goto(baseURL + "/");
 assert.ok(await page.locator("#discover-query").count() > 0);

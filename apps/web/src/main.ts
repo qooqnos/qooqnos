@@ -677,8 +677,8 @@ function render(): void {
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/welcome";
-  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications";
   const isPublicBusiness = route.path.startsWith("/businesses/");
+  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || isPublicBusiness;
   const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
     route.path === "/" ? "feed"
       : route.path === "/activity" || route.path === "/notifications" ? "activity"
@@ -687,13 +687,13 @@ function render(): void {
           : "none";
   appRoot.innerHTML = `
     <div class="app-shell ${isHome ? "home-shell" : ""} ${isSocial ? "social-shell" : ""} ${isPublicBusiness ? "public-business-shell" : ""}">
-      ${isHome || isPublicBusiness ? renderPublicHeader() : isSocial ? renderSocialHeader(socialActive) : renderHeader(route)}
+      ${isHome ? renderPublicHeader() : isSocial ? renderSocialHeader(socialActive) : renderHeader(route)}
       <div class="app-body">
         ${isHome || isSocial || isPublicBusiness ? "" : renderSidebar(route)}
-        <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : isPublicBusiness ? "public-business-page-content" : ""}">${page}</main>
+        <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : ""} ${isPublicBusiness ? "public-business-page-content" : ""}">${page}</main>
       </div>
       ${isSocial ? "" : renderSiteFooter()}
-      ${isPublicBusiness ? "" : isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
+      ${isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
       ${renderToastHost()}
     </div>
   `;
@@ -6557,13 +6557,36 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
       offersHost.innerHTML = '<div class="slot-empty"><span>◇</span><p>هنوز عرضه منتشرشده‌ای برای این کسب‌وکار در دسترس نیست.</p></div>';
       return;
     }
-    offersHost.innerHTML = response.data.offers.map((offer) => {
-      const price = offer.priceAmountMinor !== null && offer.currency ? formatPublicMoney(offer.priceAmountMinor, offer.currency) : "قیمت پس از انتخاب";
-      const action = offer.offeringType === "product"
-        ? '<a class="button button-primary" href="/checkout?entity=' + encodeURIComponent(offer.id) + '&type=offering" data-nav>خرید فوری ↗</a>'
-        : '<a class="button button-secondary" href="/booking?offering=' + encodeURIComponent(offer.id) + '" data-nav>رزرو ↗</a>';
-      return '<article class="phoenix-public-offer-card"><div class="phoenix-public-offer-icon">' + (offer.offeringType === "product" ? "▦" : "◷") + '</div><div class="phoenix-public-offer-body"><span class="section-kicker">' + escapeHtml(offer.offeringType === "product" ? "Product" : "Service") + '</span><h3>' + escapeHtml(offer.title) + '</h3><p>' + escapeHtml(offer.description ?? "توضیح تکمیلی برای این عرضه ثبت نشده است.") + '</p><strong>' + escapeHtml(price) + '</strong></div><div class="phoenix-public-offer-action">' + action + '</div></article>';
+    const publicOffers = response.data.offers;
+    offersHost.innerHTML = publicOffers.map((offer, index) => {
+      const price = offer.priceAmountMinor !== null && offer.currency
+        ? formatPublicMoney(offer.priceAmountMinor, offer.currency)
+        : uiText("استعلام قیمت");
+      const actionLabel = offer.offeringType === "product" ? uiText("مشاهده جزئیات") : uiText("بررسی خدمت و رزرو");
+      return '<article class="phoenix-public-offer-card"><div class="phoenix-public-offer-icon">' + (offer.offeringType === "product" ? "▦" : "◷") + '</div><div class="phoenix-public-offer-body"><span class="section-kicker">' + escapeHtml(offer.offeringType === "product" ? uiText("کالا") : uiText("خدمت")) + '</span><h3>' + escapeHtml(offer.title) + '</h3><p>' + escapeHtml(offer.description ?? uiText("توضیح تکمیلی برای این عرضه ثبت نشده است.")) + '</p><strong>' + escapeHtml(price) + '</strong></div><div class="phoenix-public-offer-action"><button class="button button-primary" type="button" data-public-offer-detail="' + index + '">' + actionLabel + ' <span aria-hidden="true">←</span></button></div></article>';
     }).join("");
+    offersHost.querySelectorAll<HTMLButtonElement>("[data-public-offer-detail]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.publicOfferDetail);
+        const offer = Number.isInteger(index) ? publicOffers[index] : undefined;
+        if (!offer) return;
+        const price = offer.priceAmountMinor;
+        openDiscoveryResultPanel({
+          id: offer.id,
+          sourceId: offer.id,
+          sourceType: offer.offeringType,
+          title: offer.title,
+          description: offer.description,
+          price: price ?? undefined,
+          currency: offer.currency ?? undefined,
+          metadata: {
+            businessId,
+            businessName: profile.displayName || profile.name,
+            offeringType: offer.offeringType,
+          },
+        });
+      });
+    });
   } catch (error) {
     summary.textContent = error instanceof Error ? error.message : "پروفایل عمومی در دسترس نیست.";
     facts.innerHTML = '<div class="slot-empty"><span>!</span><p>خواندن Business عمومی ناموفق بود.</p></div>';

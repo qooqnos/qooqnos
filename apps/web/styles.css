@@ -11587,3 +11587,46 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-detail-actions .button { justify-content: center; width: 100%; }
   .phoenix-detail-contact-note { grid-column: 1 / -1; }
 }
+
+
+
+/* Public seller profiles stay inside the same social-commerce navigation. */
+.social-shell .page-content.social-page-content .phoenix-public-business-page {
+  width: min(1200px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 25px 0 96px;
+}
+.social-shell .phoenix-public-business-hero {
+  border: 1px solid var(--line);
+  border-radius: 25px;
+  background:
+    radial-gradient(circle at 7% 0%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 17rem),
+    linear-gradient(130deg, var(--surface), color-mix(in srgb, var(--surface-2) 48%, var(--surface)));
+  box-shadow: 0 14px 42px rgba(47, 32, 22, .04);
+}
+.social-shell .phoenix-public-business-content { gap: 15px; }
+.social-shell .phoenix-public-business-content > .glass-card {
+  border-color: var(--line);
+  border-radius: 20px;
+  box-shadow: 0 9px 28px rgba(47, 32, 22, .035);
+}
+.social-shell .phoenix-public-offer-card {
+  border-color: var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: none;
+}
+.social-shell .phoenix-public-offer-action .button {
+  min-height: 38px;
+  border-radius: 11px;
+  font-size: 11px;
+}
+@media (max-width: 720px) {
+  .social-shell .page-content.social-page-content .phoenix-public-business-page {
+    width: calc(100% - 24px);
+    padding: 14px 0 98px;
+  }
+  .social-shell .phoenix-public-business-hero { border-radius: 21px; }
+  .social-shell .phoenix-public-offer-card { border-radius: 15px; }
+  .social-shell .phoenix-public-offer-action .button { width: 100%; justify-content: center; }
+}
