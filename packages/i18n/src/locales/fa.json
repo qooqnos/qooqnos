@@ -1715,6 +1715,7 @@
     "commentDialogCancel": "انصراف",
     "commentDialogSubmit": "ثبت دیدگاه",
     "commentDialogRequired": "برای ثبت، متن دیدگاه را بنویس.",
-    "commentSent": "دیدگاه برای بررسی ثبت شد."
+    "commentSent": "دیدگاه برای بررسی ثبت شد.",
+    "messagesIntegrityDescription": "برای شروع، کالا یا خدمت موردنظرت را در اکسپلور پیدا کن و اطلاعات عرضه و فروشنده را بررسی کن. این بخش فقط گفت‌وگوهای ثبت‌شده را نمایش می‌دهد."
   }
 }
