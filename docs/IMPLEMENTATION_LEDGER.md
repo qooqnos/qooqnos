@@ -3044,3 +3044,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Verification status: CI, Phoenix verification and browser E2E must pass on the latest commit before this step is considered complete.
 
 - Booking date-range boundaries are converted to canonical instants using the selected provider timezone; the chosen end date is included through the end of that local day. Browser E2E now checks the requested range is complete.
+
+
+## 2026-10-15 — Seller relationship from offer details
+
+- Added a follow/unfollow action directly to product/service/business details when a seller target is present.
+- The action uses the canonical social follow API, synchronizes its visible pressed state with the feed, and opens authentication for signed-out users.
+- Detail modal now focuses its close control on open, closes with Escape, and restores focus to the originating card.
+- Added Persian, English and Arabic labels/toasts and E2E checks for follow-state synchronization and keyboard dismissal.

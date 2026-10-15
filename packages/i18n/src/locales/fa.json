@@ -2003,6 +2003,10 @@
     "bookingHoldErrorBody": "نگه‌داشت موقت زمان ناموفق بود.",
     "bookingRetry": "تلاش دوباره",
     "bookingAvailabilityErrorTitle": "زمان‌های آزاد دریافت نشدند",
-    "bookingAvailabilityError": "خواندن زمان‌بندی ناموفق بود."
+    "bookingAvailabilityError": "خواندن زمان‌بندی ناموفق بود.",
+    "detailFollowSeller": "دنبال‌کردن فروشنده",
+    "detailFollowingSeller": "فروشنده را دنبال می‌کنی",
+    "detailFollowAddedToast": "این فروشنده به دنبال‌شده‌های تو اضافه شد.",
+    "detailFollowRemovedToast": "این فروشنده از دنبال‌شده‌های تو حذف شد."
   }
 }

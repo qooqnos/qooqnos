@@ -2003,6 +2003,10 @@
     "bookingHoldErrorBody": "فشل الحجز المؤقت للوقت.",
     "bookingRetry": "إعادة المحاولة",
     "bookingAvailabilityErrorTitle": "تعذر تحميل الأوقات المتاحة",
-    "bookingAvailabilityError": "تعذرت قراءة جدول التوافر."
+    "bookingAvailabilityError": "تعذرت قراءة جدول التوافر.",
+    "detailFollowSeller": "متابعة البائع",
+    "detailFollowingSeller": "أنت تتابع هذا البائع",
+    "detailFollowAddedToast": "أصبحت تتابع هذا البائع.",
+    "detailFollowRemovedToast": "لم تعد تتابع هذا البائع."
   }
 }

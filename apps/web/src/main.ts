@@ -5770,6 +5770,8 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
     ? "★ " + formatLocalizedNumber(Number(item.rating))
     : "";
   const businessId = typeof item.metadata?.businessId === "string" ? item.metadata.businessId : "";
+  const followTargetId = businessId || (isBusiness ? item.sourceId ?? item.id ?? "" : "");
+  const initiallyFollowing = Boolean(followTargetId) && isSocialActive("follow", item);
   const businessName = typeof item.metadata?.businessName === "string" && item.metadata.businessName.trim()
     ? item.metadata.businessName
     : isBusiness ? title : uiText("نام فروشنده در اطلاعات این عرضه ثبت نشده است");
@@ -5835,6 +5837,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
           ${metadataEntries.length ? '<section class="phoenix-detail-attributes"><h3>' + uiText("مشخصات ثبت‌شده") + '</h3><dl>' + metadataEntries.map(([label, value]) => '<div><dt>' + escapeHtml(uiText(label)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>').join("") + '</dl></section>' : ""}
           <div class="phoenix-detail-actions">
             ${mainAction}
+            ${followTargetId ? '<button class="button button-ghost phoenix-detail-follow-button' + (initiallyFollowing ? ' selected' : '') + '" type="button" data-follow-seller-detail aria-pressed="' + String(initiallyFollowing) + '">' + (initiallyFollowing ? socialCommerceUi("detailFollowingSeller") : socialCommerceUi("detailFollowSeller")) + '</button>' : ""}
             ${isProduct ? '<button class="button button-ghost" type="button" data-compare-detail="' + escapeAttr(key) + '">⚖ ' + uiText("مقایسه") + '</button>' : ""}
             <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}">☆ ${uiText("ذخیره")}</button>
             <button class="button button-ghost" type="button" data-share-detail="${escapeAttr(key)}">↗ ${uiText("اشتراک‌گذاری")}</button>
@@ -5843,8 +5846,49 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
       </div>
     </section>`;
 
+  const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const closeDetail = (): void => {
+    document.removeEventListener("keydown", handleDetailKeydown);
+    overlay.remove();
+    previousFocus?.focus();
+  };
+  const handleDetailKeydown = (event: KeyboardEvent): void => {
+    if (event.key === "Escape") closeDetail();
+  };
   document.body.appendChild(overlay);
-  overlay.querySelectorAll<HTMLElement>("[data-close-discovery]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
+  document.addEventListener("keydown", handleDetailKeydown);
+  overlay.querySelectorAll<HTMLElement>("[data-close-discovery]").forEach((node) => node.addEventListener("click", closeDetail));
+  overlay.querySelector<HTMLButtonElement>(".connection-close")?.focus();
+
+  const followDetailButton = overlay.querySelector<HTMLButtonElement>("[data-follow-seller-detail]");
+  if (followDetailButton) {
+    const updateFollowButton = (active: boolean): void => {
+      followDetailButton.setAttribute("aria-pressed", String(active));
+      followDetailButton.classList.toggle("selected", active);
+      followDetailButton.textContent = active
+        ? socialCommerceUi("detailFollowingSeller")
+        : socialCommerceUi("detailFollowSeller");
+    };
+    followDetailButton.addEventListener("click", async () => {
+      if (!sessionStorage.getItem(STORAGE.accessToken)) {
+        openConnectionPanel();
+        return;
+      }
+      followDetailButton.disabled = true;
+      try {
+        await loadSocialState();
+        const active = await persistSocialFollow(item);
+        updateFollowButton(active);
+        refreshSocialFeed();
+        showToast(socialCommerceUi(active ? "detailFollowAddedToast" : "detailFollowRemovedToast"));
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : socialCommerceUi("socialActionUnavailable"));
+      } finally {
+        followDetailButton.disabled = false;
+      }
+    });
+  }
+
   overlay.querySelector<HTMLButtonElement>("[data-compare-detail]")?.addEventListener("click", () => {
     const wasSelected = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key);
     toggleCompare(item);

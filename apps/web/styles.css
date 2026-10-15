@@ -13163,3 +13163,20 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-reset-booking-slot-grid { grid-template-columns: minmax(0, 1fr); }
   .phoenix-reset-booking-slot { padding: 14px; }
 }
+
+
+/* Detail modal seller-follow action: persistent relationship affordance. */
+.phoenix-detail-actions .phoenix-detail-follow-button {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--line));
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+}
+.phoenix-detail-actions .phoenix-detail-follow-button[aria-pressed="true"] {
+  border-color: var(--line);
+  color: var(--text);
+  background: var(--surface-2);
+}
+.phoenix-detail-actions .phoenix-detail-follow-button:disabled {
+  opacity: .65;
+  cursor: wait;
+}

@@ -2003,6 +2003,10 @@
     "bookingHoldErrorBody": "The temporary time hold failed.",
     "bookingRetry": "Try again",
     "bookingAvailabilityErrorTitle": "Could not load available times",
-    "bookingAvailabilityError": "The availability schedule could not be read."
+    "bookingAvailabilityError": "The availability schedule could not be read.",
+    "detailFollowSeller": "Follow seller",
+    "detailFollowingSeller": "Following this seller",
+    "detailFollowAddedToast": "You are now following this seller.",
+    "detailFollowRemovedToast": "You no longer follow this seller."
   }
 }
