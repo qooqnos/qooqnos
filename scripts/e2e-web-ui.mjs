@@ -27,6 +27,7 @@ const runtimeErrors = [];
 const failedRequests = [];
 const moduleResponses = [];
 const discoveryRequests = [];
+const bookingAvailabilityRequests = [];
 const mockSocialFollows = new Map();
 const mockSocialEngagements = new Map();
 const mockSocialComments = [];
@@ -64,6 +65,9 @@ await page.route("**/api/v1/**", async (route) => {
   const path = url.pathname;
   if (path.startsWith("/api/v1/discovery/")) {
     discoveryRequests.push({ path, method: request.method(), url: request.url() });
+  }
+  if (path.startsWith("/api/v1/availability/schedules/") && path.endsWith("/slots")) {
+    bookingAvailabilityRequests.push({ path, method: request.method(), url: request.url() });
   }
   const workspace = request.headers()["x-workspace-id"] ?? "ws-1";
 
@@ -404,6 +408,13 @@ await page.goto(baseURL + "/booking?businessId=biz-1&offering=offering-service-1
 await page.locator(".phoenix-reset-booking-page").waitFor();
 await page.locator(".phoenix-reset-booking-offer").waitFor();
 await page.locator(".phoenix-reset-booking-slot button[data-book-slot]").first().waitFor();
+assert.ok(bookingAvailabilityRequests.length > 0);
+const bookingSlotUrl = new URL(bookingAvailabilityRequests[0].url);
+const bookingFrom = new Date(bookingSlotUrl.searchParams.get("from") || "").getTime();
+const bookingTo = new Date(bookingSlotUrl.searchParams.get("to") || "").getTime();
+assert.ok(Number.isFinite(bookingFrom) && Number.isFinite(bookingTo));
+assert.ok(bookingTo > bookingFrom);
+assert.ok(bookingTo - bookingFrom > 47 * 60 * 60 * 1000, "The provider-local end date must be included in the availability range.");
 const bookingFa = await page.locator(".phoenix-reset-booking-page").innerText();
 assert.ok(bookingFa.includes("مشاورهٔ تخصصی"));
 assert.ok(bookingFa.includes("زمان‌های آزاد"));

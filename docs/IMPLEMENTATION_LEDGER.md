@@ -3042,3 +3042,5 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - A successful hold is described as temporary, never as a confirmed booking; the UI states explicitly that final confirmation/payment has not happened.
 - Added responsive layout, Persian/English/Arabic copy and browser E2E coverage for real service context, schedule/slot loading, ID privacy and temporary-hold messaging.
 - Verification status: CI, Phoenix verification and browser E2E must pass on the latest commit before this step is considered complete.
+
+- Booking date-range boundaries are converted to canonical instants using the selected provider timezone; the chosen end date is included through the end of that local day. Browser E2E now checks the requested range is complete.

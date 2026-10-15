@@ -1857,12 +1857,69 @@ async function loadBusinessBookingSchedules(): Promise<void> {
 
 
 
+function bookingDateBoundary(value: string, timezone: string, isEnd: boolean): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/u.exec(value);
+  if (!match) {
+    const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : "";
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const nextLocalDate = new Date(Date.UTC(year, month - 1, day + (isEnd ? 1 : 0)));
+  const targetUtc = Date.UTC(nextLocalDate.getUTCFullYear(), nextLocalDate.getUTCMonth(), nextLocalDate.getUTCDate());
+
+  if (!timezone) {
+    const localBoundary = new Date(year, month - 1, day + (isEnd ? 1 : 0), 0, 0, 0, 0);
+    return new Date(localBoundary.getTime() - (isEnd ? 1 : 0)).toISOString();
+  }
+
+  try {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    });
+    let guess = targetUtc;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const parts: Record<string, string> = {};
+      for (const part of formatter.formatToParts(new Date(guess))) {
+        if (part.type !== "literal") parts[part.type] = part.value;
+      }
+      const renderedUtc = Date.UTC(
+        Number(parts.year),
+        Number(parts.month) - 1,
+        Number(parts.day),
+        Number(parts.hour) % 24,
+        Number(parts.minute),
+        Number(parts.second),
+      );
+      const correction = targetUtc - renderedUtc;
+      guess += correction;
+      if (Math.abs(correction) < 500) break;
+    }
+    return new Date(guess - (isEnd ? 1 : 0)).toISOString();
+  } catch {
+    const localBoundary = new Date(year, month - 1, day + (isEnd ? 1 : 0), 0, 0, 0, 0);
+    return new Date(localBoundary.getTime() - (isEnd ? 1 : 0)).toISOString();
+  }
+}
+
 async function loadBookingSlots(): Promise<void> {
   const scheduleId = document.querySelector<HTMLInputElement>("#booking-schedule")?.value.trim() ?? "";
   const fromEl = document.querySelector<HTMLInputElement>("#booking-from");
   const toEl = document.querySelector<HTMLInputElement>("#booking-to");
   const from = fromEl?.dataset.isoDate || fromEl?.value || "";
   const to = toEl?.dataset.isoDate || toEl?.value || "";
+  const timezone = document.querySelector<HTMLInputElement>("#booking-timezone")?.value.trim() ?? "";
+  const fromInstant = from ? bookingDateBoundary(from, timezone, false) : "";
+  const toInstant = to ? bookingDateBoundary(to, timezone, true) : "";
   const durationSeconds = Number(document.querySelector<HTMLInputElement>("#booking-duration")?.value ?? "60") * 60;
   const host = document.querySelector<HTMLElement>("#booking-slots-result");
   if (!host) return;
@@ -1879,7 +1936,7 @@ async function loadBookingSlots(): Promise<void> {
   host.innerHTML = '<div class="phoenix-reset-booking-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><p>' + socialCommerceUi("bookingSlotsLoading") + '</p></div>';
   try {
     const response = await apiJson<{ data: BookingSlotView[] }>(
-      "/api/v1/availability/schedules/" + encodeURIComponent(scheduleId) + "/slots?from=" + encodeURIComponent(new Date(from).toISOString()) + "&to=" + encodeURIComponent(new Date(to).toISOString()) + "&durationSeconds=" + String(Math.trunc(durationSeconds)),
+      "/api/v1/availability/schedules/" + encodeURIComponent(scheduleId) + "/slots?from=" + encodeURIComponent(fromInstant) + "&to=" + encodeURIComponent(toInstant) + "&durationSeconds=" + String(Math.trunc(durationSeconds)),
     );
     const slots = Array.isArray(response.data) ? response.data : [];
     const bookable = slots.filter((slot) =>
