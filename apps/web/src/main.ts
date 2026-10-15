@@ -5847,10 +5847,15 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
     </section>`;
 
   const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const previousDiscoveryIndex = previousFocus?.getAttribute("data-discovery-index") ?? null;
   const closeDetail = (): void => {
     document.removeEventListener("keydown", handleDetailKeydown);
     overlay.remove();
-    previousFocus?.focus();
+    if (previousFocus?.isConnected) {
+      previousFocus.focus();
+    } else if (previousDiscoveryIndex !== null) {
+      document.querySelector<HTMLElement>('[data-discovery-index="' + escapeAttr(previousDiscoveryIndex) + '"]')?.focus();
+    }
   };
   const handleDetailKeydown = (event: KeyboardEvent): void => {
     if (event.key === "Escape") closeDetail();
