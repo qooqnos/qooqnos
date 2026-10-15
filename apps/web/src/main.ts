@@ -3767,38 +3767,60 @@ type OrderRecord = {
 };
 
 function renderOrders(): string {
-  return `
-    <div class="phoenix-orders-page">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("سفارش‌ها و معاملات")}</span>
-          <h1>${uiText("سفارش‌های من و")} <em>${uiText("پیگیری وضعیت")}</em></h1>
-          <p>${uiText("سفارش‌های خرید، خدمات رزروشده و معاملات را به سادگی رهگیری و مدیریت کنید.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-ghost" href="/transactions" data-nav>${uiText("استعلام تراکنش")}</a>
-          <a class="button button-primary" href="/discover" data-nav>${uiText("کشف و خرید جدید")} <span>←</span></a>
-        </div>
-      </section>
-
-      <section class="phoenix-orders-controls">
-        <div class="phoenix-orders-tabs" role="tablist" aria-label="${escapeAttr(uiText("فیلتر سفارش‌ها"))}">
-          <button class="active" type="button" data-orders-filter="all">${uiText("همه سفارش‌ها")}</button>
-          <button type="button" data-orders-filter="processing">${uiText("در حال پردازش")}</button>
-          <button type="button" data-orders-filter="shipped">${uiText("ارسال‌شده")}</button>
-          <button type="button" data-orders-filter="delivered">${uiText("تحویل‌شده")}</button>
-        </div>
-        <div class="phoenix-orders-search">
-          <input type="search" id="orders-search-input" class="studio-input-line" placeholder="${escapeAttr(uiText("جستجو بر اساس شناسه یا عنوان سفارش…"))}" />
-        </div>
-      </section>
-
-      <section class="phoenix-orders-container" id="orders-container">
-        <div class="slot-loading">${uiText("در حال دریافت سفارش‌ها…")}</div>
-      </section>
-    </div>
-  `;
+  return '<div class="phoenix-reset-page phoenix-reset-orders-page">' +
+    '<section class="phoenix-reset-hero">' +
+      '<div class="phoenix-reset-hero-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("ordersEyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("ordersTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("ordersIntro") + '</p>' +
+      '</div>' +
+      '<div class="phoenix-reset-orders-hero-actions">' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("ordersDiscoverAction") + ' <span aria-hidden="true">←</span></a>' +
+        '<a class="button button-ghost" href="/transactions" data-nav>' + socialCommerceUi("ordersTransactionsAction") + '</a>' +
+      '</div>' +
+    '</section>' +
+    '<div class="phoenix-reset-discover-grid">' +
+      '<section class="phoenix-reset-main-column">' +
+        '<div class="phoenix-reset-orders-toolbar">' +
+          '<nav class="phoenix-reset-orders-tabs" role="tablist" aria-label="' + escapeAttr(socialCommerceUi("ordersFilterLabel")) + '">' +
+            '<button class="phoenix-reset-tab active" type="button" data-orders-filter="all" aria-selected="true">' + socialCommerceUi("ordersAll") + '</button>' +
+            '<button class="phoenix-reset-tab" type="button" data-orders-filter="processing" aria-selected="false">' + socialCommerceUi("ordersProcessing") + '</button>' +
+            '<button class="phoenix-reset-tab" type="button" data-orders-filter="shipped" aria-selected="false">' + socialCommerceUi("ordersShipped") + '</button>' +
+            '<button class="phoenix-reset-tab" type="button" data-orders-filter="delivered" aria-selected="false">' + socialCommerceUi("ordersDelivered") + '</button>' +
+          '</nav>' +
+          '<label class="phoenix-reset-orders-search">' +
+            '<span aria-hidden="true">⌕</span>' +
+            '<input type="search" id="orders-search-input" autocomplete="off" placeholder="' + escapeAttr(socialCommerceUi("ordersSearchPlaceholder")) + '" aria-label="' + escapeAttr(socialCommerceUi("ordersSearchPlaceholder")) + '" />' +
+          '</label>' +
+        '</div>' +
+        '<div id="orders-container" class="phoenix-reset-order-list" aria-live="polite" aria-busy="true">' +
+          '<div class="phoenix-reset-orders-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">▣</span><p>' + socialCommerceUi("ordersLoading") + '</p></div>' +
+        '</div>' +
+      '</section>' +
+      '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
+        '<section class="phoenix-reset-side-card phoenix-reset-order-steps-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">↗</span>' +
+          '<h2>' + socialCommerceUi("ordersProgressTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("ordersProgressIntro") + '</p>' +
+          '<ol class="phoenix-reset-order-steps">' +
+            '<li><span>1</span><div><strong>' + socialCommerceUi("ordersStageConfirmation") + '</strong><small>' + socialCommerceUi("ordersStageConfirmationHint") + '</small></div></li>' +
+            '<li><span>2</span><div><strong>' + socialCommerceUi("ordersStagePacking") + '</strong><small>' + socialCommerceUi("ordersStagePackingHint") + '</small></div></li>' +
+            '<li><span>3</span><div><strong>' + socialCommerceUi("ordersStageShipping") + '</strong><small>' + socialCommerceUi("ordersStageShippingHint") + '</small></div></li>' +
+            '<li><span>4</span><div><strong>' + socialCommerceUi("ordersStageDelivery") + '</strong><small>' + socialCommerceUi("ordersStageDeliveryHint") + '</small></div></li>' +
+          '</ol>' +
+        '</section>' +
+        '<section class="phoenix-reset-side-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">✉</span>' +
+          '<h2>' + socialCommerceUi("ordersNeedHelpTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("ordersNeedHelpBody") + '</p>' +
+          '<a class="button button-ghost" href="/messages" data-nav>' + socialCommerceUi("ordersAskSellerAction") + ' <span aria-hidden="true">←</span></a>' +
+        '</section>' +
+      '</aside>' +
+    '</div>' +
+  '</div>';
 }
+
+
 
 async function loadOrdersPage(): Promise<void> {
   const container = document.querySelector<HTMLElement>("#orders-container");
@@ -3806,128 +3828,159 @@ async function loadOrdersPage(): Promise<void> {
   const tabButtons = document.querySelectorAll<HTMLButtonElement>("[data-orders-filter]");
   if (!container) return;
 
+  const statusLabel = (status: string): string => {
+    const normalized = status.toLowerCase();
+    if (["created", "pending", "awaiting_confirmation", "awaiting_seller_confirmation", "submitted"].includes(normalized)) {
+      return socialCommerceUi("orderStatusAwaitingConfirmation");
+    }
+    if (["processing", "packing", "confirmed", "accepted", "ready_to_ship"].includes(normalized)) {
+      return socialCommerceUi("orderStatusPreparing");
+    }
+    if (["shipped", "dispatched", "in_transit", "out_for_delivery"].includes(normalized)) {
+      return socialCommerceUi("orderStatusShipped");
+    }
+    if (["delivered", "completed"].includes(normalized)) return socialCommerceUi("orderStatusDelivered");
+    if (["cancelled", "canceled", "refunded", "failed"].includes(normalized)) return socialCommerceUi("orderStatusCancelled");
+    return socialCommerceUi("orderStatusInReview");
+  };
+  const statusClass = (status: string): string => {
+    const normalized = status.toLowerCase();
+    if (["created", "pending", "awaiting_confirmation", "awaiting_seller_confirmation", "submitted"].includes(normalized)) return "waiting";
+    if (["processing", "packing", "confirmed", "accepted", "ready_to_ship"].includes(normalized)) return "preparing";
+    if (["shipped", "dispatched", "in_transit", "out_for_delivery"].includes(normalized)) return "shipped";
+    if (["delivered", "completed"].includes(normalized)) return "delivered";
+    if (["cancelled", "canceled", "refunded", "failed"].includes(normalized)) return "cancelled";
+    return "unknown";
+  };
+  const stageIndex = (status: string): number => {
+    const normalized = status.toLowerCase();
+    if (["created", "pending", "awaiting_confirmation", "awaiting_seller_confirmation", "submitted"].includes(normalized)) return 0;
+    if (["processing", "packing", "confirmed", "accepted", "ready_to_ship"].includes(normalized)) return 1;
+    if (["shipped", "dispatched", "in_transit", "out_for_delivery"].includes(normalized)) return 2;
+    if (["delivered", "completed"].includes(normalized)) return 3;
+    return -1;
+  };
+
   try {
     const res = await apiJson<{ data: OrderRecord[] }>("/api/v1/commerce/orders");
     const allOrders = Array.isArray(res.data) ? res.data : [];
     let currentFilter = "all";
     let searchQuery = "";
 
-    const renderFiltered = () => {
+    const renderFiltered = (): void => {
       let filtered = allOrders;
-      if (currentFilter !== "all") {
-        if (currentFilter === "processing") filtered = filtered.filter((o) => o.status === "processing" || o.status === "created");
-        else if (currentFilter === "shipped") filtered = filtered.filter((o) => o.status === "shipped" || o.status === "dispatched");
-        else if (currentFilter === "delivered") filtered = filtered.filter((o) => o.status === "delivered" || o.status === "completed");
+      if (currentFilter === "processing") {
+        filtered = filtered.filter((order) => ["created", "pending", "awaiting_confirmation", "awaiting_seller_confirmation", "submitted", "processing", "packing", "confirmed", "accepted", "ready_to_ship"].includes(order.status.toLowerCase()));
+      } else if (currentFilter === "shipped") {
+        filtered = filtered.filter((order) => ["shipped", "dispatched", "in_transit", "out_for_delivery"].includes(order.status.toLowerCase()));
+      } else if (currentFilter === "delivered") {
+        filtered = filtered.filter((order) => ["delivered", "completed"].includes(order.status.toLowerCase()));
       }
       if (searchQuery) {
-        filtered = filtered.filter((o) =>
-          o.id.toLowerCase().includes(searchQuery) ||
-          (o.trackingNumber && o.trackingNumber.toLowerCase().includes(searchQuery)) ||
-          (o.items && o.items.some((i) => i.descriptionSnapshot && i.descriptionSnapshot.toLowerCase().includes(searchQuery)))
+        filtered = filtered.filter((order) =>
+          order.id.toLowerCase().includes(searchQuery) ||
+          (order.trackingNumber && order.trackingNumber.toLowerCase().includes(searchQuery)) ||
+          (order.items && order.items.some((item) => item.descriptionSnapshot && item.descriptionSnapshot.toLowerCase().includes(searchQuery)))
         );
       }
 
+      container.setAttribute("aria-busy", "false");
       if (!filtered.length) {
-        container.innerHTML = `
-          <div class="slot-empty">
-            <span>📦</span>
-            <p>${uiText("هیچ سفارشی در این دسته‌بندی یافت نشد.")}</p>
-            <a class="button button-primary" href="/discover" data-nav>${uiText("مشاهده محصولات و خدمات")}</a>
-          </div>
-        `;
+        container.innerHTML =
+          '<div class="phoenix-reset-orders-empty">' +
+            '<span class="phoenix-reset-orders-empty-icon" aria-hidden="true">▣</span>' +
+            '<h2>' + socialCommerceUi("ordersEmptyTitle") + '</h2>' +
+            '<p>' + socialCommerceUi("ordersEmptyBody") + '</p>' +
+            '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("ordersEmptyAction") + ' <span aria-hidden="true">←</span></a>' +
+          '</div>';
         return;
       }
 
-      container.innerHTML = `
-        <div class="phoenix-orders-list">
-          ${filtered.map((order) => {
-            const statusLabel = order.status === "delivered" || order.status === "completed"
-              ? uiText("تحویل‌شده")
-              : order.status === "shipped"
-              ? uiText("در حال ارسال")
-              : uiText("در حال آماده‌سازی");
-            const statusClass = order.status === "delivered" || order.status === "completed"
-              ? "status-delivered"
-              : order.status === "shipped"
-              ? "status-shipped"
-              : "status-processing";
+      const stages = [
+        socialCommerceUi("ordersStageConfirmation"),
+        socialCommerceUi("ordersStagePacking"),
+        socialCommerceUi("ordersStageShipping"),
+        socialCommerceUi("ordersStageDelivery"),
+      ];
+      container.innerHTML = '<div class="phoenix-reset-order-list-inner">' + filtered.map((order) => {
+        const stateClass = statusClass(order.status);
+        const currentStage = stageIndex(order.status);
+        const formattedTotal = order.grandTotalMinor !== undefined && order.grandTotalMinor !== null
+          ? formatLocalizedNumber(order.grandTotalMinor) + (order.currency ? " " + escapeHtml(order.currency) : "")
+          : socialCommerceUi("orderAmountUnavailable");
+        const items = order.items ?? [];
+        const stageMarkup = currentStage >= 0
+          ? '<ol class="phoenix-reset-order-progress" aria-label="' + escapeAttr(socialCommerceUi("ordersProgressTitle")) + '">' +
+            stages.map((stage, index) => '<li class="' + (index < currentStage ? "complete" : index === currentStage ? "current" : "") + '">' +
+              '<span aria-hidden="true">' + (index < currentStage ? "✓" : String(index + 1)) + '</span><small>' + stage + '</small></li>').join("") +
+            '</ol>'
+          : "";
+        return '<article class="phoenix-reset-order-card">' +
+          '<header class="phoenix-reset-order-header">' +
+            '<div class="phoenix-reset-order-heading"><span class="phoenix-reset-order-kicker">' + socialCommerceUi("orderReference") + '</span><strong class="phoenix-reset-order-id"><bdi>' + escapeHtml(order.id) + '</bdi></strong>' +
+              '<small>' + (order.createdAt ? escapeHtml(formatDate(order.createdAt)) : socialCommerceUi("orderDateUnavailable")) + '</small></div>' +
+            '<span class="phoenix-reset-order-status ' + stateClass + '">' + statusLabel(order.status) + '</span>' +
+          '</header>' +
+          stageMarkup +
+          '<div class="phoenix-reset-order-items">' +
+            (items.length ? items.map((item) => {
+              const unitPrice = item.unitPriceMinorSnapshot !== undefined && item.unitPriceMinorSnapshot !== null
+                ? formatLocalizedNumber(item.unitPriceMinorSnapshot) + (order.currency ? " " + escapeHtml(order.currency) : "")
+                : socialCommerceUi("orderAmountUnavailable");
+              return '<div class="phoenix-reset-order-item"><span class="phoenix-reset-order-item-icon" aria-hidden="true">▦</span><div><strong>' +
+                escapeHtml(item.descriptionSnapshot ?? socialCommerceUi("orderItemFallback")) + '</strong><small>' +
+                socialCommerceUi("orderQuantity") + ' ' + formatLocalizedNumber(item.quantity ?? 1) + ' · ' + unitPrice + '</small></div></div>';
+            }).join("") : '<p class="phoenix-reset-order-no-items">' + socialCommerceUi("orderItemsUnavailable") + '</p>') +
+          '</div>' +
+          '<footer class="phoenix-reset-order-footer">' +
+            '<div class="phoenix-reset-order-total"><span>' + socialCommerceUi("orderTotalLabel") + '</span><strong>' + formattedTotal + '</strong>' +
+              (order.trackingNumber ? '<small>' + socialCommerceUi("orderTrackingCode") + ' <bdi>' + escapeHtml(order.trackingNumber) + '</bdi></small>' : '') + '</div>' +
+            '<div class="phoenix-reset-order-actions">' +
+              '<button class="button button-primary" type="button" data-track-order="' + escapeAttr(order.id) + '">' + socialCommerceUi("orderTrackAction") + '</button>' +
+              '<a class="button button-ghost" href="/transactions?order=' + encodeURIComponent(order.id) + '" data-nav>' + socialCommerceUi("orderDetailsAction") + '</a>' +
+            '</div>' +
+          '</footer>' +
+        '</article>';
+      }).join("") + '</div>';
 
-            const items = order.items ?? [];
-            const formattedTotal = order.grandTotalMinor ? formatLocalizedNumber(order.grandTotalMinor) + " ریال" : "—";
-            return `
-              <article class="phoenix-order-card glass-card">
-                <div class="phoenix-order-card-header">
-                  <div>
-                    <span class="order-id-label">${uiText("شناسه سفارش:")} <strong>${escapeHtml(order.id)}</strong></span>
-                    <span class="order-date">${order.createdAt ? formatDate(order.createdAt) : "—"}</span>
-                  </div>
-                  <span class="order-status-badge ${statusClass}">${escapeHtml(statusLabel)}</span>
-                </div>
-
-                <div class="phoenix-order-card-items">
-                  ${items.map((item) => `
-                    <div class="order-item-row">
-                      <div class="order-item-icon">✦</div>
-                      <div class="order-item-copy">
-                        <strong>${escapeHtml(item.descriptionSnapshot ?? "محصول یا خدمت ققنوس")}</strong>
-                        <small>${uiText("تعداد:")} ${item.quantity ?? 1} · ${item.unitPriceMinorSnapshot ? formatLocalizedNumber(item.unitPriceMinorSnapshot) + " ریال" : "—"}</small>
-                      </div>
-                    </div>
-                  `).join("")}
-                </div>
-
-                <div class="phoenix-order-card-footer">
-                  <div class="order-footer-meta">
-                    ${order.trackingNumber ? `<span>${uiText("کد رهگیری:")} <code>${escapeHtml(order.trackingNumber)}</code></span>` : ""}
-                    <span>${uiText("مبلغ پرداختی:")} <strong>${formattedTotal}</strong></span>
-                  </div>
-                  <div class="order-footer-actions">
-                    <button class="button button-primary" type="button" data-track-order="${escapeHtml(order.id)}">${uiText("رهگیری گام‌به‌گام")}</button>
-                    <a class="button button-ghost" href="/transactions?order=${encodeURIComponent(order.id)}" data-nav>${uiText("جزئیات معامله")}</a>
-                    <a class="button button-ghost" href="/billing" data-nav>${uiText("فاکتور")}</a>
-                  </div>
-                </div>
-              </article>
-            `;
-          }).join("")}
-        </div>
-      `;
-
-      container.querySelectorAll<HTMLButtonElement>("[data-track-order]").forEach((btn) => {
-        btn.onclick = () => {
-          const orderId = btn.dataset.trackOrder;
-          if (!orderId) return;
-          openOrderTrackingDrawer(orderId);
+      container.querySelectorAll<HTMLButtonElement>("[data-track-order]").forEach((button) => {
+        button.onclick = () => {
+          const orderId = button.dataset.trackOrder;
+          if (orderId) openOrderTrackingDrawer(orderId);
         };
       });
     };
 
-    tabButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        tabButtons.forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentFilter = btn.dataset.ordersFilter ?? "all";
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        currentFilter = button.dataset.ordersFilter ?? "all";
+        tabButtons.forEach((candidate) => {
+          const active = candidate === button;
+          candidate.classList.toggle("active", active);
+          candidate.setAttribute("aria-selected", String(active));
+        });
         renderFiltered();
       });
     });
-
-    if (searchInput) {
-      searchInput.addEventListener("input", () => {
-        searchQuery = searchInput.value.trim().toLowerCase();
-        renderFiltered();
-      });
-    }
-
+    searchInput?.addEventListener("input", () => {
+      searchQuery = searchInput.value.trim().toLocaleLowerCase();
+      renderFiltered();
+    });
     renderFiltered();
   } catch (error) {
-    container.innerHTML = `
-      <div class="slot-empty">
-        <span>!</span>
-        <p>${escapeHtml(error instanceof Error ? error.message : uiText("خواندن سفارش‌ها با خطا مواجه شد."))}</p>
-      </div>
-    `;
+    container.setAttribute("aria-busy", "false");
+    container.innerHTML =
+      '<div class="phoenix-reset-orders-empty error">' +
+        '<span class="phoenix-reset-orders-empty-icon" aria-hidden="true">!</span>' +
+        '<h2>' + socialCommerceUi("ordersLoadErrorTitle") + '</h2>' +
+        '<p>' + escapeHtml(error instanceof Error ? error.message : socialCommerceUi("ordersLoadErrorBody")) + '</p>' +
+        '<button class="button button-ghost" type="button" data-orders-retry>' + socialCommerceUi("ordersRetry") + '</button>' +
+      '</div>';
+    container.querySelector<HTMLButtonElement>("[data-orders-retry]")?.addEventListener("click", () => void loadOrdersPage());
   }
 }
+
+
 
 /* =========================================================================
    Saved / Wishlist Surface (ذخیره‌شده‌ها)

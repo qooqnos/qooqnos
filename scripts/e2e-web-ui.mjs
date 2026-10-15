@@ -74,6 +74,10 @@ await page.route("**/api/v1/**", async (route) => {
       { id: "ws-1", organizationId: "tenant-1", name: "Workspace اصلی", status: "active" },
       { id: "ws-2", organizationId: "tenant-1", name: "Workspace دوم", status: "active" },
     ], currentWorkspaceId: workspace },
+    "/api/v1/commerce/orders": { data: [
+      { id: "order-test-1", status: "shipped", currency: "IRR", grandTotalMinor: 750000, subtotalMinor: 750000, trackingNumber: "TRK-12345", createdAt: "2026-10-15T08:00:00.000Z", items: [{ id: "line-1", descriptionSnapshot: "میز چوبی دست‌ساز", quantity: 1, unitPriceMinorSnapshot: 750000 }] },
+      { id: "order-test-2", status: "processing", currency: "IRR", grandTotalMinor: 350000, subtotalMinor: 350000, createdAt: "2026-10-14T08:00:00.000Z", items: [{ id: "line-2", descriptionSnapshot: "صندلی چوبی", quantity: 1, unitPriceMinorSnapshot: 350000 }] },
+    ] },
     "/api/v1/notifications": { data: [
       { id: "notice-1", intent: "booking.confirmed", channel: "in_app", priority: "high", status: "delivered", createdAt: new Date().toISOString(), variables: {} },
     ] },
@@ -385,6 +389,39 @@ assert.ok(personalProfileText.includes("سفارش‌ها و پیگیری"));
 assert.ok(!personalProfileText.includes("۲۸۰"));
 assert.ok(!personalProfileText.includes("۵ خدمت"));
 assert.ok(!personalProfileText.includes("معامله"));
+await page.goto(baseURL + "/orders");
+await page.locator(".phoenix-reset-orders-page").waitFor();
+await page.locator(".phoenix-reset-order-card").first().waitFor();
+const ordersFa = await page.locator(".phoenix-reset-orders-page").innerText();
+assert.ok(ordersFa.includes("سفارش‌ها، از تأیید تا تحویل"));
+assert.ok(ordersFa.includes("TRK-12345"));
+assert.ok(ordersFa.includes("میز چوبی دست‌ساز"));
+assert.equal(await page.locator(".phoenix-reset-order-card").count(), 2);
+await page.locator("[data-orders-filter='shipped']").click();
+assert.equal(await page.locator(".phoenix-reset-order-card").count(), 1);
+assert.ok((await page.locator(".phoenix-reset-order-card").innerText()).includes("order-test-1"));
+await page.locator("[data-orders-filter='all']").click();
+await page.locator("#orders-search-input").fill("صندلی چوبی");
+assert.equal(await page.locator(".phoenix-reset-order-card").count(), 1);
+assert.ok((await page.locator(".phoenix-reset-order-card").innerText()).includes("order-test-2"));
+await page.locator("#orders-search-input").fill("");
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='en']").click();
+await page.waitForTimeout(50);
+const ordersEn = await page.locator(".phoenix-reset-orders-page").innerText();
+assert.ok(ordersEn.includes("From seller confirmation to delivery"));
+assert.ok(ordersEn.includes("Awaiting / preparing") || ordersEn.includes("In transit"));
+assert.ok(ordersEn.includes("Tracking code:"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='ar']").click();
+await page.waitForTimeout(50);
+const ordersAr = await page.locator(".phoenix-reset-orders-page").innerText();
+assert.ok(ordersAr.includes("من تأكيد البائع حتى التسليم"));
+assert.ok(ordersAr.includes("رمز التتبع:"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='fa']").click();
+await page.waitForTimeout(50);
+
 await page.goto(baseURL + "/messages");
 const messagesText = await page.locator(".phoenix-reset-messages-page").innerText();
 assert.ok(messagesText.includes("پیام‌ها و گفت‌وگوها"));

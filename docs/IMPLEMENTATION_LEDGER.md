@@ -3021,3 +3021,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Moved `/create` into the social shell and changed the route label to the agreed “Add” terminology.
 - Added Persian, English and Arabic copy, responsive layout styles, and Playwright coverage for language changes and draft handoff to Product Studio.
 - Verification status: CI, Phoenix verification and browser E2E must pass on the latest head before this pass is considered complete.
+
+
+## 2026-10-15 — Orders and tracking interface reset
+
+- Rebuilt the buyer Orders page within the social-commerce shell using the same hero, tabs, restrained card surfaces and mobile spacing as the redesigned feed.
+- Added localized statuses for seller confirmation, preparation/packing, shipping, delivery, cancellation/refund, plus a four-stage progress indicator. A stage advances only from the recorded canonical order status.
+- Localized order search, filters, empty/loading/error/retry states, recorded total, quantity and tracking-code labels in Persian, English and Arabic.
+- Removed the unsupported invoice shortcut from the buyer order card; invoice PDF access remains a separate task until a canonical invoice endpoint is available.
+- Added browser E2E coverage for actual returned order data, filtering, search and three-language rendering.
+- Verification status: run CI, Phoenix verification and browser E2E on this commit before considering the Orders reset complete.
