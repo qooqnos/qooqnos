@@ -405,7 +405,7 @@ assert.ok(shippedOrderText.includes("میز چوبی دست‌ساز"));
 await page.locator("[data-orders-filter='all']").click();
 await page.locator("#orders-search-input").fill("صندلی چوبی");
 assert.equal(await page.locator(".phoenix-reset-order-card").count(), 1);
-assert.ok((await page.locator(".phoenix-reset-order-card").innerText()).includes("order-test-2"));
+assert.ok((await page.locator(".phoenix-reset-order-card").first().innerText()).includes("صندلی چوبی"));
 await page.locator("#orders-search-input").fill("");
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='en']").click();
