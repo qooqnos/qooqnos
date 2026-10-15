@@ -38,7 +38,8 @@
     "discoverProductsAndServices": "کشف کالاها و خدمات",
     "backToCart": "بازگشت به سبد خرید",
     "continueDiscovering": "ادامهٔ کشف کالاها و خدمات",
-    "continueToCheckoutReview": "ادامه به بررسی پرداخت"
+    "continueToCheckoutReview": "ادامه به بررسی پرداخت",
+    "add": "افزودن"
   },
   "nav": {
     "home": "خانه",
@@ -1163,7 +1164,8 @@
     "resultCount": "{{count}} نتیجه",
     "loadMore": "نمایش موارد بیشتر",
     "error": "خطا",
-    "retry": "تلاش دوباره"
+    "retry": "تلاش دوباره",
+    "createOfferingDescriptionRequired": "توضیح کالا یا خدمت را وارد کن."
   },
   "workspaceCopy": {
     "roleBusinessProfileDescription": "هویت، Trust و Publication",
@@ -1865,6 +1867,24 @@
     "notificationStatusQueued": "در صف",
     "notificationStatusSent": "ارسال‌شده",
     "notificationStatusDelivered": "تحویل‌شده",
-    "notificationStatusFailed": "ناموفق"
+    "notificationStatusFailed": "ناموفق",
+    "createHubEyebrow": "افزودن کالا یا خدمت",
+    "createHubTitle": "عرضه‌ات را با توضیحی ساده شروع کن",
+    "createHubIntro": "کالا یا خدمت را به زبان خودت توصیف کن یا از تصویر شروع کن. ققنوس پیش‌نویس می‌سازد و انتشار فقط با تأیید تو انجام می‌شود.",
+    "createHubWriteButton": "نوشتن کالا یا خدمت",
+    "createHubTextEyebrow": "شروع با متن",
+    "createHubTextTitle": "توضیحت را بنویس",
+    "createHubTextBody": "نام کالا یا خدمت، ویژگی‌ها و نکته‌های مهم برای خریدار را هر طور راحتی بنویس؛ لازم نیست فرم طولانی پر کنی.",
+    "createHubImageEyebrow": "شروع با تصویر",
+    "createHubImageTitle": "از تصویر شروع کن",
+    "createHubImageBody": "اگر عکس آماده داری، آن را در استودیو اضافه کن تا ققنوس برای شناسایی ویژگی‌ها و تهیهٔ پیش‌نویس کمکت کند.",
+    "createHubOpenStudio": "ورود به استودیو محصول",
+    "createHubStagesLabel": "مراحل آماده‌سازی عرضه",
+    "createHubRawStep": "توصیف خام",
+    "createHubRawStepBody": "متن آزاد یا تصویر اولیه",
+    "createHubDraftStep": "پیش‌نویس هوشمند",
+    "createHubDraftStepBody": "استخراج اطلاعات و پرسش دربارهٔ موارد ناقص",
+    "createHubReviewStep": "بازبینی و انتشار",
+    "createHubReviewStepBody": "بررسی نهایی و تأیید خودت"
   }
 }
