@@ -3011,3 +3011,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Notification summary rendering now selects known human-readable fields only instead of joining arbitrary variables.
 - Added browser E2E coverage for all three languages and assertions that raw event identifiers and the retired sample summary do not appear.
 - Verification status: CI, Phoenix verification and browser E2E must pass on the newest commit before this change is considered complete.
+
+
+## 2026-10-15 — Create center reset: product/service offer first
+
+- Replaced the generic media/idea post grid with a focused path for adding a product or service, consistent with Phoenix's social-commerce model.
+- The new page explains raw text/image input → AI-assisted draft → seller review/publish without requiring a long form at the start.
+- Text entry uses the existing compose modal and carries the draft into Product Studio; image-first creation opens Product Studio directly.
+- Moved `/create` into the social shell and changed the route label to the agreed “Add” terminology.
+- Added Persian, English and Arabic copy, responsive layout styles, and Playwright coverage for language changes and draft handoff to Product Studio.
+- Verification status: CI, Phoenix verification and browser E2E must pass on the latest head before this pass is considered complete.
