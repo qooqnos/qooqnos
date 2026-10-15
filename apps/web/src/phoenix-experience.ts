@@ -713,51 +713,40 @@ export function renderIndividualDashboard(): string {
 /**
  * Screen 1.3: آپلود محتوا (انتخاب نوع محتوا)
  */
-export function renderCreateContentHub(): string {
+export export function renderCreateContentHub(): string {
   return `
-    <div class="phoenix-screen-wrapper">
-      <div class="phoenix-screen-top">
-        <a href="/" data-nav class="phoenix-screen-back-btn" aria-label="${ui("بازگشت")}">→</a>
-        <div class="phoenix-screen-title-wrap">
-          <h1 class="phoenix-screen-title">${ui("آپلود محتوا")}</h1>
-          <div class="phoenix-screen-subtitle">${ui("چه محتوایی می‌خوای اضافه کنی؟")}</div>
+    <div class="phoenix-reset-page phoenix-reset-create-page">
+      <section class="phoenix-reset-hero">
+        <div class="phoenix-reset-hero-copy">
+          <div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>${ui("افزودن کالا یا خدمت")}</span></div>
+          <h1>${ui("عرضه‌ات را با توضیحی ساده شروع کن")}</h1>
+          <p>${ui("کالا یا خدمت را به زبان خودت توصیف کن یا از تصویر شروع کن. ققنوس پیش‌نویس می‌سازد و انتشار فقط با تأیید تو انجام می‌شود.")}</p>
         </div>
-        <div style="width: 38px;"></div>
-      </div>
+        <button class="button button-primary phoenix-reset-create-hero-action" type="button" data-open-create-post>＋ ${ui("نوشتن کالا یا خدمت")}</button>
+      </section>
 
-      <div class="phoenix-screen-content">
-        <div class="phoenix-action-grid" style="grid-template-columns: repeat(2, 1fr);">
-          <a href="/create/details?type=image" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">🖼️</div>
-            <span class="phoenix-action-label">${ui("تصویر")}</span>
-          </a>
-          <a href="/create/details?type=video" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">🎥</div>
-            <span class="phoenix-action-label">${ui("ویدیو")}</span>
-          </a>
-          <a href="/create/details?type=audio" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">🎙️</div>
-            <span class="phoenix-action-label">${ui("صوت")}</span>
-          </a>
-          <a href="/create/details?type=idea" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">💡</div>
-            <span class="phoenix-action-label">${ui("ایده / نظر")}</span>
-          </a>
-          <a href="/create/details?type=service" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">💼</div>
-            <span class="phoenix-action-label">${ui("خدمت")}</span>
-          </a>
-          <a href="/create/details?type=product" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">📦</div>
-            <span class="phoenix-action-label">${ui("محصول")}</span>
-          </a>
-        </div>
+      <section class="phoenix-reset-create-grid">
+        <article class="phoenix-reset-create-card phoenix-reset-create-card-primary">
+          <span class="phoenix-reset-create-icon" aria-hidden="true">✎</span>
+          <span class="phoenix-reset-section-kicker">${ui("شروع با متن")}</span>
+          <h2>${ui("توضیحت را بنویس")}</h2>
+          <p>${ui("نام کالا یا خدمت، ویژگی‌ها و نکته‌های مهم برای خریدار را هر طور راحتی بنویس؛ لازم نیست فرم طولانی پر کنی.")}</p>
+          <button class="button button-primary" type="button" data-open-create-post>${ui("نوشتن کالا یا خدمت")} <span aria-hidden="true">←</span></button>
+        </article>
+        <article class="phoenix-reset-create-card">
+          <span class="phoenix-reset-create-icon" aria-hidden="true">▧</span>
+          <span class="phoenix-reset-section-kicker">${ui("شروع با تصویر")}</span>
+          <h2>${ui("از تصویر شروع کن")}</h2>
+          <p>${ui("اگر عکس آماده داری، آن را در استودیو اضافه کن تا ققنوس برای شناسایی ویژگی‌ها و تهیهٔ پیش‌نویس کمکت کند.")}</p>
+          <a class="button button-ghost" href="/product-studio" data-nav>${ui("ورود به استودیو محصول")} <span aria-hidden="true">←</span></a>
+        </article>
+      </section>
 
-        ${renderSmartAiCard(
-          ui("ققنوس پیشنهاد می‌دهد:"),
-          ui("برای جذب مشتری، ۳ عکس با کیفیت بالا و نور مناسب بارگذاری کن.")
-        )}
-      </div>
+      <section class="phoenix-reset-create-steps" aria-label="${ui("مراحل آماده‌سازی عرضه")}">
+        <article><span>۱</span><div><strong>${ui("توصیف خام")}</strong><small>${ui("متن آزاد یا تصویر اولیه")}</small></div></article>
+        <article><span>۲</span><div><strong>${ui("پیش‌نویس هوشمند")}</strong><small>${ui("استخراج اطلاعات و پرسش دربارهٔ موارد ناقص")}</small></div></article>
+        <article><span>۳</span><div><strong>${ui("بازبینی و انتشار")}</strong><small>${ui("بررسی نهایی و تأیید خودت")}</small></div></article>
+      </section>
     </div>
   `;
 }
