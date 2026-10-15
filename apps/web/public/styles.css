@@ -11959,3 +11959,124 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-reset-notification-icon { width: 35px; height: 35px; flex-basis: 35px; border-radius: 11px; }
   .phoenix-reset-notification-read { padding: 6px 8px; font-size: 10px; }
 }
+
+
+/* Create center — a direct continuation of the social-commerce feed. */
+.phoenix-reset-create-page .phoenix-reset-create-hero-action {
+  min-height: 46px;
+  padding-inline: 18px;
+  border-radius: 14px;
+  white-space: nowrap;
+}
+.phoenix-reset-create-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+  margin-top: 22px;
+}
+.phoenix-reset-create-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  min-height: 285px;
+  padding: clamp(20px, 3vw, 30px);
+  border: 1px solid var(--line);
+  border-radius: 23px;
+  background: var(--surface);
+  box-shadow: 0 12px 36px rgba(55, 35, 22, .04);
+}
+.phoenix-reset-create-card-primary {
+  border-color: color-mix(in srgb, var(--primary) 32%, var(--line));
+  background: linear-gradient(150deg, color-mix(in srgb, var(--primary) 5%, var(--surface)), var(--surface) 65%);
+}
+.phoenix-reset-create-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 17px;
+  border-radius: 15px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  font-size: 22px;
+}
+.phoenix-reset-create-card h2 {
+  margin: 4px 0 8px;
+  color: var(--text);
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 850;
+  line-height: 1.6;
+}
+.phoenix-reset-create-card p {
+  flex: 1;
+  margin: 0 0 22px;
+  max-width: 540px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.95;
+}
+.phoenix-reset-create-card .button {
+  min-height: 43px;
+  padding-inline: 15px;
+  border-radius: 13px;
+  text-decoration: none;
+}
+.phoenix-reset-create-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+.phoenix-reset-create-steps article {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: var(--surface);
+}
+.phoenix-reset-create-steps article > span {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 10px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  font-size: 12px;
+  font-weight: 900;
+}
+.phoenix-reset-create-steps article div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.phoenix-reset-create-steps strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 850;
+}
+.phoenix-reset-create-steps small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.75;
+}
+@media (max-width: 800px) {
+  .phoenix-reset-create-grid { grid-template-columns: minmax(0, 1fr); }
+  .phoenix-reset-create-card { min-height: 225px; }
+  .phoenix-reset-create-steps { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .phoenix-reset-create-page .phoenix-reset-hero {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .phoenix-reset-create-hero-action { width: 100%; justify-content: center; }
+  .phoenix-reset-create-card { padding: 20px; border-radius: 19px; }
+  .phoenix-reset-create-steps article { padding: 14px; }
+}
