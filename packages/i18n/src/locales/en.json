@@ -38,7 +38,8 @@
     "discoverProductsAndServices": "Discover products and services",
     "backToCart": "Back to cart",
     "continueDiscovering": "Continue discovering products and services",
-    "continueToCheckoutReview": "Continue to checkout review"
+    "continueToCheckoutReview": "Continue to checkout review",
+    "add": "Add"
   },
   "nav": {
     "home": "Home",
@@ -1163,7 +1164,8 @@
     "resultCount": "{{count}} results",
     "loadMore": "Show more",
     "error": "Error",
-    "retry": "Try again"
+    "retry": "Try again",
+    "createOfferingDescriptionRequired": "Describe the product or service before continuing."
   },
   "workspaceCopy": {
     "roleBusinessProfileDescription": "Identity, Trust, and Publication",
@@ -1865,6 +1867,24 @@
     "notificationStatusQueued": "Queued",
     "notificationStatusSent": "Sent",
     "notificationStatusDelivered": "Delivered",
-    "notificationStatusFailed": "Failed"
+    "notificationStatusFailed": "Failed",
+    "createHubEyebrow": "Add a product or service",
+    "createHubTitle": "Start your offer with a simple description",
+    "createHubIntro": "Describe a product or service in your own words, or start with an image. Phoenix prepares a draft, and nothing is published until you approve it.",
+    "createHubWriteButton": "Write a product or service",
+    "createHubTextEyebrow": "Start with text",
+    "createHubTextTitle": "Describe your offer",
+    "createHubTextBody": "Describe the product or service, its features, and what buyers should know. You do not need to complete a long form first.",
+    "createHubImageEyebrow": "Start with an image",
+    "createHubImageTitle": "Start from a photo",
+    "createHubImageBody": "Add an image in Product Studio so Phoenix can help identify details and prepare a draft.",
+    "createHubOpenStudio": "Open Product Studio",
+    "createHubStagesLabel": "Offer preparation steps",
+    "createHubRawStep": "Raw description",
+    "createHubRawStepBody": "Free text or an initial image",
+    "createHubDraftStep": "AI-assisted draft",
+    "createHubDraftStepBody": "Extract details and ask about missing information",
+    "createHubReviewStep": "Review and publish",
+    "createHubReviewStepBody": "Review the final draft and approve it yourself"
   }
 }
