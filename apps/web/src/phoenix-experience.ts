@@ -713,7 +713,7 @@ export function renderIndividualDashboard(): string {
 /**
  * Screen 1.3: آپلود محتوا (انتخاب نوع محتوا)
  */
-export export function renderCreateContentHub(): string {
+export function renderCreateContentHub(): string {
   return `
     <div class="phoenix-reset-page phoenix-reset-create-page">
       <section class="phoenix-reset-hero">
