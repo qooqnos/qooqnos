@@ -38,7 +38,8 @@
     "discoverProductsAndServices": "اكتشف المنتجات والخدمات",
     "backToCart": "العودة إلى السلة",
     "continueDiscovering": "مواصلة استكشاف المنتجات والخدمات",
-    "continueToCheckoutReview": "المتابعة إلى مراجعة الدفع"
+    "continueToCheckoutReview": "المتابعة إلى مراجعة الدفع",
+    "add": "إضافة"
   },
   "nav": {
     "home": "الرئيسية",
@@ -1163,7 +1164,8 @@
     "resultCount": "{{count}} نتيجة",
     "loadMore": "عرض المزيد",
     "error": "خطأ",
-    "retry": "حاول مرة أخرى"
+    "retry": "حاول مرة أخرى",
+    "createOfferingDescriptionRequired": "اكتب وصف المنتج أو الخدمة قبل المتابعة."
   },
   "workspaceCopy": {
     "roleBusinessProfileDescription": "الهوية والثقة والنشر",
@@ -1865,6 +1867,24 @@
     "notificationStatusQueued": "في قائمة الانتظار",
     "notificationStatusSent": "أُرسل",
     "notificationStatusDelivered": "تم التسليم",
-    "notificationStatusFailed": "فشل"
+    "notificationStatusFailed": "فشل",
+    "createHubEyebrow": "إضافة منتج أو خدمة",
+    "createHubTitle": "ابدأ عرضك بوصف بسيط",
+    "createHubIntro": "صف المنتج أو الخدمة بلغتك أو ابدأ بصورة. يجهّز ققنوس مسودة، ولا يُنشر أي شيء قبل موافقتك.",
+    "createHubWriteButton": "اكتب منتجاً أو خدمة",
+    "createHubTextEyebrow": "ابدأ بالنص",
+    "createHubTextTitle": "اكتب وصف العرض",
+    "createHubTextBody": "صف المنتج أو الخدمة وميزاته وما يحتاج المشتري إلى معرفته. لا تحتاج إلى ملء نموذج طويل أولاً.",
+    "createHubImageEyebrow": "ابدأ بصورة",
+    "createHubImageTitle": "ابدأ من صورة",
+    "createHubImageBody": "أضف صورة في استوديو المنتج ليُساعدك ققنوس في تحديد التفاصيل وتجهيز المسودة.",
+    "createHubOpenStudio": "فتح استوديو المنتج",
+    "createHubStagesLabel": "خطوات تجهيز العرض",
+    "createHubRawStep": "الوصف الأولي",
+    "createHubRawStepBody": "نص حر أو صورة أولية",
+    "createHubDraftStep": "مسودة بمساعدة الذكاء الاصطناعي",
+    "createHubDraftStepBody": "استخراج المعلومات والسؤال عن التفاصيل الناقصة",
+    "createHubReviewStep": "المراجعة والنشر",
+    "createHubReviewStepBody": "راجع المسودة النهائية ووافق عليها بنفسك"
   }
 }
