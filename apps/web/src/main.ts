@@ -208,17 +208,17 @@ async function loadSocialActivity(): Promise<unknown[]> {
 }
 
 function socialActivityLabel(eventType: string): string {
-  const labels: Record<string,string> = {
-    "social.follow.created": "کسب‌وکاری را دنبال کردی",
-    "social.follow.removed": "دنبال‌کردن یک کسب‌وکار را برداشتی",
-    "social.like.created": "یک مورد را پسندیدی",
-    "social.like.removed": "پسندیدن یک مورد را برداشتی",
-    "social.save.created": "یک مورد را ذخیره کردی",
-    "social.save.removed": "ذخیره یک مورد را برداشتی",
-    "social.comment.created": "برای یک مورد نظر ثبت کردی",
-    "social.comment.removed": "نظر خودت را حذف کردی",
+  const labels: Record<string, string> = {
+    "social.follow.created": "activityFollowCreated",
+    "social.follow.removed": "activityFollowRemoved",
+    "social.like.created": "activityLikeCreated",
+    "social.like.removed": "activityLikeRemoved",
+    "social.save.created": "activitySaveCreated",
+    "social.save.removed": "activitySaveRemoved",
+    "social.comment.created": "activityCommentCreated",
+    "social.comment.removed": "activityCommentRemoved",
   };
-  return labels[eventType] ?? "یک فعالیت اجتماعی ثبت شد";
+  return socialCommerceUi(labels[eventType] ?? "activityGenericEvent");
 }
 
 async function persistSocialAction(action: "like" | "save", item: DiscoveryResult): Promise<boolean> {
@@ -5088,11 +5088,52 @@ function renderCompareTray(): void {
 
 
 function renderActivity(): string {
-  if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><span class="phoenix-kicker">Activity</span><h1>فعالیت‌های ققنوس</h1><p>برای دیدن Follow، Like، Save و نظرات ثبت‌شده، ابتدا وارد حساب کاربری شوید.</p></section><div class="glass-card phoenix-activity-gate"><div class="draft-orb">✦</div><h2>فعالیت شخصی شما</h2><p>برای ثبت و مشاهده تعاملات و علاقه‌مندی‌ها، لطفاً وارد حساب خود شوید.</p><button class="button button-primary" type="button" data-activity-connect>ورود / ثبت‌نام</button></div></div>';
-  }
-  return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><div><span class="phoenix-kicker">Activity</span><h1>ردپای اجتماعی تو در ققنوس</h1><p>رویدادها مستقیماً از Social Engagement خوانده می‌شوند؛ این صفحه timeline جداگانه‌ای در مرورگر نمی‌سازد.</p></div><div class="heading-actions"><button class="button button-ghost" type="button" data-activity-refresh>↻ بروزرسانی</button><a class="button button-primary" href="/discover" data-nav>ادامه کشف ←</a></div></section><section class="phoenix-activity-layout"><article class="glass-card phoenix-activity-card"><div class="card-section-heading"><div><span class="section-kicker">Canonical Social Events</span><h2>آخرین فعالیت‌ها</h2></div><span id="activity-status" class="pill" aria-live="polite">در حال آماده‌سازی</span></div><div id="activity-list" class="phoenix-activity-list" aria-live="polite" aria-busy="true"><div class="slot-loading">در حال خواندن فعالیت‌های واقعی…</div></div></article><aside class="glass-card phoenix-activity-side"><span class="section-kicker">Your loop</span><h2>دنبال کن، ذخیره کن، مقایسه کن.</h2><p>فعالیت‌های اجتماعی در کنار Discovery و Compare برای تصمیم‌گیری پیوسته استفاده می‌شوند؛ ranking و recommendation همچنان در backend canonical باقی می‌مانند.</p><a class="button button-ghost" href="/compare" data-nav>مقایسه‌های انتخاب‌شده</a></aside></section></div>';
+  const signedIn = Boolean(sessionStorage.getItem(STORAGE.accessToken));
+  const hero = '<section class="phoenix-reset-hero">' +
+    '<div class="phoenix-reset-hero-copy">' +
+      '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("activityEyebrow") + '</span></div>' +
+      '<h1>' + socialCommerceUi("activityTitle") + '</h1>' +
+      '<p>' + socialCommerceUi("activityIntro") + '</p>' +
+    '</div>' +
+    '<div class="phoenix-reset-activity-hero-actions">' +
+      (signedIn ? '<button class="button button-ghost" type="button" data-activity-refresh>↻ ' + socialCommerceUi("activityRefresh") + '</button>' : '') +
+      '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("continueDiscovering") + ' <span aria-hidden="true">←</span></a>' +
+    '</div>' +
+  '</section>';
+  const activityPanel = signedIn
+    ? '<article class="phoenix-reset-activity-panel">' +
+        '<div class="phoenix-reset-activity-panel-heading">' +
+          '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("activityEyebrow") + '</span><h2>' + socialCommerceUi("activityListTitle") + '</h2></div>' +
+          '<span id="activity-status" class="phoenix-reset-activity-status" aria-live="polite">' + socialCommerceUi("activityStatusPreparing") + '</span>' +
+        '</div>' +
+        '<div id="activity-list" class="phoenix-reset-activity-list" aria-live="polite" aria-busy="true"><div class="slot-loading">' + socialCommerceUi("activityLoading") + '</div></div>' +
+      '</article>'
+    : '<article class="phoenix-reset-activity-login">' +
+        '<div class="phoenix-reset-side-icon" aria-hidden="true">✦</div>' +
+        '<h2>' + socialCommerceUi("activitySignInTitle") + '</h2>' +
+        '<p>' + socialCommerceUi("activitySignInBody") + '</p>' +
+        '<button class="button button-primary" type="button" data-activity-connect>' + socialCommerceUi("activitySignInAction") + '</button>' +
+      '</article>';
+  const sidebar = '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
+    '<section class="phoenix-reset-side-card">' +
+      '<span class="phoenix-reset-side-icon" aria-hidden="true">◇</span>' +
+      '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("activitySideEyebrow") + '</span>' +
+      '<h2>' + socialCommerceUi("activitySideTitle") + '</h2>' +
+      '<p>' + socialCommerceUi("activitySideBody") + '</p>' +
+      '<a class="button button-ghost" href="/compare" data-nav>' + socialCommerceUi("activityCompareAction") + '</a>' +
+    '</section>' +
+    '<section class="phoenix-reset-side-card">' +
+      '<span class="phoenix-reset-side-icon" aria-hidden="true">⌕</span>' +
+      '<h2>' + socialCommerceUi("needTitle") + '</h2>' +
+      '<p>' + socialCommerceUi("needBody") + '</p>' +
+      '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("tabExplore") + ' <span aria-hidden="true">←</span></a>' +
+    '</section>' +
+  '</aside>';
+  return '<div class="phoenix-reset-page phoenix-reset-activity-page">' + hero +
+    '<div class="phoenix-reset-discover-grid"><section class="phoenix-reset-main-column">' + activityPanel + '</section>' +
+    sidebar + '</div></div>';
 }
+
 
 async function loadActivityPage(): Promise<void> {
   const connect = document.querySelector<HTMLButtonElement>("[data-activity-connect]");
@@ -5108,9 +5149,11 @@ async function loadActivityPage(): Promise<void> {
   const renderRows = (items: unknown[]): void => {
     host.setAttribute("aria-busy", "false");
     if (!items.length) {
-      host.innerHTML = '<div class="social-empty-state"><div class="draft-orb">✦</div><h3>هنوز فعالیتی ثبت نشده است.</h3><p>از Discover یک کسب‌وکار را دنبال کن یا یک محصول را Like/Save کن تا رویداد واقعی اینجا دیده شود.</p><a class="button button-ghost" href="/discover?tab=explore" data-nav>رفتن به اکسپلور</a></div>';
-      status.textContent = "خالی";
-      status.className = "pill";
+      host.innerHTML = '<div class="phoenix-reset-activity-empty"><div class="phoenix-reset-side-icon" aria-hidden="true">✦</div><h3>' +
+        socialCommerceUi("activityEmptyTitle") + '</h3><p>' + socialCommerceUi("activityEmptyBody") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' +
+        socialCommerceUi("activityExploreAction") + ' <span aria-hidden="true">←</span></a></div>';
+      status.textContent = socialCommerceUi("activityStatusEmpty");
+      status.className = "phoenix-reset-activity-status";
       return;
     }
     host.innerHTML = items.map((item) => {
@@ -5119,40 +5162,62 @@ async function loadActivityPage(): Promise<void> {
       let payload: Record<string, unknown> = {};
       const rawPayload = event.payloadJson ?? event.payload;
       if (typeof rawPayload === "string") {
-        try { const parsed = JSON.parse(rawPayload); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) payload = parsed as Record<string, unknown>; } catch { /* ignore */ }
+        try {
+          const parsed = JSON.parse(rawPayload);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) payload = parsed as Record<string, unknown>;
+        } catch {
+          // Ignore an invalid event payload; never expose it as raw JSON.
+        }
       } else if (rawPayload && typeof rawPayload === "object" && !Array.isArray(rawPayload)) {
         payload = rawPayload as Record<string, unknown>;
       }
-      const targetType = String(payload.targetType ?? event.aggregateType ?? "");
+      const targetType = String(payload.targetType ?? event.aggregateType ?? "").toLowerCase();
       const targetId = String(payload.targetId ?? event.aggregateId ?? "");
       const occurredAt = String(event.occurredAt ?? event.createdAt ?? "");
-      const targetLabel = targetType && targetId ? targetType + " · " + targetId : "رویداد اجتماعی ققنوس";
+      const rawTitle = payload.targetTitle ?? payload.title ?? payload.name ?? payload.displayName;
+      const targetTitle = typeof rawTitle === "string" && rawTitle.trim() ? rawTitle.trim() : "";
+      const targetLabel = targetTitle || (
+        targetType === "business" ? socialCommerceUi("activityTargetBusiness")
+          : targetType === "product" ? socialCommerceUi("activityTargetProduct")
+            : targetType === "service" ? socialCommerceUi("activityTargetService")
+              : socialCommerceUi("activityTargetOther")
+      );
       const businessId = String(payload.businessId ?? "");
       const targetHref = targetType === "business" && targetId
         ? "/businesses/" + encodeURIComponent(targetId)
         : targetType === "service" && targetId
           ? "/booking?offering=" + encodeURIComponent(targetId) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : "")
-          : targetType === "product" && targetId
-            ? "/checkout?product=" + encodeURIComponent(targetId)
+          : targetType === "product"
+            ? "/discover?tab=explore" + (targetTitle ? "&q=" + encodeURIComponent(targetTitle) : "")
             : "";
-      return '<article class="phoenix-activity-row"><div class="phoenix-activity-icon">✦</div><div class="phoenix-activity-copy"><strong>' + escapeHtml(socialActivityLabel(eventType)) + '</strong><p>' + escapeHtml(targetLabel) + '</p><small>' + escapeHtml(formatDate(occurredAt)) + '</small></div>' + (targetHref ? '<a class="button button-ghost" href="' + escapeAttr(targetHref) + '" data-nav>باز کردن</a>' : '') + '</article>';
+      const actionLabel = targetType === "product" && !targetTitle
+        ? socialCommerceUi("activityExploreAction")
+        : socialCommerceUi("activityOpenTarget");
+      return '<article class="phoenix-activity-row"><div class="phoenix-activity-icon" aria-hidden="true">✦</div>' +
+        '<div class="phoenix-activity-copy"><strong>' + escapeHtml(socialActivityLabel(eventType)) + '</strong><p>' + escapeHtml(targetLabel) + '</p>' +
+        (occurredAt ? '<small>' + escapeHtml(formatDate(occurredAt)) + '</small>' : '') + '</div>' +
+        (targetHref ? '<a class="button button-ghost phoenix-activity-open" href="' + escapeAttr(targetHref) + '" data-nav>' + actionLabel + '</a>' : '') +
+      '</article>';
     }).join("");
-    status.textContent = String(items.length) + " رویداد";
-    status.className = "pill success";
+    status.textContent = socialCommerceUi("activityEventCount", { count: formatLocalizedNumber(items.length) });
+    status.className = "phoenix-reset-activity-status has-events";
   };
 
   const load = async (): Promise<void> => {
     host.setAttribute("aria-busy", "true");
-    host.innerHTML = '<div class="slot-loading">در حال همگام‌سازی Social Activity…</div>';
-    status.textContent = "در حال خواندن";
-    status.className = "pill";
+    host.innerHTML = '<div class="slot-loading">' + socialCommerceUi("activityLoading") + '</div>';
+    status.textContent = socialCommerceUi("activityStatusReading");
+    status.className = "phoenix-reset-activity-status";
     try {
       const items = await loadSocialActivity();
       renderRows(items);
     } catch (error) {
-      status.textContent = "خطا";
-      status.className = "pill warning";
-      host.innerHTML = '<div class="social-error-state"><div class="draft-orb">!</div><h3>Activity در دسترس نیست.</h3><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Activity ناموفق بود.") + '</p><button class="button button-ghost" type="button" data-activity-retry>تلاش دوباره</button></div>';
+      status.textContent = socialCommerceUi("activityStatusError");
+      status.className = "phoenix-reset-activity-status is-error";
+      const detail = error instanceof Error ? error.message : socialCommerceUi("activityErrorBody");
+      host.innerHTML = '<div class="phoenix-reset-activity-empty is-error"><div class="phoenix-reset-side-icon" aria-hidden="true">!</div><h3>' +
+        socialCommerceUi("activityErrorTitle") + '</h3><p>' + escapeHtml(detail) + '</p><button class="button button-ghost" type="button" data-activity-retry>' +
+        socialCommerceUi("activityRetry") + '</button></div>';
       host.querySelector<HTMLButtonElement>("[data-activity-retry]")?.addEventListener("click", () => void load());
     }
   };
@@ -5160,6 +5225,7 @@ async function loadActivityPage(): Promise<void> {
   refresh?.addEventListener("click", () => void load());
   await load();
 }
+
 
 function renderCompare(): string {
   const items = getCompareItems();

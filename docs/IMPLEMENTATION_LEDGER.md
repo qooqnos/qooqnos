@@ -2992,3 +2992,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The item count and the single-selected count use locale-aware number formatting; raw `product`/`service` values are translated before display.
 - Added unit/E2E coverage for English and Arabic compare copy while protecting against exposing arbitrary internal metadata.
 - Build, typecheck, unit tests, worker dry-run, and browser E2E passed on commit `c2bc20a974b58617fcc1f6e5031924fb39329d25`: https://github.com/qooqnos/qooqnos/actions/runs/38545676101, https://github.com/qooqnos/qooqnos/actions/runs/38545676124, https://github.com/qooqnos/qooqnos/actions/runs/38545676283.
+
+
+## 2026-10-15 — Social Activity page reset
+
+- Rebuilt the Activity page using the approved social-commerce hero, card surface, sidebar, and mobile spacing rather than the legacy dashboard-oriented activity layout.
+- Added Persian, English, and Arabic copy for sign-in gating, activity statuses, empty/error states, event labels, target types, and actions.
+- Activity rows no longer expose internal product/business IDs as display text. Product activity links back to Discovery instead of the unverified checkout flow.
+- Added Playwright assertions for recorded Activity events in all three languages, no leaked product identifiers, and no checkout links.
+- Verification status: CI and browser E2E must be green on the latest branch head before this pass is considered complete.

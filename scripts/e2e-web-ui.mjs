@@ -89,6 +89,10 @@ await page.route("**/api/v1/**", async (route) => {
       { id: "followed-product", sourceType: "product", sourceId: "followed-product", title: "کالای فروشگاه دنبال‌شده", description: "کالای منتشرشده در فید دنبال‌شده‌ها", metadata: { offeringType: "product", businessId: "biz-1", businessName: "فروشگاه دنبال‌شده" } },
     ] },
     "/api/v1/social/state": { data: { follows: [], engagements: [] } },
+    "/api/v1/social/activity": { data: [
+      { id: "event-save-1", eventType: "social.save.created", payloadJson: JSON.stringify({ targetType: "product", targetId: "prod-1", targetTitle: "میز چوبی" }), occurredAt: new Date().toISOString() },
+      { id: "event-follow-1", eventType: "social.follow.created", payloadJson: JSON.stringify({ targetType: "business", targetId: "biz-1", targetTitle: "فروشگاه ترنج" }), occurredAt: new Date().toISOString() },
+    ] },
     "/api/v1/social/follows": { data: { id: "follow-1" } },
     "/api/v1/public/businesses/biz-1": { data: {
       profile: { id: "biz-1", name: "فروشگاه ترنج", displayName: "ترنج", status: "active", publicationStatus: "published", businessType: "retail", primaryCategoryId: "handmade", defaultLocale: "fa-IR", timezone: "Asia/Tehran", defaultCurrency: "IRR", updatedAt: new Date().toISOString() },
@@ -407,6 +411,30 @@ await page.evaluate(() => {
     { id: "local-preview-item", title: "محصول نمایشی محلی", category: "پیش‌نمایش", price: 1234, quantity: 2 },
   ]));
 });
+await page.goto(baseURL + "/activity");
+await page.locator(".phoenix-activity-row").first().waitFor();
+const activityFa = await page.locator(".phoenix-reset-activity-page").innerText();
+assert.ok(activityFa.includes("ردپای اجتماعی تو در ققنوس"));
+assert.ok(activityFa.includes("یک مورد را ذخیره کردی"));
+assert.ok(activityFa.includes("میز چوبی"));
+assert.ok(!activityFa.includes("prod-1"));
+assert.equal(await page.locator("a[href*='/checkout']").count(), 0);
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='en']").click();
+await page.waitForTimeout(50);
+const activityEn = await page.locator(".phoenix-reset-activity-page").innerText();
+assert.ok(activityEn.includes("Your activity on Phoenix"));
+assert.ok(activityEn.includes("You saved an item"));
+assert.ok(activityEn.includes("Selected comparisons"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='ar']").click();
+await page.waitForTimeout(50);
+const activityAr = await page.locator(".phoenix-reset-activity-page").innerText();
+assert.ok(activityAr.includes("نشاطك على ققنوس"));
+assert.ok(activityAr.includes("حفظت عنصراً"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='fa']").click();
+
 await page.goto(baseURL + "/cart");
 const cartPreviewText = await page.locator(".phoenix-screen-wrapper").innerText();
 assert.ok(cartPreviewText.includes("پیش‌نمایش سبد محلی"));

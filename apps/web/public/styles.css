@@ -11653,3 +11653,178 @@ button[aria-busy="true"] .btn-spinner {
   .social-shell .phoenix-public-offer-card { border-radius: 15px; }
   .social-shell .phoenix-public-offer-action .button { width: 100%; justify-content: center; }
 }
+
+
+/* Social activity — shared visual language with the redesigned feed. */
+.phoenix-reset-activity-page .phoenix-reset-activity-hero-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.phoenix-reset-activity-page .phoenix-reset-activity-hero-actions .button {
+  min-height: 44px;
+  border-radius: 13px;
+  white-space: nowrap;
+}
+.phoenix-reset-activity-panel,
+.phoenix-reset-activity-login {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 23px;
+  background: var(--surface);
+  box-shadow: 0 12px 36px rgba(55, 35, 22, .045);
+}
+.phoenix-reset-activity-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+.phoenix-reset-activity-panel-heading h2 {
+  margin: 3px 0 0;
+  font-size: 21px;
+  line-height: 1.55;
+  font-weight: 850;
+}
+.phoenix-reset-activity-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  background: var(--surface-2);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.phoenix-reset-activity-status.has-events {
+  color: var(--primary-strong);
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--line));
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+}
+.phoenix-reset-activity-status.is-error {
+  color: var(--danger, #b42318);
+  border-color: color-mix(in srgb, var(--danger, #b42318) 24%, var(--line));
+}
+.phoenix-reset-activity-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 17px;
+}
+.phoenix-reset-activity-list .phoenix-activity-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+}
+.phoenix-reset-activity-list .phoenix-activity-row:last-child { border-bottom: 0; }
+.phoenix-reset-activity-list .phoenix-activity-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface));
+}
+.phoenix-reset-activity-list .phoenix-activity-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+.phoenix-reset-activity-list .phoenix-activity-copy strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.7;
+}
+.phoenix-reset-activity-list .phoenix-activity-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.phoenix-reset-activity-list .phoenix-activity-copy small {
+  color: var(--faint);
+  font-size: 10px;
+}
+.phoenix-reset-activity-list .phoenix-activity-open {
+  flex: 0 0 auto;
+  min-height: 35px;
+  padding: 7px 11px;
+  border-radius: 11px;
+  font-size: 11px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.phoenix-reset-activity-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 28px 4px 7px;
+}
+.phoenix-reset-activity-empty h3,
+.phoenix-reset-activity-login h2 {
+  margin: 3px 0;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.65;
+  font-weight: 850;
+}
+.phoenix-reset-activity-empty p,
+.phoenix-reset-activity-login p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.95;
+}
+.phoenix-reset-activity-empty .button,
+.phoenix-reset-activity-login .button {
+  min-height: 40px;
+  border-radius: 12px;
+}
+.phoenix-reset-activity-empty.is-error .phoenix-reset-side-icon {
+  color: var(--danger, #b42318);
+  background: color-mix(in srgb, var(--danger, #b42318) 8%, var(--surface));
+}
+.phoenix-reset-activity-login {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+.phoenix-reset-activity-login .phoenix-reset-side-icon { margin-bottom: 8px; }
+@media (max-width: 720px) {
+  .phoenix-reset-activity-page .phoenix-reset-hero {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .phoenix-reset-activity-page .phoenix-reset-activity-hero-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .phoenix-reset-activity-page .phoenix-reset-activity-hero-actions .button { width: 100%; justify-content: center; }
+  .phoenix-reset-activity-panel,
+  .phoenix-reset-activity-login { padding: 17px; border-radius: 19px; }
+  .phoenix-reset-activity-panel-heading { align-items: flex-start; }
+  .phoenix-reset-activity-panel-heading h2 { font-size: 18px; }
+  .phoenix-reset-activity-list .phoenix-activity-row { align-items: flex-start; gap: 9px; }
+  .phoenix-reset-activity-list .phoenix-activity-icon { width: 35px; height: 35px; flex-basis: 35px; border-radius: 11px; }
+  .phoenix-reset-activity-list .phoenix-activity-open { padding: 6px 8px; font-size: 10px; }
+}
