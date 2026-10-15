@@ -436,7 +436,7 @@ const appRoot = app;
 const routes: Route[] = [
   { path: "/", label: "خانه", icon: "⌂", render: renderHome },
   { path: "/welcome", label: "شروع و آشنایی", icon: "✦", render: renderWelcome },
-  { path: "/create", label: "آپلود محتوا", icon: "＋", render: renderCreateContentHub },
+  { path: "/create", label: "افزودن", icon: "＋", render: renderCreateContentHub },
   { path: "/create/details", label: "جزئیات محتوا", icon: "📝", render: renderContentDetailsForm },
   { path: "/create/deal-type", label: "انتخاب معامله", icon: "↔", render: renderDealTypeSelection },
   { path: "/business/welcome", label: "شروع کسب‌وکار", icon: "🏢", render: renderBusinessWelcome },
@@ -753,7 +753,7 @@ function render(): void {
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/welcome";
   const isPublicBusiness = route.path.startsWith("/businesses/");
-  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || isPublicBusiness;
+  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || isPublicBusiness;
   const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
     route.path === "/" ? "feed"
       : route.path === "/activity" || route.path === "/notifications" ? "activity"
@@ -7008,7 +7008,7 @@ function openCreatePostPanel(): void {
   overlay.querySelectorAll<HTMLElement>("[data-close-create-post]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
   overlay.querySelector<HTMLButtonElement>("[data-create-post-submit]")?.addEventListener("click", () => {
     const value = overlay.querySelector<HTMLTextAreaElement>("#social-post-text")?.value.trim() ?? "";
-    if (!value) { showToast("توضیح محصول یا خدمت را وارد کن."); return; }
+    if (!value) { showToast(discoveryUi("createOfferingDescriptionRequired")); return; }
     sessionStorage.setItem("phoenix-social-create-draft", value);
     overlay.remove();
     navigate("/product-studio");
