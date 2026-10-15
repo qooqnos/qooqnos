@@ -78,6 +78,14 @@ await page.route("**/api/v1/**", async (route) => {
       { id: "order-test-1", status: "shipped", currency: "IRR", grandTotalMinor: 750000, subtotalMinor: 750000, trackingNumber: "TRK-12345", createdAt: "2026-10-15T08:00:00.000Z", items: [{ id: "line-1", descriptionSnapshot: "میز چوبی دست‌ساز", quantity: 1, unitPriceMinorSnapshot: 750000 }] },
       { id: "order-test-2", status: "processing", currency: "IRR", grandTotalMinor: 350000, subtotalMinor: 350000, createdAt: "2026-10-14T08:00:00.000Z", items: [{ id: "line-2", descriptionSnapshot: "صندلی چوبی", quantity: 1, unitPriceMinorSnapshot: 350000 }] },
     ] },
+    "/api/v1/availability/schedules": { data: [
+      { id: "schedule-1", businessId: "biz-1", locationId: "location-1", resourceId: "resource-1", timezone: "Asia/Baku", status: "active" },
+    ] },
+    "/api/v1/availability/schedules/schedule-1/slots": { data: [
+      { slotReference: "slot-reference-1", startsAt: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(), endsAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), remainingCapacity: 1, available: true, status: "available" },
+      { slotReference: "slot-reference-2", startsAt: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(), endsAt: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(), remainingCapacity: 0, available: false, status: "booked" },
+    ] },
+    "/api/v1/booking/holds": { data: { id: "hold-test-1", status: "active", expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(), slotReference: "slot-reference-1" } },
     "/api/v1/notifications": { data: [
       { id: "notice-1", intent: "booking.confirmed", channel: "in_app", priority: "high", status: "delivered", createdAt: new Date().toISOString(), variables: {} },
     ] },
@@ -103,7 +111,10 @@ await page.route("**/api/v1/**", async (route) => {
       contacts: [{ contactType: "phone", value: "02100000000", isPrimary: true }],
       locations: [{ name: "شعبه مرکزی", locationType: "store", timezone: "Asia/Tehran" }],
       reviews: [{ id: "review-1", customerId: "customer-1", ratingValue: 5, content: "تجربهٔ منتشرشدهٔ آزمایشی", publishedAt: new Date().toISOString(), createdAt: new Date().toISOString() }],
-      offers: [{ id: "offering-1", businessId: "biz-1", offeringType: "product", title: "کیف دست‌دوز", description: "نمونهٔ کالای منتشرشده", productId: "product-1", serviceId: null, priceAmountMinor: 1250000, currency: "IRR", pricingType: "fixed" }]
+      offers: [
+        { id: "offering-1", businessId: "biz-1", offeringType: "product", title: "کیف دست‌دوز", description: "نمونهٔ کالای منتشرشده", productId: "product-1", serviceId: null, priceAmountMinor: 1250000, currency: "IRR", pricingType: "fixed" },
+        { id: "offering-service-1", businessId: "biz-1", offeringType: "service", title: "مشاورهٔ تخصصی", description: "جلسهٔ مشاورهٔ یک‌ساعته", productId: null, serviceId: "service-1", priceAmountMinor: 450000, currency: "IRR", pricingType: "fixed" },
+      ]
     } },
     "/api/v1/ai/seller/product-creation-sessions": { session: { id: "seller-session-1" } },
     "/api/v1/ai/seller/product-creation-sessions/seller-session-1": { session: { id: "seller-session-1", currentDraftVersion: 1 }, draft: {} },
@@ -389,6 +400,40 @@ assert.ok(personalProfileText.includes("سفارش‌ها و پیگیری"));
 assert.ok(!personalProfileText.includes("۲۸۰"));
 assert.ok(!personalProfileText.includes("۵ خدمت"));
 assert.ok(!personalProfileText.includes("معامله"));
+await page.goto(baseURL + "/booking?businessId=biz-1&offering=offering-service-1");
+await page.locator(".phoenix-reset-booking-page").waitFor();
+await page.locator(".phoenix-reset-booking-offer").waitFor();
+await page.locator(".phoenix-reset-booking-slot button[data-book-slot]").first().waitFor();
+const bookingFa = await page.locator(".phoenix-reset-booking-page").innerText();
+assert.ok(bookingFa.includes("مشاورهٔ تخصصی"));
+assert.ok(bookingFa.includes("زمان‌های آزاد"));
+assert.ok(bookingFa.includes("زمان آزاد"));
+assert.ok(!bookingFa.includes("biz-1"));
+assert.ok(!bookingFa.includes("offering-service-1"));
+assert.ok(!bookingFa.includes("schedule-1"));
+assert.ok(!bookingFa.includes("Business ID"));
+await page.locator(".phoenix-reset-booking-slot button[data-book-slot]").first().click();
+await page.locator(".phoenix-reset-booking-hold-message.success").waitFor();
+const bookingHoldFa = await page.locator(".phoenix-reset-booking-hold-message.success").innerText();
+assert.ok(bookingHoldFa.includes("زمان به‌طور موقت نگه داشته شد"));
+assert.ok(bookingHoldFa.includes("این هنوز رزرو قطعی نیست"));
+assert.ok(!bookingHoldFa.includes("hold-test-1"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='en']").click();
+await page.waitForTimeout(50);
+const bookingEn = await page.locator(".phoenix-reset-booking-page").innerText();
+assert.ok(bookingEn.includes("Choose a time that works for you"));
+assert.ok(bookingEn.includes("This is not a confirmed booking"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='ar']").click();
+await page.waitForTimeout(50);
+const bookingAr = await page.locator(".phoenix-reset-booking-page").innerText();
+assert.ok(bookingAr.includes("اختر الوقت المناسب لك"));
+assert.ok(bookingAr.includes("هذا ليس حجزاً مؤكداً"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='fa']").click();
+await page.waitForTimeout(50);
+
 await page.goto(baseURL + "/orders");
 await page.locator(".phoenix-reset-orders-page").waitFor();
 await page.locator(".phoenix-reset-order-card").first().waitFor();

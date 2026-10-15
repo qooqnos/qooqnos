@@ -753,7 +753,7 @@ function render(): void {
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/welcome";
   const isPublicBusiness = route.path.startsWith("/businesses/");
-  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || isPublicBusiness;
+  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/booking" || isPublicBusiness;
   const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
     route.path === "/" ? "feed"
       : route.path === "/activity" || route.path === "/notifications" ? "activity"
@@ -831,9 +831,15 @@ function render(): void {
     const bookingSchedule = bookingParams.get("scheduleId")?.trim();
     const bookingBusiness = bookingParams.get("businessId")?.trim() || bookingParams.get("business")?.trim();
     const bookingOffering = bookingParams.get("offering")?.trim() || bookingParams.get("offeringId")?.trim();
-    if (bookingOffering) void loadBookingOfferingContext();
-    if (bookingSchedule) void loadBookingSlots();
-    else if (bookingBusiness && bookingOffering) void loadBusinessBookingSchedules();
+    if (bookingOffering) {
+      void loadBookingOfferingContext().then((isBookableService) => {
+        if (!isBookableService) return;
+        if (bookingSchedule) void loadBookingSlots();
+        else if (bookingBusiness) void loadBusinessBookingSchedules();
+      });
+    }
+    document.querySelector<HTMLButtonElement>("[data-load-slots]")?.addEventListener("click", () => void loadBookingSlots());
+    document.querySelector<HTMLButtonElement>("[data-load-business-schedules]")?.addEventListener("click", () => void loadBusinessBookingSchedules());
   }
   if (route.path === "/notifications") void loadNotificationsPage();
   if (route.path === "/profile" && document.querySelector("[data-buyer-tab]")) void loadProfilePage();
@@ -1545,7 +1551,7 @@ function toDateTimeLocal(value: Date): string {
 function renderBooking(): string {
   const params = new URLSearchParams(location.search);
   const scheduleId = params.get("scheduleId")?.trim() ?? "";
-  const businessId = params.get("businessId")?.trim() || params.get("business")?.trim() || localStorage.getItem(STORAGE.business) || "";
+  const businessId = params.get("businessId")?.trim() || params.get("business")?.trim() || "";
   const offeringId = params.get("offering")?.trim() || params.get("offeringId")?.trim() || "";
   const customerId = params.get("customerId")?.trim() || localStorage.getItem(STORAGE.customer) || "";
   const resourceId = params.get("resourceId")?.trim() || "";
@@ -1555,44 +1561,98 @@ function renderBooking(): string {
   const safeDuration = Number.isFinite(duration) && duration > 0 ? Math.trunc(duration) : 60;
   const fromLocal = from ? toDateTimeLocal(new Date(from)) : toDateTimeLocal(new Date());
   const toLocal = to ? toDateTimeLocal(new Date(to)) : toDateTimeLocal(new Date(Date.now() + 86400000));
-  return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Booking / Availability</span><h1>زمان مناسب را پیدا کنید.</h1><p>Availability از سرویس canonical رزرو خوانده می‌شود؛ انتخاب slot از همین صفحه به Hold canonical متصل می‌شود.</p></div>
-    </section>
-    <section class="section-block">
-      <article class="glass-card booking-panel">
-        <div class="booking-context-strip">
-          <div><span>${canonicalUi("canonical.business.business")}</span><strong>${escapeHtml(businessId || "—")}</strong></div>
-          <div><span>${canonicalUi("canonical.catalog.offering")}</span><strong>${escapeHtml(offeringId || "برای مسیر رزرو مشخص نشده")}</strong></div>
-          <div><span>${canonicalUi("canonical.customer.customer")}</span><strong>${escapeHtml(customerId || "از context حساب")}</strong></div>
-          <div><span>${canonicalUi("canonical.booking.resource")}</span><strong>${escapeHtml(resourceId || "از Availability")}</strong></div>
-        </div>
-        <div id="booking-offering-context" class="booking-offering-context" aria-live="polite">
-          ${offeringId
-            ? '<div class="slot-loading booking-offering-loading">در حال خواندن اطلاعات خدمت از Business منتشرشده…</div>'
-            : '<div class="booking-offering-empty">ابتدا یک Service/Offering را انتخاب کنید؛ سپس Availability مناسب همین Business را می‌بینید.</div>'}
-        </div>
-        <div class="booking-fields">
-          <label class="field-label">Schedule ID<input id="booking-schedule" class="studio-input-line" placeholder="Schedule ID" value="${escapeAttr(scheduleId)}" /></label>
-          <label class="field-label">Business ID<input id="booking-business" class="studio-input-line" placeholder="Business ID" value="${escapeAttr(businessId)}" /></label>
-          <label class="field-label">Offering ID<input id="booking-offering" class="studio-input-line" placeholder="Offering ID (برای finalize)" value="${escapeAttr(offeringId)}" /></label>
-          <label class="field-label">Customer ID<input id="booking-customer" class="studio-input-line" placeholder="Customer ID" value="${escapeAttr(customerId)}" /></label>
-          <label class="field-label">${uiText("از تاریخ")}<div class="phoenix-date-input-group"><input id="booking-from" class="studio-input-line date-picker-input" data-date-picker="true" data-iso-date="${escapeAttr(fromLocal.slice(0, 10))}" value="${escapeAttr(formatCentralDate(fromLocal.slice(0, 10)))}" readonly /><button type="button" class="date-picker-trigger-icon" tabindex="-1">📅</button></div></label>
-          <label class="field-label">${uiText("تا تاریخ")}<div class="phoenix-date-input-group"><input id="booking-to" class="studio-input-line date-picker-input" data-date-picker="true" data-iso-date="${escapeAttr(toLocal.slice(0, 10))}" value="${escapeAttr(formatCentralDate(toLocal.slice(0, 10)))}" readonly /><button type="button" class="date-picker-trigger-icon" tabindex="-1">📅</button></div></label>
-          <label class="field-label">Duration (minutes)<input id="booking-duration" class="studio-input-line" type="number" min="1" value="${String(safeDuration)}" /></label>
-          <label class="field-label">Resource ID<input id="booking-resource" class="studio-input-line" placeholder="Resource ID (اختیاری)" value="${escapeAttr(resourceId)}" /></label>
-        </div>
-        <div class="booking-action-row">
-          <button class="button button-primary" type="button" data-load-slots>خواندن Availability</button>
-          <button class="button button-ghost" type="button" data-load-business-schedules>یافتن زمان‌بندی این کسب‌وکار</button>
-        </div>
-        <div id="booking-schedules-result"></div>
-        <div id="booking-hold-result" class="booking-hold-result" aria-live="polite"></div>
-        <div id="booking-slots-result" class="slot-empty"><span>◷</span><p>${scheduleId ? "در حال اتصال به Availability…" : offeringId ? "یک Schedule از Availability انتخاب کنید." : "Schedule را وارد کنید."}</p></div>
-      </article>
-    </section>
-  `;
+
+  return '<div class="phoenix-reset-page phoenix-reset-booking-page">' +
+    '<section class="phoenix-reset-hero">' +
+      '<div class="phoenix-reset-hero-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("bookingEyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("bookingTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("bookingIntro") + '</p>' +
+      '</div>' +
+      '<div class="phoenix-reset-booking-hero-actions">' +
+        '<a class="button button-ghost" href="/discover?tab=explore" data-nav>' + socialCommerceUi("bookingBackToOffer") + ' <span aria-hidden="true">←</span></a>' +
+      '</div>' +
+    '</section>' +
+    '<div class="phoenix-reset-discover-grid">' +
+      '<section class="phoenix-reset-main-column">' +
+        '<article class="phoenix-reset-booking-offer-panel">' +
+          '<div id="booking-offering-context" class="phoenix-reset-booking-offer-context" aria-live="polite">' +
+            (offeringId && businessId
+              ? '<div class="phoenix-reset-booking-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><p>' + socialCommerceUi("bookingLoadingOffer") + '</p></div>'
+              : '<div class="phoenix-reset-booking-empty"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><h2>' + socialCommerceUi("bookingMissingContextTitle") + '</h2><p>' + socialCommerceUi("bookingMissingContextBody") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("bookingBackToOffer") + '</a></div>') +
+          '</div>' +
+          '<input type="hidden" id="booking-schedule" value="' + escapeAttr(scheduleId) + '" />' +
+          '<input type="hidden" id="booking-business" value="' + escapeAttr(businessId) + '" />' +
+          '<input type="hidden" id="booking-offering" value="' + escapeAttr(offeringId) + '" />' +
+          '<input type="hidden" id="booking-customer" value="' + escapeAttr(customerId) + '" />' +
+          '<input type="hidden" id="booking-resource" value="' + escapeAttr(resourceId) + '" />' +
+          '<input type="hidden" id="booking-timezone" value="" />' +
+          '<input type="hidden" id="booking-price-minor" value="" />' +
+          '<input type="hidden" id="booking-currency" value="" />' +
+          '<input type="hidden" id="booking-title-snapshot" value="" />' +
+          '<input type="hidden" id="booking-duration" value="' + String(safeDuration) + '" />' +
+        '</article>' +
+        '<section class="phoenix-reset-booking-date-panel">' +
+          '<div class="phoenix-reset-booking-panel-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("bookingDateRangeEyebrow") + '</span><h2>' + socialCommerceUi("bookingDateRangeTitle") + '</h2><p>' + socialCommerceUi("bookingDateRangeIntro") + '</p></div>' +
+            '<span class="phoenix-reset-booking-date-mark" aria-hidden="true">◷</span></div>' +
+          '<div class="phoenix-reset-booking-date-fields">' +
+            '<label class="phoenix-reset-booking-date-field"><span>' + socialCommerceUi("bookingFromDate") + '</span><div class="phoenix-date-input-group"><input id="booking-from" class="studio-input-line date-picker-input" data-date-picker="true" data-iso-date="' + escapeAttr(fromLocal.slice(0, 10)) + '" value="' + escapeAttr(formatCentralDate(fromLocal.slice(0, 10))) + '" readonly aria-label="' + escapeAttr(socialCommerceUi("bookingFromDate")) + '" /><button type="button" class="date-picker-trigger-icon" tabindex="-1" aria-hidden="true">▦</button></div></label>' +
+            '<label class="phoenix-reset-booking-date-field"><span>' + socialCommerceUi("bookingToDate") + '</span><div class="phoenix-date-input-group"><input id="booking-to" class="studio-input-line date-picker-input" data-date-picker="true" data-iso-date="' + escapeAttr(toLocal.slice(0, 10)) + '" value="' + escapeAttr(formatCentralDate(toLocal.slice(0, 10))) + '" readonly aria-label="' + escapeAttr(socialCommerceUi("bookingToDate")) + '" /><button type="button" class="date-picker-trigger-icon" tabindex="-1" aria-hidden="true">▦</button></div></label>' +
+          '</div>' +
+          '<p class="phoenix-reset-booking-timezone-note">' + socialCommerceUi("bookingTimezoneNote") + '</p>' +
+          '<div class="phoenix-reset-booking-date-actions">' +
+            '<button class="button button-primary" type="button" data-load-slots>' + socialCommerceUi("bookingRefreshTimes") + ' <span aria-hidden="true">←</span></button>' +
+            '<button class="button button-ghost" type="button" data-load-business-schedules>' + socialCommerceUi("bookingRefreshSchedules") + '</button>' +
+          '</div>' +
+        '</section>' +
+        '<section class="phoenix-reset-booking-availability-panel">' +
+          '<div class="phoenix-reset-booking-panel-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("bookingAvailabilityEyebrow") + '</span><h2>' + socialCommerceUi("bookingAvailabilityTitle") + '</h2><p>' + socialCommerceUi("bookingAvailabilityIntro") + '</p></div>' +
+            '<span class="phoenix-reset-booking-date-mark" aria-hidden="true">◷</span></div>' +
+          '<div id="booking-schedules-result" class="phoenix-reset-booking-schedules" aria-live="polite"></div>' +
+          '<div id="booking-slots-result" class="phoenix-reset-booking-slots" aria-live="polite"><div class="phoenix-reset-booking-empty"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><h3>' + socialCommerceUi("bookingSlotsInitialTitle") + '</h3><p>' + socialCommerceUi("bookingSlotsInitialBody") + '</p></div></div>' +
+          '<div id="booking-hold-result" class="phoenix-reset-booking-hold" aria-live="polite"></div>' +
+        '</section>' +
+      '</section>' +
+      '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
+        '<section class="phoenix-reset-side-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">✓</span>' +
+          '<h2>' + socialCommerceUi("bookingStepsTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("bookingStepsIntro") + '</p>' +
+          '<ol class="phoenix-reset-booking-steps">' +
+            '<li><span>1</span><div><strong>' + socialCommerceUi("bookingStepChooseTime") + '</strong><small>' + socialCommerceUi("bookingStepChooseTimeHint") + '</small></div></li>' +
+            '<li><span>2</span><div><strong>' + socialCommerceUi("bookingStepTemporaryHold") + '</strong><small>' + socialCommerceUi("bookingStepTemporaryHoldHint") + '</small></div></li>' +
+            '<li><span>3</span><div><strong>' + socialCommerceUi("bookingStepConfirmation") + '</strong><small>' + socialCommerceUi("bookingStepConfirmationHint") + '</small></div></li>' +
+          '</ol>' +
+        '</section>' +
+        '<section class="phoenix-reset-side-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">✉</span>' +
+          '<h2>' + socialCommerceUi("bookingNeedHelpTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("bookingNeedHelpBody") + '</p>' +
+          '<a class="button button-ghost" href="/messages" data-nav>' + socialCommerceUi("ordersAskSellerAction") + ' <span aria-hidden="true">←</span></a>' +
+        '</section>' +
+      '</aside>' +
+    '</div>' +
+  '</div>';
 }
+
+function formatBookingInstant(value?: string | null): string {
+  if (!value) return socialCommerceUi("bookingTimeUnavailable");
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return socialCommerceUi("bookingTimeUnavailable");
+  const locale = globalLocaleService.getLocale();
+  const timezone = document.querySelector<HTMLInputElement>("#booking-timezone")?.value.trim();
+  try {
+    return new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeStyle: "short",
+      ...(timezone ? { timeZone: timezone } : {}),
+    }).format(date);
+  } catch {
+    return formatDate(value);
+  }
+}
+
+
 
 type BookingSlotView = {
   slotReference?: string;
@@ -1611,6 +1671,14 @@ type BookingOfferingPreview = {
   description?: string | null;
   serviceId?: string | null;
   productId?: string | null;
+  priceAmountMinor?: number | null;
+  currency?: string | null;
+  pricingType?: string | null;
+};
+
+type BookingPublicBusinessPreview = {
+  profile?: { name?: string | null; displayName?: string | null };
+  offers?: BookingOfferingPreview[];
 };
 
 type BookingScheduleView = {
@@ -1622,112 +1690,172 @@ type BookingScheduleView = {
   status?: string;
 };
 
-async function loadBookingOfferingContext(): Promise<void> {
+async function loadBookingOfferingContext(): Promise<boolean> {
+  const params = new URLSearchParams(location.search);
   const offeringId =
     document.querySelector<HTMLInputElement>("#booking-offering")?.value.trim()
-    || new URLSearchParams(location.search).get("offering")?.trim()
-    || new URLSearchParams(location.search).get("offeringId")?.trim()
+    || params.get("offering")?.trim()
+    || params.get("offeringId")?.trim()
     || "";
   const businessId =
     document.querySelector<HTMLInputElement>("#booking-business")?.value.trim()
-    || new URLSearchParams(location.search).get("business")?.trim()
-    || new URLSearchParams(location.search).get("businessId")?.trim()
-    || localStorage.getItem(STORAGE.business)
+    || params.get("business")?.trim()
+    || params.get("businessId")?.trim()
     || "";
   const host = document.querySelector<HTMLElement>("#booking-offering-context");
-  if (!host || !offeringId) return;
+  if (!host || !offeringId) return false;
   if (!businessId) {
-    host.innerHTML = '<div class="booking-offering-empty"><strong>Business context لازم است.</strong><span>برای رزرو خدمت، این Offering باید به یک Business مشخص متصل باشد.</span></div>';
-    return;
+    host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h2>' +
+      socialCommerceUi("bookingMissingContextTitle") + '</h2><p>' + socialCommerceUi("bookingMissingContextBody") + '</p></div>';
+    return false;
   }
 
-  host.innerHTML = '<div class="slot-loading booking-offering-loading">در حال خواندن عرضه منتشرشده…</div>';
+  host.innerHTML = '<div class="phoenix-reset-booking-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><p>' + socialCommerceUi("bookingLoadingOffer") + '</p></div>';
   try {
     const response = await fetch("/api/v1/public/businesses/" + encodeURIComponent(businessId), { headers: { Accept: "application/json" } });
     const body = await response.json().catch(() => null) as {
+      data?: BookingPublicBusinessPreview;
+      profile?: BookingPublicBusinessPreview["profile"];
       offers?: BookingOfferingPreview[];
       error?: { message?: string };
     } | null;
-    if (!response.ok) throw new Error(body?.error?.message ?? "Public Business supply unavailable");
-    const offers = Array.isArray(body?.offers) ? body.offers : [];
+    if (!response.ok) throw new Error(body?.error?.message ?? socialCommerceUi("bookingOfferError"));
+    const publicBusiness = body?.data ?? body ?? null;
+    const offers = Array.isArray(publicBusiness?.offers) ? publicBusiness.offers : [];
     const offer = offers.find((item) => item.id === offeringId);
     if (!offer) {
-      host.innerHTML = '<div class="booking-offering-empty"><strong>این Offering در عرضه عمومی این کسب‌وکار پیدا نشد.</strong><span>شناسه انتخاب‌شده: ' + escapeHtml(offeringId) + ' · مسیر رزرو همچنان از Availability canonical پیروی می‌کند.</span></div>';
-      return;
+      host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h2>' +
+        socialCommerceUi("bookingOfferUnavailableTitle") + '</h2><p>' + socialCommerceUi("bookingOfferUnavailableBody") + '</p></div>';
+      return false;
+    }
+    if (offer.offeringType !== "service") {
+      host.innerHTML = '<div class="phoenix-reset-booking-empty"><span class="phoenix-reset-side-icon" aria-hidden="true">◇</span><h2>' +
+        socialCommerceUi("bookingNotServiceTitle") + '</h2><p>' + socialCommerceUi("bookingNotServiceBody") + '</p><a class="button button-ghost" href="/discover?tab=explore" data-nav>' +
+        socialCommerceUi("bookingBackToOffer") + '</a></div>';
+      return false;
     }
 
-    const kind = offer.offeringType === "service" ? "خدمت" : "محصول";
+    const price = typeof offer.priceAmountMinor === "number" && Number.isFinite(offer.priceAmountMinor)
+      ? formatLocalizedNumber(offer.priceAmountMinor) + (offer.currency ? " " + escapeHtml(offer.currency) : "")
+      : socialCommerceUi("bookingPriceUnavailable");
+    const providerName = publicBusiness?.profile?.displayName || publicBusiness?.profile?.name || "";
+    const hiddenTitle = document.querySelector<HTMLInputElement>("#booking-title-snapshot");
+    const hiddenPrice = document.querySelector<HTMLInputElement>("#booking-price-minor");
+    const hiddenCurrency = document.querySelector<HTMLInputElement>("#booking-currency");
+    const provider = document.querySelector<HTMLElement>("#booking-provider-name");
+    if (hiddenTitle) hiddenTitle.value = offer.title;
+    if (hiddenPrice) hiddenPrice.value = offer.priceAmountMinor !== undefined && offer.priceAmountMinor !== null ? String(offer.priceAmountMinor) : "";
+    if (hiddenCurrency) hiddenCurrency.value = offer.currency ?? "";
+
     host.innerHTML =
-      '<div class="booking-offering-card">' +
-        '<div class="booking-offering-card-main"><span class="section-kicker">Canonical Public Offering</span><h3>' + escapeHtml(offer.title) + '</h3><p>' + escapeHtml(offer.description ?? "توضیح منتشرشده‌ای برای این عرضه ثبت نشده است.") + '</p></div>' +
-        '<div class="booking-offering-card-meta">' +
-          '<span class="pill success">' + kind + '</span>' +
-          '<span>Offering: <strong>' + escapeHtml(offer.id) + '</strong></span>' +
-          (offer.serviceId ? '<span>Service: <strong>' + escapeHtml(offer.serviceId) + '</strong></span>' : '') +
-        '</div>' +
+      '<div class="phoenix-reset-booking-offer">' +
+        '<div class="phoenix-reset-booking-offer-symbol" aria-hidden="true">◷</div>' +
+        '<div class="phoenix-reset-booking-offer-copy"><span class="phoenix-reset-booking-offer-kind">' + socialCommerceUi("service") + '</span>' +
+          '<h2>' + escapeHtml(offer.title) + '</h2>' +
+          '<p>' + escapeHtml(offer.description ?? socialCommerceUi("bookingOfferDescriptionUnavailable")) + '</p>' +
+          '<div class="phoenix-reset-booking-offer-meta">' +
+            '<span>' + socialCommerceUi("bookingSellerLabel") + ': <strong>' + escapeHtml(providerName || socialCommerceUi("seller")) + '</strong></span>' +
+            '<span>' + socialCommerceUi("bookingPriceLabel") + ': <strong>' + price + '</strong></span>' +
+          '</div></div>' +
       '</div>';
+    if (provider) provider.textContent = providerName;
+    return true;
   } catch (error) {
-    host.innerHTML = '<div class="booking-offering-empty"><strong>اطلاعات Offering فعلاً قابل خواندن نیست.</strong><span>' + escapeHtml(error instanceof Error ? error.message : "Public Business supply unavailable") + '</span></div>';
+    host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h2>' +
+      socialCommerceUi("bookingOfferErrorTitle") + '</h2><p>' + socialCommerceUi("bookingOfferError") + '</p></div>';
+    return false;
   }
 }
+
+
 
 async function loadBusinessBookingSchedules(): Promise<void> {
   const businessId =
     document.querySelector<HTMLInputElement>("#booking-business")?.value.trim()
     || new URLSearchParams(location.search).get("business")?.trim()
-    || localStorage.getItem(STORAGE.business)
+    || new URLSearchParams(location.search).get("businessId")?.trim()
     || "";
-  const host = document.querySelector<HTMLDivElement>("#booking-schedules-result");
+  const host = document.querySelector<HTMLElement>("#booking-schedules-result");
   if (!host) return;
   if (!businessId) {
-    host.innerHTML = '<div class="slot-empty"><span>!</span><p>برای پیدا کردن زمان‌بندی، Business ID لازم است.</p></div>';
+    host.innerHTML = '<div class="phoenix-reset-booking-empty"><p>' + socialCommerceUi("bookingMissingContextBody") + '</p></div>';
     return;
   }
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    openConnectionPanel();
+    host.innerHTML = '<div class="phoenix-reset-booking-empty"><h3>' + socialCommerceUi("bookingSignInTitle") + '</h3><p>' +
+      socialCommerceUi("bookingSignInBody") + '</p><button class="button button-primary" type="button" data-booking-sign-in>' +
+      socialCommerceUi("bookingSignInAction") + '</button></div>';
+    host.querySelector<HTMLButtonElement>("[data-booking-sign-in]")?.addEventListener("click", () => openConnectionPanel());
     return;
   }
 
-  host.innerHTML = '<div class="slot-loading">در حال خواندن Scheduleهای واقعی این کسب‌وکار…</div>';
+  host.innerHTML = '<div class="phoenix-reset-booking-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><p>' + socialCommerceUi("bookingAvailabilityLoading") + '</p></div>';
   try {
     const response = await apiJson<{ data: BookingScheduleView[] }>(
       "/api/v1/availability/schedules?businessId=" + encodeURIComponent(businessId) + "&limit=12",
     );
     const schedules = (response.data ?? []).filter((item) => item.status === undefined || item.status === "active");
-    host.innerHTML = schedules.length
-      ? '<div class="booking-schedule-picker"><div class="booking-schedule-picker-head"><div><span class="section-kicker">Canonical Availability</span><h3>زمان‌بندی‌های فعال</h3><p>Schedule از Availability خوانده می‌شود؛ این صفحه Schedule جدید ایجاد نمی‌کند.</p></div><span class="pill success">' + String(schedules.length) + ' مورد</span></div><div class="booking-schedule-grid">' +
-        schedules.map((schedule) => {
-          const currentId = document.querySelector<HTMLInputElement>("#booking-schedule")?.value.trim() ?? "";
-          const active = currentId === schedule.id;
-          const meta = [
-            schedule.locationId ? "Location " + schedule.locationId : "",
-            schedule.resourceId ? "Resource " + schedule.resourceId : "",
-            schedule.timezone ?? "",
-          ].filter(Boolean).join(" · ") || "منبع زمان‌بندی canonical";
-          return '<article class="booking-schedule-card' + (active ? ' active' : '') + '">' +
-            '<div class="booking-schedule-card-top"><span class="pill' + (active ? ' success' : '') + '">' + (active ? "انتخاب‌شده" : "فعال") + '</span><strong>' + escapeHtml(schedule.id) + '</strong></div>' +
-            '<p>' + escapeHtml(meta) + '</p>' +
-            '<button class="button ' + (active ? 'button-secondary' : 'button-primary') + '" type="button" data-select-booking-schedule="' + escapeAttr(schedule.id) + '" data-schedule-resource="' + escapeAttr(schedule.resourceId ?? "") + '">' + (active ? "بارگذاری Availability ↻" : "انتخاب این زمان‌بندی →") + '</button>' +
-          '</article>';
-        }).join("") +
-      '</div></div>'
-      : '<div class="slot-empty"><span>◌</span><p>برای این Business هنوز Schedule فعال قابل استفاده پیدا نشد.</p></div>';
+    if (!schedules.length) {
+      host.innerHTML = '<div class="phoenix-reset-booking-empty"><span class="phoenix-reset-side-icon" aria-hidden="true">◌</span><h3>' +
+        socialCommerceUi("bookingNoScheduleTitle") + '</h3><p>' + socialCommerceUi("bookingNoScheduleBody") + '</p></div>';
+      return;
+    }
+
+    const scheduleInput = document.querySelector<HTMLInputElement>("#booking-schedule");
+    const resourceInput = document.querySelector<HTMLInputElement>("#booking-resource");
+    const timezoneInput = document.querySelector<HTMLInputElement>("#booking-timezone");
+    const requestedId = scheduleInput?.value.trim() ?? "";
+    const selectedSchedule = schedules.find((schedule) => schedule.id === requestedId) ?? schedules[0]!;
+    if (scheduleInput) scheduleInput.value = selectedSchedule.id;
+    if (resourceInput) resourceInput.value = selectedSchedule.resourceId ?? "";
+    if (timezoneInput) timezoneInput.value = selectedSchedule.timezone ?? "";
+    host.innerHTML = '<div class="phoenix-reset-booking-schedule-list">' +
+      '<div class="phoenix-reset-booking-schedule-list-head"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("bookingAvailabilityEyebrow") + '</span><h3>' +
+        socialCommerceUi("bookingSelectSchedule") + '</h3><p>' + socialCommerceUi("bookingTimezoneNote") + '</p></div></div>' +
+      schedules.map((schedule, index) => {
+        const active = schedule.id === selectedSchedule.id;
+        const timezoneInputValue = schedule.timezone ?? "";
+        return '<article class="phoenix-reset-booking-schedule-card' + (active ? " active" : "") + '">' +
+          '<span class="phoenix-reset-booking-schedule-icon" aria-hidden="true">◷</span>' +
+          '<div class="phoenix-reset-booking-schedule-copy"><strong>' + socialCommerceUi("bookingScheduleFallback") + ' ' + formatLocalizedNumber(index + 1) + '</strong>' +
+            '<small>' + (timezoneInputValue ? socialCommerceUi("bookingProviderLocalTime") : socialCommerceUi("bookingAvailabilityVerified")) + '</small></div>' +
+          '<button class="button ' + (active ? "button-secondary" : "button-ghost") + '" type="button" data-select-booking-schedule="' + escapeAttr(schedule.id) +
+            '" data-schedule-resource="' + escapeAttr(schedule.resourceId ?? "") + '" data-schedule-timezone="' + escapeAttr(schedule.timezone ?? "") + '">' +
+            (active ? socialCommerceUi("bookingSelectedSchedule") : socialCommerceUi("bookingUseSchedule")) + '</button>' +
+        '</article>';
+      }).join("") +
+    '</div>';
 
     host.querySelectorAll<HTMLButtonElement>("[data-select-booking-schedule]").forEach((button) => {
       button.addEventListener("click", () => {
-        const scheduleInput = document.querySelector<HTMLInputElement>("#booking-schedule");
-        const resourceInput = document.querySelector<HTMLInputElement>("#booking-resource");
-        if (scheduleInput) scheduleInput.value = button.dataset.selectBookingSchedule ?? "";
-        if (resourceInput) resourceInput.value = button.dataset.scheduleResource ?? "";
+        const scheduleNode = document.querySelector<HTMLInputElement>("#booking-schedule");
+        const resourceNode = document.querySelector<HTMLInputElement>("#booking-resource");
+        const timezoneNode = document.querySelector<HTMLInputElement>("#booking-timezone");
+        if (scheduleNode) scheduleNode.value = button.dataset.selectBookingSchedule ?? "";
+        if (resourceNode) resourceNode.value = button.dataset.scheduleResource ?? "";
+        if (timezoneNode) timezoneNode.value = button.dataset.scheduleTimezone ?? "";
+        host.querySelectorAll<HTMLElement>(".phoenix-reset-booking-schedule-card").forEach((card) => card.classList.remove("active"));
+        button.closest<HTMLElement>(".phoenix-reset-booking-schedule-card")?.classList.add("active");
+        host.querySelectorAll<HTMLButtonElement>("[data-select-booking-schedule]").forEach((candidate) => {
+          const active = candidate === button;
+          candidate.classList.toggle("button-secondary", active);
+          candidate.classList.toggle("button-primary", active);
+          candidate.classList.toggle("button-ghost", !active);
+          candidate.textContent = active ? socialCommerceUi("bookingSelectedSchedule") : socialCommerceUi("bookingUseSchedule");
+        });
         void loadBookingSlots();
-        host.querySelectorAll<HTMLElement>(".booking-schedule-card").forEach((card) => card.classList.remove("active"));
-        button.closest<HTMLElement>(".booking-schedule-card")?.classList.add("active");
       });
     });
+    void loadBookingSlots();
   } catch (error) {
-    host.innerHTML = '<div class="slot-empty"><span>!</span><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Scheduleهای Availability ناموفق بود.") + '</p></div>';
+    host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h3>' +
+      socialCommerceUi("bookingAvailabilityErrorTitle") + '</h3><p>' + escapeHtml(error instanceof Error ? error.message : socialCommerceUi("bookingAvailabilityError")) + '</p>' +
+      '<button type="button" class="button button-ghost" data-booking-retry-schedules>' + socialCommerceUi("bookingRetry") + '</button></div>';
+    host.querySelector<HTMLButtonElement>("[data-booking-retry-schedules]")?.addEventListener("click", () => void loadBusinessBookingSchedules());
   }
 }
+
+
 
 async function loadBookingSlots(): Promise<void> {
   const scheduleId = document.querySelector<HTMLInputElement>("#booking-schedule")?.value.trim() ?? "";
@@ -1736,44 +1864,71 @@ async function loadBookingSlots(): Promise<void> {
   const from = fromEl?.dataset.isoDate || fromEl?.value || "";
   const to = toEl?.dataset.isoDate || toEl?.value || "";
   const durationSeconds = Number(document.querySelector<HTMLInputElement>("#booking-duration")?.value ?? "60") * 60;
-  const host = document.querySelector<HTMLDivElement>("#booking-slots-result");
+  const host = document.querySelector<HTMLElement>("#booking-slots-result");
   if (!host) return;
   if (!scheduleId || !from || !to || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
-    host.innerHTML = '<div class="slot-empty"><span>!</span><p>Schedule و بازه زمانی معتبر لازم است.</p></div>';
+    host.innerHTML = '<div class="phoenix-reset-booking-empty"><h3>' + socialCommerceUi("bookingSlotsInitialTitle") + '</h3><p>' + socialCommerceUi("bookingSlotsInitialBody") + '</p></div>';
     return;
   }
-  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
-  host.innerHTML = '<div class="slot-loading">در حال خواندن Availability…</div>';
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    host.innerHTML = '<div class="phoenix-reset-booking-empty"><h3>' + socialCommerceUi("bookingSignInTitle") + '</h3><p>' + socialCommerceUi("bookingSignInBody") + '</p></div>';
+    return;
+  }
+
+  host.innerHTML = '<div class="phoenix-reset-booking-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><p>' + socialCommerceUi("bookingSlotsLoading") + '</p></div>';
   try {
     const response = await apiJson<{ data: BookingSlotView[] }>(
       "/api/v1/availability/schedules/" + encodeURIComponent(scheduleId) + "/slots?from=" + encodeURIComponent(new Date(from).toISOString()) + "&to=" + encodeURIComponent(new Date(to).toISOString()) + "&durationSeconds=" + String(Math.trunc(durationSeconds)),
     );
-    host.innerHTML = response.data.length
-      ? '<div class="booking-slot-grid">' + response.data.map((slot) => {
-          const disabled = slot.available === false || (slot.status !== undefined && slot.status !== "available") || (slot.remainingCapacity !== undefined && slot.remainingCapacity <= 0) || !slot.slotReference;
-          const reference = slot.slotReference ?? "";
-          return '<article class="booking-slot-card">' +
-            '<div class="booking-slot-card-meta"><span>' + escapeHtml(slot.status ?? "available") + '</span>' + (slot.remainingCapacity !== undefined ? '<span>' + String(Math.max(slot.remainingCapacity, 0)) + ' ظرفیت</span>' : '') + '</div>' +
-            '<strong>' + escapeHtml(slot.startsAt ?? "—") + '</strong><small>' + escapeHtml(slot.endsAt ?? "—") + '</small>' +
-            (disabled ? '<span class="pill warning">قابل رزرو نیست</span>' : '<button class="button button-primary booking-slot-action" type="button" data-book-slot="' + escapeAttr(reference) + '">گرفتن نوبت</button>') +
-            '</article>';
-        }).join("") + '</div>'
-      : '<div class="slot-empty"><span>◌</span><p>در این بازه slot قابل‌نمایشی پیدا نشد.</p></div>';
+    const slots = Array.isArray(response.data) ? response.data : [];
+    const bookable = slots.filter((slot) =>
+      slot.available !== false &&
+      (slot.status === undefined || slot.status === "available") &&
+      (slot.remainingCapacity === undefined || slot.remainingCapacity > 0) &&
+      Boolean(slot.slotReference),
+    );
+    if (!bookable.length) {
+      host.innerHTML = '<div class="phoenix-reset-booking-empty"><span class="phoenix-reset-side-icon" aria-hidden="true">◌</span><h3>' +
+        socialCommerceUi("bookingNoSlotsTitle") + '</h3><p>' + socialCommerceUi("bookingNoSlotsBody") + '</p></div>';
+      return;
+    }
+    host.innerHTML = '<div class="phoenix-reset-booking-slot-grid">' + bookable.map((slot) => {
+      const reference = slot.slotReference ?? "";
+      const capacity = slot.remainingCapacity !== undefined
+        ? '<small class="phoenix-reset-booking-slot-capacity">' + socialCommerceUi("bookingCapacityLabel") + ' ' + formatLocalizedNumber(slot.remainingCapacity) + '</small>'
+        : '';
+      return '<article class="phoenix-reset-booking-slot">' +
+        '<span class="phoenix-reset-booking-slot-status"><i></i>' + socialCommerceUi("bookingSlotAvailable") + '</span>' +
+        '<strong>' + escapeHtml(formatBookingInstant(slot.startsAt)) + '</strong>' +
+        '<small>' + socialCommerceUi("bookingUntil") + ' ' + escapeHtml(formatBookingInstant(slot.endsAt)) + '</small>' +
+        capacity +
+        '<button class="button button-primary" type="button" data-book-slot="' + escapeAttr(reference) + '">' + socialCommerceUi("bookingSlotAction") + ' <span aria-hidden="true">←</span></button>' +
+      '</article>';
+    }).join("") + '</div>';
     host.querySelectorAll<HTMLButtonElement>("[data-book-slot]").forEach((button) => {
       button.addEventListener("click", () => void createBookingHold(button.dataset.bookSlot ?? "", button));
     });
   } catch (error) {
-    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن Availability ناموفق بود.")}</p></div>`;
+    host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h3>' +
+      socialCommerceUi("bookingAvailabilityErrorTitle") + '</h3><p>' + escapeHtml(error instanceof Error ? error.message : socialCommerceUi("bookingAvailabilityError")) + '</p>' +
+      '<button type="button" class="button button-ghost" data-booking-retry-slots>' + socialCommerceUi("bookingRetry") + '</button></div>';
+    host.querySelector<HTMLButtonElement>("[data-booking-retry-slots]")?.addEventListener("click", () => void loadBookingSlots());
   }
 }
 
+
+
 async function createBookingHold(slotReference: string, button: HTMLButtonElement): Promise<void> {
-  const businessId = document.querySelector<HTMLInputElement>("#booking-business")?.value.trim() || localStorage.getItem(STORAGE.business) || "";
+  const businessId = document.querySelector<HTMLInputElement>("#booking-business")?.value.trim()
+    || new URLSearchParams(location.search).get("businessId")?.trim()
+    || new URLSearchParams(location.search).get("business")?.trim()
+    || "";
   const resourceId = document.querySelector<HTMLInputElement>("#booking-resource")?.value.trim() || "";
   const result = document.querySelector<HTMLElement>("#booking-hold-result");
   if (!result) return;
   if (!businessId || !slotReference) {
-    result.innerHTML = '<div class="connection-state error">Business ID و slot reference برای Hold لازم است.</div>';
+    result.innerHTML = '<div class="phoenix-reset-booking-empty error"><p>' + socialCommerceUi("bookingHoldErrorBody") + '</p></div>';
     return;
   }
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
@@ -1781,22 +1936,28 @@ async function createBookingHold(slotReference: string, button: HTMLButtonElemen
     return;
   }
   button.disabled = true;
-  button.textContent = "در حال رزرو موقت…";
-  result.innerHTML = '<div class="connection-state">در حال ایجاد Hold canonical…</div>';
+  const originalLabel = button.textContent ?? socialCommerceUi("bookingSlotAction");
+  button.textContent = socialCommerceUi("bookingHoldLoading");
+  result.innerHTML = '<div class="phoenix-reset-booking-hold-message loading">' + socialCommerceUi("bookingHoldLoading") + '</div>';
   try {
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
     const response = await apiJson<{ data: { id: string; status: string; expiresAt: string; slotReference: string } }>("/api/v1/booking/holds", {
       method: "POST",
       body: { businessId, slotReference, ...(resourceId ? { resourceId } : {}), expiresAt },
     });
-    result.innerHTML = '<div class="connection-state success"><strong>Slot موقتاً نگه داشته شد.</strong><span>Hold: ' + escapeHtml(response.data.id) + '</span><span>وضعیت: ' + escapeHtml(response.data.status) + '</span><span>انقضا: ' + escapeHtml(response.data.expiresAt) + '</span><p>مرحله finalize به اطلاعات معتبر Offering/price snapshot وابسته است و تا قبل از دریافت آن خودکار اجرا نمی‌شود.</p></div>';
-    button.textContent = "Hold ایجاد شد ✓";
+    result.innerHTML = '<div class="phoenix-reset-booking-hold-message success"><span class="phoenix-reset-side-icon" aria-hidden="true">✓</span><h3>' +
+      socialCommerceUi("bookingHoldCreatedTitle") + '</h3><p>' + socialCommerceUi("bookingHoldExpires") + ' <strong>' + escapeHtml(formatBookingInstant(response.data.expiresAt)) + '</strong></p>' +
+      '<p class="phoenix-reset-booking-hold-warning">' + socialCommerceUi("bookingHoldNotConfirmed") + '</p></div>';
+    button.textContent = socialCommerceUi("bookingHeldAction");
   } catch (error) {
     button.disabled = false;
-    button.textContent = "گرفتن نوبت";
-    result.innerHTML = '<div class="connection-state error">' + escapeHtml(error instanceof Error ? error.message : "ایجاد Hold ناموفق بود.") + '</div>';
+    button.textContent = originalLabel;
+    result.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h3>' +
+      socialCommerceUi("bookingHoldErrorTitle") + '</h3><p>' + escapeHtml(error instanceof Error ? error.message : socialCommerceUi("bookingHoldErrorBody")) + '</p></div>';
   }
 }
+
+
 
 function renderPromotion(): string {
   return "<section class='page-heading'><div><span class='eyebrow'><i></i> Promotion Studio</span><h1>مشوق را تعریف کنید؛ <em>قانون را قفل کنید.</em></h1><p>Promotion فقط policy و eligibility را مالک است.</p></div></section>" +

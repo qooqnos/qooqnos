@@ -3031,3 +3031,14 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Removed the unsupported invoice shortcut from the buyer order card; invoice PDF access remains a separate task until a canonical invoice endpoint is available.
 - Added browser E2E coverage for actual returned order data, filtering, search and three-language rendering.
 - Verification status: run CI, Phoenix verification and browser E2E on this commit before considering the Orders reset complete.
+
+
+## 2026-10-15 — Service booking interface reset
+
+- Replaced the exposed-ID Availability form with a customer-facing service-booking surface inside the social shell.
+- Business, offering, customer, schedule, resource and price snapshot identifiers remain in hidden form state; user-visible content is based on the published service and canonical Availability response.
+- The public business response accepts its canonical `data.offers` envelope. Product offers are not presented as bookable services.
+- Available schedule and slot lists use the provider's recorded timezone and only display slots whose canonical status is `available` with remaining capacity.
+- A successful hold is described as temporary, never as a confirmed booking; the UI states explicitly that final confirmation/payment has not happened.
+- Added responsive layout, Persian/English/Arabic copy and browser E2E coverage for real service context, schedule/slot loading, ID privacy and temporary-hold messaging.
+- Verification status: CI, Phoenix verification and browser E2E must pass on the latest commit before this step is considered complete.
