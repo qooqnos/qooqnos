@@ -1760,7 +1760,7 @@ async function loadBookingOfferingContext(): Promise<boolean> {
       '</div>';
     if (provider) provider.textContent = providerName;
     return true;
-  } catch (error) {
+  } catch {
     host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h2>' +
       socialCommerceUi("bookingOfferErrorTitle") + '</h2><p>' + socialCommerceUi("bookingOfferError") + '</p></div>';
     return false;
