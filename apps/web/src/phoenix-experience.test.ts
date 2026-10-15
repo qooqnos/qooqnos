@@ -76,8 +76,10 @@ describe("Phoenix Unified Experience (apps/web/src/phoenix-experience.ts)", () =
     expect(renderIndividualWelcome()).toContain("سلام!");
     expect(renderIndividualDashboard()).toContain("سلام سارا");
     expect(renderIndividualDashboard()).toContain("بگو چی می‌خوای انجام بدی؟");
-    expect(renderCreateContentHub()).toContain("چه محتوایی می‌خوای اضافه کنی؟");
-    expect(renderCreateContentHub()).toContain("ایده / نظر");
+    expect(renderCreateContentHub()).toContain("عرضه‌ات را با توضیحی ساده شروع کن");
+    expect(renderCreateContentHub()).toContain("نوشتن کالا یا خدمت");
+    expect(renderCreateContentHub()).toContain("پیش‌نویس هوشمند");
+    expect(renderCreateContentHub()).toContain("/product-studio");
     expect(renderContentDetailsForm()).toContain("جزئیات محتوا");
     expect(renderContentDetailsForm()).toContain("قیمت پیشنهادی");
     expect(renderDealTypeSelection()).toContain("الان می‌خوای با این محتوا چیکار کنی؟");
