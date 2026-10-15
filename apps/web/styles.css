@@ -12181,3 +12181,134 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-reset-activity-list .phoenix-activity-icon { width: 35px; height: 35px; flex-basis: 35px; border-radius: 11px; }
   .phoenix-reset-activity-list .phoenix-activity-open { padding: 6px 8px; font-size: 10px; }
 }
+
+
+/* Canonical notifications — same social shell as Activity and the feed. */
+.phoenix-reset-notifications-page .phoenix-reset-notification-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+}
+.phoenix-reset-notifications-page .phoenix-reset-notification-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.phoenix-reset-notifications-page .phoenix-reset-notification-item:last-child { border-bottom: 0; }
+.phoenix-reset-notifications-page .phoenix-reset-notification-item.unread {
+  background: color-mix(in srgb, var(--primary) 3%, var(--surface));
+}
+.phoenix-reset-notification-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface));
+}
+.phoenix-reset-notification-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 4px;
+}
+.phoenix-reset-notification-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.phoenix-reset-notification-top strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.7;
+}
+.phoenix-reset-notification-top span {
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: var(--surface-2);
+  font-size: 10px;
+  font-weight: 750;
+}
+.phoenix-reset-notification-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.phoenix-reset-notification-copy small {
+  color: var(--faint);
+  font-size: 10px;
+}
+.phoenix-reset-notification-read {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--primary-strong);
+  background: var(--surface);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.phoenix-reset-notification-item.read .phoenix-reset-notification-read {
+  color: var(--muted);
+  background: var(--surface-2);
+}
+.phoenix-reset-notification-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 28px 4px 8px;
+}
+.phoenix-reset-notification-empty h3 {
+  margin: 3px 0;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.6;
+  font-weight: 850;
+}
+.phoenix-reset-notification-empty p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.9;
+}
+.phoenix-reset-notification-empty .button {
+  min-height: 40px;
+  border-radius: 12px;
+}
+.phoenix-reset-notification-empty.is-error .phoenix-reset-side-icon {
+  color: var(--danger, #b42318);
+  background: color-mix(in srgb, var(--danger, #b42318) 8%, var(--surface));
+}
+@media (max-width: 720px) {
+  .phoenix-reset-notifications-page .phoenix-reset-hero {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .phoenix-reset-notifications-page .phoenix-reset-activity-hero-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .phoenix-reset-notifications-page .phoenix-reset-activity-hero-actions .button { width: 100%; justify-content: center; }
+  .phoenix-reset-notifications-page .phoenix-reset-activity-panel { padding: 17px; border-radius: 19px; }
+  .phoenix-reset-notifications-page .phoenix-reset-notification-item { align-items: flex-start; gap: 9px; }
+  .phoenix-reset-notification-icon { width: 35px; height: 35px; flex-basis: 35px; border-radius: 11px; }
+  .phoenix-reset-notification-read { padding: 6px 8px; font-size: 10px; }
+}

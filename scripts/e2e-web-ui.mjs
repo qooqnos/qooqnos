@@ -75,7 +75,7 @@ await page.route("**/api/v1/**", async (route) => {
       { id: "ws-2", organizationId: "tenant-1", name: "Workspace دوم", status: "active" },
     ], currentWorkspaceId: workspace },
     "/api/v1/notifications": { data: [
-      { id: "notice-1", intent: "booking.confirmed", channel: "in_app", priority: "high", status: "delivered", createdAt: new Date().toISOString(), variables: { title: "رزرو شما تأیید شد" } },
+      { id: "notice-1", intent: "booking.confirmed", channel: "in_app", priority: "high", status: "delivered", createdAt: new Date().toISOString(), variables: {} },
     ] },
     "/api/v1/business-access": { status: "authorized", tenantId: "tenant-1", workspaceId: workspace },
     "/api/v1/ai/usage": { data: [{ operationId: "op-1", operationType: "seller.product.extract", meterUnit: "provider_units", quantity: 17, modelId: "test-model", billingUsageReference: "bill-1", createdAt: new Date().toISOString() }] },
@@ -432,6 +432,30 @@ await page.waitForTimeout(50);
 const activityAr = await page.locator(".phoenix-reset-activity-page").innerText();
 assert.ok(activityAr.includes("نشاطك على ققنوس"));
 assert.ok(activityAr.includes("حفظت عنصراً"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='fa']").click();
+
+await page.goto(baseURL + "/notifications");
+await page.locator(".phoenix-reset-notification-item").first().waitFor();
+const notificationsFa = await page.locator(".phoenix-reset-notifications-page").innerText();
+assert.ok(notificationsFa.includes("خبرهای مهم ققنوس"));
+assert.ok(notificationsFa.includes("رزرو تأیید شد"));
+assert.ok(notificationsFa.includes("خوانده‌نشده"));
+assert.ok(!notificationsFa.includes("booking.confirmed"));
+assert.ok(!notificationsFa.includes("رزرو شما تأیید شد"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='en']").click();
+await page.waitForTimeout(50);
+const notificationsEn = await page.locator(".phoenix-reset-notifications-page").innerText();
+assert.ok(notificationsEn.includes("Updates that matter"));
+assert.ok(notificationsEn.includes("Booking confirmed"));
+assert.ok(notificationsEn.includes("1 unread"));
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='ar']").click();
+await page.waitForTimeout(50);
+const notificationsAr = await page.locator(".phoenix-reset-notifications-page").innerText();
+assert.ok(notificationsAr.includes("التحديثات المهمة"));
+assert.ok(notificationsAr.includes("تم تأكيد الحجز"));
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 

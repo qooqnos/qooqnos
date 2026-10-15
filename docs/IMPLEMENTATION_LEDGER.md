@@ -3001,3 +3001,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Activity rows no longer expose internal product/business IDs as display text. Product activity links back to Discovery instead of the unverified checkout flow.
 - Added Playwright assertions for recorded Activity events in all three languages, no leaked product identifiers, and no checkout links.
 - Verification status: CI and browser E2E must be green on the latest branch head before this pass is considered complete.
+
+
+## 2026-10-15 — Canonical notifications page reset
+
+- Removed the route's connection to a legacy renderer containing fabricated example notifications.
+- Rebuilt the Notifications page in the social-commerce shell and connected it to the canonical `/api/v1/notifications` loader.
+- Localized event intent, priority, delivery status, empty/loading/error states, unread counts and mark-read labels in Persian, English and Arabic.
+- Notification summary rendering now selects known human-readable fields only instead of joining arbitrary variables.
+- Added browser E2E coverage for all three languages and assertions that raw event identifiers and the retired sample summary do not appear.
+- Verification status: CI, Phoenix verification and browser E2E must pass on the newest commit before this change is considered complete.

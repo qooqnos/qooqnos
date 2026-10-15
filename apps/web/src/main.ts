@@ -43,7 +43,6 @@ import {
   renderCreateContentHub,
   renderContentDetailsForm,
   renderDealTypeSelection,
-  renderIndividualNotifications,
   renderBusinessWelcome,
   renderBusinessCreateContent,
   renderBusinessContentDetails,
@@ -3523,7 +3522,35 @@ function openOrderTrackingDrawer(orderId: string): void {
 }
 
 function renderNotifications(): string {
-  return renderIndividualNotifications();
+  return '<div class="phoenix-reset-page phoenix-reset-notifications-page">' +
+    '<section class="phoenix-reset-hero">' +
+      '<div class="phoenix-reset-hero-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("notificationsEyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("notificationsTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("notificationsIntro") + '</p>' +
+      '</div>' +
+      '<div class="phoenix-reset-activity-hero-actions">' +
+        '<button class="button button-ghost" type="button" data-refresh-notifications>↻ ' + socialCommerceUi("notificationsRefresh") + '</button>' +
+        '<a class="button button-primary" href="/activity" data-nav>' + socialCommerceUi("activityEyebrow") + ' <span aria-hidden="true">←</span></a>' +
+      '</div>' +
+    '</section>' +
+    '<div class="phoenix-reset-discover-grid">' +
+      '<section class="phoenix-reset-main-column">' +
+        '<article class="phoenix-reset-activity-panel">' +
+          '<div class="phoenix-reset-activity-panel-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("notificationsEyebrow") + '</span><h2>' + socialCommerceUi("notificationsListTitle") + '</h2></div>' +
+            '<span id="notifications-page-count" class="phoenix-reset-activity-status" aria-live="polite">' + socialCommerceUi("notificationsStatusPreparing") + '</span></div>' +
+          '<div id="notifications-page-list" class="phoenix-reset-notification-list" aria-live="polite" aria-busy="true"><div class="slot-loading">' + socialCommerceUi("notificationsLoading") + '</div></div>' +
+        '</article>' +
+      '</section>' +
+      '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
+        '<section class="phoenix-reset-side-card"><span class="phoenix-reset-side-icon" aria-hidden="true">◇</span><span class="phoenix-reset-section-kicker">' + socialCommerceUi("activitySideEyebrow") + '</span>' +
+          '<h2>' + socialCommerceUi("notificationsSideTitle") + '</h2><p>' + socialCommerceUi("notificationsSideBody") + '</p>' +
+          '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("notificationsOrdersAction") + ' <span aria-hidden="true">←</span></a></section>' +
+        '<section class="phoenix-reset-side-card"><span class="phoenix-reset-side-icon" aria-hidden="true">⌕</span><h2>' + socialCommerceUi("needTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("needBody") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("tabExplore") + ' <span aria-hidden="true">←</span></a></section>' +
+      '</aside>' +
+    '</div>' +
+  '</div>';
 }
 
 function _renderLegacyNotifications(): string {
@@ -3541,22 +3568,38 @@ async function loadNotificationsPage(): Promise<void> {
   if (refresh) refresh.onclick = () => { void loadNotificationsPage(); };
   if (!host || !count) return;
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    host.innerHTML = '<div class="slot-empty"><span>♢</span><p>برای دیدن اعلان‌ها باید وارد شوید.</p></div>';
-    count.textContent = "ورود";
+    host.setAttribute("aria-busy", "false");
+    host.innerHTML = '<div class="phoenix-reset-notification-empty"><div class="phoenix-reset-side-icon" aria-hidden="true">♢</div><h3>' +
+      socialCommerceUi("notificationsSignInTitle") + '</h3><p>' + socialCommerceUi("notificationsSignInBody") + '</p>' +
+      '<button class="button button-primary" type="button" data-notifications-connect>' + socialCommerceUi("notificationsSignInAction") + '</button></div>';
+    count.textContent = socialCommerceUi("notificationsSignInStatus");
+    host.querySelector<HTMLButtonElement>("[data-notifications-connect]")?.addEventListener("click", () => openConnectionPanel());
     return;
   }
+  host.setAttribute("aria-busy", "true");
+  host.innerHTML = '<div class="slot-loading">' + socialCommerceUi("notificationsLoading") + '</div>';
+  count.textContent = socialCommerceUi("notificationsStatusReading");
   try {
     const response = await apiJson<{ data: NotificationView[] }>("/api/v1/notifications?limit=50");
     const items = Array.isArray(response.data) ? response.data : [];
-    const readIds = getReadNotificationIds();
-    const renderRows = () => {
+    const renderRows = (): void => {
       const currentRead = getReadNotificationIds();
-      host.innerHTML = items.length ? items.map((item) => '<article class="notification-item ' + (currentRead.has(item.id) ? "read" : "unread") + '">' +
-        '<div class="notification-item-icon">' + (item.channel === "in_app" ? "♢" : "◌") + '</div>' +
-        '<div class="notification-item-copy"><div class="notification-item-top"><strong>' + escapeHtml(item.intent ?? "notification") + '</strong><span>' + escapeHtml(item.priority ?? "normal") + '</span></div><p>' + escapeHtml(notificationSummary(item)) + '</p><small>' + escapeHtml(formatDate(item.createdAt)) + ' · ' + escapeHtml(item.status ?? "created") + '</small></div>' +
-        '<button class="notification-read" type="button" data-page-mark-read="' + escapeAttr(item.id) + '">' + (currentRead.has(item.id) ? "خوانده شد" : "خواندم") + '</button>' +
-      '</article>').join("") : '<div class="slot-empty"><span>♢</span><p>اعلان جدیدی برای این حساب ثبت نشده است.</p></div>';
-      count.textContent = items.filter((item) => !currentRead.has(item.id)).length + " خوانده‌نشده";
+      host.setAttribute("aria-busy", "false");
+      host.innerHTML = items.length ? items.map((item) => {
+        const read = currentRead.has(item.id);
+        return '<article class="phoenix-reset-notification-item ' + (read ? "read" : "unread") + '">' +
+          '<div class="phoenix-reset-notification-icon" aria-hidden="true">' + (item.channel === "in_app" ? "♢" : "◌") + '</div>' +
+          '<div class="phoenix-reset-notification-copy"><div class="phoenix-reset-notification-top"><strong>' + escapeHtml(notificationIntentLabel(item.intent)) + '</strong>' +
+            '<span>' + escapeHtml(notificationPriorityLabel(item.priority)) + '</span></div><p>' + escapeHtml(notificationSummary(item)) + '</p>' +
+            '<small>' + escapeHtml(formatDate(item.createdAt)) + ' · ' + escapeHtml(notificationStatusLabel(item.status)) + '</small></div>' +
+          '<button class="phoenix-reset-notification-read" type="button" data-page-mark-read="' + escapeAttr(item.id) + '">' +
+            (read ? socialCommerceUi("notificationsRead") : socialCommerceUi("notificationsMarkRead")) + '</button>' +
+        '</article>';
+      }).join("") : '<div class="phoenix-reset-notification-empty"><div class="phoenix-reset-side-icon" aria-hidden="true">♢</div><h3>' +
+        socialCommerceUi("notificationsEmptyTitle") + '</h3><p>' + socialCommerceUi("notificationsEmptyBody") + '</p></div>';
+      const unreadCount = items.filter((item) => !currentRead.has(item.id)).length;
+      count.textContent = socialCommerceUi("notificationsUnreadCount", { count: formatLocalizedNumber(unreadCount) });
+      count.className = "phoenix-reset-activity-status" + (unreadCount ? " has-events" : "");
       host.querySelectorAll<HTMLButtonElement>("[data-page-mark-read]").forEach((button) => button.addEventListener("click", () => {
         const id = button.dataset.pageMarkRead;
         if (!id) return;
@@ -3564,11 +3607,16 @@ async function loadNotificationsPage(): Promise<void> {
         renderRows();
       }));
     };
-    void readIds;
     renderRows();
   } catch (error) {
-    host.innerHTML = '<div class="slot-empty"><span>!</span><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن اعلان‌ها ناموفق بود.") + '</p></div>';
-    count.textContent = "خطا";
+    host.setAttribute("aria-busy", "false");
+    count.textContent = socialCommerceUi("notificationsStatusError");
+    count.className = "phoenix-reset-activity-status is-error";
+    host.innerHTML = '<div class="phoenix-reset-notification-empty is-error"><div class="phoenix-reset-side-icon" aria-hidden="true">!</div><h3>' +
+      socialCommerceUi("notificationsErrorTitle") + '</h3><p>' +
+      escapeHtml(error instanceof Error ? error.message : socialCommerceUi("notificationsErrorBody")) + '</p>' +
+      '<button class="button button-ghost" type="button" data-notifications-retry>' + socialCommerceUi("activityRetry") + '</button></div>';
+    host.querySelector<HTMLButtonElement>("[data-notifications-retry]")?.addEventListener("click", () => void loadNotificationsPage());
   }
 }
 
@@ -8229,10 +8277,48 @@ function openNotificationCenter(): void {
   });
 }
 
+function notificationIntentLabel(intent: string | undefined): string {
+  const labels: Record<string, string> = {
+    "booking.confirmed": "notificationBookingConfirmed",
+    "booking.created": "notificationBookingCreated",
+    "order.created": "notificationOrderCreated",
+    "order.shipped": "notificationOrderShipped",
+    "order.delivered": "notificationOrderDelivered",
+    "transaction_update": "notificationTransactionUpdated",
+  };
+  return intent && labels[intent] ? socialCommerceUi(labels[intent]) : socialCommerceUi("notificationsGenericTitle");
+}
+
+function notificationPriorityLabel(priority: string | undefined): string {
+  const labels: Record<string, string> = {
+    low: "notificationPriorityLow",
+    normal: "notificationPriorityNormal",
+    high: "notificationPriorityHigh",
+    urgent: "notificationPriorityUrgent",
+  };
+  return priority && labels[priority] ? socialCommerceUi(labels[priority]) : socialCommerceUi("notificationPriorityNormal");
+}
+
+function notificationStatusLabel(status: string | undefined): string {
+  const labels: Record<string, string> = {
+    created: "notificationStatusCreated",
+    queued: "notificationStatusQueued",
+    sent: "notificationStatusSent",
+    delivered: "notificationStatusDelivered",
+    failed: "notificationStatusFailed",
+  };
+  return status && labels[status] ? socialCommerceUi(labels[status]) : socialCommerceUi("notificationStatusCreated");
+}
+
 function notificationSummary(item: NotificationView): string {
-  if (!item.variables || typeof item.variables !== "object") return "اعلان ثبت‌شده در ققنوس.";
-  const values = Object.values(item.variables).filter((value) => typeof value === "string" || typeof value === "number" || typeof value === "boolean");
-  return values.length ? values.slice(0, 2).map(String).join(" · ") : "اعلان ثبت‌شده در ققنوس.";
+  const variables = item.variables;
+  if (variables && typeof variables === "object") {
+    for (const key of ["summary", "message", "description", "body", "title"]) {
+      const value = variables[key];
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+  }
+  return socialCommerceUi("notificationsGenericBody");
 }
 
 function renderAdminHealth(): void {
