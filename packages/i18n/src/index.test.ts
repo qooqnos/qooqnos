@@ -35,6 +35,10 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("نیازت را بگو", "en")).toBe("Tell Phoenix what you need");
     expect(translations.en["common.addProductOrService"]).toBe("Add a product or service");
     expect(translations.ar["common.addProductOrService"]).toBe("إضافة منتج أو خدمة");
+    expect(translations.fa["socialCommercePage.messagesTitle"]).toBe("پیام‌ها و گفت‌وگوها");
+    expect(translations.en["socialCommercePage.messagesTitle"]).toBe("Messages and conversations");
+    expect(translations.ar["socialCommercePage.messagesTitle"]).toBe("الرسائل والمحادثات");
+    expect(translations.en["socialCommercePage.messagesListUnavailableTitle"]).toBe("The conversation list is not available in this view yet.");
     expect(translateUiText("افزودن کالا یا خدمت", "en")).toBe("Add a product or service");
     expect(translateUiText("افزودن کالا یا خدمت", "ar")).toBe("إضافة منتج أو خدمة");
     expect(translateUiText("نیازت را بگو", "ar")).toBe("أخبر ققنوس بما تحتاج");
