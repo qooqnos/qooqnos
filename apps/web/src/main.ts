@@ -770,7 +770,7 @@ function render(): void {
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/welcome";
   const isPublicBusiness = route.path.startsWith("/businesses/");
-  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/booking" || isPublicBusiness;
+  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/account" || route.path === "/settings" || route.path === "/booking" || isPublicBusiness;
   const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
     route.path === "/" ? "feed"
       : route.path === "/activity" || route.path === "/notifications" ? "activity"
@@ -834,7 +834,6 @@ function render(): void {
   }
   if (route.path === "/activity") void loadActivityPage();
   void loadShellContext();
-  if (route.path === "/account") void loadAccountState();
   if (route.path === "/booking") {
     const bookingParams = new URLSearchParams(location.search);
     const bookingSchedule = bookingParams.get("scheduleId")?.trim();
@@ -3903,31 +3902,56 @@ async function loadTransactionsPage(): Promise<void> {
 }
 
 function renderAccount(): string {
-  return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Account & Session</span><h1>مدیریت حساب کاربری و <em>کسب‌وکار</em> شما.</h1><p>وضعیت حساب کاربری و دسترسی‌ها مستقیماً از سامانه ققنوس خوانده می‌شود.</p></div>
-      <button class="button button-primary" type="button" data-refresh-account>بروزرسانی وضعیت</button>
-    </section>
-    <section class="account-grid">
-      <article class="glass-card account-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Account</span><h2>وضعیت حساب کاربری</h2></div><span id="account-status" class="pill">در حال بررسی</span></div>
-        <div id="account-details" class="account-details">
-          <div class="account-row"><span>Actor</span><strong>—</strong></div>
-          <div class="account-row"><span>Tenant</span><strong>—</strong></div>
-          <div class="account-row"><span>Workspace</span><strong>—</strong></div>
-        </div>
-        <div class="account-actions">
-          <button class="button button-ghost" type="button" data-account-connect>پروفایل و مدیریت حساب</button>
-          <button class="button button-danger" type="button" data-account-revoke>خروج از حساب</button>
-        </div>
-      </article>
-      <article class="glass-card account-card">
-        <span class="section-kicker">Permissions & Role</span>
-        <h2>مجوزهای فعال</h2>
-        <div id="account-permissions" class="permission-cloud"><span class="permission-empty">برای مشاهده مجوزها وارد حساب کاربری شوید.</span></div>
-      </article>
-    </section>
-  `;
+  const auth = getStoredAuth();
+  const user = auth.user;
+  const signedIn = Boolean(auth.token && user);
+  const displayName = user?.displayName?.trim()
+    || [user?.firstName, user?.lastName].filter((part) => Boolean(part?.trim())).join(" ").trim()
+    || socialCommerceUi("accountGuestName");
+  const mobile = user?.mobile?.trim() ?? "";
+  const initial = displayName.slice(0, 1) || "ق";
+  const isSeller = user?.role === "seller";
+  const destinations = [
+    { href: "/orders", icon: "▣", title: socialCommerceUi("accountOrdersTitle"), body: socialCommerceUi("accountOrdersBody"), action: socialCommerceUi("accountOrdersAction") },
+    { href: "/saved", icon: "☆", title: socialCommerceUi("accountSavedTitle"), body: socialCommerceUi("accountSavedBody"), action: socialCommerceUi("accountSavedAction") },
+    { href: "/messages", icon: "✉", title: socialCommerceUi("accountMessagesTitle"), body: socialCommerceUi("accountMessagesBody"), action: socialCommerceUi("accountMessagesAction") },
+    { href: "/settings", icon: "⚙", title: socialCommerceUi("accountSettingsTitle"), body: socialCommerceUi("accountSettingsBody"), action: socialCommerceUi("accountSettingsAction") },
+  ];
+  const cards = destinations.map((item) =>
+    '<a class="phoenix-reset-account-link" href="' + item.href + '" data-nav>' +
+      '<span class="phoenix-reset-account-link-icon" aria-hidden="true">' + item.icon + '</span>' +
+      '<span class="phoenix-reset-account-link-copy"><strong>' + item.title + '</strong><small>' + item.body + '</small><span class="phoenix-reset-account-link-action">' + item.action + ' <span aria-hidden="true">←</span></span></span>' +
+    '</a>'
+  ).join("");
+  return '<div class="phoenix-reset-page phoenix-reset-account-page">' +
+    '<section class="phoenix-reset-hero"><div class="phoenix-reset-hero-copy">' +
+      '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("accountEyebrow") + '</span></div>' +
+      '<h1>' + socialCommerceUi("accountTitle") + '</h1><p>' + socialCommerceUi("accountIntro") + '</p></div>' +
+      (signedIn ? '<a class="button button-primary phoenix-reset-hero-cta" href="/profile" data-nav>' + socialCommerceUi("accountProfileAction") + ' ←</a>' :
+        '<button class="button button-primary phoenix-reset-hero-cta" type="button" data-open-login>' + socialCommerceUi("accountSignInAction") + '</button>') +
+    '</section>' +
+    '<section class="phoenix-reset-account-identity">' +
+      '<div class="phoenix-reset-account-avatar" aria-hidden="true">' + escapeHtml(initial) + '</div>' +
+      '<div class="phoenix-reset-account-identity-copy"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("accountIdentityTitle") + '</span><h2>' + escapeHtml(displayName) + '</h2>' +
+        '<p>' + (signedIn ? socialCommerceUi("accountStatusSignedIn") : socialCommerceUi("accountSignInBody")) + '</p></div>' +
+      '<div class="phoenix-reset-account-identity-details">' +
+        '<span><small>' + socialCommerceUi("accountNameLabel") + '</small><strong>' + escapeHtml(displayName) + '</strong></span>' +
+        '<span><small>' + socialCommerceUi("accountMobileLabel") + '</small><strong>' + (mobile ? '<bdi dir="ltr">' + escapeHtml(mobile) + '</bdi>' : socialCommerceUi("accountNotProvided")) + '</strong></span>' +
+      '</div>' +
+      '<div class="phoenix-reset-account-identity-actions">' +
+        (signedIn ? '<a class="button button-ghost" href="/profile" data-nav>' + socialCommerceUi("accountProfileAction") + '</a><button class="button button-ghost" type="button" data-account-revoke>' + socialCommerceUi("accountLogoutAction") + '</button>' :
+          '<button class="button button-primary" type="button" data-open-login>' + socialCommerceUi("accountSignInAction") + '</button>') +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-account-section"><div class="phoenix-reset-account-section-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("accountShortcutsEyebrow") + '</span><h2>' + socialCommerceUi("accountShortcutsTitle") + '</h2></div><p>' + socialCommerceUi("accountShortcutsBody") + '</p></div>' +
+      '<div class="phoenix-reset-account-grid">' + cards + '</div></section>' +
+    '<section class="phoenix-reset-account-seller"><div class="phoenix-reset-account-seller-icon" aria-hidden="true">＋</div>' +
+      '<div class="phoenix-reset-account-seller-copy"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("accountSellerEyebrow") + '</span>' +
+        '<h2>' + (isSeller ? socialCommerceUi("accountSellerReadyTitle") : socialCommerceUi("accountSellerTitle")) + '</h2>' +
+        '<p>' + (isSeller ? socialCommerceUi("accountSellerReadyBody") : socialCommerceUi("accountSellerBody")) + '</p></div>' +
+      (isSeller ? '<a class="button button-primary" href="/business" data-nav>' + socialCommerceUi("accountSellerWorkspaceAction") + ' ←</a>' :
+        '<button class="button button-primary" type="button" data-activate-seller>' + socialCommerceUi("accountSellerAction") + ' ←</button>') +
+    '</section></div>';
 }
 
 async function loadAccountState(): Promise<void> {
@@ -4473,116 +4497,105 @@ function renderMessages(): string {
    Settings Surface (تنظیمات)
    ========================================================================= */
 
+type PhoenixNotificationPreferences = { inApp: boolean; sms: boolean; email: boolean; social: boolean };
+const PHOENIX_NOTIFICATION_PREFERENCES_KEY = "phoenix-notification-preferences";
+
+function readPhoenixNotificationPreferences(): PhoenixNotificationPreferences {
+  const fallback: PhoenixNotificationPreferences = { inApp: true, sms: false, email: false, social: false };
+  try {
+    const raw = localStorage.getItem(PHOENIX_NOTIFICATION_PREFERENCES_KEY);
+    if (!raw) return fallback;
+    const value = JSON.parse(raw) as Partial<PhoenixNotificationPreferences>;
+    return { inApp: value.inApp ?? fallback.inApp, sms: value.sms ?? fallback.sms, email: value.email ?? fallback.email, social: value.social ?? fallback.social };
+  } catch { return fallback; }
+}
+
 function renderSettings(): string {
-  return `
-    <div class="phoenix-settings-page">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("تنظیمات")}</span>
-          <h1>${uiText("تنظیمات کاربری و")} <em>${uiText("ترجیحات سامانه")}</em></h1>
-          <p>${uiText("مدیریت حساب شخصی، زبان، پوسته بصری، کانال‌های دریافت اعلان و حقوق داده‌ها.")}</p>
-        </div>
-        <div class="heading-actions">
-          <button class="button button-primary" type="button" data-save-all-settings>${uiText("ذخیره تنظیمات")}</button>
-        </div>
-      </section>
-
-      <div class="phoenix-settings-grid">
-        <article class="glass-card phoenix-settings-card">
-          <div class="card-section-heading">
-            <div><span class="section-kicker">${uiText("زبان و منطقه")}</span><h2>${uiText("زبان سامانه")}</h2></div>
-          </div>
-          <p class="settings-hint">${uiText("زبان محیط کاربری به صورت آنی تغییر می‌کند و در مرورگر شما ذخیره می‌شود.")}</p>
-          <div class="settings-options-row">
-            <button class="button button-ghost settings-lang-btn" type="button" data-set-lang="fa">🇮🇷 فارسی</button>
-            <button class="button button-ghost settings-lang-btn" type="button" data-set-lang="en">🇬🇧 English</button>
-            <button class="button button-ghost settings-lang-btn" type="button" data-set-lang="ar">🇸🇦 العربية</button>
-          </div>
-        </article>
-
-        <article class="glass-card phoenix-settings-card">
-          <div class="card-section-heading">
-            <div><span class="section-kicker">${uiText("ظاهر و پوسته")}</span><h2>${uiText("حالت نمایش")}</h2></div>
-          </div>
-          <p class="settings-hint">${uiText("انتخاب حالت روشن یا تیره متناسب با محیط و نور محیطی.")}</p>
-          <div class="settings-options-row">
-            <button class="button button-ghost settings-theme-btn" type="button" data-set-theme="light">☀ ${uiText("روشن")}</button>
-            <button class="button button-ghost settings-theme-btn" type="button" data-set-theme="dark">☾ ${uiText("تاریک")}</button>
-          </div>
-        </article>
-
-        <article class="glass-card phoenix-settings-card">
-          <div class="card-section-heading">
-            <div><span class="section-kicker">${uiText("ارتباطات")}</span><h2>${uiText("کانال‌های اعلان")}</h2></div>
-          </div>
-          <div class="settings-toggles-list">
-            <label class="settings-toggle-row">
-              <span>${uiText("اعلان‌های درون‌برنامه‌ای (In-App)")}</span>
-              <input type="checkbox" id="setting-notify-inapp" checked />
-            </label>
-            <label class="settings-toggle-row">
-              <span>${uiText("پیامک رویدادهای مهم و سفارش‌ها (SMS)")}</span>
-              <input type="checkbox" id="setting-notify-sms" checked />
-            </label>
-            <label class="settings-toggle-row">
-              <span>${uiText("ایمیل گزارش‌ها و فاکتورها (Email)")}</span>
-              <input type="checkbox" id="setting-notify-email" />
-            </label>
-            <label class="settings-toggle-row">
-              <span>${uiText("پیام‌رسان اجتماعی و واتس‌اپ")}</span>
-              <input type="checkbox" id="setting-notify-social" />
-            </label>
-          </div>
-        </article>
-
-        <article class="glass-card phoenix-settings-card">
-          <div class="card-section-heading">
-            <div><span class="section-kicker">${uiText("امنیت و داده‌ها")}</span><h2>${uiText("حریم خصوصی و حساب")}</h2></div>
-          </div>
-          <div class="settings-actions-stack">
-            <button class="button button-ghost" type="button" data-export-user-data>${uiText("دریافت نسخه پشتیبان از داده‌ها (Export)")}</button>
-            <a class="button button-ghost" href="/account" data-nav>${uiText("مدیریت Session و دسترسی‌ها")}</a>
-            <button class="button button-danger" type="button" data-clear-local-cache>${uiText("پاکسازی کش و خروج")}</button>
-          </div>
-        </article>
-      </div>
-    </div>
-  `;
+  const preferences = readPhoenixNotificationPreferences();
+  return '<div class="phoenix-reset-page phoenix-reset-settings-page">' +
+    '<section class="phoenix-reset-hero"><div class="phoenix-reset-hero-copy">' +
+      '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("settingsEyebrow") + '</span></div>' +
+      '<h1>' + socialCommerceUi("settingsTitle") + '</h1><p>' + socialCommerceUi("settingsIntro") + '</p></div>' +
+      '<a class="button button-ghost phoenix-reset-hero-cta" href="/account" data-nav>' + socialCommerceUi("settingsBackToAccount") + ' ←</a></section>' +
+    '<div class="phoenix-reset-settings-grid">' +
+      '<article class="phoenix-reset-settings-card"><div class="phoenix-reset-settings-card-heading"><span class="phoenix-reset-settings-icon" aria-hidden="true">文</span><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("settingsLanguageEyebrow") + '</span><h2>' + socialCommerceUi("settingsLanguageTitle") + '</h2></div></div>' +
+        '<p>' + socialCommerceUi("settingsLanguageBody") + '</p><div class="phoenix-reset-settings-options">' +
+          '<button class="button button-ghost settings-lang-btn" type="button" data-set-lang="fa">🇮🇷 ' + socialCommerceUi("settingsPersian") + '</button>' +
+          '<button class="button button-ghost settings-lang-btn" type="button" data-set-lang="en">🇬🇧 ' + socialCommerceUi("settingsEnglish") + '</button>' +
+          '<button class="button button-ghost settings-lang-btn" type="button" data-set-lang="ar">🇸🇦 ' + socialCommerceUi("settingsArabic") + '</button></div></article>' +
+      '<article class="phoenix-reset-settings-card"><div class="phoenix-reset-settings-card-heading"><span class="phoenix-reset-settings-icon" aria-hidden="true">◐</span><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("settingsAppearanceEyebrow") + '</span><h2>' + socialCommerceUi("settingsThemeTitle") + '</h2></div></div>' +
+        '<p>' + socialCommerceUi("settingsThemeBody") + '</p><div class="phoenix-reset-settings-options">' +
+          '<button class="button button-ghost settings-theme-btn" type="button" data-set-theme="light">☀ ' + socialCommerceUi("settingsLight") + '</button>' +
+          '<button class="button button-ghost settings-theme-btn" type="button" data-set-theme="dark">☾ ' + socialCommerceUi("settingsDark") + '</button></div></article>' +
+      '<article class="phoenix-reset-settings-card phoenix-reset-settings-notifications"><div class="phoenix-reset-settings-card-heading"><span class="phoenix-reset-settings-icon" aria-hidden="true">♢</span><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("settingsNotificationsEyebrow") + '</span><h2>' + socialCommerceUi("settingsNotificationsTitle") + '</h2></div></div>' +
+        '<p>' + socialCommerceUi("settingsNotificationsBody") + '</p><div class="phoenix-reset-settings-toggles">' +
+          '<label class="phoenix-reset-settings-toggle"><span><strong>' + socialCommerceUi("settingsNotifyInApp") + '</strong><small>' + socialCommerceUi("settingsNotifyInAppHint") + '</small></span><input type="checkbox" id="setting-notify-inapp"' + (preferences.inApp ? ' checked' : '') + ' /></label>' +
+          '<label class="phoenix-reset-settings-toggle"><span><strong>' + socialCommerceUi("settingsNotifySms") + '</strong><small>' + socialCommerceUi("settingsNotifySmsHint") + '</small></span><input type="checkbox" id="setting-notify-sms"' + (preferences.sms ? ' checked' : '') + ' /></label>' +
+          '<label class="phoenix-reset-settings-toggle"><span><strong>' + socialCommerceUi("settingsNotifyEmail") + '</strong><small>' + socialCommerceUi("settingsNotifyEmailHint") + '</small></span><input type="checkbox" id="setting-notify-email"' + (preferences.email ? ' checked' : '') + ' /></label>' +
+          '<label class="phoenix-reset-settings-toggle"><span><strong>' + socialCommerceUi("settingsNotifySocial") + '</strong><small>' + socialCommerceUi("settingsNotifySocialHint") + '</small></span><input type="checkbox" id="setting-notify-social"' + (preferences.social ? ' checked' : '') + ' /></label></div>' +
+        '<div class="phoenix-reset-settings-save-row"><span>' + socialCommerceUi("settingsSaveHint") + '</span><button class="button button-primary" type="button" data-save-all-settings>' + socialCommerceUi("settingsSave") + '</button></div></article>' +
+      '<article class="phoenix-reset-settings-card"><div class="phoenix-reset-settings-card-heading"><span class="phoenix-reset-settings-icon" aria-hidden="true">⌑</span><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("settingsPrivacyEyebrow") + '</span><h2>' + socialCommerceUi("settingsPrivacyTitle") + '</h2></div></div>' +
+        '<p>' + socialCommerceUi("settingsPrivacyBody") + '</p><div class="phoenix-reset-settings-actions">' +
+          '<button class="button button-ghost" type="button" data-export-user-data>' + socialCommerceUi("settingsExportAction") + '</button>' +
+          '<a class="button button-ghost" href="/account" data-nav>' + socialCommerceUi("settingsAccountAction") + '</a>' +
+          '<button class="button button-ghost" type="button" data-clear-local-cache>' + socialCommerceUi("settingsClearAction") + '</button></div></article>' +
+    '</div></div>';
 }
 
 function loadSettingsPage(): void {
   const currentLang = getInitialLanguage();
   const currentTheme = document.documentElement.dataset.theme ?? "light";
-
-  document.querySelectorAll<HTMLButtonElement>("[data-set-lang]").forEach((btn) => {
-    if (btn.dataset.setLang === currentLang) btn.classList.add("active");
-    btn.addEventListener("click", () => {
-      const targetLang = btn.dataset.setLang as SupportedLanguage;
+  const preferences = readPhoenixNotificationPreferences();
+  document.querySelectorAll<HTMLInputElement>("[id^='setting-notify-']").forEach((input) => {
+    if (input.id === "setting-notify-inapp") input.checked = preferences.inApp;
+    else if (input.id === "setting-notify-sms") input.checked = preferences.sms;
+    else if (input.id === "setting-notify-email") input.checked = preferences.email;
+    else if (input.id === "setting-notify-social") input.checked = preferences.social;
+  });
+  document.querySelectorAll<HTMLButtonElement>("[data-set-lang]").forEach((button) => {
+    if (button.dataset.setLang === currentLang) button.classList.add("active");
+    button.addEventListener("click", () => {
+      const targetLang = button.dataset.setLang as SupportedLanguage;
       if (targetLang) setLanguage(targetLang);
     });
   });
-
-  document.querySelectorAll<HTMLButtonElement>("[data-set-theme]").forEach((btn) => {
-    if (btn.dataset.setTheme === currentTheme) btn.classList.add("active");
-    btn.addEventListener("click", () => {
-      const targetTheme = btn.dataset.setTheme;
+  document.querySelectorAll<HTMLButtonElement>("[data-set-theme]").forEach((button) => {
+    if (button.dataset.setTheme === currentTheme) button.classList.add("active");
+    button.addEventListener("click", () => {
+      const targetTheme = button.dataset.setTheme;
       if (targetTheme && targetTheme !== document.documentElement.dataset.theme) toggleTheme();
     });
   });
-
   document.querySelector<HTMLButtonElement>("[data-save-all-settings]")?.addEventListener("click", () => {
-    showToast("تنظیمات با موفقیت ذخیره شد.");
+    const next: PhoenixNotificationPreferences = {
+      inApp: document.querySelector<HTMLInputElement>("#setting-notify-inapp")?.checked ?? false,
+      sms: document.querySelector<HTMLInputElement>("#setting-notify-sms")?.checked ?? false,
+      email: document.querySelector<HTMLInputElement>("#setting-notify-email")?.checked ?? false,
+      social: document.querySelector<HTMLInputElement>("#setting-notify-social")?.checked ?? false,
+    };
+    localStorage.setItem(PHOENIX_NOTIFICATION_PREFERENCES_KEY, JSON.stringify(next));
+    showToast(socialCommerceUi("settingsSavedNotice"));
   });
-
   document.querySelector<HTMLButtonElement>("[data-export-user-data]")?.addEventListener("click", () => {
-    showToast("درخواست نسخه پشتیبان داده‌ها ثبت شد.");
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      language: getInitialLanguage(),
+      theme: document.documentElement.dataset.theme ?? "light",
+      notifications: readPhoenixNotificationPreferences(),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "phoenix-local-preferences.json";
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    showToast(socialCommerceUi("settingsExportNotice"));
   });
-
   document.querySelector<HTMLButtonElement>("[data-clear-local-cache]")?.addEventListener("click", () => {
     localStorage.clear();
     sessionStorage.clear();
-    showToast("کش محلی پاکسازی شد.");
-    window.location.reload();
+    window.location.assign("/");
   });
 }
 
@@ -5286,7 +5299,7 @@ function renderSocialMobileNav(): string {
   const feedActive = (path === "/" || path === "/discover") && tab !== "explore" && tab !== "following";
   const exploreActive = path === "/discover" && tab === "explore";
   const activityActive = path === "/activity";
-  const profileActive = path === "/profile";
+  const profileActive = path === "/profile" || path === "/account" || path === "/settings";
   return '<nav class="phoenix-social-mobile-nav" aria-label="' + escapeAttr(socialCommerceUi("mobileNavigation")) + '">' +
     '<a href="/" data-nav class="' + (feedActive ? "active" : "") + '"' + (feedActive ? ' aria-current="page"' : '') + '>⌂<small>' + socialCommerceUi("tabForYou") + '</small></a>' +
     '<a href="/discover?tab=explore" data-nav class="' + (exploreActive ? "active" : "") + '"' + (exploreActive ? ' aria-current="page"' : '') + '>⌕<small>' + socialCommerceUi("tabExplore") + '</small></a>' +
