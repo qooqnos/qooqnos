@@ -3294,3 +3294,5 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - PR #12 added the real Communication inbox/thread read/send path and the backend CI checks passed.
 - The first browser run completed the inbox read and message send steps but failed on a brittle exact-copy assertion for the integrity note. The UI renders that note as its own component; the E2E check now verifies the component is visible rather than pinning its sentence text.
 - The follow-up change is not considered verified until the current main-branch browser E2E passes.
+
+- Follow-up diagnosis: the browser test found that clicking the rendered send button did not dispatch a form submit in the E2E runtime, so the message action now has an explicit button click handler as well as form-submit and Ctrl+Enter handling. A send lock prevents duplicate requests; successful UI refresh still occurs only after the Communication API responds.
