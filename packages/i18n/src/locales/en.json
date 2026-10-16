@@ -2248,6 +2248,7 @@
     "createNeedEyebrow": "To discover",
     "createNeedTitle": "Looking for something?",
     "createNeedBody": "Describe what you need in your own words, explore available options, and continue with questions or comparison.",
-    "createNeedAction": "Describe your need"
+    "createNeedAction": "Describe your need",
+    "notificationStatusRead": "Read"
   }
 }

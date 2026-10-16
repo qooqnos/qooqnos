@@ -2248,6 +2248,7 @@
     "createNeedEyebrow": "للاكتشاف",
     "createNeedTitle": "هل تبحث عن شيء محدد؟",
     "createNeedBody": "اكتب احتياجك بلغتك، واستكشف الخيارات المتاحة، ثم تابع بالسؤال أو المقارنة.",
-    "createNeedAction": "اكتب احتياجك"
+    "createNeedAction": "اكتب احتياجك",
+    "notificationStatusRead": "مقروء"
   }
 }

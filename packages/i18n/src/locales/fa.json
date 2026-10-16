@@ -2248,6 +2248,7 @@
     "createNeedEyebrow": "برای پیدا کردن",
     "createNeedTitle": "دنبال چیزی می‌گردی؟",
     "createNeedBody": "نیازت را به زبان خودت بنویس؛ از اکسپلور گزینه‌های موجود را بررسی کن و بعد سؤال یا مقایسه را ادامه بده.",
-    "createNeedAction": "بیان نیاز"
+    "createNeedAction": "بیان نیاز",
+    "notificationStatusRead": "خوانده شد"
   }
 }

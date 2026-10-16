@@ -32,6 +32,10 @@ const mockSocialFollows = new Map();
 const mockSocialEngagements = new Map();
 const mockSocialComments = [];
 const mockBusinessUpdates = [];
+const notificationReadRequests = [];
+const mockNotifications = [
+  { id: "notice-1", intent: "booking.confirmed", channel: "in_app", priority: "high", status: "delivered", createdAt: new Date().toISOString(), variables: {} },
+];
 let socialSequence = 0;
 page.on("pageerror", (error) => runtimeErrors.push(String(error.stack || error)));
 page.on("console", (message) => {
@@ -91,9 +95,7 @@ await page.route("**/api/v1/**", async (route) => {
       { slotReference: "slot-reference-2", startsAt: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(), endsAt: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(), remainingCapacity: 0, available: false, status: "booked" },
     ] },
     "/api/v1/booking/holds": { data: { id: "hold-test-1", status: "active", expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(), slotReference: "slot-reference-1" } },
-    "/api/v1/notifications": { data: [
-      { id: "notice-1", intent: "booking.confirmed", channel: "in_app", priority: "high", status: "delivered", createdAt: new Date().toISOString(), variables: {} },
-    ] },
+    "/api/v1/notifications": { data: mockNotifications },
     "/api/v1/businesses/biz-1/management": { data: {
       business: { id: "biz-1", name: "store-test", displayName: "فروشگاه آزمایشی", businessType: "retail", primaryCategoryId: "retail", defaultLocale: "fa-IR", timezone: "Asia/Baku", defaultCurrency: "IRR", status: "active", publicationStatus: "unpublished" },
       locations: [], hours: [], contacts: [], socialLinks: []
@@ -250,6 +252,19 @@ await page.route("**/api/v1/**", async (route) => {
 
   if (path === "/api/v1/workspaces/" + workspace + "/members") {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payloads["/api/v1/workspaces/" + workspace + "/members"]) });
+    return;
+  }
+
+  if (path.startsWith("/api/v1/notifications/") && path.endsWith("/read") && request.method() === "POST") {
+    const id = path.split("/").at(-2);
+    const notification = mockNotifications.find((item) => item.id === id);
+    if (!notification) {
+      await route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: { message: "Notification not found." } }) });
+      return;
+    }
+    notification.status = "read";
+    notificationReadRequests.push({ id, method: request.method(), path });
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: notification }) });
     return;
   }
 
@@ -674,6 +689,7 @@ const notificationsFa = await page.locator(".phoenix-reset-notifications-page").
 assert.ok(notificationsFa.includes("خبرهای مهم ققنوس"));
 assert.ok(notificationsFa.includes("رزرو تأیید شد"));
 assert.ok(notificationsFa.includes("خوانده‌نشده"));
+assert.ok(notificationsFa.includes("خوانده شد"));
 assert.ok(!notificationsFa.includes("booking.confirmed"));
 assert.ok(!notificationsFa.includes("رزرو شما تأیید شد"));
 await page.locator("[data-language-toggle]").click();
@@ -682,7 +698,8 @@ await page.locator(".phoenix-reset-notification-item strong").filter({ hasText: 
 const notificationsEn = await page.locator(".phoenix-reset-notifications-page").innerText();
 assert.ok(notificationsEn.includes("Updates that matter"));
 assert.ok(notificationsEn.includes("Booking confirmed"));
-assert.ok(notificationsEn.includes("1 unread"));
+assert.ok(notificationsEn.includes("0 unread"));
+assert.ok(notificationsEn.includes("Read"));
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='ar']").click();
 await page.locator(".phoenix-reset-notification-item strong").filter({ hasText: "تم تأكيد الحجز" }).waitFor();
@@ -969,6 +986,8 @@ assert.equal(await page.evaluate(() => localStorage.getItem("phoenix-workspace-i
 await page.locator("[data-notification-toggle]").click();
 await page.getByText("booking.confirmed").waitFor();
 await page.locator("[data-mark-notification-read='notice-1']").click();
+assert.deepEqual(notificationReadRequests, [{ id: "notice-1", method: "POST", path: "/api/v1/notifications/notice-1/read" }]);
+assert.equal(mockNotifications[0].status, "read");
 
 await page.goto(baseURL + "/admin");
 await page.getByText("business.updated").waitFor();

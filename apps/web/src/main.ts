@@ -3788,7 +3788,7 @@ async function loadNotificationsPage(): Promise<void> {
     const response = await apiJson<{ data: NotificationView[] }>("/api/v1/notifications?limit=50");
     const items = Array.isArray(response.data) ? response.data : [];
     const renderRows = (): void => {
-      const currentRead = getReadNotificationIds();
+      const currentRead = new Set(items.filter((item) => item.status === "read").map((item) => item.id));
       host.setAttribute("aria-busy", "false");
       host.innerHTML = items.length ? items.map((item) => {
         const read = currentRead.has(item.id);
@@ -3805,11 +3805,19 @@ async function loadNotificationsPage(): Promise<void> {
       const unreadCount = items.filter((item) => !currentRead.has(item.id)).length;
       count.textContent = socialCommerceUi("notificationsUnreadCount", { count: formatLocalizedNumber(unreadCount) });
       count.className = "phoenix-reset-activity-status" + (unreadCount ? " has-events" : "");
-      host.querySelectorAll<HTMLButtonElement>("[data-page-mark-read]").forEach((button) => button.addEventListener("click", () => {
+      host.querySelectorAll<HTMLButtonElement>("[data-page-mark-read]").forEach((button) => button.addEventListener("click", async () => {
         const id = button.dataset.pageMarkRead;
-        if (!id) return;
-        markNotificationReadLocally(id);
-        renderRows();
+        if (!id || button.disabled) return;
+        button.disabled = true;
+        try {
+          const updated = await markNotificationReadOnServer(id);
+          const index = items.findIndex((item) => item.id === id);
+          if (index >= 0) items[index] = { ...items[index], ...updated };
+          renderRows();
+        } catch (error) {
+          button.disabled = false;
+          showToast(error instanceof Error ? error.message : socialCommerceUi("notificationsStatusError"));
+        }
       }));
     };
     renderRows();
@@ -8808,28 +8816,25 @@ function updateShellIndicators(): void {
         ? uiText(current.status ?? "فضای کاری من")
         : uiText("فضای کاری من");
   });
-  const readIds = getReadNotificationIds();
-  const unread = shellNotifications.filter((item) => !readIds.has(item.id)).length;
+  const unread = shellNotifications.filter((item) => item.status !== "read").length;
   document.querySelectorAll<HTMLElement>("#notification-count").forEach((node) => {
     node.textContent = String(unread);
     node.hidden = unread === 0;
   });
 }
 
-function getReadNotificationIds(): Set<string> {
-  try {
-    const raw = JSON.parse(localStorage.getItem("phoenix-read-notifications") ?? "[]");
-    return new Set(Array.isArray(raw) ? raw.filter((value): value is string => typeof value === "string").slice(-200) : []);
-  } catch {
-    return new Set();
+async function markNotificationReadOnServer(id: string): Promise<NotificationView> {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    throw new Error(socialCommerceUi("notificationsSignInBody"));
   }
-}
-
-function markNotificationReadLocally(id: string): void {
-  const ids = getReadNotificationIds();
-  ids.add(id);
-  localStorage.setItem("phoenix-read-notifications", JSON.stringify(Array.from(ids).slice(-200)));
+  const response = await apiJson<{ data: NotificationView }>(
+    "/api/v1/notifications/" + encodeURIComponent(id) + "/read",
+    { method: "POST" },
+  );
+  shellNotifications = shellNotifications.map((item) => item.id === id ? { ...item, ...response.data } : item);
   updateShellIndicators();
+  return response.data;
 }
 
 async function openWorkspaceSwitcher(): Promise<void> {
@@ -8946,17 +8951,16 @@ function openNotificationCenter(): void {
   }
   const overlay = document.createElement("div");
   overlay.className = "notification-overlay";
-  const readIds = getReadNotificationIds();
   const rows = shellNotifications.length
     ? shellNotifications.map((item) => `
-        <article class="notification-item ${readIds.has(item.id) ? "read" : "unread"}">
+        <article class="notification-item ${item.status === "read" ? "read" : "unread"}">
           <div class="notification-item-icon">${item.channel === "in_app" ? "♢" : "◌"}</div>
           <div class="notification-item-copy">
             <div class="notification-item-top"><strong>${escapeHtml(item.intent ?? "notification")}</strong><span>${escapeHtml(item.priority ?? "normal")}</span></div>
             <p>${escapeHtml(notificationSummary(item))}</p>
             <small>${escapeHtml(formatDate(item.createdAt))} · ${escapeHtml(item.status ?? "created")}</small>
           </div>
-          <button class="notification-read" type="button" data-mark-notification-read="${escapeAttr(item.id)}">${readIds.has(item.id) ? "خوانده شد" : "خواندم"}</button>
+          <button class="notification-read" type="button" data-mark-notification-read="${escapeAttr(item.id)}">${socialCommerceUi(item.status === "read" ? "notificationsRead" : "notificationsMarkRead")}</button>
         </article>`).join("")
     : '<div class="slot-empty"><span>♢</span><p>اعلان جدیدی برای این حساب ثبت نشده است.</p></div>';
   overlay.innerHTML = `
@@ -8971,13 +8975,19 @@ function openNotificationCenter(): void {
   document.body.appendChild(overlay);
   overlay.querySelectorAll<HTMLElement>("[data-close-notification]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
   overlay.querySelectorAll<HTMLButtonElement>("[data-mark-notification-read]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const id = button.dataset.markNotificationRead;
-      if (!id) return;
-      markNotificationReadLocally(id);
-      button.textContent = "خوانده شد";
-      button.parentElement?.classList.remove("unread");
-      button.parentElement?.classList.add("read");
+      if (!id || button.disabled || button.parentElement?.classList.contains("read")) return;
+      button.disabled = true;
+      try {
+        await markNotificationReadOnServer(id);
+        button.textContent = socialCommerceUi("notificationsRead");
+        button.parentElement?.classList.remove("unread");
+        button.parentElement?.classList.add("read");
+      } catch (error) {
+        button.disabled = false;
+        showToast(error instanceof Error ? error.message : socialCommerceUi("notificationsStatusError"));
+      }
     });
   });
 }
@@ -9010,6 +9020,7 @@ function notificationStatusLabel(status: string | undefined): string {
     queued: "notificationStatusQueued",
     sent: "notificationStatusSent",
     delivered: "notificationStatusDelivered",
+    read: "notificationStatusRead",
     failed: "notificationStatusFailed",
   };
   return status && labels[status] ? socialCommerceUi(labels[status]) : socialCommerceUi("notificationStatusCreated");
