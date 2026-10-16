@@ -504,6 +504,14 @@ await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);
 
+// The legacy customer transactions URL should lead to order tracking, not a deal-type dead end.
+await page.evaluate(() => localStorage.setItem("phoenix.active_persona", "consumer"));
+await page.goto(baseURL + "/transactions");
+await page.locator(".phoenix-reset-orders-page").waitFor();
+assert.equal(await page.locator(".social-shell .phoenix-social-header").count(), 1);
+assert.ok((await page.locator(".phoenix-reset-orders-page").innerText()).includes("سفارش‌ها، از تأیید تا تحویل"));
+assert.ok((await page.locator(".phoenix-reset-orders-page").innerText()).includes("TRK-12345"));
+
 await page.goto(baseURL + "/messages");
 const messagesText = await page.locator(".phoenix-reset-messages-page").innerText();
 assert.ok(messagesText.includes("پیام‌ها و گفت‌وگوها"));

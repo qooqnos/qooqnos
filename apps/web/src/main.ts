@@ -780,7 +780,7 @@ function render(): void {
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/welcome" || route.path === "/consumer/welcome" || route.path === "/business/welcome";
   const isPublicBusiness = route.path.startsWith("/businesses/");
-  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/account" || route.path === "/settings" || route.path === "/cart" || route.path === "/checkout" || route.path === "/consumer/payment" || route.path === "/product/demo" || route.path === "/booking" || isPublicBusiness;
+  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || (route.path === "/transactions" && getActivePersona() !== "business") || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/account" || route.path === "/settings" || route.path === "/cart" || route.path === "/checkout" || route.path === "/consumer/payment" || route.path === "/product/demo" || route.path === "/booking" || isPublicBusiness;
   const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
     route.path === "/" ? "feed"
       : route.path === "/activity" || route.path === "/notifications" ? "activity"
@@ -807,7 +807,7 @@ function render(): void {
   installLanguageObserver();
   installTabAccessibility(document);
   if (route.path === "/welcome") void loadWelcomePage();
-  if (route.path === "/orders") void loadOrdersPage();
+  if (route.path === "/orders" || (route.path === "/transactions" && getActivePersona() !== "business")) void loadOrdersPage();
   if (route.path === "/saved") void loadSavedPage();
   if (route.path === "/settings") void loadSettingsPage();
   if (route.path === "/business/products") void loadBusinessProductsPage();
@@ -3819,11 +3819,9 @@ async function loadNotificationsPage(): Promise<void> {
 }
 
 function renderTransactions(): string {
-  const persona = getActivePersona();
-  if (persona === "business") {
-    return renderBusinessDeals();
-  }
-  return renderDealTypeSelection();
+  // Legacy customer-facing transactions URL is an alias for order history.
+  // Business transactions remain available from the dedicated business-deals route.
+  return getActivePersona() === "business" ? renderBusinessDeals() : renderOrders();
 }
 
 function _renderLegacyTransactions(): string {
