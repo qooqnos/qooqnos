@@ -2113,6 +2113,23 @@
     "publicReviewPlaceholder": "تجربهٔ خودت را بنویس…",
     "publicReviewRatingInvalid": "امتیاز باید بین ۱ تا ۵ باشد.",
     "publicReviewSubmitted": "نظر برای بررسی ثبت شد.",
-    "publicReviewFailed": "ثبت نظر ناموفق بود."
+    "publicReviewFailed": "ثبت نظر ناموفق بود.",
+    "messagesEyebrow": "ارتباط در ققنوس",
+    "messagesTitle": "پیام‌ها و گفت‌وگوها",
+    "messagesIntro": "گفت‌وگو باید ادامهٔ طبیعی شناخت کالا، پرسش از فروشنده و پیگیری سفارش باشد.",
+    "messagesInboxEyebrow": "صندوق گفت‌وگو",
+    "messagesInboxTitle": "گفت‌وگوهای ثبت‌شده",
+    "messagesListUnavailableTitle": "فهرست گفت‌وگوها هنوز در این صفحه فعال نشده است.",
+    "messagesListUnavailableBody": "برای حفظ دقت، گفت‌وگوی نمونه‌ای نمایش نمی‌دهیم. این بخش فقط گفت‌وگوهای ثبت‌شده را نشان می‌دهد.",
+    "messagesStartTitle": "از یک کالا یا خدمت شروع کن",
+    "messagesStartBody": "عرضه را پیدا کن و اطلاعات کالا یا خدمت و فروشنده را بررسی کن. پیام مستقیم پس از تکمیل اتصال گفت‌وگوها فعال می‌شود.",
+    "messagesNoSyntheticNote": "هیچ گفت‌وگوی ساختگی یا پیام نمونه‌ای در این صفحه نمایش داده نمی‌شود.",
+    "messagesContextTitle": "زمینهٔ پیگیری",
+    "messagesContextOrderPrefix": "سفارش",
+    "messagesContextTopicPrefix": "موضوع",
+    "messagesContextBody": "شناسهٔ پیگیری از صفحهٔ قبلی حفظ شده است؛ تا زمان بارگیری گفت‌وگو، هیچ پیامی نمایش یا ارسال نمی‌شود.",
+    "messagesExploreAction": "کشف کالاها و خدمات",
+    "messagesOrdersAction": "مشاهدهٔ سفارش‌ها",
+    "messagesStatusLabel": "وضعیت صندوق"
   }
 }

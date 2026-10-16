@@ -2113,6 +2113,23 @@
     "publicReviewPlaceholder": "شارك تجربتك…",
     "publicReviewRatingInvalid": "يجب أن يكون التقييم بين ١ و٥.",
     "publicReviewSubmitted": "تم إرسال التقييم للمراجعة.",
-    "publicReviewFailed": "تعذّر إرسال التقييم."
+    "publicReviewFailed": "تعذّر إرسال التقييم.",
+    "messagesEyebrow": "التواصل في ققنوس",
+    "messagesTitle": "الرسائل والمحادثات",
+    "messagesIntro": "ينبغي أن تأتي المحادثة بشكل طبيعي بعد اكتشاف العرض وسؤال البائع ومتابعة الطلب.",
+    "messagesInboxEyebrow": "صندوق الرسائل",
+    "messagesInboxTitle": "المحادثات المسجّلة",
+    "messagesListUnavailableTitle": "قائمة المحادثات غير متاحة في هذه الصفحة بعد.",
+    "messagesListUnavailableBody": "للحفاظ على الدقة، لا نعرض محادثات تجريبية. هذا القسم مخصص للمحادثات المسجّلة فقط.",
+    "messagesStartTitle": "ابدأ بمنتج أو خدمة",
+    "messagesStartBody": "ابحث عن عرض وراجع المنتج والبائع. ستُفعّل الرسائل المباشرة عند اكتمال ربط مسار المحادثات.",
+    "messagesNoSyntheticNote": "لا تظهر هنا محادثات مختلقة أو رسائل تجريبية.",
+    "messagesContextTitle": "سياق المتابعة",
+    "messagesContextOrderPrefix": "الطلب",
+    "messagesContextTopicPrefix": "الموضوع",
+    "messagesContextBody": "تم الاحتفاظ بالمرجع من الصفحة السابقة؛ لن تظهر رسالة أو تُرسل حتى تصبح المحادثة متاحة.",
+    "messagesExploreAction": "اكتشف المنتجات والخدمات",
+    "messagesOrdersAction": "عرض الطلبات",
+    "messagesStatusLabel": "حالة صندوق الرسائل"
   }
 }

@@ -2113,6 +2113,23 @@
     "publicReviewPlaceholder": "Share your experience…",
     "publicReviewRatingInvalid": "Rating must be between 1 and 5.",
     "publicReviewSubmitted": "Your review was submitted for review.",
-    "publicReviewFailed": "Could not submit the review."
+    "publicReviewFailed": "Could not submit the review.",
+    "messagesEyebrow": "Communication on Phoenix",
+    "messagesTitle": "Messages and conversations",
+    "messagesIntro": "Conversation should naturally follow discovering an offer, asking the seller, and tracking an order.",
+    "messagesInboxEyebrow": "Inbox",
+    "messagesInboxTitle": "Recorded conversations",
+    "messagesListUnavailableTitle": "The conversation list is not available in this view yet.",
+    "messagesListUnavailableBody": "To keep the experience accurate, no sample conversations are shown. This area is reserved for recorded conversations.",
+    "messagesStartTitle": "Start with a product or service",
+    "messagesStartBody": "Find an offer and review the item and seller. Direct messaging will be enabled when the conversation flow is connected.",
+    "messagesNoSyntheticNote": "No fabricated conversations or sample messages are shown here.",
+    "messagesContextTitle": "Follow-up context",
+    "messagesContextOrderPrefix": "Order",
+    "messagesContextTopicPrefix": "Topic",
+    "messagesContextBody": "The reference from the previous page is preserved; no message is displayed or sent until the conversation is available.",
+    "messagesExploreAction": "Discover products and services",
+    "messagesOrdersAction": "View orders",
+    "messagesStatusLabel": "Inbox status"
   }
 }
