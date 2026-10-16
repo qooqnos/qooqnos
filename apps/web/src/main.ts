@@ -4544,7 +4544,7 @@ function renderMessageThread(
         escapeAttr(socialCommerceUi("messagesComposePlaceholder")) + '"></textarea>' +
       '<p id="messages-send-error" class="phoenix-reset-message-error" role="status" aria-live="polite"></p>' +
       '<div class="phoenix-reset-message-composer-footer"><small>' + socialCommerceUi("messagesNoSyntheticNote") + '</small>' +
-      '<button class="button button-primary" type="submit" data-message-send>' + socialCommerceUi("messagesSendAction") + ' <span aria-hidden="true">←</span></button></div>' +
+      '<button class="button button-primary" type="button" data-message-send>' + socialCommerceUi("messagesSendAction") + ' <span aria-hidden="true">←</span></button></div>' +
       '</form>'
     : '<p class="phoenix-reset-message-thread-closed">' + socialCommerceUi("messagesConversationClosedBody") + '</p>';
   return '<article class="phoenix-reset-message-thread-card">' +
@@ -4618,14 +4618,16 @@ async function loadMessagesPage(preferredConversationId?: string): Promise<void>
       if (!conversation) return;
       thread.innerHTML = renderMessageThread(conversation, Array.isArray(threadResponse.data) ? threadResponse.data : []);
       const form = thread.querySelector<HTMLFormElement>("[data-communication-send]");
-      form?.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const textarea = form.querySelector<HTMLTextAreaElement>("#messages-compose");
-        const send = form.querySelector<HTMLButtonElement>("[data-message-send]");
-        const error = form.querySelector<HTMLElement>("#messages-send-error");
+      const textarea = form?.querySelector<HTMLTextAreaElement>("#messages-compose");
+      const send = form?.querySelector<HTMLButtonElement>("[data-message-send]");
+      const error = form?.querySelector<HTMLElement>("#messages-send-error");
+      let isSending = false;
+      const sendMessage = async (): Promise<void> => {
         const content = textarea?.value.trim() ?? "";
-        if (!content || send?.disabled) return;
-        if (send) { send.disabled = true; send.textContent = socialCommerceUi("messagesSending"); }
+        if (!content || !send || send.disabled || isSending) return;
+        isSending = true;
+        send.disabled = true;
+        send.textContent = socialCommerceUi("messagesSending");
         if (error) error.textContent = "";
         try {
           await apiJson("/api/v1/communications/messages", {
@@ -4636,7 +4638,26 @@ async function loadMessagesPage(preferredConversationId?: string): Promise<void>
           await loadMessagesPage(selectedId);
         } catch {
           if (error) error.textContent = socialCommerceUi("messagesSendError");
-          if (send) { send.disabled = false; send.innerHTML = socialCommerceUi("messagesSendAction") + ' <span aria-hidden="true">←</span>'; }
+          if (send.isConnected) {
+            send.disabled = false;
+            send.innerHTML = socialCommerceUi("messagesSendAction") + ' <span aria-hidden="true">←</span>';
+          }
+        } finally {
+          isSending = false;
+        }
+      };
+      send?.addEventListener("click", (event) => {
+        event.preventDefault();
+        void sendMessage();
+      });
+      form?.addEventListener("submit", (event) => {
+        event.preventDefault();
+        void sendMessage();
+      });
+      textarea?.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+          event.preventDefault();
+          void sendMessage();
         }
       });
     } catch {
