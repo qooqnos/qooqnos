@@ -30,7 +30,6 @@ import {
 if (typeof window !== "undefined") {
   (window as unknown as { openPhoenixAuthModal: typeof openAuthModal }).openPhoenixAuthModal = openAuthModal;
 }
-import { ProductCreateFormComponent, type NewProductFormData } from "./product-form-component.js";
 import {
   getActivePersona,
   renderPersonaSwitcher,
