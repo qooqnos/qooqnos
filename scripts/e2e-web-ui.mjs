@@ -33,6 +33,28 @@ const mockSocialEngagements = new Map();
 const mockSocialComments = [];
 const mockBusinessUpdates = [];
 const notificationReadRequests = [];
+const communicationSendRequests = [];
+const mockConversations = [{
+  id: "conversation-e2e-1",
+  organizationId: "tenant-1",
+  workspaceId: "ws-1",
+  customerId: "customer-e2e-1",
+  status: "open",
+  createdAt: "2026-10-16T10:00:00.000Z",
+  updatedAt: "2026-10-16T10:05:00.000Z",
+  lastMessagePreview: "دربارهٔ این کالا یک پرسش دارم.",
+  lastMessageAt: "2026-10-16T10:05:00.000Z",
+}];
+const mockCommunicationMessages = [{
+  id: "message-e2e-1",
+  conversationId: "conversation-e2e-1",
+  senderReference: "seller-user-1",
+  content: "سلام، چطور می‌توانم راهنمایی‌ات کنم؟",
+  classification: "buyer_seller",
+  status: "created",
+  createdAt: "2026-10-16T10:05:00.000Z",
+  updatedAt: "2026-10-16T10:05:00.000Z",
+}];
 const mockNotifications = [
   { id: "notice-1", intent: "booking.confirmed", channel: "in_app", priority: "high", status: "delivered", createdAt: new Date().toISOString(), variables: {} },
 ];
@@ -252,6 +274,34 @@ await page.route("**/api/v1/**", async (route) => {
 
   if (path === "/api/v1/workspaces/" + workspace + "/members") {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payloads["/api/v1/workspaces/" + workspace + "/members"]) });
+    return;
+  }
+
+  if (path === "/api/v1/communications/conversations" && request.method() === "GET") {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: mockConversations }) });
+    return;
+  }
+  if (path === "/api/v1/communications/conversations/conversation-e2e-1/messages" && request.method() === "GET") {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: mockCommunicationMessages }) });
+    return;
+  }
+  if (path === "/api/v1/communications/messages" && request.method() === "POST") {
+    const body = request.postDataJSON();
+    communicationSendRequests.push(body);
+    const message = {
+      id: "message-e2e-" + (mockCommunicationMessages.length + 1),
+      conversationId: body.conversationId,
+      senderReference: "user-1",
+      content: body.content,
+      classification: body.classification,
+      status: "created",
+      createdAt: "2026-10-16T10:06:00.000Z",
+      updatedAt: "2026-10-16T10:06:00.000Z",
+    };
+    mockCommunicationMessages.push(message);
+    mockConversations[0].lastMessagePreview = String(body.content);
+    mockConversations[0].lastMessageAt = message.createdAt;
+    await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ data: message }) });
     return;
   }
 
@@ -569,11 +619,21 @@ assert.ok((await page.locator(".phoenix-reset-orders-page").innerText()).include
 assert.ok((await page.locator(".phoenix-reset-orders-page").innerText()).includes("TRK-12345"));
 
 await page.goto(baseURL + "/messages");
+await page.locator("[data-message-conversation]").first().waitFor();
+assert.ok(await page.locator(".phoenix-reset-messages-workspace").count() === 1);
 const messagesText = await page.locator(".phoenix-reset-messages-page").innerText();
 assert.ok(messagesText.includes("پیام‌ها و گفت‌وگوها"));
-assert.ok(messagesText.includes("فهرست گفت‌وگوها هنوز در این صفحه فعال نشده است."));
+assert.ok(messagesText.includes("دربارهٔ این کالا یک پرسش دارم."));
+assert.ok(!messagesText.includes("conversation-e2e-1"));
+await page.locator("[data-message-conversation]").first().click();
+await page.locator(".phoenix-reset-message-bubble").first().waitFor();
+assert.ok((await page.locator(".phoenix-reset-message-thread-card").innerText()).includes("سلام، چطور می‌توانم راهنمایی‌ات کنم؟"));
+await page.locator("#messages-compose").fill("ممنون، لطفاً جزئیات بیشتری بفرستید.");
+await page.locator("[data-message-send]").click();
+await page.locator(".phoenix-reset-message-bubble").filter({ hasText: "ممنون، لطفاً جزئیات بیشتری بفرستید." }).waitFor();
+assert.equal(communicationSendRequests.length, 1);
+assert.equal(communicationSendRequests[0].conversationId, "conversation-e2e-1");
 assert.ok(messagesText.includes("برای حفظ دقت، گفت‌وگوی نمونه‌ای نمایش نمی‌دهیم."));
-assert.ok(await page.locator(".phoenix-reset-messages-workspace").count() === 1);
 assert.ok(!messagesText.includes("پاسخ ساختگی"));
 assert.ok(!messagesText.includes("در خدمت شما هستیم"));
 assert.ok(!messagesText.includes("سفارش کالا رسید و تأیید شد"));
@@ -587,12 +647,13 @@ assert.ok(contextualMessages.includes("هیچ پیامی نمایش یا ارس�
 await page.goto(baseURL + "/messages");
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='en']").click();
-await page.waitForTimeout(50);
-assert.ok((await page.locator(".phoenix-reset-messages-page").innerText()).includes("This area is reserved for recorded conversations."));
+await page.waitForTimeout(100);
+assert.ok((await page.locator(".phoenix-reset-messages-page").innerText()).includes("Messages & conversations"));
+assert.ok((await page.locator(".phoenix-reset-messages-page").innerText()).includes("Loading conversations") === false);
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='ar']").click();
-await page.waitForTimeout(50);
-assert.ok((await page.locator(".phoenix-reset-messages-page").innerText()).includes("هذا القسم مخصص للمحادثات المسجّلة فقط."));
+await page.waitForTimeout(100);
+assert.ok((await page.locator(".phoenix-reset-messages-page").innerText()).includes("الرسائل والمحادثات"));
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);

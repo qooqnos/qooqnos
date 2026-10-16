@@ -14119,3 +14119,234 @@ button[aria-busy="true"] .btn-spinner {
 .phoenix-reset-message-context-title {
   overflow-wrap: anywhere;
 }
+
+
+/* Live, permission-scoped Communication inbox and conversation thread. */
+.phoenix-reset-messages-inbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 12px;
+}
+.phoenix-reset-message-row {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 10px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  color: var(--text);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease;
+}
+.phoenix-reset-message-row:hover,
+.phoenix-reset-message-row.selected {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--line));
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+}
+.phoenix-reset-message-row-icon,
+.phoenix-reset-message-thread-header .phoenix-reset-messages-mark {
+  display: grid;
+  place-items: center;
+  width: 41px;
+  height: 41px;
+  border-radius: 13px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  font-size: 17px;
+}
+.phoenix-reset-message-row-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 4px;
+}
+.phoenix-reset-message-row-copy strong {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phoenix-reset-message-row-copy small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phoenix-reset-message-row-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  max-width: 75px;
+  color: var(--faint);
+  font-size: 9px;
+}
+.phoenix-reset-message-row-meta time { white-space: nowrap; }
+.phoenix-reset-message-thread {
+  min-width: 0;
+  min-height: 360px;
+}
+.phoenix-reset-message-thread-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 470px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 23px;
+  background: var(--surface);
+  box-shadow: 0 12px 36px rgba(55, 35, 22, .035);
+}
+.phoenix-reset-message-thread-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.phoenix-reset-message-thread-header h2 {
+  margin: 3px 0 2px;
+  font-size: 16px;
+  font-weight: 850;
+}
+.phoenix-reset-message-thread-header small { color: var(--muted); font-size: 10px; }
+.phoenix-reset-message-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  flex: 1;
+  min-height: 190px;
+  max-height: 55vh;
+  overflow: auto;
+  padding: 20px;
+  background: color-mix(in srgb, var(--bg) 52%, var(--surface));
+}
+.phoenix-reset-message-bubble {
+  width: fit-content;
+  max-width: min(84%, 560px);
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: var(--surface);
+  box-shadow: 0 6px 18px rgba(40, 30, 22, .025);
+}
+.phoenix-reset-message-bubble.own {
+  align-self: flex-end;
+  border-color: color-mix(in srgb, var(--primary) 24%, var(--line));
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+}
+.phoenix-reset-message-bubble.other { align-self: flex-start; }
+.phoenix-reset-message-bubble-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.phoenix-reset-message-bubble-meta strong { color: var(--primary-strong); font-weight: 850; }
+.phoenix-reset-message-bubble-meta time { color: var(--faint); }
+.phoenix-reset-message-bubble p {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.95;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.phoenix-reset-message-thread-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 230px;
+  text-align: center;
+}
+.phoenix-reset-message-thread-empty h3 { margin: 12px 0 4px; font-size: 15px; }
+.phoenix-reset-message-thread-empty p {
+  max-width: 390px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.95;
+}
+.phoenix-reset-message-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px 18px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.phoenix-reset-message-composer label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+.phoenix-reset-message-composer textarea {
+  width: 100%;
+  min-height: 75px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  outline: 0;
+  color: var(--text);
+  background: var(--bg);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.8;
+  resize: vertical;
+}
+.phoenix-reset-message-composer textarea:focus-visible {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--line));
+  outline: 2px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  outline-offset: 2px;
+}
+.phoenix-reset-message-composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.phoenix-reset-message-composer-footer small {
+  max-width: 65%;
+  color: var(--faint);
+  font-size: 10px;
+  line-height: 1.8;
+}
+.phoenix-reset-message-composer-footer .button { min-height: 39px; border-radius: 12px; }
+.phoenix-reset-message-error {
+  margin: 0;
+  color: var(--danger, #b42318);
+  font-size: 11px;
+  line-height: 1.8;
+}
+.phoenix-reset-message-thread-closed {
+  margin: 0;
+  padding: 13px 18px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+@media (max-width: 720px) {
+  .phoenix-reset-message-row { gap: 8px; padding: 10px 7px; }
+  .phoenix-reset-message-row-icon { width: 36px; height: 36px; }
+  .phoenix-reset-message-thread-card { border-radius: 18px; min-height: 390px; }
+  .phoenix-reset-message-thread-header { padding: 14px; }
+  .phoenix-reset-message-list { padding: 14px; max-height: 47vh; }
+  .phoenix-reset-message-bubble { max-width: 93%; padding: 10px 12px; }
+  .phoenix-reset-message-composer { padding: 13px; }
+  .phoenix-reset-message-composer-footer { align-items: stretch; flex-direction: column; }
+  .phoenix-reset-message-composer-footer small { max-width: none; }
+  .phoenix-reset-message-composer-footer .button { width: 100%; justify-content: center; }
+}
