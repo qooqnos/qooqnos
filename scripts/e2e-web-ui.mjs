@@ -899,6 +899,21 @@ assert.ok(
   feedOverflow.documentWidth <= feedOverflow.viewport,
   "the social feed must not overflow horizontally on mobile: " + JSON.stringify(feedOverflow),
 );
+
+// Saving a feed card must preserve the approved social-card renderer. It must not
+// fall back to the retired generic Discovery result cards after social-state refresh.
+await page.locator('.phoenix-post-card [data-save="result-product-1"]').click();
+await page.locator('.phoenix-post-card [data-save="result-product-1"].selected').waitFor();
+assert.ok(await page.locator(".phoenix-post-card .phoenix-post-media").count() >= 3);
+assert.equal(await page.locator(".phoenix-reset-posts .result-card").count(), 0);
+await page.locator('.phoenix-post-card [data-save="result-product-1"]').click();
+await page.waitForFunction(() => {
+  const button = document.querySelector<HTMLButtonElement>('.phoenix-post-card [data-save="result-product-1"]');
+  return Boolean(button && !button.classList.contains("selected"));
+});
+assert.equal(await page.locator("#shortlist-count").innerText(), "۰");
+assert.ok(await page.locator(".phoenix-post-card").count() >= 3);
+
 await page.locator("[data-discovery-index='0']").click();
 const detailFollowButton = page.locator(".phoenix-detail-modal [data-follow-seller-detail]");
 await detailFollowButton.waitFor();
