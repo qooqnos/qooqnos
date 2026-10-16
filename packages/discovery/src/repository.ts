@@ -285,6 +285,8 @@ export class DiscoveryRepository extends Repository {
   async searchFollowing(context: RequestContext, limit = 20, offset = 0): Promise<SearchDocumentRecord[]> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const actorId = context.actorId;
+    if (!actorId) throw new DatabaseError("Following feed requires an authenticated actor");
     const safeLimit = normalizeLimit(limit);
     const safeOffset = normalizeOffset(offset);
     const rows = await this.database.all<SearchDocumentRow>(
@@ -294,17 +296,34 @@ export class DiscoveryRepository extends Repository {
               sd.metadata_json AS metadataJson, sd.eligibility,
               sd.created_at AS createdAt, sd.updated_at AS updatedAt
        FROM search_documents sd
-       INNER JOIN social_follows sf
-         ON sf.target_type = 'business'
-        AND sf.target_id = json_extract(sd.metadata_json, '$.businessId')
-        AND sf.actor_user_id = ?
-        AND sf.status = 'active'
-        AND sf.organization_id = ?
-        AND sf.workspace_id = ?
-       WHERE sd.organization_id = ? AND sd.workspace_id = ? AND sd.eligibility = 'eligible'
-       ORDER BY sf.updated_at DESC, sd.updated_at DESC, sd.id ASC
+       WHERE sd.organization_id = ?
+         AND sd.workspace_id = ?
+         AND sd.eligibility = 'eligible'
+         AND EXISTS (
+           SELECT 1
+           FROM social_follows sf
+           WHERE sf.actor_user_id = ?
+             AND sf.status = 'active'
+             AND sf.organization_id = ?
+             AND sf.workspace_id = ?
+             AND (
+               (sf.target_type = 'business' AND sf.target_id = json_extract(sd.metadata_json, '$.businessId'))
+               OR
+               (sf.target_type = 'user' AND (
+                 sf.target_id = COALESCE(
+                   json_extract(sd.metadata_json, '$.sellerUserId'),
+                   json_extract(sd.metadata_json, '$.ownerUserId'),
+                   json_extract(sd.metadata_json, '$.authorUserId'),
+                   json_extract(sd.metadata_json, '$.profileUserId'),
+                   json_extract(sd.metadata_json, '$.userId')
+                 )
+                 OR (sd.source_type IN ('user', 'person', 'profile') AND sf.target_id = sd.source_id)
+               ))
+             )
+         )
+       ORDER BY sd.updated_at DESC, sd.id ASC
        LIMIT ? OFFSET ?`,
-      context.actorId, organizationId, workspaceId, organizationId, workspaceId, safeLimit, safeOffset,
+      organizationId, workspaceId, actorId, organizationId, workspaceId, safeLimit, safeOffset,
     );
     return rows.map(toRecord);
   }
