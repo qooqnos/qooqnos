@@ -13446,3 +13446,109 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-reset-deal-guard-card p { margin-bottom: 17px; }
   .phoenix-reset-deal-guard-card .button { width:100%; justify-content:center; }
 }
+
+
+
+/* Public seller storefront — canonical, human-readable, responsive. */
+.phoenix-public-business-page { padding-top: 22px; }
+.phoenix-public-business-hero { align-items: flex-end; gap: 24px; }
+.phoenix-public-business-hero .phoenix-reset-hero-copy { max-width: 820px; }
+.phoenix-public-business-meta { display:flex; flex-wrap:wrap; gap:7px; margin-top:17px; }
+.phoenix-public-business-meta > span {
+  display:inline-flex; align-items:center; min-height:30px; padding:5px 10px;
+  border:1px solid var(--line); border-radius:10px; color:var(--muted);
+  background:var(--surface); font-size:11px; font-weight:750;
+}
+.phoenix-public-business-meta > .phoenix-public-status-chip {
+  color:var(--primary-strong); border-color:color-mix(in srgb,var(--primary) 24%,var(--line));
+  background:color-mix(in srgb,var(--primary) 7%,var(--surface));
+}
+.phoenix-public-business-hero-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; flex:0 0 auto; }
+.phoenix-public-business-hero-actions .button { min-height:42px; border-radius:13px; }
+.phoenix-public-business-grid {
+  display:grid; grid-template-columns:minmax(250px,.78fr) minmax(0,1.5fr);
+  gap:18px; margin-top:18px; align-items:start;
+}
+.phoenix-public-business-card {
+  min-width:0; padding:21px; border:1px solid var(--line); border-radius:22px;
+  background:var(--surface); box-shadow:0 10px 32px rgba(46,31,22,.035);
+}
+.phoenix-public-business-card-heading {
+  display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px;
+}
+.phoenix-public-business-card-heading > div { min-width:0; }
+.phoenix-public-business-card-heading h2 { margin:4px 0 0; font-size:17px; font-weight:850; line-height:1.55; }
+.phoenix-public-business-card-heading .pill { flex:0 0 auto; font-size:10px; }
+.phoenix-public-fact-grid { display:grid; gap:11px; }
+.phoenix-public-fact-grid > div { display:grid; gap:3px; padding-bottom:11px; border-bottom:1px solid var(--line); }
+.phoenix-public-fact-grid > div:last-child { padding-bottom:0; border-bottom:0; }
+.phoenix-public-fact-grid span { color:var(--muted); font-size:11px; }
+.phoenix-public-fact-grid strong { color:var(--text); font-size:13px; overflow-wrap:anywhere; }
+.phoenix-public-offer-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:11px; }
+.phoenix-public-offer-card {
+  display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:13px;
+  padding:14px; border:1px solid var(--line); border-radius:16px; background:var(--surface);
+  transition:border-color .18s ease,background .18s ease;
+}
+.phoenix-public-offer-card:hover { border-color:color-mix(in srgb,var(--primary) 30%,var(--line)); background:color-mix(in srgb,var(--primary) 2%,var(--surface)); }
+.phoenix-public-offer-icon {
+  display:grid; place-items:center; width:44px; height:44px; border-radius:13px;
+  color:var(--primary-strong); background:color-mix(in srgb,var(--primary) 10%,var(--surface)); font-size:19px;
+}
+.phoenix-public-offer-body { min-width:0; }
+.phoenix-public-offer-body .section-kicker { font-size:10px; }
+.phoenix-public-offer-body h3 { margin:3px 0 4px; font-size:14px; font-weight:850; line-height:1.6; }
+.phoenix-public-offer-body p { margin:0 0 8px; color:var(--muted); font-size:11px; line-height:1.8; }
+.phoenix-public-offer-body > strong { font-size:12px; }
+.phoenix-public-offer-action .button { min-height:38px; border-radius:11px; padding:8px 11px; white-space:nowrap; font-size:11px; }
+.phoenix-public-business-support-grid {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start;
+  gap:16px; margin-top:18px;
+}
+.phoenix-public-business-contact-list { display:flex; flex-direction:column; gap:11px; }
+.phoenix-public-business-contact-list a,
+.phoenix-public-business-contact-list > div {
+  display:flex; flex-direction:column; gap:3px; padding-bottom:10px; border-bottom:1px solid var(--line);
+  color:var(--text); font-size:12px; text-decoration:none; overflow-wrap:anywhere;
+}
+.phoenix-public-business-contact-list a:last-child,
+.phoenix-public-business-contact-list > div:last-child { border-bottom:0; padding-bottom:0; }
+.phoenix-public-business-contact-list b { color:var(--muted); font-size:10px; }
+.phoenix-public-business-contact-list a:hover { color:var(--primary-strong); }
+.phoenix-public-business-location-list { display:flex; flex-direction:column; gap:10px; }
+.phoenix-public-location-row { display:flex; gap:10px; align-items:flex-start; padding-bottom:10px; border-bottom:1px solid var(--line); }
+.phoenix-public-location-row:last-child { border-bottom:0; padding-bottom:0; }
+.phoenix-public-location-icon {
+  display:grid; place-items:center; width:34px; height:34px; flex:0 0 34px; border-radius:10px;
+  color:var(--primary-strong); background:color-mix(in srgb,var(--primary) 9%,var(--surface));
+}
+.phoenix-public-location-row > div { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.phoenix-public-location-row strong { font-size:12px; line-height:1.6; }
+.phoenix-public-location-row small { color:var(--muted); font-size:10px; }
+.phoenix-public-review-list { display:flex; flex-direction:column; gap:10px; }
+.phoenix-public-review-card { padding:13px; border:1px solid var(--line); border-radius:14px; background:var(--bg); }
+.phoenix-public-review-card-head { display:flex; align-items:center; justify-content:space-between; gap:9px; }
+.phoenix-public-review-rating { color:var(--primary-strong); letter-spacing:.06em; }
+.phoenix-public-review-card time { color:var(--muted); font-size:10px; white-space:nowrap; }
+.phoenix-public-review-card p { margin:8px 0 0; color:var(--text); font-size:12px; line-height:1.85; overflow-wrap:anywhere; }
+.phoenix-public-business-empty {
+  display:flex; flex-direction:column; align-items:center; gap:7px; padding:22px 13px;
+  border:1px dashed var(--line-strong); border-radius:14px; color:var(--muted); text-align:center;
+}
+.phoenix-public-business-empty > span { font-size:20px; color:var(--primary-strong); }
+.phoenix-public-business-empty p { margin:0; font-size:11px; line-height:1.8; }
+@media (max-width:1050px) {
+  .phoenix-public-business-grid { grid-template-columns:minmax(0,1fr); }
+  .phoenix-public-business-support-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:720px) {
+  .phoenix-public-business-page { padding-top:14px; }
+  .phoenix-public-business-hero { align-items:stretch; gap:17px; }
+  .phoenix-public-business-hero-actions { display:grid; grid-template-columns:minmax(0,1fr); width:100%; }
+  .phoenix-public-business-hero-actions .button { justify-content:center; width:100%; }
+  .phoenix-public-business-grid,.phoenix-public-business-support-grid { grid-template-columns:minmax(0,1fr); gap:12px; }
+  .phoenix-public-business-card { padding:16px; border-radius:18px; }
+  .phoenix-public-offer-card { grid-template-columns:auto minmax(0,1fr); gap:10px; padding:12px; }
+  .phoenix-public-offer-action { grid-column:1 / -1; }
+  .phoenix-public-offer-action .button { width:100%; justify-content:center; }
+}

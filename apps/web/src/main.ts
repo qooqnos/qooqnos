@@ -6607,21 +6607,44 @@ function renderBusiness(): string {
 
 
 function renderBusinessPublic(): string {
-  return '<div class="phoenix-public-business-page">' +
-    '<section class="phoenix-public-business-hero">' +
-      '<div class="phoenix-public-business-hero-copy"><span class="phoenix-kicker">Phoenix Business</span><h1 id="public-business-page-name">کسب‌وکار</h1><p id="public-business-page-summary">در حال بارگذاری اطلاعات عمومی…</p><div id="public-business-page-meta" class="phoenix-public-business-meta"></div><div class="phoenix-public-business-hero-actions"><button class="button button-primary" type="button" id="public-business-follow">دنبال کردن</button><button class="button button-ghost" type="button" id="public-business-review">ثبت نظر</button><button class="button button-ghost" type="button" id="public-business-share">اشتراک‌گذاری</button></div></div>' +
-      '<div class="phoenix-public-business-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></div>' +
+  return '<div class="phoenix-reset-page phoenix-public-business-page">' +
+    '<section class="phoenix-reset-hero phoenix-public-business-hero">' +
+      '<div class="phoenix-reset-hero-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("publicBusinessEyebrow") + '</span></div>' +
+        '<h1 id="public-business-page-name">' + socialCommerceUi("publicBusinessLoadingName") + '</h1>' +
+        '<p id="public-business-page-summary">' + socialCommerceUi("publicBusinessLoadingDescription") + '</p>' +
+        '<div id="public-business-page-meta" class="phoenix-public-business-meta"></div>' +
+      '</div>' +
+      '<div class="phoenix-public-business-hero-actions">' +
+        '<button class="button button-primary" type="button" id="public-business-follow">' + socialCommerceUi("publicFollowAction") + '</button>' +
+        '<button class="button button-ghost" type="button" id="public-business-review">' + socialCommerceUi("publicReviewAction") + '</button>' +
+        '<button class="button button-ghost" type="button" id="public-business-share">' + socialCommerceUi("publicShareAction") + '</button>' +
+      '</div>' +
     '</section>' +
-    '<section class="phoenix-public-business-content">' +
-      '<article class="glass-card phoenix-public-business-identity"><div class="card-section-heading"><div><span class="section-kicker">Supply Identity</span><h2>هویت و عرضه</h2></div><span id="public-business-page-publication" class="pill success">published</span></div><div id="public-business-page-facts" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
-      '<article class="glass-card phoenix-public-business-offers"><div class="card-section-heading"><div><span class="section-kicker">Products & Services</span><h2>محصولات و خدمات منتشرشده</h2></div><span id="public-business-page-offer-count" class="pill">—</span></div><div id="public-business-page-offers" class="phoenix-public-offer-grid"><div class="slot-loading">در حال خواندن عرضه‌ها…</div></div></article>' +
-      '<article class="glass-card phoenix-public-business-contact"><div class="card-section-heading"><div><span class="section-kicker">Contact</span><h2>راه‌های ارتباط</h2></div></div><div id="public-business-page-contacts" class="metadata-cloud"><span>—</span></div></article>' +
-      '<article class="glass-card phoenix-public-business-location"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div></div><div id="public-business-page-locations" class="business-location-list"><div class="slot-loading">—</div></div></article>' +
-      '<article class="glass-card phoenix-public-business-reviews"><div class="card-section-heading"><div><span class="section-kicker">Trust / Reviews</span><h2>تجربه‌های منتشرشده مشتریان</h2></div><span id="public-business-page-review-count" class="pill">—</span></div><div id="public-business-page-reviews" class="phoenix-public-review-list"><div class="slot-loading">در حال خواندن تجربه‌ها…</div></div></article>' +
-    '</section>' +
-    '<section class="glass-card phoenix-public-business-bridge"><span class="section-kicker">پلتفرم فروشندگان ققنوس</span><h2>از ثبت‌نام فروشنده تا عرضه محصولات و دریافت سفارش، یک مسیر یکپارچه.</h2><p>شما نیز می‌توانید فروشگاه خود را در ققنوس ثبت کرده و محصولاتتان را مستقیماً به خریداران عرضه کنید.</p><div class="phoenix-public-capability-list"><span>ثبت‌نام فروشنده</span><span>مدیریت فروشگاه</span><span>عرضه محصولات</span><span>سفارش‌گیری آنلاین</span></div><div style="margin-top:16px;"><button class="button button-primary" type="button" data-bridge-seller-register>ثبت‌نام و افتتاح فروشگاه در ققنوس</button></div></section>' +
+    '<div class="phoenix-public-business-grid">' +
+      '<article class="phoenix-public-business-card phoenix-public-business-identity">' +
+        '<div class="phoenix-public-business-card-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("publicIdentityEyebrow") + '</span><h2>' + socialCommerceUi("publicIdentityTitle") + '</h2></div>' +
+          '<span id="public-business-page-publication" class="pill">' + socialCommerceUi("publicStatusUnknown") + '</span></div>' +
+        '<div id="public-business-page-facts" class="phoenix-public-fact-grid"><div class="slot-loading">' + socialCommerceUi("publicBusinessLoading") + '</div></div>' +
+      '</article>' +
+      '<article class="phoenix-public-business-card phoenix-public-business-offers">' +
+        '<div class="phoenix-public-business-card-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("publicOffersEyebrow") + '</span><h2>' + socialCommerceUi("publicOffersTitle") + '</h2></div>' +
+          '<span id="public-business-page-offer-count" class="phoenix-reset-shortlist-count">—</span></div>' +
+        '<div id="public-business-page-offers" class="phoenix-public-offer-grid"><div class="slot-loading">' + socialCommerceUi("publicOffersLoading") + '</div></div>' +
+      '</article>' +
+    '</div>' +
+    '<div class="phoenix-public-business-support-grid">' +
+      '<article class="phoenix-public-business-card"><div class="phoenix-public-business-card-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("publicContactEyebrow") + '</span><h2>' + socialCommerceUi("publicContactTitle") + '</h2></div></div>' +
+        '<div id="public-business-page-contacts" class="phoenix-public-business-contact-list"><span>—</span></div></article>' +
+      '<article class="phoenix-public-business-card"><div class="phoenix-public-business-card-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("publicLocationsEyebrow") + '</span><h2>' + socialCommerceUi("publicLocationsTitle") + '</h2></div></div>' +
+        '<div id="public-business-page-locations" class="phoenix-public-business-location-list"><div class="slot-loading">—</div></div></article>' +
+      '<article class="phoenix-public-business-card phoenix-public-business-reviews"><div class="phoenix-public-business-card-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("publicReviewsEyebrow") + '</span><h2>' + socialCommerceUi("publicReviewsTitle") + '</h2></div>' +
+        '<span id="public-business-page-review-count" class="phoenix-reset-shortlist-count">—</span></div>' +
+        '<div id="public-business-page-reviews" class="phoenix-public-review-list"><div class="slot-loading">' + socialCommerceUi("publicReviewsLoading") + '</div></div></article>' +
+    '</div>' +
   '</div>';
 }
+
 function renderBusinessProfile(): string {
   const bt = (key: string): string => escapeHtml(businessUi(key));
   const bs = (key: string): string => escapeHtml(businessSurfaceUi(key));
@@ -7048,22 +7071,22 @@ function openPublicBusinessReview(routePath: string): void {
   const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
   if (!businessId) return;
   if (!customerId) {
-    showToast("برای ثبت نظر، Customer context این حساب هنوز آماده نیست.");
+    showToast(socialCommerceUi("publicReviewContextMissing"));
     return;
   }
-  openSimpleFormDialog("نظر درباره کسب‌وکار", "Trust / Review", [
-    { id: "public-review-rating", label: "امتیاز (۱ تا ۵)", placeholder: "5", value: "5" },
-    { id: "public-review-content", label: "نظر", placeholder: "تجربه شما…", value: "" },
+  openSimpleFormDialog(socialCommerceUi("publicReviewDialogTitle"), socialCommerceUi("publicReviewsEyebrow"), [
+    { id: "public-review-rating", label: socialCommerceUi("publicReviewRating"), placeholder: "5", value: "5" },
+    { id: "public-review-content", label: socialCommerceUi("publicReviewContent"), placeholder: socialCommerceUi("publicReviewPlaceholder"), value: "" },
   ], async (dialog) => {
     const rating = Number(dialog.querySelector<HTMLInputElement>("#public-review-rating")?.value ?? "0");
     const content = dialog.querySelector<HTMLInputElement>("#public-review-content")?.value.trim() ?? "";
-    if (!Number.isSafeInteger(rating) || rating < 1 || rating > 5) { showToast("امتیاز باید بین ۱ تا ۵ باشد."); return false; }
+    if (!Number.isSafeInteger(rating) || rating < 1 || rating > 5) { showToast(socialCommerceUi("publicReviewRatingInvalid")); return false; }
     try {
       await apiJson("/api/v1/trust/reviews", { method: "POST", body: { customerId, ratingValue: rating, ...(content ? { content } : {}), businessId } });
-      showToast("نظر برای بررسی Trust ثبت شد.");
+      showToast(socialCommerceUi("publicReviewSubmitted"));
       return true;
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "ثبت نظر ناموفق بود.");
+      showToast(error instanceof Error ? error.message : socialCommerceUi("publicReviewFailed"));
       return false;
     }
   });
@@ -7073,7 +7096,7 @@ async function togglePublicBusinessFollow(routePath: string): Promise<void> {
   const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
   if (!businessId) return;
   const button = document.querySelector<HTMLButtonElement>("#public-business-follow");
-  if (button) { button.disabled = true; button.textContent = "در حال ثبت…"; }
+  if (button) { button.disabled = true; button.textContent = socialCommerceUi("publicFollowSaving"); }
   try {
     const followed = await persistSocialFollow({
       id: businessId,
@@ -7082,9 +7105,9 @@ async function togglePublicBusinessFollow(routePath: string): Promise<void> {
       title: document.querySelector<HTMLElement>("#public-business-page-name")?.textContent ?? "Business",
       metadata: { businessId },
     });
-    if (button) { button.disabled = false; button.textContent = followed ? "دنبال شد ✓" : "دنبال کردن"; }
+    if (button) { button.disabled = false; button.textContent = followed ? socialCommerceUi("publicFollowActive") : socialCommerceUi("publicFollowAction"); }
   } catch (error) {
-    if (button) { button.disabled = false; button.textContent = "دنبال کردن"; }
+    if (button) { button.disabled = false; button.textContent = socialCommerceUi("publicFollowAction"); }
     showToast(error instanceof Error ? error.message : "ثبت Follow ناموفق بود.");
   }
 }
@@ -7092,11 +7115,68 @@ async function togglePublicBusinessFollow(routePath: string): Promise<void> {
 async function sharePublicBusiness(): Promise<void> {
   try {
     await navigator.clipboard.writeText(window.location.href);
-    showToast("لینک پروفایل کپی شد.");
+    showToast(socialCommerceUi("publicLinkCopied"));
   } catch {
     showToast(window.location.href);
   }
 }
+function publicBusinessTypeLabel(value: string | null | undefined): string {
+  const type = (value ?? "").trim().toLowerCase().replace(/-/g, "_");
+  if (!type) return socialCommerceUi("publicBusinessGenericType");
+  if (type === "retail" || type.startsWith("retail_") || type === "shop") return socialCommerceUi("publicBusinessTypeRetail");
+  if (type.startsWith("medical_") || type === "clinic" || type === "medical") return socialCommerceUi("publicBusinessTypeClinic");
+  if (type.startsWith("food_") || type === "restaurant" || type === "cafe") return socialCommerceUi("publicBusinessTypeFood");
+  if (type === "beauty_salon" || type === "salon") return socialCommerceUi("publicBusinessTypeSalon");
+  if (type.startsWith("service_") || type === "service") return socialCommerceUi("publicBusinessTypeService");
+  if (type.startsWith("education_") || type === "education") return socialCommerceUi("publicBusinessTypeEducation");
+  if (type.startsWith("hospitality_") || type === "hotel") return socialCommerceUi("publicBusinessTypeHospitality");
+  if (type.startsWith("professional_") || type === "consulting") return socialCommerceUi("publicBusinessTypeConsulting");
+  return socialCommerceUi("publicBusinessGenericType");
+}
+
+function publicBusinessPublicationLabel(value: string | null | undefined): string {
+  switch ((value ?? "").trim().toLowerCase()) {
+    case "published": return socialCommerceUi("publicStatusPublished");
+    case "pending": return socialCommerceUi("publicStatusPending");
+    case "unpublished":
+    case "draft": return socialCommerceUi("publicStatusUnpublished");
+    case "blocked": return socialCommerceUi("publicStatusBlocked");
+    default: return socialCommerceUi("publicStatusUnknown");
+  }
+}
+
+function publicBusinessContactLabel(value: string | null | undefined): string {
+  switch ((value ?? "").trim().toLowerCase()) {
+    case "phone": return socialCommerceUi("publicContactPhone");
+    case "email": return socialCommerceUi("publicContactEmail");
+    case "website": return socialCommerceUi("publicContactWebsite");
+    default: return socialCommerceUi("publicContactOther");
+  }
+}
+
+function publicBusinessLocationLabel(value: string | null | undefined): string {
+  switch ((value ?? "").trim().toLowerCase()) {
+    case "store": return socialCommerceUi("publicLocationStore");
+    case "clinic": return socialCommerceUi("publicLocationClinic");
+    case "office": return socialCommerceUi("publicLocationOffice");
+    case "branch": return socialCommerceUi("publicLocationBranch");
+    default: return socialCommerceUi("publicLocationDefault");
+  }
+}
+
+function formatPublicBusinessDate(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const language = localStorage.getItem("qooqnos.locale") ?? "fa";
+  const locale = language === "fa" ? "fa-IR-u-ca-persian" : language === "ar" ? "ar-SA-u-ca-islamic-umalqura" : "en-GB-u-ca-gregory";
+  try {
+    return new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", day: "numeric" }).format(date);
+  } catch {
+    return new Intl.DateTimeFormat("en-GB", { year: "numeric", month: "short", day: "numeric" }).format(date);
+  }
+}
+
 async function loadBusinessPublicPage(routePath: string): Promise<void> {
   const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
   const name = document.querySelector<HTMLElement>("#public-business-page-name");
@@ -7116,33 +7196,46 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
       "/api/v1/public/businesses/" + encodeURIComponent(businessId) + "?limit=50",
     );
     const profile = response.data.profile;
-    name.textContent = profile.displayName || profile.name;
-    summary.textContent = "اطلاعات منتشرشده و عرضه‌های فعال " + (profile.businessType ? "در حوزه " + profile.businessType : "این کسب‌وکار") + ".";
-    publication.textContent = profile.publicationStatus;
-    meta.innerHTML = [profile.businessType, profile.defaultLocale, profile.timezone, profile.defaultCurrency].filter(Boolean).map((value) => '<span>' + escapeHtml(String(value)) + '</span>').join("");
-    facts.innerHTML = '<div><span>نام رسمی</span><strong>' + escapeHtml(profile.name) + '</strong></div>' +
-      '<div><span>نوع کسب‌وکار</span><strong>' + escapeHtml(profile.businessType ?? "—") + '</strong></div>' +
-      '<div><span>Locale</span><strong>' + escapeHtml(profile.defaultLocale ?? "—") + '</strong></div>' +
-      '<div><span>ارز</span><strong>' + escapeHtml(profile.defaultCurrency ?? "—") + '</strong></div>';
+    const displayName = profile.displayName || profile.name;
+    const businessTypeLabel = publicBusinessTypeLabel(profile.businessType);
+    const publicationLabel = publicBusinessPublicationLabel(profile.publicationStatus);
+    name.textContent = displayName;
+    summary.textContent = socialCommerceUi("publicBusinessIntro");
+    meta.innerHTML = '<span>' + escapeHtml(businessTypeLabel) + '</span><span class="phoenix-public-status-chip">' + escapeHtml(publicationLabel) + '</span>';
+    publication.textContent = publicationLabel;
+    publication.className = "pill " + (profile.publicationStatus === "published" ? "success" : profile.publicationStatus === "pending" ? "warning" : "");
+    facts.innerHTML =
+      '<div><span>' + socialCommerceUi("publicOfficialName") + '</span><strong>' + escapeHtml(profile.name) + '</strong></div>' +
+      '<div><span>' + socialCommerceUi("publicBusinessTypeLabel") + '</span><strong>' + escapeHtml(businessTypeLabel) + '</strong></div>' +
+      '<div><span>' + socialCommerceUi("publicPublicationLabel") + '</span><strong>' + escapeHtml(publicationLabel) + '</strong></div>';
     contactsHost.innerHTML = response.data.contacts.length
       ? response.data.contacts.map((contact) => {
-          const type = contact.contactType ?? "contact";
-          const value = contact.value ?? "—";
-          const href = type === "phone" ? "tel:" + encodeURIComponent(value) : type === "email" ? "mailto:" + encodeURIComponent(value) : type === "website" ? (value.startsWith("http://") || value.startsWith("https://") ? value : "https://" + value) : "";
-          const content = href ? '<a href="' + escapeAttr(href) + '" target="_blank" rel="noopener noreferrer"><b>' + escapeHtml(type) + '</b> ' + escapeHtml(value) + '</a>' : '<span><b>' + escapeHtml(type) + '</b> ' + escapeHtml(value) + '</span>';
+          const rawType = contact.contactType ?? "";
+          const typeLabel = publicBusinessContactLabel(rawType);
+          const value = contact.value ?? "";
+          const href = rawType === "phone" ? "tel:" + encodeURIComponent(value)
+            : rawType === "email" ? "mailto:" + encodeURIComponent(value)
+              : rawType === "website" ? (value.startsWith("http://") || value.startsWith("https://") ? value : "https://" + value) : "";
+          const content = href
+            ? '<a href="' + escapeAttr(href) + '" target="_blank" rel="noopener noreferrer"><b>' + escapeHtml(typeLabel) + '</b><span>' + escapeHtml(value) + '</span></a>'
+            : '<div><b>' + escapeHtml(typeLabel) + '</b><span>' + escapeHtml(value) + '</span></div>';
           return content;
         }).join("")
-      : '<span>راه ارتباط عمومی ثبت نشده است.</span>';
+      : '<div class="phoenix-public-business-empty"><span aria-hidden="true">✉</span><p>' + socialCommerceUi("publicNoContacts") + '</p></div>';
     locationsHost.innerHTML = response.data.locations.length
-      ? response.data.locations.map((location) => '<div class="business-location-item"><div><strong>' + escapeHtml(location.name ?? "Location") + '</strong><small>' + escapeHtml(location.locationType ?? "—") + (location.timezone ? " · " + escapeHtml(location.timezone) : "") + '</small></div></div>').join("")
-      : '<div class="slot-empty"><span>⌖</span><p>مکان عمومی ثبت نشده است.</p></div>';
-    reviewCount.textContent = response.data.reviews.length + " نظر";
+      ? response.data.locations.map((location) => '<div class="phoenix-public-location-row"><span class="phoenix-public-location-icon" aria-hidden="true">⌖</span><div><strong>' + escapeHtml(location.name ?? publicBusinessLocationLabel(location.locationType)) + '</strong><small>' + escapeHtml(publicBusinessLocationLabel(location.locationType)) + '</small></div></div>').join("")
+      : '<div class="phoenix-public-business-empty"><span aria-hidden="true">⌖</span><p>' + socialCommerceUi("publicNoLocations") + '</p></div>';
+    reviewCount.textContent = socialCommerceUi("publicReviewCount", { count: formatLocalizedNumber(response.data.reviews.length) });
     reviewsHost.innerHTML = response.data.reviews.length
-      ? response.data.reviews.map((review) => '<article class="phoenix-public-review-card"><div class="phoenix-public-review-rating">' + "★".repeat(Math.max(0, Math.min(5, Math.trunc(review.ratingValue)))) + '</div><p>' + escapeHtml(review.content ?? "") + '</p><small>تجربه منتشرشده · ' + escapeHtml(review.publishedAt ?? review.createdAt) + '</small></article>').join("")
-      : '<div class="slot-empty"><span>◌</span><p>هنوز نظر منتشرشده‌ای برای این کسب‌وکار موجود نیست.</p></div>';
-    offerCount.textContent = response.data.offers.length + " عرضه";
+      ? response.data.reviews.map((review) => {
+          const rating = Math.max(0, Math.min(5, Math.trunc(review.ratingValue)));
+          const date = formatPublicBusinessDate(review.publishedAt ?? review.createdAt);
+          return '<article class="phoenix-public-review-card"><div class="phoenix-public-review-card-head"><span class="phoenix-public-review-rating">' + "★".repeat(rating) + '</span>' + (date ? '<time>' + escapeHtml(date) + '</time>' : '') + '</div><p>' + escapeHtml(review.content ?? socialCommerceUi("publicReviewNoText")) + '</p></article>';
+        }).join("")
+      : '<div class="phoenix-public-business-empty"><span aria-hidden="true">◌</span><p>' + socialCommerceUi("publicNoReviews") + '</p></div>';
+    offerCount.textContent = socialCommerceUi("publicOfferCount", { count: formatLocalizedNumber(response.data.offers.length) });
     if (!response.data.offers.length) {
-      offersHost.innerHTML = '<div class="slot-empty"><span>◇</span><p>هنوز عرضه منتشرشده‌ای برای این کسب‌وکار در دسترس نیست.</p></div>';
+      offersHost.innerHTML = '<div class="phoenix-public-business-empty"><span aria-hidden="true">◇</span><p>' + socialCommerceUi("publicNoOffers") + '</p></div>';
       return;
     }
     const publicOffers = response.data.offers;
