@@ -80,8 +80,12 @@ describe("Phoenix Unified Experience (apps/web/src/phoenix-experience.ts)", () =
     expect(renderCreateContentHub()).toContain("نوشتن کالا یا خدمت");
     expect(renderCreateContentHub()).toContain("پیش‌نویس هوشمند");
     expect(renderCreateContentHub()).toContain("/product-studio");
-    expect(renderContentDetailsForm()).toContain("جزئیات محتوا");
-    expect(renderContentDetailsForm()).toContain("قیمت پیشنهادی");
+    const contentDetails = renderContentDetailsForm();
+    expect(contentDetails).toContain("توصیفت را بنویس؛ ققنوس ساختار می‌دهد");
+    expect(contentDetails).toContain('id="content-desc-input"');
+    expect(contentDetails).toContain('id="content-details-form"');
+    expect(contentDetails).not.toContain('id="content-price-input"');
+    expect(contentDetails).not.toContain("150,000");
     expect(renderDealTypeSelection()).toContain("الان می‌خوای با این محتوا چیکار کنی؟");
     expect(renderDealTypeSelection()).toContain("بفروشم");
     expect(renderDealTypeSelection()).toContain("معاوضه کنم");
