@@ -663,7 +663,7 @@ await page.locator("[data-language-option='ar']").click();
 await page.waitForTimeout(50);
 const notificationsAr = await page.locator(".phoenix-reset-notifications-page").innerText();
 assert.ok(notificationsAr.includes("التحديثات المهمة"));
-assert.ok(notificationsAr.includes("تم تأكيد الحجز"));
+assert.ok(notificationsAr.includes("تم تأكيد الحجز"), "Arabic notification content did not match. Actual page text: " + notificationsAr);
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 
