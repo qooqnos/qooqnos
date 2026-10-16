@@ -3261,3 +3261,17 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added the new copy to the canonical Persian/English/Arabic dictionaries and browser E2E coverage for the focus transition.
 - Responsive layout: three columns on desktop, two on tablet, one on mobile.
 - Checks: CI, Phoenix verification, and Phoenix web UI verification must pass for the current branch head.
+
+## 2026-10-16 — Persist notification read state in Communication
+
+- Added authenticated `POST /api/v1/notifications/:notificationId/read` through the existing Communication API/service/repository boundary.
+- The recipient identity is derived from the authenticated request context, not from client input. The database mutation is scoped to the recipient, organization, and current workspace; attempts to mark another recipient's notification return not-found.
+- Replaced browser-local `localStorage` read-state tracking in both the notification inbox and notification popover with the canonical API response. Header unread count and inbox state now derive from notification status.
+- Added repository tests for recipient ownership and tenant/workspace-scoped updates. Updated browser smoke to distinguish initial unread state from the post-action state, and to verify the state survives a fresh inbox load.
+- Fixed test-server routing so the dedicated notification GET/POST handlers run before the generic API fixture fallback.
+- Verified on commit `4033bdc30ae81058854a5b5ce3e44e44e14a28e9`:
+  - CI succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38960663170
+  - Phoenix verification succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38960663066
+  - Phoenix web UI verification / Playwright E2E succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38960663182
+- The redesign is still on `feat/social-commerce-ui-reset`; PR #11 remains a draft and has not been merged or deployed to `main`: https://github.com/qooqnos/qooqnos/pull/11.
+- Remaining milestones: real authorized inbox/thread listing and message sending (the current Messages surface intentionally does not fabricate them), and canonical production checkout/payment integration before claiming purchases are active.
