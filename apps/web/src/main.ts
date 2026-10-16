@@ -4595,7 +4595,9 @@ async function loadMessagesPage(preferredConversationId?: string): Promise<void>
     inbox.querySelectorAll<HTMLButtonElement>("[data-message-conversation]").forEach((button) => {
       button.addEventListener("click", () => {
         const id = button.dataset.messageConversation;
-        if (id) void loadMessagesPage(id);
+        // The selected conversation is already loading/rendered. Re-requesting it
+        // resets the composer and can detach the active send handler unnecessarily.
+        if (id && id !== activeConversationId) void loadMessagesPage(id);
       });
     });
 

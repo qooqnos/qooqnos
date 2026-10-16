@@ -3311,3 +3311,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Replaced the single document-level click delegate with a shared guarded submit handler bound to the message button each time a thread is rendered. This matches the app's asynchronous thread refresh lifecycle and preserves the no-double-submit guard.
 - Retained the real Communication API request, explicit error/success handling, and message reload from canonical conversation data. No local fake message is inserted by the UI.
 - Verification is required on the current PR before merge.
+
+
+## 2026-10-17 — Avoid reloading an already-active message thread
+
+- Fixed a browser E2E race on the current main branch: the Messages page selects and starts loading the first conversation automatically, then the smoke test clicks that same selected row before the thread load finishes.
+- Clicking the already-active row no longer starts a second overlapping inbox/thread request. This prevents unnecessary thread replacement and keeps the composer/button lifecycle stable.
+- Selecting a different conversation still loads the canonical thread as before. Message sending remains routed through the authenticated Communication API; the UI does not create local fake messages.
+- Verification: CI, Phoenix verification, and browser E2E are required on this commit before merge.
