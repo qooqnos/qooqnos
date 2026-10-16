@@ -13847,3 +13847,54 @@ button[aria-busy="true"] .btn-spinner {
 @media(max-width:720px){.phoenix-reset-start-page{padding-top:14px;padding-bottom:105px}.phoenix-reset-start-hero{padding:23px 18px;border-radius:23px}.phoenix-reset-start-copy h1{font-size:29px}.phoenix-reset-start-copy>p{font-size:12px}.phoenix-reset-start-actions{display:grid;grid-template-columns:minmax(0,1fr)}.phoenix-reset-start-actions .button{width:100%;justify-content:center}.phoenix-reset-start-visual{min-height:235px}.phoenix-reset-start-orbit{width:min(100%,235px)}.phoenix-reset-start-mark{width:112px;height:112px;border-radius:33px}.phoenix-reset-start-mark img{width:80px;height:80px}.phoenix-reset-start-float{width:42px;height:42px;border-radius:14px}.phoenix-reset-start-principles article{padding:17px;border-radius:18px}.phoenix-reset-start-seller{align-items:stretch;flex-direction:column;padding:20px 17px;border-radius:20px}.phoenix-reset-start-seller>.button{width:100%;justify-content:center}}
 
 .phoenix-reset-seller-start-page .phoenix-reset-start-hero{background:radial-gradient(circle at 92% 0%,color-mix(in srgb,var(--primary) 14%,transparent),transparent 23rem),linear-gradient(128deg,var(--surface),color-mix(in srgb,var(--surface-2) 48%,var(--surface)))}
+
+
+/* Mobile correction: keep the social header controls inside the viewport. */
+@media (max-width: 720px) {
+  .social-shell .phoenix-social-header-inner {
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .social-shell .phoenix-social-actions {
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+  }
+  .social-shell .phoenix-social-actions > [data-open-login],
+  .social-shell .phoenix-social-actions > [data-open-create-post] {
+    display: none !important;
+  }
+  .social-shell .phoenix-social-actions .phoenix-register-btn {
+    min-height: 34px;
+    padding-inline: 9px;
+    white-space: nowrap;
+  }
+  .social-shell .phoenix-social-actions .phoenix-register-btn .btn-sparkle {
+    display: none;
+  }
+  .social-shell .phoenix-social-actions .language-toggle {
+    min-width: 54px;
+    gap: 4px;
+    padding-inline: 7px;
+  }
+  .social-shell .phoenix-social-actions > button[data-theme-toggle] {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+  }
+  .social-shell .phoenix-public-brand {
+    min-width: 0;
+    flex: 0 1 auto;
+    gap: 8px;
+  }
+  .social-shell .phoenix-public-brand > span:last-child {
+    min-width: 0;
+  }
+  .social-shell .phoenix-compare-tray {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: calc(100vw - 24px);
+    margin-inline: auto;
+  }
+}
