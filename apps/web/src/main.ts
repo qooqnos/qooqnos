@@ -7307,11 +7307,10 @@ function renderProductStudio(): string {
       <section class="phoenix-reset-studio-workspace" aria-label="${ps("eyebrow")}">
         <article class="glass-card studio-input phoenix-reset-studio-input">
           <header class="phoenix-reset-studio-panel-heading">
-            <span class="phoenix-reset-studio-step-number">۰۱</span>
+            <span class="phoenix-reset-studio-step-number">01</span>
             <div>
-              <span class="phoenix-reset-section-kicker">${ps("inputTab")}</span>
-              <h2>${ps("productDescription")}</h2>
-              <p>${ps("inputHint")}</p>
+              <span class="phoenix-reset-section-kicker">${ps("step1")}</span>
+              <h2>${ps("inputSectionTitle")}</h2>
             </div>
           </header>
           <input id="studio-business" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
@@ -7321,8 +7320,8 @@ function renderProductStudio(): string {
 
           <div class="phoenix-reset-studio-image-heading">
             <span class="phoenix-reset-studio-image-icon" aria-hidden="true">▧</span>
-            <div><strong>${ps("addProductPhoto")}</strong><small>${ps("imageFormats")}</small></div>
-            <span class="phoenix-reset-studio-optional">${psTitle("imageTab")}</span>
+            <div><strong>${ps("imageTab")}</strong><small>${ps("imageFormats")}</small></div>
+            <span class="phoenix-reset-studio-optional">${ps("imageOptional")}</span>
           </div>
           <label class="media-dropzone phoenix-reset-studio-dropzone" for="studio-file">
             <input id="studio-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic" />
@@ -7351,8 +7350,8 @@ function renderProductStudio(): string {
 
       <section class="studio-flow phoenix-reset-studio-process" aria-label="${ps("eyebrow")}">
         <div class="phoenix-reset-studio-process-heading">
-          <span class="phoenix-reset-section-kicker">${ps("step1")}</span>
-          <h2>${psTitle("heroEmphasis")}</h2>
+          <span class="phoenix-reset-section-kicker">${ps("eyebrow")}</span>
+          <h2>${psTitle("workflowTitle")}</h2>
         </div>
         <div class="phoenix-reset-studio-process-steps">
           ${steps.map(([title, desc], i) =>

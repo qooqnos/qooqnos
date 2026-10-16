@@ -1240,7 +1240,10 @@
     "step4": "بازبینی",
     "step4Desc": "کنترل انسانی",
     "step5": "انتشار",
-    "step5Desc": "ورود به کاتالوگ"
+    "step5Desc": "ورود به کاتالوگ",
+    "inputSectionTitle": "توصیف آزاد",
+    "imageOptional": "اختیاری",
+    "workflowTitle": "از ورودی خام تا عرضهٔ آماده"
   },
   "taxonomy": {
     "industry": {

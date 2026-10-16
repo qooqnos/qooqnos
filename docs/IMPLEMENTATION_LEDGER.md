@@ -3067,3 +3067,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The customer Messages screen is intentionally honest about being unavailable; it does not invent example conversations.
 - The current Communication API supports creating a conversation and sending a message, but has no participant-scoped conversation-list/read endpoint in the route layer. The current Conversation model also needs an explicit participant/ownership access rule before exposing message history in the customer UI.
 - Do not connect a list of conversations until read/list APIs enforce actor, tenant and workspace scope. This is a backend contract task, not a front-end-only placeholder to bypass.
+
+
+## 2026-10-16 — Product Studio visual reset
+
+- Rebuilt Product Studio's composition around one free-form input, an optional image, a review preview and the five-step seller workflow.
+- Removed inert text/image tabs; the seller can provide free text and an image in the same draft rather than being asked to choose a fake mode.
+- Preserved the draft-generation/file-input hooks and canonical AI flow; the presentation does not simulate successful AI output.
+- Added responsive desktop/tablet/mobile styling with shared Phoenix design tokens. The build synchronizes the authored stylesheet to the public asset.
+- Verify the latest CI and browser flow before treating this screen as done.

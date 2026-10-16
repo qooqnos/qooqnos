@@ -1240,7 +1240,10 @@
     "step4": "Review",
     "step4Desc": "Human control",
     "step5": "Publish",
-    "step5Desc": "Enter Catalog"
+    "step5Desc": "Enter Catalog",
+    "inputSectionTitle": "Free-form description",
+    "imageOptional": "Optional",
+    "workflowTitle": "From raw input to a publishable offer"
   },
   "taxonomy": {
     "industry": {

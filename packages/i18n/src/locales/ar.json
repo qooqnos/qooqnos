@@ -1240,7 +1240,10 @@
     "step4": "المراجعة",
     "step4Desc": "تحكم بشري",
     "step5": "النشر",
-    "step5Desc": "إدخال إلى الكاتالوج"
+    "step5Desc": "إدخال إلى الكاتالوج",
+    "inputSectionTitle": "وصف حر",
+    "imageOptional": "اختياري",
+    "workflowTitle": "من الإدخال الخام إلى عرض جاهز للنشر"
   },
   "taxonomy": {
     "industry": {

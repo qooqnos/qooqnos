@@ -753,6 +753,9 @@ await page.getByText("Primitiveهای مشترک").waitFor();
 await page.locator(".ds-table").waitFor();
 
 await page.goto(baseURL + "/product-studio");
+await page.locator(".phoenix-reset-studio-page").waitFor();
+assert.equal(await page.locator(".phoenix-reset-studio-process .phoenix-reset-studio-step").count(), 5);
+assert.equal(await page.locator(".phoenix-reset-studio-image-heading").count(), 1);
 // Seed internal workspace context as test data without exposing IDs in the end-user form.
 await page.locator("#studio-business").evaluate((element) => {
   element.value = "biz-1";
