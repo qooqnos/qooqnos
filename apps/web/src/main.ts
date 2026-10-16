@@ -4539,7 +4539,7 @@ function renderMessageThread(
     : '<div class="phoenix-reset-message-thread-empty"><span class="phoenix-reset-messages-icon" aria-hidden="true">◌</span>' +
       '<h3>' + socialCommerceUi("messagesThreadEmptyTitle") + '</h3><p>' + socialCommerceUi("messagesThreadEmptyBody") + '</p></div>';
   const composer = conversation.status === "open"
-    ? '<form class="phoenix-reset-message-composer" data-communication-send>' +
+    ? '<form class="phoenix-reset-message-composer" data-communication-send data-conversation-id="' + escapeAttr(conversation.id) + '">' +
       '<label for="messages-compose">' + socialCommerceUi("messagesComposeLabel") + '</label>' +
       '<textarea id="messages-compose" name="content" rows="3" maxlength="5000" required placeholder="' +
         escapeAttr(socialCommerceUi("messagesComposePlaceholder")) + '"></textarea>' +
@@ -4563,6 +4563,21 @@ async function loadMessagesPage(preferredConversationId?: string): Promise<void>
   const thread = document.querySelector<HTMLElement>("#messages-thread");
   if (!inbox || !status || !thread) return;
   const generation = ++messagesLoadGeneration;
+
+  // Bind delegated sending once to the persistent thread host. The composer nodes
+  // are replaced on every async reload, but this host remains mounted.
+  if (thread.dataset.communicationSendDelegate !== "bound") {
+    thread.dataset.communicationSendDelegate = "bound";
+    thread.addEventListener("click", (event) => {
+      const target = event.target instanceof Element
+        ? event.target.closest<HTMLButtonElement>("[data-message-send]")
+        : null;
+      if (!target || !thread.contains(target)) return;
+      event.preventDefault();
+      const form = target.closest<HTMLFormElement>("[data-communication-send]");
+      void submitCommunicationMessage(target, form?.dataset.conversationId);
+    });
+  }
 
   if (!token) {
     inbox.setAttribute("aria-busy", "false");
@@ -4623,21 +4638,14 @@ async function loadMessagesPage(preferredConversationId?: string): Promise<void>
       const form = thread.querySelector<HTMLFormElement>("[data-communication-send]");
       const textarea = form?.querySelector<HTMLTextAreaElement>("#messages-compose");
       const send = form?.querySelector<HTMLButtonElement>("[data-message-send]");
-      // Bind to the freshly-rendered button because thread refresh replaces its DOM node.
-      // The shared handler guards against duplicate submissions.
-      send?.addEventListener("click", (event) => {
-        event.preventDefault();
-        void submitCommunicationMessage(send);
-      });
-      // Preserve accessible keyboard submission through the same guarded click path.
       form?.addEventListener("submit", (event) => {
         event.preventDefault();
-        send?.click();
+        if (send) void submitCommunicationMessage(send, selectedId);
       });
       textarea?.addEventListener("keydown", (event) => {
         if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
           event.preventDefault();
-          send?.click();
+          if (send) void submitCommunicationMessage(send, selectedId);
         }
       });
     } catch {
@@ -8093,13 +8101,22 @@ function bindBusinessWorkspaceDynamicEvents(): void {
   });
 }
 
-async function submitCommunicationMessage(send: HTMLButtonElement): Promise<void> {
+async function submitCommunicationMessage(send: HTMLButtonElement, preferredConversationId?: string): Promise<void> {
   const form = send.closest<HTMLFormElement>("[data-communication-send]");
   const textarea = form?.querySelector<HTMLTextAreaElement>("#messages-compose");
   const error = form?.querySelector<HTMLElement>("#messages-send-error");
   const content = textarea?.value.trim() ?? "";
-  const conversationId = activeConversationId;
-  if (!form || !conversationId || !content || send.disabled || communicationMessageSendInFlight) return;
+  const conversationId = form?.dataset.conversationId || preferredConversationId || activeConversationId;
+  if (!form) return;
+  if (!conversationId) {
+    if (error) error.textContent = socialCommerceUi("messagesSendError");
+    return;
+  }
+  if (!content) {
+    textarea?.focus();
+    return;
+  }
+  if (send.disabled || communicationMessageSendInFlight) return;
 
   communicationMessageSendInFlight = true;
   send.disabled = true;
