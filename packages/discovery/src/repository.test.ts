@@ -17,8 +17,9 @@ function context(tenant = "tenant-1", workspace = "workspace-1"): RequestContext
   };
 }
 
-function makeDatabase(results: unknown[] = []): { db: D1Database; calls: unknown[][] } {
+function makeDatabase(results: unknown[] = []): { db: D1Database; calls: unknown[][]; queries: string[] } {
   const calls: unknown[][] = [];
+  const queries: string[] = [];
   const statement: D1PreparedStatementLike = {
     bind(...values: unknown[]) {
       calls.push(values);
@@ -35,14 +36,15 @@ function makeDatabase(results: unknown[] = []): { db: D1Database; calls: unknown
     },
   };
   const rawDatabase: D1DatabaseLike = {
-    prepare() {
+    prepare(query: string) {
+      queries.push(query);
       return statement;
     },
     async batch() {
       return [];
     },
   };
-  return { db: new D1Database(rawDatabase), calls };
+  return { db: new D1Database(rawDatabase), calls, queries };
 }
 
 describe("DiscoveryRepository search", () => {
@@ -78,5 +80,34 @@ describe("DiscoveryRepository search", () => {
     await new DiscoveryRepository(fixture.db).search({ context: context("tenant-2", "workspace-9") });
 
     expect(fixture.calls[0]).toEqual(["tenant-2", "workspace-9", 20, 0]);
+  });
+
+  it("includes followed people and businesses without crossing tenant/workspace scope", async () => {
+    const fixture = makeDatabase([
+      {
+        id: "doc-user-offer",
+        organizationId: "tenant-1",
+        workspaceId: "workspace-1",
+        sourceType: "product",
+        sourceId: "product-user-1",
+        documentVersion: 1,
+        title: "Handmade bowl",
+        body: "Offer from an individual seller",
+        metadataJson: JSON.stringify({ sellerUserId: "seller-user-1" }),
+        eligibility: "eligible",
+        createdAt: "2026-10-16T00:00:00.000Z",
+        updatedAt: "2026-10-16T00:00:00.000Z",
+      },
+    ]);
+
+    const result = await new DiscoveryRepository(fixture.db).searchFollowing(context(), 10, 0);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.id).toBe("doc-user-offer");
+    expect(fixture.queries[0]).toContain("sf.target_type = 'business'");
+    expect(fixture.queries[0]).toContain("sf.target_type = 'user'");
+    expect(fixture.queries[0]).toContain("$.sellerUserId");
+    expect(fixture.queries[0]).toContain("EXISTS");
+    expect(fixture.calls[0]).toEqual(["tenant-1", "workspace-1", "user-1", "tenant-1", "workspace-1", 10, 0]);
   });
 });
