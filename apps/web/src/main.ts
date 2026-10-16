@@ -722,7 +722,11 @@ function syncThemeButtons(): void {
 function currentRoute(): Route {
   const normalized = normalizePath(location.pathname);
   const staticRoute = routes.find((route) => route.path === normalized);
-  const businessModule = parseBusinessModuleRequest(normalized) ?? parseBusinessModuleAliasPath(normalized);
+  // Explicit routes such as /business/products and /business/services must win over
+  // short aliases. Only resolve a /business/:alias path dynamically when no static
+  // route owns that URL; /business?module=... remains an intentional dynamic route.
+  const businessModule = parseBusinessModuleRequest(normalized)
+    ?? (staticRoute ? null : parseBusinessModuleAliasPath(normalized));
   if (normalized.startsWith("/businesses/") && normalized.split("/").filter(Boolean).length === 2) {
     return {
       path: normalized,
