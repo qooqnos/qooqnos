@@ -645,7 +645,7 @@ try {
 }
 assert.equal(communicationSendRequests.length, 1);
 assert.equal(communicationSendRequests[0].conversationId, "conversation-e2e-1");
-assert.ok(messagesText.includes("برای حفظ دقت، گفت‌وگوی نمونه‌ای نمایش نمی‌دهیم."));
+assert.ok(await page.locator(".phoenix-reset-messages-integrity-note").isVisible());
 assert.ok(!messagesText.includes("پاسخ ساختگی"));
 assert.ok(!messagesText.includes("در خدمت شما هستیم"));
 assert.ok(!messagesText.includes("سفارش کالا رسید و تأیید شد"));
