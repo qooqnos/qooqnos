@@ -3076,3 +3076,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Preserved the draft-generation/file-input hooks and canonical AI flow; the presentation does not simulate successful AI output.
 - Added responsive desktop/tablet/mobile styling with shared Phoenix design tokens. The build synchronizes the authored stylesheet to the public asset.
 - Verify the latest CI and browser flow before treating this screen as done.
+
+
+## 2026-10-16 — Free-form Create Details handoff
+
+- Removed hard-coded sample description and sample price from `/create/details`.
+- The page now collects a free-form description and hands it to Product Studio through a one-time local handoff key; Product Studio consumes and clears it on entry.
+- The form no longer proceeds to the old deal-selection flow or claims success. Price/attributes are added only in the reviewed offer flow.
+- Added browser E2E assertions for an empty initial description, absence of fake price, and text handoff into the Studio.

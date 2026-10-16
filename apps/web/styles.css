@@ -13237,3 +13237,155 @@ button[aria-busy="true"] .btn-spinner {
 .phoenix-reset-studio-step small{display:block;margin-top:3px;color:var(--muted);font-size:10px;line-height:1.7}
 @media(max-width:1100px){.phoenix-reset-studio-workspace{grid-template-columns:minmax(0,1fr)}.phoenix-reset-studio-preview{min-height:380px}.phoenix-reset-studio-process-steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){.phoenix-reset-studio-page{padding:0 0 28px}.phoenix-reset-studio-hero{align-items:stretch;flex-direction:column;gap:18px;padding:22px 17px;border-radius:21px}.phoenix-reset-studio-hero h1{font-size:25px}.phoenix-reset-studio-hero p{font-size:12px}.phoenix-reset-studio-hero-side{align-items:center;flex-direction:row;flex-wrap:wrap;justify-content:space-between}.phoenix-reset-studio-billing{white-space:normal}.phoenix-reset-studio-workspace{gap:13px}.phoenix-reset-studio-input,.phoenix-reset-studio-preview{padding:16px;border-radius:18px}.phoenix-reset-studio-panel-heading{margin-bottom:17px}.phoenix-reset-studio-input textarea#studio-text{min-height:190px;padding:13px;font-size:12px}.phoenix-reset-studio-dropzone{align-items:flex-start;flex-wrap:wrap;padding:12px}.phoenix-reset-studio-dropzone .media-file-name{max-width:100%;width:100%;padding-inline-start:50px}.phoenix-reset-studio-actions{align-items:stretch;flex-direction:column}.phoenix-reset-studio-actions .field-hint{max-width:none}.phoenix-reset-studio-actions .button{width:100%;justify-content:center}.phoenix-reset-studio-preview{min-height:310px}.phoenix-reset-studio-draft-empty{min-height:250px;padding:24px 15px}.phoenix-reset-studio-process{padding:15px;border-radius:18px}.phoenix-reset-studio-process-steps{grid-template-columns:minmax(0,1fr);gap:8px}.phoenix-reset-studio-step{min-height:57px}}
+
+
+
+/* Free-form create step: no prefilled sample description or price. */
+.phoenix-reset-create-detail-page { padding-top: 8px; }
+.phoenix-reset-create-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-strong);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+.phoenix-reset-create-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(260px, .75fr);
+  gap: 18px;
+  margin-top: 22px;
+  align-items: start;
+}
+.phoenix-reset-create-detail-form,
+.phoenix-reset-create-detail-process {
+  min-width: 0;
+  padding: clamp(18px, 2.5vw, 28px);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: 0 13px 34px rgba(40, 28, 20, .04);
+}
+.phoenix-reset-create-detail-form > label {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 13px;
+  font-weight: 850;
+}
+.phoenix-reset-create-detail-form textarea {
+  display: block;
+  width: 100%;
+  min-height: 250px;
+  padding: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 15px;
+  color: var(--text);
+  background: var(--bg);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.95;
+  resize: vertical;
+}
+.phoenix-reset-create-detail-form textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.phoenix-reset-create-detail-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 13px 14px;
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--line));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+}
+.phoenix-reset-create-detail-note > span {
+  color: var(--primary-strong);
+  font-size: 18px;
+}
+.phoenix-reset-create-detail-note p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.9;
+}
+.phoenix-reset-create-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.phoenix-reset-create-detail-actions .button { min-height: 43px; border-radius: 12px; }
+.phoenix-reset-create-detail-process {
+  position: sticky;
+  top: 95px;
+}
+.phoenix-reset-create-detail-process h2 {
+  margin: 4px 0 18px;
+  font-size: 19px;
+  font-weight: 850;
+  line-height: 1.55;
+}
+.phoenix-reset-create-detail-process ol {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.phoenix-reset-create-detail-process li {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+}
+.phoenix-reset-create-detail-process li > span {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 10px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  font-size: 10px;
+  font-weight: 900;
+}
+.phoenix-reset-create-detail-process li strong,
+.phoenix-reset-create-detail-process li small { display: block; }
+.phoenix-reset-create-detail-process li strong { font-size: 12px; font-weight: 850; line-height: 1.6; }
+.phoenix-reset-create-detail-process li small { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.8; }
+.phoenix-reset-create-detail-studio-link {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 17px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--primary-strong);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+@media (max-width: 920px) {
+  .phoenix-reset-create-detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .phoenix-reset-create-detail-process { position: static; }
+}
+@media (max-width: 720px) {
+  .phoenix-reset-create-detail-page { padding-top: 0; }
+  .phoenix-reset-create-detail-page .phoenix-reset-hero { align-items: stretch; flex-direction: column; }
+  .phoenix-reset-create-detail-back { justify-content: flex-start; }
+  .phoenix-reset-create-detail-form,
+  .phoenix-reset-create-detail-process { padding: 16px; border-radius: 18px; }
+  .phoenix-reset-create-detail-form textarea { min-height: 200px; padding: 13px; }
+  .phoenix-reset-create-detail-actions { flex-direction: column-reverse; }
+  .phoenix-reset-create-detail-actions .button { width: 100%; justify-content: center; }
+}

@@ -756,45 +756,41 @@ export function renderCreateContentHub(): string {
  */
 export function renderContentDetailsForm(): string {
   return `
-    <div class="phoenix-screen-wrapper">
-      <div class="phoenix-screen-top">
-        <a href="/create" data-nav class="phoenix-screen-back-btn" aria-label="${ui("بازگشت")}">→</a>
-        <div class="phoenix-screen-title-wrap">
-          <h1 class="phoenix-screen-title">${ui("جزئیات محتوا")}</h1>
+    <div class="phoenix-reset-page phoenix-reset-create-detail-page">
+      <section class="phoenix-reset-hero">
+        <div class="phoenix-reset-hero-copy">
+          <div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>${ui("افزودن کالا یا خدمت")}</span></div>
+          <h1>${ui("توصیفت را بنویس؛ ققنوس ساختار می‌دهد")}</h1>
+          <p>${ui("لازم نیست فرم طولانی پر کنی. هرچه دربارهٔ کالا یا خدمت می‌دانی بنویس؛ در استودیو پیش‌نویس را می‌بینی و خودت تأیید می‌کنی.")}</p>
         </div>
-        <div style="width: 38px;"></div>
-      </div>
+        <a href="/create" data-nav class="phoenix-reset-create-detail-back">${ui("بازگشت")} <span aria-hidden="true">←</span></a>
+      </section>
 
-      <form class="phoenix-screen-content" id="content-details-form">
-        <!-- Media container with preview -->
-        <label for="content-media-upload" class="phoenix-upload-box" id="upload-preview-box">
-          <input type="file" id="content-media-upload" accept="image/*,video/*" style="display:none;" />
-          <div class="phoenix-upload-box-icon" aria-hidden="true">📷</div>
-          <strong style="font-size: 14px;">${ui("عکس آپلود شده توسط کاربر")}</strong>
-          <small style="color: var(--muted);">${ui("برای تغییر تصویر کلیک کنید")}</small>
-        </label>
+      <section class="phoenix-reset-create-detail-grid">
+        <form class="phoenix-reset-create-detail-form" id="content-details-form">
+          <label for="content-desc-input">${ui("توضیح آزاد")}</label>
+          <textarea id="content-desc-input" rows="8" placeholder="${ui("برای نمونه، جنس، اندازه، کاربرد، شرایط ارائه یا نکته‌های مهم را با زبان خودت بنویس.")}"></textarea>
+          <div class="phoenix-reset-create-detail-note">
+            <span aria-hidden="true">✦</span>
+            <p>${ui("ققنوس اطلاعات موجود را ساختارمند می‌کند و اگر چیزی کم باشد سؤال می‌پرسد. قیمت و جزئیات نهایی را خودت بازبینی می‌کنی.")}</p>
+          </div>
+          <footer class="phoenix-reset-create-detail-actions">
+            <a href="/create" data-nav class="button button-ghost">${ui("انصراف")}</a>
+            <button type="submit" class="button button-primary">${ui("رفتن به استودیو")} <span aria-hidden="true">←</span></button>
+          </footer>
+        </form>
 
-        <!-- Description Field -->
-        <div>
-          <label for="content-desc-input" class="field-label" style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block;">
-            ${ui("توضیحات")}
-          </label>
-          <textarea id="content-desc-input" rows="4" class="studio-input-line" style="width:100%; border-radius:14px; padding:12px; font-family:inherit;" placeholder="${ui("توضیحات را اینجا بنویسید…")}">محصول تمیز و آماده استفاده، دارای تضمین کیفیت و مهلت تست.</textarea>
-        </div>
-
-        <!-- Suggested Price Field -->
-        <div>
-          <label for="content-price-input" class="field-label" style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block;">
-            ${ui("قیمت پیشنهادی (تومان)")}
-          </label>
-          <input type="text" id="content-price-input" class="studio-input-line" style="width:100%; border-radius:14px; padding:12px;" value="150,000" placeholder="${ui("قیمت را وارد کنید…")}" />
-        </div>
-
-        <button type="submit" class="phoenix-primary-cta" style="margin-top: 10px;">
-          <span>${ui("ثبت و ادامه")}</span>
-          <span aria-hidden="true">←</span>
-        </button>
-      </form>
+        <aside class="phoenix-reset-create-detail-process">
+          <span class="phoenix-reset-section-kicker">${ui("مسیر آماده‌سازی عرضه")}</span>
+          <h2>${ui("از توضیح خام تا انتشار")}</h2>
+          <ol>
+            <li><span>01</span><div><strong>${ui("توصیف خام")}</strong><small>${ui("اطلاعات اولیه با زبان خودت")}</small></div></li>
+            <li><span>02</span><div><strong>${ui("پیش‌نویس هوشمند")}</strong><small>${ui("استخراج مشخصات و پرسش دربارهٔ موارد ناقص")}</small></div></li>
+            <li><span>03</span><div><strong>${ui("بازبینی و انتشار")}</strong><small>${ui("انتشار بعد از تأیید خودت")}</small></div></li>
+          </ol>
+          <a href="/product-studio" data-nav class="phoenix-reset-create-detail-studio-link">${ui("افزودن تصویر در استودیو")} <span aria-hidden="true">←</span></a>
+        </aside>
+      </section>
     </div>
   `;
 }
@@ -2185,12 +2181,23 @@ export function bindPhoenixExperienceEvents(container: HTMLElement, onNavigate: 
     };
   }
 
-  // Content details form submit
+  // Free-form content handoff to the canonical AI Product Studio.
   const contentForm = container.querySelector<HTMLFormElement>("#content-details-form");
   if (contentForm) {
-    contentForm.onsubmit = (e) => {
-      e.preventDefault();
-      onNavigate("/create/deal-type");
+    contentForm.onsubmit = (event) => {
+      event.preventDefault();
+      const description = container.querySelector<HTMLTextAreaElement>("#content-desc-input")?.value.trim() ?? "";
+      if (!description) {
+        container.querySelector<HTMLTextAreaElement>("#content-desc-input")?.focus();
+        return;
+      }
+      try {
+        localStorage.setItem("phoenix.pending-offer-description", description);
+      } catch {
+        showToast(ui("ذخیرهٔ موقت متن در این مرورگر ممکن نیست."));
+        return;
+      }
+      onNavigate("/product-studio");
     };
   }
 
