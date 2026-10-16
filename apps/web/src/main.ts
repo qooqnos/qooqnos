@@ -157,13 +157,7 @@ function socialKey(targetType: string, targetId: string): string {
 }
 
 function isSocialActive(action: "follow" | "like" | "save", item: DiscoveryResult): boolean {
-  const target = action === "follow"
-    ? (item.metadata && typeof item.metadata.businessId === "string"
-      ? { targetType: "business" as const, targetId: item.metadata.businessId }
-      : item.sourceType === "business"
-        ? { targetType: "business" as const, targetId: item.sourceId ?? item.id ?? "" }
-        : null)
-    : socialTarget(item);
+  const target = action === "follow" ? socialFollowTarget(item) : socialTarget(item);
   if (!target?.targetId) return false;
   return action === "follow"
     ? socialState.follows.has(socialKey(target.targetType, target.targetId))
@@ -190,6 +184,27 @@ function refreshSocialFeed(): void {
   host.innerHTML = renderSocialPosts(activeDiscoveryItems);
   bindDiscoveryResultEvents();
   renderCompareTray();
+}
+
+function socialFollowTarget(item: DiscoveryResult): { targetType: "user" | "business"; targetId: string } | null {
+  const metadata = item.metadata;
+  const businessId = metadata && typeof metadata.businessId === "string" ? metadata.businessId : undefined;
+  if (businessId) return { targetType: "business", targetId: businessId };
+  if (item.sourceType === "business") {
+    const targetId = item.sourceId ?? item.id;
+    return targetId ? { targetType: "business", targetId } : null;
+  }
+
+  const ownerKeys = ["sellerUserId", "ownerUserId", "authorUserId", "profileUserId", "userId"];
+  const userId = metadata
+    ? ownerKeys.map((key) => metadata[key]).find((value): value is string => typeof value === "string" && Boolean(value.trim()))
+    : undefined;
+  if (userId) return { targetType: "user", targetId: userId };
+  if (item.sourceType === "user" || item.sourceType === "person" || item.sourceType === "profile") {
+    const targetId = item.sourceId ?? item.id;
+    return targetId ? { targetType: "user", targetId } : null;
+  }
+  return null;
 }
 
 function socialTarget(item: DiscoveryResult): { targetType: "product" | "service" | "business"; targetId: string } | null {
@@ -238,18 +253,19 @@ async function persistSocialAction(action: "like" | "save", item: DiscoveryResul
 }
 
 async function persistSocialFollow(item: DiscoveryResult): Promise<boolean> {
-  const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : item.sourceType === "business" ? item.sourceId ?? item.id : undefined;
-  if (!businessId) throw new Error(socialCommerceUi("followTargetMissing"));
-  const key = socialKey("business", businessId);
-  const existingId = socialState.follows.get(key) ?? socialActionIds.get("follow:" + key);
+  const target = socialFollowTarget(item);
+  if (!target) throw new Error(socialCommerceUi("followTargetMissing"));
+  const key = socialKey(target.targetType, target.targetId);
+  const actionKey = "follow:" + key;
+  const existingId = socialState.follows.get(key) ?? socialActionIds.get(actionKey);
   if (existingId) {
     await apiJson("/api/v1/social/follows/" + encodeURIComponent(existingId), { method: "DELETE" });
-    socialActionIds.delete("follow:" + key);
+    socialActionIds.delete(actionKey);
     socialState.follows.delete(key);
     return false;
   }
-  const result = await apiJson<{ data: { id: string } }>("/api/v1/social/follows", { method: "POST", body: { targetType: "business", targetId: businessId } });
-  socialActionIds.set("follow:" + key, result.data.id);
+  const result = await apiJson<{ data: { id: string } }>("/api/v1/social/follows", { method: "POST", body: target });
+  socialActionIds.set(actionKey, result.data.id);
   socialState.follows.set(key, result.data.id);
   return true;
 }
@@ -5266,9 +5282,9 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
       ? formatLocalizedNumber(Number(rawPrice)) + " " + escapeHtml(item.currency ?? "")
       : discoveryUi("askPrice");
     const typeLabel = sourceType === "service" ? discoveryUi("service") : sourceType === "business" ? discoveryUi("business") : discoveryUi("product");
-    const authorName = item.metadata && typeof item.metadata.businessName === "string" ? item.metadata.businessName : sourceType === "business" ? titleRaw : discoveryUi("seller");
+    const authorName = item.metadata && typeof item.metadata.businessName === "string" ? item.metadata.businessName : item.metadata && typeof (item.metadata.sellerName ?? item.metadata.ownerName ?? item.metadata.authorName ?? item.metadata.userName) === "string" ? String(item.metadata.sellerName ?? item.metadata.ownerName ?? item.metadata.authorName ?? item.metadata.userName) : sourceType === "business" ? titleRaw : discoveryUi("seller");
     const avatarInitial = escapeHtml(authorName.trim().slice(0, 1) || "ق");
-    const canFollow = Boolean(item.metadata && typeof item.metadata.businessId === "string") || sourceType === "business";
+    const canFollow = socialFollowTarget(item) !== null;
     const followLabel = followed ? discoveryUi("followActive") : discoveryUi("follow");
     const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ?? item.metadata?.thumbnailUrl ??
       (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
