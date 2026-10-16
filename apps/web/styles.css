@@ -14101,3 +14101,14 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-business-subpage .phoenix-business-settings-form .booking-fields { grid-template-columns: minmax(0, 1fr); }
   .phoenix-business-subpage .phoenix-business-settings-form .field-span-2 { grid-column: auto; }
 }
+
+
+
+/* Contextual seller question: preserve offer title and avoid exposing raw IDs. */
+.phoenix-detail-actions .phoenix-detail-ask-seller {
+  border-color: color-mix(in srgb, var(--primary) 18%, var(--line));
+  box-shadow: 0 7px 18px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+.phoenix-reset-message-context-title {
+  overflow-wrap: anywhere;
+}

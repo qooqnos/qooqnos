@@ -2241,6 +2241,9 @@
     "sellerStartSameAccountEyebrow": "حساب واحد وإمكانات أكثر",
     "sellerStartSameAccountTitle": "لا تحتاج إلى حساب بائع منفصل.",
     "sellerStartSameAccountBody": "سجّل الدخول، وفعّل البيع من ملفك الشخصي، ثم جهّز مساحة عمل نشاطك التجاري.",
-    "sellerStartAccountAction": "الانتقال إلى حسابي"
+    "sellerStartAccountAction": "الانتقال إلى حسابي",
+    "detailAskSeller": "اسأل البائع",
+    "messagesOrderSelected": "الطلب المحدد",
+    "messagesTopicSelected": "الموضوع المحدد"
   }
 }

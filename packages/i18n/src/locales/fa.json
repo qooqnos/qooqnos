@@ -2241,6 +2241,9 @@
     "sellerStartSameAccountEyebrow": "یک حساب، امکانات بیشتر",
     "sellerStartSameAccountTitle": "برای فروشندگی حساب جداگانه نمی‌خواهی.",
     "sellerStartSameAccountBody": "وارد حساب شو؛ سپس فروشندگی را از پروفایل فعال کن و فضای کسب‌وکار خودت را بساز.",
-    "sellerStartAccountAction": "رفتن به حساب من"
+    "sellerStartAccountAction": "رفتن به حساب من",
+    "detailAskSeller": "پرسش از فروشنده",
+    "messagesOrderSelected": "سفارش انتخاب‌شده",
+    "messagesTopicSelected": "موضوع انتخاب‌شده"
   }
 }

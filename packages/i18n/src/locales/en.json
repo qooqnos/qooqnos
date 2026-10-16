@@ -2241,6 +2241,9 @@
     "sellerStartSameAccountEyebrow": "One account, more capabilities",
     "sellerStartSameAccountTitle": "You do not need a separate seller account.",
     "sellerStartSameAccountBody": "Sign in, activate selling from your profile, and set up your business workspace.",
-    "sellerStartAccountAction": "Go to my account"
+    "sellerStartAccountAction": "Go to my account",
+    "detailAskSeller": "Ask the seller",
+    "messagesOrderSelected": "Selected order",
+    "messagesTopicSelected": "Selected topic"
   }
 }

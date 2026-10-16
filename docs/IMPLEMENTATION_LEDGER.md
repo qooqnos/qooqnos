@@ -3241,3 +3241,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The interface design decision is maintained in `docs/PHOENIX_SOCIAL_COMMERCE_INTERFACE_RESET.md`.
 - PR #11 remains a draft and is not merged to `main`: https://github.com/qooqnos/qooqnos/pull/11.
 - Remaining explicit milestones: wire real message-thread reads/listing through authorized canonical Communication APIs; integrate production checkout/payment before claiming purchases are active; continue visual and accessibility checks on all customer surfaces.
+
+
+
+## 2026-10-16 — Contextual seller question from offer details
+
+- Added a localized “Ask the seller” CTA to the offer detail overlay when the offer has a canonical business reference.
+- The transition carries the readable offer title into Messages; the technical offer reference remains hidden from the visible context panel.
+- Added E2E coverage for offer-to-message context in Persian, hidden identifier behavior, and the explicit no-message-sent state.
+- This does not claim that message sending is active. Real inbox reads and message creation still require the authorized participant/tenant/workspace contract described in the design decision record.
+- Checks: CI, Phoenix verification, and Phoenix web UI verification must pass on this commit before the change is considered verified.

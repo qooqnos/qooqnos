@@ -4416,10 +4416,12 @@ function renderMessages(): string {
   const contextLabel = orderId
     ? socialCommerceUi("messagesContextOrderPrefix")
     : socialCommerceUi("messagesContextTopicPrefix");
+  const contextTitle = params.get("label")?.trim() || socialCommerceUi(orderId ? "messagesOrderSelected" : "messagesTopicSelected");
   const contextPanel = contextId
     ? '<section class="phoenix-reset-message-context">' +
         '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesContextTitle") + '</span>' +
-        '<h2>' + contextLabel + ' <bdi dir="ltr" translate="no" data-no-translate class="phoenix-reset-message-context-id">' + escapeHtml(contextId) + '</bdi></h2>' +
+        '<h2 class="phoenix-reset-message-context-title">' + escapeHtml(contextTitle) + '</h2>' +
+        '<bdi hidden dir="ltr" translate="no" data-no-translate class="phoenix-reset-message-context-id">' + escapeHtml(contextId) + '</bdi>' +
         '<p>' + socialCommerceUi("messagesContextBody") + '</p>' +
         '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("messagesOrdersAction") + ' <span aria-hidden="true">←</span></a>' +
       '</section>'
@@ -6093,6 +6095,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
           ${metadataEntries.length ? '<section class="phoenix-detail-attributes"><h3>' + uiText("مشخصات ثبت‌شده") + '</h3><dl>' + metadataEntries.map(([label, value]) => '<div><dt>' + escapeHtml(uiText(label)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>').join("") + '</dl></section>' : ""}
           <div class="phoenix-detail-actions">
             ${mainAction}
+            ${businessId ? '<a class="button button-primary phoenix-detail-ask-seller" href="' + escapeAttr("/messages?topic=" + encodeURIComponent(key) + "&label=" + encodeURIComponent(title)) + '" data-nav>' + socialCommerceUi("detailAskSeller") + ' <span aria-hidden="true">←</span></a>' : ""}
             ${followTargetId ? '<button class="button button-ghost phoenix-detail-follow-button' + (initiallyFollowing ? ' selected' : '') + '" type="button" data-follow-seller-detail aria-pressed="' + String(initiallyFollowing) + '">' + (initiallyFollowing ? socialCommerceUi("detailFollowingSeller") : socialCommerceUi("detailFollowSeller")) + '</button>' : ""}
             ${isProduct ? '<button class="button button-ghost" type="button" data-compare-detail="' + escapeAttr(key) + '">⚖ ' + uiText("مقایسه") + '</button>' : ""}
             <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}">☆ ${uiText("ذخیره")}</button>
