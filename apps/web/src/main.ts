@@ -7291,51 +7291,78 @@ function renderProductStudio(): string {
     ["step5", "step5Desc"],
   ];
   return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> ${ps("eyebrow")}</span><h1>${psTitle("heroTitle")} <em>${psTitle("heroEmphasis")}</em></h1><p>${ps("heroDescription")}</p></div>
-      <span class="billing-note">${ps("billingNote")}</span>
-    </section>
+    <div class="phoenix-reset-studio-page">
+      <section class="phoenix-reset-studio-hero">
+        <div class="phoenix-reset-studio-hero-copy">
+          <div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>${ps("eyebrow")}</span></div>
+          <h1>${psTitle("heroTitle")} <em>${psTitle("heroEmphasis")}</em></h1>
+          <p>${ps("heroDescription")}</p>
+        </div>
+        <div class="phoenix-reset-studio-hero-side">
+          <span class="phoenix-reset-studio-billing">${ps("billingNote")}</span>
+          <a href="/business" data-nav class="phoenix-reset-studio-back">${canonicalUi("canonical.business.business")} <span aria-hidden="true">←</span></a>
+        </div>
+      </section>
 
-    <section class="studio-grid">
-      <article class="glass-card studio-input">
-        <div class="studio-tabs"><button class="studio-tab active" type="button">${ps("inputTab")}</button><button class="studio-tab" type="button">${ps("imageTab")}</button></div>
-        <input id="studio-business" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
-        <input id="studio-workspace" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.workspace) ?? "")}" />
-        <div class="studio-human-header" style="margin-bottom:14px;padding:10px 14px;background:var(--surface, rgba(255,255,255,0.04));border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span>✨</span>
-            <span style="font-size:13px;font-weight:600;">ساخت هوشمند محصول و خدمات</span>
+      <section class="phoenix-reset-studio-workspace" aria-label="${ps("eyebrow")}">
+        <article class="glass-card studio-input phoenix-reset-studio-input">
+          <header class="phoenix-reset-studio-panel-heading">
+            <span class="phoenix-reset-studio-step-number">۰۱</span>
+            <div>
+              <span class="phoenix-reset-section-kicker">${ps("inputTab")}</span>
+              <h2>${ps("productDescription")}</h2>
+              <p>${ps("inputHint")}</p>
+            </div>
+          </header>
+          <input id="studio-business" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
+          <input id="studio-workspace" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.workspace) ?? "")}" />
+          <label class="field-label phoenix-reset-studio-label" for="studio-text">${ps("productDescription")}</label>
+          <textarea id="studio-text" rows="8" placeholder="${escapeAttr(productStudioUi("productPlaceholder"))}"></textarea>
+
+          <div class="phoenix-reset-studio-image-heading">
+            <span class="phoenix-reset-studio-image-icon" aria-hidden="true">▧</span>
+            <div><strong>${ps("addProductPhoto")}</strong><small>${ps("imageFormats")}</small></div>
+            <span class="phoenix-reset-studio-optional">${psTitle("imageTab")}</span>
           </div>
-          <span class="ds-pill ds-status-success" style="font-size:11px;font-weight:600;">تنظیم خودکار در فروشگاه</span>
-        </div>
-        <label class="field-label" for="studio-text">${ps("productDescription")}</label>
-        <textarea id="studio-text" rows="7" placeholder="${escapeAttr(productStudioUi("productPlaceholder"))}"></textarea>
-        <label class="media-dropzone" for="studio-file">
-          <input id="studio-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic" />
-          <span class="media-drop-icon">＋</span>
-          <span><strong>${ps("addProductPhoto")}</strong><small>${ps("imageFormats")}</small></span>
-          <span id="studio-file-name" class="media-file-name">${ps("noImage")}</span>
-        </label>
-        <div class="studio-actions">
-          <span class="field-hint">${ps("inputHint")}</span>
-          <button class="button button-primary" type="button" data-generate-draft>${ps("buildDraft")} <span>✦</span></button>
-        </div>
-      </article>
+          <label class="media-dropzone phoenix-reset-studio-dropzone" for="studio-file">
+            <input id="studio-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic" />
+            <span class="media-drop-icon">＋</span>
+            <span class="phoenix-reset-studio-drop-copy"><strong>${ps("addProductPhoto")}</strong><small>${ps("imageFormats")}</small></span>
+            <span id="studio-file-name" class="media-file-name">${ps("noImage")}</span>
+          </label>
+          <footer class="studio-actions phoenix-reset-studio-actions">
+            <span class="field-hint">${ps("inputHint")}</span>
+            <button class="button button-primary" type="button" data-generate-draft>${ps("buildDraft")} <span aria-hidden="true">✦</span></button>
+          </footer>
+        </article>
 
-      <article class="glass-card studio-preview">
-        <div class="preview-top"><span class="section-kicker">${ps("livePreview")}</span><span class="pill" id="studio-status">${ps("ready")}</span></div>
-        <div id="studio-draft" class="draft-empty"><div class="draft-orb">✦</div><strong>${ps("draftEmptyTitle")}</strong><p>${ps("draftEmptyDescription")}</p></div>
-      </article>
-    </section>
+        <article class="glass-card studio-preview phoenix-reset-studio-preview">
+          <div class="phoenix-reset-studio-preview-heading">
+            <div><span class="phoenix-reset-section-kicker">${ps("livePreview")}</span><h2>${ps("livePreview")}</h2></div>
+            <span class="pill" id="studio-status">${ps("ready")}</span>
+          </div>
+          <div id="studio-draft" class="draft-empty phoenix-reset-studio-draft-empty">
+            <div class="draft-orb">✦</div>
+            <strong>${ps("draftEmptyTitle")}</strong>
+            <p>${ps("draftEmptyDescription")}</p>
+          </div>
+        </article>
+      </section>
 
-    <section class="studio-flow">
-      ${steps.map(([title, desc], i) =>
-        `<div class="studio-step ${i===0 ? "active" : ""}"><span>0${i+1}</span><div><strong>${ps(title)}</strong><small>${ps(desc)}</small></div></div>`
-      ).join("")}
-    </section>
+      <section class="studio-flow phoenix-reset-studio-process" aria-label="${ps("eyebrow")}">
+        <div class="phoenix-reset-studio-process-heading">
+          <span class="phoenix-reset-section-kicker">${ps("step1")}</span>
+          <h2>${psTitle("heroEmphasis")}</h2>
+        </div>
+        <div class="phoenix-reset-studio-process-steps">
+          ${steps.map(([title, desc], i) =>
+            `<div class="studio-step phoenix-reset-studio-step ${i === 0 ? "active" : ""}"><span>0${i+1}</span><div><strong>${ps(title)}</strong><small>${ps(desc)}</small></div></div>`
+          ).join("")}
+        </div>
+      </section>
+    </div>
   `;
 }
-
 function openCreatePostPanel(): void {
   const overlay = document.createElement("div");
   overlay.className = "connection-overlay";
