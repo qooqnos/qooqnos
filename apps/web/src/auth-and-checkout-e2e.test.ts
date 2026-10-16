@@ -34,8 +34,10 @@ describe("Phase 14 & Acceptance: End-to-End Registration, Authentication & Progr
 
     // 2. Render screens: Choice screen -> Mobile screen -> OTP screen -> Buyer Name screen
     const choiceHtml = renderChoiceScreen();
-    expect(choiceHtml).toContain("ثبت‌نام در ققنوس");
-    expect(choiceHtml).toContain("ثبت‌نام فروشندگان");
+    expect(choiceHtml).toContain("یک حساب برای همهٔ تجربه‌های ققنوس");
+    expect(choiceHtml).toContain("ادامه با شمارهٔ موبایل");
+    expect(choiceHtml).toContain("بعداً فروشندگی را به همین حساب اضافه کن");
+    expect(choiceHtml).not.toContain("ثبت‌نام فروشندگان");
 
     const mobileHtml = renderMobileScreen(false);
     expect(mobileHtml).toContain("شماره موبایل");
@@ -161,22 +163,25 @@ describe("Phase 14 & Acceptance: End-to-End Registration, Authentication & Progr
     globalLocaleService.setLocale("fa");
     expect(globalLocaleService.getDirection()).toBe("rtl");
     const faChoice = renderChoiceScreen();
-    expect(faChoice).toContain("ثبت‌نام در ققنوس");
-    expect(faChoice).toContain("ثبت‌نام فروشندگان");
+    expect(faChoice).toContain("یک حساب برای همهٔ تجربه‌های ققنوس");
+    expect(faChoice).toContain("ادامه با شمارهٔ موبایل");
+    expect(faChoice).not.toContain("ثبت‌نام فروشندگان");
 
     // Arabic
     globalLocaleService.setLocale("ar");
     expect(globalLocaleService.getDirection()).toBe("rtl");
     const arChoice = renderChoiceScreen();
-    expect(arChoice).toContain("التسجيل في ققنوس");
-    expect(arChoice).toContain("تسجيل التجار");
+    expect(arChoice).toContain("حساب واحد لجميع تجارب ققنوس");
+    expect(arChoice).toContain("المتابعة برقم الهاتف");
+    expect(arChoice).not.toContain("تسجيل التجار");
 
     // English
     globalLocaleService.setLocale("en");
     expect(globalLocaleService.getDirection()).toBe("ltr");
     const enChoice = renderChoiceScreen();
-    expect(enChoice).toContain("Sign up in Phoenix");
-    expect(enChoice).toContain("Seller Registration");
+    expect(enChoice).toContain("One account for every Phoenix experience");
+    expect(enChoice).toContain("Continue with mobile number");
+    expect(enChoice).not.toContain("Seller Registration");
 
     // Reset back to Persian default
     globalLocaleService.setLocale("fa");
