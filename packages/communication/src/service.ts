@@ -84,6 +84,48 @@ export class CommunicationService {
     });
   }
 
+  async listConversations(context: RequestContext, limit = 50) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.conversation.read",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    if (!context.actorId) {
+      throw new AppError({
+        code: "UNAUTHORIZED",
+        message: "Authentication is required to read conversations.",
+        requestId: context.requestId,
+      });
+    }
+    return this.options.repository.listConversationsForActor(context, limit);
+  }
+
+  async listMessages(context: RequestContext, conversationId: EntityId, limit = 100) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.conversation.read",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    if (!context.actorId) {
+      throw new AppError({
+        code: "UNAUTHORIZED",
+        message: "Authentication is required to read conversation messages.",
+        requestId: context.requestId,
+      });
+    }
+    const conversation = await this.options.repository.getConversation(context, conversationId);
+    if (!conversation) {
+      throw new AppError({
+        code: "NOT_FOUND",
+        message: "Conversation not found.",
+        requestId: context.requestId,
+      });
+    }
+    return this.options.repository.listMessagesForConversation(context, conversationId, limit);
+  }
+
   async sendMessage(context: RequestContext, input: {
     readonly conversationId: EntityId; readonly content: string; readonly classification: string;
   }) {

@@ -17,6 +17,11 @@ export interface ConversationRecord {
   readonly updatedAt: string;
 }
 
+export interface ConversationInboxRecord extends ConversationRecord {
+  readonly lastMessagePreview: string | null;
+  readonly lastMessageAt: string | null;
+}
+
 export interface MessageRecord {
   readonly id: EntityId;
   readonly conversationId: EntityId;
@@ -248,10 +253,81 @@ export class CommunicationRepository extends Repository {
     return record;
   }
 
+  async listConversationsForActor(context: RequestContext, limit = 50): Promise<readonly ConversationInboxRecord[]> {
+    const actorId = context.actorId;
+    if (!actorId) return [];
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = context.workspaceId ?? null;
+    const safeLimit = Math.min(Math.max(Number.isSafeInteger(limit) ? limit : 50, 1), 100);
+    return this.database.all<ConversationInboxRecord>(
+      `SELECT c.id, c.organization_id AS organizationId, c.workspace_id AS workspaceId,
+              c.customer_id AS customerId, c.status, c.created_at AS createdAt, c.updated_at AS updatedAt,
+              (SELECT m.content FROM communication_messages m WHERE m.conversation_id = c.id
+               ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS lastMessagePreview,
+              (SELECT m.created_at FROM communication_messages m WHERE m.conversation_id = c.id
+               ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS lastMessageAt
+       FROM communication_conversations c
+       WHERE c.organization_id = ? AND (
+         (c.workspace_id IS NOT NULL AND c.workspace_id = ?)
+         OR EXISTS (
+           SELECT 1 FROM customers cu
+           WHERE cu.id = c.customer_id
+             AND cu.organization_id = c.organization_id
+             AND cu.user_id = ?
+         )
+       )
+       ORDER BY COALESCE(lastMessageAt, c.updated_at) DESC, c.id DESC
+       LIMIT ${safeLimit}`,
+      organizationId,
+      workspaceId,
+      actorId,
+    );
+  }
+
   async getConversation(context: RequestContext, id: EntityId): Promise<ConversationRecord | null> {
+    const actorId = context.actorId;
+    if (!actorId) return null;
     return this.database.first<ConversationRecord>(
-      "SELECT id, organization_id AS organizationId, workspace_id AS workspaceId, customer_id AS customerId, status, created_at AS createdAt, updated_at AS updatedAt FROM communication_conversations WHERE id = ? AND organization_id = ? AND (workspace_id IS NULL OR workspace_id = ?) LIMIT 1",
-      id, this.requireOrganization({ organizationId: context.tenantId }), context.workspaceId ?? null,
+      `SELECT c.id, c.organization_id AS organizationId, c.workspace_id AS workspaceId,
+              c.customer_id AS customerId, c.status, c.created_at AS createdAt, c.updated_at AS updatedAt
+       FROM communication_conversations c
+       WHERE c.id = ? AND c.organization_id = ? AND (
+         (c.workspace_id IS NOT NULL AND c.workspace_id = ?)
+         OR EXISTS (
+           SELECT 1 FROM customers cu
+           WHERE cu.id = c.customer_id
+             AND cu.organization_id = c.organization_id
+             AND cu.user_id = ?
+         )
+       )
+       LIMIT 1`,
+      id,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+      actorId,
+    );
+  }
+
+  async listMessagesForConversation(
+    context: RequestContext,
+    conversationId: EntityId,
+    limit = 100,
+  ): Promise<readonly MessageRecord[]> {
+    const conversation = await this.getConversation(context, conversationId);
+    if (!conversation) throw new DatabaseError("Communication conversation not found");
+    const safeLimit = Math.min(Math.max(Number.isSafeInteger(limit) ? limit : 100, 1), 200);
+    return this.database.all<MessageRecord>(
+      `SELECT id, conversation_id AS conversationId, sender_reference AS senderReference,
+              content, classification, status, created_at AS createdAt, updated_at AS updatedAt
+       FROM (
+         SELECT id, conversation_id, sender_reference, content, classification, status, created_at, updated_at
+         FROM communication_messages
+         WHERE conversation_id = ?
+         ORDER BY created_at DESC, id DESC
+         LIMIT ${safeLimit}
+       ) recent_messages
+       ORDER BY createdAt ASC, id ASC`,
+      conversationId,
     );
   }
 
@@ -270,9 +346,27 @@ export class CommunicationRepository extends Repository {
   }
 
   async getMessage(context: RequestContext, id: EntityId): Promise<MessageRecord> {
+    const actorId = context.actorId;
+    if (!actorId) throw new DatabaseError("Communication message not found");
     const row = await this.database.first<MessageRecord>(
-      "SELECT m.id, m.conversation_id AS conversationId, m.sender_reference AS senderReference, m.content, m.classification, m.status, m.created_at AS createdAt, m.updated_at AS updatedAt FROM communication_messages m INNER JOIN communication_conversations c ON c.id = m.conversation_id WHERE m.id = ? AND c.organization_id = ? AND (c.workspace_id IS NULL OR c.workspace_id = ?) LIMIT 1",
-      id, this.requireOrganization({ organizationId: context.tenantId }), context.workspaceId ?? null,
+      `SELECT m.id, m.conversation_id AS conversationId, m.sender_reference AS senderReference,
+              m.content, m.classification, m.status, m.created_at AS createdAt, m.updated_at AS updatedAt
+       FROM communication_messages m
+       INNER JOIN communication_conversations c ON c.id = m.conversation_id
+       WHERE m.id = ? AND c.organization_id = ? AND (
+         (c.workspace_id IS NOT NULL AND c.workspace_id = ?)
+         OR EXISTS (
+           SELECT 1 FROM customers cu
+           WHERE cu.id = c.customer_id
+             AND cu.organization_id = c.organization_id
+             AND cu.user_id = ?
+         )
+       )
+       LIMIT 1`,
+      id,
+      this.requireOrganization({ organizationId: context.tenantId }),
+      context.workspaceId ?? null,
+      actorId,
     );
     if (!row) throw new DatabaseError("Communication message not found");
     return row;

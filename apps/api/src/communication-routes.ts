@@ -12,6 +12,44 @@ export function registerCommunicationRoutes(
   authorization: AuthorizationRegistry | undefined,
 ): void {
   router.register({
+    method: "GET",
+    path: "/api/v1/communications/conversations",
+    module: "communication",
+    operation: "communication.conversation.read",
+    permission: "communication.conversation.read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const service = createService(database, authorization, context.requestId);
+      const rawLimit = Number(new URL(request.url).searchParams.get("limit") ?? "50");
+      const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 50;
+      const conversations = await service.listConversations(context, limit);
+      return json({ data: conversations }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/communications/conversations/:conversationId/messages",
+    module: "communication",
+    operation: "communication.conversation.read",
+    permission: "communication.conversation.read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const rawLimit = Number(new URL(request.url).searchParams.get("limit") ?? "100");
+      const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 100;
+      const messages = await service.listMessages(
+        context,
+        brandId<"EntityId">(requiredParam(params.conversationId, context.requestId)),
+        limit,
+      );
+      return json({ data: messages }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "POST",
     path: "/api/v1/communications/conversations",
     module: "communication",
