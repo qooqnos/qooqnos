@@ -2259,7 +2259,7 @@
     "messagesConversationOpen": "باز",
     "messagesConversationClosed": "بسته",
     "messagesConversationClosedBody": "این گفت‌وگو بسته است و امکان ارسال پیام جدید ندارد.",
-    "messagesConversationCount": "{count} گفت‌وگو",
+    "messagesConversationCount": "{{count}} گفت‌وگو",
     "messagesNewConversation": "گفت‌وگوی جدید؛ هنوز پیامی ثبت نشده است.",
     "messagesThreadSelect": "برای دیدن پیام‌ها، یک گفت‌وگو را انتخاب کن.",
     "messagesThreadLoading": "در حال بارگذاری پیام‌ها…",

@@ -3273,5 +3273,17 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
   - CI succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38960663170
   - Phoenix verification succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38960663066
   - Phoenix web UI verification / Playwright E2E succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38960663182
-- The redesign is still on `feat/social-commerce-ui-reset`; PR #11 remains a draft and has not been merged or deployed to `main`: https://github.com/qooqnos/qooqnos/pull/11.
-- Remaining milestones: real authorized inbox/thread listing and message sending (the current Messages surface intentionally does not fabricate them), and canonical production checkout/payment integration before claiming purchases are active.
+- The social-commerce interface reset was merged to `main` via PR #11 on 2026-10-16. The `74f8cc55f23ec52703050daa65cc63948b25d4a8` deployment passed CI, Phoenix verification, browser E2E, and the SPA deployment check.
+- Remaining milestones at the time of this entry: authorized inbox/thread reads and real message sending, plus canonical production checkout/payment integration before claiming purchases are active.
+
+
+
+## 2026-10-17 — Live Communication inbox and message thread (in progress)
+
+- Added authenticated `GET /api/v1/communications/conversations` and `GET /api/v1/communications/conversations/:conversationId/messages` using the existing Communication repository/service/authorization boundary.
+- Conversation lists are scoped by tenant and either the current workspace (shared seller inbox) or the authenticated actor's own Customer mapping. Thread reads use the same access predicate; raw conversation identifiers are not rendered as visible UI copy.
+- Connected the Messages page to real inbox data, thread history, loading/error/empty states, and message submission. The UI never inserts a synthetic conversation or a fake successful message; it updates only after the API responds.
+- Added browser E2E fixtures/checks for listing, thread read, sending, localization, and hidden technical identifiers.
+- This does not yet add a safe “start a new conversation from any offer” command. That requires an explicit canonical mapping between the offer's seller/workspace and the authenticated user's Customer identity; the UI must not guess either identifier.
+- Production checkout/payment remains a separate incomplete capability and must not be described as ready for real transactions.
+- Current branch: `feat/communication-inbox-read-api`; verification and review are pending.

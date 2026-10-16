@@ -2259,7 +2259,7 @@
     "messagesConversationOpen": "Open",
     "messagesConversationClosed": "Closed",
     "messagesConversationClosedBody": "This conversation is closed and cannot accept new messages.",
-    "messagesConversationCount": "{count} conversations",
+    "messagesConversationCount": "{{count}} conversations",
     "messagesNewConversation": "New conversation — no messages yet.",
     "messagesThreadSelect": "Select a conversation to read its messages.",
     "messagesThreadLoading": "Loading messages…",
