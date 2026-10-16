@@ -690,6 +690,15 @@ assert.ok(businessEnglishText.includes("How does a user see this business?"));
 assert.ok(!businessEnglishText.includes("نام کسب‌وکار"));
 assert.ok(!businessEnglishText.includes("اقدام‌های سریع"));
 assert.ok(!businessEnglishText.includes("مکان‌ها"));
+await page.setViewportSize({ width: 390, height: 844 });
+await page.waitForTimeout(60);
+assert.equal(await page.locator(".phoenix-seller-reset").isVisible(), true);
+assert.equal(
+  await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  true,
+  "the seller workspace must not overflow horizontally on mobile",
+);
+await page.setViewportSize({ width: 1440, height: 900 });
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);
@@ -761,10 +770,25 @@ await page.locator('[data-follow="result-product-user-1"]').click();
 await page.locator('[data-follow="result-product-user-1"].selected').waitFor();
 assert.ok(mockSocialFollows.has("user:user-seller-2"), "a person-owned offer must follow the seller user, not a fake business");
 assert.ok(mockSocialFollows.has("business:biz-1"), "a business-owned offer must follow the business");
+
+// Mobile regression: feed and offer detail stay within the viewport without horizontal scrolling.
+await page.setViewportSize({ width: 390, height: 844 });
+await page.waitForTimeout(60);
+assert.equal(await page.locator(".phoenix-social-mobile-nav").isVisible(), true);
+assert.equal(
+  await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  true,
+  "the social feed must not overflow horizontally on a 390px viewport",
+);
 await page.locator("[data-discovery-index='0']").click();
 const detailFollowButton = page.locator(".phoenix-detail-modal [data-follow-seller-detail]");
 await detailFollowButton.waitFor();
 assert.equal(await detailFollowButton.getAttribute("aria-pressed"), "true");
+const detailBounds = await page.locator(".phoenix-detail-modal").boundingBox();
+assert.ok(detailBounds, "the product detail modal should be visible on mobile");
+assert.ok(detailBounds.width <= 390, "the product detail modal must fit the mobile viewport");
+const detailColumns = await page.locator(".phoenix-detail-layout").evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+assert.equal(detailColumns.trim().split(/\\s+/).length, 1, "offer details should stack to one column on mobile");
 await detailFollowButton.click();
 await page.waitForFunction(() => document.querySelector(".phoenix-detail-modal [data-follow-seller-detail]")?.getAttribute("aria-pressed") === "false");
 await detailFollowButton.click();
@@ -775,6 +799,12 @@ await page.keyboard.press("Escape");
 await page.locator(".phoenix-detail-modal").waitFor({ state: "detached" });
 assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("data-discovery-index")), "0");
 assert.equal(await page.locator("#shortlist-count").innerText(), "۱");
+assert.equal(
+  await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  true,
+  "the open/closed detail flow must not introduce mobile page overflow",
+);
+await page.setViewportSize({ width: 1440, height: 900 });
 
 await page.goto(baseURL + "/discover?tab=following");
 try {
