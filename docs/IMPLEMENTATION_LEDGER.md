@@ -3228,3 +3228,16 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
   - CI: https://github.com/qooqnos/qooqnos/actions/runs/38934113131
   - Phoenix verification: https://github.com/qooqnos/qooqnos/actions/runs/38934113490
   - Phoenix web UI verification: https://github.com/qooqnos/qooqnos/actions/runs/38934112976
+
+
+## 2026-10-16 — Social commerce route precedence and green E2E checkpoint
+
+- Fixed route precedence so explicitly declared seller routes (for example `/business/products`, `/business/services`, and `/business/bookings`) take precedence over one-segment dynamic module aliases. Routes without a static definition may still resolve through the module alias parser.
+- Updated browser smoke assertions to wait for the translated notification title after a locale change rather than assuming a fixed 50 ms delay is sufficient for async page re-rendering.
+- Verified the code on commit `563e7845ce06b78c8edbf6da0888d15b1f184c88`:
+  - CI succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38937633382
+  - Phoenix verification succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38937633101
+  - Phoenix web UI verification and browser E2E succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38937633371
+- The interface design decision is maintained in `docs/PHOENIX_SOCIAL_COMMERCE_INTERFACE_RESET.md`.
+- PR #11 remains a draft and is not merged to `main`: https://github.com/qooqnos/qooqnos/pull/11.
+- Remaining explicit milestones: wire real message-thread reads/listing through authorized canonical Communication APIs; integrate production checkout/payment before claiming purchases are active; continue visual and accessibility checks on all customer surfaces.
