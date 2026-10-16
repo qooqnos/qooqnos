@@ -3097,3 +3097,15 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The old `/create/deal-type` route used to show a success toast and navigate to transactions without a backend transaction creation call. That handler and its selectable fake deal list are removed.
 - The route now explains that an offer must be completed and reviewed before entering a real order/booking path, with links to Product Studio and Create.
 - Added unit and browser E2E assertions that the route does not expose the old confirmation button or claim a transaction was created.
+
+
+## 2026-10-16 — Browser E2E and locale persistence restored
+
+- Fixed the actual browser module bootstrap failure by serving only the browser-safe commerce tier module and adding the missing .js extension to the local ESM import.
+- Replaced the default seller home with an action-led workspace so fixed sample sales/team/activity figures are not presented as real metrics.
+- Preserved selected locale across full-page navigations in Playwright; the test harness no longer resets the user's chosen language on every navigation.
+- Regenerated the checked-in browser translation runtime from the canonical Persian, English and Arabic JSON dictionaries.
+- Removed duplicate offer-guard strings from the productStudio namespace and reused the existing canonical ui.createDealGuard* translations, preventing conflicting source-to-key matches.
+- Added translation unit checks and E2E coverage for the Arabic transaction guard. Latest verified implementation commit: 0a2cf5b0525d77009d280942f0036bf39f16fed7.
+- Verification on that commit: CI passed, Phoenix verification passed, Phoenix web UI E2E passed, and the Workers build check passed. See [CI](https://github.com/qooqnos/qooqnos/actions/runs/38890858601), [Phoenix verification](https://github.com/qooqnos/qooqnos/actions/runs/38890858610), [Browser E2E](https://github.com/qooqnos/qooqnos/actions/runs/38890858621).
+- The pull request remains a draft and has not been merged to main. Do not describe production deployment or real checkout/payment as completed.
