@@ -135,6 +135,8 @@ let shellNotifications: NotificationView[] = [];
 let shellContext: { actorId?: string; tenantId?: string; workspaceId?: string } = {};
 let activeConversationId: string | null = null;
 let messagesLoadGeneration = 0;
+let communicationSendDelegateBound = false;
+let communicationMessageSendInFlight = false;
 let shellLoadInFlight = false;
 const socialActionIds = new Map<string, string>();
 const socialState = {
@@ -4620,44 +4622,16 @@ async function loadMessagesPage(preferredConversationId?: string): Promise<void>
       const form = thread.querySelector<HTMLFormElement>("[data-communication-send]");
       const textarea = form?.querySelector<HTMLTextAreaElement>("#messages-compose");
       const send = form?.querySelector<HTMLButtonElement>("[data-message-send]");
-      const error = form?.querySelector<HTMLElement>("#messages-send-error");
-      let isSending = false;
-      const sendMessage = async (): Promise<void> => {
-        const content = textarea?.value.trim() ?? "";
-        if (!content || !send || send.disabled || isSending) return;
-        isSending = true;
-        send.disabled = true;
-        send.textContent = socialCommerceUi("messagesSending");
-        if (error) error.textContent = "";
-        try {
-          await apiJson("/api/v1/communications/messages", {
-            method: "POST",
-            body: { conversationId: selectedId, content, classification: "buyer_seller" },
-          });
-          showToast(socialCommerceUi("messagesSendSuccess"));
-          await loadMessagesPage(selectedId);
-        } catch {
-          if (error) error.textContent = socialCommerceUi("messagesSendError");
-          if (send.isConnected) {
-            send.disabled = false;
-            send.innerHTML = socialCommerceUi("messagesSendAction") + ' <span aria-hidden="true">←</span>';
-          }
-        } finally {
-          isSending = false;
-        }
-      };
-      send?.addEventListener("click", (event) => {
-        event.preventDefault();
-        void sendMessage();
-      });
+      // The button uses type="button"; click handling is delegated by bindGlobalEvents.
+      // Preserve accessible keyboard submission without creating a second message request.
       form?.addEventListener("submit", (event) => {
         event.preventDefault();
-        void sendMessage();
+        send?.click();
       });
       textarea?.addEventListener("keydown", (event) => {
         if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
           event.preventDefault();
-          void sendMessage();
+          send?.click();
         }
       });
     } catch {
@@ -8114,6 +8088,47 @@ function bindBusinessWorkspaceDynamicEvents(): void {
 }
 
 function bindGlobalEvents(): void {
+  // Message thread content is fetched asynchronously and can be replaced after a send.
+  // Delegate the send-button click once at document level so each refreshed thread
+  // remains actionable instead of relying on a listener attached to a disposable node.
+  if (!communicationSendDelegateBound) {
+    document.addEventListener("click", (event) => {
+      const eventTarget = event.target as Element | null;
+      const send = eventTarget?.closest<HTMLButtonElement>("[data-message-send]");
+      if (!send) return;
+      event.preventDefault();
+      const form = send.closest<HTMLFormElement>("[data-communication-send]");
+      const textarea = form?.querySelector<HTMLTextAreaElement>("#messages-compose");
+      const error = form?.querySelector<HTMLElement>("#messages-send-error");
+      const content = textarea?.value.trim() ?? "";
+      const conversationId = activeConversationId;
+      if (!form || !conversationId || !content || send.disabled || communicationMessageSendInFlight) return;
+      communicationMessageSendInFlight = true;
+      send.disabled = true;
+      send.textContent = socialCommerceUi("messagesSending");
+      if (error) error.textContent = "";
+      void (async () => {
+        try {
+          await apiJson("/api/v1/communications/messages", {
+            method: "POST",
+            body: { conversationId, content, classification: "buyer_seller" },
+          });
+          showToast(socialCommerceUi("messagesSendSuccess"));
+          await loadMessagesPage(conversationId);
+        } catch {
+          if (error) error.textContent = socialCommerceUi("messagesSendError");
+          if (send.isConnected) {
+            send.disabled = false;
+            send.innerHTML = socialCommerceUi("messagesSendAction") + ' <span aria-hidden="true">←</span>';
+          }
+        } finally {
+          communicationMessageSendInFlight = false;
+        }
+      })();
+    });
+    communicationSendDelegateBound = true;
+  }
+
   document.querySelectorAll<HTMLElement>("[data-nav]").forEach((element) => {
     element.addEventListener("click", (event) => {
       const href = element.getAttribute("href");
