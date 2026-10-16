@@ -737,7 +737,21 @@
     "selectServiceOffering": "Select a Service/Offering first to view matching Availability.",
     "loadingOfferingInfo": "Loading offering information from published Business…",
     "connectAvailability": "Connecting to Availability…",
-    "selectFromAvailability": "Select a Schedule from Availability."
+    "selectFromAvailability": "Select a Schedule from Availability.",
+    "createDetailsTitle": "Describe your offer; Phoenix structures it.",
+    "createDetailsIntro": "No long form is needed. Describe what you know about the product or service; review the draft in Studio and approve it yourself.",
+    "createDetailsInputLabel": "Free-form description",
+    "createDetailsPlaceholder": "For example, describe materials, size, use, service terms, or anything buyers should know.",
+    "createDetailsReviewNote": "Phoenix structures the information and asks about missing details. You review the price and final details yourself.",
+    "createDetailsProcessLabel": "Offer preparation",
+    "createDetailsProcessTitle": "From raw description to publication",
+    "createDetailsStepRaw": "Raw description",
+    "createDetailsStepRawDesc": "Initial details in your own words",
+    "createDetailsStepDraft": "AI-generated draft",
+    "createDetailsStepDraftDesc": "Extract attributes and ask about missing details",
+    "createDetailsStepReview": "Review and publish",
+    "createDetailsStepReviewDesc": "Publish only after your approval",
+    "createDetailsStudioLink": "Add an image in Studio"
   },
   "canonical": {
     "identity": {

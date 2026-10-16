@@ -737,7 +737,21 @@
     "selectServiceOffering": "ابتدا یک Service/Offering را انتخاب کنید؛ سپس Availability مناسب همین Business را می‌بینید.",
     "loadingOfferingInfo": "در حال خواندن اطلاعات خدمت از Business منتشرشده…",
     "connectAvailability": "در حال اتصال به Availability…",
-    "selectFromAvailability": "یک Schedule از Availability انتخاب کنید."
+    "selectFromAvailability": "یک Schedule از Availability انتخاب کنید.",
+    "createDetailsTitle": "توصیفت را بنویس؛ ققنوس ساختار می‌دهد",
+    "createDetailsIntro": "لازم نیست فرم طولانی پر کنی. هرچه دربارهٔ کالا یا خدمت می‌دانی بنویس؛ در استودیو پیش‌نویس را می‌بینی و خودت تأیید می‌کنی.",
+    "createDetailsInputLabel": "توضیح آزاد",
+    "createDetailsPlaceholder": "برای نمونه، جنس، اندازه، کاربرد، شرایط ارائه یا نکته‌های مهم را با زبان خودت بنویس.",
+    "createDetailsReviewNote": "ققنوس اطلاعات موجود را ساختارمند می‌کند و اگر چیزی کم باشد سؤال می‌پرسد. قیمت و جزئیات نهایی را خودت بازبینی می‌کنی.",
+    "createDetailsProcessLabel": "مسیر آماده‌سازی عرضه",
+    "createDetailsProcessTitle": "از توضیح خام تا انتشار",
+    "createDetailsStepRaw": "توصیف خام",
+    "createDetailsStepRawDesc": "اطلاعات اولیه با زبان خودت",
+    "createDetailsStepDraft": "پیش‌نویس هوشمند",
+    "createDetailsStepDraftDesc": "استخراج مشخصات و پرسش دربارهٔ موارد ناقص",
+    "createDetailsStepReview": "بازبینی و انتشار",
+    "createDetailsStepReviewDesc": "انتشار بعد از تأیید خودت",
+    "createDetailsStudioLink": "افزودن تصویر در استودیو"
   },
   "canonical": {
     "identity": {

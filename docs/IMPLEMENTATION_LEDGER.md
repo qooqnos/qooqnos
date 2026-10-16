@@ -3084,3 +3084,9 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The page now collects a free-form description and hands it to Product Studio through a one-time local handoff key; Product Studio consumes and clears it on entry.
 - The form no longer proceeds to the old deal-selection flow or claims success. Price/attributes are added only in the reviewed offer flow.
 - Added browser E2E assertions for an empty initial description, absence of fake price, and text handoff into the Studio.
+
+
+## 2026-10-16 — Create Details localization integrity
+
+- Added explicit Persian, English and Arabic dictionary entries for every new customer-facing phrase on `/create/details`.
+- Extended E2E checks for Arabic, English and Persian rendering before validating the one-time handoff into Product Studio.

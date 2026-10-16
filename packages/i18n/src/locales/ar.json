@@ -737,7 +737,21 @@
     "selectServiceOffering": "اختر خدمة أولاً لعرض التوفر المطابق.",
     "loadingOfferingInfo": "جاري تحميل معلومات الخدمة من النشاط التجاري المنشور…",
     "connectAvailability": "جاري الاتصال بنظام التوفر…",
-    "selectFromAvailability": "اختر جدولاً من التوفر."
+    "selectFromAvailability": "اختر جدولاً من التوفر.",
+    "createDetailsTitle": "اكتب وصف العرض؛ سيُنظّم ققنوس التفاصيل.",
+    "createDetailsIntro": "لا حاجة إلى نموذج طويل. اكتب ما تعرفه عن المنتج أو الخدمة؛ راجع المسودة في الاستوديو ووافق عليها بنفسك.",
+    "createDetailsInputLabel": "وصف حر",
+    "createDetailsPlaceholder": "مثلاً اكتب المواد والحجم والاستخدام وشروط الخدمة أو أي تفاصيل تهم المشتري.",
+    "createDetailsReviewNote": "ينظّم ققنوس المعلومات ويسأل عن التفاصيل الناقصة. راجع السعر والتفاصيل النهائية بنفسك.",
+    "createDetailsProcessLabel": "إعداد العرض",
+    "createDetailsProcessTitle": "من الوصف الأولي إلى النشر",
+    "createDetailsStepRaw": "وصف أولي",
+    "createDetailsStepRawDesc": "التفاصيل الأولية بلغتك",
+    "createDetailsStepDraft": "مسودة ذكية",
+    "createDetailsStepDraftDesc": "استخراج المواصفات والسؤال عن التفاصيل الناقصة",
+    "createDetailsStepReview": "المراجعة والنشر",
+    "createDetailsStepReviewDesc": "لا تنشر إلا بعد موافقتك",
+    "createDetailsStudioLink": "أضف صورة في الاستوديو"
   },
   "canonical": {
     "identity": {
