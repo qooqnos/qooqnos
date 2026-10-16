@@ -3337,3 +3337,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The Customer mapping is resolved from the authenticated actor inside the current organization (or created for that actor only); suspended/deactivated mappings cannot initiate new conversations.
 - Reuses an existing open conversation for the same customer and seller workspace before creating one. The returned conversation ID is passed to Messages so the correct thread is selected.
 - Added repository scope tests and Playwright coverage for the product-detail → seller conversation path. Check Build, CI, Phoenix verification, and browser E2E before merging.
+
+
+## 2026-10-17 — Offer detail to local review cart
+
+- Removed the default demonstration products from the local cart. Known legacy sample items are filtered out when reading the cart; a first visit remains empty.
+- Added “Add to review cart” on product detail only if the result includes a source ID, a non-negative numeric price, and an explicit currency.
+- Cart items preserve their currency. If multiple currencies are present, the UI shows subtotals by currency rather than summing unlike currencies into a misleading total.
+- Browser E2E now adds the real mocked Discovery product through the detail UI, reloads the cart, and verifies the item/currency persist. Checkout remains review-only and tests still reject claims that an order or payment succeeded.
+- Required checks on this branch: CI, Phoenix verification, Phoenix web UI E2E, and preview deploy. This increment does not integrate a payment provider or create a canonical order.

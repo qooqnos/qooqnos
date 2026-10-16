@@ -27,6 +27,7 @@ import {
   renderConsumerMessages,
   renderConsumerLoyalty,
   getCartItems,
+  addCartItem,
   saveCartItems,
   updateCartQuantity,
   removeCartItem,
@@ -135,6 +136,29 @@ describe("Phoenix Unified Experience (apps/web/src/phoenix-experience.ts)", () =
     expect(renderConsumerMessages()).toContain("پشتیبانی ققنوس");
     expect(renderConsumerLoyalty()).toContain("امتیاز و رتبه");
     expect(renderConsumerLoyalty()).toContain("۴۰٪");
+  });
+
+  it("starts empty, adds a priced offer, and merges repeated additions", () => {
+    if (typeof localStorage !== "undefined") localStorage.removeItem("phoenix.cart_items");
+    expect(getCartItems()).toEqual([]);
+
+    const input = {
+      id: "offer-cart-unit-test",
+      title: "میز چوبی",
+      category: "کالا",
+      price: 25000000,
+      currency: "ریال",
+    };
+    expect(addCartItem(input)).toHaveLength(1);
+    expect(addCartItem(input)[0]?.quantity).toBe(2);
+    expect(getCartItems()[0]).toMatchObject({
+      id: "offer-cart-unit-test",
+      title: "میز چوبی",
+      price: 25000000,
+      currency: "ریال",
+      quantity: 2,
+    });
+    saveCartItems([]);
   });
 
   it("manages cart items and financial calculations", () => {

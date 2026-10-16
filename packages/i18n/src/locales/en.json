@@ -39,7 +39,9 @@
     "backToCart": "Back to cart",
     "continueDiscovering": "Continue discovering products and services",
     "continueToCheckoutReview": "Continue to checkout review",
-    "add": "Add"
+    "add": "Add",
+    "cartTotalByCurrency": "Totals by currency",
+    "cartCurrenciesSeparateNotice": "Different currencies are shown separately."
   },
   "nav": {
     "home": "Home",
@@ -2274,6 +2276,9 @@
     "messagesSending": "Sending…",
     "messagesSendError": "Message was not sent. Please try again.",
     "messagesSendSuccess": "Message sent.",
-    "messagesSignInToRead": "Sign in to view your conversations."
+    "messagesSignInToRead": "Sign in to view your conversations.",
+    "addToReviewCart": "Add to review cart",
+    "addedToReviewCartToast": "Added to your local review cart; checkout is not connected yet.",
+    "reviewCartAddError": "This offer could not be added to the review cart."
   }
 }

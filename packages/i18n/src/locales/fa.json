@@ -39,7 +39,9 @@
     "backToCart": "بازگشت به سبد خرید",
     "continueDiscovering": "ادامهٔ کشف کالاها و خدمات",
     "continueToCheckoutReview": "ادامه به بررسی پرداخت",
-    "add": "افزودن"
+    "add": "افزودن",
+    "cartTotalByCurrency": "مجموع به تفکیک ارز",
+    "cartCurrenciesSeparateNotice": "ارزهای متفاوت جداگانه نمایش داده می‌شوند."
   },
   "nav": {
     "home": "خانه",
@@ -2274,6 +2276,9 @@
     "messagesSending": "در حال ارسال…",
     "messagesSendError": "پیام ارسال نشد. دوباره تلاش کن.",
     "messagesSendSuccess": "پیام ارسال شد.",
-    "messagesSignInToRead": "برای دیدن گفت‌وگوها وارد حسابت شو."
+    "messagesSignInToRead": "برای دیدن گفت‌وگوها وارد حسابت شو.",
+    "addToReviewCart": "افزودن به سبد بررسی",
+    "addedToReviewCartToast": "به سبد بررسی محلی اضافه شد؛ پرداخت هنوز متصل نیست.",
+    "reviewCartAddError": "افزودن این عرضه به سبد بررسی ممکن نشد."
   }
 }
