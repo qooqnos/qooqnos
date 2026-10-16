@@ -104,6 +104,7 @@ await page.route("**/api/v1/**", async (route) => {
     ] },
     "/api/v1/discovery/following": { data: [
       { id: "followed-product", sourceType: "product", sourceId: "followed-product", title: "کالای فروشگاه دنبال‌شده", description: "کالای منتشرشده در فید دنبال‌شده‌ها", metadata: { offeringType: "product", businessId: "biz-1", businessName: "فروشگاه دنبال‌شده" } },
+      { id: "followed-user-product", sourceType: "product", sourceId: "followed-user-product", title: "کالای فروشندهٔ مستقل دنبال‌شده", description: "کالای منتشرشده از سوی فروشندهٔ شخصی", metadata: { offeringType: "product", sellerUserId: "user-seller-2", sellerName: "هنرمند مستقل" } },
     ] },
     "/api/v1/social/state": { data: { follows: [], engagements: [] } },
     "/api/v1/social/activity": { data: [
@@ -716,6 +717,8 @@ assert.equal(await page.locator("#shortlist-count").innerText(), "۱");
 await page.goto(baseURL + "/discover?tab=following");
 try {
   await page.getByRole("heading", { name: "کالای فروشگاه دنبال‌شده" }).waitFor({ timeout: 7000 });
+  await page.getByRole("heading", { name: "کالای فروشندهٔ مستقل دنبال‌شده" }).waitFor({ timeout: 7000 });
+  assert.ok(await page.locator('[data-follow="followed-user-product"].selected').count() === 1);
 } catch (error) {
   const visibleText = await page.locator(".phoenix-reset-page").innerText().catch(() => "");
   process.stderr.write("Phoenix following-feed diagnostics: " + JSON.stringify({ discoveryRequests, visibleText, runtimeErrors, failedRequests }, null, 2) + "\\n");
