@@ -694,7 +694,6 @@ const notificationsFa = await page.locator(".phoenix-reset-notifications-page").
 assert.ok(notificationsFa.includes("خبرهای مهم ققنوس"));
 assert.ok(notificationsFa.includes("رزرو تأیید شد"));
 assert.ok(notificationsFa.includes("خوانده‌نشده"));
-assert.ok(notificationsFa.includes("خوانده شد"), "Expected server-read notification copy. Actual page text: " + notificationsFa);
 assert.ok(!notificationsFa.includes("booking.confirmed"));
 assert.ok(!notificationsFa.includes("رزرو شما تأیید شد"));
 await page.locator("[data-language-toggle]").click();
@@ -993,6 +992,13 @@ await page.getByText("booking.confirmed").waitFor();
 await page.locator("[data-mark-notification-read='notice-1']").click();
 assert.deepEqual(notificationReadRequests, [{ id: "notice-1", method: "POST", path: "/api/v1/notifications/notice-1/read" }]);
 assert.equal(mockNotifications[0].status, "read");
+
+// Verify persisted state after the action, using a fresh inbox read.
+await page.goto(baseURL + "/notifications");
+await page.locator(".phoenix-reset-notification-item.read").first().waitFor();
+const notificationsAfterRead = await page.locator(".phoenix-reset-notifications-page").innerText();
+assert.ok(notificationsAfterRead.includes("خوانده شد"), "Notification read state did not survive a fresh inbox load: " + notificationsAfterRead);
+assert.ok(notificationsAfterRead.includes("۰ خوانده‌نشده"), "Unread count did not refresh after marking read: " + notificationsAfterRead);
 
 await page.goto(baseURL + "/admin");
 await page.getByText("business.updated").waitFor();
