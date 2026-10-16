@@ -8954,22 +8954,22 @@ function openNotificationCenter(): void {
   const rows = shellNotifications.length
     ? shellNotifications.map((item) => `
         <article class="notification-item ${item.status === "read" ? "read" : "unread"}">
-          <div class="notification-item-icon">${item.channel === "in_app" ? "♢" : "◌"}</div>
+          <div class="notification-item-icon" aria-hidden="true">${item.channel === "in_app" ? "♢" : "◌"}</div>
           <div class="notification-item-copy">
-            <div class="notification-item-top"><strong>${escapeHtml(item.intent ?? "notification")}</strong><span>${escapeHtml(item.priority ?? "normal")}</span></div>
+            <div class="notification-item-top"><strong>${escapeHtml(notificationIntentLabel(item.intent))}</strong><span>${escapeHtml(notificationPriorityLabel(item.priority))}</span></div>
             <p>${escapeHtml(notificationSummary(item))}</p>
-            <small>${escapeHtml(formatDate(item.createdAt))} · ${escapeHtml(item.status ?? "created")}</small>
+            <small>${escapeHtml(formatDate(item.createdAt))} · ${escapeHtml(notificationStatusLabel(item.status))}</small>
           </div>
           <button class="notification-read" type="button" data-mark-notification-read="${escapeAttr(item.id)}">${socialCommerceUi(item.status === "read" ? "notificationsRead" : "notificationsMarkRead")}</button>
         </article>`).join("")
-    : '<div class="slot-empty"><span>♢</span><p>اعلان جدیدی برای این حساب ثبت نشده است.</p></div>';
+    : '<div class="slot-empty"><span aria-hidden="true">♢</span><h3>' + socialCommerceUi("notificationsEmptyTitle") + '</h3><p>' + socialCommerceUi("notificationsEmptyBody") + '</p></div>';
   overlay.innerHTML = `
     <div class="connection-backdrop" data-close-notification></div>
     <section class="connection-modal glass-card notification-modal" role="dialog" aria-modal="true" aria-labelledby="notification-title">
-      <button class="connection-close" type="button" data-close-notification aria-label="بستن">×</button>
-      <span class="eyebrow"><i></i> Notification Center</span>
-      <h2 id="notification-title">اعلان‌های شما</h2>
-      <p>وضعیت خوانده‌شدن در سطح UI مدیریت می‌شود و delivery state همچنان متعلق به Communication است.</p>
+      <button class="connection-close" type="button" data-close-notification aria-label="${escapeAttr(uiText("بستن"))}">×</button>
+      <span class="eyebrow"><i></i> ${socialCommerceUi("notificationsEyebrow")}</span>
+      <h2 id="notification-title">${socialCommerceUi("notificationsListTitle")}</h2>
+      <p>${socialCommerceUi("notificationsIntro")}</p>
       <div class="notification-list">${rows}</div>
     </section>`;
   document.body.appendChild(overlay);

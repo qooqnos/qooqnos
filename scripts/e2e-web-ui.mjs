@@ -988,7 +988,9 @@ await page.waitForTimeout(100);
 assert.equal(await page.evaluate(() => localStorage.getItem("phoenix-workspace-id")), "ws-2");
 
 await page.locator("[data-notification-toggle]").click();
-await page.getByText("booking.confirmed").waitFor();
+await page.getByRole("heading", { name: "اعلان‌های شما" }).waitFor();
+await page.getByText("رزرو تأیید شد").waitFor();
+assert.ok(!(await page.locator(".notification-modal").innerText()).includes("booking.confirmed"));
 await page.locator("[data-mark-notification-read='notice-1']").click();
 assert.deepEqual(notificationReadRequests, [{ id: "notice-1", method: "POST", path: "/api/v1/notifications/notice-1/read" }]);
 assert.equal(mockNotifications[0].status, "read");
