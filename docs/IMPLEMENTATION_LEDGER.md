@@ -3217,3 +3217,14 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
   - Phoenix verification: https://github.com/qooqnos/qooqnos/actions/runs/38933382423
   - Phoenix web UI verification and mobile browser smoke: https://github.com/qooqnos/qooqnos/actions/runs/38933382369
 - Current working branch remains `feat/social-commerce-ui-reset`; PR #11 remains draft and is not deployed to `main`.
+
+
+## 2026-10-16 — Align customer Transactions with order tracking
+
+- Corrected the legacy customer `/transactions` route: it now renders the same order history and tracking experience as `/orders`, instead of sending buyers to the “choose a deal type” guard.
+- Kept seller transactions on the existing dedicated business-deals path; customer `/transactions` uses the social shell and loads order data.
+- Added an E2E assertion that visits `/transactions` as a consumer and verifies the redesigned order tracker and a recorded tracking code.
+- Verification passed on commit `7652e642b3f9c274bdc173a3e5999522c117cec3`:
+  - CI: https://github.com/qooqnos/qooqnos/actions/runs/38934113131
+  - Phoenix verification: https://github.com/qooqnos/qooqnos/actions/runs/38934113490
+  - Phoenix web UI verification: https://github.com/qooqnos/qooqnos/actions/runs/38934112976
