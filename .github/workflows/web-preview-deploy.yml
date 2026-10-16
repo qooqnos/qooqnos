@@ -66,8 +66,11 @@ jobs:
           head -c 1200 /tmp/phoenix-admin.html || true
           echo
           test "$http_code" = "200"
-          grep -Fq '<div id="app"></div>' /tmp/phoenix-admin.html
+          # The SPA root intentionally contains shell markup; it is not an empty div.
+          grep -Eq '<div id="app"([[:space:]>])' /tmp/phoenix-admin.html
           grep -Fq '/dist/main.js' /tmp/phoenix-admin.html
+          grep -Fq 'type="importmap"' /tmp/phoenix-admin.html
+          grep -Fq '@qooqnos/commerce' /tmp/phoenix-admin.html
           echo "Phoenix /admin SPA route is serving the deployed application shell."
 
           for asset in "/" "/dist/main.js" "/dist/ui.js" "/styles.css"; do
