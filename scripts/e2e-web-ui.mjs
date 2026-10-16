@@ -380,12 +380,16 @@ assert.ok((await page.locator(".phoenix-detail-modal").innerText()).includes("ک
 assert.equal(await page.locator(".phoenix-detail-modal a[href*='/checkout']").count(), 0);
 const askSellerLink = page.locator(".phoenix-detail-modal a.phoenix-detail-ask-seller");
 assert.equal(await askSellerLink.count(), 1);
-assert.ok((await askSellerLink.getAttribute("href")).includes("topic=offering-product-e2e"));
+const askSellerHref = await askSellerLink.getAttribute("href");
+assert.ok(askSellerHref?.startsWith("/messages?topic="));
+const askSellerTopic = new URL(askSellerHref, baseURL).searchParams.get("topic");
+assert.ok(askSellerTopic);
 await askSellerLink.click();
 await page.locator(".phoenix-reset-message-context").waitFor();
 const contextualOfferText = await page.locator(".phoenix-reset-message-context").innerText();
 assert.ok(contextualOfferText.includes("کیف دست‌دوز"));
-assert.ok(!contextualOfferText.includes("offering-product-e2e"));
+assert.equal(await page.locator(".phoenix-reset-message-context-id").textContent(), askSellerTopic);
+assert.ok(!contextualOfferText.includes(askSellerTopic));
 assert.equal(await page.locator(".phoenix-reset-message-context-id").isVisible(), false);
 assert.ok(contextualOfferText.includes("هیچ پیامی نمایش یا ارسال نمی‌شود"));
 await page.goto(baseURL + "/businesses/biz-1");
