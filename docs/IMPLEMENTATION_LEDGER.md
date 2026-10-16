@@ -3109,3 +3109,15 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added translation unit checks and E2E coverage for the Arabic transaction guard. Latest verified implementation commit: 0a2cf5b0525d77009d280942f0036bf39f16fed7.
 - Verification on that commit: CI passed, Phoenix verification passed, Phoenix web UI E2E passed, and the Workers build check passed. See [CI](https://github.com/qooqnos/qooqnos/actions/runs/38890858601), [Phoenix verification](https://github.com/qooqnos/qooqnos/actions/runs/38890858610), [Browser E2E](https://github.com/qooqnos/qooqnos/actions/runs/38890858621).
 - The pull request remains a draft and has not been merged to main. Do not describe production deployment or real checkout/payment as completed.
+
+
+## 2026-10-16 — Public seller profile aligned with social commerce
+
+- Reworked the public seller profile (/businesses/:id) into a customer-facing continuation of the social shell: clear identity, published offers, contact methods, locations and published reviews.
+- Public data remains sourced from the canonical public-business endpoint; empty states are honest when no contact, location, review or offer exists.
+- Removed raw locale/timezone/currency codes from the public identity block. Business type, publication state, contacts and location type are shown as human-readable, translated labels.
+- Added Persian, English and Arabic copy to the shared socialCommercePage locale dictionary and regenerated the browser runtime from canonical locale JSON.
+- Public review dates follow the selected locale's calendar preference (Persian solar Hijri, Arabic Islamic calendar, English Gregorian); offer amounts use the selected locale and localized currency names.
+- E2E verifies that the public profile and offers render, the legacy checkout/payment action is absent, and English/Arabic do not expose raw locale/timezone/currency metadata.
+- Last verified implementation commit before this ledger entry: 6dfe1726152486930324ef79f58b41f568dc52a0. CI, Phoenix verification, browser E2E and Worker dry run passed at that commit.
+- The social commerce UI PR remains draft and is not merged; real checkout/payment is still a separate incomplete integration milestone.
