@@ -853,7 +853,10 @@ function render(): void {
     });
   }
   if (route.path === "/activity") void loadActivityPage();
-  if (route.path === "/messages") void loadMessagesPage();
+  if (route.path === "/messages") {
+    const preferredConversationId = new URLSearchParams(location.search).get("conversation")?.trim();
+    void loadMessagesPage(preferredConversationId || undefined);
+  }
   void loadShellContext();
   if (route.path === "/booking") {
     const bookingParams = new URLSearchParams(location.search);
@@ -6294,7 +6297,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
           ${metadataEntries.length ? '<section class="phoenix-detail-attributes"><h3>' + uiText("مشخصات ثبت‌شده") + '</h3><dl>' + metadataEntries.map(([label, value]) => '<div><dt>' + escapeHtml(uiText(label)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>').join("") + '</dl></section>' : ""}
           <div class="phoenix-detail-actions">
             ${mainAction}
-            ${businessId ? '<a class="button button-primary phoenix-detail-ask-seller" href="' + escapeAttr("/messages?topic=" + encodeURIComponent(key) + "&label=" + encodeURIComponent(title)) + '" data-nav>' + socialCommerceUi("detailAskSeller") + ' <span aria-hidden="true">←</span></a>' : ""}
+            ${businessId ? '<button class="button button-primary phoenix-detail-ask-seller" type="button" data-ask-seller-detail>' + socialCommerceUi("detailAskSeller") + ' <span aria-hidden="true">←</span></button>' : ""}
             ${followTargetId ? '<button class="button button-ghost phoenix-detail-follow-button' + (initiallyFollowing ? ' selected' : '') + '" type="button" data-follow-seller-detail aria-pressed="' + String(initiallyFollowing) + '">' + (initiallyFollowing ? socialCommerceUi("detailFollowingSeller") : socialCommerceUi("detailFollowSeller")) + '</button>' : ""}
             ${isProduct ? '<button class="button button-ghost" type="button" data-compare-detail="' + escapeAttr(key) + '">⚖ ' + uiText("مقایسه") + '</button>' : ""}
             <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}">☆ ${uiText("ذخیره")}</button>
@@ -6322,6 +6325,35 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
   document.addEventListener("keydown", handleDetailKeydown);
   overlay.querySelectorAll<HTMLElement>("[data-close-discovery]").forEach((node) => node.addEventListener("click", closeDetail));
   overlay.querySelector<HTMLButtonElement>(".connection-close")?.focus();
+
+  const askSellerButton = overlay.querySelector<HTMLButtonElement>("[data-ask-seller-detail]");
+  askSellerButton?.addEventListener("click", async () => {
+    if (!sessionStorage.getItem(STORAGE.accessToken)) {
+      closeDetail();
+      openConnectionPanel();
+      return;
+    }
+    if (!businessId || askSellerButton.disabled) return;
+    askSellerButton.disabled = true;
+    try {
+      const response = await apiJson<{ data: { id: string } }>("/api/v1/communications/conversations/from-business", {
+        method: "POST",
+        body: { businessId },
+      });
+      if (!response.data?.id) throw new Error(socialCommerceUi("socialActionUnavailable"));
+      closeDetail();
+      const query = new URLSearchParams({
+        conversation: response.data.id,
+        topic: key,
+        label: title,
+      });
+      navigate("/messages?" + query.toString());
+    } catch {
+      showToast(socialCommerceUi("socialActionUnavailable"));
+    } finally {
+      askSellerButton.disabled = false;
+    }
+  });
 
   const followDetailButton = overlay.querySelector<HTMLButtonElement>("[data-follow-seller-detail]");
   if (followDetailButton) {

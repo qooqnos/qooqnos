@@ -34,6 +34,7 @@ const mockSocialComments = [];
 const mockBusinessUpdates = [];
 const notificationReadRequests = [];
 const communicationSendRequests = [];
+const communicationStartRequests = [];
 const mockConversations = [{
   id: "conversation-e2e-1",
   organizationId: "tenant-1",
@@ -277,12 +278,35 @@ await page.route("**/api/v1/**", async (route) => {
     return;
   }
 
+  if (path === "/api/v1/communications/conversations/from-business" && request.method() === "POST") {
+    const body = request.postDataJSON();
+    communicationStartRequests.push(body);
+    let conversation = mockConversations.find((item) => item.id === "conversation-from-offer-e2e");
+    if (!conversation) {
+      conversation = {
+        id: "conversation-from-offer-e2e",
+        organizationId: "tenant-1",
+        workspaceId: "seller-workspace-1",
+        customerId: "customer-e2e-1",
+        status: "open",
+        createdAt: "2026-10-17T00:00:00.000Z",
+        updatedAt: "2026-10-17T00:00:00.000Z",
+        lastMessagePreview: null,
+        lastMessageAt: null,
+      };
+      mockConversations.push(conversation);
+    }
+    await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ data: conversation }) });
+    return;
+  }
   if (path === "/api/v1/communications/conversations" && request.method() === "GET") {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: mockConversations }) });
     return;
   }
-  if (path === "/api/v1/communications/conversations/conversation-e2e-1/messages" && request.method() === "GET") {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: mockCommunicationMessages }) });
+  if (path.startsWith("/api/v1/communications/conversations/") && path.endsWith("/messages") && request.method() === "GET") {
+    const conversationId = path.split("/").at(-2);
+    const messages = conversationId === "conversation-e2e-1" ? mockCommunicationMessages : [];
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: messages }) });
     return;
   }
   if (path === "/api/v1/communications/messages" && request.method() === "POST") {
@@ -367,6 +391,21 @@ await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);
 assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
+
+// Asking about a product starts (or reuses) its canonical seller conversation.
+await page.locator('[data-open-view="result-product-1"]').click();
+await page.locator("[data-ask-seller-detail]").waitFor();
+await page.locator("[data-ask-seller-detail]").click();
+await page.waitForFunction(() => location.pathname === "/messages"
+  && new URLSearchParams(location.search).get("conversation") === "conversation-from-offer-e2e");
+await page.locator("#messages-compose").waitFor();
+assert.equal(communicationStartRequests.length, 1);
+assert.deepEqual(communicationStartRequests[0], { businessId: "biz-1" });
+assert.equal(await page.locator("#messages-compose").count(), 1);
+const sellerMessageText = await page.locator(".phoenix-reset-messages-page").innerText();
+assert.ok(sellerMessageText.includes("میز چوبی"));
+assert.ok(!sellerMessageText.includes("seller-workspace-1"));
+assert.ok(!sellerMessageText.includes("customer-e2e-1"));
 
 // Comparison is data-led, responsive, and must not expose arbitrary internal metadata.
 await page.evaluate(() => localStorage.setItem("phoenix-compare-items", JSON.stringify([
