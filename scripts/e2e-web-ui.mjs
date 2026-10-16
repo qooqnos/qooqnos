@@ -908,7 +908,7 @@ assert.ok(await page.locator(".phoenix-post-card .phoenix-post-media").count() >
 assert.equal(await page.locator(".phoenix-reset-posts .result-card").count(), 0);
 await page.locator('.phoenix-post-card [data-save="result-product-1"]').click();
 await page.waitForFunction(() => {
-  const button = document.querySelector<HTMLButtonElement>('.phoenix-post-card [data-save="result-product-1"]');
+  const button = document.querySelector('.phoenix-post-card [data-save="result-product-1"]');
   return Boolean(button && !button.classList.contains("selected"));
 });
 assert.equal(await page.locator("#shortlist-count").innerText(), "۰");
