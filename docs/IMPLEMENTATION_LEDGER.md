@@ -3251,3 +3251,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added E2E coverage for offer-to-message context in Persian, hidden identifier behavior, and the explicit no-message-sent state.
 - This does not claim that message sending is active. Real inbox reads and message creation still require the authorized participant/tenant/workspace contract described in the design decision record.
 - Checks: CI, Phoenix verification, and Phoenix web UI verification must pass on this commit before the change is considered verified.
+
+
+
+## 2026-10-16 — Create center: offer or express a need
+
+- Extended the approved Add/Create hub with a third, distinct route: a buyer who is looking for something can describe a need and move directly to Explore.
+- The destination preserves the exploration tab and focuses the real discovery search input; it does not create a fake request, message, or transaction.
+- Added the new copy to the canonical Persian/English/Arabic dictionaries and browser E2E coverage for the focus transition.
+- Responsive layout: three columns on desktop, two on tablet, one on mobile.
+- Checks: CI, Phoenix verification, and Phoenix web UI verification must pass for the current branch head.
