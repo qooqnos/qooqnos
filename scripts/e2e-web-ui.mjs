@@ -255,11 +255,6 @@ await page.route("**/api/v1/**", async (route) => {
     return;
   }
 
-  if (path === "/api/v1/notifications" && request.method() === "GET") {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: mockNotifications }) });
-    return;
-  }
-
   if (path.startsWith("/api/v1/notifications/") && path.endsWith("/read") && request.method() === "POST") {
     const id = path.split("/").at(-2);
     const notification = mockNotifications.find((item) => item.id === id);
@@ -270,6 +265,11 @@ await page.route("**/api/v1/**", async (route) => {
     notification.status = "read";
     notificationReadRequests.push({ id, method: request.method(), path });
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: notification }) });
+    return;
+  }
+
+  if (path === "/api/v1/notifications" && request.method() === "GET") {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: mockNotifications }) });
     return;
   }
 
