@@ -46,7 +46,6 @@ import {
   renderBusinessTeam as renderPhoenixBusinessTeam,
   renderBusinessOrgProfile,
   renderConsumerWelcome,
-  renderConsumerProductDetails,
   renderConsumerCart,
   renderConsumerPayment,
   renderConsumerLoyalty,
@@ -445,6 +444,20 @@ const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Phoenix web root is missing.");
 const appRoot = app;
 
+function renderUnavailableProductDetails(): string {
+  return '<div class="phoenix-reset-page phoenix-reset-product-unavailable">' +
+    '<section class="phoenix-reset-hero"><div class="phoenix-reset-hero-copy">' +
+      '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("productDetailUnavailableEyebrow") + '</span></div>' +
+      '<h1>' + socialCommerceUi("productDetailUnavailableTitle") + '</h1>' +
+      '<p>' + socialCommerceUi("productDetailUnavailableBody") + '</p>' +
+    '</div></section>' +
+    '<section class="phoenix-reset-product-unavailable-actions">' +
+      '<span class="phoenix-reset-product-unavailable-icon" aria-hidden="true">⌕</span>' +
+      '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("productDetailDiscoverAction") + ' <span aria-hidden="true">←</span></a>' +
+    '</section>' +
+  '</div>';
+}
+
 const routes: Route[] = [
   { path: "/", label: "خانه", icon: "⌂", render: renderHome },
   { path: "/welcome", label: "شروع و آشنایی", icon: "✦", render: renderWelcome },
@@ -457,7 +470,7 @@ const routes: Route[] = [
   { path: "/business/deals", label: "معاملات تجاری", icon: "🤝", render: renderBusinessDeals },
   { path: "/business/organization", label: "اطلاعات سازمانی", icon: "🏢", render: renderBusinessOrgProfile },
   { path: "/consumer/welcome", label: "شروع خرید", icon: "🛍️", render: renderConsumerWelcome },
-  { path: "/product/demo", label: "جزئیات محصول", icon: "📦", render: renderConsumerProductDetails },
+  { path: "/product/demo", label: "جزئیات محصول", icon: "📦", render: renderUnavailableProductDetails },
   { path: "/cart", label: "سبد خرید", icon: "🛒", render: renderConsumerCart },
   { path: "/consumer/payment", label: "درگاه پرداخت", icon: "💳", render: renderConsumerPayment },
   { path: "/discover", label: "کشف", icon: "⌕", render: renderDiscover },
@@ -770,7 +783,7 @@ function render(): void {
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/welcome";
   const isPublicBusiness = route.path.startsWith("/businesses/");
-  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/account" || route.path === "/settings" || route.path === "/booking" || isPublicBusiness;
+  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/account" || route.path === "/settings" || route.path === "/cart" || route.path === "/checkout" || route.path === "/consumer/payment" || route.path === "/product/demo" || route.path === "/booking" || isPublicBusiness;
   const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
     route.path === "/" ? "feed"
       : route.path === "/activity" || route.path === "/notifications" ? "activity"

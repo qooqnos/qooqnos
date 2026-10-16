@@ -13794,3 +13794,26 @@ button[aria-busy="true"] .btn-spinner {
 .phoenix-reset-settings-actions .button{min-height:41px;justify-content:center;border-radius:12px;text-decoration:none}
 @media(max-width:980px){.phoenix-reset-account-identity{grid-template-columns:auto minmax(0,1fr)}.phoenix-reset-account-identity-details,.phoenix-reset-account-identity-actions{grid-column:1/-1}.phoenix-reset-account-section-heading{align-items:flex-start;flex-direction:column}}
 @media(max-width:720px){.phoenix-reset-account-page,.phoenix-reset-settings-page{padding-bottom:110px}.phoenix-reset-account-identity{grid-template-columns:auto minmax(0,1fr);gap:13px;padding:17px;border-radius:20px}.phoenix-reset-account-avatar{width:58px;height:58px;border-radius:18px;font-size:23px}.phoenix-reset-account-identity-copy h2{font-size:17px}.phoenix-reset-account-identity-details{grid-template-columns:minmax(0,1fr)}.phoenix-reset-account-identity-actions{flex-direction:column;align-items:stretch}.phoenix-reset-account-identity-actions .button{width:100%;justify-content:center}.phoenix-reset-account-grid{grid-template-columns:minmax(0,1fr)}.phoenix-reset-account-link{min-height:110px;padding:17px;border-radius:17px}.phoenix-reset-account-seller{grid-template-columns:auto minmax(0,1fr);padding:17px;border-radius:19px}.phoenix-reset-account-seller>.button{grid-column:1/-1;width:100%;justify-content:center}.phoenix-reset-settings-grid{grid-template-columns:minmax(0,1fr);gap:12px}.phoenix-reset-settings-card{padding:18px;border-radius:19px}.phoenix-reset-settings-toggles{grid-template-columns:minmax(0,1fr)}.phoenix-reset-settings-save-row{align-items:stretch;flex-direction:column}.phoenix-reset-settings-save-row .button{width:100%;justify-content:center}}
+
+
+/* Keep the local-cart preview visually continuous with the social-commerce shell. */
+.social-shell .page-content.social-page-content > .phoenix-screen-wrapper {
+  width: min(100%, 960px);
+  margin: 0 auto;
+  padding: 22px 24px 110px;
+}
+.phoenix-reset-product-unavailable { padding-bottom: 100px; }
+.phoenix-reset-product-unavailable-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  margin-top: 20px; padding: 22px; border: 1px solid var(--line);
+  border-radius: 22px; background: var(--surface);
+}
+.phoenix-reset-product-unavailable-icon {
+  display: grid; place-items: center; width: 48px; height: 48px; border-radius: 15px;
+  color: var(--primary-strong); background: color-mix(in srgb, var(--primary) 10%, var(--surface)); font-size: 24px;
+}
+@media (max-width: 720px) {
+  .social-shell .page-content.social-page-content > .phoenix-screen-wrapper { padding: 14px 12px 108px; }
+  .phoenix-reset-product-unavailable-actions { align-items: stretch; flex-direction: column; padding: 17px; }
+  .phoenix-reset-product-unavailable-actions .button { width: 100%; justify-content: center; }
+}

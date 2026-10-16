@@ -2201,6 +2201,10 @@
     "settingsExportAction": "Download preferences backup",
     "settingsExportNotice": "The local preferences file is ready to download.",
     "settingsAccountAction": "Manage account",
-    "settingsClearAction": "Reset local data and sign out"
+    "settingsClearAction": "Reset local data and sign out",
+    "productDetailUnavailableEyebrow": "Offer details",
+    "productDetailUnavailableTitle": "This link is not connected to a real offer",
+    "productDetailUnavailableBody": "This legacy URL has no published-offer identifier, so no sample price or product details are shown. Open a real product or service from the Phoenix feed.",
+    "productDetailDiscoverAction": "Explore offers"
   }
 }

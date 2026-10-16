@@ -2201,6 +2201,10 @@
     "settingsExportAction": "تنزيل نسخة التفضيلات",
     "settingsExportNotice": "ملف التفضيلات المحلية جاهز للتنزيل.",
     "settingsAccountAction": "إدارة الحساب",
-    "settingsClearAction": "إعادة ضبط البيانات المحلية وتسجيل الخروج"
+    "settingsClearAction": "إعادة ضبط البيانات المحلية وتسجيل الخروج",
+    "productDetailUnavailableEyebrow": "تفاصيل العرض",
+    "productDetailUnavailableTitle": "هذا الرابط غير مرتبط بعرض حقيقي",
+    "productDetailUnavailableBody": "لا يحتوي هذا المسار القديم على معرّف لعرض منشور؛ لذلك لن نعرض سعراً أو تفاصيل تجريبية. افتح منتجاً أو خدمة حقيقية من موجز ققنوس.",
+    "productDetailDiscoverAction": "استكشاف العروض"
   }
 }

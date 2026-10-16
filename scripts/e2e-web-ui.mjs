@@ -830,6 +830,23 @@ await page.reload();
 assert.equal(await page.locator("#setting-notify-sms").isChecked(), true);
 assert.ok((await page.locator(".phoenix-reset-settings-page").innerText()).includes("اتصال ارسال پیامک هنوز فعال نیست"));
 
+await page.goto(baseURL + "/product/demo");
+await page.locator(".phoenix-reset-product-unavailable").waitFor();
+const unavailableProductText = await page.locator(".phoenix-reset-product-unavailable").innerText();
+assert.ok(unavailableProductText.includes("این نشانی به کالای واقعی وصل نیست"));
+assert.ok(!unavailableProductText.includes("۱۵۰٬۰۰۰"));
+assert.ok(await page.locator(".phoenix-reset-product-unavailable a[href='/discover?tab=explore']").count() === 1);
+
+await page.goto(baseURL + "/cart");
+assert.equal(await page.locator(".social-shell .phoenix-social-header").count(), 1);
+assert.ok((await page.locator(".phoenix-screen-wrapper").innerText()).includes("این صفحه فقط پیش‌نمایش سبد محلی را نشان می‌دهد"));
+
+await page.goto(baseURL + "/checkout");
+assert.equal(await page.locator(".social-shell .phoenix-social-header").count(), 1);
+await page.locator(".phoenix-checkout-review-hero").waitFor();
+assert.ok((await page.locator(".phoenix-checkout-review-hero").innerText()).includes("پرداخت امن هنوز متصل نشده است."));
+assert.equal(await page.locator("[data-submit-payment], [data-confirm-order]").count(), 0);
+
 await page.goto(baseURL + "/design-system");
 await page.getByText("Primitiveهای مشترک").waitFor();
 await page.locator(".ds-table").waitFor();

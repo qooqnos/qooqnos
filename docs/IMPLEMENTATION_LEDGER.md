@@ -3157,3 +3157,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The preference backup downloads only local UI preferences, not the user's full account data.
 - Put /account and /settings inside the social-commerce shell and made the mobile Profile destination active on both.
 - Added browser E2E for account copy, hiding technical identifiers, settings save persistence, and honest SMS integration wording. Verify current CI and browser E2E before considering the step complete.
+
+
+## 2026-10-16 — Retire static demo product details and unify cart shell
+
+- Replaced the legacy `/product/demo` sample product and invented fixed price with an honest unavailable-detail state; the route has no canonical published-offer identifier, so it now directs the user to Explore.
+- Added the cart, checkout review, and old consumer-payment path to the social-commerce shell, preserving the new header and mobile navigation through the purchase review.
+- The checkout screen remains review-only until canonical checkout/payment integration exists; the copy explicitly says no order is registered and no money is collected.
+- Added browser checks that the demo price/product is absent, cart/checkout retain the social shell, and no payment/confirmation action is exposed. Verify the latest CI and browser E2E before considering this slice complete.

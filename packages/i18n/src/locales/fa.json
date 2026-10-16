@@ -2201,6 +2201,10 @@
     "settingsExportAction": "دانلود پشتیبان ترجیحات",
     "settingsExportNotice": "فایل ترجیحات محلی آمادهٔ دانلود شد.",
     "settingsAccountAction": "مدیریت حساب",
-    "settingsClearAction": "بازنشانی داده‌های محلی و خروج"
+    "settingsClearAction": "بازنشانی داده‌های محلی و خروج",
+    "productDetailUnavailableEyebrow": "جزئیات عرضه",
+    "productDetailUnavailableTitle": "این نشانی به کالای واقعی وصل نیست",
+    "productDetailUnavailableBody": "این صفحهٔ قدیمی شناسهٔ یک عرضهٔ منتشرشده را ندارد؛ بنابراین قیمت یا مشخصات نمونه نمایش داده نمی‌شود. از فید ققنوس یک کالا یا خدمت واقعی را باز کن.",
+    "productDetailDiscoverAction": "رفتن به اکسپلور"
   }
 }
