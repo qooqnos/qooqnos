@@ -1,5 +1,6 @@
 import { CommunicationRepository, CommunicationService, type CommunicationChannel, type CommunicationMessageStatus } from "@qooqnos/communication";
-import { AuthorizationRepository } from "@qooqnos/database";
+import { BusinessRepository } from "@qooqnos/business";
+import { AuthorizationRepository, CustomerRepository } from "@qooqnos/database";
 import { createAuthorizationService, type AuthorizationRegistry } from "@qooqnos/runtime";
 import { AppError, brandId, type EntityId } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
@@ -25,6 +26,91 @@ export function registerCommunicationRoutes(
       const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 50;
       const conversations = await service.listConversations(context, limit);
       return json({ data: conversations }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/communications/conversations/from-business",
+    module: "communication",
+    operation: "communication.conversation.manage",
+    permission: "communication.conversation.manage",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      const body = await bodyObject(request, context.requestId);
+      const businessId = requiredId(body.businessId, "businessId", context.requestId);
+      if (!context.actorId || !context.tenantId) {
+        throw new AppError({
+          code: "UNAUTHORIZED",
+          message: "Authentication is required to start a seller conversation.",
+          requestId: context.requestId,
+        });
+      }
+
+      const databaseInstance = requireDatabase(database, context.requestId);
+      const authorizationRegistry = requireAuthorization(authorization, context.requestId);
+      const authorizationService = createAuthorizationService(
+        new AuthorizationRepository(databaseInstance),
+        authorizationRegistry,
+      );
+      await authorizationService.assert({
+        context,
+        permission: "communication.conversation.manage",
+        requireAuthentication: true,
+        requireWorkspace: false,
+      });
+
+      const target = await new BusinessRepository(databaseInstance).getPublishedConversationTarget(businessId);
+      // Communication is currently organization-scoped; cross-organization seller
+      // messaging requires a first-class participant model before it can be enabled.
+      if (!target || target.organizationId !== context.tenantId) {
+        throw new AppError({
+          code: "NOT_FOUND",
+          message: "The seller is not available for a new conversation.",
+          requestId: context.requestId,
+        });
+      }
+
+      const customers = new CustomerRepository(databaseInstance);
+      let customer = await customers.getByUserId(context, context.actorId);
+      if (!customer) {
+        try {
+          customer = await customers.create(context, {
+            id: brandId<"EntityId">(crypto.randomUUID()),
+            organizationId: context.tenantId,
+            userId: context.actorId,
+            ...(context.locale ? { locale: context.locale } : {}),
+            ...(context.timezone ? { timezone: context.timezone } : {}),
+            now: new Date().toISOString(),
+          });
+        } catch (error) {
+          customer = await customers.getByUserId(context, context.actorId);
+          if (!customer) throw error;
+        }
+      }
+      if (customer.status !== "active") {
+        throw new AppError({
+          code: "FORBIDDEN",
+          message: "This account cannot start a seller conversation.",
+          requestId: context.requestId,
+        });
+      }
+
+      const communication = new CommunicationRepository(databaseInstance);
+      const existing = await communication.findOpenConversationForCustomerWorkspace(
+        context,
+        customer.id,
+        target.workspaceId,
+      );
+      if (existing) return json({ data: existing }, 200, context.requestId);
+
+      const service = createService(databaseInstance, authorizationRegistry, context.requestId);
+      const conversation = await service.createConversation(context, {
+        customerId: customer.id,
+        workspaceId: target.workspaceId,
+      });
+      return json({ data: conversation }, 201, context.requestId);
     },
   });
 
@@ -326,6 +412,19 @@ export function registerCommunicationRoutes(
       return json({ data: notification }, 200, context.requestId);
     },
   });
+}
+
+function requireDatabase(database: D1Database | undefined, requestId: EntityId): D1Database {
+  if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId });
+  return database;
+}
+
+function requireAuthorization(
+  authorization: AuthorizationRegistry | undefined,
+  requestId: EntityId,
+): AuthorizationRegistry {
+  if (!authorization) throw new AppError({ code: "INTERNAL_ERROR", message: "Authorization registry is not configured.", requestId });
+  return authorization;
 }
 
 function createService(

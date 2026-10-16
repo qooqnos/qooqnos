@@ -138,6 +138,30 @@ export class BusinessRepository extends Repository {
       id,
     );
   }
+
+  async getPublishedConversationTarget(id: EntityId): Promise<{
+    readonly id: EntityId;
+    readonly organizationId: EntityId;
+    readonly workspaceId: EntityId;
+  } | null> {
+    return this.database.first<{
+      id: EntityId;
+      organizationId: EntityId;
+      workspaceId: EntityId;
+    }>(
+      `SELECT b.id, b.organization_id AS organizationId, b.workspace_id AS workspaceId
+       FROM businesses b
+       INNER JOIN workspaces w
+         ON w.id = b.workspace_id
+        AND w.organization_id = b.organization_id
+       WHERE b.id = ?
+         AND b.status = 'active'
+         AND b.publication_status = 'published'
+         AND w.status = 'active'
+       LIMIT 1`,
+      id,
+    );
+  }
   async listPublishedPublicContacts(businessId: EntityId): Promise<readonly BusinessPublicContactRecord[]> {
     return this.database.all<BusinessPublicContactRecord>(
       `SELECT c.id, c.business_id AS businessId, c.location_id AS locationId,
