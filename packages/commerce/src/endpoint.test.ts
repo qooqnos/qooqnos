@@ -99,7 +99,7 @@ describe("Commerce API Endpoint: handleResolveOfferEndpoint", () => {
   function createRepo() {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
-      async first<T>() { return null; },
+      async first<T>() { return null as T | null; },
       async all<T>() { return { results: rows as T[] }; },
       async run() { return { success: true }; },
     };

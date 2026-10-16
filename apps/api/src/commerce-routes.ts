@@ -1,7 +1,7 @@
 import { CommerceRepository, CommerceService, type OrderStatus } from "@qooqnos/commerce";
 import { AuthorizationRepository } from "@qooqnos/database";
 import { createAuthorizationService, type AuthorizationRegistry } from "@qooqnos/runtime";
-import { AppError, brandId, type EntityId } from "@qooqnos/core";
+import { AppError, brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
@@ -28,8 +28,7 @@ export function registerCommerceRoutes(
       const asOf = url.searchParams.get("asOf") ?? undefined;
 
       const service = createService(database, authorization, context.requestId);
-      try {
-        var result = await service.resolveOffer(context, {
+      const result = await service.resolveOffer(context, {
         sellerId: brandId<"EntityId">(sellerId),
         productId: brandId<"EntityId">(productId),
         ...(variantId ? { variantId: brandId<"EntityId">(variantId) } : {}),
@@ -37,11 +36,6 @@ export function registerCommerceRoutes(
         ...(customerGroup ? { customerGroup } : {}),
         ...(asOf ? { asOf } : {}),
       });
-
-      } catch (err) {
-        console.error("Resolve error:", err);
-        throw err;
-      }
       if (!result || !result.offer) {
         return json({ data: null, message: "No available offer found for the specified context." }, 404, context.requestId);
       }
@@ -105,13 +99,13 @@ export function registerCommerceRoutes(
         ...(body.variantId !== undefined ? { variantId: requiredId(body.variantId, "variantId", context.requestId) } : {}),
         ...(body.customerGroup !== undefined ? { customerGroup: String(body.customerGroup) } : {}),
         ...(body.customerId !== undefined ? { customerId: requiredId(body.customerId, "customerId", context.requestId) } : {}),
-        ...(body.audienceType !== undefined ? { audienceType: body.audienceType as any } : {}),
+        ...(body.audienceType !== undefined ? { audienceType: parseOfferAudienceType(body.audienceType, context.requestId) } : {}),
         priceAmountMinor,
         ...(body.currency !== undefined ? { currency: String(body.currency) } : {}),
         ...(body.available !== undefined ? { available: Boolean(body.available) } : {}),
         ...(body.validFrom !== undefined ? { validFrom: String(body.validFrom) } : {}),
         ...(body.validTo !== undefined ? { validTo: String(body.validTo) } : {}),
-        ...(body.status !== undefined ? { status: String(body.status) as any } : {}),
+        ...(body.status !== undefined ? { status: String(body.status) } : {}),
       });
 
       return json({ data: offer }, 201, context.requestId);
@@ -137,7 +131,7 @@ export function registerCommerceRoutes(
         ...(body.available !== undefined ? { available: Boolean(body.available) } : {}),
         ...(body.validFrom !== undefined ? { validFrom: String(body.validFrom) } : {}),
         ...(body.validTo !== undefined ? { validTo: String(body.validTo) } : {}),
-        ...(body.status !== undefined ? { status: String(body.status) as any } : {}),
+        ...(body.status !== undefined ? { status: String(body.status) } : {}),
       });
 
       return json({ data: offer }, 200, context.requestId);
@@ -593,4 +587,17 @@ function requiredIdempotencyKey(request: Request, requestId: EntityId): string {
   if (!value) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is required.", requestId });
   if (value.length > 200) throw new AppError({ code: "VALIDATION_ERROR", message: "Idempotency-Key header is too long.", requestId });
   return value;
+}
+
+
+function parseOfferAudienceType(
+  value: unknown,
+  requestId: RequestContext["requestId"],
+): "customer" | "group" | "general" {
+  if (value === "customer" || value === "group" || value === "general") return value;
+  throw new AppError({
+    code: "VALIDATION_ERROR",
+    message: "audienceType must be customer, group, or general.",
+    requestId,
+  });
 }

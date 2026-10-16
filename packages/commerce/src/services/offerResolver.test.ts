@@ -19,7 +19,6 @@ const mockContext: RequestContext = {
 describe("OfferResolver in services/offerResolver.ts", () => {
   const sellerId = brandId<"EntityId">("seller-shop-1");
   const productId = brandId<"EntityId">("product-book-1");
-  const variantId = brandId<"EntityId">("variant-hardcover");
   const customerId = brandId<"EntityId">("customer-ali");
 
   const databaseRows = [
@@ -97,18 +96,14 @@ describe("OfferResolver in services/offerResolver.ts", () => {
     },
   ];
 
-  function createMockRepo(rows: any[]) {
-    let boundParams: readonly unknown[] = [];
+  function createMockRepo(rows: readonly Record<string, unknown>[]) {
     const statement: D1PreparedStatementLike = {
-      bind(...params: readonly unknown[]) {
-        boundParams = params;
-        return this;
-      },
+      bind() { return this; },
       async first<T>(): Promise<T | null> {
         return null;
       },
       async all<T>(): Promise<{ results: T[] }> {
-        return { results: rows as T[] };
+        return { results: rows as unknown as T[] };
       },
       async run() {
         return { success: true };

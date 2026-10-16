@@ -2868,3 +2868,410 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The test now requires all five Workspace vertical registries (default, Clinic, Retail, Restaurant, Salon) to have blueprint coverage, stable semantic slugs, capability/permission metadata and canonical-term traceability for every visible module.
 - This strengthens the shared UI infrastructure without introducing a parallel domain store or authorization logic.
 - Verification: test assertion committed; full CI/build/browser verification has not been run in this step.
+
+
+## 2026-10-13 — Approved Social Commerce Interface Reset (initial implementation)
+
+- Added `docs/PHOENIX_SOCIAL_COMMERCE_INTERFACE_RESET.md` as the design decision record; the previous visual design is not treated as approved.
+- Repaired commerce route test registration and the stale migration import; fixed lint and workspace build issues reported by CI.
+- Initial design implementation: the root home is now the social-commerce discovery feed; added new feed composition and dedicated Persian, English, and Arabic copy.
+- Feed cards use actual image/avatar metadata when available and no longer invent a default city, seller rating, or verification badge.
+- A product card opens its details rather than the legacy sample-payment screen. Production purchase remains incomplete until canonical cart/checkout/payment is integrated and verified.
+- Verification status: follow the active PR checks at https://github.com/qooqnos/qooqnos/pull/11; do not mark complete until build, lint, migrations, tests, UI E2E and preview deployment are green.
+
+
+
+## 2026-10-13 — Shared customer social shell
+
+- Extended the social-commerce header, mobile navigation, and no-sidebar shell to buyer-facing Messages, Orders, Saved, Profile, and Notifications surfaces.
+- Added desktop shortcuts to messages, orders, saved items, and notifications. Operational Business routes remain in their dedicated workspace shell.
+- Verification is being run against the latest branch head; production deployment remains blocked until all current checks pass.
+
+
+## 2026-10-13 — Browser ESM dependency resolution
+
+- The browser E2E smoke test exposed a real boot failure: a frontend module imported the bare specifier `@qooqnos/commerce`, which the static web server returned as HTML instead of JavaScript.
+- Added an explicit import-map entry to both source and served HTML documents and a build step that copies only the browser-safe, dependency-free `account-tiers.js` module into the web asset output.
+- The full commerce barrel remains server/domain-only; browser code does not load its D1/runtime modules.
+- Re-run the web UI E2E on the current commit before considering the reset ready. Production payment remains explicitly unverified until the canonical checkout flow is connected.
+
+
+
+## 2026-10-13 — Seller workspace reset: action-led dashboard
+
+- Replaced the old sample-metrics business home (fixed team/transaction/content counts) with a calm, role-aware workspace entry.
+- The new default seller surface uses the selected business vertical's real navigation/capability registry, offers clear actions, and links to business profile, locations, and the public-facing view.
+- No fixed sales figures, fake live activity, or unsupported verification badge are shown. Operational data remains owned by canonical domain APIs.
+- Added responsive desktop/tablet/mobile composition. Seller workspace still uses the business shell; customer routes use the separate social shell.
+
+
+
+## 2026-10-14 — Redesigned product comparison surface
+
+- Replaced the previous table-first comparison page with a decision-focused experience: selection summary, one card per selected item, horizontal comparison rows, clear empty/single-item states, and responsive mobile layout.
+- The comparison details are limited to recognized product attributes and values actually present in canonical discovery data. Missing facts are labelled as unavailable; arbitrary metadata fields are not exposed.
+- Removed purchase-to-demo-checkout links from comparison. The page opens the existing product detail panel and sends users back to discovery to continue; checkout is not claimed as verified.
+- Added direct remove-item and clear-selection handlers for the redesigned comparison screen.
+
+
+- Follow-up verification: regression smoke now covers comparison with multiple actual selected-item records, suppresses unrecognized/internal metadata, asserts no demo-checkout links, and verifies the clear-selection action.
+- Responsive comparison grid column count is derived from the selected-item count (2–4) rather than hard-coded to two.
+
+
+
+## 2026-10-14 — Personal profile and messages reset
+
+- Replaced the old profile's fixed points, membership badge, and service/transaction/content counters with a single personal-account surface using the signed-in user's actual name and mobile when available.
+- The profile deliberately avoids labeling people as public “ordinary users.” Seller activation is a capability on the same account; active sellers get a link to their business workspace.
+- Replaced hard-coded example conversations and the local-only simulated seller acknowledgement with a clear, responsive messages landing surface. The current API supports conversation/message creation but does not yet expose a listing/read conversation route, so the UI does not pretend to show persisted threads.
+- Added E2E assertions that profile figures are not fabricated and example message threads are absent.
+
+
+## 2026-10-14 — Buyer orders and saved items styling
+
+- Unified the visual treatment of data-backed Orders and Saved pages with the new social feed: softer headers, quieter selected filters, card hierarchy, mobile-first filter scrolling and more consistent spacing.
+- Existing canonical order/saved data handlers remain in place; this pass changes layout and tokens, not the business rules or state source.
+
+
+## 2026-10-14 — Offer detail decision panel
+
+- The detail overlay is now media-led and uses only real image, price, rating, location, verification, seller and recognized product-attribute fields when those fields are present.
+- Removed generic “verified business” assumptions, invented default currency, and arbitrary metadata rendering; products without a seller reference no longer offer a misleading direct message path.
+- Comparison and saved-item toast messages now reflect whether an item was added or removed.
+
+
+
+## 2026-10-14 — Public seller profile in the social journey
+
+- Public seller profiles now use the same social header, desktop shortcuts and mobile navigation as the feed, so opening a seller no longer feels like switching to a separate public microsite.
+- Public profile offers open the factual offer-detail panel instead of linking to a demo checkout. The detail panel receives only the public offer's actual ID, price, currency, title, description and known seller identity.
+- E2E now seeds a public business response, verifies the seller page is within the social shell and checks that offer details do not advertise a checkout action.
+
+
+## 2026-10-14 — Social feed compare threshold, refresh, and served CSS sync
+
+- Separated Saved items and Compare in the feed toolbar; the saved counter remains tied to the saved shortlist, while the comparison counter reflects the selected comparable products.
+- The Compare link is hidden until two or more comparable products are selected. Selecting or removing comparison items refreshes both the tray and toolbar count.
+- The feed refresh action now reloads Discovery results and the currently available social-interaction state, with an accessible busy state.
+- Updated the social-commerce label for saved items across Persian, English and Arabic.
+- Synchronized the social feed, seller workspace and responsive public-business refinements from the authored stylesheet into `apps/web/public/styles.css`, the file actually served by the static web shell.
+- Extended Playwright smoke coverage with two product fixtures and assertions for the compare threshold; verification on the newest branch head is required before calling this complete.
+
+
+## 2026-10-14 — Social comment dialog
+
+- Replaced the browser-native `window.prompt` comment flow with an accessible, responsive dialog that matches the new social-commerce UI.
+- The dialog supports keyboard Escape, backdrop/cancel dismissal, Ctrl/Cmd+Enter submit, empty-text validation, visible character limit, and focus placement.
+- Cancellation and empty input do not send an API request and do not show a success toast. A success toast is shown only after the canonical comment endpoint accepts the comment for moderation.
+- Added Persian, English, and Arabic copy, responsive styles, and browser E2E coverage for validation, cancellation, and successful submission.
+- CI status for this change: see https://github.com/qooqnos/qooqnos/actions/runs/38542506671, https://github.com/qooqnos/qooqnos/actions/runs/38542506610, and https://github.com/qooqnos/qooqnos/actions/runs/38542506684.
+
+
+## 2026-10-14 — Safe product sharing and localized social navigation
+
+- Product share links now return to the canonical discovery surface using the product title as a search query; they no longer point to the unfinished checkout flow.
+- Business shares still open the public business profile, and service shares still open the booking surface.
+- Social header tab labels now use the dedicated social-commerce locale dictionary rather than fixed Persian strings.
+- Added E2E assertions for the shared product URL so the feed cannot silently regress into linking products to checkout before checkout is actually wired and verified.
+
+
+## 2026-10-14 — Prevent false checkout/payment success
+
+- Removed the legacy consumer payment submit handler that cleared local cart state and displayed “order and payment succeeded” without contacting a payment provider.
+- Replaced the mock payment-method list with a responsive checkout review surface. It shows the locally stored cart as a preview, labels the subtotal as an estimate, and explicitly states that no order is placed and no money is taken.
+- The cart page no longer claims free shipping or calls a local preview subtotal “amount payable”.
+- Checkout does not expose the fake `#consumer-payment-form`, bank/credit/cash-on-delivery claims, or a final-payment submit action.
+- Added Persian, English, and Arabic copy for the review-only state and unit/E2E tests to ensure the cart remains intact after opening checkout and no false success is shown.
+- Build, typecheck, unit tests, and browser E2E passed on commit `eb5b6153cf948b9b0617f7a69e211cddae9d491c`; see https://github.com/qooqnos/qooqnos/actions/runs/38544797878, https://github.com/qooqnos/qooqnos/actions/runs/38544798003, and https://github.com/qooqnos/qooqnos/actions/runs/38544798141.
+- Production checkout/payment is still not complete; the current consumer screen is explicitly review-only until canonical payment integration is implemented and verified.
+
+
+## 2026-10-14 — Localized comparison surface
+
+- Migrated the comparison page's heading, empty/single-selection states, product-type label, price/rating/location/description rows, specification attributes, remove/clear actions and footer guidance to the dedicated social-commerce locale namespace.
+- The item count and the single-selected count use locale-aware number formatting; raw `product`/`service` values are translated before display.
+- Added unit/E2E coverage for English and Arabic compare copy while protecting against exposing arbitrary internal metadata.
+- Build, typecheck, unit tests, worker dry-run, and browser E2E passed on commit `c2bc20a974b58617fcc1f6e5031924fb39329d25`: https://github.com/qooqnos/qooqnos/actions/runs/38545676101, https://github.com/qooqnos/qooqnos/actions/runs/38545676124, https://github.com/qooqnos/qooqnos/actions/runs/38545676283.
+
+
+## 2026-10-15 — Social Activity page reset
+
+- Rebuilt the Activity page using the approved social-commerce hero, card surface, sidebar, and mobile spacing rather than the legacy dashboard-oriented activity layout.
+- Added Persian, English, and Arabic copy for sign-in gating, activity statuses, empty/error states, event labels, target types, and actions.
+- Activity rows no longer expose internal product/business IDs as display text. Product activity links back to Discovery instead of the unverified checkout flow.
+- Added Playwright assertions for recorded Activity events in all three languages, no leaked product identifiers, and no checkout links.
+- Verification status: CI and browser E2E must be green on the latest branch head before this pass is considered complete.
+
+
+## 2026-10-15 — Canonical notifications page reset
+
+- Removed the route's connection to a legacy renderer containing fabricated example notifications.
+- Rebuilt the Notifications page in the social-commerce shell and connected it to the canonical `/api/v1/notifications` loader.
+- Localized event intent, priority, delivery status, empty/loading/error states, unread counts and mark-read labels in Persian, English and Arabic.
+- Notification summary rendering now selects known human-readable fields only instead of joining arbitrary variables.
+- Added browser E2E coverage for all three languages and assertions that raw event identifiers and the retired sample summary do not appear.
+- Verification status: CI, Phoenix verification and browser E2E must pass on the newest commit before this change is considered complete.
+
+
+## 2026-10-15 — Create center reset: product/service offer first
+
+- Replaced the generic media/idea post grid with a focused path for adding a product or service, consistent with Phoenix's social-commerce model.
+- The new page explains raw text/image input → AI-assisted draft → seller review/publish without requiring a long form at the start.
+- Text entry uses the existing compose modal and carries the draft into Product Studio; image-first creation opens Product Studio directly.
+- Moved `/create` into the social shell and changed the route label to the agreed “Add” terminology.
+- Added Persian, English and Arabic copy, responsive layout styles, and Playwright coverage for language changes and draft handoff to Product Studio.
+- Verification status: CI, Phoenix verification and browser E2E must pass on the latest head before this pass is considered complete.
+
+
+## 2026-10-15 — Orders and tracking interface reset
+
+- Rebuilt the buyer Orders page within the social-commerce shell using the same hero, tabs, restrained card surfaces and mobile spacing as the redesigned feed.
+- Added localized statuses for seller confirmation, preparation/packing, shipping, delivery, cancellation/refund, plus a four-stage progress indicator. A stage advances only from the recorded canonical order status.
+- Localized order search, filters, empty/loading/error/retry states, recorded total, quantity and tracking-code labels in Persian, English and Arabic.
+- Removed the unsupported invoice shortcut from the buyer order card; invoice PDF access remains a separate task until a canonical invoice endpoint is available.
+- Added browser E2E coverage for actual returned order data, filtering, search and three-language rendering.
+- Verification status: run CI, Phoenix verification and browser E2E on this commit before considering the Orders reset complete.
+
+
+## 2026-10-15 — Service booking interface reset
+
+- Replaced the exposed-ID Availability form with a customer-facing service-booking surface inside the social shell.
+- Business, offering, customer, schedule, resource and price snapshot identifiers remain in hidden form state; user-visible content is based on the published service and canonical Availability response.
+- The public business response accepts its canonical `data.offers` envelope. Product offers are not presented as bookable services.
+- Available schedule and slot lists use the provider's recorded timezone and only display slots whose canonical status is `available` with remaining capacity.
+- A successful hold is described as temporary, never as a confirmed booking; the UI states explicitly that final confirmation/payment has not happened.
+- Added responsive layout, Persian/English/Arabic copy and browser E2E coverage for real service context, schedule/slot loading, ID privacy and temporary-hold messaging.
+- Verification status: CI, Phoenix verification and browser E2E must pass on the latest commit before this step is considered complete.
+
+- Booking date-range boundaries are converted to canonical instants using the selected provider timezone; the chosen end date is included through the end of that local day. Browser E2E now checks the requested range is complete.
+
+
+## 2026-10-15 — Seller relationship from offer details
+
+- Added a follow/unfollow action directly to product/service/business details when a seller target is present.
+- The action uses the canonical social follow API, synchronizes its visible pressed state with the feed, and opens authentication for signed-out users.
+- Detail modal now focuses its close control on open, closes with Escape, and restores focus to the originating card.
+- Added Persian, English and Arabic labels/toasts and E2E checks for follow-state synchronization and keyboard dismissal.
+
+
+## 2026-10-16 — Person and business following in the social feed
+
+- Feed cards can follow a business when a canonical business target exists, or an individual seller when owner metadata provides a user ID (`sellerUserId`, `ownerUserId`, `authorUserId`, `profileUserId`, or `userId`). No guessed target ID is sent.
+- The action uses the canonical `/api/v1/social/follows` contract, keeps selected state tied to `targetType + targetId`, and supports unfollow.
+- The canonical Discovery `searchFollowing` query now includes both followed businesses and followed users' published/eligible projections, scoped to the active actor, tenant and workspace. An `EXISTS` predicate prevents duplicate search rows when both target types match one offer.
+- Added repository coverage for the user/business follow query and browser E2E coverage for creating both follow types and seeing an independently owned offer in the Following feed.
+- Latest verification runs to inspect: CI, Phoenix verification and browser E2E on the current branch head. Do not mark this change complete until all three runs pass.
+
+## Known integration boundary — direct messages
+
+- The customer Messages screen is intentionally honest about being unavailable; it does not invent example conversations.
+- The current Communication API supports creating a conversation and sending a message, but has no participant-scoped conversation-list/read endpoint in the route layer. The current Conversation model also needs an explicit participant/ownership access rule before exposing message history in the customer UI.
+- Do not connect a list of conversations until read/list APIs enforce actor, tenant and workspace scope. This is a backend contract task, not a front-end-only placeholder to bypass.
+
+
+## 2026-10-16 — Product Studio visual reset
+
+- Rebuilt Product Studio's composition around one free-form input, an optional image, a review preview and the five-step seller workflow.
+- Removed inert text/image tabs; the seller can provide free text and an image in the same draft rather than being asked to choose a fake mode.
+- Preserved the draft-generation/file-input hooks and canonical AI flow; the presentation does not simulate successful AI output.
+- Added responsive desktop/tablet/mobile styling with shared Phoenix design tokens. The build synchronizes the authored stylesheet to the public asset.
+- Verify the latest CI and browser flow before treating this screen as done.
+
+
+## 2026-10-16 — Free-form Create Details handoff
+
+- Removed hard-coded sample description and sample price from `/create/details`.
+- The page now collects a free-form description and hands it to Product Studio through the existing one-time `sessionStorage` key used by the Create modal; the shared Studio binder consumes and clears it on entry.
+- The form no longer proceeds to the old deal-selection flow or claims success. Price/attributes are added only in the reviewed offer flow.
+- Added browser E2E assertions for an empty initial description, absence of fake price, and text handoff into the Studio.
+
+
+## 2026-10-16 — Create Details localization integrity
+
+- Added explicit Persian, English and Arabic dictionary entries for every new customer-facing phrase on `/create/details`.
+- Extended E2E checks for Arabic, English and Persian rendering before validating the one-time handoff into Product Studio.
+
+
+## 2026-10-16 — Removed legacy fake transaction confirmation
+
+- The old `/create/deal-type` route used to show a success toast and navigate to transactions without a backend transaction creation call. That handler and its selectable fake deal list are removed.
+- The route now explains that an offer must be completed and reviewed before entering a real order/booking path, with links to Product Studio and Create.
+- Added unit and browser E2E assertions that the route does not expose the old confirmation button or claim a transaction was created.
+
+
+## 2026-10-16 — Browser E2E and locale persistence restored
+
+- Fixed the actual browser module bootstrap failure by serving only the browser-safe commerce tier module and adding the missing .js extension to the local ESM import.
+- Replaced the default seller home with an action-led workspace so fixed sample sales/team/activity figures are not presented as real metrics.
+- Preserved selected locale across full-page navigations in Playwright; the test harness no longer resets the user's chosen language on every navigation.
+- Regenerated the checked-in browser translation runtime from the canonical Persian, English and Arabic JSON dictionaries.
+- Removed duplicate offer-guard strings from the productStudio namespace and reused the existing canonical ui.createDealGuard* translations, preventing conflicting source-to-key matches.
+- Added translation unit checks and E2E coverage for the Arabic transaction guard. Latest verified implementation commit: 0a2cf5b0525d77009d280942f0036bf39f16fed7.
+- Verification on that commit: CI passed, Phoenix verification passed, Phoenix web UI E2E passed, and the Workers build check passed. See [CI](https://github.com/qooqnos/qooqnos/actions/runs/38890858601), [Phoenix verification](https://github.com/qooqnos/qooqnos/actions/runs/38890858610), [Browser E2E](https://github.com/qooqnos/qooqnos/actions/runs/38890858621).
+- The pull request remains a draft and has not been merged to main. Do not describe production deployment or real checkout/payment as completed.
+
+
+## 2026-10-16 — Public seller profile aligned with social commerce
+
+- Reworked the public seller profile (/businesses/:id) into a customer-facing continuation of the social shell: clear identity, published offers, contact methods, locations and published reviews.
+- Public data remains sourced from the canonical public-business endpoint; empty states are honest when no contact, location, review or offer exists.
+- Removed raw locale/timezone/currency codes from the public identity block. Business type, publication state, contacts and location type are shown as human-readable, translated labels.
+- Added Persian, English and Arabic copy to the shared socialCommercePage locale dictionary and regenerated the browser runtime from canonical locale JSON.
+- Public review dates follow the selected locale's calendar preference (Persian solar Hijri, Arabic Islamic calendar, English Gregorian); offer amounts use the selected locale and localized currency names.
+- E2E verifies that the public profile and offers render, the legacy checkout/payment action is absent, and English/Arabic do not expose raw locale/timezone/currency metadata.
+- Last verified implementation commit before this ledger entry: 6dfe1726152486930324ef79f58b41f568dc52a0. CI, Phoenix verification, browser E2E and Worker dry run passed at that commit.
+- The social commerce UI PR remains draft and is not merged; real checkout/payment is still a separate incomplete integration milestone.
+
+
+
+## 2026-10-16 — Prevent persona-dependent legacy checkout
+
+- The `/checkout` route previously switched to the retired stepwise demo checkout when the active persona was `business`. That flow used fixed sample products/addresses and a client-side order path.
+- Checkout now always renders the explicit review-only surface until canonical checkout and payment are connected. No persona can reach the old sample payment flow from the customer-facing checkout route.
+- Browser E2E now deliberately selects the business persona before visiting `/checkout` and verifies the legacy stepper/order action is absent while the no-payment warning remains visible.
+- This is a guardrail, not a claim that production payment is complete.
+
+
+## 2026-10-16 — Messages inbox shell, locale coverage, and contextual handoff
+
+- Rebuilt `/messages` from a centered placeholder into a responsive two-panel inbox shell that follows the new social-commerce design system.
+- Added a clear inbox state and a discovery start panel; no fake conversation rows, sender identities, unread counters, timestamps, or delivery status are fabricated.
+- Preserved an order/topic reference through `?order=` and `?topic=` and displayed it safely as context. This does not claim that a conversation is loaded or that a message has been sent.
+- Added canonical Persian, English and Arabic copy under `socialCommercePage`, regenerated `apps/web/src/i18n-runtime.ts`, and added translation and browser smoke coverage.
+- API limitation is explicit: Communication currently offers create/send operations, but no read/list endpoints for the inbox. Before implementing a live list/detail view, add authorized participant-scoped APIs for listing conversations and reading messages. Do not query across tenants or expose conversations by guessable IDs.
+- Validation to follow: current CI, Phoenix verification, and web UI E2E for the latest commit. Checkout remains review-only until canonical checkout/payment is fully integrated.
+
+
+## 2026-10-16 — Prevent automatic translation of reference identifiers
+
+- The browser translation observer was translating part of a Latin order reference inside the RTL message context. References and IDs are not user-facing prose and must never be rewritten by a locale change.
+- Added support for `translate="no"` and `data-no-translate` subtrees in the shared DOM translation pass, and marked the context identifier explicitly.
+- E2E now asserts that the raw order reference remains unchanged after locale rendering and that the element is excluded from translation.
+
+
+## 2026-10-16 — Account and settings aligned to social commerce
+
+- Replaced the account screen's internal Actor/Tenant/Workspace identifiers and permission dump with a user-facing account overview, everyday shortcuts, profile details, and a seller activation entry point for the same account.
+- Rebuilt Settings into a responsive page for language, appearance, and locally stored notification preferences.
+- Notification preferences persist to browser storage. Copy clearly states SMS/email delivery is not connected; the UI does not imply a server-side delivery preference was saved.
+- The preference backup downloads only local UI preferences, not the user's full account data.
+- Put /account and /settings inside the social-commerce shell and made the mobile Profile destination active on both.
+- Added browser E2E for account copy, hiding technical identifiers, settings save persistence, and honest SMS integration wording. Verify current CI and browser E2E before considering the step complete.
+
+
+## 2026-10-16 — Retire static demo product details and unify cart shell
+
+- Replaced the legacy `/product/demo` sample product and invented fixed price with an honest unavailable-detail state; the route has no canonical published-offer identifier, so it now directs the user to Explore.
+- Added the cart, checkout review, and old consumer-payment path to the social-commerce shell, preserving the new header and mobile navigation through the purchase review.
+- The checkout screen remains review-only until canonical checkout/payment integration exists; the copy explicitly says no order is registered and no money is collected.
+- Added browser checks that the demo price/product is absent, cart/checkout retain the social shell, and no payment/confirmation action is exposed. Verify the latest CI and browser E2E before considering this slice complete.
+
+
+## 2026-10-16 — Unified customer/seller welcome surface
+
+- Replaced the old consumer welcome screen's unsupported claims about secure payment, payment on delivery, points, rankings, and special offers with the approved social-commerce start screen.
+- The page introduces discovery, seller relationship, and informed comparison without publicly labeling a person as an ordinary/buyer user. Selling is enabled on the same account.
+- Both `/welcome` (default/non-business experience) and `/consumer/welcome` use the same start composition; explicit business onboarding remains available in its own route.
+- Added responsive hero and three principle cards, with Persian/English/Arabic copy and browser E2E assertions for honest purchase messaging and same-account seller activation.
+- Validate CI, Phoenix verification, and browser E2E on the current branch head before treating this step as complete.
+
+
+## 2026-10-16 — Seller welcome aligned to one-account onboarding
+
+- Replaced the prior seller welcome promises (corporate store upgrade, tenders, and several unverified feature claims) with a practical introduction to offering products/services and reviewing before publication.
+- The page uses the shared sign-up/sign-in flow; it explicitly tells users to enable selling from their existing profile rather than create a separate account.
+- Added responsive reuse of the approved start composition with dedicated Persian/English/Arabic seller copy and E2E checks for the one-account rule and removal of tender claims.
+- Run all CI, Phoenix verification, and browser E2E checks on the current head before accepting this slice.
+
+
+## 2026-10-16 — Registration entry unified to one account
+
+- Removed the separate "seller sign-up" CTA and public persona switcher from the public header. Public navigation now consistently offers Explore, seller information, common sign-up/sign-in, language, and theme.
+- Replaced the initial auth modal's buyer/seller fork with one account path. The first step is mobile verification and name completion; users are told they can add selling later to the same account.
+- Unauthenticated seller activation and legacy `data-open-seller-register` entries now start the common account flow. Authenticated seller activation still uses the existing authenticated seller-upgrade endpoint and onboarding form.
+- Added Persian/English/Arabic auth copy and E2E checks that the public header has one sign-up action, exposes no public persona switcher, and the auth choice screen contains no seller registration track.
+- The current auth API supports mobile OTP for this primary entry; email registration is not available in these route contracts and is not presented as an available method in this screen.
+- Verify all CI and browser E2E checks on the current branch head before accepting the change.
+
+
+## 2026-10-16 — Social commerce reset verification checkpoint
+
+- Fixed the unclosed CSS gradient on the redesigned seller welcome surface.
+- Updated unit and acceptance assertions to match the approved one-account registration flow: continue with mobile, then enable selling from the same profile; separate seller sign-up is not offered in the initial choice screen.
+- Verification passed on commit `bb42f776c1fe8bf6d230470db68a826377d4d727`:
+  - CI: https://github.com/qooqnos/qooqnos/actions/runs/38932203211
+  - Phoenix verification: https://github.com/qooqnos/qooqnos/actions/runs/38932203286
+  - Phoenix web UI verification / browser smoke: https://github.com/qooqnos/qooqnos/actions/runs/38932202993
+- The Markdown design decision remains `docs/PHOENIX_SOCIAL_COMMERCE_INTERFACE_RESET.md`. The active implementation is on `feat/social-commerce-ui-reset` and the pull request is still draft: https://github.com/qooqnos/qooqnos/pull/11.
+- Scope note: canonical production checkout/payment integration is still not claimed complete; the current redesigned cart/checkout screens are honest review-only surfaces unless and until real order/payment APIs are wired and verified.
+
+
+## 2026-10-16 — Mobile social-shell overflow fixed and verified
+
+- Added a browser regression check at a 390px viewport for the social feed, the product-detail modal, and the seller workspace. The check reports offending elements and their bounds when horizontal overflow occurs.
+- The diagnostic found the mobile social header action cluster extending left of the viewport because duplicate sign-in/create controls competed with the language/theme controls. The compact mobile header now hides redundant entry points while retaining the registration action, language picker, and theme toggle.
+- The comparison tray now uses border-box sizing and a mobile viewport-aware maximum width.
+- Fixed a missing closing parenthesis in the seller welcome hero background gradient.
+- Verification passed on commit `fc6f2b85b66986c5835d33f09457c1789802b9e8`:
+  - CI: https://github.com/qooqnos/qooqnos/actions/runs/38933382400
+  - Phoenix verification: https://github.com/qooqnos/qooqnos/actions/runs/38933382423
+  - Phoenix web UI verification and mobile browser smoke: https://github.com/qooqnos/qooqnos/actions/runs/38933382369
+- Current working branch remains `feat/social-commerce-ui-reset`; PR #11 remains draft and is not deployed to `main`.
+
+
+## 2026-10-16 — Align customer Transactions with order tracking
+
+- Corrected the legacy customer `/transactions` route: it now renders the same order history and tracking experience as `/orders`, instead of sending buyers to the “choose a deal type” guard.
+- Kept seller transactions on the existing dedicated business-deals path; customer `/transactions` uses the social shell and loads order data.
+- Added an E2E assertion that visits `/transactions` as a consumer and verifies the redesigned order tracker and a recorded tracking code.
+- Verification passed on commit `7652e642b3f9c274bdc173a3e5999522c117cec3`:
+  - CI: https://github.com/qooqnos/qooqnos/actions/runs/38934113131
+  - Phoenix verification: https://github.com/qooqnos/qooqnos/actions/runs/38934113490
+  - Phoenix web UI verification: https://github.com/qooqnos/qooqnos/actions/runs/38934112976
+
+
+## 2026-10-16 — Social commerce route precedence and green E2E checkpoint
+
+- Fixed route precedence so explicitly declared seller routes (for example `/business/products`, `/business/services`, and `/business/bookings`) take precedence over one-segment dynamic module aliases. Routes without a static definition may still resolve through the module alias parser.
+- Updated browser smoke assertions to wait for the translated notification title after a locale change rather than assuming a fixed 50 ms delay is sufficient for async page re-rendering.
+- Verified the code on commit `563e7845ce06b78c8edbf6da0888d15b1f184c88`:
+  - CI succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38937633382
+  - Phoenix verification succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38937633101
+  - Phoenix web UI verification and browser E2E succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38937633371
+- The interface design decision is maintained in `docs/PHOENIX_SOCIAL_COMMERCE_INTERFACE_RESET.md`.
+- PR #11 remains a draft and is not merged to `main`: https://github.com/qooqnos/qooqnos/pull/11.
+- Remaining explicit milestones: wire real message-thread reads/listing through authorized canonical Communication APIs; integrate production checkout/payment before claiming purchases are active; continue visual and accessibility checks on all customer surfaces.
+
+
+
+## 2026-10-16 — Contextual seller question from offer details
+
+- Added a localized “Ask the seller” CTA to the offer detail overlay when the offer has a canonical business reference.
+- The transition carries the readable offer title into Messages; the technical offer reference remains hidden from the visible context panel.
+- Added E2E coverage for offer-to-message context in Persian, hidden identifier behavior, and the explicit no-message-sent state.
+- This does not claim that message sending is active. Real inbox reads and message creation still require the authorized participant/tenant/workspace contract described in the design decision record.
+- Checks: CI, Phoenix verification, and Phoenix web UI verification must pass on this commit before the change is considered verified.
+
+
+
+## 2026-10-16 — Create center: offer or express a need
+
+- Extended the approved Add/Create hub with a third, distinct route: a buyer who is looking for something can describe a need and move directly to Explore.
+- The destination preserves the exploration tab and focuses the real discovery search input; it does not create a fake request, message, or transaction.
+- Added the new copy to the canonical Persian/English/Arabic dictionaries and browser E2E coverage for the focus transition.
+- Responsive layout: three columns on desktop, two on tablet, one on mobile.
+- Checks: CI, Phoenix verification, and Phoenix web UI verification must pass for the current branch head.
+
+## 2026-10-16 — Persist notification read state in Communication
+
+- Added authenticated `POST /api/v1/notifications/:notificationId/read` through the existing Communication API/service/repository boundary.
+- The recipient identity is derived from the authenticated request context, not from client input. The database mutation is scoped to the recipient, organization, and current workspace; attempts to mark another recipient's notification return not-found.
+- Replaced browser-local `localStorage` read-state tracking in both the notification inbox and notification popover with the canonical API response. Header unread count and inbox state now derive from notification status.
+- Added repository tests for recipient ownership and tenant/workspace-scoped updates. Updated browser smoke to distinguish initial unread state from the post-action state, and to verify the state survives a fresh inbox load.
+- Fixed test-server routing so the dedicated notification GET/POST handlers run before the generic API fixture fallback.
+- Verified on commit `4033bdc30ae81058854a5b5ce3e44e44e14a28e9`:
+  - CI succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38960663170
+  - Phoenix verification succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38960663066
+  - Phoenix web UI verification / Playwright E2E succeeded: https://github.com/qooqnos/qooqnos/actions/runs/38960663182
+- The redesign is still on `feat/social-commerce-ui-reset`; PR #11 remains a draft and has not been merged or deployed to `main`: https://github.com/qooqnos/qooqnos/pull/11.
+- Remaining milestones: real authorized inbox/thread listing and message sending (the current Messages surface intentionally does not fabricate them), and canonical production checkout/payment integration before claiming purchases are active.

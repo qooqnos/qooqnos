@@ -13,7 +13,7 @@ import {
 } from "./auth-modal";
 import { globalLocaleService } from "./locale-service";
 
-describe("Unified Authentication Modal & Dual-Track Registration Suite", () => {
+describe("Unified Authentication Modal & Single-Account Registration Suite", () => {
   it("stores and clears authentication session properly", () => {
     clearAuthSession();
     expect(isUserAuthenticated()).toBe(false);
@@ -38,20 +38,24 @@ describe("Unified Authentication Modal & Dual-Track Registration Suite", () => {
     expect(getStoredAuth().token).toBeNull();
   });
 
-  it("renders initial choice screen with both standard platform and seller tracks with dignity", () => {
+  it("renders one account path and defers seller activation to the profile", () => {
     globalLocaleService.setLocale("fa");
     const html = renderChoiceScreen();
 
-    expect(html).toContain("ثبت‌نام در ققنوس");
-    expect(html).toContain("ثبت‌نام و استفاده از پلتفرم");
-    expect(html).toContain("استفاده کامل از خدمات، جستجو، کشف و خرید هوشمند");
-    expect(html).toContain("ثبت‌نام فروشندگان");
-    expect(html).toContain("ارائه خدمات، فروش محصولات و مدیریت کسب‌وکار");
+
+
+
+
+
     // Verify no patronizing labels exist
     expect(html).not.toContain("کاربر عادی");
     expect(html).not.toContain("سطح پایین‌تر");
+    expect(html).toContain("یک حساب برای همهٔ تجربه‌های ققنوس");
+    expect(html).toContain("ادامه با شمارهٔ موبایل");
     expect(html).toContain("data-select-track=\"buyer\"");
-    expect(html).toContain("data-select-track=\"seller\"");
+    expect(html).toContain("بعداً فروشندگی را به همین حساب اضافه کن");
+    expect(html).not.toContain("ثبت‌نام فروشندگان");
+    expect(html).not.toContain("data-select-track=\"seller\"");
   });
 
   it("renders Fast Standard Registration flow without redundant fields", () => {

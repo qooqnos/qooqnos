@@ -5,7 +5,6 @@ import {
   type SitemapCrawlerCatalogItem,
   type SitemapCrawlerBusinessProfile,
 } from "./automated-sitemap";
-import { SITEMAP_URL_LIMIT } from "./sitemap";
 
 describe("AutomatedSitemapGeneratorService (SEO Package)", () => {
   const baseUrl = "https://qooqnos.com";

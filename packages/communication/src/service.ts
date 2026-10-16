@@ -1,4 +1,4 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
+import { AppError, type EntityId, type RequestContext } from "@qooqnos/core";
 import type { AuthorizationService } from "@qooqnos/runtime";
 import { CommunicationRepository, type CommunicationChannel, type CommunicationMessageStatus } from "./repository";
 
@@ -217,6 +217,36 @@ export class CommunicationService {
     });
     if (!context.actorId) return [];
     return this.options.repository.listNotificationsForRecipient(context, context.actorId, limit);
+  }
+
+  async markOwnNotificationRead(context: RequestContext, notificationId: EntityId) {
+    await this.options.authorization.assert({
+      context,
+      permission: "communication.notification.read",
+      requireAuthentication: true,
+      requireWorkspace: false,
+    });
+    if (!context.actorId) {
+      throw new AppError({
+        code: "UNAUTHORIZED",
+        message: "Authentication is required to mark a notification as read.",
+        requestId: context.requestId,
+      });
+    }
+    const notification = await this.options.repository.markNotificationReadForRecipient(
+      context,
+      notificationId,
+      context.actorId,
+      this.options.now(),
+    );
+    if (!notification) {
+      throw new AppError({
+        code: "NOT_FOUND",
+        message: "Notification not found.",
+        requestId: context.requestId,
+      });
+    }
+    return notification;
   }
 
   async updateDeliveryStatus(context: RequestContext, notificationId: EntityId, status: CommunicationMessageStatus) {

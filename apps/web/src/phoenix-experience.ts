@@ -9,16 +9,9 @@ import {
   accountTierService,
   validateNationalCode,
   BUYER_ROLE_LABELS_FA,
-  type AccountTier,
-  type CorporateVerificationStatus,
   type OfferingType,
   type StoreBuyerRole,
-  type StoreProductItem,
-  type CustomerAddressItem,
-  type AccountOrderRecord,
-  type TimedDiscount,
-  type StoreCustomerRelationship,
-} from "./account-tier-service";
+} from "./account-tier-service.js";
 
 export type PhoenixPersona = "individual" | "business" | "consumer";
 
@@ -722,49 +715,45 @@ export function renderIndividualDashboard(): string {
  */
 export function renderCreateContentHub(): string {
   return `
-    <div class="phoenix-screen-wrapper">
-      <div class="phoenix-screen-top">
-        <a href="/" data-nav class="phoenix-screen-back-btn" aria-label="${ui("بازگشت")}">→</a>
-        <div class="phoenix-screen-title-wrap">
-          <h1 class="phoenix-screen-title">${ui("آپلود محتوا")}</h1>
-          <div class="phoenix-screen-subtitle">${ui("چه محتوایی می‌خوای اضافه کنی؟")}</div>
+    <div class="phoenix-reset-page phoenix-reset-create-page">
+      <section class="phoenix-reset-hero">
+        <div class="phoenix-reset-hero-copy">
+          <div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>${ui("افزودن کالا یا خدمت")}</span></div>
+          <h1>${ui("عرضه‌ات را با توضیحی ساده شروع کن")}</h1>
+          <p>${ui("کالا یا خدمت را به زبان خودت توصیف کن یا از تصویر شروع کن. ققنوس پیش‌نویس می‌سازد و انتشار فقط با تأیید تو انجام می‌شود.")}</p>
         </div>
-        <div style="width: 38px;"></div>
-      </div>
+        <button class="button button-primary phoenix-reset-create-hero-action" type="button" data-open-create-post>＋ ${ui("نوشتن کالا یا خدمت")}</button>
+      </section>
 
-      <div class="phoenix-screen-content">
-        <div class="phoenix-action-grid" style="grid-template-columns: repeat(2, 1fr);">
-          <a href="/create/details?type=image" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">🖼️</div>
-            <span class="phoenix-action-label">${ui("تصویر")}</span>
-          </a>
-          <a href="/create/details?type=video" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">🎥</div>
-            <span class="phoenix-action-label">${ui("ویدیو")}</span>
-          </a>
-          <a href="/create/details?type=audio" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">🎙️</div>
-            <span class="phoenix-action-label">${ui("صوت")}</span>
-          </a>
-          <a href="/create/details?type=idea" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">💡</div>
-            <span class="phoenix-action-label">${ui("ایده / نظر")}</span>
-          </a>
-          <a href="/create/details?type=service" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">💼</div>
-            <span class="phoenix-action-label">${ui("خدمت")}</span>
-          </a>
-          <a href="/create/details?type=product" data-nav class="phoenix-action-card" style="padding: 22px 14px;">
-            <div class="phoenix-action-icon" aria-hidden="true">📦</div>
-            <span class="phoenix-action-label">${ui("محصول")}</span>
-          </a>
-        </div>
+      <section class="phoenix-reset-create-grid">
+        <article class="phoenix-reset-create-card phoenix-reset-create-card-primary">
+          <span class="phoenix-reset-create-icon" aria-hidden="true">✎</span>
+          <span class="phoenix-reset-section-kicker">${ui("شروع با متن")}</span>
+          <h2>${ui("توضیحت را بنویس")}</h2>
+          <p>${ui("نام کالا یا خدمت، ویژگی‌ها و نکته‌های مهم برای خریدار را هر طور راحتی بنویس؛ لازم نیست فرم طولانی پر کنی.")}</p>
+          <button class="button button-primary" type="button" data-open-create-post>${ui("نوشتن کالا یا خدمت")} <span aria-hidden="true">←</span></button>
+        </article>
+        <article class="phoenix-reset-create-card">
+          <span class="phoenix-reset-create-icon" aria-hidden="true">▧</span>
+          <span class="phoenix-reset-section-kicker">${ui("شروع با تصویر")}</span>
+          <h2>${ui("از تصویر شروع کن")}</h2>
+          <p>${ui("اگر عکس آماده داری، آن را در استودیو اضافه کن تا ققنوس برای شناسایی ویژگی‌ها و تهیهٔ پیش‌نویس کمکت کند.")}</p>
+          <a class="button button-ghost" href="/product-studio" data-nav>${ui("ورود به استودیو محصول")} <span aria-hidden="true">←</span></a>
+        </article>
+        <article class="phoenix-reset-create-card phoenix-reset-create-need-card">
+          <span class="phoenix-reset-create-icon" aria-hidden="true">⌕</span>
+          <span class="phoenix-reset-section-kicker">${ui("برای پیدا کردن")}</span>
+          <h2>${ui("دنبال چیزی می‌گردی؟")}</h2>
+          <p>${ui("نیازت را به زبان خودت بنویس؛ از اکسپلور گزینه‌های موجود را بررسی کن و بعد سؤال یا مقایسه را ادامه بده.")}</p>
+          <a class="button button-ghost" href="/discover?tab=explore&intent=need" data-nav data-create-need>${ui("بیان نیاز")} <span aria-hidden="true">←</span></a>
+        </article>
+      </section>
 
-        ${renderSmartAiCard(
-          ui("ققنوس پیشنهاد می‌دهد:"),
-          ui("برای جذب مشتری، ۳ عکس با کیفیت بالا و نور مناسب بارگذاری کن.")
-        )}
-      </div>
+      <section class="phoenix-reset-create-steps" aria-label="${ui("مراحل آماده‌سازی عرضه")}">
+        <article><span>۱</span><div><strong>${ui("توصیف خام")}</strong><small>${ui("متن آزاد یا تصویر اولیه")}</small></div></article>
+        <article><span>۲</span><div><strong>${ui("پیش‌نویس هوشمند")}</strong><small>${ui("استخراج اطلاعات و پرسش دربارهٔ موارد ناقص")}</small></div></article>
+        <article><span>۳</span><div><strong>${ui("بازبینی و انتشار")}</strong><small>${ui("بررسی نهایی و تأیید خودت")}</small></div></article>
+      </section>
     </div>
   `;
 }
@@ -774,45 +763,41 @@ export function renderCreateContentHub(): string {
  */
 export function renderContentDetailsForm(): string {
   return `
-    <div class="phoenix-screen-wrapper">
-      <div class="phoenix-screen-top">
-        <a href="/create" data-nav class="phoenix-screen-back-btn" aria-label="${ui("بازگشت")}">→</a>
-        <div class="phoenix-screen-title-wrap">
-          <h1 class="phoenix-screen-title">${ui("جزئیات محتوا")}</h1>
+    <div class="phoenix-reset-page phoenix-reset-create-detail-page">
+      <section class="phoenix-reset-hero">
+        <div class="phoenix-reset-hero-copy">
+          <div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>${ui("افزودن کالا یا خدمت")}</span></div>
+          <h1>${ui("توصیفت را بنویس؛ ققنوس ساختار می‌دهد")}</h1>
+          <p>${ui("لازم نیست فرم طولانی پر کنی. هرچه دربارهٔ کالا یا خدمت می‌دانی بنویس؛ در استودیو پیش‌نویس را می‌بینی و خودت تأیید می‌کنی.")}</p>
         </div>
-        <div style="width: 38px;"></div>
-      </div>
+        <a href="/create" data-nav class="phoenix-reset-create-detail-back">${ui("بازگشت")} <span aria-hidden="true">←</span></a>
+      </section>
 
-      <form class="phoenix-screen-content" id="content-details-form">
-        <!-- Media container with preview -->
-        <label for="content-media-upload" class="phoenix-upload-box" id="upload-preview-box">
-          <input type="file" id="content-media-upload" accept="image/*,video/*" style="display:none;" />
-          <div class="phoenix-upload-box-icon" aria-hidden="true">📷</div>
-          <strong style="font-size: 14px;">${ui("عکس آپلود شده توسط کاربر")}</strong>
-          <small style="color: var(--muted);">${ui("برای تغییر تصویر کلیک کنید")}</small>
-        </label>
+      <section class="phoenix-reset-create-detail-grid">
+        <form class="phoenix-reset-create-detail-form" id="content-details-form">
+          <label for="content-desc-input">${ui("توضیح آزاد")}</label>
+          <textarea id="content-desc-input" rows="8" placeholder="${ui("برای نمونه، جنس، اندازه، کاربرد، شرایط ارائه یا نکته‌های مهم را با زبان خودت بنویس.")}"></textarea>
+          <div class="phoenix-reset-create-detail-note">
+            <span aria-hidden="true">✦</span>
+            <p>${ui("ققنوس اطلاعات موجود را ساختارمند می‌کند و اگر چیزی کم باشد سؤال می‌پرسد. قیمت و جزئیات نهایی را خودت بازبینی می‌کنی.")}</p>
+          </div>
+          <footer class="phoenix-reset-create-detail-actions">
+            <a href="/create" data-nav class="button button-ghost">${ui("انصراف")}</a>
+            <button type="submit" class="button button-primary">${ui("رفتن به استودیو")} <span aria-hidden="true">←</span></button>
+          </footer>
+        </form>
 
-        <!-- Description Field -->
-        <div>
-          <label for="content-desc-input" class="field-label" style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block;">
-            ${ui("توضیحات")}
-          </label>
-          <textarea id="content-desc-input" rows="4" class="studio-input-line" style="width:100%; border-radius:14px; padding:12px; font-family:inherit;" placeholder="${ui("توضیحات را اینجا بنویسید…")}">محصول تمیز و آماده استفاده، دارای تضمین کیفیت و مهلت تست.</textarea>
-        </div>
-
-        <!-- Suggested Price Field -->
-        <div>
-          <label for="content-price-input" class="field-label" style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block;">
-            ${ui("قیمت پیشنهادی (تومان)")}
-          </label>
-          <input type="text" id="content-price-input" class="studio-input-line" style="width:100%; border-radius:14px; padding:12px;" value="150,000" placeholder="${ui("قیمت را وارد کنید…")}" />
-        </div>
-
-        <button type="submit" class="phoenix-primary-cta" style="margin-top: 10px;">
-          <span>${ui("ثبت و ادامه")}</span>
-          <span aria-hidden="true">←</span>
-        </button>
-      </form>
+        <aside class="phoenix-reset-create-detail-process">
+          <span class="phoenix-reset-section-kicker">${ui("مسیر آماده‌سازی عرضه")}</span>
+          <h2>${ui("از توضیح خام تا انتشار")}</h2>
+          <ol>
+            <li><span>01</span><div><strong>${ui("توصیف خام")}</strong><small>${ui("اطلاعات اولیه با زبان خودت")}</small></div></li>
+            <li><span>02</span><div><strong>${ui("پیش‌نویس هوشمند")}</strong><small>${ui("استخراج مشخصات و پرسش دربارهٔ موارد ناقص")}</small></div></li>
+            <li><span>03</span><div><strong>${ui("بازبینی و انتشار")}</strong><small>${ui("انتشار بعد از تأیید خودت")}</small></div></li>
+          </ol>
+          <a href="/product-studio" data-nav class="phoenix-reset-create-detail-studio-link">${ui("افزودن تصویر در استودیو")} <span aria-hidden="true">←</span></a>
+        </aside>
+      </section>
     </div>
   `;
 }
@@ -821,44 +806,29 @@ export function renderContentDetailsForm(): string {
  * Screen 1.5: انتخاب نوع معامله
  */
 export function renderDealTypeSelection(): string {
-  const deals = [
-    { id: "sell", label: "بفروشم", desc: "پیشنهاد به خریداران مرتبط", icon: "🏷️" },
-    { id: "buy", label: "بخرم", desc: "جستجوی آگهی‌های مشابه", icon: "🛒" },
-    { id: "rent", label: "اجاره بدم", desc: "مدیریت قرارداد و پرداخت", icon: "🔑" },
-    { id: "trade", label: "معاوضه کنم", desc: "پیشنهاد برای معاوضه", icon: "🔄" },
-    { id: "auction", label: "مزایده بذارم", desc: "شروع مزایده و جذب پیشنهاد", icon: "⚡" },
-    { id: "tender", label: "مناقصه انجام بدم", desc: "برای پروژه‌های بزرگ", icon: "📋" },
-  ];
-
   return `
-    <div class="phoenix-screen-wrapper">
-      <div class="phoenix-screen-top">
-        <a href="/create/details" data-nav class="phoenix-screen-back-btn" aria-label="${ui("بازگشت")}">→</a>
-        <div class="phoenix-screen-title-wrap">
-          <h1 class="phoenix-screen-title">${ui("انتخاب معامله")}</h1>
-          <div class="phoenix-screen-subtitle">${ui("الان می‌خوای با این محتوا چیکار کنی؟")}</div>
+    <div class="phoenix-reset-page phoenix-reset-deal-guard">
+      <section class="phoenix-reset-hero">
+        <div class="phoenix-reset-hero-copy">
+          <div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>${ui("افزودن کالا یا خدمت")}</span></div>
+          <h1>${ui("برای ثبت معامله، اول عرضه را کامل کن")}</h1>
+          <p>${ui("انتخاب معامله از روی متن خام انجام نمی‌شود. ابتدا کالا یا خدمت را در استودیو کامل کن و بعد از بازبینی، از مسیر سفارش یا رزرو واقعی ادامه بده.")}</p>
         </div>
-        <div style="width: 38px;"></div>
-      </div>
-
-      <div class="phoenix-screen-content">
-        <div class="phoenix-deal-list" id="deal-options-list">
-          ${deals.map((d, index) => `
-            <button type="button" class="phoenix-deal-card ${index === 0 ? "selected" : ""}" data-deal-type="${d.id}">
-              <div class="phoenix-deal-card-icon" aria-hidden="true">${d.icon}</div>
-              <div class="phoenix-deal-card-copy">
-                <strong>${ui(d.label)}</strong>
-                <small>${ui(d.desc)}</small>
-              </div>
-            </button>
-          `).join("")}
-        </div>
-
-        <button type="button" class="phoenix-primary-cta" id="confirm-deal-btn" style="margin-top: 8px;">
-          <span>${ui("تأیید و انتشار معامله")}</span>
-          <span aria-hidden="true">✓</span>
-        </button>
-      </div>
+      </section>
+      <section class="phoenix-reset-deal-guard-grid">
+        <article class="phoenix-reset-deal-guard-card">
+          <span class="phoenix-reset-deal-guard-number">01</span>
+          <h2>${ui("ساخت عرضه")}</h2>
+          <p>${ui("مشخصات را بنویس، در صورت نیاز تصویر اضافه کن و پیش‌نویس را بازبینی کن.")}</p>
+          <a href="/product-studio" data-nav class="button button-primary">${ui("ادامه در استودیو")} <span aria-hidden="true">←</span></a>
+        </article>
+        <article class="phoenix-reset-deal-guard-card">
+          <span class="phoenix-reset-deal-guard-number">02</span>
+          <h2>${ui("انتشار با تأیید خودت")}</h2>
+          <p>${ui("تا وقتی عرضه را تأیید نکرده‌ای، ققنوس آن را منتشرشده یا معامله را ثبت‌شده نشان نمی‌دهد.")}</p>
+          <a href="/create" data-nav class="button button-ghost">${ui("بازگشت به ایجاد")} <span aria-hidden="true">←</span></a>
+        </article>
+      </section>
     </div>
   `;
 }
@@ -1954,6 +1924,7 @@ export function renderConsumerCart(): string {
       </div>
 
       <div class="phoenix-screen-content">
+        <p class="phoenix-checkout-preview-note">${ui("این صفحه فقط پیش‌نمایش سبد محلی را نشان می‌دهد؛ این اقلام هنوز به سفارش ثبت‌شده متصل نیستند.")}</p>
         ${items.length === 0 ? `
           <div style="text-align:center; padding: 48px 20px; color: var(--muted);">
             <div style="font-size: 48px; margin-bottom: 12px;">🛒</div>
@@ -1987,16 +1958,16 @@ export function renderConsumerCart(): string {
             </div>
             <div class="phoenix-cart-row">
               <span>${ui("هزینه ارسال")}</span>
-              <span style="color: var(--success); font-weight: 700;">${ui("رایگان")}</span>
+              <span>${ui("هزینهٔ ارسال پس از بررسی سفارش مشخص می‌شود.")}</span>
             </div>
             <div class="phoenix-cart-row phoenix-cart-total">
-              <span>${ui("قابل پرداخت")}</span>
+              <span>${ui("مجموع تقریبی اقلام محلی")}</span>
               <span style="color: var(--primary);">${total.toLocaleString("fa-IR")} ${ui("تومان")}</span>
             </div>
           </div>
 
           <a href="/checkout" data-nav class="phoenix-primary-cta" style="margin-top: 8px;">
-            <span>${ui("پرداخت")}</span>
+            <span>${ui("ادامه به بررسی پرداخت")}</span>
             <span aria-hidden="true">←</span>
           </a>
         `}
@@ -2010,61 +1981,66 @@ export function renderConsumerCart(): string {
  */
 export function renderConsumerPayment(): string {
   const items = getCartItems();
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const estimatedSubtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return `
-    <div class="phoenix-screen-wrapper">
+    <div class="phoenix-screen-wrapper phoenix-checkout-review">
       <div class="phoenix-screen-top">
         <a href="/cart" data-nav class="phoenix-screen-back-btn" aria-label="${ui("بازگشت")}">→</a>
         <div class="phoenix-screen-title-wrap">
-          <h1 class="phoenix-screen-title">${ui("پرداخت")}</h1>
+          <h1 class="phoenix-screen-title">${ui("بررسی پرداخت")}</h1>
         </div>
         <div style="width: 38px;"></div>
       </div>
 
-      <form class="phoenix-screen-content" id="consumer-payment-form">
-        <!-- Payment Methods Stack -->
-        <div class="phoenix-deal-list" id="payment-methods-stack">
-          <label class="phoenix-deal-card selected" style="cursor: pointer;">
-            <input type="radio" name="pay-method" value="gateway" checked style="accent-color: var(--primary);" />
-            <div class="phoenix-deal-card-icon" aria-hidden="true">💳</div>
-            <div class="phoenix-deal-card-copy">
-              <strong>${ui("درگاه بانکی")}</strong>
-              <small>${ui("اتصال امن به درگاه بانکی شاپرک با تمام کارت‌های عضو شتاب")}</small>
-            </div>
-          </label>
+      <div class="phoenix-screen-content">
+        <section class="phoenix-checkout-review-hero" role="status" aria-live="polite">
+          <span class="phoenix-checkout-review-icon" aria-hidden="true">⏸</span>
+          <span class="phoenix-reset-section-kicker">${ui("مرحلهٔ نهایی خرید")}</span>
+          <h2>${ui("پرداخت امن هنوز متصل نشده است.")}</h2>
+          <p>${ui("تا زمان اتصال درگاه معتبر و تأیید سرویس پرداخت، سفارشی ثبت نمی‌شود و مبلغی کسر نخواهد شد.")}</p>
+        </section>
 
-          <label class="phoenix-deal-card" style="cursor: pointer;">
-            <input type="radio" name="pay-method" value="credit" style="accent-color: var(--primary);" />
-            <div class="phoenix-deal-card-icon" aria-hidden="true">⭐</div>
-            <div class="phoenix-deal-card-copy">
-              <strong>${ui("اعتبار ققنوس")}</strong>
-              <small style="color: var(--primary-strong);">${ui("با خرید از ققنوس، اعتبار بگیر و از تخفیف‌های ویژه استفاده کن")}</small>
+        <section class="phoenix-checkout-local-preview">
+          <div class="phoenix-checkout-local-preview-head">
+            <div>
+              <span class="phoenix-reset-section-kicker">${ui("پیش‌نمایش سبد محلی")}</span>
+              <h2>${ui("اقلام انتخاب‌شده")}</h2>
             </div>
-          </label>
-
-          <label class="phoenix-deal-card" style="cursor: pointer;">
-            <input type="radio" name="pay-method" value="cod" style="accent-color: var(--primary);" />
-            <div class="phoenix-deal-card-icon" aria-hidden="true">🚚</div>
-            <div class="phoenix-deal-card-copy">
-              <strong>${ui("پرداخت در محل")}</strong>
-              <small>${ui("تسویه پس از تحویل و بررسی نهایی کالا")}</small>
-            </div>
-          </label>
-        </div>
-
-        <div style="background:var(--surface-2); padding:14px 16px; border-radius:16px; border:1px solid var(--line); margin-top:8px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:13px; font-weight:700;">${ui("مبلغ قابل پرداخت:")}</span>
-            <span style="font-size:18px; font-weight:800; color:var(--primary);">${total.toLocaleString("fa-IR")} ${ui("تومان")}</span>
+            <a href="/cart" data-nav class="phoenix-checkout-edit-link">${ui("ویرایش سبد")}</a>
           </div>
-        </div>
+          <p class="phoenix-checkout-preview-note">${ui("این صفحه فقط پیش‌نمایش سبد محلی را نشان می‌دهد؛ این اقلام هنوز به سفارش ثبت‌شده متصل نیستند.")}</p>
+          ${items.length ? `
+            <div class="phoenix-checkout-review-items">
+              ${items.map((item) => `
+                <article class="phoenix-checkout-review-item">
+                  <span class="phoenix-checkout-review-item-icon" aria-hidden="true">▦</span>
+                  <div class="phoenix-checkout-review-item-copy">
+                    <strong>${escapeHtml(item.title)}</strong>
+                    <small>${escapeHtml(item.category)} · ${ui("تعداد")} ${item.quantity.toLocaleString("fa-IR")}</small>
+                  </div>
+                  <span class="phoenix-checkout-review-item-total">${(item.price * item.quantity).toLocaleString("fa-IR")} ${ui("تومان")}</span>
+                </article>
+              `).join("")}
+            </div>
+            <div class="phoenix-checkout-review-total">
+              <span>${ui("مجموع تقریبی اقلام محلی")}</span>
+              <strong>${estimatedSubtotal.toLocaleString("fa-IR")} ${ui("تومان")}</strong>
+            </div>
+          ` : `
+            <div class="phoenix-checkout-review-empty">
+              <span aria-hidden="true">🛒</span>
+              <p>${ui("سبد محلی خالی است.")}</p>
+              <a class="button button-ghost" href="/discover?tab=explore" data-nav>${ui("کشف کالاها و خدمات")}</a>
+            </div>
+          `}
+        </section>
 
-        <button type="submit" class="phoenix-primary-cta" style="margin-top: 10px;">
-          <span>${ui("پرداخت نهایی")}</span>
-          <span aria-hidden="true">✓</span>
-        </button>
-      </form>
+        <div class="phoenix-checkout-review-actions">
+          <a href="/cart" data-nav class="button button-ghost">${ui("بازگشت به سبد خرید")}</a>
+          <a href="/discover?tab=explore" data-nav class="button button-primary">${ui("ادامهٔ کشف کالاها و خدمات")} <span aria-hidden="true">←</span></a>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -2188,21 +2164,23 @@ export function bindPhoenixExperienceEvents(container: HTMLElement, onNavigate: 
     };
   });
 
-  // Confirm deal button
-  const confirmDealBtn = container.querySelector<HTMLButtonElement>("#confirm-deal-btn");
-  if (confirmDealBtn) {
-    confirmDealBtn.onclick = () => {
-      showToast(ui("معامله با موفقیت ثبت شد و در سیستم قرار گرفت."));
-      onNavigate("/transactions");
-    };
-  }
-
-  // Content details form submit
+  // Free-form content handoff to the canonical AI Product Studio.
   const contentForm = container.querySelector<HTMLFormElement>("#content-details-form");
   if (contentForm) {
-    contentForm.onsubmit = (e) => {
-      e.preventDefault();
-      onNavigate("/create/deal-type");
+    contentForm.onsubmit = (event) => {
+      event.preventDefault();
+      const description = container.querySelector<HTMLTextAreaElement>("#content-desc-input")?.value.trim() ?? "";
+      if (!description) {
+        container.querySelector<HTMLTextAreaElement>("#content-desc-input")?.focus();
+        return;
+      }
+      try {
+        sessionStorage.setItem("phoenix-social-create-draft", description);
+      } catch {
+        showToast(ui("ذخیرهٔ موقت متن در این مرورگر ممکن نیست."));
+        return;
+      }
+      onNavigate("/product-studio");
     };
   }
 
@@ -2399,16 +2377,8 @@ export function bindPhoenixExperienceEvents(container: HTMLElement, onNavigate: 
     };
   }
 
-  // Consumer payment form submit
-  const payForm = container.querySelector<HTMLFormElement>("#consumer-payment-form");
-  if (payForm) {
-    payForm.onsubmit = (e) => {
-      e.preventDefault();
-      saveCartItems([]);
-      showToast(ui("سفارش با موفقیت ثبت و پرداخت شد!"));
-      onNavigate("/orders");
-    };
-  }
+  // Consumer checkout is intentionally review-only until canonical payment confirmation is wired.
+  // Never clear the local cart or announce an order/payment success from the legacy demo flow.
 
   // Seller activation button from individual profile
   const activateSellerBtns = container.querySelectorAll<HTMLButtonElement>("[data-activate-seller]");

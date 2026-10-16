@@ -31,36 +31,20 @@ if (typeof window !== "undefined") {
   (window as unknown as { openPhoenixAuthModal: typeof openAuthModal }).openPhoenixAuthModal = openAuthModal;
 }
 import {
-  renderCheckoutPage,
-  bindCheckoutEvents,
-} from "./checkout-flow.js";
-import { ProductCreateFormComponent, type NewProductFormData } from "./product-form-component.js";
-import {
   getActivePersona,
   renderPersonaSwitcher,
   renderUnifiedBottomNav,
-  renderIndividualWelcome,
-  renderIndividualDashboard,
   renderCreateContentHub,
   renderContentDetailsForm,
   renderDealTypeSelection,
-  renderIndividualProfile,
-  renderIndividualNotifications,
-  renderBusinessWelcome,
-  renderBusinessPanel,
   renderBusinessCreateContent,
   renderBusinessContentDetails,
   renderBusinessDeals,
   renderBusinessTeam as renderPhoenixBusinessTeam,
   renderBusinessOrgProfile,
-  renderConsumerWelcome,
-  renderConsumerHome,
-  renderConsumerProductDetails,
   renderConsumerCart,
   renderConsumerPayment,
-  renderConsumerMessages,
   renderConsumerLoyalty,
-  renderPhoenixMasterLayout,
   bindPhoenixExperienceEvents,
 } from "./phoenix-experience.js";
 type Theme = "dark" | "light";
@@ -164,13 +148,7 @@ function socialKey(targetType: string, targetId: string): string {
 }
 
 function isSocialActive(action: "follow" | "like" | "save", item: DiscoveryResult): boolean {
-  const target = action === "follow"
-    ? (item.metadata && typeof item.metadata.businessId === "string"
-      ? { targetType: "business" as const, targetId: item.metadata.businessId }
-      : item.sourceType === "business"
-        ? { targetType: "business" as const, targetId: item.sourceId ?? item.id ?? "" }
-        : null)
-    : socialTarget(item);
+  const target = action === "follow" ? socialFollowTarget(item) : socialTarget(item);
   if (!target?.targetId) return false;
   return action === "follow"
     ? socialState.follows.has(socialKey(target.targetType, target.targetId))
@@ -199,6 +177,27 @@ function refreshSocialFeed(): void {
   renderCompareTray();
 }
 
+function socialFollowTarget(item: DiscoveryResult): { targetType: "user" | "business"; targetId: string } | null {
+  const metadata = item.metadata;
+  const businessId = metadata && typeof metadata.businessId === "string" ? metadata.businessId : undefined;
+  if (businessId) return { targetType: "business", targetId: businessId };
+  if (item.sourceType === "business") {
+    const targetId = item.sourceId ?? item.id;
+    return targetId ? { targetType: "business", targetId } : null;
+  }
+
+  const ownerKeys = ["sellerUserId", "ownerUserId", "authorUserId", "profileUserId", "userId"];
+  const userId = metadata
+    ? ownerKeys.map((key) => metadata[key]).find((value): value is string => typeof value === "string" && Boolean(value.trim()))
+    : undefined;
+  if (userId) return { targetType: "user", targetId: userId };
+  if (item.sourceType === "user" || item.sourceType === "person" || item.sourceType === "profile") {
+    const targetId = item.sourceId ?? item.id;
+    return targetId ? { targetType: "user", targetId } : null;
+  }
+  return null;
+}
+
 function socialTarget(item: DiscoveryResult): { targetType: "product" | "service" | "business"; targetId: string } | null {
   const metadataType = item.metadata && typeof item.metadata.offeringType === "string" ? item.metadata.offeringType : undefined;
   const targetType = item.sourceType === "product" || item.sourceType === "service" || item.sourceType === "business"
@@ -214,22 +213,22 @@ async function loadSocialActivity(): Promise<unknown[]> {
 }
 
 function socialActivityLabel(eventType: string): string {
-  const labels: Record<string,string> = {
-    "social.follow.created": "کسب‌وکاری را دنبال کردی",
-    "social.follow.removed": "دنبال‌کردن یک کسب‌وکار را برداشتی",
-    "social.like.created": "یک مورد را پسندیدی",
-    "social.like.removed": "پسندیدن یک مورد را برداشتی",
-    "social.save.created": "یک مورد را ذخیره کردی",
-    "social.save.removed": "ذخیره یک مورد را برداشتی",
-    "social.comment.created": "برای یک مورد نظر ثبت کردی",
-    "social.comment.removed": "نظر خودت را حذف کردی",
+  const labels: Record<string, string> = {
+    "social.follow.created": "activityFollowCreated",
+    "social.follow.removed": "activityFollowRemoved",
+    "social.like.created": "activityLikeCreated",
+    "social.like.removed": "activityLikeRemoved",
+    "social.save.created": "activitySaveCreated",
+    "social.save.removed": "activitySaveRemoved",
+    "social.comment.created": "activityCommentCreated",
+    "social.comment.removed": "activityCommentRemoved",
   };
-  return labels[eventType] ?? "یک فعالیت اجتماعی ثبت شد";
+  return socialCommerceUi(labels[eventType] ?? "activityGenericEvent");
 }
 
 async function persistSocialAction(action: "like" | "save", item: DiscoveryResult): Promise<boolean> {
   const target = socialTarget(item);
-  if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
+  if (!target) throw new Error(socialCommerceUi("socialActionUnavailable"));
   const key = action + ":" + socialKey(target.targetType, target.targetId);
   const existingId = socialState.engagements.get(key) ?? socialActionIds.get(key);
   if (existingId) {
@@ -245,28 +244,105 @@ async function persistSocialAction(action: "like" | "save", item: DiscoveryResul
 }
 
 async function persistSocialFollow(item: DiscoveryResult): Promise<boolean> {
-  const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : item.sourceType === "business" ? item.sourceId ?? item.id : undefined;
-  if (!businessId) throw new Error("شناسه کسب‌وکار این محتوا هنوز canonical نشده است.");
-  const key = socialKey("business", businessId);
-  const existingId = socialState.follows.get(key) ?? socialActionIds.get("follow:" + key);
+  const target = socialFollowTarget(item);
+  if (!target) throw new Error(socialCommerceUi("followTargetMissing"));
+  const key = socialKey(target.targetType, target.targetId);
+  const actionKey = "follow:" + key;
+  const existingId = socialState.follows.get(key) ?? socialActionIds.get(actionKey);
   if (existingId) {
     await apiJson("/api/v1/social/follows/" + encodeURIComponent(existingId), { method: "DELETE" });
-    socialActionIds.delete("follow:" + key);
+    socialActionIds.delete(actionKey);
     socialState.follows.delete(key);
     return false;
   }
-  const result = await apiJson<{ data: { id: string } }>("/api/v1/social/follows", { method: "POST", body: { targetType: "business", targetId: businessId } });
-  socialActionIds.set("follow:" + key, result.data.id);
+  const result = await apiJson<{ data: { id: string } }>("/api/v1/social/follows", { method: "POST", body: target });
+  socialActionIds.set(actionKey, result.data.id);
   socialState.follows.set(key, result.data.id);
   return true;
 }
 
-async function persistSocialComment(item: DiscoveryResult): Promise<void> {
+function requestSocialComment(item: DiscoveryResult): Promise<string | null> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "phoenix-social-comment-backdrop";
+    const offerTitle = item.title ?? item.displayName ?? item.name ?? socialCommerceUi("feedTitle");
+    overlay.innerHTML =
+      '<section class="phoenix-social-comment-dialog" role="dialog" aria-modal="true" aria-labelledby="phoenix-social-comment-title" aria-describedby="phoenix-social-comment-description">' +
+        '<header class="phoenix-social-comment-head">' +
+          '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("eyebrow") + '</span><h2 id="phoenix-social-comment-title">' + socialCommerceUi("commentDialogTitle") + '</h2></div>' +
+          '<button type="button" class="phoenix-social-comment-close" data-cancel-social-comment aria-label="' + escapeAttr(socialCommerceUi("commentDialogCancel")) + '">×</button>' +
+        '</header>' +
+        '<p id="phoenix-social-comment-description">' + socialCommerceUi("commentDialogDescription") + '</p>' +
+        '<div class="phoenix-social-comment-offer">' + escapeHtml(offerTitle) + '</div>' +
+        '<label for="phoenix-social-comment-body">' + discoveryUi("comment") + '</label>' +
+        '<textarea id="phoenix-social-comment-body" rows="4" maxlength="2000" placeholder="' + escapeAttr(socialCommerceUi("commentDialogPlaceholder")) + '"></textarea>' +
+        '<p class="phoenix-social-comment-error" id="phoenix-social-comment-error" aria-live="polite"></p>' +
+        '<footer class="phoenix-social-comment-actions">' +
+          '<button type="button" class="button button-ghost" data-cancel-social-comment>' + socialCommerceUi("commentDialogCancel") + '</button>' +
+          '<button type="button" class="button button-primary" data-submit-social-comment>' + socialCommerceUi("commentDialogSubmit") + '</button>' +
+        '</footer>' +
+      '</section>';
+    document.body.appendChild(overlay);
+
+    const textarea = overlay.querySelector<HTMLTextAreaElement>("#phoenix-social-comment-body");
+    const error = overlay.querySelector<HTMLElement>("#phoenix-social-comment-error");
+    const submit = overlay.querySelector<HTMLButtonElement>("[data-submit-social-comment]");
+    let settled = false;
+    const finish = (value: string | null): void => {
+      if (settled) return;
+      settled = true;
+      document.removeEventListener("keydown", onDocumentKeydown);
+      overlay.remove();
+      resolve(value);
+    };
+    const cancel = (): void => finish(null);
+    const onDocumentKeydown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancel();
+      }
+    };
+
+    overlay.querySelectorAll<HTMLButtonElement>("[data-cancel-social-comment]").forEach((button) =>
+      button.addEventListener("click", cancel),
+    );
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) cancel();
+    });
+    const submitComment = (): void => {
+      const body = textarea?.value.trim() ?? "";
+      if (!body) {
+        if (error) error.textContent = socialCommerceUi("commentDialogRequired");
+        textarea?.focus();
+        return;
+      }
+      finish(body);
+    };
+    submit?.addEventListener("click", submitComment);
+    textarea?.addEventListener("input", () => {
+      if (error) error.textContent = "";
+    });
+    textarea?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        submitComment();
+      }
+    });
+    document.addEventListener("keydown", onDocumentKeydown);
+    window.requestAnimationFrame(() => textarea?.focus());
+  });
+}
+
+async function persistSocialComment(item: DiscoveryResult): Promise<boolean> {
   const target = socialTarget(item);
-  if (!target) throw new Error("این محتوا هنوز به یک عرضه canonical متصل نیست.");
-  const body = window.prompt("نظر شما چیست؟", "");
-  if (!body?.trim()) return;
-  await apiJson("/api/v1/social/comments", { method: "POST", body: { ...target, body: body.trim(), idempotencyKey: crypto.randomUUID() } });
+  if (!target) throw new Error(socialCommerceUi("commentTargetMissing"));
+  const body = await requestSocialComment(item);
+  if (!body) return false;
+  await apiJson("/api/v1/social/comments", {
+    method: "POST",
+    body: { ...target, body, idempotencyKey: crypto.randomUUID() },
+  });
+  return true;
 }
 
 type PublicSeoHydration = {
@@ -364,10 +440,24 @@ const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Phoenix web root is missing.");
 const appRoot = app;
 
+function renderUnavailableProductDetails(): string {
+  return '<div class="phoenix-reset-page phoenix-reset-product-unavailable">' +
+    '<section class="phoenix-reset-hero"><div class="phoenix-reset-hero-copy">' +
+      '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("productDetailUnavailableEyebrow") + '</span></div>' +
+      '<h1>' + socialCommerceUi("productDetailUnavailableTitle") + '</h1>' +
+      '<p>' + socialCommerceUi("productDetailUnavailableBody") + '</p>' +
+    '</div></section>' +
+    '<section class="phoenix-reset-product-unavailable-actions">' +
+      '<span class="phoenix-reset-product-unavailable-icon" aria-hidden="true">⌕</span>' +
+      '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("productDetailDiscoverAction") + ' <span aria-hidden="true">←</span></a>' +
+    '</section>' +
+  '</div>';
+}
+
 const routes: Route[] = [
   { path: "/", label: "خانه", icon: "⌂", render: renderHome },
   { path: "/welcome", label: "شروع و آشنایی", icon: "✦", render: renderWelcome },
-  { path: "/create", label: "آپلود محتوا", icon: "＋", render: renderCreateContentHub },
+  { path: "/create", label: "افزودن", icon: "＋", render: renderCreateContentHub },
   { path: "/create/details", label: "جزئیات محتوا", icon: "📝", render: renderContentDetailsForm },
   { path: "/create/deal-type", label: "انتخاب معامله", icon: "↔", render: renderDealTypeSelection },
   { path: "/business/welcome", label: "شروع کسب‌وکار", icon: "🏢", render: renderBusinessWelcome },
@@ -376,7 +466,7 @@ const routes: Route[] = [
   { path: "/business/deals", label: "معاملات تجاری", icon: "🤝", render: renderBusinessDeals },
   { path: "/business/organization", label: "اطلاعات سازمانی", icon: "🏢", render: renderBusinessOrgProfile },
   { path: "/consumer/welcome", label: "شروع خرید", icon: "🛍️", render: renderConsumerWelcome },
-  { path: "/product/demo", label: "جزئیات محصول", icon: "📦", render: renderConsumerProductDetails },
+  { path: "/product/demo", label: "جزئیات محصول", icon: "📦", render: renderUnavailableProductDetails },
   { path: "/cart", label: "سبد خرید", icon: "🛒", render: renderConsumerCart },
   { path: "/consumer/payment", label: "درگاه پرداخت", icon: "💳", render: renderConsumerPayment },
   { path: "/discover", label: "کشف", icon: "⌕", render: renderDiscover },
@@ -459,12 +549,16 @@ function getInitialLanguage(): Language {
 
 
 function applyLanguageToNode(root: Node, language: Language): void {
+  // Identifiers, codes, and user-provided references must remain byte-for-byte
+  // stable when the interface language changes.
+  if (root instanceof Element && root.closest('[translate="no"], [data-no-translate]')) return;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const nodes: Text[] = [];
   let node: Node | null;
   while ((node = walker.nextNode())) nodes.push(node as Text);
 
   nodes.forEach((textNode) => {
+    if (textNode.parentElement?.closest('[translate="no"], [data-no-translate]')) return;
     const value = textNode.nodeValue ?? "";
     if (!value.trim()) return;
     const translated = translateUiText(value, language);
@@ -482,6 +576,7 @@ function applyLanguageToNode(root: Node, language: Language): void {
 
   if (root instanceof Element || root instanceof Document) {
     root.querySelectorAll<HTMLElement>("[placeholder], [aria-label], [title]").forEach((element) => {
+      if (element.closest('[translate="no"], [data-no-translate]')) return;
       (["placeholder", "aria-label", "title"] as const).forEach((attribute) => {
         const value = element.getAttribute(attribute);
         if (!value) return;
@@ -541,7 +636,7 @@ function canonicalUi(key: string): string {
 }
 
 function pageUi(
-  namespace: "businessPage" | "businessSurface" | "discoveryPage" | "productStudio",
+  namespace: "businessPage" | "businessSurface" | "discoveryPage" | "productStudio" | "socialCommercePage",
   key: string,
   variables?: Readonly<Record<string, string>>,
 ): string {
@@ -558,6 +653,10 @@ function businessSurfaceUi(key: string, variables?: Readonly<Record<string, stri
 
 function discoveryUi(key: string, variables?: Readonly<Record<string, string>>): string {
   return pageUi("discoveryPage", key, variables);
+}
+
+function socialCommerceUi(key: string, variables?: Readonly<Record<string, string>>): string {
+  return pageUi("socialCommercePage", key, variables);
 }
 
 function productStudioUi(key: string, variables?: Readonly<Record<string, string>>): string {
@@ -623,7 +722,11 @@ function syncThemeButtons(): void {
 function currentRoute(): Route {
   const normalized = normalizePath(location.pathname);
   const staticRoute = routes.find((route) => route.path === normalized);
-  const businessModule = parseBusinessModuleRequest(normalized) ?? parseBusinessModuleAliasPath(normalized);
+  // Explicit routes such as /business/products and /business/services must win over
+  // short aliases. Only resolve a /business/:alias path dynamically when no static
+  // route owns that URL; /business?module=... remains an intentional dynamic route.
+  const businessModule = parseBusinessModuleRequest(normalized)
+    ?? (staticRoute ? null : parseBusinessModuleAliasPath(normalized));
   if (normalized.startsWith("/businesses/") && normalized.split("/").filter(Boolean).length === 2) {
     return {
       path: normalized,
@@ -678,18 +781,24 @@ function render(): void {
   const route = currentRoute();
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
-  const isHome = route.path === "/" || route.path === "/welcome";
-  const isSocial = route.path === "/discover" || route.path === "/compare" || route.path === "/activity";
+  const isHome = route.path === "/welcome" || route.path === "/consumer/welcome" || route.path === "/business/welcome";
   const isPublicBusiness = route.path.startsWith("/businesses/");
+  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || (route.path === "/transactions" && getActivePersona() !== "business") || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/account" || route.path === "/settings" || route.path === "/cart" || route.path === "/checkout" || route.path === "/consumer/payment" || route.path === "/product/demo" || route.path === "/booking" || isPublicBusiness;
+  const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
+    route.path === "/" ? "feed"
+      : route.path === "/activity" || route.path === "/notifications" ? "activity"
+        : route.path === "/discover"
+          ? (new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : new URLSearchParams(location.search).get("tab") === "following" ? "following" : "feed")
+          : "none";
   appRoot.innerHTML = `
     <div class="app-shell ${isHome ? "home-shell" : ""} ${isSocial ? "social-shell" : ""} ${isPublicBusiness ? "public-business-shell" : ""}">
-      ${isHome || isPublicBusiness ? renderPublicHeader() : isSocial ? renderSocialHeader(route.path === "/activity" ? "activity" : route.path === "/discover" ? (new URLSearchParams(location.search).get("tab") === "explore" ? "explore" : new URLSearchParams(location.search).get("tab") === "following" ? "following" : "feed") : "feed") : renderHeader(route)}
+      ${isHome ? renderPublicHeader() : isSocial ? renderSocialHeader(socialActive) : renderHeader(route)}
       <div class="app-body">
         ${isHome || isSocial || isPublicBusiness ? "" : renderSidebar(route)}
-        <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : isPublicBusiness ? "public-business-page-content" : ""}">${page}</main>
+        <main id="main" class="page-content ${isHome ? "home-page-content" : isSocial ? "social-page-content" : ""} ${isPublicBusiness ? "public-business-page-content" : ""}">${page}</main>
       </div>
-      ${renderSiteFooter()}
-      ${isPublicBusiness ? "" : isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
+      ${isSocial ? "" : renderSiteFooter()}
+      ${isSocial ? renderSocialMobileNav() : renderMobileNav(route)}
       ${renderToastHost()}
     </div>
   `;
@@ -701,51 +810,64 @@ function render(): void {
   installLanguageObserver();
   installTabAccessibility(document);
   if (route.path === "/welcome") void loadWelcomePage();
-  if (route.path === "/checkout") {
-    const container = document.querySelector<HTMLElement>(".phoenix-checkout-container");
-    if (container) {
-      bindCheckoutEvents(container, (_orderId) => {
-        navigate("/orders");
-      });
-    }
-  }
-  if (route.path === "/orders") void loadOrdersPage();
+  if (route.path === "/orders" || (route.path === "/transactions" && getActivePersona() !== "business")) void loadOrdersPage();
   if (route.path === "/saved") void loadSavedPage();
-  if (route.path === "/messages") void loadMessagesPage();
   if (route.path === "/settings") void loadSettingsPage();
   if (route.path === "/business/products") void loadBusinessProductsPage();
   if (route.path === "/business/services") void loadBusinessServicesPage();
   if (route.path === "/business/bookings") void loadBusinessBookingsPage();
   if (route.path === "/business/team") void loadBusinessTeamPage();
   if (route.path === "/business/settings") void loadBusinessSettingsPage();
-  if (route.path === "/discover") {
-    const params = new URLSearchParams(location.search);
-    const initialDiscoveryQuery = params.get("q")?.trim() ?? "";
-    const socialTab = params.get("tab") ?? "for-you";
-    if (initialDiscoveryQuery || socialTab === "explore" || socialTab === "following") void runDiscovery();
+  if (route.path === "/" || route.path === "/discover") {
+    void runDiscovery();
     bindDiscoveryResultEvents();
     renderCompareTray();
     renderShortlist();
     void loadSocialState();
+    const discoveryParams = new URLSearchParams(location.search);
+    if (discoveryParams.get("intent") === "need") {
+      document.querySelector<HTMLInputElement>("#discover-query")?.focus({ preventScroll: true });
+    }
   }
   if (route.path === "/compare") {
-    document.querySelector<HTMLButtonElement>("[data-clear-compare]")?.addEventListener("click", () => { localStorage.removeItem("phoenix-compare-items"); render(); });
+    document.querySelector<HTMLButtonElement>("[data-clear-compare]")?.addEventListener("click", () => {
+      localStorage.removeItem("phoenix-compare-items");
+      render();
+    });
+    document.querySelectorAll<HTMLButtonElement>("[data-remove-compare]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.removeCompare ?? "";
+        saveCompareItems(getCompareItems().filter((item) => (item.id ?? item.sourceId) !== key));
+        render();
+      });
+    });
+    document.querySelectorAll<HTMLButtonElement>("[data-open-compare-detail]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.openCompareDetail ?? "";
+        const item = getCompareItems().find((entry) => (entry.id ?? entry.sourceId) === key);
+        if (item) openDiscoveryResultPanel(item);
+      });
+    });
   }
   if (route.path === "/activity") void loadActivityPage();
   void loadShellContext();
-  if (route.path === "/") bindHomeEvents();
-  if (route.path === "/account") void loadAccountState();
   if (route.path === "/booking") {
     const bookingParams = new URLSearchParams(location.search);
     const bookingSchedule = bookingParams.get("scheduleId")?.trim();
     const bookingBusiness = bookingParams.get("businessId")?.trim() || bookingParams.get("business")?.trim();
     const bookingOffering = bookingParams.get("offering")?.trim() || bookingParams.get("offeringId")?.trim();
-    if (bookingOffering) void loadBookingOfferingContext();
-    if (bookingSchedule) void loadBookingSlots();
-    else if (bookingBusiness && bookingOffering) void loadBusinessBookingSchedules();
+    if (bookingOffering) {
+      void loadBookingOfferingContext().then((isBookableService) => {
+        if (!isBookableService) return;
+        if (bookingSchedule) void loadBookingSlots();
+        else if (bookingBusiness) void loadBusinessBookingSchedules();
+      });
+    }
+    document.querySelector<HTMLButtonElement>("[data-load-slots]")?.addEventListener("click", () => void loadBookingSlots());
+    document.querySelector<HTMLButtonElement>("[data-load-business-schedules]")?.addEventListener("click", () => void loadBusinessBookingSchedules());
   }
   if (route.path === "/notifications") void loadNotificationsPage();
-  if (route.path === "/profile") void loadProfilePage();
+  if (route.path === "/profile" && document.querySelector("[data-buyer-tab]")) void loadProfilePage();
   if (route.path === "/transactions") void loadTransactionsPage();
   if (route.path === "/customer") void loadCustomerState();
   if (route.path === "/communication") void loadCommunicationState();
@@ -929,62 +1051,28 @@ function renderPublicHeader(): string {
   const auth = getStoredAuth();
   const authenticated = Boolean(auth.token && auth.user);
   const user = auth.user;
-  const persona = getActivePersona();
-
   const authActionsHtml = authenticated && user
     ? `
       <div class="phoenix-header-user-menu" style="display:flex;align-items:center;gap:8px;">
         <a class="profile-chip" href="/profile" data-nav aria-label="${escapeAttr(user.displayName || uiText("حساب من"))}">
-          <span class="avatar">${(user.displayName || "ق")[0]}</span>
+          <span class="avatar">${escapeHtml((user.displayName || "ق").slice(0, 1))}</span>
           <span class="profile-copy">
             <strong>${escapeHtml(user.displayName || uiText("حساب من"))}</strong>
-            <small>${user.role === "seller" ? escapeHtml(user.businessName || "کسب‌وکار") : uiText("حساب کاربری")}</small>
+            <small>${user.role === "seller" ? escapeHtml(user.businessName || uiText("فضای کسب‌وکار")) : uiText("حساب کاربری")}</small>
           </span>
         </a>
-        ${user.role !== "seller" ? `<button type="button" class="button button-outline button-sm" data-activate-seller style="font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;">🏪 ${uiText("فعال‌سازی فروشندگی")}</button>` : ""}
+        ${user.role !== "seller" ? `<button type="button" class="button button-outline button-sm" data-activate-seller style="font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;">＋ ${uiText("فعال‌سازی فروشندگی")}</button>` : ""}
         <button type="button" class="button button-ghost button-sm" data-auth-logout>${uiText("خروج")}</button>
       </div>
     `
     : `
       <div class="phoenix-auth-header-cta" style="display:flex;align-items:center;gap:6px;">
         <button type="button" class="button button-primary phoenix-register-btn" data-open-register aria-label="${uiText("ثبت‌نام و استفاده از پلتفرم")}">
-          <span class="btn-sparkle" aria-hidden="true">✦</span>
-          <span>${uiText("ثبت‌نام")}</span>
-        </button>
-        <button type="button" class="button button-outline button-sm phoenix-seller-register-btn" data-open-seller-register style="font-size:12px;display:flex;align-items:center;gap:4px;">
-          <span aria-hidden="true">🏪</span>
-          <span>${uiText("ثبت‌نام فروشنده")}</span>
+          <span class="btn-sparkle" aria-hidden="true">✦</span><span>${uiText("ثبت‌نام")}</span>
         </button>
         <button type="button" class="button button-ghost phoenix-login-btn" data-open-login>${uiText("ورود")}</button>
       </div>
     `;
-
-  let personaNavHtml = "";
-  if (persona === "individual") {
-    personaNavHtml = `
-      <a href="/" data-nav class="phoenix-nav-pill active">⌂ ${uiText("داشبورد")}</a>
-      <a href="/create" data-nav class="phoenix-nav-pill">📤 ${uiText("آپلود محتوا")}</a>
-      <a href="/transactions" data-nav class="phoenix-nav-pill">↔ ${uiText("معاملات")}</a>
-      <a href="/welcome" data-nav class="phoenix-nav-pill">✦ ${uiText("شروع و آشنایی")}</a>
-    `;
-  } else if (persona === "business") {
-    personaNavHtml = `
-      <a href="/" data-nav class="phoenix-nav-pill active">▦ ${uiText("پنل مدیریت")}</a>
-      <a href="/business/create" data-nav class="phoenix-nav-pill">✦ ${uiText("تولید محتوا AI")}</a>
-      <a href="/business/deals" data-nav class="phoenix-nav-pill">🤝 ${uiText("معاملات تجاری")}</a>
-      <a href="/business/team" data-nav class="phoenix-nav-pill">👥 ${uiText("مدیریت تیم")}</a>
-      <a href="/business/organization" data-nav class="phoenix-nav-pill">🏢 ${uiText("اطلاعات سازمان")}</a>
-    `;
-  } else {
-    personaNavHtml = `
-      <a href="/" data-nav class="phoenix-nav-pill active">🛍️ ${uiText("بازارگاه و کشف")}</a>
-      <a href="/cart" data-nav class="phoenix-nav-pill">🛒 ${uiText("سبد خرید")}</a>
-      <a href="/consumer/payment" data-nav class="phoenix-nav-pill">💳 ${uiText("پرداخت")}</a>
-      <a href="/messages" data-nav class="phoenix-nav-pill">✉ ${uiText("پیام‌ها")}</a>
-      <a href="/loyalty" data-nav class="phoenix-nav-pill">♢ ${uiText("وفاداری")}</a>
-    `;
-  }
-
   return `
     <header class="phoenix-public-header phoenix-unified-header">
       <div class="phoenix-public-header-inner container-wide">
@@ -992,14 +1080,10 @@ function renderPublicHeader(): string {
           <span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=2" alt="" /></span>
           <span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
         </a>
-
-        <div class="phoenix-header-center-area">
-          ${renderPersonaSwitcher()}
-          <nav class="phoenix-persona-quick-nav" aria-label="${uiText("مسیرهای نقش فعال")}">
-            ${personaNavHtml}
-          </nav>
-        </div>
-
+        <nav class="phoenix-public-nav" aria-label="${uiText("مسیرهای اصلی ققنوس")}">
+          <a href="/discover?tab=explore" data-nav>${uiText("اکسپلور")}</a>
+          <a href="/business/welcome" data-nav>${uiText("برای عرضه‌کنندگان")}</a>
+        </nav>
         <div class="phoenix-public-actions">
           ${authActionsHtml}
           ${renderLanguageSwitcher()}
@@ -1229,19 +1313,11 @@ function renderToastHost(): string {
 }
 
 function renderHome(): string {
-  const persona = getActivePersona();
-  let screenHtml = "";
-  if (persona === "business") {
-    screenHtml = renderBusinessPanel();
-  } else if (persona === "consumer") {
-    screenHtml = renderConsumerHome();
-  } else {
-    screenHtml = renderIndividualDashboard();
-  }
-  return renderPhoenixMasterLayout(persona, screenHtml);
+  return renderDiscover();
 }
 
-function renderLegacyHome(): string {
+// Retained temporarily for visual comparison during the approved interface reset.
+function _renderLegacyHome(): string {
   return `
     <div class="phoenix-home">
       <section class="phoenix-home-hero">
@@ -1408,7 +1484,7 @@ function renderLegacyHome(): string {
   `;
 }
 
-function bindHomeEvents(): void {
+function _bindHomeEvents(): void {
   const draftKey = "phoenix-home-demand-draft";
   const primaryInput = document.querySelector<HTMLTextAreaElement>("#phoenix-demand-input");
   const savedDraft = sessionStorage.getItem(draftKey);
@@ -1462,7 +1538,7 @@ function toDateTimeLocal(value: Date): string {
 function renderBooking(): string {
   const params = new URLSearchParams(location.search);
   const scheduleId = params.get("scheduleId")?.trim() ?? "";
-  const businessId = params.get("businessId")?.trim() || params.get("business")?.trim() || localStorage.getItem(STORAGE.business) || "";
+  const businessId = params.get("businessId")?.trim() || params.get("business")?.trim() || "";
   const offeringId = params.get("offering")?.trim() || params.get("offeringId")?.trim() || "";
   const customerId = params.get("customerId")?.trim() || localStorage.getItem(STORAGE.customer) || "";
   const resourceId = params.get("resourceId")?.trim() || "";
@@ -1472,44 +1548,98 @@ function renderBooking(): string {
   const safeDuration = Number.isFinite(duration) && duration > 0 ? Math.trunc(duration) : 60;
   const fromLocal = from ? toDateTimeLocal(new Date(from)) : toDateTimeLocal(new Date());
   const toLocal = to ? toDateTimeLocal(new Date(to)) : toDateTimeLocal(new Date(Date.now() + 86400000));
-  return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Booking / Availability</span><h1>زمان مناسب را پیدا کنید.</h1><p>Availability از سرویس canonical رزرو خوانده می‌شود؛ انتخاب slot از همین صفحه به Hold canonical متصل می‌شود.</p></div>
-    </section>
-    <section class="section-block">
-      <article class="glass-card booking-panel">
-        <div class="booking-context-strip">
-          <div><span>${canonicalUi("canonical.business.business")}</span><strong>${escapeHtml(businessId || "—")}</strong></div>
-          <div><span>${canonicalUi("canonical.catalog.offering")}</span><strong>${escapeHtml(offeringId || "برای مسیر رزرو مشخص نشده")}</strong></div>
-          <div><span>${canonicalUi("canonical.customer.customer")}</span><strong>${escapeHtml(customerId || "از context حساب")}</strong></div>
-          <div><span>${canonicalUi("canonical.booking.resource")}</span><strong>${escapeHtml(resourceId || "از Availability")}</strong></div>
-        </div>
-        <div id="booking-offering-context" class="booking-offering-context" aria-live="polite">
-          ${offeringId
-            ? '<div class="slot-loading booking-offering-loading">در حال خواندن اطلاعات خدمت از Business منتشرشده…</div>'
-            : '<div class="booking-offering-empty">ابتدا یک Service/Offering را انتخاب کنید؛ سپس Availability مناسب همین Business را می‌بینید.</div>'}
-        </div>
-        <div class="booking-fields">
-          <label class="field-label">Schedule ID<input id="booking-schedule" class="studio-input-line" placeholder="Schedule ID" value="${escapeAttr(scheduleId)}" /></label>
-          <label class="field-label">Business ID<input id="booking-business" class="studio-input-line" placeholder="Business ID" value="${escapeAttr(businessId)}" /></label>
-          <label class="field-label">Offering ID<input id="booking-offering" class="studio-input-line" placeholder="Offering ID (برای finalize)" value="${escapeAttr(offeringId)}" /></label>
-          <label class="field-label">Customer ID<input id="booking-customer" class="studio-input-line" placeholder="Customer ID" value="${escapeAttr(customerId)}" /></label>
-          <label class="field-label">${uiText("از تاریخ")}<div class="phoenix-date-input-group"><input id="booking-from" class="studio-input-line date-picker-input" data-date-picker="true" data-iso-date="${escapeAttr(fromLocal.slice(0, 10))}" value="${escapeAttr(formatCentralDate(fromLocal.slice(0, 10)))}" readonly /><button type="button" class="date-picker-trigger-icon" tabindex="-1">📅</button></div></label>
-          <label class="field-label">${uiText("تا تاریخ")}<div class="phoenix-date-input-group"><input id="booking-to" class="studio-input-line date-picker-input" data-date-picker="true" data-iso-date="${escapeAttr(toLocal.slice(0, 10))}" value="${escapeAttr(formatCentralDate(toLocal.slice(0, 10)))}" readonly /><button type="button" class="date-picker-trigger-icon" tabindex="-1">📅</button></div></label>
-          <label class="field-label">Duration (minutes)<input id="booking-duration" class="studio-input-line" type="number" min="1" value="${String(safeDuration)}" /></label>
-          <label class="field-label">Resource ID<input id="booking-resource" class="studio-input-line" placeholder="Resource ID (اختیاری)" value="${escapeAttr(resourceId)}" /></label>
-        </div>
-        <div class="booking-action-row">
-          <button class="button button-primary" type="button" data-load-slots>خواندن Availability</button>
-          <button class="button button-ghost" type="button" data-load-business-schedules>یافتن زمان‌بندی این کسب‌وکار</button>
-        </div>
-        <div id="booking-schedules-result"></div>
-        <div id="booking-hold-result" class="booking-hold-result" aria-live="polite"></div>
-        <div id="booking-slots-result" class="slot-empty"><span>◷</span><p>${scheduleId ? "در حال اتصال به Availability…" : offeringId ? "یک Schedule از Availability انتخاب کنید." : "Schedule را وارد کنید."}</p></div>
-      </article>
-    </section>
-  `;
+
+  return '<div class="phoenix-reset-page phoenix-reset-booking-page">' +
+    '<section class="phoenix-reset-hero">' +
+      '<div class="phoenix-reset-hero-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("bookingEyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("bookingTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("bookingIntro") + '</p>' +
+      '</div>' +
+      '<div class="phoenix-reset-booking-hero-actions">' +
+        '<a class="button button-ghost" href="/discover?tab=explore" data-nav>' + socialCommerceUi("bookingBackToOffer") + ' <span aria-hidden="true">←</span></a>' +
+      '</div>' +
+    '</section>' +
+    '<div class="phoenix-reset-discover-grid">' +
+      '<section class="phoenix-reset-main-column">' +
+        '<article class="phoenix-reset-booking-offer-panel">' +
+          '<div id="booking-offering-context" class="phoenix-reset-booking-offer-context" aria-live="polite">' +
+            (offeringId && businessId
+              ? '<div class="phoenix-reset-booking-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><p>' + socialCommerceUi("bookingLoadingOffer") + '</p></div>'
+              : '<div class="phoenix-reset-booking-empty"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><h2>' + socialCommerceUi("bookingMissingContextTitle") + '</h2><p>' + socialCommerceUi("bookingMissingContextBody") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("bookingBackToOffer") + '</a></div>') +
+          '</div>' +
+          '<input type="hidden" id="booking-schedule" value="' + escapeAttr(scheduleId) + '" />' +
+          '<input type="hidden" id="booking-business" value="' + escapeAttr(businessId) + '" />' +
+          '<input type="hidden" id="booking-offering" value="' + escapeAttr(offeringId) + '" />' +
+          '<input type="hidden" id="booking-customer" value="' + escapeAttr(customerId) + '" />' +
+          '<input type="hidden" id="booking-resource" value="' + escapeAttr(resourceId) + '" />' +
+          '<input type="hidden" id="booking-timezone" value="" />' +
+          '<input type="hidden" id="booking-price-minor" value="" />' +
+          '<input type="hidden" id="booking-currency" value="" />' +
+          '<input type="hidden" id="booking-title-snapshot" value="" />' +
+          '<input type="hidden" id="booking-duration" value="' + String(safeDuration) + '" />' +
+        '</article>' +
+        '<section class="phoenix-reset-booking-date-panel">' +
+          '<div class="phoenix-reset-booking-panel-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("bookingDateRangeEyebrow") + '</span><h2>' + socialCommerceUi("bookingDateRangeTitle") + '</h2><p>' + socialCommerceUi("bookingDateRangeIntro") + '</p></div>' +
+            '<span class="phoenix-reset-booking-date-mark" aria-hidden="true">◷</span></div>' +
+          '<div class="phoenix-reset-booking-date-fields">' +
+            '<label class="phoenix-reset-booking-date-field"><span>' + socialCommerceUi("bookingFromDate") + '</span><div class="phoenix-date-input-group"><input id="booking-from" class="studio-input-line date-picker-input" data-date-picker="true" data-iso-date="' + escapeAttr(fromLocal.slice(0, 10)) + '" value="' + escapeAttr(formatCentralDate(fromLocal.slice(0, 10))) + '" readonly aria-label="' + escapeAttr(socialCommerceUi("bookingFromDate")) + '" /><button type="button" class="date-picker-trigger-icon" tabindex="-1" aria-hidden="true">▦</button></div></label>' +
+            '<label class="phoenix-reset-booking-date-field"><span>' + socialCommerceUi("bookingToDate") + '</span><div class="phoenix-date-input-group"><input id="booking-to" class="studio-input-line date-picker-input" data-date-picker="true" data-iso-date="' + escapeAttr(toLocal.slice(0, 10)) + '" value="' + escapeAttr(formatCentralDate(toLocal.slice(0, 10))) + '" readonly aria-label="' + escapeAttr(socialCommerceUi("bookingToDate")) + '" /><button type="button" class="date-picker-trigger-icon" tabindex="-1" aria-hidden="true">▦</button></div></label>' +
+          '</div>' +
+          '<p class="phoenix-reset-booking-timezone-note">' + socialCommerceUi("bookingTimezoneNote") + '</p>' +
+          '<div class="phoenix-reset-booking-date-actions">' +
+            '<button class="button button-primary" type="button" data-load-slots>' + socialCommerceUi("bookingRefreshTimes") + ' <span aria-hidden="true">←</span></button>' +
+            '<button class="button button-ghost" type="button" data-load-business-schedules>' + socialCommerceUi("bookingRefreshSchedules") + '</button>' +
+          '</div>' +
+        '</section>' +
+        '<section class="phoenix-reset-booking-availability-panel">' +
+          '<div class="phoenix-reset-booking-panel-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("bookingAvailabilityEyebrow") + '</span><h2>' + socialCommerceUi("bookingAvailabilityTitle") + '</h2><p>' + socialCommerceUi("bookingAvailabilityIntro") + '</p></div>' +
+            '<span class="phoenix-reset-booking-date-mark" aria-hidden="true">◷</span></div>' +
+          '<div id="booking-schedules-result" class="phoenix-reset-booking-schedules" aria-live="polite"></div>' +
+          '<div id="booking-slots-result" class="phoenix-reset-booking-slots" aria-live="polite"><div class="phoenix-reset-booking-empty"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><h3>' + socialCommerceUi("bookingSlotsInitialTitle") + '</h3><p>' + socialCommerceUi("bookingSlotsInitialBody") + '</p></div></div>' +
+          '<div id="booking-hold-result" class="phoenix-reset-booking-hold" aria-live="polite"></div>' +
+        '</section>' +
+      '</section>' +
+      '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
+        '<section class="phoenix-reset-side-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">✓</span>' +
+          '<h2>' + socialCommerceUi("bookingStepsTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("bookingStepsIntro") + '</p>' +
+          '<ol class="phoenix-reset-booking-steps">' +
+            '<li><span>1</span><div><strong>' + socialCommerceUi("bookingStepChooseTime") + '</strong><small>' + socialCommerceUi("bookingStepChooseTimeHint") + '</small></div></li>' +
+            '<li><span>2</span><div><strong>' + socialCommerceUi("bookingStepTemporaryHold") + '</strong><small>' + socialCommerceUi("bookingStepTemporaryHoldHint") + '</small></div></li>' +
+            '<li><span>3</span><div><strong>' + socialCommerceUi("bookingStepConfirmation") + '</strong><small>' + socialCommerceUi("bookingStepConfirmationHint") + '</small></div></li>' +
+          '</ol>' +
+        '</section>' +
+        '<section class="phoenix-reset-side-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">✉</span>' +
+          '<h2>' + socialCommerceUi("bookingNeedHelpTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("bookingNeedHelpBody") + '</p>' +
+          '<a class="button button-ghost" href="/messages" data-nav>' + socialCommerceUi("ordersAskSellerAction") + ' <span aria-hidden="true">←</span></a>' +
+        '</section>' +
+      '</aside>' +
+    '</div>' +
+  '</div>';
 }
+
+function formatBookingInstant(value?: string | null): string {
+  if (!value) return socialCommerceUi("bookingTimeUnavailable");
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return socialCommerceUi("bookingTimeUnavailable");
+  const locale = globalLocaleService.getLocale();
+  const timezone = document.querySelector<HTMLInputElement>("#booking-timezone")?.value.trim();
+  try {
+    return new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeStyle: "short",
+      ...(timezone ? { timeZone: timezone } : {}),
+    }).format(date);
+  } catch {
+    return formatDate(value);
+  }
+}
+
+
 
 type BookingSlotView = {
   slotReference?: string;
@@ -1528,6 +1658,14 @@ type BookingOfferingPreview = {
   description?: string | null;
   serviceId?: string | null;
   productId?: string | null;
+  priceAmountMinor?: number | null;
+  currency?: string | null;
+  pricingType?: string | null;
+};
+
+type BookingPublicBusinessPreview = {
+  profile?: { name?: string | null; displayName?: string | null };
+  offers?: BookingOfferingPreview[];
 };
 
 type BookingScheduleView = {
@@ -1539,110 +1677,224 @@ type BookingScheduleView = {
   status?: string;
 };
 
-async function loadBookingOfferingContext(): Promise<void> {
+async function loadBookingOfferingContext(): Promise<boolean> {
+  const params = new URLSearchParams(location.search);
   const offeringId =
     document.querySelector<HTMLInputElement>("#booking-offering")?.value.trim()
-    || new URLSearchParams(location.search).get("offering")?.trim()
-    || new URLSearchParams(location.search).get("offeringId")?.trim()
+    || params.get("offering")?.trim()
+    || params.get("offeringId")?.trim()
     || "";
   const businessId =
     document.querySelector<HTMLInputElement>("#booking-business")?.value.trim()
-    || new URLSearchParams(location.search).get("business")?.trim()
-    || new URLSearchParams(location.search).get("businessId")?.trim()
-    || localStorage.getItem(STORAGE.business)
+    || params.get("business")?.trim()
+    || params.get("businessId")?.trim()
     || "";
   const host = document.querySelector<HTMLElement>("#booking-offering-context");
-  if (!host || !offeringId) return;
+  if (!host || !offeringId) return false;
   if (!businessId) {
-    host.innerHTML = '<div class="booking-offering-empty"><strong>Business context لازم است.</strong><span>برای رزرو خدمت، این Offering باید به یک Business مشخص متصل باشد.</span></div>';
-    return;
+    host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h2>' +
+      socialCommerceUi("bookingMissingContextTitle") + '</h2><p>' + socialCommerceUi("bookingMissingContextBody") + '</p></div>';
+    return false;
   }
 
-  host.innerHTML = '<div class="slot-loading booking-offering-loading">در حال خواندن عرضه منتشرشده…</div>';
+  host.innerHTML = '<div class="phoenix-reset-booking-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><p>' + socialCommerceUi("bookingLoadingOffer") + '</p></div>';
   try {
     const response = await fetch("/api/v1/public/businesses/" + encodeURIComponent(businessId), { headers: { Accept: "application/json" } });
     const body = await response.json().catch(() => null) as {
+      data?: BookingPublicBusinessPreview;
+      profile?: BookingPublicBusinessPreview["profile"];
       offers?: BookingOfferingPreview[];
       error?: { message?: string };
     } | null;
-    if (!response.ok) throw new Error(body?.error?.message ?? "Public Business supply unavailable");
-    const offers = Array.isArray(body?.offers) ? body.offers : [];
+    if (!response.ok) throw new Error(body?.error?.message ?? socialCommerceUi("bookingOfferError"));
+    const publicBusiness = body?.data ?? body ?? null;
+    const offers = Array.isArray(publicBusiness?.offers) ? publicBusiness.offers : [];
     const offer = offers.find((item) => item.id === offeringId);
     if (!offer) {
-      host.innerHTML = '<div class="booking-offering-empty"><strong>این Offering در عرضه عمومی این کسب‌وکار پیدا نشد.</strong><span>شناسه انتخاب‌شده: ' + escapeHtml(offeringId) + ' · مسیر رزرو همچنان از Availability canonical پیروی می‌کند.</span></div>';
-      return;
+      host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h2>' +
+        socialCommerceUi("bookingOfferUnavailableTitle") + '</h2><p>' + socialCommerceUi("bookingOfferUnavailableBody") + '</p></div>';
+      return false;
+    }
+    if (offer.offeringType !== "service") {
+      host.innerHTML = '<div class="phoenix-reset-booking-empty"><span class="phoenix-reset-side-icon" aria-hidden="true">◇</span><h2>' +
+        socialCommerceUi("bookingNotServiceTitle") + '</h2><p>' + socialCommerceUi("bookingNotServiceBody") + '</p><a class="button button-ghost" href="/discover?tab=explore" data-nav>' +
+        socialCommerceUi("bookingBackToOffer") + '</a></div>';
+      return false;
     }
 
-    const kind = offer.offeringType === "service" ? "خدمت" : "محصول";
+    const price = typeof offer.priceAmountMinor === "number" && Number.isFinite(offer.priceAmountMinor)
+      ? formatLocalizedNumber(offer.priceAmountMinor) + (offer.currency ? " " + escapeHtml(offer.currency) : "")
+      : socialCommerceUi("bookingPriceUnavailable");
+    const providerName = publicBusiness?.profile?.displayName || publicBusiness?.profile?.name || "";
+    const hiddenTitle = document.querySelector<HTMLInputElement>("#booking-title-snapshot");
+    const hiddenPrice = document.querySelector<HTMLInputElement>("#booking-price-minor");
+    const hiddenCurrency = document.querySelector<HTMLInputElement>("#booking-currency");
+    const provider = document.querySelector<HTMLElement>("#booking-provider-name");
+    if (hiddenTitle) hiddenTitle.value = offer.title;
+    if (hiddenPrice) hiddenPrice.value = offer.priceAmountMinor !== undefined && offer.priceAmountMinor !== null ? String(offer.priceAmountMinor) : "";
+    if (hiddenCurrency) hiddenCurrency.value = offer.currency ?? "";
+
     host.innerHTML =
-      '<div class="booking-offering-card">' +
-        '<div class="booking-offering-card-main"><span class="section-kicker">Canonical Public Offering</span><h3>' + escapeHtml(offer.title) + '</h3><p>' + escapeHtml(offer.description ?? "توضیح منتشرشده‌ای برای این عرضه ثبت نشده است.") + '</p></div>' +
-        '<div class="booking-offering-card-meta">' +
-          '<span class="pill success">' + kind + '</span>' +
-          '<span>Offering: <strong>' + escapeHtml(offer.id) + '</strong></span>' +
-          (offer.serviceId ? '<span>Service: <strong>' + escapeHtml(offer.serviceId) + '</strong></span>' : '') +
-        '</div>' +
+      '<div class="phoenix-reset-booking-offer">' +
+        '<div class="phoenix-reset-booking-offer-symbol" aria-hidden="true">◷</div>' +
+        '<div class="phoenix-reset-booking-offer-copy"><span class="phoenix-reset-booking-offer-kind">' + socialCommerceUi("service") + '</span>' +
+          '<h2>' + escapeHtml(offer.title) + '</h2>' +
+          '<p>' + escapeHtml(offer.description ?? socialCommerceUi("bookingOfferDescriptionUnavailable")) + '</p>' +
+          '<div class="phoenix-reset-booking-offer-meta">' +
+            '<span>' + socialCommerceUi("bookingSellerLabel") + ': <strong>' + escapeHtml(providerName || socialCommerceUi("seller")) + '</strong></span>' +
+            '<span>' + socialCommerceUi("bookingPriceLabel") + ': <strong>' + price + '</strong></span>' +
+          '</div></div>' +
       '</div>';
-  } catch (error) {
-    host.innerHTML = '<div class="booking-offering-empty"><strong>اطلاعات Offering فعلاً قابل خواندن نیست.</strong><span>' + escapeHtml(error instanceof Error ? error.message : "Public Business supply unavailable") + '</span></div>';
+    if (provider) provider.textContent = providerName;
+    return true;
+  } catch {
+    host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h2>' +
+      socialCommerceUi("bookingOfferErrorTitle") + '</h2><p>' + socialCommerceUi("bookingOfferError") + '</p></div>';
+    return false;
   }
 }
+
+
 
 async function loadBusinessBookingSchedules(): Promise<void> {
   const businessId =
     document.querySelector<HTMLInputElement>("#booking-business")?.value.trim()
     || new URLSearchParams(location.search).get("business")?.trim()
-    || localStorage.getItem(STORAGE.business)
+    || new URLSearchParams(location.search).get("businessId")?.trim()
     || "";
-  const host = document.querySelector<HTMLDivElement>("#booking-schedules-result");
+  const host = document.querySelector<HTMLElement>("#booking-schedules-result");
   if (!host) return;
   if (!businessId) {
-    host.innerHTML = '<div class="slot-empty"><span>!</span><p>برای پیدا کردن زمان‌بندی، Business ID لازم است.</p></div>';
+    host.innerHTML = '<div class="phoenix-reset-booking-empty"><p>' + socialCommerceUi("bookingMissingContextBody") + '</p></div>';
     return;
   }
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    openConnectionPanel();
+    host.innerHTML = '<div class="phoenix-reset-booking-empty"><h3>' + socialCommerceUi("bookingSignInTitle") + '</h3><p>' +
+      socialCommerceUi("bookingSignInBody") + '</p><button class="button button-primary" type="button" data-booking-sign-in>' +
+      socialCommerceUi("bookingSignInAction") + '</button></div>';
+    host.querySelector<HTMLButtonElement>("[data-booking-sign-in]")?.addEventListener("click", () => openConnectionPanel());
     return;
   }
 
-  host.innerHTML = '<div class="slot-loading">در حال خواندن Scheduleهای واقعی این کسب‌وکار…</div>';
+  host.innerHTML = '<div class="phoenix-reset-booking-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><p>' + socialCommerceUi("bookingAvailabilityLoading") + '</p></div>';
   try {
     const response = await apiJson<{ data: BookingScheduleView[] }>(
       "/api/v1/availability/schedules?businessId=" + encodeURIComponent(businessId) + "&limit=12",
     );
     const schedules = (response.data ?? []).filter((item) => item.status === undefined || item.status === "active");
-    host.innerHTML = schedules.length
-      ? '<div class="booking-schedule-picker"><div class="booking-schedule-picker-head"><div><span class="section-kicker">Canonical Availability</span><h3>زمان‌بندی‌های فعال</h3><p>Schedule از Availability خوانده می‌شود؛ این صفحه Schedule جدید ایجاد نمی‌کند.</p></div><span class="pill success">' + String(schedules.length) + ' مورد</span></div><div class="booking-schedule-grid">' +
-        schedules.map((schedule) => {
-          const currentId = document.querySelector<HTMLInputElement>("#booking-schedule")?.value.trim() ?? "";
-          const active = currentId === schedule.id;
-          const meta = [
-            schedule.locationId ? "Location " + schedule.locationId : "",
-            schedule.resourceId ? "Resource " + schedule.resourceId : "",
-            schedule.timezone ?? "",
-          ].filter(Boolean).join(" · ") || "منبع زمان‌بندی canonical";
-          return '<article class="booking-schedule-card' + (active ? ' active' : '') + '">' +
-            '<div class="booking-schedule-card-top"><span class="pill' + (active ? ' success' : '') + '">' + (active ? "انتخاب‌شده" : "فعال") + '</span><strong>' + escapeHtml(schedule.id) + '</strong></div>' +
-            '<p>' + escapeHtml(meta) + '</p>' +
-            '<button class="button ' + (active ? 'button-secondary' : 'button-primary') + '" type="button" data-select-booking-schedule="' + escapeAttr(schedule.id) + '" data-schedule-resource="' + escapeAttr(schedule.resourceId ?? "") + '">' + (active ? "بارگذاری Availability ↻" : "انتخاب این زمان‌بندی →") + '</button>' +
-          '</article>';
-        }).join("") +
-      '</div></div>'
-      : '<div class="slot-empty"><span>◌</span><p>برای این Business هنوز Schedule فعال قابل استفاده پیدا نشد.</p></div>';
+    if (!schedules.length) {
+      host.innerHTML = '<div class="phoenix-reset-booking-empty"><span class="phoenix-reset-side-icon" aria-hidden="true">◌</span><h3>' +
+        socialCommerceUi("bookingNoScheduleTitle") + '</h3><p>' + socialCommerceUi("bookingNoScheduleBody") + '</p></div>';
+      return;
+    }
+
+    const scheduleInput = document.querySelector<HTMLInputElement>("#booking-schedule");
+    const resourceInput = document.querySelector<HTMLInputElement>("#booking-resource");
+    const timezoneInput = document.querySelector<HTMLInputElement>("#booking-timezone");
+    const requestedId = scheduleInput?.value.trim() ?? "";
+    const selectedSchedule = schedules.find((schedule) => schedule.id === requestedId) ?? schedules[0]!;
+    if (scheduleInput) scheduleInput.value = selectedSchedule.id;
+    if (resourceInput) resourceInput.value = selectedSchedule.resourceId ?? "";
+    if (timezoneInput) timezoneInput.value = selectedSchedule.timezone ?? "";
+    host.innerHTML = '<div class="phoenix-reset-booking-schedule-list">' +
+      '<div class="phoenix-reset-booking-schedule-list-head"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("bookingAvailabilityEyebrow") + '</span><h3>' +
+        socialCommerceUi("bookingSelectSchedule") + '</h3><p>' + socialCommerceUi("bookingTimezoneNote") + '</p></div></div>' +
+      schedules.map((schedule, index) => {
+        const active = schedule.id === selectedSchedule.id;
+        const timezoneInputValue = schedule.timezone ?? "";
+        return '<article class="phoenix-reset-booking-schedule-card' + (active ? " active" : "") + '">' +
+          '<span class="phoenix-reset-booking-schedule-icon" aria-hidden="true">◷</span>' +
+          '<div class="phoenix-reset-booking-schedule-copy"><strong>' + socialCommerceUi("bookingScheduleFallback") + ' ' + formatLocalizedNumber(index + 1) + '</strong>' +
+            '<small>' + (timezoneInputValue ? socialCommerceUi("bookingProviderLocalTime") : socialCommerceUi("bookingAvailabilityVerified")) + '</small></div>' +
+          '<button class="button ' + (active ? "button-secondary" : "button-ghost") + '" type="button" data-select-booking-schedule="' + escapeAttr(schedule.id) +
+            '" data-schedule-resource="' + escapeAttr(schedule.resourceId ?? "") + '" data-schedule-timezone="' + escapeAttr(schedule.timezone ?? "") + '">' +
+            (active ? socialCommerceUi("bookingSelectedSchedule") : socialCommerceUi("bookingUseSchedule")) + '</button>' +
+        '</article>';
+      }).join("") +
+    '</div>';
 
     host.querySelectorAll<HTMLButtonElement>("[data-select-booking-schedule]").forEach((button) => {
       button.addEventListener("click", () => {
-        const scheduleInput = document.querySelector<HTMLInputElement>("#booking-schedule");
-        const resourceInput = document.querySelector<HTMLInputElement>("#booking-resource");
-        if (scheduleInput) scheduleInput.value = button.dataset.selectBookingSchedule ?? "";
-        if (resourceInput) resourceInput.value = button.dataset.scheduleResource ?? "";
+        const scheduleNode = document.querySelector<HTMLInputElement>("#booking-schedule");
+        const resourceNode = document.querySelector<HTMLInputElement>("#booking-resource");
+        const timezoneNode = document.querySelector<HTMLInputElement>("#booking-timezone");
+        if (scheduleNode) scheduleNode.value = button.dataset.selectBookingSchedule ?? "";
+        if (resourceNode) resourceNode.value = button.dataset.scheduleResource ?? "";
+        if (timezoneNode) timezoneNode.value = button.dataset.scheduleTimezone ?? "";
+        host.querySelectorAll<HTMLElement>(".phoenix-reset-booking-schedule-card").forEach((card) => card.classList.remove("active"));
+        button.closest<HTMLElement>(".phoenix-reset-booking-schedule-card")?.classList.add("active");
+        host.querySelectorAll<HTMLButtonElement>("[data-select-booking-schedule]").forEach((candidate) => {
+          const active = candidate === button;
+          candidate.classList.toggle("button-secondary", active);
+          candidate.classList.toggle("button-primary", active);
+          candidate.classList.toggle("button-ghost", !active);
+          candidate.textContent = active ? socialCommerceUi("bookingSelectedSchedule") : socialCommerceUi("bookingUseSchedule");
+        });
         void loadBookingSlots();
-        host.querySelectorAll<HTMLElement>(".booking-schedule-card").forEach((card) => card.classList.remove("active"));
-        button.closest<HTMLElement>(".booking-schedule-card")?.classList.add("active");
       });
     });
+    void loadBookingSlots();
   } catch (error) {
-    host.innerHTML = '<div class="slot-empty"><span>!</span><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Scheduleهای Availability ناموفق بود.") + '</p></div>';
+    host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h3>' +
+      socialCommerceUi("bookingAvailabilityErrorTitle") + '</h3><p>' + escapeHtml(error instanceof Error ? error.message : socialCommerceUi("bookingAvailabilityError")) + '</p>' +
+      '<button type="button" class="button button-ghost" data-booking-retry-schedules>' + socialCommerceUi("bookingRetry") + '</button></div>';
+    host.querySelector<HTMLButtonElement>("[data-booking-retry-schedules]")?.addEventListener("click", () => void loadBusinessBookingSchedules());
+  }
+}
+
+
+
+function bookingDateBoundary(value: string, timezone: string, isEnd: boolean): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/u.exec(value);
+  if (!match) {
+    const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : "";
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const nextLocalDate = new Date(Date.UTC(year, month - 1, day + (isEnd ? 1 : 0)));
+  const targetUtc = Date.UTC(nextLocalDate.getUTCFullYear(), nextLocalDate.getUTCMonth(), nextLocalDate.getUTCDate());
+
+  if (!timezone) {
+    const localBoundary = new Date(year, month - 1, day + (isEnd ? 1 : 0), 0, 0, 0, 0);
+    return new Date(localBoundary.getTime() - (isEnd ? 1 : 0)).toISOString();
+  }
+
+  try {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    });
+    let guess = targetUtc;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const parts: Record<string, string> = {};
+      for (const part of formatter.formatToParts(new Date(guess))) {
+        if (part.type !== "literal") parts[part.type] = part.value;
+      }
+      const renderedUtc = Date.UTC(
+        Number(parts.year),
+        Number(parts.month) - 1,
+        Number(parts.day),
+        Number(parts.hour) % 24,
+        Number(parts.minute),
+        Number(parts.second),
+      );
+      const correction = targetUtc - renderedUtc;
+      guess += correction;
+      if (Math.abs(correction) < 500) break;
+    }
+    return new Date(guess - (isEnd ? 1 : 0)).toISOString();
+  } catch {
+    const localBoundary = new Date(year, month - 1, day + (isEnd ? 1 : 0), 0, 0, 0, 0);
+    return new Date(localBoundary.getTime() - (isEnd ? 1 : 0)).toISOString();
   }
 }
 
@@ -1652,45 +1904,75 @@ async function loadBookingSlots(): Promise<void> {
   const toEl = document.querySelector<HTMLInputElement>("#booking-to");
   const from = fromEl?.dataset.isoDate || fromEl?.value || "";
   const to = toEl?.dataset.isoDate || toEl?.value || "";
+  const timezone = document.querySelector<HTMLInputElement>("#booking-timezone")?.value.trim() ?? "";
+  const fromInstant = from ? bookingDateBoundary(from, timezone, false) : "";
+  const toInstant = to ? bookingDateBoundary(to, timezone, true) : "";
   const durationSeconds = Number(document.querySelector<HTMLInputElement>("#booking-duration")?.value ?? "60") * 60;
-  const host = document.querySelector<HTMLDivElement>("#booking-slots-result");
+  const host = document.querySelector<HTMLElement>("#booking-slots-result");
   if (!host) return;
   if (!scheduleId || !from || !to || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
-    host.innerHTML = '<div class="slot-empty"><span>!</span><p>Schedule و بازه زمانی معتبر لازم است.</p></div>';
+    host.innerHTML = '<div class="phoenix-reset-booking-empty"><h3>' + socialCommerceUi("bookingSlotsInitialTitle") + '</h3><p>' + socialCommerceUi("bookingSlotsInitialBody") + '</p></div>';
     return;
   }
-  if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
-  host.innerHTML = '<div class="slot-loading">در حال خواندن Availability…</div>';
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    host.innerHTML = '<div class="phoenix-reset-booking-empty"><h3>' + socialCommerceUi("bookingSignInTitle") + '</h3><p>' + socialCommerceUi("bookingSignInBody") + '</p></div>';
+    return;
+  }
+
+  host.innerHTML = '<div class="phoenix-reset-booking-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">◷</span><p>' + socialCommerceUi("bookingSlotsLoading") + '</p></div>';
   try {
     const response = await apiJson<{ data: BookingSlotView[] }>(
-      "/api/v1/availability/schedules/" + encodeURIComponent(scheduleId) + "/slots?from=" + encodeURIComponent(new Date(from).toISOString()) + "&to=" + encodeURIComponent(new Date(to).toISOString()) + "&durationSeconds=" + String(Math.trunc(durationSeconds)),
+      "/api/v1/availability/schedules/" + encodeURIComponent(scheduleId) + "/slots?from=" + encodeURIComponent(fromInstant) + "&to=" + encodeURIComponent(toInstant) + "&durationSeconds=" + String(Math.trunc(durationSeconds)),
     );
-    host.innerHTML = response.data.length
-      ? '<div class="booking-slot-grid">' + response.data.map((slot) => {
-          const disabled = slot.available === false || (slot.status !== undefined && slot.status !== "available") || (slot.remainingCapacity !== undefined && slot.remainingCapacity <= 0) || !slot.slotReference;
-          const reference = slot.slotReference ?? "";
-          return '<article class="booking-slot-card">' +
-            '<div class="booking-slot-card-meta"><span>' + escapeHtml(slot.status ?? "available") + '</span>' + (slot.remainingCapacity !== undefined ? '<span>' + String(Math.max(slot.remainingCapacity, 0)) + ' ظرفیت</span>' : '') + '</div>' +
-            '<strong>' + escapeHtml(slot.startsAt ?? "—") + '</strong><small>' + escapeHtml(slot.endsAt ?? "—") + '</small>' +
-            (disabled ? '<span class="pill warning">قابل رزرو نیست</span>' : '<button class="button button-primary booking-slot-action" type="button" data-book-slot="' + escapeAttr(reference) + '">گرفتن نوبت</button>') +
-            '</article>';
-        }).join("") + '</div>'
-      : '<div class="slot-empty"><span>◌</span><p>در این بازه slot قابل‌نمایشی پیدا نشد.</p></div>';
+    const slots = Array.isArray(response.data) ? response.data : [];
+    const bookable = slots.filter((slot) =>
+      slot.available !== false &&
+      (slot.status === undefined || slot.status === "available") &&
+      (slot.remainingCapacity === undefined || slot.remainingCapacity > 0) &&
+      Boolean(slot.slotReference),
+    );
+    if (!bookable.length) {
+      host.innerHTML = '<div class="phoenix-reset-booking-empty"><span class="phoenix-reset-side-icon" aria-hidden="true">◌</span><h3>' +
+        socialCommerceUi("bookingNoSlotsTitle") + '</h3><p>' + socialCommerceUi("bookingNoSlotsBody") + '</p></div>';
+      return;
+    }
+    host.innerHTML = '<div class="phoenix-reset-booking-slot-grid">' + bookable.map((slot) => {
+      const reference = slot.slotReference ?? "";
+      const capacity = slot.remainingCapacity !== undefined
+        ? '<small class="phoenix-reset-booking-slot-capacity">' + socialCommerceUi("bookingCapacityLabel") + ' ' + formatLocalizedNumber(slot.remainingCapacity) + '</small>'
+        : '';
+      return '<article class="phoenix-reset-booking-slot">' +
+        '<span class="phoenix-reset-booking-slot-status"><i></i>' + socialCommerceUi("bookingSlotAvailable") + '</span>' +
+        '<strong>' + escapeHtml(formatBookingInstant(slot.startsAt)) + '</strong>' +
+        '<small>' + socialCommerceUi("bookingUntil") + ' ' + escapeHtml(formatBookingInstant(slot.endsAt)) + '</small>' +
+        capacity +
+        '<button class="button button-primary" type="button" data-book-slot="' + escapeAttr(reference) + '">' + socialCommerceUi("bookingSlotAction") + ' <span aria-hidden="true">←</span></button>' +
+      '</article>';
+    }).join("") + '</div>';
     host.querySelectorAll<HTMLButtonElement>("[data-book-slot]").forEach((button) => {
       button.addEventListener("click", () => void createBookingHold(button.dataset.bookSlot ?? "", button));
     });
   } catch (error) {
-    host.innerHTML = `<div class="slot-empty"><span>!</span><p>${escapeHtml(error instanceof Error ? error.message : "خواندن Availability ناموفق بود.")}</p></div>`;
+    host.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h3>' +
+      socialCommerceUi("bookingAvailabilityErrorTitle") + '</h3><p>' + escapeHtml(error instanceof Error ? error.message : socialCommerceUi("bookingAvailabilityError")) + '</p>' +
+      '<button type="button" class="button button-ghost" data-booking-retry-slots>' + socialCommerceUi("bookingRetry") + '</button></div>';
+    host.querySelector<HTMLButtonElement>("[data-booking-retry-slots]")?.addEventListener("click", () => void loadBookingSlots());
   }
 }
 
+
+
 async function createBookingHold(slotReference: string, button: HTMLButtonElement): Promise<void> {
-  const businessId = document.querySelector<HTMLInputElement>("#booking-business")?.value.trim() || localStorage.getItem(STORAGE.business) || "";
+  const businessId = document.querySelector<HTMLInputElement>("#booking-business")?.value.trim()
+    || new URLSearchParams(location.search).get("businessId")?.trim()
+    || new URLSearchParams(location.search).get("business")?.trim()
+    || "";
   const resourceId = document.querySelector<HTMLInputElement>("#booking-resource")?.value.trim() || "";
   const result = document.querySelector<HTMLElement>("#booking-hold-result");
   if (!result) return;
   if (!businessId || !slotReference) {
-    result.innerHTML = '<div class="connection-state error">Business ID و slot reference برای Hold لازم است.</div>';
+    result.innerHTML = '<div class="phoenix-reset-booking-empty error"><p>' + socialCommerceUi("bookingHoldErrorBody") + '</p></div>';
     return;
   }
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
@@ -1698,22 +1980,28 @@ async function createBookingHold(slotReference: string, button: HTMLButtonElemen
     return;
   }
   button.disabled = true;
-  button.textContent = "در حال رزرو موقت…";
-  result.innerHTML = '<div class="connection-state">در حال ایجاد Hold canonical…</div>';
+  const originalLabel = button.textContent ?? socialCommerceUi("bookingSlotAction");
+  button.textContent = socialCommerceUi("bookingHoldLoading");
+  result.innerHTML = '<div class="phoenix-reset-booking-hold-message loading">' + socialCommerceUi("bookingHoldLoading") + '</div>';
   try {
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
     const response = await apiJson<{ data: { id: string; status: string; expiresAt: string; slotReference: string } }>("/api/v1/booking/holds", {
       method: "POST",
       body: { businessId, slotReference, ...(resourceId ? { resourceId } : {}), expiresAt },
     });
-    result.innerHTML = '<div class="connection-state success"><strong>Slot موقتاً نگه داشته شد.</strong><span>Hold: ' + escapeHtml(response.data.id) + '</span><span>وضعیت: ' + escapeHtml(response.data.status) + '</span><span>انقضا: ' + escapeHtml(response.data.expiresAt) + '</span><p>مرحله finalize به اطلاعات معتبر Offering/price snapshot وابسته است و تا قبل از دریافت آن خودکار اجرا نمی‌شود.</p></div>';
-    button.textContent = "Hold ایجاد شد ✓";
+    result.innerHTML = '<div class="phoenix-reset-booking-hold-message success"><span class="phoenix-reset-side-icon" aria-hidden="true">✓</span><h3>' +
+      socialCommerceUi("bookingHoldCreatedTitle") + '</h3><p>' + socialCommerceUi("bookingHoldExpires") + ' <strong>' + escapeHtml(formatBookingInstant(response.data.expiresAt)) + '</strong></p>' +
+      '<p class="phoenix-reset-booking-hold-warning">' + socialCommerceUi("bookingHoldNotConfirmed") + '</p></div>';
+    button.textContent = socialCommerceUi("bookingHeldAction");
   } catch (error) {
     button.disabled = false;
-    button.textContent = "گرفتن نوبت";
-    result.innerHTML = '<div class="connection-state error">' + escapeHtml(error instanceof Error ? error.message : "ایجاد Hold ناموفق بود.") + '</div>';
+    button.textContent = originalLabel;
+    result.innerHTML = '<div class="phoenix-reset-booking-empty error"><span class="phoenix-reset-side-icon" aria-hidden="true">!</span><h3>' +
+      socialCommerceUi("bookingHoldErrorTitle") + '</h3><p>' + escapeHtml(error instanceof Error ? error.message : socialCommerceUi("bookingHoldErrorBody")) + '</p></div>';
   }
 }
+
+
 
 function renderPromotion(): string {
   return "<section class='page-heading'><div><span class='eyebrow'><i></i> Promotion Studio</span><h1>مشوق را تعریف کنید؛ <em>قانون را قفل کنید.</em></h1><p>Promotion فقط policy و eligibility را مالک است.</p></div></section>" +
@@ -3270,14 +3558,49 @@ async function addCustomerPreference(): Promise<void> {
 
 
 function renderProfile(): string {
-  const persona = getActivePersona();
-  if (persona === "business") {
-    return renderBusinessOrgProfile();
-  }
-  return renderIndividualProfile();
+  const { token, user } = getStoredAuth();
+  const displayName = user?.displayName?.trim()
+    || [user?.firstName, user?.lastName].filter((part) => Boolean(part?.trim())).join(" ").trim()
+    || uiText("حساب من");
+  const mobile = user?.mobile?.trim() ?? "";
+  const initial = displayName.slice(0, 1) || "ق";
+  const isSeller = user?.role === "seller";
+  const menuItems = [
+    { href: "/orders", icon: "▣", title: "سفارش‌ها و پیگیری", description: "وضعیت خریدها و مراحل تحویل" },
+    { href: "/saved", icon: "☆", title: "ذخیره‌شده‌ها", description: "کالاها و خدماتی که برای بعد نگه داشته‌ای" },
+    { href: "/messages", icon: "✉", title: "پیام‌ها و ارتباطات", description: "مسیر ارتباط دربارهٔ کالا و خدمت" },
+    { href: "/activity", icon: "✦", title: "فعالیت اجتماعی", description: "تعامل‌ها و دنبال‌کردن‌ها" },
+    { href: "/notifications", icon: "♢", title: "اعلان‌ها", description: "خبرهای مربوط به حساب و فعالیت‌ها" },
+    { href: "/account", icon: "◎", title: "حساب و اطلاعات شخصی", description: "اطلاعات حساب و دسترسی‌ها" },
+    { href: "/settings", icon: "⚙", title: "زبان و ترجیحات", description: "زبان، پوسته و تنظیمات" },
+  ];
+  const menuHtml = menuItems.map((item) =>
+    '<a class="phoenix-reset-profile-link" href="' + item.href + '" data-nav>' +
+      '<span class="phoenix-reset-profile-link-icon" aria-hidden="true">' + item.icon + '</span>' +
+      '<span class="phoenix-reset-profile-link-copy"><strong>' + uiText(item.title) + '</strong><small>' + uiText(item.description) + '</small></span>' +
+      '<span class="phoenix-reset-profile-arrow" aria-hidden="true">←</span></a>'
+  ).join("");
+
+  return '<div class="phoenix-reset-profile-page">' +
+    '<section class="phoenix-reset-profile-hero">' +
+      '<div class="phoenix-reset-profile-avatar" aria-hidden="true">' + escapeHtml(initial) + '</div>' +
+      '<div class="phoenix-reset-profile-identity"><span class="phoenix-reset-section-kicker">' + uiText("پروفایل شخصی") + '</span>' +
+        '<h1>' + escapeHtml(displayName) + '</h1>' +
+        (mobile ? '<p class="phoenix-reset-profile-mobile">' + uiText("شماره موبایل") + ' · <bdi>' + escapeHtml(mobile) + '</bdi></p>' : '<p>' + uiText("اطلاعات حساب و ارتباطات خود را از این بخش مدیریت کن.") + '</p>') +
+      '</div>' +
+      '<div class="phoenix-reset-profile-hero-actions">' +
+        (token ? '<a class="button button-ghost" href="/account" data-nav>' + uiText("اطلاعات حساب") + '</a>' : '<button class="button button-primary" type="button" data-open-login>' + uiText("ورود به حساب") + '</button>') +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-profile-section"><div class="phoenix-reset-profile-section-heading"><div><span class="phoenix-reset-section-kicker">' + uiText("حساب تو") + '</span><h2>' + uiText("دسترسی‌های روزمره") + '</h2></div></div>' +
+      '<div class="phoenix-reset-profile-links">' + menuHtml + '</div></section>' +
+    (isSeller
+      ? '<section class="phoenix-reset-profile-seller"><div><span class="phoenix-reset-section-kicker">' + uiText("فضای کسب‌وکار") + '</span><h2>' + uiText("مدیریت عرضه‌ها و ارتباط با مشتریان") + '</h2><p>' + uiText("امکانات فروشندگی از همین حساب در دسترس توست.") + '</p></div><a class="button button-primary" href="/business" data-nav>' + uiText("ورود به فضای کسب‌وکار") + ' <span aria-hidden="true">←</span></a></section>'
+      : '<section class="phoenix-reset-profile-seller"><div><span class="phoenix-reset-section-kicker">' + uiText("برای ارائه‌دهندگان") + '</span><h2>' + uiText("کالا یا خدمتی برای عرضه داری؟") + '</h2><p>' + uiText("فعالیت فروشندگی را به همین حساب اضافه کن؛ نیازی به ساخت حساب جداگانه نیست.") + '</p></div><button class="button button-primary" type="button" data-activate-seller>' + uiText("فعال‌سازی فروشندگی") + ' <span aria-hidden="true">←</span></button></section>') +
+    '</div>';
 }
 
-function renderLegacyProfile(): string {
+function _renderLegacyProfile(): string {
   const initialProfile: BuyerProfileData = {
     id: "cust-current",
     name: uiText("کاربر ققنوس"),
@@ -3404,10 +3727,38 @@ function openOrderTrackingDrawer(orderId: string): void {
 }
 
 function renderNotifications(): string {
-  return renderIndividualNotifications();
+  return '<div class="phoenix-reset-page phoenix-reset-notifications-page">' +
+    '<section class="phoenix-reset-hero">' +
+      '<div class="phoenix-reset-hero-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("notificationsEyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("notificationsTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("notificationsIntro") + '</p>' +
+      '</div>' +
+      '<div class="phoenix-reset-activity-hero-actions">' +
+        '<button class="button button-ghost" type="button" data-refresh-notifications>↻ ' + socialCommerceUi("notificationsRefresh") + '</button>' +
+        '<a class="button button-primary" href="/activity" data-nav>' + socialCommerceUi("activityEyebrow") + ' <span aria-hidden="true">←</span></a>' +
+      '</div>' +
+    '</section>' +
+    '<div class="phoenix-reset-discover-grid">' +
+      '<section class="phoenix-reset-main-column">' +
+        '<article class="phoenix-reset-activity-panel">' +
+          '<div class="phoenix-reset-activity-panel-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("notificationsEyebrow") + '</span><h2>' + socialCommerceUi("notificationsListTitle") + '</h2></div>' +
+            '<span id="notifications-page-count" class="phoenix-reset-activity-status" aria-live="polite">' + socialCommerceUi("notificationsStatusPreparing") + '</span></div>' +
+          '<div id="notifications-page-list" class="phoenix-reset-notification-list" aria-live="polite" aria-busy="true"><div class="slot-loading">' + socialCommerceUi("notificationsLoading") + '</div></div>' +
+        '</article>' +
+      '</section>' +
+      '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
+        '<section class="phoenix-reset-side-card"><span class="phoenix-reset-side-icon" aria-hidden="true">◇</span><span class="phoenix-reset-section-kicker">' + socialCommerceUi("activitySideEyebrow") + '</span>' +
+          '<h2>' + socialCommerceUi("notificationsSideTitle") + '</h2><p>' + socialCommerceUi("notificationsSideBody") + '</p>' +
+          '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("notificationsOrdersAction") + ' <span aria-hidden="true">←</span></a></section>' +
+        '<section class="phoenix-reset-side-card"><span class="phoenix-reset-side-icon" aria-hidden="true">⌕</span><h2>' + socialCommerceUi("needTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("needBody") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("tabExplore") + ' <span aria-hidden="true">←</span></a></section>' +
+      '</aside>' +
+    '</div>' +
+  '</div>';
 }
 
-function renderLegacyNotifications(): string {
+function _renderLegacyNotifications(): string {
   return '<div class="phoenix-notifications-page">' +
     '<section class="page-heading"><div><span class="eyebrow"><i></i> Notification Center</span><h1>چیزهایی که لازم است <em>بدانی.</em></h1><p>پیام‌ها، پیشنهادهای ققنوس و تغییر وضعیت معامله را در یک فضای آرام و قابل‌فهم ببین.</p></div><button class="button button-primary" type="button" data-refresh-notifications>بروزرسانی</button></section>' +
     '<section class="phoenix-notification-tabs" aria-label="دسته اعلان‌ها"><button class="active" type="button">همه</button><button type="button">مهم</button><button type="button">پیام‌ها</button><button type="button">معاملات</button></section>' +
@@ -3422,46 +3773,73 @@ async function loadNotificationsPage(): Promise<void> {
   if (refresh) refresh.onclick = () => { void loadNotificationsPage(); };
   if (!host || !count) return;
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    host.innerHTML = '<div class="slot-empty"><span>♢</span><p>برای دیدن اعلان‌ها باید وارد شوید.</p></div>';
-    count.textContent = "ورود";
+    host.setAttribute("aria-busy", "false");
+    host.innerHTML = '<div class="phoenix-reset-notification-empty"><div class="phoenix-reset-side-icon" aria-hidden="true">♢</div><h3>' +
+      socialCommerceUi("notificationsSignInTitle") + '</h3><p>' + socialCommerceUi("notificationsSignInBody") + '</p>' +
+      '<button class="button button-primary" type="button" data-notifications-connect>' + socialCommerceUi("notificationsSignInAction") + '</button></div>';
+    count.textContent = socialCommerceUi("notificationsSignInStatus");
+    host.querySelector<HTMLButtonElement>("[data-notifications-connect]")?.addEventListener("click", () => openConnectionPanel());
     return;
   }
+  host.setAttribute("aria-busy", "true");
+  host.innerHTML = '<div class="slot-loading">' + socialCommerceUi("notificationsLoading") + '</div>';
+  count.textContent = socialCommerceUi("notificationsStatusReading");
   try {
     const response = await apiJson<{ data: NotificationView[] }>("/api/v1/notifications?limit=50");
     const items = Array.isArray(response.data) ? response.data : [];
-    const readIds = getReadNotificationIds();
-    const renderRows = () => {
-      const currentRead = getReadNotificationIds();
-      host.innerHTML = items.length ? items.map((item) => '<article class="notification-item ' + (currentRead.has(item.id) ? "read" : "unread") + '">' +
-        '<div class="notification-item-icon">' + (item.channel === "in_app" ? "♢" : "◌") + '</div>' +
-        '<div class="notification-item-copy"><div class="notification-item-top"><strong>' + escapeHtml(item.intent ?? "notification") + '</strong><span>' + escapeHtml(item.priority ?? "normal") + '</span></div><p>' + escapeHtml(notificationSummary(item)) + '</p><small>' + escapeHtml(formatDate(item.createdAt)) + ' · ' + escapeHtml(item.status ?? "created") + '</small></div>' +
-        '<button class="notification-read" type="button" data-page-mark-read="' + escapeAttr(item.id) + '">' + (currentRead.has(item.id) ? "خوانده شد" : "خواندم") + '</button>' +
-      '</article>').join("") : '<div class="slot-empty"><span>♢</span><p>اعلان جدیدی برای این حساب ثبت نشده است.</p></div>';
-      count.textContent = items.filter((item) => !currentRead.has(item.id)).length + " خوانده‌نشده";
-      host.querySelectorAll<HTMLButtonElement>("[data-page-mark-read]").forEach((button) => button.addEventListener("click", () => {
+    const renderRows = (): void => {
+      const currentRead = new Set(items.filter((item) => item.status === "read").map((item) => item.id));
+      host.setAttribute("aria-busy", "false");
+      host.innerHTML = items.length ? items.map((item) => {
+        const read = currentRead.has(item.id);
+        return '<article class="phoenix-reset-notification-item ' + (read ? "read" : "unread") + '">' +
+          '<div class="phoenix-reset-notification-icon" aria-hidden="true">' + (item.channel === "in_app" ? "♢" : "◌") + '</div>' +
+          '<div class="phoenix-reset-notification-copy"><div class="phoenix-reset-notification-top"><strong>' + escapeHtml(notificationIntentLabel(item.intent)) + '</strong>' +
+            '<span>' + escapeHtml(notificationPriorityLabel(item.priority)) + '</span></div><p>' + escapeHtml(notificationSummary(item)) + '</p>' +
+            '<small>' + escapeHtml(formatDate(item.createdAt)) + ' · ' + escapeHtml(notificationStatusLabel(item.status)) + '</small></div>' +
+          '<button class="phoenix-reset-notification-read" type="button" data-page-mark-read="' + escapeAttr(item.id) + '">' +
+            (read ? socialCommerceUi("notificationsRead") : socialCommerceUi("notificationsMarkRead")) + '</button>' +
+        '</article>';
+      }).join("") : '<div class="phoenix-reset-notification-empty"><div class="phoenix-reset-side-icon" aria-hidden="true">♢</div><h3>' +
+        socialCommerceUi("notificationsEmptyTitle") + '</h3><p>' + socialCommerceUi("notificationsEmptyBody") + '</p></div>';
+      const unreadCount = items.filter((item) => !currentRead.has(item.id)).length;
+      count.textContent = socialCommerceUi("notificationsUnreadCount", { count: formatLocalizedNumber(unreadCount) });
+      count.className = "phoenix-reset-activity-status" + (unreadCount ? " has-events" : "");
+      host.querySelectorAll<HTMLButtonElement>("[data-page-mark-read]").forEach((button) => button.addEventListener("click", async () => {
         const id = button.dataset.pageMarkRead;
-        if (!id) return;
-        markNotificationReadLocally(id);
-        renderRows();
+        if (!id || button.disabled) return;
+        button.disabled = true;
+        try {
+          const updated = await markNotificationReadOnServer(id);
+          const index = items.findIndex((item) => item.id === id);
+          if (index >= 0) items[index] = { ...items[index], ...updated };
+          renderRows();
+        } catch (error) {
+          button.disabled = false;
+          showToast(error instanceof Error ? error.message : socialCommerceUi("notificationsStatusError"));
+        }
       }));
     };
-    void readIds;
     renderRows();
   } catch (error) {
-    host.innerHTML = '<div class="slot-empty"><span>!</span><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن اعلان‌ها ناموفق بود.") + '</p></div>';
-    count.textContent = "خطا";
+    host.setAttribute("aria-busy", "false");
+    count.textContent = socialCommerceUi("notificationsStatusError");
+    count.className = "phoenix-reset-activity-status is-error";
+    host.innerHTML = '<div class="phoenix-reset-notification-empty is-error"><div class="phoenix-reset-side-icon" aria-hidden="true">!</div><h3>' +
+      socialCommerceUi("notificationsErrorTitle") + '</h3><p>' +
+      escapeHtml(error instanceof Error ? error.message : socialCommerceUi("notificationsErrorBody")) + '</p>' +
+      '<button class="button button-ghost" type="button" data-notifications-retry>' + socialCommerceUi("activityRetry") + '</button></div>';
+    host.querySelector<HTMLButtonElement>("[data-notifications-retry]")?.addEventListener("click", () => void loadNotificationsPage());
   }
 }
 
 function renderTransactions(): string {
-  const persona = getActivePersona();
-  if (persona === "business") {
-    return renderBusinessDeals();
-  }
-  return renderDealTypeSelection();
+  // Legacy customer-facing transactions URL is an alias for order history.
+  // Business transactions remain available from the dedicated business-deals route.
+  return getActivePersona() === "business" ? renderBusinessDeals() : renderOrders();
 }
 
-function renderLegacyTransactions(): string {
+function _renderLegacyTransactions(): string {
   return '<div class="phoenix-transactions-page">' +
     '<section class="page-heading"><div><span class="eyebrow"><i></i> Transactions</span><h1>هر معامله، یک <em>مسیر روشن.</em></h1><p>خرید، فروش، اجاره، معاوضه، مزایده و مناقصه در یک زبان واحد؛ جزئیات هر جریان از قابلیت canonical همان حوزه می‌آید.</p></div></section>' +
     '<section class="phoenix-transaction-types">' +
@@ -3509,31 +3887,56 @@ async function loadTransactionsPage(): Promise<void> {
 }
 
 function renderAccount(): string {
-  return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Account & Session</span><h1>مدیریت حساب کاربری و <em>کسب‌وکار</em> شما.</h1><p>وضعیت حساب کاربری و دسترسی‌ها مستقیماً از سامانه ققنوس خوانده می‌شود.</p></div>
-      <button class="button button-primary" type="button" data-refresh-account>بروزرسانی وضعیت</button>
-    </section>
-    <section class="account-grid">
-      <article class="glass-card account-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Account</span><h2>وضعیت حساب کاربری</h2></div><span id="account-status" class="pill">در حال بررسی</span></div>
-        <div id="account-details" class="account-details">
-          <div class="account-row"><span>Actor</span><strong>—</strong></div>
-          <div class="account-row"><span>Tenant</span><strong>—</strong></div>
-          <div class="account-row"><span>Workspace</span><strong>—</strong></div>
-        </div>
-        <div class="account-actions">
-          <button class="button button-ghost" type="button" data-account-connect>پروفایل و مدیریت حساب</button>
-          <button class="button button-danger" type="button" data-account-revoke>خروج از حساب</button>
-        </div>
-      </article>
-      <article class="glass-card account-card">
-        <span class="section-kicker">Permissions & Role</span>
-        <h2>مجوزهای فعال</h2>
-        <div id="account-permissions" class="permission-cloud"><span class="permission-empty">برای مشاهده مجوزها وارد حساب کاربری شوید.</span></div>
-      </article>
-    </section>
-  `;
+  const auth = getStoredAuth();
+  const user = auth.user;
+  const signedIn = Boolean(auth.token && user);
+  const displayName = user?.displayName?.trim()
+    || [user?.firstName, user?.lastName].filter((part) => Boolean(part?.trim())).join(" ").trim()
+    || socialCommerceUi("accountGuestName");
+  const mobile = user?.mobile?.trim() ?? "";
+  const initial = displayName.slice(0, 1) || "ق";
+  const isSeller = user?.role === "seller";
+  const destinations = [
+    { href: "/orders", icon: "▣", title: socialCommerceUi("accountOrdersTitle"), body: socialCommerceUi("accountOrdersBody"), action: socialCommerceUi("accountOrdersAction") },
+    { href: "/saved", icon: "☆", title: socialCommerceUi("accountSavedTitle"), body: socialCommerceUi("accountSavedBody"), action: socialCommerceUi("accountSavedAction") },
+    { href: "/messages", icon: "✉", title: socialCommerceUi("accountMessagesTitle"), body: socialCommerceUi("accountMessagesBody"), action: socialCommerceUi("accountMessagesAction") },
+    { href: "/settings", icon: "⚙", title: socialCommerceUi("accountSettingsTitle"), body: socialCommerceUi("accountSettingsBody"), action: socialCommerceUi("accountSettingsAction") },
+  ];
+  const cards = destinations.map((item) =>
+    '<a class="phoenix-reset-account-link" href="' + item.href + '" data-nav>' +
+      '<span class="phoenix-reset-account-link-icon" aria-hidden="true">' + item.icon + '</span>' +
+      '<span class="phoenix-reset-account-link-copy"><strong>' + item.title + '</strong><small>' + item.body + '</small><span class="phoenix-reset-account-link-action">' + item.action + ' <span aria-hidden="true">←</span></span></span>' +
+    '</a>'
+  ).join("");
+  return '<div class="phoenix-reset-page phoenix-reset-account-page">' +
+    '<section class="phoenix-reset-hero"><div class="phoenix-reset-hero-copy">' +
+      '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("accountEyebrow") + '</span></div>' +
+      '<h1>' + socialCommerceUi("accountTitle") + '</h1><p>' + socialCommerceUi("accountIntro") + '</p></div>' +
+      (signedIn ? '<a class="button button-primary phoenix-reset-hero-cta" href="/profile" data-nav>' + socialCommerceUi("accountProfileAction") + ' ←</a>' :
+        '<button class="button button-primary phoenix-reset-hero-cta" type="button" data-open-login>' + socialCommerceUi("accountSignInAction") + '</button>') +
+    '</section>' +
+    '<section class="phoenix-reset-account-identity">' +
+      '<div class="phoenix-reset-account-avatar" aria-hidden="true">' + escapeHtml(initial) + '</div>' +
+      '<div class="phoenix-reset-account-identity-copy"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("accountIdentityTitle") + '</span><h2>' + escapeHtml(displayName) + '</h2>' +
+        '<p>' + (signedIn ? socialCommerceUi("accountStatusSignedIn") : socialCommerceUi("accountSignInBody")) + '</p></div>' +
+      '<div class="phoenix-reset-account-identity-details">' +
+        '<span><small>' + socialCommerceUi("accountNameLabel") + '</small><strong>' + escapeHtml(displayName) + '</strong></span>' +
+        '<span><small>' + socialCommerceUi("accountMobileLabel") + '</small><strong>' + (mobile ? '<bdi dir="ltr">' + escapeHtml(mobile) + '</bdi>' : socialCommerceUi("accountNotProvided")) + '</strong></span>' +
+      '</div>' +
+      '<div class="phoenix-reset-account-identity-actions">' +
+        (signedIn ? '<a class="button button-ghost" href="/profile" data-nav>' + socialCommerceUi("accountProfileAction") + '</a><button class="button button-ghost" type="button" data-account-revoke>' + socialCommerceUi("accountLogoutAction") + '</button>' :
+          '<button class="button button-primary" type="button" data-open-login>' + socialCommerceUi("accountSignInAction") + '</button>') +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-account-section"><div class="phoenix-reset-account-section-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("accountShortcutsEyebrow") + '</span><h2>' + socialCommerceUi("accountShortcutsTitle") + '</h2></div><p>' + socialCommerceUi("accountShortcutsBody") + '</p></div>' +
+      '<div class="phoenix-reset-account-grid">' + cards + '</div></section>' +
+    '<section class="phoenix-reset-account-seller"><div class="phoenix-reset-account-seller-icon" aria-hidden="true">＋</div>' +
+      '<div class="phoenix-reset-account-seller-copy"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("accountSellerEyebrow") + '</span>' +
+        '<h2>' + (isSeller ? socialCommerceUi("accountSellerReadyTitle") : socialCommerceUi("accountSellerTitle")) + '</h2>' +
+        '<p>' + (isSeller ? socialCommerceUi("accountSellerReadyBody") : socialCommerceUi("accountSellerBody")) + '</p></div>' +
+      (isSeller ? '<a class="button button-primary" href="/business" data-nav>' + socialCommerceUi("accountSellerWorkspaceAction") + ' ←</a>' :
+        '<button class="button button-primary" type="button" data-activate-seller>' + socialCommerceUi("accountSellerAction") + ' ←</button>') +
+    '</section></div>';
 }
 
 async function loadAccountState(): Promise<void> {
@@ -3600,38 +4003,60 @@ type OrderRecord = {
 };
 
 function renderOrders(): string {
-  return `
-    <div class="phoenix-orders-page">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("سفارش‌ها و معاملات")}</span>
-          <h1>${uiText("سفارش‌های من و")} <em>${uiText("پیگیری وضعیت")}</em></h1>
-          <p>${uiText("سفارش‌های خرید، خدمات رزروشده و معاملات را به سادگی رهگیری و مدیریت کنید.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-ghost" href="/transactions" data-nav>${uiText("استعلام تراکنش")}</a>
-          <a class="button button-primary" href="/discover" data-nav>${uiText("کشف و خرید جدید")} <span>←</span></a>
-        </div>
-      </section>
-
-      <section class="phoenix-orders-controls">
-        <div class="phoenix-orders-tabs" role="tablist" aria-label="${escapeAttr(uiText("فیلتر سفارش‌ها"))}">
-          <button class="active" type="button" data-orders-filter="all">${uiText("همه سفارش‌ها")}</button>
-          <button type="button" data-orders-filter="processing">${uiText("در حال پردازش")}</button>
-          <button type="button" data-orders-filter="shipped">${uiText("ارسال‌شده")}</button>
-          <button type="button" data-orders-filter="delivered">${uiText("تحویل‌شده")}</button>
-        </div>
-        <div class="phoenix-orders-search">
-          <input type="search" id="orders-search-input" class="studio-input-line" placeholder="${escapeAttr(uiText("جستجو بر اساس شناسه یا عنوان سفارش…"))}" />
-        </div>
-      </section>
-
-      <section class="phoenix-orders-container" id="orders-container">
-        <div class="slot-loading">${uiText("در حال دریافت سفارش‌ها…")}</div>
-      </section>
-    </div>
-  `;
+  return '<div class="phoenix-reset-page phoenix-reset-orders-page">' +
+    '<section class="phoenix-reset-hero">' +
+      '<div class="phoenix-reset-hero-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("ordersEyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("ordersTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("ordersIntro") + '</p>' +
+      '</div>' +
+      '<div class="phoenix-reset-orders-hero-actions">' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("ordersDiscoverAction") + ' <span aria-hidden="true">←</span></a>' +
+        '<a class="button button-ghost" href="/transactions" data-nav>' + socialCommerceUi("ordersTransactionsAction") + '</a>' +
+      '</div>' +
+    '</section>' +
+    '<div class="phoenix-reset-discover-grid">' +
+      '<section class="phoenix-reset-main-column">' +
+        '<div class="phoenix-reset-orders-toolbar">' +
+          '<nav class="phoenix-reset-orders-tabs" role="tablist" aria-label="' + escapeAttr(socialCommerceUi("ordersFilterLabel")) + '">' +
+            '<button class="phoenix-reset-tab active" type="button" data-orders-filter="all" aria-selected="true">' + socialCommerceUi("ordersAll") + '</button>' +
+            '<button class="phoenix-reset-tab" type="button" data-orders-filter="processing" aria-selected="false">' + socialCommerceUi("ordersProcessing") + '</button>' +
+            '<button class="phoenix-reset-tab" type="button" data-orders-filter="shipped" aria-selected="false">' + socialCommerceUi("ordersShipped") + '</button>' +
+            '<button class="phoenix-reset-tab" type="button" data-orders-filter="delivered" aria-selected="false">' + socialCommerceUi("ordersDelivered") + '</button>' +
+          '</nav>' +
+          '<label class="phoenix-reset-orders-search">' +
+            '<span aria-hidden="true">⌕</span>' +
+            '<input type="search" id="orders-search-input" autocomplete="off" placeholder="' + escapeAttr(socialCommerceUi("ordersSearchPlaceholder")) + '" aria-label="' + escapeAttr(socialCommerceUi("ordersSearchPlaceholder")) + '" />' +
+          '</label>' +
+        '</div>' +
+        '<div id="orders-container" class="phoenix-reset-order-list" aria-live="polite" aria-busy="true">' +
+          '<div class="phoenix-reset-orders-loading"><span class="phoenix-reset-side-icon" aria-hidden="true">▣</span><p>' + socialCommerceUi("ordersLoading") + '</p></div>' +
+        '</div>' +
+      '</section>' +
+      '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
+        '<section class="phoenix-reset-side-card phoenix-reset-order-steps-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">↗</span>' +
+          '<h2>' + socialCommerceUi("ordersProgressTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("ordersProgressIntro") + '</p>' +
+          '<ol class="phoenix-reset-order-steps">' +
+            '<li><span>1</span><div><strong>' + socialCommerceUi("ordersStageConfirmation") + '</strong><small>' + socialCommerceUi("ordersStageConfirmationHint") + '</small></div></li>' +
+            '<li><span>2</span><div><strong>' + socialCommerceUi("ordersStagePacking") + '</strong><small>' + socialCommerceUi("ordersStagePackingHint") + '</small></div></li>' +
+            '<li><span>3</span><div><strong>' + socialCommerceUi("ordersStageShipping") + '</strong><small>' + socialCommerceUi("ordersStageShippingHint") + '</small></div></li>' +
+            '<li><span>4</span><div><strong>' + socialCommerceUi("ordersStageDelivery") + '</strong><small>' + socialCommerceUi("ordersStageDeliveryHint") + '</small></div></li>' +
+          '</ol>' +
+        '</section>' +
+        '<section class="phoenix-reset-side-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">✉</span>' +
+          '<h2>' + socialCommerceUi("ordersNeedHelpTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("ordersNeedHelpBody") + '</p>' +
+          '<a class="button button-ghost" href="/messages" data-nav>' + socialCommerceUi("ordersAskSellerAction") + ' <span aria-hidden="true">←</span></a>' +
+        '</section>' +
+      '</aside>' +
+    '</div>' +
+  '</div>';
 }
+
+
 
 async function loadOrdersPage(): Promise<void> {
   const container = document.querySelector<HTMLElement>("#orders-container");
@@ -3639,569 +4064,522 @@ async function loadOrdersPage(): Promise<void> {
   const tabButtons = document.querySelectorAll<HTMLButtonElement>("[data-orders-filter]");
   if (!container) return;
 
+  const statusLabel = (status: string): string => {
+    const normalized = status.toLowerCase();
+    if (["created", "pending", "awaiting_confirmation", "awaiting_seller_confirmation", "submitted"].includes(normalized)) {
+      return socialCommerceUi("orderStatusAwaitingConfirmation");
+    }
+    if (["processing", "packing", "confirmed", "accepted", "ready_to_ship"].includes(normalized)) {
+      return socialCommerceUi("orderStatusPreparing");
+    }
+    if (["shipped", "dispatched", "in_transit", "out_for_delivery"].includes(normalized)) {
+      return socialCommerceUi("orderStatusShipped");
+    }
+    if (["delivered", "completed"].includes(normalized)) return socialCommerceUi("orderStatusDelivered");
+    if (["cancelled", "canceled", "refunded", "failed"].includes(normalized)) return socialCommerceUi("orderStatusCancelled");
+    return socialCommerceUi("orderStatusInReview");
+  };
+  const statusClass = (status: string): string => {
+    const normalized = status.toLowerCase();
+    if (["created", "pending", "awaiting_confirmation", "awaiting_seller_confirmation", "submitted"].includes(normalized)) return "waiting";
+    if (["processing", "packing", "confirmed", "accepted", "ready_to_ship"].includes(normalized)) return "preparing";
+    if (["shipped", "dispatched", "in_transit", "out_for_delivery"].includes(normalized)) return "shipped";
+    if (["delivered", "completed"].includes(normalized)) return "delivered";
+    if (["cancelled", "canceled", "refunded", "failed"].includes(normalized)) return "cancelled";
+    return "unknown";
+  };
+  const stageIndex = (status: string): number => {
+    const normalized = status.toLowerCase();
+    if (["created", "pending", "awaiting_confirmation", "awaiting_seller_confirmation", "submitted"].includes(normalized)) return 0;
+    if (["processing", "packing", "confirmed", "accepted", "ready_to_ship"].includes(normalized)) return 1;
+    if (["shipped", "dispatched", "in_transit", "out_for_delivery"].includes(normalized)) return 2;
+    if (["delivered", "completed"].includes(normalized)) return 3;
+    return -1;
+  };
+
   try {
     const res = await apiJson<{ data: OrderRecord[] }>("/api/v1/commerce/orders");
     const allOrders = Array.isArray(res.data) ? res.data : [];
     let currentFilter = "all";
     let searchQuery = "";
 
-    const renderFiltered = () => {
+    const renderFiltered = (): void => {
       let filtered = allOrders;
-      if (currentFilter !== "all") {
-        if (currentFilter === "processing") filtered = filtered.filter((o) => o.status === "processing" || o.status === "created");
-        else if (currentFilter === "shipped") filtered = filtered.filter((o) => o.status === "shipped" || o.status === "dispatched");
-        else if (currentFilter === "delivered") filtered = filtered.filter((o) => o.status === "delivered" || o.status === "completed");
+      if (currentFilter === "processing") {
+        filtered = filtered.filter((order) => ["created", "pending", "awaiting_confirmation", "awaiting_seller_confirmation", "submitted", "processing", "packing", "confirmed", "accepted", "ready_to_ship"].includes(order.status.toLowerCase()));
+      } else if (currentFilter === "shipped") {
+        filtered = filtered.filter((order) => ["shipped", "dispatched", "in_transit", "out_for_delivery"].includes(order.status.toLowerCase()));
+      } else if (currentFilter === "delivered") {
+        filtered = filtered.filter((order) => ["delivered", "completed"].includes(order.status.toLowerCase()));
       }
       if (searchQuery) {
-        filtered = filtered.filter((o) =>
-          o.id.toLowerCase().includes(searchQuery) ||
-          (o.trackingNumber && o.trackingNumber.toLowerCase().includes(searchQuery)) ||
-          (o.items && o.items.some((i) => i.descriptionSnapshot && i.descriptionSnapshot.toLowerCase().includes(searchQuery)))
+        filtered = filtered.filter((order) =>
+          order.id.toLowerCase().includes(searchQuery) ||
+          (order.trackingNumber && order.trackingNumber.toLowerCase().includes(searchQuery)) ||
+          (order.items && order.items.some((item) => item.descriptionSnapshot && item.descriptionSnapshot.toLowerCase().includes(searchQuery)))
         );
       }
 
+      container.setAttribute("aria-busy", "false");
       if (!filtered.length) {
-        container.innerHTML = `
-          <div class="slot-empty">
-            <span>📦</span>
-            <p>${uiText("هیچ سفارشی در این دسته‌بندی یافت نشد.")}</p>
-            <a class="button button-primary" href="/discover" data-nav>${uiText("مشاهده محصولات و خدمات")}</a>
-          </div>
-        `;
+        container.innerHTML =
+          '<div class="phoenix-reset-orders-empty">' +
+            '<span class="phoenix-reset-orders-empty-icon" aria-hidden="true">▣</span>' +
+            '<h2>' + socialCommerceUi("ordersEmptyTitle") + '</h2>' +
+            '<p>' + socialCommerceUi("ordersEmptyBody") + '</p>' +
+            '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("ordersEmptyAction") + ' <span aria-hidden="true">←</span></a>' +
+          '</div>';
         return;
       }
 
-      container.innerHTML = `
-        <div class="phoenix-orders-list">
-          ${filtered.map((order) => {
-            const statusLabel = order.status === "delivered" || order.status === "completed"
-              ? uiText("تحویل‌شده")
-              : order.status === "shipped"
-              ? uiText("در حال ارسال")
-              : uiText("در حال آماده‌سازی");
-            const statusClass = order.status === "delivered" || order.status === "completed"
-              ? "status-delivered"
-              : order.status === "shipped"
-              ? "status-shipped"
-              : "status-processing";
+      const stages = [
+        socialCommerceUi("ordersStageConfirmation"),
+        socialCommerceUi("ordersStagePacking"),
+        socialCommerceUi("ordersStageShipping"),
+        socialCommerceUi("ordersStageDelivery"),
+      ];
+      container.innerHTML = '<div class="phoenix-reset-order-list-inner">' + filtered.map((order) => {
+        const stateClass = statusClass(order.status);
+        const currentStage = stageIndex(order.status);
+        const formattedTotal = order.grandTotalMinor !== undefined && order.grandTotalMinor !== null
+          ? formatLocalizedNumber(order.grandTotalMinor) + (order.currency ? " " + escapeHtml(order.currency) : "")
+          : socialCommerceUi("orderAmountUnavailable");
+        const items = order.items ?? [];
+        const stageMarkup = currentStage >= 0
+          ? '<ol class="phoenix-reset-order-progress" aria-label="' + escapeAttr(socialCommerceUi("ordersProgressTitle")) + '">' +
+            stages.map((stage, index) => '<li class="' + (index < currentStage ? "complete" : index === currentStage ? "current" : "") + '">' +
+              '<span aria-hidden="true">' + (index < currentStage ? "✓" : String(index + 1)) + '</span><small>' + stage + '</small></li>').join("") +
+            '</ol>'
+          : "";
+        return '<article class="phoenix-reset-order-card">' +
+          '<header class="phoenix-reset-order-header">' +
+            '<div class="phoenix-reset-order-heading"><span class="phoenix-reset-order-kicker">' + socialCommerceUi("orderReference") + '</span><strong class="phoenix-reset-order-id"><bdi>' + escapeHtml(order.id) + '</bdi></strong>' +
+              '<small>' + (order.createdAt ? escapeHtml(formatDate(order.createdAt)) : socialCommerceUi("orderDateUnavailable")) + '</small></div>' +
+            '<span class="phoenix-reset-order-status ' + stateClass + '">' + statusLabel(order.status) + '</span>' +
+          '</header>' +
+          stageMarkup +
+          '<div class="phoenix-reset-order-items">' +
+            (items.length ? items.map((item) => {
+              const unitPrice = item.unitPriceMinorSnapshot !== undefined && item.unitPriceMinorSnapshot !== null
+                ? formatLocalizedNumber(item.unitPriceMinorSnapshot) + (order.currency ? " " + escapeHtml(order.currency) : "")
+                : socialCommerceUi("orderAmountUnavailable");
+              return '<div class="phoenix-reset-order-item"><span class="phoenix-reset-order-item-icon" aria-hidden="true">▦</span><div><strong>' +
+                escapeHtml(item.descriptionSnapshot ?? socialCommerceUi("orderItemFallback")) + '</strong><small>' +
+                socialCommerceUi("orderQuantity") + ' ' + formatLocalizedNumber(item.quantity ?? 1) + ' · ' + unitPrice + '</small></div></div>';
+            }).join("") : '<p class="phoenix-reset-order-no-items">' + socialCommerceUi("orderItemsUnavailable") + '</p>') +
+          '</div>' +
+          '<footer class="phoenix-reset-order-footer">' +
+            '<div class="phoenix-reset-order-total"><span>' + socialCommerceUi("orderTotalLabel") + '</span><strong>' + formattedTotal + '</strong>' +
+              (order.trackingNumber ? '<small>' + socialCommerceUi("orderTrackingCode") + ' <bdi>' + escapeHtml(order.trackingNumber) + '</bdi></small>' : '') + '</div>' +
+            '<div class="phoenix-reset-order-actions">' +
+              '<button class="button button-primary" type="button" data-track-order="' + escapeAttr(order.id) + '">' + socialCommerceUi("orderTrackAction") + '</button>' +
+              '<a class="button button-ghost" href="/transactions?order=' + encodeURIComponent(order.id) + '" data-nav>' + socialCommerceUi("orderDetailsAction") + '</a>' +
+            '</div>' +
+          '</footer>' +
+        '</article>';
+      }).join("") + '</div>';
 
-            const items = order.items ?? [];
-            const formattedTotal = order.grandTotalMinor ? formatLocalizedNumber(order.grandTotalMinor) + " ریال" : "—";
-            return `
-              <article class="phoenix-order-card glass-card">
-                <div class="phoenix-order-card-header">
-                  <div>
-                    <span class="order-id-label">${uiText("شناسه سفارش:")} <strong>${escapeHtml(order.id)}</strong></span>
-                    <span class="order-date">${order.createdAt ? formatDate(order.createdAt) : "—"}</span>
-                  </div>
-                  <span class="order-status-badge ${statusClass}">${escapeHtml(statusLabel)}</span>
-                </div>
-
-                <div class="phoenix-order-card-items">
-                  ${items.map((item) => `
-                    <div class="order-item-row">
-                      <div class="order-item-icon">✦</div>
-                      <div class="order-item-copy">
-                        <strong>${escapeHtml(item.descriptionSnapshot ?? "محصول یا خدمت ققنوس")}</strong>
-                        <small>${uiText("تعداد:")} ${item.quantity ?? 1} · ${item.unitPriceMinorSnapshot ? formatLocalizedNumber(item.unitPriceMinorSnapshot) + " ریال" : "—"}</small>
-                      </div>
-                    </div>
-                  `).join("")}
-                </div>
-
-                <div class="phoenix-order-card-footer">
-                  <div class="order-footer-meta">
-                    ${order.trackingNumber ? `<span>${uiText("کد رهگیری:")} <code>${escapeHtml(order.trackingNumber)}</code></span>` : ""}
-                    <span>${uiText("مبلغ پرداختی:")} <strong>${formattedTotal}</strong></span>
-                  </div>
-                  <div class="order-footer-actions">
-                    <button class="button button-primary" type="button" data-track-order="${escapeHtml(order.id)}">${uiText("رهگیری گام‌به‌گام")}</button>
-                    <a class="button button-ghost" href="/transactions?order=${encodeURIComponent(order.id)}" data-nav>${uiText("جزئیات معامله")}</a>
-                    <a class="button button-ghost" href="/billing" data-nav>${uiText("فاکتور")}</a>
-                  </div>
-                </div>
-              </article>
-            `;
-          }).join("")}
-        </div>
-      `;
-
-      container.querySelectorAll<HTMLButtonElement>("[data-track-order]").forEach((btn) => {
-        btn.onclick = () => {
-          const orderId = btn.dataset.trackOrder;
-          if (!orderId) return;
-          openOrderTrackingDrawer(orderId);
+      container.querySelectorAll<HTMLButtonElement>("[data-track-order]").forEach((button) => {
+        button.onclick = () => {
+          const orderId = button.dataset.trackOrder;
+          if (orderId) openOrderTrackingDrawer(orderId);
         };
       });
     };
 
-    tabButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        tabButtons.forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentFilter = btn.dataset.ordersFilter ?? "all";
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        currentFilter = button.dataset.ordersFilter ?? "all";
+        tabButtons.forEach((candidate) => {
+          const active = candidate === button;
+          candidate.classList.toggle("active", active);
+          candidate.setAttribute("aria-selected", String(active));
+        });
         renderFiltered();
       });
     });
-
-    if (searchInput) {
-      searchInput.addEventListener("input", () => {
-        searchQuery = searchInput.value.trim().toLowerCase();
-        renderFiltered();
-      });
-    }
-
+    searchInput?.addEventListener("input", () => {
+      searchQuery = searchInput.value.trim().toLocaleLowerCase();
+      renderFiltered();
+    });
     renderFiltered();
   } catch (error) {
-    container.innerHTML = `
-      <div class="slot-empty">
-        <span>!</span>
-        <p>${escapeHtml(error instanceof Error ? error.message : uiText("خواندن سفارش‌ها با خطا مواجه شد."))}</p>
-      </div>
-    `;
+    container.setAttribute("aria-busy", "false");
+    container.innerHTML =
+      '<div class="phoenix-reset-orders-empty error">' +
+        '<span class="phoenix-reset-orders-empty-icon" aria-hidden="true">!</span>' +
+        '<h2>' + socialCommerceUi("ordersLoadErrorTitle") + '</h2>' +
+        '<p>' + escapeHtml(error instanceof Error ? error.message : socialCommerceUi("ordersLoadErrorBody")) + '</p>' +
+        '<button class="button button-ghost" type="button" data-orders-retry>' + socialCommerceUi("ordersRetry") + '</button>' +
+      '</div>';
+    container.querySelector<HTMLButtonElement>("[data-orders-retry]")?.addEventListener("click", () => void loadOrdersPage());
   }
 }
+
+
 
 /* =========================================================================
    Saved / Wishlist Surface (ذخیره‌شده‌ها)
    ========================================================================= */
 
 function renderSaved(): string {
-  return `
-    <div class="phoenix-saved-page">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("علاقه‌مندی‌ها")}</span>
-          <h1>${uiText("موارد ذخیره‌شده و")} <em>${uiText("گزینه‌های منتخب")}</em></h1>
-          <p>${uiText("محصولات، خدمات و کسب‌وکارهایی که برای بررسی یا خرید آینده نشان کرده‌اید.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-ghost" href="/compare" data-nav>${uiText("میز مقایسه")} ⚖</a>
-          <button class="button button-ghost" type="button" data-clear-all-saved>${uiText("پاکسازی همه")}</button>
-        </div>
-      </section>
+  const savedItems = getShortlist();
+  const compareCount = getCompareItems().length;
+  return '<div class="phoenix-reset-saved-page">' +
+    '<section class="phoenix-reset-saved-hero">' +
+      '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("savedEyebrow") + '</span>' +
+        '<h1>' + socialCommerceUi("savedTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("savedIntro") + '</p></div>' +
+      '<div class="phoenix-reset-saved-hero-actions">' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("discoverSaved") + ' <span aria-hidden="true">←</span></a>' +
+        '<a class="button button-ghost" href="/compare" data-nav' + (compareCount < 2 ? ' hidden' : '') + '>' + socialCommerceUi("compare") + ' · ' + formatLocalizedNumber(compareCount) + '</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-saved-toolbar">' +
+      '<nav class="phoenix-reset-saved-tabs" role="tablist" aria-label="' + escapeAttr(socialCommerceUi("savedCategories")) + '">' +
+        '<button class="active" type="button" data-saved-filter="all" aria-selected="true">' + socialCommerceUi("allItems") + '</button>' +
+        '<button type="button" data-saved-filter="product" aria-selected="false">' + socialCommerceUi("productsPlural") + '</button>' +
+        '<button type="button" data-saved-filter="service" aria-selected="false">' + socialCommerceUi("servicesPlural") + '</button>' +
+        '<button type="button" data-saved-filter="business" aria-selected="false">' + socialCommerceUi("businessesPlural") + '</button>' +
+      '</nav>' +
+      '<div class="phoenix-reset-saved-toolbar-meta"><span id="saved-items-count">' + formatLocalizedNumber(savedItems.length) + '</span><span>' + socialCommerceUi("savedItemsLabel") + '</span>' +
+        '<button class="button button-ghost" type="button" data-clear-all-saved' + (savedItems.length ? '' : ' disabled') + '>' + socialCommerceUi("clearSavedItems") + '</button></div>' +
+    '</section>' +
+    '<section class="phoenix-reset-saved-grid" id="saved-items-grid" aria-live="polite">' +
+      '<div class="slot-loading">' + socialCommerceUi("loadingSavedItems") + '</div>' +
+    '</section>' +
+  '</div>';
+}
 
-      <section class="phoenix-saved-tabs" role="tablist" aria-label="${escapeAttr(uiText("دسته‌بندی موارد ذخیره"))}">
-        <button class="active" type="button" data-saved-filter="all">${uiText("همه")}</button>
-        <button type="button" data-saved-filter="product">${uiText("محصولات")}</button>
-        <button type="button" data-saved-filter="service">${uiText("خدمات")}</button>
-        <button type="button" data-saved-filter="business">${uiText("کسب‌وکارها")}</button>
-      </section>
-
-      <section class="phoenix-saved-grid" id="saved-items-grid">
-        <div class="slot-loading">${uiText("در حال بارگذاری موارد ذخیره‌شده…")}</div>
-      </section>
-    </div>
-  `;
+async function removeSavedItem(item: DiscoveryResult): Promise<void> {
+  const target = socialTarget(item);
+  if (sessionStorage.getItem(STORAGE.accessToken) && target) {
+    const socialIdKey = "save:" + socialKey(target.targetType, target.targetId);
+    const engagementId = socialState.engagements.get(socialIdKey) ?? socialActionIds.get(socialIdKey);
+    if (engagementId) {
+      await apiJson("/api/v1/social/saves/" + encodeURIComponent(engagementId), { method: "DELETE" });
+      socialState.engagements.delete(socialIdKey);
+      socialActionIds.delete(socialIdKey);
+    }
+  }
+  setShortlistItem(item, false);
 }
 
 function loadSavedPage(): void {
   const grid = document.querySelector<HTMLElement>("#saved-items-grid");
   const tabButtons = document.querySelectorAll<HTMLButtonElement>("[data-saved-filter]");
   const clearBtn = document.querySelector<HTMLButtonElement>("[data-clear-all-saved]");
+  const countNode = document.querySelector<HTMLElement>("#saved-items-count");
   if (!grid) return;
 
-  const defaultSavedItems: DiscoveryResult[] = [
-    {
-      id: "item-1",
-      sourceType: "service",
-      sourceId: "svc-1",
-      title: "خدمات مشاوره تخصصی کسب‌وکار و رشد",
-      description: "راهنمایی جامع برای بهینه‌سازی فرایندها، بازاریابی دیجیتال و رشد مقیاس‌پذیر در پلتفرم ققنوس.",
-      city: "تهران",
-      locality: "سعادت‌آباد",
-      rating: 4.9,
-      score: 96,
-      price: 4500000,
-      currency: "IRR",
-      metadata: { businessId: "biz-1", offeringType: "service" },
-    },
-    {
-      id: "item-2",
-      sourceType: "product",
-      sourceId: "prod-1",
-      title: "بسته ابری هوش سازمانی ققنوس",
-      description: "مجموعه ابزارهای هوش مصنوعی جهت تحلیل داده‌ها، پیش‌بینی رفتار مشتریان و خودکارسازی سفارش‌ها.",
-      city: "تهران",
-      locality: "ونک",
-      rating: 4.8,
-      score: 92,
-      price: 12000000,
-      currency: "IRR",
-      metadata: { businessId: "biz-2", offeringType: "product" },
-    },
-  ];
-
   let currentCategory = "all";
+  let savedItems = getShortlist();
 
-  const renderGrid = () => {
-    let items = defaultSavedItems;
-    if (currentCategory !== "all") {
-      items = items.filter((i) => i.sourceType === currentCategory || (i.metadata && i.metadata.offeringType === currentCategory));
-    }
+  const classify = (item: DiscoveryResult): "product" | "service" | "business" => {
+    const kind = item.sourceType ?? item.metadata?.offeringType;
+    if (kind === "business") return "business";
+    if (kind === "service") return "service";
+    return "product";
+  };
 
-    if (!items.length) {
-      grid.innerHTML = `
-        <div class="slot-empty">
-          <span>★</span>
-          <p>${uiText("هنوز موردی در این بخش ذخیره نکرده‌اید.")}</p>
-          <a class="button button-primary" href="/discover" data-nav>${uiText("کشف گزینه‌ها در ققنوس")}</a>
-        </div>
-      `;
+  const renderGrid = (): void => {
+    const filtered = currentCategory === "all" ? savedItems : savedItems.filter((item) => classify(item) === currentCategory);
+    if (countNode) countNode.textContent = formatLocalizedNumber(savedItems.length);
+    if (clearBtn) clearBtn.disabled = savedItems.length === 0;
+
+    tabButtons.forEach((button) => {
+      const active = (button.dataset.savedFilter ?? "all") === currentCategory;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+
+    if (!filtered.length) {
+      grid.innerHTML = '<div class="phoenix-reset-saved-empty"><div class="phoenix-reset-saved-empty-icon" aria-hidden="true">☆</div>' +
+        '<h2>' + socialCommerceUi(savedItems.length ? "savedEmptyFilteredTitle" : "savedEmptyTitle") + '</h2>' +
+        '<p>' + socialCommerceUi(savedItems.length ? "savedEmptyFilteredBody" : "savedEmptyBody") + '</p>' +
+        '<button class="button button-primary" type="button" data-saved-explore>' + socialCommerceUi("goExploreFromSaved") + ' <span aria-hidden="true">←</span></button></div>';
+      grid.querySelector<HTMLButtonElement>("[data-saved-explore]")?.addEventListener("click", () => navigate("/discover?tab=explore"));
       return;
     }
 
-    grid.innerHTML = items.map((item) => {
-      const isService = item.sourceType === "service" || item.metadata?.offeringType === "service";
-      const formattedPrice = item.price ? formatLocalizedNumber(item.price) + " ریال" : uiText("توافقی / استعلام");
-      return `
-        <article class="phoenix-saved-card glass-card">
-          <div class="saved-card-top">
-            <span class="saved-card-type">${isService ? uiText("خدمت") : uiText("محصول")}</span>
-            ${item.rating ? `<span class="saved-card-rating">★ ${formatLocalizedNumber(item.rating)}</span>` : ""}
-          </div>
-          <h3>${escapeHtml(item.title ?? "مورد ذخیره‌شده")}</h3>
-          <p>${escapeHtml(item.description ?? "توضیحی ثبت نشده است.")}</p>
-          <div class="saved-card-meta">
-            ${item.city ? `<span>📍 ${escapeHtml(item.city)}${item.locality ? " · " + escapeHtml(item.locality) : ""}</span>` : ""}
-            <span><strong>${formattedPrice}</strong></span>
-          </div>
-          <div class="saved-card-actions">
-            ${isService
-              ? `<a class="button button-primary" href="/booking?business=${encodeURIComponent(String(item.metadata?.businessId ?? ""))}&offering=${encodeURIComponent(item.id ?? "")}" data-nav>${uiText("رزرو وقت")}</a>`
-              : `<a class="button button-primary" href="/checkout" data-nav>${uiText("خرید مستقیم")}</a>`}
-            <button class="button button-ghost" type="button" data-saved-compare="${escapeAttr(item.id ?? "")}">${uiText("مقایسه")} ⚖</button>
-            <button class="button button-ghost" type="button" data-saved-remove="${escapeAttr(item.id ?? "")}">${uiText("حذف")}</button>
-          </div>
-        </article>
-      `;
+    grid.innerHTML = filtered.map((item) => {
+      const key = item.id ?? item.sourceId ?? "";
+      const kind = classify(item);
+      const kindLabel = kind === "service" ? uiText("خدمت") : kind === "business" ? uiText("کسب‌وکار") : uiText("کالا");
+      const title = item.title ?? item.displayName ?? item.name ?? uiText("مورد ذخیره‌شده");
+      const description = item.description ?? item.body ?? "";
+      const price = item.price !== undefined && item.price !== null
+        ? formatLocalizedNumber(Number(item.price)) + (item.currency ? " " + item.currency : "")
+        : discoveryUi("askPrice");
+      const locationLabel = [item.city, item.locality].filter((part) => Boolean(part?.trim())).join(" · ");
+      const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ??
+        item.metadata?.thumbnailUrl ?? (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
+      const mediaUrl = typeof mediaCandidate === "string" && (mediaCandidate.startsWith("/") || /^https?:\/\//i.test(mediaCandidate)) ? mediaCandidate : "";
+      const media = mediaUrl
+        ? '<img src="' + escapeAttr(mediaUrl) + '" alt="' + escapeAttr(title) + '" loading="lazy" />'
+        : '<span class="phoenix-reset-saved-media-placeholder" aria-hidden="true">◇</span>';
+      const metadataBusiness = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
+      const compareButton = kind === "product"
+        ? '<button class="button button-ghost" type="button" data-saved-compare="' + escapeAttr(key) + '">' + uiText("مقایسه") + ' ⚖</button>'
+        : "";
+      const routePath = kind === "business"
+        ? "/businesses/" + encodeURIComponent(item.sourceId ?? item.id ?? "")
+        : kind === "service"
+          ? "/booking?offering=" + encodeURIComponent(item.sourceId ?? item.id ?? "") + (metadataBusiness ? "&businessId=" + encodeURIComponent(metadataBusiness) : "")
+          : "";
+      return '<article class="phoenix-reset-saved-card">' +
+        '<button class="phoenix-reset-saved-media" type="button" data-saved-open="' + escapeAttr(key) + '" aria-label="' + escapeAttr(socialCommerceUi("viewDetailsSaved")) + '">' + media + '<span class="phoenix-reset-saved-kind">' + kindLabel + '</span></button>' +
+        '<div class="phoenix-reset-saved-card-body"><div class="phoenix-reset-saved-card-kicker">' + kindLabel + (locationLabel ? ' · ' + escapeHtml(locationLabel) : '') + '</div>' +
+          '<h2>' + escapeHtml(title) + '</h2>' + (description ? '<p>' + escapeHtml(description) + '</p>' : '') +
+          '<div class="phoenix-reset-saved-card-price">' + escapeHtml(price) + '</div>' +
+          '<div class="phoenix-reset-saved-card-actions">' +
+            '<button class="button button-primary" type="button" data-saved-open="' + escapeAttr(key) + '">' + uiText("مشاهده جزئیات") + '</button>' +
+            (routePath ? '<button class="button button-ghost" type="button" data-saved-route="' + escapeAttr(routePath) + '">' + (kind === "service" ? socialCommerceUi("bookingSavedAction") : socialCommerceUi("viewSellerSaved")) + '</button>' : '') +
+            compareButton +
+            '<button class="button button-ghost" type="button" data-saved-remove="' + escapeAttr(key) + '">' + socialCommerceUi("removeFromSaved") + '</button>' +
+          '</div></div></article>';
     }).join("");
 
-    grid.querySelectorAll<HTMLButtonElement>("[data-saved-compare]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.dataset.savedCompare;
-        const target = defaultSavedItems.find((i) => i.id === id);
-        if (target) {
-          const raw = localStorage.getItem("phoenix-compare-items");
-          const existing: DiscoveryResult[] = raw ? JSON.parse(raw) : [];
-          if (!existing.some((e) => e.id === target.id)) {
-            existing.push(target);
-            localStorage.setItem("phoenix-compare-items", JSON.stringify(existing));
-            showToast("به میز مقایسه اضافه شد.");
-          } else {
-            showToast("این مورد قبلاً به مقایسه اضافه شده است.");
-          }
-        }
+    grid.querySelectorAll<HTMLButtonElement>("[data-saved-open]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.savedOpen ?? "";
+        const item = savedItems.find((entry) => (entry.id ?? entry.sourceId ?? "") === key);
+        if (item) openDiscoveryResultPanel(item);
       });
     });
-
-    grid.querySelectorAll<HTMLButtonElement>("[data-saved-remove]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.dataset.savedRemove;
-        const idx = defaultSavedItems.findIndex((i) => i.id === id);
-        if (idx >= 0) defaultSavedItems.splice(idx, 1);
-        showToast("از ذخیره‌شده‌ها برداشته شد.");
-        renderGrid();
+    grid.querySelectorAll<HTMLButtonElement>("[data-saved-route]").forEach((button) => {
+      button.addEventListener("click", () => navigate(button.dataset.savedRoute ?? "/discover"));
+    });
+    grid.querySelectorAll<HTMLButtonElement>("[data-saved-compare]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.savedCompare ?? "";
+        const item = savedItems.find((entry) => (entry.id ?? entry.sourceId ?? "") === key);
+        if (!item) return;
+        const alreadySelected = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key);
+        if (!alreadySelected) toggleCompare(item);
+        const selected = getCompareItems().length;
+        if (selected >= 2) navigate("/compare");
+        else showToast(socialCommerceUi("compareAddHint"));
+      });
+    });
+    grid.querySelectorAll<HTMLButtonElement>("[data-saved-remove]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const key = button.dataset.savedRemove ?? "";
+        const item = savedItems.find((entry) => (entry.id ?? entry.sourceId ?? "") === key);
+        if (!item) return;
+        button.disabled = true;
+        try {
+          await removeSavedItem(item);
+          savedItems = getShortlist();
+          renderGrid();
+          showToast(socialCommerceUi("savedRemovedToast"));
+        } catch (error) {
+          button.disabled = false;
+          showToast(error instanceof Error ? error.message : socialCommerceUi("savedRemoveFailedToast"));
+        }
       });
     });
   };
 
-  tabButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      tabButtons.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentCategory = btn.dataset.savedFilter ?? "all";
-      renderGrid();
-    });
+  tabButtons.forEach((button) => button.addEventListener("click", () => {
+    currentCategory = button.dataset.savedFilter ?? "all";
+    renderGrid();
+  }));
+
+  clearBtn?.addEventListener("click", async () => {
+    if (!savedItems.length || clearBtn.disabled) return;
+    clearBtn.disabled = true;
+    const failed: DiscoveryResult[] = [];
+    if (sessionStorage.getItem(STORAGE.accessToken)) await loadSocialState();
+    for (const item of savedItems) {
+      try {
+        await removeSavedItem(item);
+      } catch {
+        failed.push(item);
+      }
+    }
+    savedItems = failed;
+    saveShortlist(failed);
+    renderGrid();
+    showToast(socialCommerceUi(failed.length ? "savedClearFailedToast" : "savedClearedToast"));
   });
 
-  if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      defaultSavedItems.length = 0;
-      showToast("همه موارد ذخیره‌شده پاکسازی شدند.");
+  const token = sessionStorage.getItem(STORAGE.accessToken);
+  if (token) {
+    void loadSocialState().finally(() => {
+      savedItems = getShortlist();
       renderGrid();
     });
+  } else {
+    renderGrid();
   }
-
-  renderGrid();
 }
 
 /* =========================================================================
    Messages / Conversations Surface (پیام‌ها و گفتگوها)
    ========================================================================= */
 
-type ChatThread = {
-  id: string;
-  peerName: string;
-  peerRole: string;
-  lastMessage: string;
-  updatedAt: string;
-  unreadCount: number;
-  messages: Array<{ id: string; sender: "user" | "peer"; text: string; time: string }>;
-};
-
 function renderMessages(): string {
-  const persona = getActivePersona();
-  if (persona === "consumer" || persona === "individual") {
-    return renderConsumerMessages();
-  }
-  return renderLegacyMessages();
-}
+  const { token } = getStoredAuth();
+  const params = new URLSearchParams(location.search);
+  const orderId = params.get("order")?.trim() ?? "";
+  const topic = params.get("topic")?.trim() ?? "";
+  const contextId = orderId || topic;
+  const contextTitle = params.get("label")?.trim() || socialCommerceUi(orderId ? "messagesOrderSelected" : "messagesTopicSelected");
+  const contextPanel = contextId
+    ? '<section class="phoenix-reset-message-context">' +
+        '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesContextTitle") + '</span>' +
+        '<h2 class="phoenix-reset-message-context-title">' + escapeHtml(contextTitle) + '</h2>' +
+        '<bdi hidden dir="ltr" translate="no" data-no-translate class="phoenix-reset-message-context-id">' + escapeHtml(contextId) + '</bdi>' +
+        '<p>' + socialCommerceUi("messagesContextBody") + '</p>' +
+        '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("messagesOrdersAction") + ' <span aria-hidden="true">←</span></a>' +
+      '</section>'
+    : '';
 
-function renderLegacyMessages(): string {
-  return `
-    <div class="phoenix-messages-page">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("پیام‌رسان")}</span>
-          <h1>${uiText("گفتگوها و")} <em>${uiText("پیام‌های مستقیم")}</em></h1>
-          <p>${uiText("ارتباط بی‌واسطه و امن با فروشندگان، ارائه‌دهندگان خدمات و پشتیبانی هوشمند ققنوس.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-ghost" href="/communication" data-nav>${uiText("تنظیمات اعلان‌ها")}</a>
-        </div>
-      </section>
-
-      <div class="phoenix-messages-layout">
-        <aside class="phoenix-messages-threads glass-card" aria-label="${escapeAttr(uiText("لیست گفتگوها"))}">
-          <div class="messages-threads-header">
-            <h3>${uiText("گفتگوها")}</h3>
-            <span class="pill" id="messages-threads-count">۲ گفتگو</span>
-          </div>
-          <div class="messages-threads-list" id="messages-threads-list">
-            <div class="slot-loading">${uiText("در حال بارگذاری گفتگوها…")}</div>
-          </div>
-        </aside>
-
-        <section class="phoenix-messages-chat glass-card" aria-label="${escapeAttr(uiText("محیط گفتگو"))}">
-          <div class="messages-chat-header" id="messages-chat-header">
-            <div>
-              <strong id="chat-peer-name">${uiText("پشتیبانی هوشمند ققنوس")}</strong>
-              <small id="chat-peer-role">${uiText("دستیار هوشمند تصمیم‌گیری")}</small>
-            </div>
-            <span class="status-live" aria-label="${escapeAttr(uiText("فعال"))}"></span>
-          </div>
-
-          <div class="messages-chat-stream" id="messages-chat-stream">
-            <div class="slot-loading">${uiText("در حال بارگذاری پیام‌ها…")}</div>
-          </div>
-
-          <form class="messages-chat-input-bar" id="messages-chat-form">
-            <input type="text" id="messages-chat-input" class="studio-input-line" placeholder="${escapeAttr(uiText("پیام خود را بنویسید…"))}" autocomplete="off" />
-            <button class="button button-primary" type="submit">${uiText("ارسال")} <span>←</span></button>
-          </form>
-        </section>
-      </div>
-    </div>
-  `;
-}
-
-async function loadMessagesPage(): Promise<void> {
-  const threadsList = document.querySelector<HTMLElement>("#messages-threads-list");
-  const chatStream = document.querySelector<HTMLElement>("#messages-chat-stream");
-  const peerNameEl = document.querySelector<HTMLElement>("#chat-peer-name");
-  const peerRoleEl = document.querySelector<HTMLElement>("#chat-peer-role");
-  const chatForm = document.querySelector<HTMLFormElement>("#messages-chat-form");
-  const chatInput = document.querySelector<HTMLInputElement>("#messages-chat-input");
-  if (!threadsList || !chatStream) return;
-
-  try {
-    const res = await apiJson<{ data: ChatThread[] }>("/api/v1/communications/conversations");
-    const threads = Array.isArray(res.data) ? res.data : [];
-    let activeThreadId = threads[0]?.id ?? "";
-
-    const renderChat = (thread: ChatThread) => {
-      if (peerNameEl) peerNameEl.textContent = thread.peerName;
-      if (peerRoleEl) peerRoleEl.textContent = thread.peerRole;
-      chatStream.innerHTML = thread.messages.map((m) => `
-        <div class="chat-bubble ${m.sender === "user" ? "chat-bubble-user" : "chat-bubble-peer"}">
-          <p>${escapeHtml(m.text)}</p>
-          <small>${escapeHtml(m.time)}</small>
-        </div>
-      `).join("");
-      chatStream.scrollTop = chatStream.scrollHeight;
-    };
-
-    const renderThreads = () => {
-      threadsList.innerHTML = threads.map((t) => `
-        <button type="button" class="message-thread-item ${t.id === activeThreadId ? "active" : ""}" data-thread-id="${escapeAttr(t.id)}">
-          <div class="thread-avatar">ق</div>
-          <div class="thread-copy">
-            <div class="thread-topline">
-              <strong>${escapeHtml(t.peerName)}</strong>
-              ${t.unreadCount ? `<span class="pill success">${t.unreadCount}</span>` : ""}
-            </div>
-            <p>${escapeHtml(t.lastMessage)}</p>
-          </div>
-        </button>
-      `).join("");
-
-      threadsList.querySelectorAll<HTMLButtonElement>("[data-thread-id]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const id = btn.dataset.threadId;
-          const found = threads.find((t) => t.id === id);
-          if (found) {
-            activeThreadId = found.id;
-            found.unreadCount = 0;
-            renderThreads();
-            renderChat(found);
-          }
-        });
-      });
-    };
-
-    renderThreads();
-    const active = threads.find((t) => t.id === activeThreadId);
-    if (active) renderChat(active);
-
-    if (chatForm && chatInput) {
-      chatForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const text = chatInput.value.trim();
-        if (!text) return;
-        chatInput.value = "";
-
-        const thread = threads.find((t) => t.id === activeThreadId);
-        if (thread) {
-          const nowStr = new Date().toLocaleTimeString(globalLocaleService.getLocale() === "fa" ? "fa-IR" : globalLocaleService.getLocale() === "ar" ? "ar-EG" : "en-US", { hour: "2-digit", minute: "2-digit" });
-          thread.messages.push({ id: "user-" + Date.now(), sender: "user", text, time: nowStr });
-          thread.lastMessage = text;
-          renderChat(thread);
-          renderThreads();
-
-          // Simulating smart peer acknowledgment
-          setTimeout(() => {
-            thread.messages.push({
-              id: "peer-" + Date.now(),
-              sender: "peer",
-              text: "پیام شما دریافت شد. ققنوس درخواست شما را پیگیری می‌کند.",
-              time: new Date().toLocaleTimeString(globalLocaleService.getLocale() === "fa" ? "fa-IR" : globalLocaleService.getLocale() === "ar" ? "ar-EG" : "en-US", { hour: "2-digit", minute: "2-digit" }),
-            });
-            renderChat(thread);
-            renderThreads();
-          }, 800);
-        }
-      });
-    }
-  } catch (error) {
-    threadsList.innerHTML = `<div class="slot-empty"><p>${escapeHtml(error instanceof Error ? error.message : "خواندن پیام‌ها ناموفق بود.")}</p></div>`;
-  }
+  return '<div class="phoenix-reset-page phoenix-reset-messages-page">' +
+    '<section class="phoenix-reset-messages-hero">' +
+      '<div class="phoenix-reset-messages-hero-copy">' +
+        '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesEyebrow") + '</span>' +
+        '<h1>' + socialCommerceUi("messagesTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("messagesIntro") + '</p>' +
+      '</div>' +
+      '<div class="phoenix-reset-messages-mark" aria-hidden="true">✉</div>' +
+    '</section>' +
+    '<div class="phoenix-reset-messages-workspace">' +
+      '<aside class="phoenix-reset-messages-inbox" aria-label="' + escapeAttr(socialCommerceUi("messagesInboxTitle")) + '">' +
+        '<div class="phoenix-reset-messages-inbox-heading">' +
+          '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesInboxEyebrow") + '</span>' +
+          '<h2>' + socialCommerceUi("messagesInboxTitle") + '</h2></div>' +
+          '<span class="phoenix-reset-messages-status">' + socialCommerceUi("messagesStatusLabel") + '</span>' +
+        '</div>' +
+        '<div class="phoenix-reset-messages-inbox-empty">' +
+          '<span class="phoenix-reset-messages-icon" aria-hidden="true">◌</span>' +
+          '<h3>' + socialCommerceUi("messagesListUnavailableTitle") + '</h3>' +
+          '<p>' + socialCommerceUi("messagesListUnavailableBody") + '</p>' +
+        '</div>' +
+      '</aside>' +
+      '<section class="phoenix-reset-messages-main">' +
+        contextPanel +
+        '<article class="phoenix-reset-messages-start-card">' +
+          '<div class="phoenix-reset-messages-start-icon" aria-hidden="true">✦</div>' +
+          '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesEyebrow") + '</span>' +
+          '<h2>' + socialCommerceUi("messagesStartTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("messagesStartBody") + '</p>' +
+          '<div class="phoenix-reset-messages-actions">' +
+            (token ? '' : '<button class="button button-ghost" type="button" data-open-login>' + uiText("ورود به حساب") + '</button>') +
+            '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("messagesExploreAction") + ' <span aria-hidden="true">←</span></a>' +
+            '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("messagesOrdersAction") + '</a>' +
+          '</div>' +
+        '</article>' +
+        '<p class="phoenix-reset-messages-integrity-note"><span aria-hidden="true">✓</span> ' + socialCommerceUi("messagesNoSyntheticNote") + '</p>' +
+      '</section>' +
+    '</div>' +
+  '</div>';
 }
 
 /* =========================================================================
    Settings Surface (تنظیمات)
    ========================================================================= */
 
+type PhoenixNotificationPreferences = { inApp: boolean; sms: boolean; email: boolean; social: boolean };
+const PHOENIX_NOTIFICATION_PREFERENCES_KEY = "phoenix-notification-preferences";
+
+function readPhoenixNotificationPreferences(): PhoenixNotificationPreferences {
+  const fallback: PhoenixNotificationPreferences = { inApp: true, sms: false, email: false, social: false };
+  try {
+    const raw = localStorage.getItem(PHOENIX_NOTIFICATION_PREFERENCES_KEY);
+    if (!raw) return fallback;
+    const value = JSON.parse(raw) as Partial<PhoenixNotificationPreferences>;
+    return { inApp: value.inApp ?? fallback.inApp, sms: value.sms ?? fallback.sms, email: value.email ?? fallback.email, social: value.social ?? fallback.social };
+  } catch { return fallback; }
+}
+
 function renderSettings(): string {
-  return `
-    <div class="phoenix-settings-page">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("تنظیمات")}</span>
-          <h1>${uiText("تنظیمات کاربری و")} <em>${uiText("ترجیحات سامانه")}</em></h1>
-          <p>${uiText("مدیریت حساب شخصی، زبان، پوسته بصری، کانال‌های دریافت اعلان و حقوق داده‌ها.")}</p>
-        </div>
-        <div class="heading-actions">
-          <button class="button button-primary" type="button" data-save-all-settings>${uiText("ذخیره تنظیمات")}</button>
-        </div>
-      </section>
-
-      <div class="phoenix-settings-grid">
-        <article class="glass-card phoenix-settings-card">
-          <div class="card-section-heading">
-            <div><span class="section-kicker">${uiText("زبان و منطقه")}</span><h2>${uiText("زبان سامانه")}</h2></div>
-          </div>
-          <p class="settings-hint">${uiText("زبان محیط کاربری به صورت آنی تغییر می‌کند و در مرورگر شما ذخیره می‌شود.")}</p>
-          <div class="settings-options-row">
-            <button class="button button-ghost settings-lang-btn" type="button" data-set-lang="fa">🇮🇷 فارسی</button>
-            <button class="button button-ghost settings-lang-btn" type="button" data-set-lang="en">🇬🇧 English</button>
-            <button class="button button-ghost settings-lang-btn" type="button" data-set-lang="ar">🇸🇦 العربية</button>
-          </div>
-        </article>
-
-        <article class="glass-card phoenix-settings-card">
-          <div class="card-section-heading">
-            <div><span class="section-kicker">${uiText("ظاهر و پوسته")}</span><h2>${uiText("حالت نمایش")}</h2></div>
-          </div>
-          <p class="settings-hint">${uiText("انتخاب حالت روشن یا تیره متناسب با محیط و نور محیطی.")}</p>
-          <div class="settings-options-row">
-            <button class="button button-ghost settings-theme-btn" type="button" data-set-theme="light">☀ ${uiText("روشن")}</button>
-            <button class="button button-ghost settings-theme-btn" type="button" data-set-theme="dark">☾ ${uiText("تاریک")}</button>
-          </div>
-        </article>
-
-        <article class="glass-card phoenix-settings-card">
-          <div class="card-section-heading">
-            <div><span class="section-kicker">${uiText("ارتباطات")}</span><h2>${uiText("کانال‌های اعلان")}</h2></div>
-          </div>
-          <div class="settings-toggles-list">
-            <label class="settings-toggle-row">
-              <span>${uiText("اعلان‌های درون‌برنامه‌ای (In-App)")}</span>
-              <input type="checkbox" id="setting-notify-inapp" checked />
-            </label>
-            <label class="settings-toggle-row">
-              <span>${uiText("پیامک رویدادهای مهم و سفارش‌ها (SMS)")}</span>
-              <input type="checkbox" id="setting-notify-sms" checked />
-            </label>
-            <label class="settings-toggle-row">
-              <span>${uiText("ایمیل گزارش‌ها و فاکتورها (Email)")}</span>
-              <input type="checkbox" id="setting-notify-email" />
-            </label>
-            <label class="settings-toggle-row">
-              <span>${uiText("پیام‌رسان اجتماعی و واتس‌اپ")}</span>
-              <input type="checkbox" id="setting-notify-social" />
-            </label>
-          </div>
-        </article>
-
-        <article class="glass-card phoenix-settings-card">
-          <div class="card-section-heading">
-            <div><span class="section-kicker">${uiText("امنیت و داده‌ها")}</span><h2>${uiText("حریم خصوصی و حساب")}</h2></div>
-          </div>
-          <div class="settings-actions-stack">
-            <button class="button button-ghost" type="button" data-export-user-data>${uiText("دریافت نسخه پشتیبان از داده‌ها (Export)")}</button>
-            <a class="button button-ghost" href="/account" data-nav>${uiText("مدیریت Session و دسترسی‌ها")}</a>
-            <button class="button button-danger" type="button" data-clear-local-cache>${uiText("پاکسازی کش و خروج")}</button>
-          </div>
-        </article>
-      </div>
-    </div>
-  `;
+  const preferences = readPhoenixNotificationPreferences();
+  return '<div class="phoenix-reset-page phoenix-reset-settings-page">' +
+    '<section class="phoenix-reset-hero"><div class="phoenix-reset-hero-copy">' +
+      '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("settingsEyebrow") + '</span></div>' +
+      '<h1>' + socialCommerceUi("settingsTitle") + '</h1><p>' + socialCommerceUi("settingsIntro") + '</p></div>' +
+      '<a class="button button-ghost phoenix-reset-hero-cta" href="/account" data-nav>' + socialCommerceUi("settingsBackToAccount") + ' ←</a></section>' +
+    '<div class="phoenix-reset-settings-grid">' +
+      '<article class="phoenix-reset-settings-card"><div class="phoenix-reset-settings-card-heading"><span class="phoenix-reset-settings-icon" aria-hidden="true">文</span><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("settingsLanguageEyebrow") + '</span><h2>' + socialCommerceUi("settingsLanguageTitle") + '</h2></div></div>' +
+        '<p>' + socialCommerceUi("settingsLanguageBody") + '</p><div class="phoenix-reset-settings-options">' +
+          '<button class="button button-ghost settings-lang-btn" type="button" data-set-lang="fa">🇮🇷 ' + socialCommerceUi("settingsPersian") + '</button>' +
+          '<button class="button button-ghost settings-lang-btn" type="button" data-set-lang="en">🇬🇧 ' + socialCommerceUi("settingsEnglish") + '</button>' +
+          '<button class="button button-ghost settings-lang-btn" type="button" data-set-lang="ar">🇸🇦 ' + socialCommerceUi("settingsArabic") + '</button></div></article>' +
+      '<article class="phoenix-reset-settings-card"><div class="phoenix-reset-settings-card-heading"><span class="phoenix-reset-settings-icon" aria-hidden="true">◐</span><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("settingsAppearanceEyebrow") + '</span><h2>' + socialCommerceUi("settingsThemeTitle") + '</h2></div></div>' +
+        '<p>' + socialCommerceUi("settingsThemeBody") + '</p><div class="phoenix-reset-settings-options">' +
+          '<button class="button button-ghost settings-theme-btn" type="button" data-set-theme="light">☀ ' + socialCommerceUi("settingsLight") + '</button>' +
+          '<button class="button button-ghost settings-theme-btn" type="button" data-set-theme="dark">☾ ' + socialCommerceUi("settingsDark") + '</button></div></article>' +
+      '<article class="phoenix-reset-settings-card phoenix-reset-settings-notifications"><div class="phoenix-reset-settings-card-heading"><span class="phoenix-reset-settings-icon" aria-hidden="true">♢</span><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("settingsNotificationsEyebrow") + '</span><h2>' + socialCommerceUi("settingsNotificationsTitle") + '</h2></div></div>' +
+        '<p>' + socialCommerceUi("settingsNotificationsBody") + '</p><div class="phoenix-reset-settings-toggles">' +
+          '<label class="phoenix-reset-settings-toggle"><span><strong>' + socialCommerceUi("settingsNotifyInApp") + '</strong><small>' + socialCommerceUi("settingsNotifyInAppHint") + '</small></span><input type="checkbox" id="setting-notify-inapp"' + (preferences.inApp ? ' checked' : '') + ' /></label>' +
+          '<label class="phoenix-reset-settings-toggle"><span><strong>' + socialCommerceUi("settingsNotifySms") + '</strong><small>' + socialCommerceUi("settingsNotifySmsHint") + '</small></span><input type="checkbox" id="setting-notify-sms"' + (preferences.sms ? ' checked' : '') + ' /></label>' +
+          '<label class="phoenix-reset-settings-toggle"><span><strong>' + socialCommerceUi("settingsNotifyEmail") + '</strong><small>' + socialCommerceUi("settingsNotifyEmailHint") + '</small></span><input type="checkbox" id="setting-notify-email"' + (preferences.email ? ' checked' : '') + ' /></label>' +
+          '<label class="phoenix-reset-settings-toggle"><span><strong>' + socialCommerceUi("settingsNotifySocial") + '</strong><small>' + socialCommerceUi("settingsNotifySocialHint") + '</small></span><input type="checkbox" id="setting-notify-social"' + (preferences.social ? ' checked' : '') + ' /></label></div>' +
+        '<div class="phoenix-reset-settings-save-row"><span>' + socialCommerceUi("settingsSaveHint") + '</span><button class="button button-primary" type="button" data-save-all-settings>' + socialCommerceUi("settingsSave") + '</button></div></article>' +
+      '<article class="phoenix-reset-settings-card"><div class="phoenix-reset-settings-card-heading"><span class="phoenix-reset-settings-icon" aria-hidden="true">⌑</span><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("settingsPrivacyEyebrow") + '</span><h2>' + socialCommerceUi("settingsPrivacyTitle") + '</h2></div></div>' +
+        '<p>' + socialCommerceUi("settingsPrivacyBody") + '</p><div class="phoenix-reset-settings-actions">' +
+          '<button class="button button-ghost" type="button" data-export-user-data>' + socialCommerceUi("settingsExportAction") + '</button>' +
+          '<a class="button button-ghost" href="/account" data-nav>' + socialCommerceUi("settingsAccountAction") + '</a>' +
+          '<button class="button button-ghost" type="button" data-clear-local-cache>' + socialCommerceUi("settingsClearAction") + '</button></div></article>' +
+    '</div></div>';
 }
 
 function loadSettingsPage(): void {
   const currentLang = getInitialLanguage();
   const currentTheme = document.documentElement.dataset.theme ?? "light";
-
-  document.querySelectorAll<HTMLButtonElement>("[data-set-lang]").forEach((btn) => {
-    if (btn.dataset.setLang === currentLang) btn.classList.add("active");
-    btn.addEventListener("click", () => {
-      const targetLang = btn.dataset.setLang as SupportedLanguage;
+  const preferences = readPhoenixNotificationPreferences();
+  document.querySelectorAll<HTMLInputElement>("[id^='setting-notify-']").forEach((input) => {
+    if (input.id === "setting-notify-inapp") input.checked = preferences.inApp;
+    else if (input.id === "setting-notify-sms") input.checked = preferences.sms;
+    else if (input.id === "setting-notify-email") input.checked = preferences.email;
+    else if (input.id === "setting-notify-social") input.checked = preferences.social;
+  });
+  document.querySelectorAll<HTMLButtonElement>("[data-set-lang]").forEach((button) => {
+    if (button.dataset.setLang === currentLang) button.classList.add("active");
+    button.addEventListener("click", () => {
+      const targetLang = button.dataset.setLang as SupportedLanguage;
       if (targetLang) setLanguage(targetLang);
     });
   });
-
-  document.querySelectorAll<HTMLButtonElement>("[data-set-theme]").forEach((btn) => {
-    if (btn.dataset.setTheme === currentTheme) btn.classList.add("active");
-    btn.addEventListener("click", () => {
-      const targetTheme = btn.dataset.setTheme;
+  document.querySelectorAll<HTMLButtonElement>("[data-set-theme]").forEach((button) => {
+    if (button.dataset.setTheme === currentTheme) button.classList.add("active");
+    button.addEventListener("click", () => {
+      const targetTheme = button.dataset.setTheme;
       if (targetTheme && targetTheme !== document.documentElement.dataset.theme) toggleTheme();
     });
   });
-
   document.querySelector<HTMLButtonElement>("[data-save-all-settings]")?.addEventListener("click", () => {
-    showToast("تنظیمات با موفقیت ذخیره شد.");
+    const next: PhoenixNotificationPreferences = {
+      inApp: document.querySelector<HTMLInputElement>("#setting-notify-inapp")?.checked ?? false,
+      sms: document.querySelector<HTMLInputElement>("#setting-notify-sms")?.checked ?? false,
+      email: document.querySelector<HTMLInputElement>("#setting-notify-email")?.checked ?? false,
+      social: document.querySelector<HTMLInputElement>("#setting-notify-social")?.checked ?? false,
+    };
+    localStorage.setItem(PHOENIX_NOTIFICATION_PREFERENCES_KEY, JSON.stringify(next));
+    showToast(socialCommerceUi("settingsSavedNotice"));
   });
-
   document.querySelector<HTMLButtonElement>("[data-export-user-data]")?.addEventListener("click", () => {
-    showToast("درخواست نسخه پشتیبان داده‌ها ثبت شد.");
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      language: getInitialLanguage(),
+      theme: document.documentElement.dataset.theme ?? "light",
+      notifications: readPhoenixNotificationPreferences(),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "phoenix-local-preferences.json";
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    showToast(socialCommerceUi("settingsExportNotice"));
   });
-
   document.querySelector<HTMLButtonElement>("[data-clear-local-cache]")?.addEventListener("click", () => {
     localStorage.clear();
     sessionStorage.clear();
-    showToast("کش محلی پاکسازی شد.");
-    window.location.reload();
+    window.location.assign("/");
   });
 }
 
@@ -4209,250 +4587,311 @@ function loadSettingsPage(): void {
    Semantic Business Sub-Routes (محصولات، خدمات، نوبت‌ها، تیم، تنظیمات کسب‌وکار)
    ========================================================================= */
 
-function renderBusinessProducts(): string {
-  return `
-    <div class="phoenix-business-subpage">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · مدیریت کاتالوگ")}</span>
-          <h1>${uiText("محصولات و")} <em>${uiText("انبارداری")}</em></h1>
-          <p>${uiText("مدیریت کاتالوگ محصولات، موجودی انبار، قیمت‌گذاری و بارگذاری سریع با هوش مصنوعی.")}</p>
-        </div>
-        <div class="heading-actions">
-          <button type="button" class="button button-primary" id="open-product-form-btn">＋ ${uiText("افزودن محصول جدید")}</button>
-          <a class="button button-ghost" href="/product-studio" data-nav>${uiText("ایجاد با Seller AI")} ✦</a>
-          <a class="button button-ghost" href="/catalog" data-nav>${uiText("کاتالوگ کلی")}</a>
-        </div>
-      </section>
-
-      <div id="new-product-form-slot" style="display: none;"></div>
-
-      <section class="glass-card business-subpage-card">
-        <div class="card-section-heading">
-          <div><span class="section-kicker">${uiText("فهرست محصولات فعال")}</span><h2>${uiText("محصولات موجود")}</h2></div>
-          <span class="pill success">${uiText("۳ محصول فعال")}</span>
-        </div>
-        <div class="business-catalog-table-wrap" id="business-products-table">
-          <div class="slot-loading">${uiText("در حال بارگذاری کاتالوگ محصولات…")}</div>
-        </div>
-      </section>
-    </div>
-  `;
+function renderBusinessDataState(title: string, description: string, actionHref?: string, actionLabel?: string): string {
+  return '<div class="phoenix-business-empty" role="status">' +
+    '<span class="phoenix-business-empty-icon" aria-hidden="true">◇</span>' +
+    '<h3>' + escapeHtml(uiText(title)) + '</h3>' +
+    '<p>' + escapeHtml(description) + '</p>' +
+    (actionHref && actionLabel
+      ? '<a class="button button-primary" href="' + escapeAttr(actionHref) + '" data-nav>' + escapeHtml(uiText(actionLabel)) + ' <span aria-hidden="true">←</span></a>'
+      : '') +
+    '</div>';
 }
+
+function businessStatusLabel(value: unknown): string {
+  const status = typeof value === "string" ? value.toLowerCase() : "";
+  const labels: Record<string, string> = {
+    active: "فعال",
+    published: "منتشرشده",
+    pending: "در انتظار بررسی",
+    unpublished: "پیش‌نویس",
+    draft: "پیش‌نویس",
+    inactive: "غیرفعال",
+    archived: "بایگانی‌شده",
+    disabled: "غیرفعال",
+    confirmed: "تأییدشده",
+    requested: "درخواست‌شده",
+    completed: "تکمیل‌شده",
+    cancelled: "لغوشده",
+    canceled: "لغوشده",
+    rejected: "ردشده",
+    no_show: "عدم مراجعه",
+  };
+  return uiText(labels[status] ?? "وضعیت ثبت‌شده");
+}
+
+function businessStatusPillClass(value: unknown): string {
+  const status = typeof value === "string" ? value.toLowerCase() : "";
+  if (["active", "published", "confirmed", "completed"].includes(status)) return "pill success";
+  if (["inactive", "disabled", "cancelled", "canceled", "rejected", "archived"].includes(status)) return "pill warning";
+  return "pill";
+}
+
+function formatBusinessDateTime(value: unknown, timezone: unknown): string {
+  if (typeof value !== "string" || !value.trim()) return uiText("زمان تعیین نشده");
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return uiText("زمان قابل نمایش نیست");
+  const language = (document.documentElement.lang || "fa").split("-")[0];
+  const locale = language === "fa"
+    ? "fa-IR-u-ca-persian"
+    : language === "ar"
+      ? "ar-SA-u-ca-islamic-umalqura"
+      : "en-GB-u-ca-gregory";
+  const options: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short" };
+  if (typeof timezone === "string" && timezone.trim()) options.timeZone = timezone;
+  try {
+    return new Intl.DateTimeFormat(locale, options).format(date);
+  } catch {
+    return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+}
+
+function renderBusinessProducts(): string {
+  return '<div class="phoenix-business-subpage">' +
+    '<section class="page-heading">' +
+      '<div><span class="eyebrow"><i></i> ' + uiText("کسب‌وکار · کاتالوگ") + '</span>' +
+        '<h1>' + uiText("کالاها و") + ' <em>' + uiText("عرضه‌ها") + '</em></h1>' +
+        '<p>' + uiText("عرضه‌های ثبت‌شدهٔ کسب‌وکار را ببین؛ وضعیت انتشار از کاتالوگ واقعی خوانده می‌شود.") + '</p></div>' +
+      '<div class="heading-actions">' +
+        '<a class="button button-primary" href="/product-studio" data-nav>＋ ' + uiText("افزودن کالا یا خدمت") + '</a>' +
+        '<a class="button button-ghost" href="/business/profile" data-nav>' + uiText("پروفایل کسب‌وکار") + '</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="glass-card business-subpage-card">' +
+      '<div class="card-section-heading">' +
+        '<div><span class="section-kicker">' + uiText("کاتالوگ") + '</span><h2>' + uiText("عرضه‌های کالا") + '</h2></div>' +
+        '<span id="business-products-count" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span>' +
+      '</div>' +
+      '<div class="business-catalog-table-wrap" id="business-products-table"><div class="slot-loading">' + uiText("در حال دریافت کاتالوگ از سامانه…") + '</div></div>' +
+    '</section>' +
+  '</div>';
+}
+
 
 function loadBusinessProductsPage(): void {
   const tableWrap = document.querySelector<HTMLElement>("#business-products-table");
-  const openFormBtn = document.querySelector<HTMLButtonElement>("#open-product-form-btn");
-  const formSlot = document.querySelector<HTMLElement>("#new-product-form-slot");
+  const countNode = document.querySelector<HTMLElement>("#business-products-count");
+  if (!tableWrap || !countNode) return;
+  const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
 
-  const sampleProducts = [
-    { id: "prd-1", name: "بسته ابری هوش سازمانی ققنوس", category: "نرم‌افزار سازمانی", stock: 45, price: 12000000, status: "active" },
-    { id: "prd-2", name: "ماژول اتصال به کانال‌های فروش", category: "افزونه‌های پلتفرم", stock: 120, price: 3500000, status: "active" },
-    { id: "prd-3", name: "لایسنس سالانه تصمیم‌گیری هوشمند", category: "اشتراک و لایسنس", stock: 999, price: 28000000, status: "active" },
-  ];
-
-  if (openFormBtn && formSlot) {
-    const component = new ProductCreateFormComponent({
-      onSave: (data: NewProductFormData) => {
-        const newPrd = {
-          id: `prd-${Date.now().toString(36).slice(-4)}`,
-          name: data.title,
-          category: data.nature === "digital" ? "محصول دیجیتال" : "کالای فیزیکی",
-          stock: data.stockQuantity ?? (data.nature === "digital" ? 999 : 10),
-          price: data.basePriceConsumer,
-          status: "active",
-        };
-        sampleProducts.unshift(newPrd);
-        formSlot.style.display = "none";
-        renderProductsTable();
-        showToast(`محصول «${data.title}» با موفقیت اضافه شد.`);
-      },
-      onCancel: () => {
-        formSlot.style.display = "none";
-      },
-    });
-
-    openFormBtn.addEventListener("click", () => {
-      formSlot.innerHTML = component.render();
-      component.bindEvents(formSlot);
-      formSlot.style.display = "block";
-      formSlot.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    countNode.textContent = uiText("نیازمند ورود");
+    tableWrap.innerHTML = renderBusinessDataState("برای دیدن کاتالوگ وارد شو", "کالاها و وضعیت انتشار فقط پس از خواندن داده‌های معتبر نمایش داده می‌شوند.", "/profile", "ورود به حساب");
+    return;
+  }
+  if (!businessId) {
+    countNode.textContent = uiText("کسب‌وکار انتخاب نشده");
+    tableWrap.innerHTML = renderBusinessDataState("فضای کسب‌وکار آماده نیست", "ابتدا پروفایل کسب‌وکار را کامل کن؛ ققنوس برای کاتالوگ، دادهٔ نمونه نمایش نمی‌دهد.", "/business/profile", "تکمیل پروفایل");
+    return;
   }
 
-  function renderProductsTable() {
-    if (!tableWrap) return;
-    tableWrap.innerHTML = `
-      <table class="ds-table">
-        <thead>
-          <tr>
-            <th>${uiText("شناسه")}</th>
-            <th>${uiText("نام محصول")}</th>
-            <th>${uiText("دسته‌بندی")}</th>
-            <th>${uiText("موجودی")}</th>
-            <th>${uiText("قیمت")}</th>
-            <th>${uiText("وضعیت")}</th>
-            <th>${uiText("اقدامات")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${sampleProducts.map((p) => `
-            <tr>
-              <td><code>${escapeHtml(p.id)}</code></td>
-              <td><strong>${escapeHtml(p.name)}</strong></td>
-              <td>${escapeHtml(p.category)}</td>
-              <td>${formatLocalizedNumber(p.stock)}</td>
-              <td>${formatLocalizedNumber(p.price)} تومان</td>
-              <td><span class="pill success">${uiText("فعال")}</span></td>
-              <td>
-                <a class="button button-ghost button-sm" href="/product-studio" data-nav>${uiText("ویرایش")}</a>
-              </td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    `;
-  }
-
-  renderProductsTable();
+  const load = async (): Promise<void> => {
+    countNode.textContent = uiText("در حال دریافت اطلاعات");
+    countNode.className = "pill";
+    tableWrap.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت کاتالوگ از سامانه…") + '</div>';
+    try {
+      const response = await apiJson<{ data: Array<{
+        id: string;
+        offeringType: string;
+        title: string;
+        description: string | null;
+        productId: string | null;
+        serviceId: string | null;
+        status: string;
+        publicationStatus: string;
+      }> }>("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/offers?limit=48");
+      const products = (Array.isArray(response.data) ? response.data : []).filter((offering) => offering.offeringType === "product" || Boolean(offering.productId));
+      countNode.textContent = formatLocalizedNumber(products.length) + " " + uiText("عرضه");
+      countNode.className = "pill";
+      if (!products.length) {
+        tableWrap.innerHTML = renderBusinessDataState("هنوز کالایی در کاتالوگ نیست", "وقتی عرضهٔ کالا از مسیر استودیو ذخیره شود، اینجا با وضعیت واقعی نمایش داده می‌شود.", "/product-studio", "افزودن کالا یا خدمت");
+        return;
+      }
+      tableWrap.innerHTML = '<table class="ds-table phoenix-business-data-table"><thead><tr>' +
+        '<th>' + uiText("عنوان عرضه") + '</th><th>' + uiText("نوع") + '</th><th>' + uiText("وضعیت") + '</th><th>' + uiText("انتشار") + '</th>' +
+        '</tr></thead><tbody>' + products.map((offering) =>
+          '<tr><td><strong>' + escapeHtml(offering.title) + '</strong>' +
+            (offering.description ? '<small class="phoenix-business-row-description">' + escapeHtml(offering.description) + '</small>' : '') +
+          '</td><td>' + uiText("کالا") + '</td>' +
+          '<td><span class="' + businessStatusPillClass(offering.status) + '">' + businessStatusLabel(offering.status) + '</span></td>' +
+          '<td><span class="' + businessStatusPillClass(offering.publicationStatus) + '">' + businessStatusLabel(offering.publicationStatus) + '</span></td></tr>'
+        ).join("") + '</tbody></table>';
+    } catch (error) {
+      countNode.textContent = uiText("قابل دریافت نیست");
+      countNode.className = "pill warning";
+      tableWrap.innerHTML = renderBusinessDataState("کاتالوگ بارگذاری نشد", error instanceof Error ? error.message : uiText("خطا در دریافت کاتالوگ")) +
+        '<div class="phoenix-business-retry-row"><button class="button button-ghost" type="button" data-retry-business-products>' + uiText("تلاش دوباره") + '</button></div>';
+      tableWrap.querySelector<HTMLButtonElement>("[data-retry-business-products]")?.addEventListener("click", () => void load());
+    }
+  };
+  void load();
 }
+
 
 function renderBusinessServices(): string {
-  return `
-    <div class="phoenix-business-subpage">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · سبد خدمات")}</span>
-          <h1>${uiText("خدمات و")} <em>${uiText("مشاوره‌ها")}</em></h1>
-          <p>${uiText("تعریف و زمان‌بندی خدمات تخصصی، جلسات مشاوره، مدت زمان و سیاست‌های پذیرش.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-primary" href="/business/bookings" data-nav>${uiText("زمان‌بندی و نوبت‌ها")} ◷</a>
-          <a class="button button-ghost" href="/business" data-nav>${uiText("داشبورد کسب‌وکار")}</a>
-        </div>
-      </section>
-
-      <section class="glass-card business-subpage-card">
-        <div class="card-section-heading">
-          <div><span class="section-kicker">${uiText("خدمات تعریف‌شده")}</span><h2>${uiText("فهرست خدمات و مشاوره‌ها")}</h2></div>
-          <span class="pill success">${uiText("۲ خدمت فعال")}</span>
-        </div>
-        <div class="business-catalog-table-wrap" id="business-services-table">
-          <div class="slot-loading">${uiText("در حال بارگذاری لیست خدمات…")}</div>
-        </div>
-      </section>
-    </div>
-  `;
+  return '<div class="phoenix-business-subpage">' +
+    '<section class="page-heading">' +
+      '<div><span class="eyebrow"><i></i> ' + uiText("کسب‌وکار · خدمات") + '</span>' +
+        '<h1>' + uiText("خدمات و") + ' <em>' + uiText("مشاوره‌ها") + '</em></h1>' +
+        '<p>' + uiText("خدمات ثبت‌شده و وضعیت انتشار آن‌ها را از کاتالوگ واقعی مدیریت کن.") + '</p></div>' +
+      '<div class="heading-actions">' +
+        '<a class="button button-primary" href="/business/create" data-nav>＋ ' + uiText("افزودن خدمت") + '</a>' +
+        '<a class="button button-ghost" href="/business/bookings" data-nav>' + uiText("نوبت‌ها و زمان‌بندی") + ' ◷</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="glass-card business-subpage-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + uiText("کاتالوگ") + '</span><h2>' + uiText("فهرست خدمات") + '</h2></div>' +
+        '<span id="business-services-count" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span></div>' +
+      '<div class="business-catalog-table-wrap" id="business-services-table"><div class="slot-loading">' + uiText("در حال دریافت خدمات از سامانه…") + '</div></div>' +
+    '</section>' +
+  '</div>';
 }
+
 
 function loadBusinessServicesPage(): void {
   const tableWrap = document.querySelector<HTMLElement>("#business-services-table");
-  if (!tableWrap) return;
+  const countNode = document.querySelector<HTMLElement>("#business-services-count");
+  if (!tableWrap || !countNode) return;
+  const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
 
-  const sampleServices = [
-    { id: "svc-1", name: "مشاوره تخصصی کسب‌وکار و رشد", duration: "۶۰ دقیقه", price: 4500000, provider: "تیم استراتژی ققنوس", status: "active" },
-    { id: "svc-2", name: "طراحی و توسعه تجربه کاربری اختصاصی", duration: "پروژه‌ای", price: 7800000, provider: "استودیو طراحی محصول", status: "active" },
-  ];
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    countNode.textContent = uiText("نیازمند ورود");
+    tableWrap.innerHTML = renderBusinessDataState("برای دیدن خدمات وارد شو", "فهرست خدمات فقط از کاتالوگ معتبر کسب‌وکار خوانده می‌شود.", "/profile", "ورود به حساب");
+    return;
+  }
+  if (!businessId) {
+    countNode.textContent = uiText("کسب‌وکار انتخاب نشده");
+    tableWrap.innerHTML = renderBusinessDataState("فضای کسب‌وکار آماده نیست", "پس از تکمیل پروفایل، خدمات ثبت‌شده در این بخش نمایش داده می‌شوند.", "/business/profile", "تکمیل پروفایل");
+    return;
+  }
 
-  tableWrap.innerHTML = `
-    <table class="ds-table">
-      <thead>
-        <tr>
-          <th>${uiText("شناسه")}</th>
-          <th>${uiText("عنوان خدمت")}</th>
-          <th>${uiText("مدت زمان")}</th>
-          <th>${uiText("تعرفه")}</th>
-          <th>${uiText("متخصص / ارائه‌دهنده")}</th>
-          <th>${uiText("وضعیت")}</th>
-          <th>${uiText("اقدامات")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${sampleServices.map((s) => `
-          <tr>
-            <td><code>${escapeHtml(s.id)}</code></td>
-            <td><strong>${escapeHtml(s.name)}</strong></td>
-            <td>${escapeHtml(s.duration)}</td>
-            <td>${formatLocalizedNumber(s.price)} ریال</td>
-            <td>${escapeHtml(s.provider)}</td>
-            <td><span class="pill success">${uiText("فعال")}</span></td>
-            <td>
-              <a class="button button-ghost button-sm" href="/booking?business=biz-1&offering=${escapeAttr(s.id)}" data-nav>${uiText("تست رزرو")}</a>
-            </td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
+  const load = async (): Promise<void> => {
+    countNode.textContent = uiText("در حال دریافت اطلاعات");
+    countNode.className = "pill";
+    tableWrap.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت خدمات از سامانه…") + '</div>';
+    try {
+      const response = await apiJson<{ data: Array<{
+        id: string;
+        offeringType: string;
+        title: string;
+        description: string | null;
+        serviceId: string | null;
+        status: string;
+        publicationStatus: string;
+      }> }>("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/offers?limit=48");
+      const services = (Array.isArray(response.data) ? response.data : []).filter((offering) => offering.offeringType === "service" || Boolean(offering.serviceId));
+      countNode.textContent = formatLocalizedNumber(services.length) + " " + uiText("خدمت");
+      countNode.className = "pill";
+      if (!services.length) {
+        tableWrap.innerHTML = renderBusinessDataState("هنوز خدمتی در کاتالوگ نیست", "خدمات پس از ثبت در مسیر ایجاد عرضه در این فهرست ظاهر می‌شوند.", "/business/create", "افزودن خدمت");
+        return;
+      }
+      tableWrap.innerHTML = '<table class="ds-table phoenix-business-data-table"><thead><tr>' +
+        '<th>' + uiText("عنوان خدمت") + '</th><th>' + uiText("توضیحات") + '</th><th>' + uiText("وضعیت") + '</th><th>' + uiText("انتشار") + '</th><th>' + uiText("اقدام") + '</th>' +
+        '</tr></thead><tbody>' + services.map((offering) =>
+          '<tr><td><strong>' + escapeHtml(offering.title) + '</strong></td>' +
+          '<td>' + escapeHtml(offering.description ?? uiText("توضیحی ثبت نشده")) + '</td>' +
+          '<td><span class="' + businessStatusPillClass(offering.status) + '">' + businessStatusLabel(offering.status) + '</span></td>' +
+          '<td><span class="' + businessStatusPillClass(offering.publicationStatus) + '">' + businessStatusLabel(offering.publicationStatus) + '</span></td>' +
+          '<td><a class="button button-ghost button-sm" href="/booking?businessId=' + encodeURIComponent(businessId) + '&offering=' + encodeURIComponent(offering.id) + '" data-nav>' + uiText("مشاهدهٔ رزرو") + '</a></td></tr>'
+        ).join("") + '</tbody></table>';
+    } catch (error) {
+      countNode.textContent = uiText("قابل دریافت نیست");
+      countNode.className = "pill warning";
+      tableWrap.innerHTML = renderBusinessDataState("خدمات بارگذاری نشد", error instanceof Error ? error.message : uiText("خطا در دریافت خدمات")) +
+        '<div class="phoenix-business-retry-row"><button class="button button-ghost" type="button" data-retry-business-services>' + uiText("تلاش دوباره") + '</button></div>';
+      tableWrap.querySelector<HTMLButtonElement>("[data-retry-business-services]")?.addEventListener("click", () => void load());
+    }
+  };
+  void load();
 }
+
 
 function renderBusinessBookings(): string {
-  return `
-    <div class="phoenix-business-subpage">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · تقویم و نوبت‌ها")}</span>
-          <h1>${uiText("رزروهای فعال و")} <em>${uiText("تقویم زمانی")}</em></h1>
-          <p>${uiText("مدیریت وقت‌های ملاقات، نوبت‌های خدمات و ظرفیت‌های پذیرش در زمان‌بندی کسب‌وکار.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-primary" href="/booking" data-nav>${uiText("فرم رزرو مشتری")} ◷</a>
-        </div>
-      </section>
-
-      <section class="glass-card business-subpage-card">
-        <div class="card-section-heading">
-          <div><span class="section-kicker">${uiText("تقویم کاری")}</span><h2>${uiText("نوبت‌های رزروشده امروز و آینده")}</h2></div>
-          <span class="pill success">${uiText("زمان‌بندی متصل")}</span>
-        </div>
-        <div class="business-catalog-table-wrap" id="business-bookings-table">
-          <div class="slot-loading">${uiText("در حال بارگذاری نوبت‌ها…")}</div>
-        </div>
-      </section>
-    </div>
-  `;
+  return '<div class="phoenix-business-subpage">' +
+    '<section class="page-heading">' +
+      '<div><span class="eyebrow"><i></i> ' + uiText("کسب‌وکار · رزروها") + '</span>' +
+        '<h1>' + uiText("نوبت‌ها و") + ' <em>' + uiText("تقویم کاری") + '</em></h1>' +
+        '<p>' + uiText("رزروهای مشتریان و زمان‌های ثبت‌شده را از سامانه پیگیری کن؛ فهرست خالی به معنی رزرو ساختگی نیست.") + '</p></div>' +
+      '<div class="heading-actions">' +
+        '<a class="button button-primary" href="/business/services" data-nav>' + uiText("مدیریت خدمات") + '</a>' +
+        '<a class="button button-ghost" href="/business/profile" data-nav>' + uiText("پروفایل کسب‌وکار") + '</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="glass-card business-subpage-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + uiText("رزروهای واقعی") + '</span><h2>' + uiText("نوبت‌های ثبت‌شده") + '</h2></div>' +
+        '<span id="business-bookings-count" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span></div>' +
+      '<div class="business-catalog-table-wrap" id="business-bookings-table"><div class="slot-loading">' + uiText("در حال دریافت نوبت‌ها از سامانه…") + '</div></div>' +
+    '</section>' +
+  '</div>';
 }
+
 
 function loadBusinessBookingsPage(): void {
   const tableWrap = document.querySelector<HTMLElement>("#business-bookings-table");
-  if (!tableWrap) return;
+  const countNode = document.querySelector<HTMLElement>("#business-bookings-count");
+  if (!tableWrap || !countNode) return;
+  const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
 
-  const sampleBookings = [
-    { id: "bkg-101", customer: "کاربر ققنوس", service: "مشاوره تخصصی کسب‌وکار و رشد", time: "فردا - ۱۰:۰۰ الی ۱۱:۰۰", status: "confirmed" },
-    { id: "bkg-102", customer: "مشتری سازمانی", service: "طراحی و توسعه تجربه کاربری", time: "پس‌فردا - ۱۴:۳۰ الی ۱۵:۳۰", status: "confirmed" },
-  ];
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    countNode.textContent = uiText("نیازمند ورود");
+    tableWrap.innerHTML = renderBusinessDataState("برای دیدن رزروها وارد شو", "رزروها فقط از منبع معتبر کسب‌وکار خوانده می‌شوند.", "/profile", "ورود به حساب");
+    return;
+  }
+  if (!businessId) {
+    countNode.textContent = uiText("کسب‌وکار انتخاب نشده");
+    tableWrap.innerHTML = renderBusinessDataState("فضای کسب‌وکار آماده نیست", "پس از تکمیل پروفایل کسب‌وکار، رزروهای واقعی در اینجا ظاهر می‌شوند.", "/business/profile", "تکمیل پروفایل");
+    return;
+  }
 
-  tableWrap.innerHTML = `
-    <table class="ds-table">
-      <thead>
-        <tr>
-          <th>${uiText("شناسه")}</th>
-          <th>${uiText("نام مشتری")}</th>
-          <th>${uiText("خدمت")}</th>
-          <th>${uiText("زمان")}</th>
-          <th>${uiText("وضعیت")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${sampleBookings.map((b) => `
-          <tr>
-            <td><code>${escapeHtml(b.id)}</code></td>
-            <td><strong>${escapeHtml(b.customer)}</strong></td>
-            <td>${escapeHtml(b.service)}</td>
-            <td>${escapeHtml(b.time)}</td>
-            <td><span class="pill success">${uiText("تأییدشده")}</span></td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
+  const load = async (): Promise<void> => {
+    countNode.textContent = uiText("در حال دریافت اطلاعات");
+    countNode.className = "pill";
+    tableWrap.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت نوبت‌ها از سامانه…") + '</div>';
+    try {
+      const response = await apiJson<{ data: Array<{
+        id: string;
+        customerId: string;
+        status: string;
+        appointmentStatus: string | null;
+        startsAt: string | null;
+        endsAt: string | null;
+        timezone: string | null;
+        offeringTitle: string | null;
+      }> }>("/api/v1/booking?businessId=" + encodeURIComponent(businessId) + "&limit=24");
+      const bookings = Array.isArray(response.data) ? response.data : [];
+      countNode.textContent = formatLocalizedNumber(bookings.length) + " " + uiText("رزرو");
+      countNode.className = "pill";
+      if (!bookings.length) {
+        tableWrap.innerHTML = renderBusinessDataState("هنوز رزروی ثبت نشده", "پس از ثبت رزرو توسط مشتری، زمان و وضعیت واقعی آن در این فهرست دیده می‌شود.", "/business/services", "مشاهدهٔ خدمات");
+        return;
+      }
+      tableWrap.innerHTML = '<table class="ds-table phoenix-business-data-table"><thead><tr>' +
+        '<th>' + uiText("خدمت") + '</th><th>' + uiText("زمان شروع") + '</th><th>' + uiText("زمان پایان") + '</th><th>' + uiText("وضعیت") + '</th>' +
+        '</tr></thead><tbody>' + bookings.map((booking) => {
+          const status = booking.appointmentStatus || booking.status;
+          return '<tr><td><strong>' + escapeHtml(booking.offeringTitle || uiText("رزرو ثبت‌شده")) + '</strong></td>' +
+            '<td>' + escapeHtml(formatBusinessDateTime(booking.startsAt, booking.timezone)) + '</td>' +
+            '<td>' + escapeHtml(formatBusinessDateTime(booking.endsAt, booking.timezone)) + '</td>' +
+            '<td><span class="' + businessStatusPillClass(status) + '">' + escapeHtml(businessStatusLabel(status)) + '</span></td></tr>';
+        }).join("") + '</tbody></table>';
+    } catch (error) {
+      countNode.textContent = uiText("قابل دریافت نیست");
+      countNode.className = "pill warning";
+      tableWrap.innerHTML = renderBusinessDataState("رزروها بارگذاری نشدند", error instanceof Error ? error.message : uiText("خطا در دریافت رزروها")) +
+        '<div class="phoenix-business-retry-row"><button class="button button-ghost" type="button" data-retry-business-bookings>' + uiText("تلاش دوباره") + '</button></div>';
+      tableWrap.querySelector<HTMLButtonElement>("[data-retry-business-bookings]")?.addEventListener("click", () => void load());
+    }
+  };
+  void load();
 }
+
 
 function renderBusinessTeam(): string {
   return renderPhoenixBusinessTeam();
 }
 
-function renderLegacyBusinessTeam(): string {
+function _renderLegacyBusinessTeam(): string {
   return `
     <div class="phoenix-business-subpage">
       <section class="page-heading">
@@ -4544,61 +4983,221 @@ async function loadBusinessTeamPage(): Promise<void> {
 }
 
 function renderBusinessSettings(): string {
-  return `
-    <div class="phoenix-business-subpage">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · تنظیمات")}</span>
-          <h1>${uiText("پروفایل و")} <em>${uiText("اطلاعات عمومی")}</em></h1>
-          <p>${uiText("تنظیم اطلاعات هویت، موقعیت جغرافیایی، ساعت کاری و وضعیت انتشار عمومی کسب‌وکار.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-ghost" href="/business/profile" data-nav>${uiText("مشاهده پروفایل")}</a>
-          <button class="button button-primary" type="button" data-save-biz-settings>${uiText("ذخیره تغییرات")}</button>
-        </div>
-      </section>
-
-      <section class="glass-card business-subpage-card">
-        <div class="card-section-heading">
-          <div><span class="section-kicker">${uiText("مشخصات اصلی")}</span><h2>${uiText("هویت کسب‌وکار")}</h2></div>
-          <span class="pill success">${uiText("تأییدشده")}</span>
-        </div>
-        <div class="booking-fields">
-          <div><label class="field-label" for="biz-set-name">${uiText("نام رسمی کسب‌وکار")}</label><input class="studio-input-line" id="biz-set-name" value="مرکز خدمات فناوری و نوآوری ققنوس" /></div>
-          <div><label class="field-label" for="biz-set-cat">${uiText("دسته‌بندی اصلی")}</label><input class="studio-input-line" id="biz-set-cat" value="خدمات فناوری و ابری" /></div>
-          <div><label class="field-label" for="biz-set-city">${uiText("شهر")}</label><input class="studio-input-line" id="biz-set-city" value="تهران" /></div>
-          <div><label class="field-label" for="biz-set-phone">${uiText("تلفن تماس عمومی")}</label><input class="studio-input-line" id="biz-set-phone" value="021-88880000" /></div>
-          <div class="field-span-2"><label class="field-label" for="biz-set-desc">${uiText("شرح فعالیت و ارزش پیشنهادی")}</label><textarea class="studio-input-line" id="biz-set-desc" rows="3">ارائه‌دهنده راهکارهای یکپارچه نرم‌افزاری و هوش مصنوعی تصمیم‌گیری برای رشد پایدار کسب‌وکارها.</textarea></div>
-        </div>
-      </section>
-    </div>
-  `;
+  return '<div class="phoenix-business-subpage">' +
+    '<section class="page-heading">' +
+      '<div><span class="eyebrow"><i></i> ' + uiText("کسب‌وکار · تنظیمات") + '</span>' +
+        '<h1>' + uiText("اطلاعات اصلی و") + ' <em>' + uiText("ترجیحات") + '</em></h1>' +
+        '<p>' + uiText("اطلاعات اصلی از پروفایل ثبت‌شده خوانده می‌شود؛ مکان‌ها و راه‌های تماس را از بخش پروفایل مدیریت کن.") + '</p></div>' +
+      '<div class="heading-actions"><a class="button button-ghost" href="/business/profile" data-nav>' + uiText("مکان‌ها و راه‌های تماس") + '</a></div>' +
+    '</section>' +
+    '<section class="glass-card business-subpage-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + uiText("اطلاعات canonical کسب‌وکار") + '</span><h2>' + uiText("هویت و ترجیحات") + '</h2></div>' +
+        '<span id="business-settings-status" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span></div>' +
+      '<div id="business-settings-load-state"><div class="slot-loading">' + uiText("در حال دریافت اطلاعات کسب‌وکار…") + '</div></div>' +
+      '<form id="business-settings-form" class="booking-fields phoenix-business-settings-form" hidden>' +
+        '<div><label class="field-label" for="biz-set-name">' + uiText("نام رسمی کسب‌وکار") + '</label><input class="studio-input-line" id="biz-set-name" required /></div>' +
+        '<div><label class="field-label" for="biz-set-display-name">' + uiText("نام نمایشی") + '</label><input class="studio-input-line" id="biz-set-display-name" required /></div>' +
+        '<div><label class="field-label" for="biz-set-type">' + uiText("نوع کسب‌وکار") + '</label><input class="studio-input-line" id="biz-set-type" /></div>' +
+        '<div><label class="field-label" for="biz-set-cat">' + uiText("شناسهٔ دسته‌بندی") + '</label><input class="studio-input-line" id="biz-set-cat" /></div>' +
+        '<div><label class="field-label" for="biz-set-locale">' + uiText("زبان پیش‌فرض") + '</label><input class="studio-input-line" id="biz-set-locale" /></div>' +
+        '<div><label class="field-label" for="biz-set-timezone">' + uiText("منطقهٔ زمانی") + '</label><input class="studio-input-line" id="biz-set-timezone" /></div>' +
+        '<div><label class="field-label" for="biz-set-currency">' + uiText("واحد پول پیش‌فرض") + '</label><input class="studio-input-line" id="biz-set-currency" /></div>' +
+        '<div class="field-span-2 phoenix-business-settings-actions"><span id="business-settings-feedback" role="status"></span><button class="button button-primary" type="button" data-save-biz-settings disabled>' + uiText("ذخیرهٔ تغییرات") + '</button></div>' +
+      '</form>' +
+    '</section>' +
+  '</div>';
 }
+
 
 function loadBusinessSettingsPage(): void {
-  document.querySelector<HTMLButtonElement>("[data-save-biz-settings]")?.addEventListener("click", () => {
-    showToast("مشخصات کسب‌وکار با موفقیت به‌روزرسانی شد.");
+  const form = document.querySelector<HTMLFormElement>("#business-settings-form");
+  const state = document.querySelector<HTMLElement>("#business-settings-load-state");
+  const statusNode = document.querySelector<HTMLElement>("#business-settings-status");
+  const saveButton = document.querySelector<HTMLButtonElement>("[data-save-biz-settings]");
+  const feedback = document.querySelector<HTMLElement>("#business-settings-feedback");
+  if (!form || !state || !statusNode || !saveButton) return;
+
+  let currentBusiness: Record<string, unknown> | null = null;
+  const field = (id: string): HTMLInputElement | null => form.querySelector<HTMLInputElement>("#" + id);
+  const setStatus = (label: string, className = "pill"): void => {
+    statusNode.textContent = label;
+    statusNode.className = className;
+  };
+  const load = async (): Promise<void> => {
+    const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
+    form.hidden = true;
+    saveButton.disabled = true;
+    state.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت اطلاعات کسب‌وکار…") + '</div>';
+    setStatus(uiText("در حال بارگذاری"));
+    if (!sessionStorage.getItem(STORAGE.accessToken)) {
+      setStatus(uiText("نیازمند ورود"), "pill warning");
+      state.innerHTML = renderBusinessDataState("برای مدیریت اطلاعات وارد شو", "اطلاعات کسب‌وکار فقط پس از احراز هویت خوانده یا ذخیره می‌شود.", "/profile", "ورود به حساب");
+      return;
+    }
+    if (!businessId) {
+      setStatus(uiText("کسب‌وکار انتخاب نشده"), "pill warning");
+      state.innerHTML = renderBusinessDataState("پروفایل کسب‌وکار ثبت نشده", "برای این حساب هنوز شناسهٔ کسب‌وکار انتخاب نشده است؛ هیچ اطلاعات پیش‌فرضی به‌جای آن نمایش داده نمی‌شود.", "/business/profile", "تکمیل پروفایل");
+      return;
+    }
+    try {
+      const response = await apiJson<{ data: { business: Record<string, unknown> } }>(
+        "/api/v1/businesses/" + encodeURIComponent(businessId) + "/management"
+      );
+      currentBusiness = response.data.business;
+      if (!currentBusiness || typeof currentBusiness !== "object") throw new Error(uiText("اطلاعات کسب‌وکار در پاسخ موجود نیست"));
+      const readText = (key: string): string => typeof currentBusiness?.[key] === "string" ? String(currentBusiness[key]) : "";
+      const values: Record<string, string> = {
+        "biz-set-name": readText("name"),
+        "biz-set-display-name": readText("displayName"),
+        "biz-set-type": readText("businessType"),
+        "biz-set-cat": readText("primaryCategoryId"),
+        "biz-set-locale": readText("defaultLocale"),
+        "biz-set-timezone": readText("timezone"),
+        "biz-set-currency": readText("defaultCurrency"),
+      };
+      for (const [id, value] of Object.entries(values)) {
+        const input = field(id);
+        if (input) input.value = value;
+      }
+      form.hidden = false;
+      state.innerHTML = "";
+      const publication = readText("publicationStatus");
+      setStatus(uiText("وضعیت انتشار") + ": " + businessStatusLabel(publication || "unpublished"), businessStatusPillClass(publication));
+      saveButton.disabled = false;
+    } catch (error) {
+      currentBusiness = null;
+      setStatus(uiText("اطلاعات بارگذاری نشد"), "pill warning");
+      state.innerHTML = renderBusinessDataState("تنظیمات بارگذاری نشد", error instanceof Error ? error.message : uiText("خطا در دریافت تنظیمات")) +
+        '<div class="phoenix-business-retry-row"><button class="button button-ghost" type="button" data-retry-business-settings>' + uiText("تلاش دوباره") + '</button></div>';
+      state.querySelector<HTMLButtonElement>("[data-retry-business-settings]")?.addEventListener("click", () => void load());
+    }
+  };
+
+  saveButton.addEventListener("click", async () => {
+    const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
+    if (!currentBusiness || !businessId) {
+      showToast(uiText("ابتدا اطلاعات واقعی کسب‌وکار را بارگذاری کن."));
+      return;
+    }
+    const name = field("biz-set-name")?.value.trim() ?? "";
+    const displayName = field("biz-set-display-name")?.value.trim() ?? "";
+    if (!name || !displayName) {
+      if (feedback) feedback.textContent = uiText("نام رسمی و نام نمایشی الزامی هستند.");
+      return;
+    }
+    const body: Record<string, string> = { name, displayName };
+    const optionalFields: Array<[string, string]> = [
+      ["businessType", "biz-set-type"],
+      ["primaryCategoryId", "biz-set-cat"],
+      ["defaultLocale", "biz-set-locale"],
+      ["timezone", "biz-set-timezone"],
+      ["defaultCurrency", "biz-set-currency"],
+    ];
+    for (const [key, id] of optionalFields) {
+      const value = field(id)?.value.trim() ?? "";
+      if (value) body[key] = value;
+    }
+    saveButton.disabled = true;
+    if (feedback) feedback.textContent = uiText("در حال ذخیره…");
+    setStatus(uiText("در حال ذخیره"), "pill");
+    try {
+      const response = await apiJson<{ data: Record<string, unknown> }>(
+        "/api/v1/businesses/" + encodeURIComponent(businessId),
+        { method: "PATCH", body }
+      );
+      currentBusiness = response.data;
+      if (feedback) feedback.textContent = uiText("اطلاعات ذخیره شد.");
+      const publication = typeof currentBusiness.publicationStatus === "string" ? currentBusiness.publicationStatus : "unpublished";
+      setStatus(uiText("وضعیت انتشار") + ": " + businessStatusLabel(publication), businessStatusPillClass(publication));
+      showToast(uiText("تغییرات کسب‌وکار ذخیره شد."));
+    } catch (error) {
+      if (feedback) feedback.textContent = error instanceof Error ? error.message : uiText("ذخیرهٔ اطلاعات ناموفق بود.");
+      setStatus(uiText("ذخیره انجام نشد"), "pill warning");
+    } finally {
+      saveButton.disabled = false;
+    }
   });
+
+  void load();
 }
 
-/* =========================================================================
-   Welcome & Onboarding Flow (/welcome)
-   Contract Section 5: Entry and Onboarding Experience
-   ========================================================================= */
 
 function renderWelcome(): string {
-  const persona = getActivePersona();
   const typeParam = new URLSearchParams(location.search).get("type") || new URLSearchParams(location.search).get("persona");
+  const persona = getActivePersona();
   if (typeParam === "business" || (!typeParam && persona === "business")) {
     return renderBusinessWelcome();
   }
-  if (typeParam === "consumer" || (!typeParam && persona === "consumer")) {
-    return renderConsumerWelcome();
-  }
-  return renderIndividualWelcome();
+  return renderConsumerWelcome();
 }
 
-function renderLegacyWelcome(): string {
+function renderBusinessWelcome(): string {
+  return '<div class="phoenix-reset-page phoenix-reset-start-page phoenix-reset-seller-start-page">' +
+    '<section class="phoenix-reset-start-hero">' +
+      '<div class="phoenix-reset-start-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("sellerStartEyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("sellerStartTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("sellerStartIntro") + '</p>' +
+        '<div class="phoenix-reset-start-actions">' +
+          '<button class="button button-primary" type="button" data-open-register>' + socialCommerceUi("sellerStartSignIn") + ' <span aria-hidden="true">←</span></button>' +
+          '<a class="button button-ghost" href="/discover?tab=explore" data-nav>' + socialCommerceUi("sellerStartExplore") + '</a>' +
+        '</div>' +
+      '</div>' +
+      '<div class="phoenix-reset-start-visual" aria-hidden="true">' +
+        '<div class="phoenix-reset-start-orbit phoenix-reset-start-orbit-one"></div>' +
+        '<div class="phoenix-reset-start-orbit phoenix-reset-start-orbit-two"></div>' +
+        '<div class="phoenix-reset-start-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></div>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-one">＋</span>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-two">◇</span>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-three">↔</span>' +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-start-principles" aria-label="' + escapeAttr(socialCommerceUi("sellerStartStepsLabel")) + '">' +
+      '<article><span aria-hidden="true">✍</span><div><h2>' + socialCommerceUi("sellerStartDescribeTitle") + '</h2><p>' + socialCommerceUi("sellerStartDescribeBody") + '</p></div></article>' +
+      '<article><span aria-hidden="true">✓</span><div><h2>' + socialCommerceUi("sellerStartReviewTitle") + '</h2><p>' + socialCommerceUi("sellerStartReviewBody") + '</p></div></article>' +
+      '<article><span aria-hidden="true">♡</span><div><h2>' + socialCommerceUi("sellerStartRelationshipTitle") + '</h2><p>' + socialCommerceUi("sellerStartRelationshipBody") + '</p></div></article>' +
+    '</section>' +
+    '<section class="phoenix-reset-start-seller">' +
+      '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("sellerStartSameAccountEyebrow") + '</span><h2>' + socialCommerceUi("sellerStartSameAccountTitle") + '</h2><p>' + socialCommerceUi("sellerStartSameAccountBody") + '</p></div>' +
+      '<a class="button button-primary" href="/account" data-nav>' + socialCommerceUi("sellerStartAccountAction") + ' <span aria-hidden="true">←</span></a>' +
+    '</section>' +
+  '</div>';
+}
+
+function renderConsumerWelcome(): string {
+  return '<div class="phoenix-reset-page phoenix-reset-start-page">' +
+    '<section class="phoenix-reset-start-hero">' +
+      '<div class="phoenix-reset-start-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("startEyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("startTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("startIntro") + '</p>' +
+        '<div class="phoenix-reset-start-actions">' +
+          '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("startExploreAction") + ' <span aria-hidden="true">←</span></a>' +
+          '<button class="button button-ghost" type="button" data-open-register>' + socialCommerceUi("startSignUpAction") + '</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="phoenix-reset-start-visual" aria-hidden="true">' +
+        '<div class="phoenix-reset-start-orbit phoenix-reset-start-orbit-one"></div>' +
+        '<div class="phoenix-reset-start-orbit phoenix-reset-start-orbit-two"></div>' +
+        '<div class="phoenix-reset-start-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></div>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-one">⌕</span>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-two">♡</span>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-three">↔</span>' +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-start-principles" aria-label="' + escapeAttr(socialCommerceUi("startPrinciplesLabel")) + '">' +
+      '<article><span aria-hidden="true">⌕</span><div><h2>' + socialCommerceUi("startDiscoverTitle") + '</h2><p>' + socialCommerceUi("startDiscoverBody") + '</p></div></article>' +
+      '<article><span aria-hidden="true">♡</span><div><h2>' + socialCommerceUi("startRelationshipTitle") + '</h2><p>' + socialCommerceUi("startRelationshipBody") + '</p></div></article>' +
+      '<article><span aria-hidden="true">⚖</span><div><h2>' + socialCommerceUi("startDecisionTitle") + '</h2><p>' + socialCommerceUi("startDecisionBody") + '</p></div></article>' +
+    '</section>' +
+    '<section class="phoenix-reset-start-seller">' +
+      '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("startForSellersEyebrow") + '</span><h2>' + socialCommerceUi("startForSellersTitle") + '</h2><p>' + socialCommerceUi("startForSellersBody") + '</p></div>' +
+      '<button class="button button-primary" type="button" data-open-register>' + socialCommerceUi("startSignUpAction") + ' <span aria-hidden="true">←</span></button>' +
+    '</section>' +
+  '</div>';
+}
+
+function _renderLegacyWelcome(): string {
   const currentTab = new URLSearchParams(location.search).get("type") === "business" ? "business" : "individual";
   return `
     <div class="phoenix-welcome-page">
@@ -4863,7 +5462,7 @@ function bindOnboardingEvents(): void {
 
 
 
-function renderSocialHeader(active: "feed" | "following" | "explore" | "activity"): string {
+function renderSocialHeader(active: "feed" | "following" | "explore" | "activity" | "none"): string {
   const auth = getStoredAuth();
   const authenticated = Boolean(auth.token && auth.user);
   const user = auth.user;
@@ -4871,37 +5470,60 @@ function renderSocialHeader(active: "feed" | "following" | "explore" | "activity
     ? '<a class="profile-chip" href="/profile" data-nav aria-label="' + escapeAttr(user.displayName || uiText("حساب من")) + '"><span class="avatar">' + ((user.displayName || "ق")[0]) + '</span><span class="profile-copy"><strong>' + escapeHtml(user.displayName || "") + '</strong></span></a>'
     : '<button type="button" class="button button-primary button-sm phoenix-register-btn" data-open-register aria-label="' + uiText("ثبت‌نام") + '"><span class="btn-sparkle" aria-hidden="true">✦</span><span>' + uiText("ثبت‌نام") + '</span></button><button type="button" class="button button-ghost button-sm" data-open-login>' + uiText("ورود") + '</button>';
 
+  const currentPath = normalizePath(location.pathname);
+  const quickLinks = [
+    { path: "/messages", label: uiText("پیام‌ها"), icon: "✉" },
+    { path: "/orders", label: uiText("سفارش‌ها"), icon: "▣" },
+    { path: "/saved", label: uiText("ذخیره‌شده‌ها"), icon: "★" },
+    { path: "/notifications", label: uiText("اعلان‌ها"), icon: "♢" },
+  ].map((item) =>
+    '<a href="' + item.path + '" data-nav class="' + (currentPath === item.path ? "active" : "") + '"' +
+    (currentPath === item.path ? ' aria-current="page"' : "") +
+    ' aria-label="' + escapeAttr(item.label) + '" title="' + escapeAttr(item.label) + '">' + item.icon + '</a>'
+  ).join("");
+
   return '<header class="phoenix-social-header"><div class="phoenix-social-header-inner">' +
     '<a class="phoenix-public-brand" href="/" data-nav aria-label="ققنوس"><span class="brand-mark phoenix-brand-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></span><span><strong>ققنوس</strong><small>Phoenix Social Commerce</small></span></a>' +
-    '<nav class="phoenix-social-tabs" aria-label="ناوبری اجتماعی">' +
-    '<a href="/discover" data-nav class="' + (active === "feed" ? "active" : "") + '">برای تو</a>' +
-    '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">دنبال‌شده‌ها</a>' +
-    '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">اکسپلور</a>' +
-    '<a href="/activity" data-nav class="' + (active === "activity" ? "active" : "") + '">فعالیت</a>' +
+    '<nav class="phoenix-social-tabs" aria-label="' + escapeAttr(socialCommerceUi("mobileNavigation")) + '">' +
+    '<a href="/" data-nav class="' + (active === "feed" ? "active" : "") + '">' + socialCommerceUi("tabForYou") + '</a>' +
+    '<a href="/discover?tab=following" data-nav class="' + (active === "following" ? "active" : "") + '">' + socialCommerceUi("tabFollowing") + '</a>' +
+    '<a href="/discover?tab=explore" data-nav class="' + (active === "explore" ? "active" : "") + '">' + socialCommerceUi("tabExplore") + '</a>' +
+    '<a href="/activity" data-nav class="' + (active === "activity" ? "active" : "") + '">' + localizedUi("فعالیت") + '</a>' +
     '<button type="button" class="phoenix-nav-link-register" data-open-register aria-label="' + uiText("ثبت‌نام") + '">✦ ' + uiText("ثبت‌نام") + '</button>' +
     '</nav>' +
     '<div class="phoenix-social-actions">' +
+    '<nav class="phoenix-social-quick-links" aria-label="' + escapeAttr(uiText("میان‌برهای اجتماعی")) + '">' + quickLinks + '</nav>' +
     authHtml +
-    '<button class="icon-button" type="button" data-open-create-post aria-label="' + uiText("پست جدید") + '">＋</button>' + renderLanguageSwitcher() + '<button class="icon-button" type="button" data-theme-toggle aria-label="' + uiText("تغییر پوسته") + '">◐</button></div>' +
+    '<button class="icon-button" type="button" data-open-create-post aria-label="' + escapeAttr(socialCommerceUi("createOffer")) + '" title="' + escapeAttr(socialCommerceUi("createOffer")) + '">＋</button>' + renderLanguageSwitcher() + '<button class="icon-button" type="button" data-theme-toggle aria-label="' + uiText("تغییر پوسته") + '">◐</button></div>' +
     '</div></header>';
 }
 
 function renderSocialMobileNav(): string {
-  return '<nav class="phoenix-social-mobile-nav" aria-label="ناوبری اجتماعی موبایل">' +
-    '<a href="/discover" data-nav>⌂<small>خانه</small></a><a href="/discover?tab=explore" data-nav>⌕<small>اکسپلور</small></a>' +
-    '<button type="button" data-open-create-post aria-label="ایجاد">＋</button><a href="/activity" data-nav>✦<small>فعالیت</small></a><a href="/profile" data-nav>◉<small>پروفایل</small></a></nav>';
+  const path = normalizePath(location.pathname);
+  const tab = new URLSearchParams(location.search).get("tab") ?? "for-you";
+  const feedActive = (path === "/" || path === "/discover") && tab !== "explore" && tab !== "following";
+  const exploreActive = path === "/discover" && tab === "explore";
+  const activityActive = path === "/activity";
+  const profileActive = path === "/profile" || path === "/account" || path === "/settings";
+  return '<nav class="phoenix-social-mobile-nav" aria-label="' + escapeAttr(socialCommerceUi("mobileNavigation")) + '">' +
+    '<a href="/" data-nav class="' + (feedActive ? "active" : "") + '"' + (feedActive ? ' aria-current="page"' : '') + '>⌂<small>' + socialCommerceUi("tabForYou") + '</small></a>' +
+    '<a href="/discover?tab=explore" data-nav class="' + (exploreActive ? "active" : "") + '"' + (exploreActive ? ' aria-current="page"' : '') + '>⌕<small>' + socialCommerceUi("tabExplore") + '</small></a>' +
+    '<button type="button" data-open-create-post aria-label="' + escapeAttr(socialCommerceUi("createOffer")) + '">＋</button>' +
+    '<a href="/activity" data-nav class="' + (activityActive ? "active" : "") + '"' + (activityActive ? ' aria-current="page"' : '') + '>✦<small>' + localizedUi("فعالیت") + '</small></a>' +
+    '<a href="/profile" data-nav class="' + (profileActive ? "active" : "") + '"' + (profileActive ? ' aria-current="page"' : '') + '>◉<small>' + localizedUi("پروفایل") + '</small></a></nav>';
 }
 
 function renderSocialPosts(items: DiscoveryResult[]): string {
   activeDiscoveryItems = items;
-  if (!items.length) return '<div class="glass-card social-empty-state"><div class="draft-orb">⌕</div><h3>' + discoveryUi("emptyResultsTitle") + '</h3><p>' + discoveryUi("emptyResultsDescription") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' + discoveryUi("goExplore") + '</a></div>';
+  if (!items.length) return '<div class="glass-card social-empty-state phoenix-reset-empty"><div class="draft-orb">⌕</div><h3>' + socialCommerceUi("emptyFeedTitle") + '</h3><p>' + socialCommerceUi("emptyFeedBody") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' + discoveryUi("goExplore") + '</a></div>';
   return items.map((item, index) => {
     const titleRaw = item.title ?? item.displayName ?? item.name ?? discoveryUi("productOrService");
     const title = escapeHtml(titleRaw);
     const description = escapeHtml(item.description ?? item.body ?? discoveryUi("offeringRegistered"));
-    const locality = escapeHtml(item.locality ?? item.city ?? discoveryUi("networkLocality"));
+    const localityRaw = item.locality ?? item.city;
+    const locality = localityRaw ? escapeHtml(localityRaw) : "";
     const key = item.id ?? item.sourceId ?? "";
-    const sourceType = item.sourceType ?? String(item.metadata?.offeringType ?? "product");
+    const sourceType = String(item.sourceType ?? item.metadata?.offeringType ?? "product").toLowerCase();
     const compared = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key && Boolean(key));
     const followed = isSocialActive("follow", item);
     const liked = isSocialActive("like", item);
@@ -4911,32 +5533,45 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
       ? formatLocalizedNumber(Number(rawPrice)) + " " + escapeHtml(item.currency ?? "")
       : discoveryUi("askPrice");
     const typeLabel = sourceType === "service" ? discoveryUi("service") : sourceType === "business" ? discoveryUi("business") : discoveryUi("product");
-    const authorName = item.metadata && typeof item.metadata.businessName === "string" ? item.metadata.businessName : sourceType === "business" ? titleRaw : discoveryUi("seller");
-    const canFollow = Boolean(item.metadata && typeof item.metadata.businessId === "string") || sourceType === "business";
+    const authorName = item.metadata && typeof item.metadata.businessName === "string" ? item.metadata.businessName : item.metadata && typeof (item.metadata.sellerName ?? item.metadata.ownerName ?? item.metadata.authorName ?? item.metadata.userName) === "string" ? String(item.metadata.sellerName ?? item.metadata.ownerName ?? item.metadata.authorName ?? item.metadata.userName) : sourceType === "business" ? titleRaw : discoveryUi("seller");
+    const avatarInitial = escapeHtml(authorName.trim().slice(0, 1) || "ق");
+    const canFollow = socialFollowTarget(item) !== null;
     const followLabel = followed ? discoveryUi("followActive") : discoveryUi("follow");
+    const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ?? item.metadata?.thumbnailUrl ??
+      (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
+    const mediaUrl = typeof mediaCandidate === "string" && (mediaCandidate.startsWith("/") || /^https?:\/\//i.test(mediaCandidate)) ? mediaCandidate : "";
+    const avatarCandidate = item.metadata?.businessAvatarUrl ?? item.metadata?.businessLogoUrl ?? item.metadata?.logoUrl;
+    const avatarUrl = typeof avatarCandidate === "string" && (avatarCandidate.startsWith("/") || /^https?:\/\//i.test(avatarCandidate)) ? avatarCandidate : "";
+    const media = mediaUrl
+      ? '<img class="phoenix-post-image" src="' + escapeAttr(mediaUrl) + '" alt="' + title + '" loading="lazy" />'
+      : '<span class="phoenix-post-placeholder"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("imageUnavailable") + '</span></span>';
+    const localityMarkup = locality ? '<span>⌖ ' + locality + '</span>' : "";
     const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
     const publicAction = sourceType === "business"
       ? '<a class="button button-primary post-buy" href="/businesses/' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>' + discoveryUi("viewBusiness") + ' <span>←</span></a>'
       : sourceType === "service"
         ? '<a class="button button-primary post-buy" href="/booking?offering=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + (businessId ? '&businessId=' + encodeURIComponent(businessId) : '') + '" data-nav>' + discoveryUi("checkBooking") + ' <span>←</span></a>'
-        : '<a class="button button-primary post-buy" href="/checkout?product=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>' + discoveryUi("instantBuy") + ' <span>←</span></a>';
+        : '<button type="button" class="button button-primary post-buy" data-open-view="' + escapeAttr(key) + '">' + discoveryUi("detailsAndDecision") + ' <span>←</span></button>';
     const followButton = canFollow
       ? '<button type="button" class="post-follow' + (followed ? ' selected' : '') + '" data-follow="' + escapeAttr(key) + '">' + followLabel + '</button>'
       : '<span class="post-follow post-follow-disabled">' + discoveryUi("viewSeller") + '</span>';
     return '<article class="phoenix-post-card">' +
-      '<header class="phoenix-post-author"><span class="phoenix-avatar phoenix-avatar-image">' + (index % 2 ? "س" : "ق") + '</span><div><strong>' + escapeHtml(authorName) + '</strong><small>' + locality + ' · ' + escapeHtml(typeLabel) + '</small></div>' + followButton + '</header>' +
-      '<button type="button" class="phoenix-post-media media-'+(index%3)+'" data-discovery-index="' + index + '" aria-label="' + title + '"><span class="post-media-badge">' + typeLabel + '</span><strong>' + title + '</strong><small>' + discoveryUi("detailsAndDecision") + '</small></button>' +
-      '<div class="phoenix-post-body"><div class="phoenix-post-meta"><span class="phoenix-post-type">' + typeLabel + '</span><span>⌖ ' + locality + '</span></div><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + price + '</div>' +
+      '<header class="phoenix-post-author">' +
+        (avatarUrl ? '<span class="phoenix-avatar phoenix-avatar-image"><img src="' + escapeAttr(avatarUrl) + '" alt="" loading="lazy" /></span>' : '<span class="phoenix-avatar phoenix-avatar-image">' + avatarInitial + '</span>') +
+        '<div class="phoenix-post-author-copy"><strong>' + escapeHtml(authorName) + '</strong><small>' + (locality ? locality + ' · ' : '') + escapeHtml(typeLabel) + '</small></div>' + followButton +
+      '</header>' +
+      '<button type="button" class="phoenix-post-media media-' + (index % 3) + '" data-discovery-index="' + index + '" aria-label="' + title + '">' + media + '<span class="post-media-badge">' + typeLabel + '</span><span class="phoenix-post-media-copy"><strong>' + title + '</strong><small>' + discoveryUi("detailsAndDecision") + '</small></span></button>' +
+      '<div class="phoenix-post-body"><div class="phoenix-post-meta"><span class="phoenix-post-type">' + typeLabel + '</span>' + localityMarkup + '</div><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + price + '</div>' +
       '<div class="phoenix-post-actions">' +
       '<button type="button" class="social-action' + (liked ? ' selected' : '') + '" data-like="' + escapeAttr(key) + '">♡ <span>' + (liked ? discoveryUi("likeActive") : discoveryUi("like")) + '</span></button>' +
       '<button type="button" class="social-action" data-comment="' + escapeAttr(key) + '">◌ <span>' + discoveryUi("comment") + '</span></button>' +
       '<button type="button" class="social-action' + (saved ? ' selected' : '') + '" data-save="' + escapeAttr(key) + '">⌑ <span>' + (saved ? discoveryUi("saveActive") : discoveryUi("save")) + '</span></button>' +
       '<button type="button" class="social-action" data-share="' + escapeAttr(key) + '">↗ <span>' + discoveryUi("share") + '</span></button>' +
       (sourceType === "product" ? '<button type="button" class="social-action ' + (compared ? "selected" : "") + '" data-compare="' + escapeAttr(key) + '">⚖ <span>' + (compared ? discoveryUi("selected") : discoveryUi("compare")) + '</span></button>' : '') +
-      (sourceType === "service" ? '<button type="button" class="social-action" data-open-view="' + escapeAttr(key) + '">◉ <span>' + discoveryUi("view") + '</span></button>' : '') +
       publicAction + '</div></div></article>';
   }).join("");
 }
+
 function isComparableProduct(item: DiscoveryResult): boolean {
   return (item.sourceType ?? "product") === "product" && Boolean(item.sourceId ?? item.id);
 }
@@ -4954,13 +5589,13 @@ function saveCompareItems(items: DiscoveryResult[]): void {
 }
 
 function toggleCompare(item: DiscoveryResult): void {
-  if (!isComparableProduct(item)) { showToast("فقط محصولات قابل مقایسه هستند."); return; }
+  if (!isComparableProduct(item)) { showToast(socialCommerceUi("compareProductsOnly")); return; }
   const key = item.id ?? item.sourceId ?? "";
   const current = getCompareItems();
   const exists = current.some((entry) => (entry.id ?? entry.sourceId) === key);
   if (exists) saveCompareItems(current.filter((entry) => (entry.id ?? entry.sourceId) !== key));
   else if (current.length < 4) saveCompareItems([...current, item]);
-  else showToast("مقایسه حداکثر ۴ محصول را پشتیبانی می‌کند.");
+  else showToast(socialCommerceUi("compareMaxProducts"));
 }
 
 function toggleCompareByKey(key: string): void {
@@ -4978,32 +5613,32 @@ async function shareSocialItem(item: DiscoveryResult): Promise<void> {
     : type === "service" && id
       ? new URL("/booking?offering=" + encodeURIComponent(id) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : ""), location.origin).toString()
       : id
-        ? new URL("/checkout?product=" + encodeURIComponent(id), location.origin).toString()
+        ? new URL("/discover?" + new URLSearchParams({ q: title }).toString(), location.origin).toString()
         : location.href;
-  const payload = { title, text: "این گزینه را در ققنوس ببین.", url };
+  const payload = { title, text: socialCommerceUi("sharePromptText"), url };
   try {
     if (navigator.share) {
       await navigator.share(payload);
-      showToast("صفحه برای اشتراک‌گذاری آماده شد.");
+      showToast(socialCommerceUi("shareReady"));
       return;
     }
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(url);
-      showToast("لینک ققنوس کپی شد.");
+      showToast(socialCommerceUi("shareLinkCopied"));
     } else {
-      window.prompt("لینک ققنوس را کپی کنید:", url);
+      window.prompt(socialCommerceUi("copyShareLinkPrompt"), url);
     }
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") return;
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(url);
-        showToast("لینک ققنوس کپی شد.");
+        showToast(socialCommerceUi("shareLinkCopied"));
       } else {
-        window.prompt("لینک ققنوس را کپی کنید:", url);
+        window.prompt(socialCommerceUi("copyShareLinkPrompt"), url);
       }
     } catch {
-      showToast("اشتراک‌گذاری این مورد در مرورگر فعلی ممکن نیست.");
+      showToast(socialCommerceUi("shareUnavailable"));
     }
   }
 }
@@ -5012,15 +5647,22 @@ function renderCompareTray(): void {
   const host = document.querySelector<HTMLElement>("#phoenix-compare-tray");
   if (!host) return;
   const items = getCompareItems();
+  const compareLink = document.querySelector<HTMLAnchorElement>(".phoenix-reset-compare-link");
+  const compareCount = document.querySelector<HTMLElement>("#compare-count");
+  if (compareCount) compareCount.textContent = formatLocalizedNumber(items.length);
+  if (compareLink) {
+    compareLink.hidden = items.length < 2;
+    compareLink.setAttribute("aria-label", socialCommerceUi("compare") + " " + formatLocalizedNumber(items.length));
+  }
   if (items.length < 2) {
     host.innerHTML = items.length === 1
-      ? '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items"><span>' + escapeHtml(items[0]?.title ?? items[0]?.name ?? "محصول") + '</span></div><span class="compare-tray-hint">یک محصول دیگر انتخاب کن.</span></div>'
+      ? '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items"><span>' + escapeHtml(items[0]?.title ?? items[0]?.name ?? "محصول") + '</span></div><span class="compare-tray-hint">' + socialCommerceUi("compareNeedOneMore") + '</span></div>'
       : "";
     return;
   }
   host.innerHTML = '<div class="phoenix-compare-tray glass-card"><div class="phoenix-compare-items">' +
-    items.map((item) => '<span>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '<button type="button" data-remove-compare="' + escapeAttr(item.id ?? item.sourceId ?? "") + '" aria-label="حذف از مقایسه">×</button></span>').join("") +
-    '</div><button class="button button-primary" type="button" data-open-compare>⚖ مقایسه ' + items.length + ' محصول</button></div>';
+    items.map((item) => '<span>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '<button type="button" data-remove-compare="' + escapeAttr(item.id ?? item.sourceId ?? "") + '" aria-label="' + escapeAttr(socialCommerceUi("removeFromCompare")) + '">×</button></span>').join("") +
+    '</div><button class="button button-primary" type="button" data-open-compare>⚖ ' + socialCommerceUi("compareButtonLabel", { count: formatLocalizedNumber(items.length) }) + '</button></div>';
   host.querySelectorAll<HTMLButtonElement>("[data-remove-compare]").forEach((button) => button.addEventListener("click", (event) => {
     event.stopPropagation();
     toggleCompareByKey(button.dataset.removeCompare ?? "");
@@ -5032,11 +5674,52 @@ function renderCompareTray(): void {
 
 
 function renderActivity(): string {
-  if (!sessionStorage.getItem(STORAGE.accessToken)) {
-    return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><span class="phoenix-kicker">Activity</span><h1>فعالیت‌های ققنوس</h1><p>برای دیدن Follow، Like، Save و نظرات ثبت‌شده، ابتدا وارد حساب کاربری شوید.</p></section><div class="glass-card phoenix-activity-gate"><div class="draft-orb">✦</div><h2>فعالیت شخصی شما</h2><p>برای ثبت و مشاهده تعاملات و علاقه‌مندی‌ها، لطفاً وارد حساب خود شوید.</p><button class="button button-primary" type="button" data-activity-connect>ورود / ثبت‌نام</button></div></div>';
-  }
-  return '<div class="phoenix-activity-page"><section class="phoenix-section-heading"><div><span class="phoenix-kicker">Activity</span><h1>ردپای اجتماعی تو در ققنوس</h1><p>رویدادها مستقیماً از Social Engagement خوانده می‌شوند؛ این صفحه timeline جداگانه‌ای در مرورگر نمی‌سازد.</p></div><div class="heading-actions"><button class="button button-ghost" type="button" data-activity-refresh>↻ بروزرسانی</button><a class="button button-primary" href="/discover" data-nav>ادامه کشف ←</a></div></section><section class="phoenix-activity-layout"><article class="glass-card phoenix-activity-card"><div class="card-section-heading"><div><span class="section-kicker">Canonical Social Events</span><h2>آخرین فعالیت‌ها</h2></div><span id="activity-status" class="pill" aria-live="polite">در حال آماده‌سازی</span></div><div id="activity-list" class="phoenix-activity-list" aria-live="polite" aria-busy="true"><div class="slot-loading">در حال خواندن فعالیت‌های واقعی…</div></div></article><aside class="glass-card phoenix-activity-side"><span class="section-kicker">Your loop</span><h2>دنبال کن، ذخیره کن، مقایسه کن.</h2><p>فعالیت‌های اجتماعی در کنار Discovery و Compare برای تصمیم‌گیری پیوسته استفاده می‌شوند؛ ranking و recommendation همچنان در backend canonical باقی می‌مانند.</p><a class="button button-ghost" href="/compare" data-nav>مقایسه‌های انتخاب‌شده</a></aside></section></div>';
+  const signedIn = Boolean(sessionStorage.getItem(STORAGE.accessToken));
+  const hero = '<section class="phoenix-reset-hero">' +
+    '<div class="phoenix-reset-hero-copy">' +
+      '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("activityEyebrow") + '</span></div>' +
+      '<h1>' + socialCommerceUi("activityTitle") + '</h1>' +
+      '<p>' + socialCommerceUi("activityIntro") + '</p>' +
+    '</div>' +
+    '<div class="phoenix-reset-activity-hero-actions">' +
+      (signedIn ? '<button class="button button-ghost" type="button" data-activity-refresh>↻ ' + socialCommerceUi("activityRefresh") + '</button>' : '') +
+      '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("continueDiscovering") + ' <span aria-hidden="true">←</span></a>' +
+    '</div>' +
+  '</section>';
+  const activityPanel = signedIn
+    ? '<article class="phoenix-reset-activity-panel">' +
+        '<div class="phoenix-reset-activity-panel-heading">' +
+          '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("activityEyebrow") + '</span><h2>' + socialCommerceUi("activityListTitle") + '</h2></div>' +
+          '<span id="activity-status" class="phoenix-reset-activity-status" aria-live="polite">' + socialCommerceUi("activityStatusPreparing") + '</span>' +
+        '</div>' +
+        '<div id="activity-list" class="phoenix-reset-activity-list" aria-live="polite" aria-busy="true"><div class="slot-loading">' + socialCommerceUi("activityLoading") + '</div></div>' +
+      '</article>'
+    : '<article class="phoenix-reset-activity-login">' +
+        '<div class="phoenix-reset-side-icon" aria-hidden="true">✦</div>' +
+        '<h2>' + socialCommerceUi("activitySignInTitle") + '</h2>' +
+        '<p>' + socialCommerceUi("activitySignInBody") + '</p>' +
+        '<button class="button button-primary" type="button" data-activity-connect>' + socialCommerceUi("activitySignInAction") + '</button>' +
+      '</article>';
+  const sidebar = '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
+    '<section class="phoenix-reset-side-card">' +
+      '<span class="phoenix-reset-side-icon" aria-hidden="true">◇</span>' +
+      '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("activitySideEyebrow") + '</span>' +
+      '<h2>' + socialCommerceUi("activitySideTitle") + '</h2>' +
+      '<p>' + socialCommerceUi("activitySideBody") + '</p>' +
+      '<a class="button button-ghost" href="/compare" data-nav>' + socialCommerceUi("activityCompareAction") + '</a>' +
+    '</section>' +
+    '<section class="phoenix-reset-side-card">' +
+      '<span class="phoenix-reset-side-icon" aria-hidden="true">⌕</span>' +
+      '<h2>' + socialCommerceUi("needTitle") + '</h2>' +
+      '<p>' + socialCommerceUi("needBody") + '</p>' +
+      '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("tabExplore") + ' <span aria-hidden="true">←</span></a>' +
+    '</section>' +
+  '</aside>';
+  return '<div class="phoenix-reset-page phoenix-reset-activity-page">' + hero +
+    '<div class="phoenix-reset-discover-grid"><section class="phoenix-reset-main-column">' + activityPanel + '</section>' +
+    sidebar + '</div></div>';
 }
+
 
 async function loadActivityPage(): Promise<void> {
   const connect = document.querySelector<HTMLButtonElement>("[data-activity-connect]");
@@ -5052,9 +5735,11 @@ async function loadActivityPage(): Promise<void> {
   const renderRows = (items: unknown[]): void => {
     host.setAttribute("aria-busy", "false");
     if (!items.length) {
-      host.innerHTML = '<div class="social-empty-state"><div class="draft-orb">✦</div><h3>هنوز فعالیتی ثبت نشده است.</h3><p>از Discover یک کسب‌وکار را دنبال کن یا یک محصول را Like/Save کن تا رویداد واقعی اینجا دیده شود.</p><a class="button button-ghost" href="/discover?tab=explore" data-nav>رفتن به اکسپلور</a></div>';
-      status.textContent = "خالی";
-      status.className = "pill";
+      host.innerHTML = '<div class="phoenix-reset-activity-empty"><div class="phoenix-reset-side-icon" aria-hidden="true">✦</div><h3>' +
+        socialCommerceUi("activityEmptyTitle") + '</h3><p>' + socialCommerceUi("activityEmptyBody") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' +
+        socialCommerceUi("activityExploreAction") + ' <span aria-hidden="true">←</span></a></div>';
+      status.textContent = socialCommerceUi("activityStatusEmpty");
+      status.className = "phoenix-reset-activity-status";
       return;
     }
     host.innerHTML = items.map((item) => {
@@ -5063,40 +5748,62 @@ async function loadActivityPage(): Promise<void> {
       let payload: Record<string, unknown> = {};
       const rawPayload = event.payloadJson ?? event.payload;
       if (typeof rawPayload === "string") {
-        try { const parsed = JSON.parse(rawPayload); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) payload = parsed as Record<string, unknown>; } catch { /* ignore */ }
+        try {
+          const parsed = JSON.parse(rawPayload);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) payload = parsed as Record<string, unknown>;
+        } catch {
+          // Ignore an invalid event payload; never expose it as raw JSON.
+        }
       } else if (rawPayload && typeof rawPayload === "object" && !Array.isArray(rawPayload)) {
         payload = rawPayload as Record<string, unknown>;
       }
-      const targetType = String(payload.targetType ?? event.aggregateType ?? "");
+      const targetType = String(payload.targetType ?? event.aggregateType ?? "").toLowerCase();
       const targetId = String(payload.targetId ?? event.aggregateId ?? "");
       const occurredAt = String(event.occurredAt ?? event.createdAt ?? "");
-      const targetLabel = targetType && targetId ? targetType + " · " + targetId : "رویداد اجتماعی ققنوس";
+      const rawTitle = payload.targetTitle ?? payload.title ?? payload.name ?? payload.displayName;
+      const targetTitle = typeof rawTitle === "string" && rawTitle.trim() ? rawTitle.trim() : "";
+      const targetLabel = targetTitle || (
+        targetType === "business" ? socialCommerceUi("activityTargetBusiness")
+          : targetType === "product" ? socialCommerceUi("activityTargetProduct")
+            : targetType === "service" ? socialCommerceUi("activityTargetService")
+              : socialCommerceUi("activityTargetOther")
+      );
       const businessId = String(payload.businessId ?? "");
       const targetHref = targetType === "business" && targetId
         ? "/businesses/" + encodeURIComponent(targetId)
         : targetType === "service" && targetId
           ? "/booking?offering=" + encodeURIComponent(targetId) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : "")
-          : targetType === "product" && targetId
-            ? "/checkout?product=" + encodeURIComponent(targetId)
+          : targetType === "product"
+            ? "/discover?tab=explore" + (targetTitle ? "&q=" + encodeURIComponent(targetTitle) : "")
             : "";
-      return '<article class="phoenix-activity-row"><div class="phoenix-activity-icon">✦</div><div class="phoenix-activity-copy"><strong>' + escapeHtml(socialActivityLabel(eventType)) + '</strong><p>' + escapeHtml(targetLabel) + '</p><small>' + escapeHtml(formatDate(occurredAt)) + '</small></div>' + (targetHref ? '<a class="button button-ghost" href="' + escapeAttr(targetHref) + '" data-nav>باز کردن</a>' : '') + '</article>';
+      const actionLabel = targetType === "product" && !targetTitle
+        ? socialCommerceUi("activityExploreAction")
+        : socialCommerceUi("activityOpenTarget");
+      return '<article class="phoenix-activity-row"><div class="phoenix-activity-icon" aria-hidden="true">✦</div>' +
+        '<div class="phoenix-activity-copy"><strong>' + escapeHtml(socialActivityLabel(eventType)) + '</strong><p>' + escapeHtml(targetLabel) + '</p>' +
+        (occurredAt ? '<small>' + escapeHtml(formatDate(occurredAt)) + '</small>' : '') + '</div>' +
+        (targetHref ? '<a class="button button-ghost phoenix-activity-open" href="' + escapeAttr(targetHref) + '" data-nav>' + actionLabel + '</a>' : '') +
+      '</article>';
     }).join("");
-    status.textContent = String(items.length) + " رویداد";
-    status.className = "pill success";
+    status.textContent = socialCommerceUi("activityEventCount", { count: formatLocalizedNumber(items.length) });
+    status.className = "phoenix-reset-activity-status has-events";
   };
 
   const load = async (): Promise<void> => {
     host.setAttribute("aria-busy", "true");
-    host.innerHTML = '<div class="slot-loading">در حال همگام‌سازی Social Activity…</div>';
-    status.textContent = "در حال خواندن";
-    status.className = "pill";
+    host.innerHTML = '<div class="slot-loading">' + socialCommerceUi("activityLoading") + '</div>';
+    status.textContent = socialCommerceUi("activityStatusReading");
+    status.className = "phoenix-reset-activity-status";
     try {
       const items = await loadSocialActivity();
       renderRows(items);
     } catch (error) {
-      status.textContent = "خطا";
-      status.className = "pill warning";
-      host.innerHTML = '<div class="social-error-state"><div class="draft-orb">!</div><h3>Activity در دسترس نیست.</h3><p>' + escapeHtml(error instanceof Error ? error.message : "خواندن Activity ناموفق بود.") + '</p><button class="button button-ghost" type="button" data-activity-retry>تلاش دوباره</button></div>';
+      status.textContent = socialCommerceUi("activityStatusError");
+      status.className = "phoenix-reset-activity-status is-error";
+      const detail = error instanceof Error ? error.message : socialCommerceUi("activityErrorBody");
+      host.innerHTML = '<div class="phoenix-reset-activity-empty is-error"><div class="phoenix-reset-side-icon" aria-hidden="true">!</div><h3>' +
+        socialCommerceUi("activityErrorTitle") + '</h3><p>' + escapeHtml(detail) + '</p><button class="button button-ghost" type="button" data-activity-retry>' +
+        socialCommerceUi("activityRetry") + '</button></div>';
       host.querySelector<HTMLButtonElement>("[data-activity-retry]")?.addEventListener("click", () => void load());
     }
   };
@@ -5105,46 +5812,157 @@ async function loadActivityPage(): Promise<void> {
   await load();
 }
 
+
 function renderCompare(): string {
   const items = getCompareItems();
-  if (items.length < 2) return '<div class="phoenix-compare-page"><div class="phoenix-section-heading"><span class="phoenix-kicker">Compare</span><h1>مقایسه محصولات</h1><p>حداقل دو محصول واقعی را از فید انتخاب کن.</p></div><div class="glass-card phoenix-compare-empty"><strong>هنوز محصول کافی برای مقایسه انتخاب نشده است.</strong><p>به اکسپلور برگرد و روی «مقایسه» محصولات موردنظر بزن.</p><a class="button button-primary" href="/discover?tab=explore" data-nav>بازگشت به اکسپلور</a></div></div>';
-  const metadataKeys = Array.from(new Set(items.flatMap((item) => Object.keys(item.metadata ?? {})))).filter((key) => !["businessId","businessName","offeringType"].includes(key)).slice(0, 8);
-  const rows: Array<[string, (item: DiscoveryResult) => unknown]> = [
-    ["نوع", (item) => item.sourceType ?? "product"],
-    ["قیمت", (item) => item.price !== undefined && item.price !== null ? formatLocalizedNumber(Number(item.price)) + " " + (item.currency ?? "") : "استعلام قیمت"],
-    ["امتیاز", (item) => item.rating !== undefined && item.rating !== null ? Number(item.rating).toFixed(1) : "—"],
-    ["موقعیت", (item) => item.locality ?? item.city ?? "—"],
-    ["توضیح", (item) => item.description ?? item.body ?? "—"],
-    ...metadataKeys.map((key) => [key, (item: DiscoveryResult) => item.metadata?.[key] ?? "—"] as [string, (item: DiscoveryResult) => unknown]),
+  const display = (value: unknown): string => {
+    if (value === null || value === undefined || value === "") return uiText("اطلاعات موجود نیست");
+    if (typeof value === "boolean") return value ? uiText("بله") : uiText("خیر");
+    if (Array.isArray(value)) return value.map((entry) => String(entry)).join(", ");
+    if (typeof value === "object") return uiText("اطلاعات موجود نیست");
+    return String(value);
+  };
+  const titleOf = (item: DiscoveryResult): string => item.title ?? item.displayName ?? item.name ?? socialCommerceUi("product");
+  const keyOf = (item: DiscoveryResult): string => item.id ?? item.sourceId ?? "";
+  const priceOf = (item: DiscoveryResult): string =>
+    item.price !== undefined && item.price !== null
+      ? formatLocalizedNumber(Number(item.price)) + (item.currency ? " " + item.currency : "")
+      : socialCommerceUi("askPrice");
+  if (items.length < 2) {
+    const single = items[0];
+    return '<div class="phoenix-reset-compare-page">' +
+      '<section class="phoenix-reset-compare-hero"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("compareEyebrow") + '</span>' +
+        '<h1>' + socialCommerceUi("compareHeadline") + '</h1>' +
+        '<p>' + socialCommerceUi("compareDescription") + '</p></div>' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("compareDiscoverProducts") + ' <span aria-hidden="true">←</span></a></section>' +
+      (single
+        ? '<section class="phoenix-reset-compare-selected"><span class="phoenix-reset-compare-number">' + formatLocalizedNumber(1) + '</span><div><strong>' + escapeHtml(titleOf(single)) + '</strong><p>' + socialCommerceUi("compareOneSelectedHint") + '</p></div><button class="button button-ghost" type="button" data-remove-compare="' + escapeAttr(keyOf(single)) + '">' + socialCommerceUi("compareRemoveSelection") + '</button></section>'
+        : '') +
+      '<section class="phoenix-reset-compare-empty"><div class="phoenix-reset-compare-empty-icon" aria-hidden="true">⚖</div>' +
+        '<h2>' + socialCommerceUi("compareEmptyTitle") + '</h2>' +
+        '<p>' + socialCommerceUi("compareEmptyBody") + '</p>' +
+        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("tabExplore") + ' <span aria-hidden="true">←</span></a></section></div>';
+  }
+
+  const knownAttributes: Array<[string, string]> = [
+    ["brand", "attributeBrand"], ["model", "attributeModel"], ["color", "attributeColor"], ["size", "attributeSize"],
+    ["material", "attributeMaterial"], ["weight", "attributeWeight"], ["dimensions", "attributeDimensions"], ["warranty", "attributeWarranty"],
+    ["condition", "attributeCondition"], ["availability", "attributeAvailability"], ["stockStatus", "attributeStockStatus"],
+    ["variant", "attributeVariant"], ["deliveryMethod", "attributeDeliveryMethod"], ["format", "attributeDigitalFormat"],
   ];
-  return '<div class="phoenix-compare-page">' +
-    '<div class="phoenix-section-heading"><span class="phoenix-kicker">Compare · 2–4</span><h1>مقایسه شفاف محصولات</h1><p>فقط داده‌ای را می‌بینی که در Discovery/Catalog آمده است؛ ققنوس ویژگی نامشخص را حدس نمی‌زند.</p></div>' +
-    '<div class="phoenix-compare-table"><div class="compare-row compare-head"><span>ویژگی</span>' + items.map((item) => '<strong>' + escapeHtml(item.title ?? item.displayName ?? item.name ?? "محصول") + '</strong>').join("") + '</div>' +
-    rows.map(([label, getter]) => '<div class="compare-row"><span>' + escapeHtml(label) + '</span>' + items.map((item) => '<span>' + escapeHtml(String(getter(item))) + '</span>').join("") + '</div>').join("") +
-    '</div><div class="phoenix-compare-actions">' +
-    items.map((item) => '<a class="button button-primary" href="/checkout?product=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>خرید «' + escapeHtml(item.title ?? item.name ?? "محصول") + '»</a>').join("") +
-    '<a class="button button-ghost" href="/discover" data-nav>ادامه کشف</a><button class="button button-ghost" type="button" data-clear-compare>پاک کردن مقایسه</button></div></div>';
+  const metadataRows = knownAttributes.filter(([key]) =>
+    items.some((item) => item.metadata && item.metadata[key] !== undefined && item.metadata[key] !== null && item.metadata[key] !== "")
+  );
+  const rows: Array<{ label: string; value: (item: DiscoveryResult) => unknown }> = [
+    { label: socialCommerceUi("compareOfferTypeLabel"), value: (item) => {
+      const type = item.sourceType ?? item.metadata?.offeringType;
+      return type === "service" ? socialCommerceUi("service") : type === "business" ? socialCommerceUi("business") : socialCommerceUi("product");
+    } },
+    { label: socialCommerceUi("comparePriceLabel"), value: (item) => priceOf(item) },
+    ...(items.some((item) => item.rating !== undefined && item.rating !== null)
+      ? [{ label: socialCommerceUi("compareRecordedRating"), value: (item: DiscoveryResult) => item.rating !== undefined && item.rating !== null ? "★ " + formatLocalizedNumber(Number(item.rating)) : undefined }]
+      : []),
+    ...metadataRows.map(([key, labelKey]) => ({ label: socialCommerceUi(labelKey), value: (item: DiscoveryResult) => item.metadata?.[key] })),
+    { label: socialCommerceUi("compareLocation"), value: (item) => item.locality ?? item.city },
+    { label: socialCommerceUi("compareDescriptionRow"), value: (item) => item.description ?? item.body },
+  ];
+  const columns = items.map((item) =>
+    '<article class="phoenix-reset-compare-product"><span class="phoenix-reset-compare-product-type">' + socialCommerceUi("product") + '</span>' +
+      '<h2>' + escapeHtml(titleOf(item)) + '</h2><strong class="phoenix-reset-compare-price">' + escapeHtml(priceOf(item)) + '</strong>' +
+      '<div class="phoenix-reset-compare-product-actions"><button class="button button-ghost" type="button" data-open-compare-detail="' + escapeAttr(keyOf(item)) + '">' + socialCommerceUi("compareViewDetails") + '</button>' +
+      '<button class="phoenix-reset-compare-remove" type="button" data-remove-compare="' + escapeAttr(keyOf(item)) + '">' + socialCommerceUi("compareRemove") + '</button></div></article>'
+  ).join("");
+  return '<div class="phoenix-reset-compare-page">' +
+    '<section class="phoenix-reset-compare-hero"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("compareEyebrow") + ' · ' + socialCommerceUi("compareCountLabel", { count: formatLocalizedNumber(items.length) }) + '</span>' +
+      '<h1>' + socialCommerceUi("compareHeadline") + '</h1>' +
+      '<p>' + socialCommerceUi("compareFactualDescription") + '</p></div>' +
+      '<a class="button button-ghost" href="/discover?tab=explore" data-nav>' + socialCommerceUi("compareAddProduct") + ' <span aria-hidden="true">＋</span></a></section>' +
+    '<section class="phoenix-reset-compare-products" aria-label="' + escapeAttr(socialCommerceUi("compareSelectedProducts")) + '">' + columns + '</section>' +
+    '<section class="phoenix-reset-compare-table-wrap"><div class="phoenix-reset-compare-table-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("compareSpecifications") + '</span><h2>' + socialCommerceUi("compareAtGlance") + '</h2></div>' +
+      '<span class="phoenix-reset-compare-factual-note">✓ ' + socialCommerceUi("compareRecordedFacts") + '</span></div>' +
+      '<div class="phoenix-reset-compare-table" style="--compare-count:' + items.length + ';" role="table" aria-label="' + escapeAttr(socialCommerceUi("compareAriaLabel")) + '">' +
+      '<div class="phoenix-reset-compare-row phoenix-reset-compare-row-head" role="row"><span role="columnheader">' + socialCommerceUi("compareAttribute") + '</span>' +
+        items.map((item) => '<strong role="columnheader">' + escapeHtml(titleOf(item)) + '</strong>').join("") + '</div>' +
+      rows.map((row) => '<div class="phoenix-reset-compare-row" role="row"><span role="rowheader">' + escapeHtml(row.label) + '</span>' +
+        items.map((item) => '<span role="cell">' + escapeHtml(display(row.value(item))) + '</span>').join("") + '</div>').join("") +
+      '</div></section>' +
+    '<footer class="phoenix-reset-compare-footer"><p>' + socialCommerceUi("compareActionDisclaimer") + '</p>' +
+      '<button class="button button-ghost" type="button" data-clear-compare>' + socialCommerceUi("compareClear") + '</button>' +
+      '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("continueDiscovering") + ' <span aria-hidden="true">←</span></a></footer></div>';
 }
+
 function renderDiscover(): string {
   const params = new URLSearchParams(location.search);
   const initialQuery = params.get("q") ?? "";
   const tab = params.get("tab") ?? "for-you";
-  const title = tab === "following" ? discoveryUi("followingTitle") : tab === "explore" ? discoveryUi("exploreTitle") : discoveryUi("forYouTitle");
+  const title = tab === "following" ? discoveryUi("followingTitle") : tab === "explore" ? discoveryUi("exploreTitle") : socialCommerceUi("feedTitle");
   const intro = tab === "following"
     ? discoveryUi("followingIntro")
     : tab === "explore"
       ? discoveryUi("exploreIntro")
-      : discoveryUi("forYouIntro");
-  return '<div class="phoenix-social-page">' +
-    '<section class="phoenix-social-hero">' +
-      '<div class="phoenix-social-intro"><span class="phoenix-kicker">' + discoveryUi(tab === "explore" ? "explore" : tab === "following" ? "following" : "forYou") + '</span><h1>' + escapeHtml(title) + '</h1><p>' + escapeHtml(intro) + '</p></div>' +
-      '<div class="phoenix-social-hero-card"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><div><strong>' + localizedUi("تصمیم را از نیاز شروع کن") + '</strong><small>' + localizedUi("محصول، خدمت یا کسب‌وکار را پیدا کن و همان‌جا مقایسه یا اقدام کن.") + '</small></div><button class="button button-primary" type="button" data-open-create-post>＋ ' + discoveryUi("createOffering") + '</button></div>' +
+      : socialCommerceUi("feedDescription");
+  const tabLink = (key: "for-you" | "following" | "explore", href: string, label: string): string =>
+    '<a class="phoenix-reset-tab' + (tab === key ? ' active' : '') + '" href="' + href + '" data-nav' +
+    (tab === key ? ' aria-current="page"' : '') + '>' + label + '</a>';
+
+  return '<div class="phoenix-reset-page">' +
+    '<section class="phoenix-reset-hero">' +
+      '<div class="phoenix-reset-hero-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("eyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("title") + '</h1>' +
+        '<p>' + socialCommerceUi("intro") + '</p>' +
+      '</div>' +
+      '<button class="button button-primary phoenix-reset-hero-cta" type="button" data-open-create-post><span aria-hidden="true">＋</span> ' + socialCommerceUi("createOffer") + '</button>' +
     '</section>' +
-    '<section class="phoenix-social-search glass-card"><span class="phoenix-search-icon">⌕</span><input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="' + escapeAttr(discoveryUi("examplePlaceholder")) + '" /><button class="button button-primary" type="button" data-run-discovery>' + discoveryUi("discoverButton") + ' <span>←</span></button></section>' +
-    '<div class="phoenix-feed-heading"><div><span class="phoenix-kicker">' + discoveryUi("discoverButton") + '</span><strong id="results-title">' + escapeHtml(initialQuery ? discoveryUi("searchResults") : tab === "following" ? discoveryUi("following") : tab === "explore" ? discoveryUi("explore") : discoveryUi("discoverableSuggestions")) + '</strong><small id="results-meta">' + discoveryUi("ready") + '</small></div><div class="phoenix-feed-actions"><a href="/compare" data-nav>' + localizedUi("مقایسه") + ' <span>→</span></a><span id="shortlist-count" class="pill" aria-label="فهرست انتخابی">0</span><button type="button" class="button button-ghost" data-social-state-refresh>↻ ' + discoveryUi("sync") + '</button></div></div>' +
-    '<div id="discovery-results" class="phoenix-social-feed">' + (initialQuery ? '<div class="slot-loading">' + discoveryUi("preparing") + '</div>' : '<div class="social-empty-state glass-card"><div class="draft-orb">✦</div><h3>' + discoveryUi("startWithNeedTitle") + '</h3><p>' + discoveryUi("writeSentence") + '</p><div class="connection-actions"><button class="button button-primary" type="button" data-focus-discover>' + discoveryUi("startSearch") + '</button><a class="button button-ghost" href="/discover?tab=explore" data-nav>' + discoveryUi("explore") + '</a></div></div>') + '</div>' +
-    '<div id="phoenix-compare-tray"></div><div id="discovery-pagination"></div></div>';
+    '<section class="phoenix-reset-search" role="search">' +
+      '<span class="phoenix-reset-search-icon" aria-hidden="true">⌕</span>' +
+      '<input id="discover-query" type="search" autocomplete="off" value="' + escapeAttr(initialQuery) + '" placeholder="' + escapeAttr(socialCommerceUi("searchPlaceholder")) + '" aria-label="' + escapeAttr(socialCommerceUi("searchPlaceholder")) + '" />' +
+      '<button class="button button-primary" type="button" data-run-discovery>' + socialCommerceUi("searchButton") + '</button>' +
+      '<button class="button button-ghost phoenix-reset-add-button" type="button" data-open-create-post aria-label="' + escapeAttr(socialCommerceUi("createOffer")) + '">＋</button>' +
+    '</section>' +
+    '<div class="phoenix-reset-discover-grid">' +
+      '<section class="phoenix-reset-main-column" aria-label="' + escapeAttr(socialCommerceUi("feedTitle")) + '">' +
+        '<nav class="phoenix-reset-feed-tabs" aria-label="' + escapeAttr(socialCommerceUi("feedTabs")) + '">' +
+          tabLink("for-you", "/", socialCommerceUi("tabForYou")) +
+          tabLink("following", "/discover?tab=following", socialCommerceUi("tabFollowing")) +
+          tabLink("explore", "/discover?tab=explore", socialCommerceUi("tabExplore")) +
+        '</nav>' +
+        '<div class="phoenix-reset-feed-heading">' +
+          '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("sectionKicker") + '</span><h2 id="results-title">' + escapeHtml(title) + '</h2><p>' + escapeHtml(intro) + '</p><small id="results-meta">' + discoveryUi("preparing") + '</small></div>' +
+          '<div class="phoenix-reset-feed-tools">' +
+            '<a href="/saved" data-nav class="phoenix-reset-saved-link">★ <span>' + socialCommerceUi("shortlist") + '</span><span id="shortlist-count" class="phoenix-reset-shortlist-count" aria-label="' + escapeAttr(socialCommerceUi("shortlist")) + '">0</span></a>' +
+            '<a href="/compare" data-nav class="phoenix-reset-compare-link" hidden>⚖ <span>' + socialCommerceUi("compare") + '</span><span id="compare-count" class="phoenix-reset-shortlist-count">0</span></a>' +
+            '<button type="button" class="phoenix-reset-refresh" data-social-state-refresh aria-label="' + escapeAttr(socialCommerceUi("refresh")) + '">↻</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="discovery-results" class="phoenix-social-feed phoenix-reset-posts"><div class="slot-loading">' + discoveryUi("preparing") + '</div></div>' +
+        '<div id="discovery-pagination" class="phoenix-reset-pagination"></div>' +
+      '</section>' +
+      '<aside class="phoenix-reset-sidebar" aria-label="' + escapeAttr(socialCommerceUi("quickPanel")) + '">' +
+        '<section class="phoenix-reset-side-card phoenix-reset-intent-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">⌕</span>' +
+          '<h2>' + socialCommerceUi("needTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("needBody") + '</p>' +
+          '<button class="button button-primary" type="button" data-focus-discover>' + socialCommerceUi("focusSearch") + '</button>' +
+        '</section>' +
+        '<section class="phoenix-reset-side-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">◇</span>' +
+          '<h2>' + socialCommerceUi("trustTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("trustBody") + '</p>' +
+          '<a href="/compare" data-nav class="phoenix-reset-side-link">' + socialCommerceUi("compare") + ' <span aria-hidden="true">←</span></a>' +
+        '</section>' +
+        '<section class="phoenix-reset-side-card phoenix-reset-seller-card">' +
+          '<span class="phoenix-reset-side-icon" aria-hidden="true">＋</span>' +
+          '<h2>' + socialCommerceUi("sellerTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("sellerBody") + '</p>' +
+          '<button class="button button-ghost" type="button" data-open-create-post>' + socialCommerceUi("createOffer") + '</button>' +
+        '</section>' +
+      '</aside>' +
+    '</div>' +
+    '<div id="phoenix-compare-tray"></div>' +
+  '</div>';
 }
+
 function getShortlist(): DiscoveryResult[] {
   try {
     const raw = localStorage.getItem("phoenix-shortlist");
@@ -5160,33 +5978,25 @@ function saveShortlist(items: DiscoveryResult[]): void {
   localStorage.setItem("phoenix-shortlist", JSON.stringify(items.slice(-20)));
 }
 
-function toggleShortlist(item: DiscoveryResult): void {
+function setShortlistItem(item: DiscoveryResult, shouldBeSaved: boolean): void {
   const key = item.id ?? item.sourceId ?? "";
-  if (!key) {
-    showToast("این نتیجه شناسه قابل نگهداری ندارد.");
-    return;
-  }
+  if (!key) return;
   const current = getShortlist();
-  const exists = current.some((entry) => (entry.id ?? entry.sourceId) === key);
-  saveShortlist(exists ? current.filter((entry) => (entry.id ?? entry.sourceId) !== key) : [...current, item]);
+  const withoutItem = current.filter((entry) => (entry.id ?? entry.sourceId) !== key);
+  saveShortlist(shouldBeSaved ? [...withoutItem, item] : withoutItem);
 }
 
 function renderShortlist(): void {
   const count = getShortlist().length;
   document.querySelectorAll<HTMLElement>("#shortlist-count").forEach((node) => {
-    node.textContent = String(count);
+    node.textContent = formatLocalizedNumber(count);
   });
   document.querySelectorAll<HTMLElement>("[data-shortlist-count]").forEach((node) => {
-    node.textContent = String(count);
+    node.textContent = formatLocalizedNumber(count);
   });
-  if (activeDiscoveryItems.length) {
-    const host = document.querySelector<HTMLElement>("#discovery-results");
-    if (host) host.innerHTML = renderResultCards(activeDiscoveryItems);
-    bindDiscoveryResultEvents();
-  }
 }
 
-function renderResultCards(items: DiscoveryResult[]): string {
+function _renderResultCards(items: DiscoveryResult[]): string {
   activeDiscoveryItems = items;
   return items.map((item,index) => {
     const title = escapeHtml(item.title ?? item.displayName ?? item.name ?? "مورد قابل کشف");
@@ -5212,122 +6022,196 @@ function renderResultCards(items: DiscoveryResult[]): string {
 }
 
 function openDiscoveryResultPanel(item: DiscoveryResult): void {
-  const title = item.title ?? item.displayName ?? item.name ?? uiText("مورد ققنوس");
-  const body = item.body ?? item.description ?? uiText("اطلاعات این مورد از عرضه canonical ققنوس خوانده شده است.");
+  const title = item.title ?? item.displayName ?? item.name ?? uiText("عرض ققنوس");
+  const description = item.description ?? item.body ?? "";
   const sourceType = item.sourceType ?? String(item.metadata?.offeringType ?? "product");
   const isService = sourceType === "service";
   const isBusiness = sourceType === "business";
   const isProduct = !isService && !isBusiness;
   const key = item.id ?? item.sourceId ?? "";
   const priceFormatted = item.price !== undefined && item.price !== null
-    ? formatLocalizedNumber(Number(item.price)) + " " + (item.currency ?? "ریال")
-    : uiText("استعلام قیمت / توافقی");
-  const locality = item.locality ?? item.city ?? uiText("تهران");
+    ? formatLocalizedNumber(Number(item.price)) + (item.currency ? " " + item.currency : "")
+    : uiText("استعلام قیمت");
+  const locality = item.locality ?? item.city ?? "";
   const ratingText = item.rating !== undefined && item.rating !== null
-    ? `★ ${formatLocalizedNumber(Number(item.rating))}`
-    : "★ ۴.۸";
-  const metadataEntries = Object.entries(item.metadata ?? {}).filter(([k]) => !["businessId", "offeringType", "businessName"].includes(k)).slice(0, 8);
-  const businessId = String(item.metadata?.businessId ?? (isBusiness ? key : ""));
-  const businessName = String(item.metadata?.businessName ?? (isBusiness ? title : uiText("کسب‌وکار تأییدشده ققنوس")));
+    ? "★ " + formatLocalizedNumber(Number(item.rating))
+    : "";
+  const businessId = typeof item.metadata?.businessId === "string" ? item.metadata.businessId : "";
+  const followTargetId = businessId || (isBusiness ? item.sourceId ?? item.id ?? "" : "");
+  const initiallyFollowing = Boolean(followTargetId) && isSocialActive("follow", item);
+  const businessName = typeof item.metadata?.businessName === "string" && item.metadata.businessName.trim()
+    ? item.metadata.businessName
+    : isBusiness ? title : uiText("نام فروشنده در اطلاعات این عرضه ثبت نشده است");
+  const typeLabel = isService ? uiText("خدمت") : isBusiness ? uiText("کسب‌وکار") : uiText("کالا");
+  const verified = item.metadata?.verified === true || item.metadata?.verificationStatus === "verified";
+  const visibleFields: Array<[string, string]> = [
+    ["brand", "برند"], ["model", "مدل"], ["color", "رنگ"], ["size", "اندازه"],
+    ["material", "جنس"], ["weight", "وزن"], ["dimensions", "ابعاد"], ["warranty", "گارانتی"],
+    ["condition", "وضعیت کالا"], ["availability", "موجودی"], ["stockStatus", "وضعیت موجودی"],
+    ["variant", "گونه"], ["deliveryMethod", "روش تحویل"], ["format", "قالب دیجیتال"],
+  ];
+  const displayMetadataValue = (value: unknown): string => {
+    if (value === null || value === undefined || value === "") return "";
+    if (typeof value === "object") return Array.isArray(value) ? value.map(String).join("، ") : "";
+    if (typeof value === "boolean") return value ? uiText("بله") : uiText("خیر");
+    return String(value);
+  };
+  const metadataEntries = visibleFields
+    .map(([keyName, label]) => [label, displayMetadataValue(item.metadata?.[keyName])] as [string, string])
+    .filter((entry) => Boolean(entry[1]));
+  const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ??
+    item.metadata?.thumbnailUrl ?? (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
+  const mediaUrl = typeof mediaCandidate === "string" &&
+    (mediaCandidate.startsWith("/") || /^https?:\/\//i.test(mediaCandidate))
+    ? mediaCandidate : "";
+  const mediaHtml = mediaUrl
+    ? '<img class="phoenix-detail-media-image" src="' + escapeAttr(mediaUrl) + '" alt="' + escapeAttr(title) + '" />'
+    : '<div class="phoenix-detail-media-placeholder"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + uiText("تصویر این عرضه ثبت نشده است") + '</span></div>';
+  const bookingQuery = new URLSearchParams({ offering: key });
+  if (businessId) bookingQuery.set("business", businessId);
+  const mainAction = isService
+    ? '<a class="button button-primary" href="/booking?' + bookingQuery.toString() + '" data-nav>' + uiText("بررسی زمان‌های رزرو") + ' <span aria-hidden="true">←</span></a>'
+    : isBusiness
+      ? '<a class="button button-primary" href="/businesses/' + encodeURIComponent(key) + '" data-nav>' + uiText("مشاهده پروفایل کسب‌وکار") + ' <span aria-hidden="true">←</span></a>'
+      : businessId
+        ? '<a class="button button-primary" href="/businesses/' + encodeURIComponent(businessId) + '" data-nav>' + uiText("شناخت فروشنده") + ' <span aria-hidden="true">←</span></a>'
+        : '<span class="phoenix-detail-contact-note">' + uiText("اطلاعات عمومی فروشنده در این عرضه موجود نیست.") + '</span>';
 
   const overlay = document.createElement("div");
-  overlay.className = "connection-overlay";
+  overlay.className = "connection-overlay phoenix-detail-overlay";
   overlay.innerHTML = `
     <div class="connection-backdrop" data-close-discovery></div>
     <section class="connection-modal glass-card phoenix-detail-modal" role="dialog" aria-modal="true" aria-labelledby="discovery-detail-title">
       <button class="connection-close" type="button" data-close-discovery aria-label="${escapeAttr(uiText("بستن"))}">×</button>
-      
-      <div class="detail-badge-strip">
-        <span class="pill ${isService ? "warning" : isProduct ? "success" : ""}">
-          ${isService ? "✦ " + uiText("خدمت تخصصی") : isBusiness ? "◉ " + uiText("کسب‌وکار معتبر") : "▦ " + uiText("محصول")}
-        </span>
-        <span class="saved-card-rating">${ratingText}</span>
-        <span class="pill success">✓ ${uiText("تأیید اصالت در ققنوس")}</span>
-      </div>
-
-      <h2 id="discovery-detail-title">${escapeHtml(title)}</h2>
-      <p style="margin: 0; color: var(--muted); line-height: 1.7;">${escapeHtml(body)}</p>
-
-      <div class="detail-meta-strip">
-        <div><span>${uiText("تعرفه / قیمت")}</span><strong>${escapeHtml(priceFormatted)}</strong></div>
-        <div><span>${uiText("موقعیت مکانی")}</span><strong>📍 ${escapeHtml(locality)}</strong></div>
-        <div><span>${uiText("ارائه‌دهنده")}</span><strong>${escapeHtml(businessName)}</strong></div>
-      </div>
-
-      ${metadataEntries.length ? `
-        <div class="metadata-cloud" style="margin: 4px 0 10px;">
-          ${metadataEntries.map(([k, v]) => `<span><b>${escapeHtml(k)}:</b> ${escapeHtml(String(v))}</span>`).join("")}
+      <div class="phoenix-detail-layout">
+        <div class="phoenix-detail-media" aria-label="${escapeAttr(uiText("تصویر عرضه"))}">
+          ${mediaHtml}
+          <span class="phoenix-detail-type-badge">${escapeHtml(typeLabel)}</span>
         </div>
-      ` : ""}
-
-      <div class="detail-actions-row">
-        ${isService ? `
-          <a class="button button-primary" href="/booking?business=${encodeURIComponent(businessId)}&offering=${encodeURIComponent(key)}" data-nav>
-            ${uiText("رزرو وقت آنلاین")} ◷
-          </a>
-          <a class="button button-ghost" href="/messages" data-nav>
-            ${uiText("ارسال پیام")} ✉
-          </a>
-        ` : isBusiness ? `
-          <a class="button button-primary" href="/businesses/${encodeURIComponent(key)}" data-nav>
-            ${uiText("مشاهده پروفایل کامل کسب‌وکار")} 🏢
-          </a>
-          <button class="button button-ghost" type="button" data-follow-detail="${escapeAttr(key)}">
-            ${uiText("دنبال کردن")}
-          </button>
-        ` : `
-          <a class="button button-primary" href="/checkout?product=${encodeURIComponent(key)}" data-nav>
-            ${uiText("خرید مستقیم و پرداخت")} ↗
-          </a>
-          <button class="button button-ghost" type="button" data-compare-detail="${escapeAttr(key)}">
-            ${uiText("افزودن به مقایسه")} ⚖
-          </button>
-        `}
-
-        <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}">
-          ★ ${uiText("ذخیره")}
-        </button>
-        <button class="button button-ghost" type="button" data-share-detail="${escapeAttr(key)}">
-          ↗ ${uiText("اشتراک")}
-        </button>
-        <button class="button button-ghost" type="button" data-close-discovery>
-          ${uiText("بستن")}
-        </button>
+        <div class="phoenix-detail-content">
+          <div class="phoenix-detail-badges">
+            <span class="phoenix-detail-type-label">${escapeHtml(typeLabel)}</span>
+            ${ratingText ? '<span class="phoenix-detail-rating">' + escapeHtml(ratingText) + '</span>' : ""}
+            ${verified ? '<span class="phoenix-detail-verified">✓ ' + uiText("تأییدشده") + '</span>' : ""}
+          </div>
+          <h2 id="discovery-detail-title">${escapeHtml(title)}</h2>
+          ${description ? '<p class="phoenix-detail-description">' + escapeHtml(description) + '</p>' : ""}
+          <div class="phoenix-detail-price-block"><span>${uiText("قیمت")}</span><strong>${escapeHtml(priceFormatted)}</strong></div>
+          <div class="phoenix-detail-seller">
+            <span class="phoenix-detail-seller-avatar" aria-hidden="true">◉</span>
+            <div><small>${uiText("ارائه‌دهنده")}</small><strong>${escapeHtml(businessName)}</strong>${locality ? '<span>' + escapeHtml(locality) + '</span>' : ""}</div>
+          </div>
+          ${metadataEntries.length ? '<section class="phoenix-detail-attributes"><h3>' + uiText("مشخصات ثبت‌شده") + '</h3><dl>' + metadataEntries.map(([label, value]) => '<div><dt>' + escapeHtml(uiText(label)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>').join("") + '</dl></section>' : ""}
+          <div class="phoenix-detail-actions">
+            ${mainAction}
+            ${businessId ? '<a class="button button-primary phoenix-detail-ask-seller" href="' + escapeAttr("/messages?topic=" + encodeURIComponent(key) + "&label=" + encodeURIComponent(title)) + '" data-nav>' + socialCommerceUi("detailAskSeller") + ' <span aria-hidden="true">←</span></a>' : ""}
+            ${followTargetId ? '<button class="button button-ghost phoenix-detail-follow-button' + (initiallyFollowing ? ' selected' : '') + '" type="button" data-follow-seller-detail aria-pressed="' + String(initiallyFollowing) + '">' + (initiallyFollowing ? socialCommerceUi("detailFollowingSeller") : socialCommerceUi("detailFollowSeller")) + '</button>' : ""}
+            ${isProduct ? '<button class="button button-ghost" type="button" data-compare-detail="' + escapeAttr(key) + '">⚖ ' + uiText("مقایسه") + '</button>' : ""}
+            <button class="button button-ghost" type="button" data-save-detail="${escapeAttr(key)}">☆ ${uiText("ذخیره")}</button>
+            <button class="button button-ghost" type="button" data-share-detail="${escapeAttr(key)}">↗ ${uiText("اشتراک‌گذاری")}</button>
+          </div>
+        </div>
       </div>
     </section>`;
 
+  const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const previousDiscoveryIndex = previousFocus?.getAttribute("data-discovery-index") ?? null;
+  const closeDetail = (): void => {
+    document.removeEventListener("keydown", handleDetailKeydown);
+    overlay.remove();
+    if (previousFocus?.isConnected) {
+      previousFocus.focus();
+    } else if (previousDiscoveryIndex !== null) {
+      document.querySelector<HTMLElement>('[data-discovery-index="' + escapeAttr(previousDiscoveryIndex) + '"]')?.focus();
+    }
+  };
+  const handleDetailKeydown = (event: KeyboardEvent): void => {
+    if (event.key === "Escape") closeDetail();
+  };
   document.body.appendChild(overlay);
-  overlay.querySelectorAll<HTMLElement>("[data-close-discovery]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
+  document.addEventListener("keydown", handleDetailKeydown);
+  overlay.querySelectorAll<HTMLElement>("[data-close-discovery]").forEach((node) => node.addEventListener("click", closeDetail));
+  overlay.querySelector<HTMLButtonElement>(".connection-close")?.focus();
+
+  const followDetailButton = overlay.querySelector<HTMLButtonElement>("[data-follow-seller-detail]");
+  if (followDetailButton) {
+    const updateFollowButton = (active: boolean): void => {
+      followDetailButton.setAttribute("aria-pressed", String(active));
+      followDetailButton.classList.toggle("selected", active);
+      followDetailButton.textContent = active
+        ? socialCommerceUi("detailFollowingSeller")
+        : socialCommerceUi("detailFollowSeller");
+    };
+    followDetailButton.addEventListener("click", async () => {
+      if (!sessionStorage.getItem(STORAGE.accessToken)) {
+        openConnectionPanel();
+        return;
+      }
+      followDetailButton.disabled = true;
+      try {
+        await loadSocialState();
+        const active = await persistSocialFollow(item);
+        updateFollowButton(active);
+        refreshSocialFeed();
+        showToast(socialCommerceUi(active ? "detailFollowAddedToast" : "detailFollowRemovedToast"));
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : socialCommerceUi("socialActionUnavailable"));
+      } finally {
+        followDetailButton.disabled = false;
+      }
+    });
+  }
 
   overlay.querySelector<HTMLButtonElement>("[data-compare-detail]")?.addEventListener("click", () => {
+    const wasSelected = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === key);
     toggleCompare(item);
     renderCompareTray();
-    showToast(uiText("به مقایسه اضافه شد."));
+    showToast(uiText(wasSelected ? "از مقایسه حذف شد." : "به مقایسه اضافه شد."));
   });
-
-  overlay.querySelector<HTMLButtonElement>("[data-save-detail]")?.addEventListener("click", () => {
-    toggleShortlist(item);
-    renderShortlist();
-    showToast(uiText("در ذخیره‌شده‌ها قرار گرفت."));
-  });
-
+  const saveDetailButton = overlay.querySelector<HTMLButtonElement>("[data-save-detail]");
+  if (saveDetailButton) {
+    const isSaved = (): boolean =>
+      getShortlist().some((entry) => (entry.id ?? entry.sourceId) === key) || isSocialActive("save", item);
+    const updateSaveButton = (): void => {
+      const active = isSaved();
+      saveDetailButton.innerHTML = (active ? "★ " : "☆ ") + uiText("ذخیره");
+      saveDetailButton.setAttribute("aria-pressed", String(active));
+    };
+    updateSaveButton();
+    saveDetailButton.addEventListener("click", async () => {
+      const signedIn = Boolean(sessionStorage.getItem(STORAGE.accessToken));
+      saveDetailButton.disabled = true;
+      try {
+        let active: boolean;
+        if (signedIn) {
+          await loadSocialState();
+          active = await persistSocialAction("save", item);
+        } else {
+          active = !getShortlist().some((entry) => (entry.id ?? entry.sourceId) === key);
+        }
+        setShortlistItem(item, active);
+        updateSaveButton();
+        renderShortlist();
+        refreshSocialFeed();
+        showToast(uiText(active ? "به ذخیره‌شده‌ها اضافه شد." : "از ذخیره‌شده‌ها حذف شد."));
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : uiText("ذخیره‌کردن این مورد ممکن نشد."));
+      } finally {
+        saveDetailButton.disabled = false;
+      }
+    });
+  }
   overlay.querySelector<HTMLButtonElement>("[data-share-detail]")?.addEventListener("click", () => {
     void shareSocialItem(item);
-  });
-
-  overlay.querySelector<HTMLButtonElement>("[data-follow-detail]")?.addEventListener("click", () => {
-    void persistSocialFollow(item).then((followed) => {
-      showToast(followed ? uiText("دنبال شد.") : uiText("لغو دنبال کردن انجام شد."));
-    });
   });
 }
 
 function renderCheckout(): string {
-  const persona = getActivePersona();
-  if (persona === "consumer" || persona === "individual") {
-    return renderConsumerPayment();
-  }
-  return renderCheckoutPage();
+  // Checkout is a buyer-facing surface for every account. Never route a
+  // business persona into the retired sample checkout, which contains local
+  // demo products and a client-only order flow. Until canonical checkout and
+  // payment are wired end-to-end, show the honest local-cart review only.
+  return renderConsumerPayment();
 }
 
 async function startCheckoutFlow(): Promise<void> {
@@ -5763,10 +6647,94 @@ function renderBusinessModule(vertical: string, module: string): string {
     '</div></section>' +
   '</div>';
 }
+function renderSellerWorkspaceHome(): string {
+  const params = new URLSearchParams(location.search);
+  const storedVertical = params.get("vertical")
+    || localStorage.getItem(STORAGE.businessVertical)
+    || localStorage.getItem(STORAGE.businessType)
+    || localStorage.getItem(STORAGE.businessOccupation)
+    || localStorage.getItem(STORAGE.businessIndustry)
+    || "default";
+  const ui = getBusinessVerticalUi(storedVertical);
+  const businessName = localStorage.getItem("phoenix-business-name")?.trim() ?? "";
+  const businessId = localStorage.getItem(STORAGE.business) ?? "";
+  const actionPath = (label: string): string => {
+    if (/محصول|موجودی|عرضه/.test(label)) return "/business/products";
+    if (/خدمت/.test(label)) return "/business/services";
+    if (/نوبت|رزرو|تقویم|زمان‌بندی/.test(label)) return "/business/bookings";
+    if (/معامله|سفارش/.test(label)) return "/orders";
+    if (/محتوا/.test(label)) return "/business/create";
+    if (/مشتری|مراجع/.test(label)) return "/customer";
+    if (/تیم|عضو/.test(label)) return "/business/team";
+    return "/business/profile";
+  };
+  const actions = ui.actions.map((label, index) => {
+    const href = actionPath(label);
+    const icon = ["＋", "▦", "↗", "◇"][index % 4];
+    return '<a class="phoenix-seller-action ' + (index === 0 ? "primary" : "") + '" href="' + href + '" data-nav>' +
+      '<span class="phoenix-seller-action-icon" aria-hidden="true">' + icon + '</span>' +
+      '<span>' + localizedUi(label) + '</span><span class="phoenix-seller-action-arrow" aria-hidden="true">←</span></a>';
+  }).join("");
+  const businessPublicHref = businessId ? "/businesses/" + encodeURIComponent(businessId) : "/business/profile";
+
+  return '<div class="phoenix-business-page phoenix-seller-reset" data-business-vertical="' + escapeAttr(ui.key) + '">' +
+    '<section class="phoenix-seller-hero">' +
+      '<div class="phoenix-seller-hero-copy">' +
+        '<span class="phoenix-seller-kicker">' + localizedUi("فضای کسب‌وکار") + '</span>' +
+        '<h1 id="business-vertical-title">' + localizedUi(ui.label) + '</h1>' +
+        '<p id="business-vertical-subtitle">' + localizedUi(ui.subtitle) + '</p>' +
+        '<div class="phoenix-seller-hero-meta"><span class="phoenix-seller-mark" aria-hidden="true">' + ui.icon + '</span>' +
+          '<span>' + (businessName ? escapeHtml(businessName) : localizedUi("نام کسب‌وکار هنوز ثبت نشده است")) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="phoenix-seller-hero-actions">' +
+        '<a class="button button-primary" href="/product-studio" data-nav><span aria-hidden="true">＋</span> ' + localizedUi("افزودن کالا یا خدمت") + '</a>' +
+        '<a class="button button-ghost" href="/business/profile" data-nav>' + localizedUi("تکمیل پروفایل") + '</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-seller-next-step" aria-labelledby="business-next-action">' +
+      '<div class="phoenix-seller-next-icon" aria-hidden="true">✦</div>' +
+      '<div class="phoenix-seller-next-copy"><span class="phoenix-seller-kicker">' + localizedUi("گام بعدی") + '</span>' +
+        '<h2 id="business-next-action">' + businessUi("todayPrimaryTask") + '</h2>' +
+        '<p id="business-next-detail">' + businessUi("workspaceComposition") + '</p>' +
+      '</div>' +
+      '<a class="button button-primary" href="/business/profile" data-nav>' + localizedUi("تنظیم فضای کسب‌وکار") + ' <span aria-hidden="true">←</span></a>' +
+    '</section>' +
+    '<section class="phoenix-seller-section">' +
+      '<div class="phoenix-seller-section-heading"><div><span class="phoenix-seller-kicker">' + localizedUi("برای شروع") + '</span>' +
+        '<h2>' + localizedUi("اقدام‌های سریع") + '</h2></div>' +
+        '<a href="/business/settings" data-nav class="phoenix-seller-text-link">' + localizedUi("همه تنظیمات") + ' <span aria-hidden="true">←</span></a></div>' +
+      '<div class="phoenix-seller-actions-grid">' + actions + '</div>' +
+    '</section>' +
+    '<section class="phoenix-seller-setup-grid">' +
+      '<article class="phoenix-seller-setup-card">' +
+        '<div class="phoenix-seller-setup-icon" aria-hidden="true">▣</div>' +
+        '<h2>' + localizedUi("اطلاعات کسب‌وکار") + '</h2>' +
+        '<p>' + localizedUi("نام، نوع فعالیت و اطلاعات تماس خود را کامل کن تا خریداران بهتر با تو آشنا شوند.") + '</p>' +
+        '<label class="phoenix-seller-field-label" for="seller-business-name">' + localizedUi("نام کسب‌وکار") + '</label>' +
+        '<input id="seller-business-name" class="phoenix-seller-name-input" type="text" value="' + escapeAttr(businessName) + '" placeholder="' + escapeAttr(localizedUi("نام کسب‌وکار خود را وارد کن")) + '" readonly />' +
+        '<a class="button button-ghost" href="/business/profile" data-nav>' + localizedUi("ویرایش اطلاعات") + '</a>' +
+      '</article>' +
+      '<article class="phoenix-seller-setup-card">' +
+        '<div class="phoenix-seller-setup-icon" aria-hidden="true">⌖</div>' +
+        '<h2>' + businessUi("locations") + '</h2>' +
+        '<p>' + businessUi("sellerLocationsDescription") + '</p>' +
+        '<a class="button button-ghost" href="/business/profile" data-nav>' + localizedUi("مدیریت مکان‌ها") + '</a>' +
+      '</article>' +
+      '<article class="phoenix-seller-setup-card">' +
+        '<div class="phoenix-seller-setup-icon" aria-hidden="true">◉</div>' +
+        '<h2>' + localizedUi("نمای عمومی کسب‌وکار") + '</h2>' +
+        '<p>' + localizedUi("نمایی را ببین که خریداران برای شناختن کسب‌وکار و عرضه‌های تو مشاهده می‌کنند.") + '</p>' +
+        '<a class="button button-ghost" href="' + businessPublicHref + '" data-nav>' + businessUi("customerExperienceQuestion") + '</a>' +
+      '</article>' +
+    '</section>' +
+  '</div>';
+}
+
 function renderBusiness(): string {
   const params = new URLSearchParams(location.search);
-  if (!params.has("vertical") && !params.has("module") && !params.has("workflow") && !params.has("stage")) {
-    return renderBusinessPanel();
+  if (!params.has("module") && !params.has("workflow") && !params.has("stage")) {
+    return renderSellerWorkspaceHome();
   }
   const businessId = localStorage.getItem(STORAGE.business) ?? "";
   const vertical = params.get("vertical")?.trim() || localStorage.getItem(STORAGE.businessVertical) || "default";
@@ -5891,21 +6859,44 @@ function renderBusiness(): string {
 
 
 function renderBusinessPublic(): string {
-  return '<div class="phoenix-public-business-page">' +
-    '<section class="phoenix-public-business-hero">' +
-      '<div class="phoenix-public-business-hero-copy"><span class="phoenix-kicker">Phoenix Business</span><h1 id="public-business-page-name">کسب‌وکار</h1><p id="public-business-page-summary">در حال بارگذاری اطلاعات عمومی…</p><div id="public-business-page-meta" class="phoenix-public-business-meta"></div><div class="phoenix-public-business-hero-actions"><button class="button button-primary" type="button" id="public-business-follow">دنبال کردن</button><button class="button button-ghost" type="button" id="public-business-review">ثبت نظر</button><button class="button button-ghost" type="button" id="public-business-share">اشتراک‌گذاری</button></div></div>' +
-      '<div class="phoenix-public-business-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></div>' +
+  return '<div class="phoenix-reset-page phoenix-public-business-page">' +
+    '<section class="phoenix-reset-hero phoenix-public-business-hero">' +
+      '<div class="phoenix-reset-hero-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("publicBusinessEyebrow") + '</span></div>' +
+        '<h1 id="public-business-page-name">' + socialCommerceUi("publicBusinessLoadingName") + '</h1>' +
+        '<p id="public-business-page-summary">' + socialCommerceUi("publicBusinessLoadingDescription") + '</p>' +
+        '<div id="public-business-page-meta" class="phoenix-public-business-meta"></div>' +
+      '</div>' +
+      '<div class="phoenix-public-business-hero-actions">' +
+        '<button class="button button-primary" type="button" id="public-business-follow">' + socialCommerceUi("publicFollowAction") + '</button>' +
+        '<button class="button button-ghost" type="button" id="public-business-review">' + socialCommerceUi("publicReviewAction") + '</button>' +
+        '<button class="button button-ghost" type="button" id="public-business-share">' + socialCommerceUi("publicShareAction") + '</button>' +
+      '</div>' +
     '</section>' +
-    '<section class="phoenix-public-business-content">' +
-      '<article class="glass-card phoenix-public-business-identity"><div class="card-section-heading"><div><span class="section-kicker">Supply Identity</span><h2>هویت و عرضه</h2></div><span id="public-business-page-publication" class="pill success">published</span></div><div id="public-business-page-facts" class="phoenix-public-fact-grid"><div class="slot-loading">در حال بارگذاری…</div></div></article>' +
-      '<article class="glass-card phoenix-public-business-offers"><div class="card-section-heading"><div><span class="section-kicker">Products & Services</span><h2>محصولات و خدمات منتشرشده</h2></div><span id="public-business-page-offer-count" class="pill">—</span></div><div id="public-business-page-offers" class="phoenix-public-offer-grid"><div class="slot-loading">در حال خواندن عرضه‌ها…</div></div></article>' +
-      '<article class="glass-card phoenix-public-business-contact"><div class="card-section-heading"><div><span class="section-kicker">Contact</span><h2>راه‌های ارتباط</h2></div></div><div id="public-business-page-contacts" class="metadata-cloud"><span>—</span></div></article>' +
-      '<article class="glass-card phoenix-public-business-location"><div class="card-section-heading"><div><span class="section-kicker">Locations</span><h2>مکان‌ها</h2></div></div><div id="public-business-page-locations" class="business-location-list"><div class="slot-loading">—</div></div></article>' +
-      '<article class="glass-card phoenix-public-business-reviews"><div class="card-section-heading"><div><span class="section-kicker">Trust / Reviews</span><h2>تجربه‌های منتشرشده مشتریان</h2></div><span id="public-business-page-review-count" class="pill">—</span></div><div id="public-business-page-reviews" class="phoenix-public-review-list"><div class="slot-loading">در حال خواندن تجربه‌ها…</div></div></article>' +
-    '</section>' +
-    '<section class="glass-card phoenix-public-business-bridge"><span class="section-kicker">پلتفرم فروشندگان ققنوس</span><h2>از ثبت‌نام فروشنده تا عرضه محصولات و دریافت سفارش، یک مسیر یکپارچه.</h2><p>شما نیز می‌توانید فروشگاه خود را در ققنوس ثبت کرده و محصولاتتان را مستقیماً به خریداران عرضه کنید.</p><div class="phoenix-public-capability-list"><span>ثبت‌نام فروشنده</span><span>مدیریت فروشگاه</span><span>عرضه محصولات</span><span>سفارش‌گیری آنلاین</span></div><div style="margin-top:16px;"><button class="button button-primary" type="button" data-bridge-seller-register>ثبت‌نام و افتتاح فروشگاه در ققنوس</button></div></section>' +
+    '<div class="phoenix-public-business-grid">' +
+      '<article class="phoenix-public-business-card phoenix-public-business-identity">' +
+        '<div class="phoenix-public-business-card-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("publicIdentityEyebrow") + '</span><h2>' + socialCommerceUi("publicIdentityTitle") + '</h2></div>' +
+          '<span id="public-business-page-publication" class="pill">' + socialCommerceUi("publicStatusUnknown") + '</span></div>' +
+        '<div id="public-business-page-facts" class="phoenix-public-fact-grid"><div class="slot-loading">' + socialCommerceUi("publicBusinessLoading") + '</div></div>' +
+      '</article>' +
+      '<article class="phoenix-public-business-card phoenix-public-business-offers">' +
+        '<div class="phoenix-public-business-card-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("publicOffersEyebrow") + '</span><h2>' + socialCommerceUi("publicOffersTitle") + '</h2></div>' +
+          '<span id="public-business-page-offer-count" class="phoenix-reset-shortlist-count">—</span></div>' +
+        '<div id="public-business-page-offers" class="phoenix-public-offer-grid"><div class="slot-loading">' + socialCommerceUi("publicOffersLoading") + '</div></div>' +
+      '</article>' +
+    '</div>' +
+    '<div class="phoenix-public-business-support-grid">' +
+      '<article class="phoenix-public-business-card"><div class="phoenix-public-business-card-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("publicContactEyebrow") + '</span><h2>' + socialCommerceUi("publicContactTitle") + '</h2></div></div>' +
+        '<div id="public-business-page-contacts" class="phoenix-public-business-contact-list"><span>—</span></div></article>' +
+      '<article class="phoenix-public-business-card"><div class="phoenix-public-business-card-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("publicLocationsEyebrow") + '</span><h2>' + socialCommerceUi("publicLocationsTitle") + '</h2></div></div>' +
+        '<div id="public-business-page-locations" class="phoenix-public-business-location-list"><div class="slot-loading">—</div></div></article>' +
+      '<article class="phoenix-public-business-card phoenix-public-business-reviews"><div class="phoenix-public-business-card-heading"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("publicReviewsEyebrow") + '</span><h2>' + socialCommerceUi("publicReviewsTitle") + '</h2></div>' +
+        '<span id="public-business-page-review-count" class="phoenix-reset-shortlist-count">—</span></div>' +
+        '<div id="public-business-page-reviews" class="phoenix-public-review-list"><div class="slot-loading">' + socialCommerceUi("publicReviewsLoading") + '</div></div></article>' +
+    '</div>' +
   '</div>';
 }
+
 function renderBusinessProfile(): string {
   const bt = (key: string): string => escapeHtml(businessUi(key));
   const bs = (key: string): string => escapeHtml(businessSurfaceUi(key));
@@ -6332,22 +7323,22 @@ function openPublicBusinessReview(routePath: string): void {
   const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
   if (!businessId) return;
   if (!customerId) {
-    showToast("برای ثبت نظر، Customer context این حساب هنوز آماده نیست.");
+    showToast(socialCommerceUi("publicReviewContextMissing"));
     return;
   }
-  openSimpleFormDialog("نظر درباره کسب‌وکار", "Trust / Review", [
-    { id: "public-review-rating", label: "امتیاز (۱ تا ۵)", placeholder: "5", value: "5" },
-    { id: "public-review-content", label: "نظر", placeholder: "تجربه شما…", value: "" },
+  openSimpleFormDialog(socialCommerceUi("publicReviewDialogTitle"), socialCommerceUi("publicReviewsEyebrow"), [
+    { id: "public-review-rating", label: socialCommerceUi("publicReviewRating"), placeholder: "5", value: "5" },
+    { id: "public-review-content", label: socialCommerceUi("publicReviewContent"), placeholder: socialCommerceUi("publicReviewPlaceholder"), value: "" },
   ], async (dialog) => {
     const rating = Number(dialog.querySelector<HTMLInputElement>("#public-review-rating")?.value ?? "0");
     const content = dialog.querySelector<HTMLInputElement>("#public-review-content")?.value.trim() ?? "";
-    if (!Number.isSafeInteger(rating) || rating < 1 || rating > 5) { showToast("امتیاز باید بین ۱ تا ۵ باشد."); return false; }
+    if (!Number.isSafeInteger(rating) || rating < 1 || rating > 5) { showToast(socialCommerceUi("publicReviewRatingInvalid")); return false; }
     try {
       await apiJson("/api/v1/trust/reviews", { method: "POST", body: { customerId, ratingValue: rating, ...(content ? { content } : {}), businessId } });
-      showToast("نظر برای بررسی Trust ثبت شد.");
+      showToast(socialCommerceUi("publicReviewSubmitted"));
       return true;
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "ثبت نظر ناموفق بود.");
+      showToast(error instanceof Error ? error.message : socialCommerceUi("publicReviewFailed"));
       return false;
     }
   });
@@ -6357,7 +7348,7 @@ async function togglePublicBusinessFollow(routePath: string): Promise<void> {
   const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
   if (!businessId) return;
   const button = document.querySelector<HTMLButtonElement>("#public-business-follow");
-  if (button) { button.disabled = true; button.textContent = "در حال ثبت…"; }
+  if (button) { button.disabled = true; button.textContent = socialCommerceUi("publicFollowSaving"); }
   try {
     const followed = await persistSocialFollow({
       id: businessId,
@@ -6366,9 +7357,9 @@ async function togglePublicBusinessFollow(routePath: string): Promise<void> {
       title: document.querySelector<HTMLElement>("#public-business-page-name")?.textContent ?? "Business",
       metadata: { businessId },
     });
-    if (button) { button.disabled = false; button.textContent = followed ? "دنبال شد ✓" : "دنبال کردن"; }
+    if (button) { button.disabled = false; button.textContent = followed ? socialCommerceUi("publicFollowActive") : socialCommerceUi("publicFollowAction"); }
   } catch (error) {
-    if (button) { button.disabled = false; button.textContent = "دنبال کردن"; }
+    if (button) { button.disabled = false; button.textContent = socialCommerceUi("publicFollowAction"); }
     showToast(error instanceof Error ? error.message : "ثبت Follow ناموفق بود.");
   }
 }
@@ -6376,11 +7367,68 @@ async function togglePublicBusinessFollow(routePath: string): Promise<void> {
 async function sharePublicBusiness(): Promise<void> {
   try {
     await navigator.clipboard.writeText(window.location.href);
-    showToast("لینک پروفایل کپی شد.");
+    showToast(socialCommerceUi("publicLinkCopied"));
   } catch {
     showToast(window.location.href);
   }
 }
+function publicBusinessTypeLabel(value: string | null | undefined): string {
+  const type = (value ?? "").trim().toLowerCase().replace(/-/g, "_");
+  if (!type) return socialCommerceUi("publicBusinessGenericType");
+  if (type === "retail" || type.startsWith("retail_") || type === "shop") return socialCommerceUi("publicBusinessTypeRetail");
+  if (type.startsWith("medical_") || type === "clinic" || type === "medical") return socialCommerceUi("publicBusinessTypeClinic");
+  if (type.startsWith("food_") || type === "restaurant" || type === "cafe") return socialCommerceUi("publicBusinessTypeFood");
+  if (type === "beauty_salon" || type === "salon") return socialCommerceUi("publicBusinessTypeSalon");
+  if (type.startsWith("service_") || type === "service") return socialCommerceUi("publicBusinessTypeService");
+  if (type.startsWith("education_") || type === "education") return socialCommerceUi("publicBusinessTypeEducation");
+  if (type.startsWith("hospitality_") || type === "hotel") return socialCommerceUi("publicBusinessTypeHospitality");
+  if (type.startsWith("professional_") || type === "consulting") return socialCommerceUi("publicBusinessTypeConsulting");
+  return socialCommerceUi("publicBusinessGenericType");
+}
+
+function publicBusinessPublicationLabel(value: string | null | undefined): string {
+  switch ((value ?? "").trim().toLowerCase()) {
+    case "published": return socialCommerceUi("publicStatusPublished");
+    case "pending": return socialCommerceUi("publicStatusPending");
+    case "unpublished":
+    case "draft": return socialCommerceUi("publicStatusUnpublished");
+    case "blocked": return socialCommerceUi("publicStatusBlocked");
+    default: return socialCommerceUi("publicStatusUnknown");
+  }
+}
+
+function publicBusinessContactLabel(value: string | null | undefined): string {
+  switch ((value ?? "").trim().toLowerCase()) {
+    case "phone": return socialCommerceUi("publicContactPhone");
+    case "email": return socialCommerceUi("publicContactEmail");
+    case "website": return socialCommerceUi("publicContactWebsite");
+    default: return socialCommerceUi("publicContactOther");
+  }
+}
+
+function publicBusinessLocationLabel(value: string | null | undefined): string {
+  switch ((value ?? "").trim().toLowerCase()) {
+    case "store": return socialCommerceUi("publicLocationStore");
+    case "clinic": return socialCommerceUi("publicLocationClinic");
+    case "office": return socialCommerceUi("publicLocationOffice");
+    case "branch": return socialCommerceUi("publicLocationBranch");
+    default: return socialCommerceUi("publicLocationDefault");
+  }
+}
+
+function formatPublicBusinessDate(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const language = localStorage.getItem("qooqnos.locale") ?? "fa";
+  const locale = language === "fa" ? "fa-IR-u-ca-persian" : language === "ar" ? "ar-SA-u-ca-islamic-umalqura" : "en-GB-u-ca-gregory";
+  try {
+    return new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", day: "numeric" }).format(date);
+  } catch {
+    return new Intl.DateTimeFormat("en-GB", { year: "numeric", month: "short", day: "numeric" }).format(date);
+  }
+}
+
 async function loadBusinessPublicPage(routePath: string): Promise<void> {
   const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
   const name = document.querySelector<HTMLElement>("#public-business-page-name");
@@ -6400,42 +7448,78 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
       "/api/v1/public/businesses/" + encodeURIComponent(businessId) + "?limit=50",
     );
     const profile = response.data.profile;
-    name.textContent = profile.displayName || profile.name;
-    summary.textContent = "اطلاعات منتشرشده و عرضه‌های فعال " + (profile.businessType ? "در حوزه " + profile.businessType : "این کسب‌وکار") + ".";
-    publication.textContent = profile.publicationStatus;
-    meta.innerHTML = [profile.businessType, profile.defaultLocale, profile.timezone, profile.defaultCurrency].filter(Boolean).map((value) => '<span>' + escapeHtml(String(value)) + '</span>').join("");
-    facts.innerHTML = '<div><span>نام رسمی</span><strong>' + escapeHtml(profile.name) + '</strong></div>' +
-      '<div><span>نوع کسب‌وکار</span><strong>' + escapeHtml(profile.businessType ?? "—") + '</strong></div>' +
-      '<div><span>Locale</span><strong>' + escapeHtml(profile.defaultLocale ?? "—") + '</strong></div>' +
-      '<div><span>ارز</span><strong>' + escapeHtml(profile.defaultCurrency ?? "—") + '</strong></div>';
+    const displayName = profile.displayName || profile.name;
+    const businessTypeLabel = publicBusinessTypeLabel(profile.businessType);
+    const publicationLabel = publicBusinessPublicationLabel(profile.publicationStatus);
+    name.textContent = displayName;
+    summary.textContent = socialCommerceUi("publicBusinessIntro");
+    meta.innerHTML = '<span>' + escapeHtml(businessTypeLabel) + '</span><span class="phoenix-public-status-chip">' + escapeHtml(publicationLabel) + '</span>';
+    publication.textContent = publicationLabel;
+    publication.className = "pill " + (profile.publicationStatus === "published" ? "success" : profile.publicationStatus === "pending" ? "warning" : "");
+    facts.innerHTML =
+      '<div><span>' + socialCommerceUi("publicOfficialName") + '</span><strong>' + escapeHtml(profile.name) + '</strong></div>' +
+      '<div><span>' + socialCommerceUi("publicBusinessTypeLabel") + '</span><strong>' + escapeHtml(businessTypeLabel) + '</strong></div>' +
+      '<div><span>' + socialCommerceUi("publicPublicationLabel") + '</span><strong>' + escapeHtml(publicationLabel) + '</strong></div>';
     contactsHost.innerHTML = response.data.contacts.length
       ? response.data.contacts.map((contact) => {
-          const type = contact.contactType ?? "contact";
-          const value = contact.value ?? "—";
-          const href = type === "phone" ? "tel:" + encodeURIComponent(value) : type === "email" ? "mailto:" + encodeURIComponent(value) : type === "website" ? (value.startsWith("http://") || value.startsWith("https://") ? value : "https://" + value) : "";
-          const content = href ? '<a href="' + escapeAttr(href) + '" target="_blank" rel="noopener noreferrer"><b>' + escapeHtml(type) + '</b> ' + escapeHtml(value) + '</a>' : '<span><b>' + escapeHtml(type) + '</b> ' + escapeHtml(value) + '</span>';
+          const rawType = contact.contactType ?? "";
+          const typeLabel = publicBusinessContactLabel(rawType);
+          const value = contact.value ?? "";
+          const href = rawType === "phone" ? "tel:" + encodeURIComponent(value)
+            : rawType === "email" ? "mailto:" + encodeURIComponent(value)
+              : rawType === "website" ? (value.startsWith("http://") || value.startsWith("https://") ? value : "https://" + value) : "";
+          const content = href
+            ? '<a href="' + escapeAttr(href) + '" target="_blank" rel="noopener noreferrer"><b>' + escapeHtml(typeLabel) + '</b><span>' + escapeHtml(value) + '</span></a>'
+            : '<div><b>' + escapeHtml(typeLabel) + '</b><span>' + escapeHtml(value) + '</span></div>';
           return content;
         }).join("")
-      : '<span>راه ارتباط عمومی ثبت نشده است.</span>';
+      : '<div class="phoenix-public-business-empty"><span aria-hidden="true">✉</span><p>' + socialCommerceUi("publicNoContacts") + '</p></div>';
     locationsHost.innerHTML = response.data.locations.length
-      ? response.data.locations.map((location) => '<div class="business-location-item"><div><strong>' + escapeHtml(location.name ?? "Location") + '</strong><small>' + escapeHtml(location.locationType ?? "—") + (location.timezone ? " · " + escapeHtml(location.timezone) : "") + '</small></div></div>').join("")
-      : '<div class="slot-empty"><span>⌖</span><p>مکان عمومی ثبت نشده است.</p></div>';
-    reviewCount.textContent = response.data.reviews.length + " نظر";
+      ? response.data.locations.map((location) => '<div class="phoenix-public-location-row"><span class="phoenix-public-location-icon" aria-hidden="true">⌖</span><div><strong>' + escapeHtml(location.name ?? publicBusinessLocationLabel(location.locationType)) + '</strong><small>' + escapeHtml(publicBusinessLocationLabel(location.locationType)) + '</small></div></div>').join("")
+      : '<div class="phoenix-public-business-empty"><span aria-hidden="true">⌖</span><p>' + socialCommerceUi("publicNoLocations") + '</p></div>';
+    reviewCount.textContent = socialCommerceUi("publicReviewCount", { count: formatLocalizedNumber(response.data.reviews.length) });
     reviewsHost.innerHTML = response.data.reviews.length
-      ? response.data.reviews.map((review) => '<article class="phoenix-public-review-card"><div class="phoenix-public-review-rating">' + "★".repeat(Math.max(0, Math.min(5, Math.trunc(review.ratingValue)))) + '</div><p>' + escapeHtml(review.content ?? "") + '</p><small>تجربه منتشرشده · ' + escapeHtml(review.publishedAt ?? review.createdAt) + '</small></article>').join("")
-      : '<div class="slot-empty"><span>◌</span><p>هنوز نظر منتشرشده‌ای برای این کسب‌وکار موجود نیست.</p></div>';
-    offerCount.textContent = response.data.offers.length + " عرضه";
+      ? response.data.reviews.map((review) => {
+          const rating = Math.max(0, Math.min(5, Math.trunc(review.ratingValue)));
+          const date = formatPublicBusinessDate(review.publishedAt ?? review.createdAt);
+          return '<article class="phoenix-public-review-card"><div class="phoenix-public-review-card-head"><span class="phoenix-public-review-rating">' + "★".repeat(rating) + '</span>' + (date ? '<time>' + escapeHtml(date) + '</time>' : '') + '</div><p>' + escapeHtml(review.content ?? socialCommerceUi("publicReviewNoText")) + '</p></article>';
+        }).join("")
+      : '<div class="phoenix-public-business-empty"><span aria-hidden="true">◌</span><p>' + socialCommerceUi("publicNoReviews") + '</p></div>';
+    offerCount.textContent = socialCommerceUi("publicOfferCount", { count: formatLocalizedNumber(response.data.offers.length) });
     if (!response.data.offers.length) {
-      offersHost.innerHTML = '<div class="slot-empty"><span>◇</span><p>هنوز عرضه منتشرشده‌ای برای این کسب‌وکار در دسترس نیست.</p></div>';
+      offersHost.innerHTML = '<div class="phoenix-public-business-empty"><span aria-hidden="true">◇</span><p>' + socialCommerceUi("publicNoOffers") + '</p></div>';
       return;
     }
-    offersHost.innerHTML = response.data.offers.map((offer) => {
-      const price = offer.priceAmountMinor !== null && offer.currency ? formatPublicMoney(offer.priceAmountMinor, offer.currency) : "قیمت پس از انتخاب";
-      const action = offer.offeringType === "product"
-        ? '<a class="button button-primary" href="/checkout?entity=' + encodeURIComponent(offer.id) + '&type=offering" data-nav>خرید فوری ↗</a>'
-        : '<a class="button button-secondary" href="/booking?offering=' + encodeURIComponent(offer.id) + '" data-nav>رزرو ↗</a>';
-      return '<article class="phoenix-public-offer-card"><div class="phoenix-public-offer-icon">' + (offer.offeringType === "product" ? "▦" : "◷") + '</div><div class="phoenix-public-offer-body"><span class="section-kicker">' + escapeHtml(offer.offeringType === "product" ? "Product" : "Service") + '</span><h3>' + escapeHtml(offer.title) + '</h3><p>' + escapeHtml(offer.description ?? "توضیح تکمیلی برای این عرضه ثبت نشده است.") + '</p><strong>' + escapeHtml(price) + '</strong></div><div class="phoenix-public-offer-action">' + action + '</div></article>';
+    const publicOffers = response.data.offers;
+    offersHost.innerHTML = publicOffers.map((offer, index) => {
+      const price = offer.priceAmountMinor !== null && offer.currency
+        ? formatPublicMoney(offer.priceAmountMinor, offer.currency)
+        : uiText("استعلام قیمت");
+      const actionLabel = offer.offeringType === "product" ? uiText("مشاهده جزئیات") : uiText("بررسی خدمت و رزرو");
+      return '<article class="phoenix-public-offer-card"><div class="phoenix-public-offer-icon">' + (offer.offeringType === "product" ? "▦" : "◷") + '</div><div class="phoenix-public-offer-body"><span class="section-kicker">' + escapeHtml(offer.offeringType === "product" ? uiText("کالا") : uiText("خدمت")) + '</span><h3>' + escapeHtml(offer.title) + '</h3><p>' + escapeHtml(offer.description ?? uiText("توضیح تکمیلی برای این عرضه ثبت نشده است.")) + '</p><strong>' + escapeHtml(price) + '</strong></div><div class="phoenix-public-offer-action"><button class="button button-primary" type="button" data-public-offer-detail="' + index + '">' + actionLabel + ' <span aria-hidden="true">←</span></button></div></article>';
     }).join("");
+    offersHost.querySelectorAll<HTMLButtonElement>("[data-public-offer-detail]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.publicOfferDetail);
+        const offer = Number.isInteger(index) ? publicOffers[index] : undefined;
+        if (!offer) return;
+        const price = offer.priceAmountMinor;
+        openDiscoveryResultPanel({
+          id: offer.id,
+          sourceId: offer.id,
+          sourceType: offer.offeringType,
+          title: offer.title,
+          ...(offer.description !== null ? { description: offer.description } : {}),
+          ...(price !== null ? { price } : {}),
+          ...(offer.currency ? { currency: offer.currency } : {}),
+          metadata: {
+            businessId,
+            businessName: profile.displayName || profile.name,
+            offeringType: offer.offeringType,
+          },
+        });
+      });
+    });
   } catch (error) {
     summary.textContent = error instanceof Error ? error.message : "پروفایل عمومی در دسترس نیست.";
     facts.innerHTML = '<div class="slot-empty"><span>!</span><p>خواندن Business عمومی ناموفق بود.</p></div>';
@@ -6446,11 +7530,17 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
 
 function formatPublicMoney(amountMinor: number, currency: string): string {
   try {
-    const formatter = new Intl.NumberFormat("fa-IR", { style: "currency", currency });
+    const language = localStorage.getItem("qooqnos.locale") ?? "fa";
+    const locale = language === "fa" ? "fa-IR" : language === "ar" ? "ar" : "en-GB";
+    const formatter = new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      currencyDisplay: "name",
+    });
     const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 0;
     return formatter.format(amountMinor / (10 ** fractionDigits));
   } catch {
-    return String(amountMinor) + " " + currency;
+    return String(amountMinor);
   }
 }
 function compactId(value?: string): string {
@@ -6552,51 +7642,77 @@ function renderProductStudio(): string {
     ["step5", "step5Desc"],
   ];
   return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> ${ps("eyebrow")}</span><h1>${psTitle("heroTitle")} <em>${psTitle("heroEmphasis")}</em></h1><p>${ps("heroDescription")}</p></div>
-      <span class="billing-note">${ps("billingNote")}</span>
-    </section>
+    <div class="phoenix-reset-studio-page">
+      <section class="phoenix-reset-studio-hero">
+        <div class="phoenix-reset-studio-hero-copy">
+          <div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>${ps("eyebrow")}</span></div>
+          <h1>${psTitle("heroTitle")} <em>${psTitle("heroEmphasis")}</em></h1>
+          <p>${ps("heroDescription")}</p>
+        </div>
+        <div class="phoenix-reset-studio-hero-side">
+          <span class="phoenix-reset-studio-billing">${ps("billingNote")}</span>
+          <a href="/business" data-nav class="phoenix-reset-studio-back">${canonicalUi("canonical.business.business")} <span aria-hidden="true">←</span></a>
+        </div>
+      </section>
 
-    <section class="studio-grid">
-      <article class="glass-card studio-input">
-        <div class="studio-tabs"><button class="studio-tab active" type="button">${ps("inputTab")}</button><button class="studio-tab" type="button">${ps("imageTab")}</button></div>
-        <input id="studio-business" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
-        <input id="studio-workspace" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.workspace) ?? "")}" />
-        <div class="studio-human-header" style="margin-bottom:14px;padding:10px 14px;background:var(--surface, rgba(255,255,255,0.04));border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span>✨</span>
-            <span style="font-size:13px;font-weight:600;">ساخت هوشمند محصول و خدمات</span>
+      <section class="phoenix-reset-studio-workspace" aria-label="${ps("eyebrow")}">
+        <article class="glass-card studio-input phoenix-reset-studio-input">
+          <header class="phoenix-reset-studio-panel-heading">
+            <span class="phoenix-reset-studio-step-number">01</span>
+            <div>
+              <span class="phoenix-reset-section-kicker">${ps("step1")}</span>
+              <h2>${ps("inputSectionTitle")}</h2>
+            </div>
+          </header>
+          <input id="studio-business" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
+          <input id="studio-workspace" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.workspace) ?? "")}" />
+          <label class="field-label phoenix-reset-studio-label" for="studio-text">${ps("productDescription")}</label>
+          <textarea id="studio-text" rows="8" placeholder="${escapeAttr(productStudioUi("productPlaceholder"))}"></textarea>
+
+          <div class="phoenix-reset-studio-image-heading">
+            <span class="phoenix-reset-studio-image-icon" aria-hidden="true">▧</span>
+            <div><strong>${ps("imageTab")}</strong><small>${ps("imageFormats")}</small></div>
+            <span class="phoenix-reset-studio-optional">${ps("imageOptional")}</span>
           </div>
-          <span class="ds-pill ds-status-success" style="font-size:11px;font-weight:600;">تنظیم خودکار در فروشگاه</span>
-        </div>
-        <label class="field-label" for="studio-text">${ps("productDescription")}</label>
-        <textarea id="studio-text" rows="7" placeholder="${escapeAttr(productStudioUi("productPlaceholder"))}"></textarea>
-        <label class="media-dropzone" for="studio-file">
-          <input id="studio-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic" />
-          <span class="media-drop-icon">＋</span>
-          <span><strong>${ps("addProductPhoto")}</strong><small>${ps("imageFormats")}</small></span>
-          <span id="studio-file-name" class="media-file-name">${ps("noImage")}</span>
-        </label>
-        <div class="studio-actions">
-          <span class="field-hint">${ps("inputHint")}</span>
-          <button class="button button-primary" type="button" data-generate-draft>${ps("buildDraft")} <span>✦</span></button>
-        </div>
-      </article>
+          <label class="media-dropzone phoenix-reset-studio-dropzone" for="studio-file">
+            <input id="studio-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic" />
+            <span class="media-drop-icon">＋</span>
+            <span class="phoenix-reset-studio-drop-copy"><strong>${ps("addProductPhoto")}</strong><small>${ps("imageFormats")}</small></span>
+            <span id="studio-file-name" class="media-file-name">${ps("noImage")}</span>
+          </label>
+          <footer class="studio-actions phoenix-reset-studio-actions">
+            <span class="field-hint">${ps("inputHint")}</span>
+            <button class="button button-primary" type="button" data-generate-draft>${ps("buildDraft")} <span aria-hidden="true">✦</span></button>
+          </footer>
+        </article>
 
-      <article class="glass-card studio-preview">
-        <div class="preview-top"><span class="section-kicker">${ps("livePreview")}</span><span class="pill" id="studio-status">${ps("ready")}</span></div>
-        <div id="studio-draft" class="draft-empty"><div class="draft-orb">✦</div><strong>${ps("draftEmptyTitle")}</strong><p>${ps("draftEmptyDescription")}</p></div>
-      </article>
-    </section>
+        <article class="glass-card studio-preview phoenix-reset-studio-preview">
+          <div class="phoenix-reset-studio-preview-heading">
+            <div><span class="phoenix-reset-section-kicker">${ps("livePreview")}</span><h2>${ps("livePreview")}</h2></div>
+            <span class="pill" id="studio-status">${ps("ready")}</span>
+          </div>
+          <div id="studio-draft" class="draft-empty phoenix-reset-studio-draft-empty">
+            <div class="draft-orb">✦</div>
+            <strong>${ps("draftEmptyTitle")}</strong>
+            <p>${ps("draftEmptyDescription")}</p>
+          </div>
+        </article>
+      </section>
 
-    <section class="studio-flow">
-      ${steps.map(([title, desc], i) =>
-        `<div class="studio-step ${i===0 ? "active" : ""}"><span>0${i+1}</span><div><strong>${ps(title)}</strong><small>${ps(desc)}</small></div></div>`
-      ).join("")}
-    </section>
+      <section class="studio-flow phoenix-reset-studio-process" aria-label="${ps("eyebrow")}">
+        <div class="phoenix-reset-studio-process-heading">
+          <span class="phoenix-reset-section-kicker">${ps("eyebrow")}</span>
+          <h2>${psTitle("workflowTitle")}</h2>
+        </div>
+        <div class="phoenix-reset-studio-process-steps">
+          ${steps.map(([title, desc], i) =>
+            `<div class="studio-step phoenix-reset-studio-step ${i === 0 ? "active" : ""}"><span>0${i+1}</span><div><strong>${ps(title)}</strong><small>${ps(desc)}</small></div></div>`
+          ).join("")}
+        </div>
+      </section>
+    </div>
   `;
 }
-
 function openCreatePostPanel(): void {
   const overlay = document.createElement("div");
   overlay.className = "connection-overlay";
@@ -6605,7 +7721,7 @@ function openCreatePostPanel(): void {
   overlay.querySelectorAll<HTMLElement>("[data-close-create-post]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
   overlay.querySelector<HTMLButtonElement>("[data-create-post-submit]")?.addEventListener("click", () => {
     const value = overlay.querySelector<HTMLTextAreaElement>("#social-post-text")?.value.trim() ?? "";
-    if (!value) { showToast("توضیح محصول یا خدمت را وارد کن."); return; }
+    if (!value) { showToast(discoveryUi("createOfferingDescriptionRequired")); return; }
     sessionStorage.setItem("phoenix-social-create-draft", value);
     overlay.remove();
     navigate("/product-studio");
@@ -6641,7 +7757,11 @@ function bindDiscoveryResultEvents(): void {
         let active = false;
         if (button.dataset.follow !== undefined) active = await persistSocialFollow(item);
         else if (button.dataset.like !== undefined) active = await persistSocialAction("like", item);
-        else if (button.dataset.save !== undefined) active = await persistSocialAction("save", item);
+        else if (button.dataset.save !== undefined) {
+          active = await persistSocialAction("save", item);
+          setShortlistItem(item, active);
+          renderShortlist();
+        }
         else if (button.dataset.share !== undefined) {
           await shareSocialItem(item);
           active = true;
@@ -6651,16 +7771,15 @@ function bindDiscoveryResultEvents(): void {
           const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
           if (type === "service") navigate("/booking?offering=" + encodeURIComponent(id) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : ""));
           else if (type === "business") navigate("/businesses/" + encodeURIComponent(id));
-          else navigate("/checkout?product=" + encodeURIComponent(id));
+          else openDiscoveryResultPanel(item);
           active = true;
-        } else {
-          await persistSocialComment(item);
-          active = true;
+        } else if (button.dataset.comment !== undefined) {
+          active = await persistSocialComment(item);
         }
         if (button.dataset.comment !== undefined) {
-          if (active) showToast("نظر برای moderation ثبت شد.");
+          if (active) showToast(socialCommerceUi("commentSent"));
         } else if (button.dataset.share === undefined && button.dataset.openView === undefined) {
-          showToast(active ? "تعامل اجتماعی ثبت شد." : "تعامل اجتماعی برداشته شد.");
+          showToast(active ? socialCommerceUi("socialActionSaved") : socialCommerceUi("socialActionRemoved"));
           refreshSocialFeed();
         }
       } catch (error) {
@@ -6843,7 +7962,7 @@ function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLElement>("[data-open-seller-register]").forEach((button) => {
     button.addEventListener("click", (e) => {
       e.preventDefault();
-      openAuthModal({ initialMode: "seller_mobile" });
+      openAuthModal({ initialMode: "choice" });
     });
   });
   document.querySelectorAll<HTMLElement>("[data-activate-seller]").forEach((button) => {
@@ -6853,7 +7972,7 @@ function bindGlobalEvents(): void {
       if (auth.token && auth.user) {
         openAuthModal({ initialMode: "seller_business" });
       } else {
-        openAuthModal({ initialMode: "seller_mobile" });
+        openAuthModal({ initialMode: "choice" });
       }
     });
   });
@@ -6933,7 +8052,19 @@ function bindGlobalEvents(): void {
 
   document.querySelector<HTMLButtonElement>("[data-run-discovery]")?.addEventListener("click", () => void runDiscovery(true));
   document.querySelectorAll<HTMLButtonElement>("[data-open-create-post]").forEach((button) => button.addEventListener("click", openCreatePostPanel));
-  document.querySelectorAll<HTMLButtonElement>("[data-social-state-refresh]").forEach((button) => button.addEventListener("click", () => void loadSocialState()));
+  document.querySelectorAll<HTMLButtonElement>("[data-social-state-refresh]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (button.disabled) return;
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      try {
+        await Promise.all([runDiscovery(true), loadSocialState()]);
+      } finally {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+      }
+    });
+  });
   document.querySelectorAll<HTMLButtonElement>("[data-load-more-discovery]").forEach((button) => button.addEventListener("click", () => void runDiscovery(false)));
   document.querySelectorAll<HTMLButtonElement>("[data-focus-discover]").forEach((button) => button.addEventListener("click", () => document.querySelector<HTMLInputElement>("#discover-query")?.focus()));
   document.querySelector<HTMLInputElement>("#discover-query")?.addEventListener("keydown", (event) => {
@@ -7008,18 +8139,11 @@ async function runDiscovery(reset = true): Promise<void> {
   const query = input.value.trim();
 
   if (reset) discoveryOffset = 0;
-  if (tab !== "following" && !query && tab === "for-you") {
-    resultHost.innerHTML = '<div class="social-empty-state glass-card"><div class="draft-orb">✦</div><h3>' + discoveryUi("noNeedTitle") + '</h3><p>' + discoveryUi("noNeedDescription") + '</p></div>';
-    meta.textContent = discoveryUi("waitingForNeed");
-    if (pagination) pagination.innerHTML = "";
-    return;
-  }
-
   if (title) {
       const displayQuery = query.length > 48 ? query.slice(0, 48) + "…" : query;
       title.textContent = query
         ? discoveryUi("resultsFor", { query: displayQuery })
-        : tab === "following" ? discoveryUi("followingResults") : discoveryUi("exploreResults");
+        : tab === "following" ? discoveryUi("followingResults") : tab === "explore" ? discoveryUi("exploreResults") : socialCommerceUi("feedTitle");
     }
   if (reset) resultHost.innerHTML = renderSkeletonCards(3);
   meta.textContent = discoveryUi("analyzing");
@@ -7100,7 +8224,7 @@ async function generateDraft(): Promise<void> {
 
   const token = sessionStorage.getItem(STORAGE.accessToken);
   if (!token) {
-    openAuthModal({ initialMode: "seller_mobile" });
+    openAuthModal({ initialMode: "choice" });
     showToast("برای استفاده از استودیوی فروشنده، لطفاً ثبت‌نام کنید یا وارد شوید.");
     return;
   }
@@ -7386,7 +8510,7 @@ function stringField(value: Record<string, unknown>, key: string): string | unde
 function openBusinessCreatePanel(): void {
   const auth = getStoredAuth();
   if (!sessionStorage.getItem(STORAGE.accessToken) || !auth.user) {
-    openAuthModal({ initialMode: "seller_mobile" });
+    openAuthModal({ initialMode: "choice" });
     showToast("برای ایجاد کسب‌وکار، لطفاً به عنوان فروشنده ثبت‌نام کنید یا وارد شوید.");
     return;
   }
@@ -7692,28 +8816,25 @@ function updateShellIndicators(): void {
         ? uiText(current.status ?? "فضای کاری من")
         : uiText("فضای کاری من");
   });
-  const readIds = getReadNotificationIds();
-  const unread = shellNotifications.filter((item) => !readIds.has(item.id)).length;
+  const unread = shellNotifications.filter((item) => item.status !== "read").length;
   document.querySelectorAll<HTMLElement>("#notification-count").forEach((node) => {
     node.textContent = String(unread);
     node.hidden = unread === 0;
   });
 }
 
-function getReadNotificationIds(): Set<string> {
-  try {
-    const raw = JSON.parse(localStorage.getItem("phoenix-read-notifications") ?? "[]");
-    return new Set(Array.isArray(raw) ? raw.filter((value): value is string => typeof value === "string").slice(-200) : []);
-  } catch {
-    return new Set();
+async function markNotificationReadOnServer(id: string): Promise<NotificationView> {
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    throw new Error(socialCommerceUi("notificationsSignInBody"));
   }
-}
-
-function markNotificationReadLocally(id: string): void {
-  const ids = getReadNotificationIds();
-  ids.add(id);
-  localStorage.setItem("phoenix-read-notifications", JSON.stringify(Array.from(ids).slice(-200)));
+  const response = await apiJson<{ data: NotificationView }>(
+    "/api/v1/notifications/" + encodeURIComponent(id) + "/read",
+    { method: "POST" },
+  );
+  shellNotifications = shellNotifications.map((item) => item.id === id ? { ...item, ...response.data } : item);
   updateShellIndicators();
+  return response.data;
 }
 
 async function openWorkspaceSwitcher(): Promise<void> {
@@ -7830,46 +8951,90 @@ function openNotificationCenter(): void {
   }
   const overlay = document.createElement("div");
   overlay.className = "notification-overlay";
-  const readIds = getReadNotificationIds();
   const rows = shellNotifications.length
     ? shellNotifications.map((item) => `
-        <article class="notification-item ${readIds.has(item.id) ? "read" : "unread"}">
-          <div class="notification-item-icon">${item.channel === "in_app" ? "♢" : "◌"}</div>
+        <article class="notification-item ${item.status === "read" ? "read" : "unread"}">
+          <div class="notification-item-icon" aria-hidden="true">${item.channel === "in_app" ? "♢" : "◌"}</div>
           <div class="notification-item-copy">
-            <div class="notification-item-top"><strong>${escapeHtml(item.intent ?? "notification")}</strong><span>${escapeHtml(item.priority ?? "normal")}</span></div>
+            <div class="notification-item-top"><strong>${escapeHtml(notificationIntentLabel(item.intent))}</strong><span>${escapeHtml(notificationPriorityLabel(item.priority))}</span></div>
             <p>${escapeHtml(notificationSummary(item))}</p>
-            <small>${escapeHtml(formatDate(item.createdAt))} · ${escapeHtml(item.status ?? "created")}</small>
+            <small>${escapeHtml(formatDate(item.createdAt))} · ${escapeHtml(notificationStatusLabel(item.status))}</small>
           </div>
-          <button class="notification-read" type="button" data-mark-notification-read="${escapeAttr(item.id)}">${readIds.has(item.id) ? "خوانده شد" : "خواندم"}</button>
+          <button class="notification-read" type="button" data-mark-notification-read="${escapeAttr(item.id)}">${socialCommerceUi(item.status === "read" ? "notificationsRead" : "notificationsMarkRead")}</button>
         </article>`).join("")
-    : '<div class="slot-empty"><span>♢</span><p>اعلان جدیدی برای این حساب ثبت نشده است.</p></div>';
+    : '<div class="slot-empty"><span aria-hidden="true">♢</span><h3>' + socialCommerceUi("notificationsEmptyTitle") + '</h3><p>' + socialCommerceUi("notificationsEmptyBody") + '</p></div>';
   overlay.innerHTML = `
     <div class="connection-backdrop" data-close-notification></div>
     <section class="connection-modal glass-card notification-modal" role="dialog" aria-modal="true" aria-labelledby="notification-title">
-      <button class="connection-close" type="button" data-close-notification aria-label="بستن">×</button>
-      <span class="eyebrow"><i></i> Notification Center</span>
-      <h2 id="notification-title">اعلان‌های شما</h2>
-      <p>وضعیت خوانده‌شدن در سطح UI مدیریت می‌شود و delivery state همچنان متعلق به Communication است.</p>
+      <button class="connection-close" type="button" data-close-notification aria-label="${escapeAttr(uiText("بستن"))}">×</button>
+      <span class="eyebrow"><i></i> ${socialCommerceUi("notificationsEyebrow")}</span>
+      <h2 id="notification-title">${socialCommerceUi("notificationsListTitle")}</h2>
+      <p>${socialCommerceUi("notificationsIntro")}</p>
       <div class="notification-list">${rows}</div>
     </section>`;
   document.body.appendChild(overlay);
   overlay.querySelectorAll<HTMLElement>("[data-close-notification]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
   overlay.querySelectorAll<HTMLButtonElement>("[data-mark-notification-read]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const id = button.dataset.markNotificationRead;
-      if (!id) return;
-      markNotificationReadLocally(id);
-      button.textContent = "خوانده شد";
-      button.parentElement?.classList.remove("unread");
-      button.parentElement?.classList.add("read");
+      if (!id || button.disabled || button.parentElement?.classList.contains("read")) return;
+      button.disabled = true;
+      try {
+        await markNotificationReadOnServer(id);
+        button.textContent = socialCommerceUi("notificationsRead");
+        button.parentElement?.classList.remove("unread");
+        button.parentElement?.classList.add("read");
+      } catch (error) {
+        button.disabled = false;
+        showToast(error instanceof Error ? error.message : socialCommerceUi("notificationsStatusError"));
+      }
     });
   });
 }
 
+function notificationIntentLabel(intent: string | undefined): string {
+  const labels: Record<string, string> = {
+    "booking.confirmed": "notificationBookingConfirmed",
+    "booking.created": "notificationBookingCreated",
+    "order.created": "notificationOrderCreated",
+    "order.shipped": "notificationOrderShipped",
+    "order.delivered": "notificationOrderDelivered",
+    "transaction_update": "notificationTransactionUpdated",
+  };
+  return intent && labels[intent] ? socialCommerceUi(labels[intent]) : socialCommerceUi("notificationsGenericTitle");
+}
+
+function notificationPriorityLabel(priority: string | undefined): string {
+  const labels: Record<string, string> = {
+    low: "notificationPriorityLow",
+    normal: "notificationPriorityNormal",
+    high: "notificationPriorityHigh",
+    urgent: "notificationPriorityUrgent",
+  };
+  return priority && labels[priority] ? socialCommerceUi(labels[priority]) : socialCommerceUi("notificationPriorityNormal");
+}
+
+function notificationStatusLabel(status: string | undefined): string {
+  const labels: Record<string, string> = {
+    created: "notificationStatusCreated",
+    queued: "notificationStatusQueued",
+    sent: "notificationStatusSent",
+    delivered: "notificationStatusDelivered",
+    read: "notificationStatusRead",
+    failed: "notificationStatusFailed",
+  };
+  return status && labels[status] ? socialCommerceUi(labels[status]) : socialCommerceUi("notificationStatusCreated");
+}
+
 function notificationSummary(item: NotificationView): string {
-  if (!item.variables || typeof item.variables !== "object") return "اعلان ثبت‌شده در ققنوس.";
-  const values = Object.values(item.variables).filter((value) => typeof value === "string" || typeof value === "number" || typeof value === "boolean");
-  return values.length ? values.slice(0, 2).map(String).join(" · ") : "اعلان ثبت‌شده در ققنوس.";
+  const variables = item.variables;
+  if (variables && typeof variables === "object") {
+    for (const key of ["summary", "message", "description", "body", "title"]) {
+      const value = variables[key];
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+  }
+  return socialCommerceUi("notificationsGenericBody");
 }
 
 function renderAdminHealth(): void {

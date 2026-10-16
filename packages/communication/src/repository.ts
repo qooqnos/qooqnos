@@ -693,6 +693,32 @@ export class CommunicationRepository extends Repository {
     return (result.meta?.changes ?? 0) === 1;
   }
 
+  async markNotificationReadForRecipient(
+    context: RequestContext,
+    id: EntityId,
+    recipientReference: string,
+    now: string,
+  ): Promise<NotificationRecord | null> {
+    const recipient = recipientReference.trim();
+    if (!recipient) return null;
+    const current = await this.getNotification(context, id);
+    if (!current || current.recipientReference !== recipient) return null;
+
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = context.workspaceId ?? null;
+    const result = await this.database.run(
+      "UPDATE communication_notifications SET status = 'read', updated_at = ? WHERE id = ? AND organization_id = ? AND ((workspace_id IS NULL AND ? IS NULL) OR workspace_id = ?) AND recipient_reference = ?",
+      now,
+      id,
+      organizationId,
+      workspaceId,
+      workspaceId,
+      recipient,
+    );
+    if ((result.meta?.changes ?? 0) === 0) return null;
+    return this.getNotification(context, id);
+  }
+
   async setNotificationStatus(context: RequestContext, id: EntityId, status: CommunicationMessageStatus, now: string): Promise<NotificationRecord> {
     const current = await this.getNotification(context, id);
     if (!current) throw new DatabaseError("Communication notification not found");

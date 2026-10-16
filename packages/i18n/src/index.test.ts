@@ -14,9 +14,39 @@ describe("@qooqnos/i18n", () => {
     expect(translations.ar["ui.tellNeed"]).toBe("أخبر ققنوس بما تحتاج");
   });
 
+  it("localizes compare labels and product attributes for all supported locales", () => {
+    expect(translations.en["socialCommercePage.compareHeadline"]).toBe("Choose confidently with a clear comparison");
+    expect(translations.en["socialCommercePage.attributeBrand"]).toBe("Brand");
+    expect(translations.ar["socialCommercePage.attributeBrand"]).toBe("العلامة التجارية");
+    expect(translations.en["socialCommercePage.compareCountLabel"]).toBe("Compare {{count}} products");
+  });
+
+  it("keeps checkout-unavailable copy honest and translated", () => {
+    expect(translations.fa["common.checkoutNotConnectedTitle"]).toBe("پرداخت امن هنوز متصل نشده است.");
+    expect(translations.en["common.checkoutNotConnectedTitle"]).toBe("Secure checkout is not connected yet.");
+    expect(translations.ar["common.checkoutNotConnectedTitle"]).toBe("لم يتم ربط الدفع الآمن بعد.");
+    expect(translateUiText("پرداخت امن هنوز متصل نشده است.", "en")).toBe("Secure checkout is not connected yet.");
+    expect(translateUiText("پرداخت امن هنوز متصل نشده است.", "ar")).toBe("لم يتم ربط الدفع الآمن بعد.");
+    expect(translateUiText("مجموع تقریبی اقلام محلی", "en")).toBe("Estimated local item subtotal");
+    expect(translateUiText("مجموع تقریبی اقلام محلی", "ar")).toBe("المجموع التقديري للعناصر المحلية");
+  });
+
   it("translates shared UI text from the canonical dictionary", () => {
     expect(translateUiText("نیازت را بگو", "en")).toBe("Tell Phoenix what you need");
+    expect(translations.en["common.addProductOrService"]).toBe("Add a product or service");
+    expect(translations.ar["common.addProductOrService"]).toBe("إضافة منتج أو خدمة");
+    expect(translations.fa["socialCommercePage.messagesTitle"]).toBe("پیام‌ها و گفت‌وگوها");
+    expect(translations.en["socialCommercePage.messagesTitle"]).toBe("Messages and conversations");
+    expect(translations.ar["socialCommercePage.messagesTitle"]).toBe("الرسائل والمحادثات");
+    expect(translations.en["socialCommercePage.messagesListUnavailableTitle"]).toBe("The conversation list is not available in this view yet.");
+    expect(translateUiText("افزودن کالا یا خدمت", "en")).toBe("Add a product or service");
+    expect(translateUiText("افزودن کالا یا خدمت", "ar")).toBe("إضافة منتج أو خدمة");
     expect(translateUiText("نیازت را بگو", "ar")).toBe("أخبر ققنوس بما تحتاج");
+    expect(translateUiText("برای ثبت معامله، اول عرضه را کامل کن", "en")).toBe("Complete the offer before starting a transaction");
+    expect(translateUiText("برای ثبت معامله، اول عرضه را کامل کن", "ar")).toBe("أكمل العرض قبل بدء المعاملة");
+    expect(translateUiText("توصیفت را بنویس؛ ققنوس ساختار می‌دهد", "en")).toBe("Describe your offer; Phoenix structures it.");
+    expect(translateUiText("توصیفت را بنویس؛ ققنوس ساختار می‌دهد", "ar")).toBe("اكتب وصف العرض؛ سيُنظّم ققنوس التفاصيل.");
+    expect(translateUiText("از توضیح خام تا انتشار", "en")).toBe("From raw description to publication");
     expect(translateUiText("Tell Phoenix what you need", "fa")).toBe("نیازت را بگو");
     expect(translateUiText("أخبر ققنوس بما تحتاج", "en")).toBe("Tell Phoenix what you need");
     expect(translateUiText("متن ناشناخته", "en")).toBe("متن ناشناخته");

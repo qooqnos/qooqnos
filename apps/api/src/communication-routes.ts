@@ -134,6 +134,23 @@ export function registerCommunicationRoutes(
   });
 
   router.register({
+    method: "POST",
+    path: "/api/v1/notifications/:notificationId/read",
+    module: "communication",
+    operation: "communication.notification.read",
+    requireAuthentication: true,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const notification = await service.markOwnNotificationRead(
+        context,
+        brandId<"EntityId">(requiredParam(params.notificationId, context.requestId)),
+      );
+      return json({ data: notification }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "GET",
     path: "/api/v1/communications/preferences",
     module: "communication",

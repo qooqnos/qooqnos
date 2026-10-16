@@ -41,22 +41,14 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Build web assets
-        run: npm --workspace=@qooqnos/web run build
+        run: npm run build
 
-      - name: Materialize workspace runtime artifacts for Wrangler
-        shell: bash
+      - name: Verify workspace runtime artifacts for Wrangler
         run: |
-          set +e
-          npm run build
-          build_status=$?
-          set -e
           test -f packages/core/dist/index.js
           test -f packages/database/dist/index.js
           test -f packages/runtime/dist/index.js
           test -f packages/seo/dist/index.js
-          if [ "$build_status" -ne 0 ]; then
-            echo "Monorepo typecheck reports existing errors; required runtime artifacts were emitted, so preview bundling can continue."
-          fi
 
       - name: Deploy web preview Worker
         env:

@@ -219,4 +219,124 @@ describe("CommunicationRepository", () => {
   });
 
 
+  it("marks a notification read only for its authenticated recipient in the current tenant/workspace", async () => {
+    let status = "delivered";
+    let lastSql = "";
+    let lastBindings: readonly unknown[] = [];
+    let updateSql = "";
+    let updateBindings: readonly unknown[] = [];
+    const row = {
+      id: "notice-1",
+      organizationId: "tenant-1",
+      workspaceId: "workspace-1",
+      recipientReference: "user-1",
+      intent: "booking.confirmed",
+      channel: "in_app",
+      templateReference: null,
+      templateVersion: null,
+      locale: "en",
+      variablesJson: "{}",
+      priority: "high",
+      get status() { return status; },
+      idempotencyKey: "notice-key-1",
+      scheduledAt: null,
+      expiresAt: null,
+      policyVersion: "1",
+      lastPolicyEvaluatedAt: "2026-10-16T00:00:00.000Z",
+      createdAt: "2026-10-16T00:00:00.000Z",
+      get updatedAt() { return status === "read" ? "2026-10-16T00:01:00.000Z" : "2026-10-16T00:00:00.000Z"; },
+    };
+    const statement: D1PreparedStatementLike = {
+      bind(...params: readonly unknown[]) {
+        lastBindings = params;
+        if (lastSql.startsWith("UPDATE communication_notifications SET status = 'read'")) {
+          updateBindings = params;
+        }
+        return this;
+      },
+      async first<T>() { return row as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() {
+        if (lastSql.startsWith("UPDATE communication_notifications SET status = 'read'")) {
+          updateSql = lastSql;
+          status = "read";
+          return { success: true, meta: { changes: 1 } };
+        }
+        return { success: true, meta: { changes: 1 } };
+      },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql) { lastSql = sql; return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CommunicationRepository(new D1Database(raw));
+    const result = await repository.markNotificationReadForRecipient(
+      context(),
+      brandId<"EntityId">("notice-1"),
+      "user-1",
+      "2026-10-16T00:01:00.000Z",
+    );
+
+    expect(result?.status).toBe("read");
+    expect(updateSql).toContain("organization_id = ?");
+    expect(updateSql).toContain("recipient_reference = ?");
+    expect(updateBindings).toEqual([
+      "2026-10-16T00:01:00.000Z",
+      "notice-1",
+      "tenant-1",
+      "workspace-1",
+      "workspace-1",
+      "user-1",
+    ]);
+    expect(lastBindings).toEqual(["notice-1", "tenant-1", "workspace-1"]);
+  });
+
+  it("does not update a notification belonging to another recipient", async () => {
+    let lastSql = "";
+    let writes = 0;
+    const row = {
+      id: "notice-private",
+      organizationId: "tenant-1",
+      workspaceId: "workspace-1",
+      recipientReference: "user-1",
+      intent: "booking.confirmed",
+      channel: "in_app",
+      templateReference: null,
+      templateVersion: null,
+      locale: "en",
+      variablesJson: "{}",
+      priority: "normal",
+      status: "delivered",
+      idempotencyKey: "notice-private-key",
+      scheduledAt: null,
+      expiresAt: null,
+      policyVersion: "1",
+      lastPolicyEvaluatedAt: null,
+      createdAt: "2026-10-16T00:00:00.000Z",
+      updatedAt: "2026-10-16T00:00:00.000Z",
+    };
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return row as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { writes += 1; return { success: true, meta: { changes: 1 } }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql) { lastSql = sql; return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CommunicationRepository(new D1Database(raw));
+    const result = await repository.markNotificationReadForRecipient(
+      context(),
+      brandId<"EntityId">("notice-private"),
+      "user-2",
+      "2026-10-16T00:01:00.000Z",
+    );
+
+    expect(result).toBeNull();
+    expect(writes).toBe(0);
+    expect(lastSql).toContain("SELECT");
+  });
+
+
 });
