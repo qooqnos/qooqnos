@@ -3319,3 +3319,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Clicking the already-active row no longer starts a second overlapping inbox/thread request. This prevents unnecessary thread replacement and keeps the composer/button lifecycle stable.
 - Selecting a different conversation still loads the canonical thread as before. Message sending remains routed through the authenticated Communication API; the UI does not create local fake messages.
 - Verification: CI, Phoenix verification, and browser E2E are required on this commit before merge.
+
+
+
+## 2026-10-17 — Stable message-send delegation (follow-up)
+
+- Built on the main-branch fix that prevents reloading the already-selected conversation. Send-button clicks are now delegated from the persistent `#messages-thread` host, so asynchronous replacement of the composer cannot remove the active handler.
+- The visible composer keeps its conversation reference in a non-visible form data attribute. Submission uses that current form context before the global selected-conversation fallback.
+- Click, submit, and Ctrl/Meta+Enter share one guarded request function. Empty submissions focus the text area; missing conversation context displays an inline error instead of failing silently.
+- The required E2E remains unchanged: one real POST to the Communication API, refreshed canonical message history, and no locally fabricated messages.
