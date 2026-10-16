@@ -7278,11 +7278,17 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
 
 function formatPublicMoney(amountMinor: number, currency: string): string {
   try {
-    const formatter = new Intl.NumberFormat("fa-IR", { style: "currency", currency });
+    const language = localStorage.getItem("qooqnos.locale") ?? "fa";
+    const locale = language === "fa" ? "fa-IR" : language === "ar" ? "ar" : "en-GB";
+    const formatter = new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      currencyDisplay: "name",
+    });
     const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 0;
     return formatter.format(amountMinor / (10 ** fractionDigits));
   } catch {
-    return String(amountMinor) + " " + currency;
+    return String(amountMinor);
   }
 }
 function compactId(value?: string): string {
