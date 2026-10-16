@@ -703,7 +703,7 @@ const notificationsEn = await page.locator(".phoenix-reset-notifications-page").
 assert.ok(notificationsEn.includes("Updates that matter"));
 assert.ok(notificationsEn.includes("Booking confirmed"));
 assert.ok(notificationsEn.includes("Mark as read"), "Initial notification should be unread before the user marks it read.");
-assert.ok(notificationsEn.includes("Read"));
+assert.ok(notificationsEn.includes("Delivered"));
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='ar']").click();
 await page.locator(".phoenix-reset-notification-item strong").filter({ hasText: "تم تأكيد الحجز" }).waitFor();
