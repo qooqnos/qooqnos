@@ -3192,3 +3192,15 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added Persian/English/Arabic auth copy and E2E checks that the public header has one sign-up action, exposes no public persona switcher, and the auth choice screen contains no seller registration track.
 - The current auth API supports mobile OTP for this primary entry; email registration is not available in these route contracts and is not presented as an available method in this screen.
 - Verify all CI and browser E2E checks on the current branch head before accepting the change.
+
+
+## 2026-10-16 — Social commerce reset verification checkpoint
+
+- Fixed the unclosed CSS gradient on the redesigned seller welcome surface.
+- Updated unit and acceptance assertions to match the approved one-account registration flow: continue with mobile, then enable selling from the same profile; separate seller sign-up is not offered in the initial choice screen.
+- Verification passed on commit `bb42f776c1fe8bf6d230470db68a826377d4d727`:
+  - CI: https://github.com/qooqnos/qooqnos/actions/runs/38932203211
+  - Phoenix verification: https://github.com/qooqnos/qooqnos/actions/runs/38932203286
+  - Phoenix web UI verification / browser smoke: https://github.com/qooqnos/qooqnos/actions/runs/38932202993
+- The Markdown design decision remains `docs/PHOENIX_SOCIAL_COMMERCE_INTERFACE_RESET.md`. The active implementation is on `feat/social-commerce-ui-reset` and the pull request is still draft: https://github.com/qooqnos/qooqnos/pull/11.
+- Scope note: canonical production checkout/payment integration is still not claimed complete; the current redesigned cart/checkout screens are honest review-only surfaces unless and until real order/payment APIs are wired and verified.
