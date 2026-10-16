@@ -39,7 +39,9 @@
     "backToCart": "العودة إلى السلة",
     "continueDiscovering": "مواصلة استكشاف المنتجات والخدمات",
     "continueToCheckoutReview": "المتابعة إلى مراجعة الدفع",
-    "add": "إضافة"
+    "add": "إضافة",
+    "cartTotalByCurrency": "الإجماليات حسب العملة",
+    "cartCurrenciesSeparateNotice": "تُعرض العملات المختلفة كلٌّ على حدة."
   },
   "nav": {
     "home": "الرئيسية",
@@ -2274,6 +2276,9 @@
     "messagesSending": "جارٍ الإرسال…",
     "messagesSendError": "لم تُرسل الرسالة. حاول مرة أخرى.",
     "messagesSendSuccess": "تم إرسال الرسالة.",
-    "messagesSignInToRead": "سجّل الدخول لعرض محادثاتك."
+    "messagesSignInToRead": "سجّل الدخول لعرض محادثاتك.",
+    "addToReviewCart": "إضافة إلى سلة المراجعة",
+    "addedToReviewCartToast": "أُضيف العنصر إلى سلة المراجعة المحلية؛ الدفع غير متصل بعد.",
+    "reviewCartAddError": "تعذرت إضافة هذا العرض إلى سلة المراجعة."
   }
 }
