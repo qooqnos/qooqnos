@@ -204,3 +204,12 @@ This is intentional honesty, not a claim that checkout is complete. Real purchas
 ## 12. Comparison is part of the multilingual social flow
 
 The comparison screen uses the same `socialCommercePage` dictionary as the feed. The heading, minimum-selection state, product attributes, row labels, item counts, remove/clear actions, and next-step links must be localized in Persian, English, and Arabic. Raw backend identifiers such as `product` and `service` must be presented as human-readable localized labels. Missing fields remain explicitly missing rather than inferred.
+
+
+## ۱۲. اجرای صندوق پیام‌ها و گام‌های بعدی — ۲۰۲۶-۱۰-۱۶
+
+صفحهٔ پیام‌ها از نظر ظاهر به یک صندوق دو بخشی تبدیل شده است: فهرست گفت‌وگوها در سمت کناری و سطح اصلی برای شروع ارتباط یا دیدن زمینهٔ سفارش. در صورت ورود از یک سفارش، شناسهٔ سفارش یا موضوع حفظ می‌شود تا مسیر کاربر قطع نشود.
+
+این نسخه **اتصال زندهٔ پیام‌ها نیست**. API فعلی Communication مسیرهای ایجاد مکالمه و ارسال پیام را دارد، اما endpoint مجاز برای فهرست مکالمه‌ها و خواندن پیام‌ها هنوز موجود نیست. مرحلهٔ بعدی باید قرارداد مشارکت‌کنندگان، محدودهٔ سازمان/فضای کاری، مجوز مشاهدهٔ مکالمه و endpointهای خواندن را تعریف کند؛ پس از آن می‌توان صندوق را به دادهٔ واقعی وصل کرد.
+
+تا آن زمان، رابط باید صریحاً بگوید که فهرست هنوز فعال نیست و نباید پیام آزمایشی، فرستندهٔ ساختگی، تعداد خوانده‌نشده یا موفقیت ارسال نمایش دهد. همچنین checkout همچنان پیش‌نمایش است و نباید پرداخت یا سفارش واقعی را القا کند.

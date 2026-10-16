@@ -3130,3 +3130,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Checkout now always renders the explicit review-only surface until canonical checkout and payment are connected. No persona can reach the old sample payment flow from the customer-facing checkout route.
 - Browser E2E now deliberately selects the business persona before visiting `/checkout` and verifies the legacy stepper/order action is absent while the no-payment warning remains visible.
 - This is a guardrail, not a claim that production payment is complete.
+
+
+## 2026-10-16 — Messages inbox shell, locale coverage, and contextual handoff
+
+- Rebuilt `/messages` from a centered placeholder into a responsive two-panel inbox shell that follows the new social-commerce design system.
+- Added a clear inbox state and a discovery start panel; no fake conversation rows, sender identities, unread counters, timestamps, or delivery status are fabricated.
+- Preserved an order/topic reference through `?order=` and `?topic=` and displayed it safely as context. This does not claim that a conversation is loaded or that a message has been sent.
+- Added canonical Persian, English and Arabic copy under `socialCommercePage`, regenerated `apps/web/src/i18n-runtime.ts`, and added translation and browser smoke coverage.
+- API limitation is explicit: Communication currently offers create/send operations, but no read/list endpoints for the inbox. Before implementing a live list/detail view, add authorized participant-scoped APIs for listing conversations and reading messages. Do not query across tenants or expose conversations by guessable IDs.
+- Validation to follow: current CI, Phoenix verification, and web UI E2E for the latest commit. Checkout remains review-only until canonical checkout/payment is fully integrated.
