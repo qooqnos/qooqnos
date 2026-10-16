@@ -120,10 +120,12 @@ describe("Phoenix Unified Experience (apps/web/src/phoenix-experience.ts)", () =
     expect(renderConsumerHome()).toContain("هر چی می‌خوای بگو تا ققنوس برات پیداش کنه");
     expect(renderConsumerProductDetails()).toContain("جزئیات محصول");
     expect(renderConsumerProductDetails()).toContain("افزودن به سبد خرید");
-    expect(renderConsumerCart()).toContain("سبد خرید");
-    expect(renderConsumerCart()).toContain("مجموع تقریبی اقلام محلی");
-    expect(renderConsumerCart()).toContain("پیش‌نمایش سبد محلی");
-    expect(renderConsumerCart()).toContain("هزینهٔ ارسال پس از بررسی سفارش مشخص می‌شود.");
+    const emptyCart = renderConsumerCart();
+    expect(emptyCart).toContain("سبد خرید");
+    expect(emptyCart).toContain("سبد خرید شما خالی است");
+    expect(emptyCart).toContain("پیش‌نمایش سبد محلی");
+    expect(emptyCart).not.toContain("مجموع تقریبی اقلام محلی");
+    expect(emptyCart).not.toContain("بسته هوشمند سازمانی ققنوس");
     expect(renderConsumerPayment()).toContain("پرداخت امن هنوز متصل نشده است.");
     expect(renderConsumerPayment()).toContain("سفارشی ثبت نمی‌شود و مبلغی کسر نخواهد شد.");
     expect(renderConsumerPayment()).toContain("اقلام انتخاب‌شده");
@@ -158,6 +160,9 @@ describe("Phoenix Unified Experience (apps/web/src/phoenix-experience.ts)", () =
       currency: "ریال",
       quantity: 2,
     });
+    expect(renderConsumerCart()).toContain("میز چوبی");
+    expect(renderConsumerCart()).toContain("ریال");
+    expect(renderConsumerCart()).toContain("مجموع تقریبی اقلام محلی");
     saveCartItems([]);
   });
 
