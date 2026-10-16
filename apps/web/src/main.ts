@@ -540,12 +540,16 @@ function getInitialLanguage(): Language {
 
 
 function applyLanguageToNode(root: Node, language: Language): void {
+  // Identifiers, codes, and user-provided references must remain byte-for-byte
+  // stable when the interface language changes.
+  if (root instanceof Element && root.closest('[translate="no"], [data-no-translate]')) return;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const nodes: Text[] = [];
   let node: Node | null;
   while ((node = walker.nextNode())) nodes.push(node as Text);
 
   nodes.forEach((textNode) => {
+    if (textNode.parentElement?.closest('[translate="no"], [data-no-translate]')) return;
     const value = textNode.nodeValue ?? "";
     if (!value.trim()) return;
     const translated = translateUiText(value, language);
@@ -563,6 +567,7 @@ function applyLanguageToNode(root: Node, language: Language): void {
 
   if (root instanceof Element || root instanceof Document) {
     root.querySelectorAll<HTMLElement>("[placeholder], [aria-label], [title]").forEach((element) => {
+      if (element.closest('[translate="no"], [data-no-translate]')) return;
       (["placeholder", "aria-label", "title"] as const).forEach((attribute) => {
         const value = element.getAttribute(attribute);
         if (!value) return;
@@ -4417,7 +4422,7 @@ function renderMessages(): string {
   const contextPanel = contextId
     ? '<section class="phoenix-reset-message-context">' +
         '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesContextTitle") + '</span>' +
-        '<h2>' + contextLabel + ' <bdi dir="ltr" class="phoenix-reset-message-context-id">' + escapeHtml(contextId) + '</bdi></h2>' +
+        '<h2>' + contextLabel + ' <bdi dir="ltr" translate="no" data-no-translate class="phoenix-reset-message-context-id">' + escapeHtml(contextId) + '</bdi></h2>' +
         '<p>' + socialCommerceUi("messagesContextBody") + '</p>' +
         '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("messagesOrdersAction") + ' <span aria-hidden="true">←</span></a>' +
       '</section>'

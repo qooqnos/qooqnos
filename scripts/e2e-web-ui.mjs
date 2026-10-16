@@ -516,6 +516,7 @@ assert.ok(!messagesText.includes("سفارش کالا رسید و تأیید ش�
 await page.goto(baseURL + "/messages?order=order-e2e-context");
 const contextualMessages = await page.locator(".phoenix-reset-messages-page").innerText();
 assert.equal(await page.locator(".phoenix-reset-message-context-id").textContent(), "order-e2e-context");
+assert.equal(await page.locator(".phoenix-reset-message-context-id").getAttribute("translate"), "no");
 assert.ok(contextualMessages.includes("سفارش"));
 assert.ok(contextualMessages.includes("هیچ پیامی نمایش یا ارسال نمی‌شود"));
 await page.goto(baseURL + "/messages");

@@ -3140,3 +3140,10 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added canonical Persian, English and Arabic copy under `socialCommercePage`, regenerated `apps/web/src/i18n-runtime.ts`, and added translation and browser smoke coverage.
 - API limitation is explicit: Communication currently offers create/send operations, but no read/list endpoints for the inbox. Before implementing a live list/detail view, add authorized participant-scoped APIs for listing conversations and reading messages. Do not query across tenants or expose conversations by guessable IDs.
 - Validation to follow: current CI, Phoenix verification, and web UI E2E for the latest commit. Checkout remains review-only until canonical checkout/payment is fully integrated.
+
+
+## 2026-10-16 — Prevent automatic translation of reference identifiers
+
+- The browser translation observer was translating part of a Latin order reference inside the RTL message context. References and IDs are not user-facing prose and must never be rewritten by a locale change.
+- Added support for `translate="no"` and `data-no-translate` subtrees in the shared DOM translation pass, and marked the context identifier explicitly.
+- E2E now asserts that the raw order reference remains unchanged after locale rendering and that the element is excluded from translation.
