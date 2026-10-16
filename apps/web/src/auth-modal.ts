@@ -257,39 +257,25 @@ function renderCurrentStepHtml(): string {
 // ----------------------------------------------------------------------------
 export function renderChoiceScreen(): string {
   return `
-    <div class="phoenix-auth-choice-view">
+    <div class="phoenix-auth-choice-view phoenix-auth-one-account-view">
       <div class="auth-headings">
         <span class="section-kicker">Phoenix Identity</span>
-        <h2 class="auth-title">${t("auth.registerTitle", "عضویت در ققنوس")}</h2>
-        <p class="auth-subtitle">${t("auth.registerSubtitle", "مسیر مورد نظر خود را برای شروع انتخاب کنید:")}</p>
+        <h2 class="auth-title">${t("auth.oneAccountTitle", "یک حساب برای همهٔ تجربه‌های ققنوس")}</h2>
+        <p class="auth-subtitle">${t("auth.oneAccountSubtitle", "با شمارهٔ موبایل وارد شو یا حساب بساز؛ هر زمان خواستی، فروشندگی را از پروفایل فعال کن.")}</p>
       </div>
-
       <div class="auth-cards-grid">
-        <!-- 1. Standard Platform Registration Track -->
-        <button type="button" class="auth-track-card auth-track-buyer" data-select-track="buyer">
+        <button type="button" class="auth-track-card auth-track-buyer phoenix-auth-one-account-card" data-select-track="buyer">
           <div class="track-icon">✦</div>
           <div class="track-copy">
-            <strong class="track-title">${t("auth.buyerTrackTitle", "ثبت‌نام و استفاده از پلتفرم")}</strong>
-            <span class="track-desc">${t("auth.buyerTrackDesc", "استفاده کامل از خدمات، جستجو، کشف و خرید هوشمند")}</span>
-            <small class="track-hint">${t("auth.buyerTrackHint", "دسترسی مستقیم و آسان به تمامی امکانات پلتفرم")}</small>
+            <strong class="track-title">${t("auth.continueWithMobile", "ادامه با شمارهٔ موبایل")}</strong>
+            <span class="track-desc">${t("auth.oneAccountFlowDescription", "برای شروع فقط شمارهٔ موبایل را تأیید کن و نامت را وارد کن.")}</span>
+            <small class="track-hint">${t("auth.sellerAfterSignIn", "برای عرضهٔ کالا یا خدمت، بعداً فروشندگی را به همین حساب اضافه کن.")}</small>
           </div>
-          <span class="track-arrow">←</span>
-        </button>
-
-        <!-- 2. Seller Registration Track -->
-        <button type="button" class="auth-track-card auth-track-seller" data-select-track="seller">
-          <div class="track-icon">🏪</div>
-          <div class="track-copy">
-            <strong class="track-title">${t("auth.sellerTrackTitle", "ثبت‌نام فروشنده")}</strong>
-            <span class="track-desc">${t("auth.sellerTrackDesc", "ارائه خدمات، فروش محصولات و مدیریت کسب‌وکار")}</span>
-            <small class="track-hint">${t("auth.sellerTrackHint", "برای فعالان، ارائه‌دهندگان کالا یا خدمات و صاحبان کسب‌وکار")}</small>
-          </div>
-          <span class="track-arrow">←</span>
+          <span class="track-arrow" aria-hidden="true">←</span>
         </button>
       </div>
-
       <div class="auth-footer-prompt">
-        <span>${t("auth.alreadyHaveAccount", "قبلاً ثبت‌نام کرده‌اید؟")}</span>
+        <span>${t("auth.alreadyHaveAccount", "قبلاً ثبت‌نام کرده‌ای؟")}</span>
         <button type="button" class="auth-link-button" data-select-track="buyer">${t("auth.signIn", "ورود به حساب")}</button>
       </div>
     </div>

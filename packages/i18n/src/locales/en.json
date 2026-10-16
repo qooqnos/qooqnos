@@ -129,7 +129,12 @@
     "email": "Email",
     "password": "Password",
     "forgotPassword": "Forgot password?",
-    "rememberMe": "Remember me"
+    "rememberMe": "Remember me",
+    "oneAccountTitle": "One account for every Phoenix experience",
+    "oneAccountSubtitle": "Sign in or create an account with your mobile number. You can enable selling from your profile whenever you're ready.",
+    "continueWithMobile": "Continue with mobile number",
+    "oneAccountFlowDescription": "To get started, verify your mobile number and add your name.",
+    "sellerAfterSignIn": "When you're ready to offer products or services, enable selling on this same account."
   },
   "language": {
     "label": "Language",

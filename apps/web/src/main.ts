@@ -1044,62 +1044,28 @@ function renderPublicHeader(): string {
   const auth = getStoredAuth();
   const authenticated = Boolean(auth.token && auth.user);
   const user = auth.user;
-  const persona = getActivePersona();
-
   const authActionsHtml = authenticated && user
     ? `
       <div class="phoenix-header-user-menu" style="display:flex;align-items:center;gap:8px;">
         <a class="profile-chip" href="/profile" data-nav aria-label="${escapeAttr(user.displayName || uiText("حساب من"))}">
-          <span class="avatar">${(user.displayName || "ق")[0]}</span>
+          <span class="avatar">${escapeHtml((user.displayName || "ق").slice(0, 1))}</span>
           <span class="profile-copy">
             <strong>${escapeHtml(user.displayName || uiText("حساب من"))}</strong>
-            <small>${user.role === "seller" ? escapeHtml(user.businessName || "کسب‌وکار") : uiText("حساب کاربری")}</small>
+            <small>${user.role === "seller" ? escapeHtml(user.businessName || uiText("فضای کسب‌وکار")) : uiText("حساب کاربری")}</small>
           </span>
         </a>
-        ${user.role !== "seller" ? `<button type="button" class="button button-outline button-sm" data-activate-seller style="font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;">🏪 ${uiText("فعال‌سازی فروشندگی")}</button>` : ""}
+        ${user.role !== "seller" ? `<button type="button" class="button button-outline button-sm" data-activate-seller style="font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;">＋ ${uiText("فعال‌سازی فروشندگی")}</button>` : ""}
         <button type="button" class="button button-ghost button-sm" data-auth-logout>${uiText("خروج")}</button>
       </div>
     `
     : `
       <div class="phoenix-auth-header-cta" style="display:flex;align-items:center;gap:6px;">
         <button type="button" class="button button-primary phoenix-register-btn" data-open-register aria-label="${uiText("ثبت‌نام و استفاده از پلتفرم")}">
-          <span class="btn-sparkle" aria-hidden="true">✦</span>
-          <span>${uiText("ثبت‌نام")}</span>
-        </button>
-        <button type="button" class="button button-outline button-sm phoenix-seller-register-btn" data-open-seller-register style="font-size:12px;display:flex;align-items:center;gap:4px;">
-          <span aria-hidden="true">🏪</span>
-          <span>${uiText("ثبت‌نام فروشنده")}</span>
+          <span class="btn-sparkle" aria-hidden="true">✦</span><span>${uiText("ثبت‌نام")}</span>
         </button>
         <button type="button" class="button button-ghost phoenix-login-btn" data-open-login>${uiText("ورود")}</button>
       </div>
     `;
-
-  let personaNavHtml = "";
-  if (persona === "individual") {
-    personaNavHtml = `
-      <a href="/" data-nav class="phoenix-nav-pill active">⌂ ${uiText("داشبورد")}</a>
-      <a href="/create" data-nav class="phoenix-nav-pill">📤 ${uiText("آپلود محتوا")}</a>
-      <a href="/transactions" data-nav class="phoenix-nav-pill">↔ ${uiText("معاملات")}</a>
-      <a href="/welcome" data-nav class="phoenix-nav-pill">✦ ${uiText("شروع و آشنایی")}</a>
-    `;
-  } else if (persona === "business") {
-    personaNavHtml = `
-      <a href="/" data-nav class="phoenix-nav-pill active">▦ ${uiText("پنل مدیریت")}</a>
-      <a href="/business/create" data-nav class="phoenix-nav-pill">✦ ${uiText("تولید محتوا AI")}</a>
-      <a href="/business/deals" data-nav class="phoenix-nav-pill">🤝 ${uiText("معاملات تجاری")}</a>
-      <a href="/business/team" data-nav class="phoenix-nav-pill">👥 ${uiText("مدیریت تیم")}</a>
-      <a href="/business/organization" data-nav class="phoenix-nav-pill">🏢 ${uiText("اطلاعات سازمان")}</a>
-    `;
-  } else {
-    personaNavHtml = `
-      <a href="/" data-nav class="phoenix-nav-pill active">🛍️ ${uiText("بازارگاه و کشف")}</a>
-      <a href="/cart" data-nav class="phoenix-nav-pill">🛒 ${uiText("سبد خرید")}</a>
-      <a href="/consumer/payment" data-nav class="phoenix-nav-pill">💳 ${uiText("پرداخت")}</a>
-      <a href="/messages" data-nav class="phoenix-nav-pill">✉ ${uiText("پیام‌ها")}</a>
-      <a href="/loyalty" data-nav class="phoenix-nav-pill">♢ ${uiText("وفاداری")}</a>
-    `;
-  }
-
   return `
     <header class="phoenix-public-header phoenix-unified-header">
       <div class="phoenix-public-header-inner container-wide">
@@ -1107,14 +1073,10 @@ function renderPublicHeader(): string {
           <span class="brand-mark phoenix-brand-mark" aria-hidden="true"><img src="/phoenix-mark.svg?v=2" alt="" /></span>
           <span><strong>ققنوس</strong><small>Phoenix Intelligence</small></span>
         </a>
-
-        <div class="phoenix-header-center-area">
-          ${renderPersonaSwitcher()}
-          <nav class="phoenix-persona-quick-nav" aria-label="${uiText("مسیرهای نقش فعال")}">
-            ${personaNavHtml}
-          </nav>
-        </div>
-
+        <nav class="phoenix-public-nav" aria-label="${uiText("مسیرهای اصلی ققنوس")}">
+          <a href="/discover?tab=explore" data-nav>${uiText("اکسپلور")}</a>
+          <a href="/business/welcome" data-nav>${uiText("برای عرضه‌کنندگان")}</a>
+        </nav>
         <div class="phoenix-public-actions">
           ${authActionsHtml}
           ${renderLanguageSwitcher()}
@@ -7829,7 +7791,7 @@ function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLElement>("[data-open-seller-register]").forEach((button) => {
     button.addEventListener("click", (e) => {
       e.preventDefault();
-      openAuthModal({ initialMode: "seller_mobile" });
+      openAuthModal({ initialMode: "choice" });
     });
   });
   document.querySelectorAll<HTMLElement>("[data-activate-seller]").forEach((button) => {
@@ -7839,7 +7801,7 @@ function bindGlobalEvents(): void {
       if (auth.token && auth.user) {
         openAuthModal({ initialMode: "seller_business" });
       } else {
-        openAuthModal({ initialMode: "seller_mobile" });
+        openAuthModal({ initialMode: "choice" });
       }
     });
   });
@@ -8091,7 +8053,7 @@ async function generateDraft(): Promise<void> {
 
   const token = sessionStorage.getItem(STORAGE.accessToken);
   if (!token) {
-    openAuthModal({ initialMode: "seller_mobile" });
+    openAuthModal({ initialMode: "choice" });
     showToast("برای استفاده از استودیوی فروشنده، لطفاً ثبت‌نام کنید یا وارد شوید.");
     return;
   }
@@ -8377,7 +8339,7 @@ function stringField(value: Record<string, unknown>, key: string): string | unde
 function openBusinessCreatePanel(): void {
   const auth = getStoredAuth();
   if (!sessionStorage.getItem(STORAGE.accessToken) || !auth.user) {
-    openAuthModal({ initialMode: "seller_mobile" });
+    openAuthModal({ initialMode: "choice" });
     showToast("برای ایجاد کسب‌وکار، لطفاً به عنوان فروشنده ثبت‌نام کنید یا وارد شوید.");
     return;
   }

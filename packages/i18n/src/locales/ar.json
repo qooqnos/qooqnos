@@ -129,7 +129,12 @@
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "forgotPassword": "هل نسيت كلمة المرور؟",
-    "rememberMe": "تذكرني"
+    "rememberMe": "تذكرني",
+    "oneAccountTitle": "حساب واحد لجميع تجارب ققنوس",
+    "oneAccountSubtitle": "سجّل الدخول أو أنشئ حساباً برقم هاتفك. يمكنك تفعيل البيع من ملفك الشخصي عندما تكون مستعداً.",
+    "continueWithMobile": "المتابعة برقم الهاتف",
+    "oneAccountFlowDescription": "للبدء، أكّد رقم هاتفك وأضف اسمك.",
+    "sellerAfterSignIn": "عندما ترغب في تقديم منتجات أو خدمات، فعّل البيع في الحساب نفسه."
   },
   "language": {
     "label": "اللغة",

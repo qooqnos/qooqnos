@@ -830,6 +830,20 @@ await page.reload();
 assert.equal(await page.locator("#setting-notify-sms").isChecked(), true);
 assert.ok((await page.locator(".phoenix-reset-settings-page").innerText()).includes("اتصال ارسال پیامک هنوز فعال نیست"));
 
+await page.goto(baseURL + "/welcome");
+await page.locator(".phoenix-public-header").waitFor();
+assert.equal(await page.locator(".phoenix-public-header [data-open-seller-register]").count(), 0);
+assert.equal(await page.locator(".phoenix-public-header [data-open-register]").count(), 1);
+assert.equal(await page.locator(".phoenix-public-header .phoenix-persona-quick-nav").count(), 0);
+assert.equal(await page.locator(".phoenix-auth-one-account-view").count(), 0);
+await page.locator(".phoenix-public-header [data-open-register]").click();
+await page.locator(".phoenix-auth-one-account-view").waitFor();
+assert.ok((await page.locator(".phoenix-auth-one-account-view").innerText()).includes("یک حساب برای همهٔ تجربه‌های ققنوس"));
+assert.equal(await page.locator(".phoenix-auth-one-account-view [data-select-track]").count(), 2);
+assert.equal(await page.locator(".phoenix-auth-one-account-view [data-select-track='seller']").count(), 0);
+await page.locator(".phoenix-auth-one-account-view [data-select-track='buyer']").first().click();
+await page.locator("#auth-mobile-form").waitFor();
+
 await page.goto(baseURL + "/business/welcome");
 await page.locator(".phoenix-reset-seller-start-page").waitFor();
 const sellerStartText = await page.locator(".phoenix-reset-seller-start-page").innerText();

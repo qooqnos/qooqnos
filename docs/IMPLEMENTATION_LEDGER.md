@@ -3182,3 +3182,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The page uses the shared sign-up/sign-in flow; it explicitly tells users to enable selling from their existing profile rather than create a separate account.
 - Added responsive reuse of the approved start composition with dedicated Persian/English/Arabic seller copy and E2E checks for the one-account rule and removal of tender claims.
 - Run all CI, Phoenix verification, and browser E2E checks on the current head before accepting this slice.
+
+
+## 2026-10-16 — Registration entry unified to one account
+
+- Removed the separate "seller sign-up" CTA and public persona switcher from the public header. Public navigation now consistently offers Explore, seller information, common sign-up/sign-in, language, and theme.
+- Replaced the initial auth modal's buyer/seller fork with one account path. The first step is mobile verification and name completion; users are told they can add selling later to the same account.
+- Unauthenticated seller activation and legacy `data-open-seller-register` entries now start the common account flow. Authenticated seller activation still uses the existing authenticated seller-upgrade endpoint and onboarding form.
+- Added Persian/English/Arabic auth copy and E2E checks that the public header has one sign-up action, exposes no public persona switcher, and the auth choice screen contains no seller registration track.
+- The current auth API supports mobile OTP for this primary entry; email registration is not available in these route contracts and is not presented as an available method in this screen.
+- Verify all CI and browser E2E checks on the current branch head before accepting the change.
