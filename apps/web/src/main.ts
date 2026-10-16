@@ -7281,13 +7281,6 @@ function openSimpleFormDialog(title:string,kicker:string,fields:Array<{id:string
 }
 
 function renderProductStudio(): string {
-  let initialOfferDescription = "";
-  try {
-    initialOfferDescription = localStorage.getItem("phoenix.pending-offer-description") ?? "";
-    if (initialOfferDescription) localStorage.removeItem("phoenix.pending-offer-description");
-  } catch {
-    initialOfferDescription = "";
-  }
   const ps = (key: string, variables?: Readonly<Record<string, string>>): string => escapeHtml(productStudioUi(key, variables));
   const psTitle = (key: string): string => productStudioUi(key);
   const steps: readonly (readonly [string, string])[] = [
@@ -7323,7 +7316,7 @@ function renderProductStudio(): string {
           <input id="studio-business" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.business) ?? "")}" />
           <input id="studio-workspace" type="hidden" value="${escapeAttr(localStorage.getItem(STORAGE.workspace) ?? "")}" />
           <label class="field-label phoenix-reset-studio-label" for="studio-text">${ps("productDescription")}</label>
-          <textarea id="studio-text" rows="8" placeholder="${escapeAttr(productStudioUi("productPlaceholder"))}">${escapeHtml(initialOfferDescription)}</textarea>
+          <textarea id="studio-text" rows="8" placeholder="${escapeAttr(productStudioUi("productPlaceholder"))}"></textarea>
 
           <div class="phoenix-reset-studio-image-heading">
             <span class="phoenix-reset-studio-image-icon" aria-hidden="true">▧</span>

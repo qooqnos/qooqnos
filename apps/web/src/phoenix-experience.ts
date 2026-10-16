@@ -2168,7 +2168,7 @@ export function bindPhoenixExperienceEvents(container: HTMLElement, onNavigate: 
         return;
       }
       try {
-        localStorage.setItem("phoenix.pending-offer-description", description);
+        sessionStorage.setItem("phoenix-social-create-draft", description);
       } catch {
         showToast(ui("ذخیرهٔ موقت متن در این مرورگر ممکن نیست."));
         return;

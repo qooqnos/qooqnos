@@ -3081,7 +3081,7 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 ## 2026-10-16 — Free-form Create Details handoff
 
 - Removed hard-coded sample description and sample price from `/create/details`.
-- The page now collects a free-form description and hands it to Product Studio through a one-time local handoff key; Product Studio consumes and clears it on entry.
+- The page now collects a free-form description and hands it to Product Studio through the existing one-time `sessionStorage` key used by the Create modal; the shared Studio binder consumes and clears it on entry.
 - The form no longer proceeds to the old deal-selection flow or claims success. Price/attributes are added only in the reviewed offer flow.
 - Added browser E2E assertions for an empty initial description, absence of fake price, and text handoff into the Studio.
 
