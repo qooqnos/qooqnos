@@ -3311,3 +3311,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Replaced the single document-level click delegate with a shared guarded submit handler bound to the message button each time a thread is rendered. This matches the app's asynchronous thread refresh lifecycle and preserves the no-double-submit guard.
 - Retained the real Communication API request, explicit error/success handling, and message reload from canonical conversation data. No local fake message is inserted by the UI.
 - Verification is required on the current PR before merge.
+
+
+
+## 2026-10-17 — Stable message-send delegation
+
+- Fixed a main-branch browser E2E failure where the refreshed Messages composer appeared correctly but a click produced no Communication POST.
+- Send-button click handling now lives on the persistent `#messages-thread` host instead of relying only on the short-lived button node created during an async render. Every rendered composer carries its conversation reference as a DOM data attribute (not visible copy).
+- The click, form-submit, and Ctrl/Meta+Enter paths use the same guarded submit function. It resolves the conversation from the current form first, reducing dependence on mutable global selection state, and keeps the existing in-flight duplicate guard.
+- The E2E requirement remains unchanged: a real POST must be captured, the message must come back from the canonical thread read, and exactly one send request must be observed.
