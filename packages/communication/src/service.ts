@@ -70,7 +70,10 @@ export class CommunicationService {
     );
   }
 
-  async createConversation(context: RequestContext, input: { readonly customerId?: EntityId | undefined }) {
+  async createConversation(context: RequestContext, input: {
+    readonly customerId?: EntityId | undefined;
+    readonly workspaceId?: EntityId | undefined;
+  }) {
     await this.options.authorization.assert({
       context,
       permission: "communication.conversation.manage",
@@ -80,6 +83,7 @@ export class CommunicationService {
     return this.options.repository.createConversation(context, {
       id: this.options.id(),
       ...(input.customerId ? { customerId: input.customerId } : {}),
+      ...(input.workspaceId ? { workspaceId: input.workspaceId } : {}),
       now: this.options.now(),
     });
   }

@@ -240,10 +240,10 @@ export class CommunicationRepository extends Repository {
   }
 
   async createConversation(context: RequestContext, input: {
-    id: EntityId; customerId?: EntityId; now: string;
+    id: EntityId; customerId?: EntityId; workspaceId?: EntityId; now: string;
   }): Promise<ConversationRecord> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
-    const workspaceId = context.workspaceId ?? null;
+    const workspaceId = input.workspaceId ?? context.workspaceId ?? null;
     await this.database.run(
       "INSERT INTO communication_conversations (id, organization_id, workspace_id, customer_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, 'open', ?, ?)",
       input.id, organizationId, workspaceId, input.customerId ?? null, input.now, input.now,
@@ -251,6 +251,25 @@ export class CommunicationRepository extends Repository {
     const record = await this.getConversation(context, input.id);
     if (!record) throw new DatabaseError("Communication conversation not found after creation");
     return record;
+  }
+
+  async findOpenConversationForCustomerWorkspace(
+    context: RequestContext,
+    customerId: EntityId,
+    workspaceId: EntityId,
+  ): Promise<ConversationRecord | null> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    return this.database.first<ConversationRecord>(
+      `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
+              customer_id AS customerId, status, created_at AS createdAt, updated_at AS updatedAt
+       FROM communication_conversations
+       WHERE organization_id = ? AND workspace_id = ? AND customer_id = ? AND status = 'open'
+       ORDER BY updated_at DESC, id DESC
+       LIMIT 1`,
+      organizationId,
+      workspaceId,
+      customerId,
+    );
   }
 
   async listConversationsForActor(context: RequestContext, limit = 50): Promise<readonly ConversationInboxRecord[]> {

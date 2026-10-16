@@ -32,6 +32,28 @@ function database(): D1Database {
 }
 
 describe("BusinessRepository", () => {
+  it("resolves only a published business in an active workspace for conversation routing", async () => {
+    let sql = "";
+    let bound: readonly unknown[] = [];
+    const target = { id: "business-1", organizationId: "tenant-1", workspaceId: "seller-workspace-1" };
+    const statement: D1PreparedStatementLike = {
+      bind(...params: readonly unknown[]) { bound = params; return this; },
+      async first<T>() { return target as T; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(query: string) { sql = query; return statement; },
+      async batch() { return []; },
+    };
+    const repository = new BusinessRepository(new D1Database(raw));
+    const result = await repository.getPublishedConversationTarget(brandId<"EntityId">("business-1"));
+    expect(result).toEqual(target);
+    expect(sql).toContain("b.publication_status = 'published'");
+    expect(sql).toContain("w.status = 'active'");
+    expect(bound).toEqual(["business-1"]);
+  });
+
   it("composes business state, audit and outbox into one atomic command", async () => {
     let captured: AtomicCommandInput<BusinessRecord> | undefined;
     const commands = {

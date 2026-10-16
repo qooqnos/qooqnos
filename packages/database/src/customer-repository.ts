@@ -63,6 +63,15 @@ export class CustomerRepository extends Repository {
     );
   }
 
+  async getByUserId(context: RequestContext, userId: EntityId): Promise<CustomerRecord | null> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    return this.database.first<CustomerRecord>(
+      "SELECT id, organization_id AS organizationId, user_id AS userId, status, locale, timezone, created_at AS createdAt, updated_at AS updatedAt FROM customers WHERE organization_id = ? AND user_id = ? LIMIT 1",
+      organizationId,
+      userId,
+    );
+  }
+
   async create(context: RequestContext, input: CreateCustomerInput): Promise<CustomerRecord> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     if (input.organizationId !== organizationId) {

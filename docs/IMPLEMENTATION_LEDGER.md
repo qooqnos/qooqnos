@@ -3330,9 +3330,10 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The required E2E remains unchanged: one real POST to the Communication API, refreshed canonical message history, and no locally fabricated messages.
 
 
+## 2026-10-17 — Start seller conversation from a product/service offer
 
-## 2026-10-17 — Stable notification popover action
-
-- Converted the notification popover's mark-read action to a delegated click listener on the persistent overlay root, matching the stable event-handling model used by Messages.
-- Kept the action bound to authenticated `POST /api/v1/notifications/:id/read`; unread/read styling changes only after the canonical API responds successfully.
-- Added focused E2E diagnostics for session presence, button state, popover state, runtime errors, and failed requests if the expected POST is absent.
+- Added authenticated `POST /api/v1/communications/conversations/from-business`. The browser submits only the published business ID; it cannot choose a customer, tenant, or seller workspace.
+- The API authorizes the action first, resolves an active published business and workspace from canonical Business data, and refuses cross-organization targets because the existing Communication model is organization-scoped.
+- The Customer mapping is resolved from the authenticated actor inside the current organization (or created for that actor only); suspended/deactivated mappings cannot initiate new conversations.
+- Reuses an existing open conversation for the same customer and seller workspace before creating one. The returned conversation ID is passed to Messages so the correct thread is selected.
+- Added repository scope tests and Playwright coverage for the product-detail → seller conversation path. Check Build, CI, Phoenix verification, and browser E2E before merging.

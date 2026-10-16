@@ -58,6 +58,26 @@ describe("CustomerRepository", () => {
     expect(statements[0]).toContain("organization_id = ?");
   });
 
+  it("resolves an actor's customer mapping within the current organization only", async () => {
+    let sql = "";
+    let bound: readonly unknown[] = [];
+    const statement: D1PreparedStatementLike = {
+      bind(...params: readonly unknown[]) { bound = params; return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(query: string) { sql = query; return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CustomerRepository(new D1Database(raw));
+    const result = await repository.getByUserId(context(), brandId<"EntityId">("user-1"));
+    expect(result).toBeNull();
+    expect(sql).toContain("organization_id = ? AND user_id = ?");
+    expect(bound).toEqual(["tenant-1", "user-1"]);
+  });
+
   it("rejects invalid preference confidence", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
