@@ -740,6 +740,13 @@ export function renderCreateContentHub(): string {
           <p>${ui("اگر عکس آماده داری، آن را در استودیو اضافه کن تا ققنوس برای شناسایی ویژگی‌ها و تهیهٔ پیش‌نویس کمکت کند.")}</p>
           <a class="button button-ghost" href="/product-studio" data-nav>${ui("ورود به استودیو محصول")} <span aria-hidden="true">←</span></a>
         </article>
+        <article class="phoenix-reset-create-card phoenix-reset-create-need-card">
+          <span class="phoenix-reset-create-icon" aria-hidden="true">⌕</span>
+          <span class="phoenix-reset-section-kicker">${ui("createNeedEyebrow")}</span>
+          <h2>${ui("createNeedTitle")}</h2>
+          <p>${ui("createNeedBody")}</p>
+          <a class="button button-ghost" href="/discover?tab=explore&intent=need" data-nav data-create-need>${ui("createNeedAction")} <span aria-hidden="true">←</span></a>
+        </article>
       </section>
 
       <section class="phoenix-reset-create-steps" aria-label="${ui("مراحل آماده‌سازی عرضه")}">

@@ -824,6 +824,10 @@ function render(): void {
     renderCompareTray();
     renderShortlist();
     void loadSocialState();
+    const discoveryParams = new URLSearchParams(location.search);
+    if (discoveryParams.get("intent") === "need") {
+      document.querySelector<HTMLInputElement>("#discover-query")?.focus({ preventScroll: true });
+    }
   }
   if (route.path === "/compare") {
     document.querySelector<HTMLButtonElement>("[data-clear-compare]")?.addEventListener("click", () => {
