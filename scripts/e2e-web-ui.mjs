@@ -810,6 +810,26 @@ await page.goto(baseURL + "/admin");
 await page.getByText("business.updated").waitFor();
 await page.getByText("seller.product.extract").waitFor();
 
+await page.goto(baseURL + "/account");
+await page.locator(".phoenix-reset-account-page").waitFor();
+await page.locator("[data-language-toggle]").click();
+await page.locator("[data-language-option='fa']").click();
+await page.waitForTimeout(100);
+const accountText = await page.locator(".phoenix-reset-account-page").innerText();
+assert.ok(accountText.includes("همه‌چیز حسابت، یک‌جا"));
+assert.ok(!accountText.includes("Tenant"));
+assert.ok(!accountText.includes("Workspace"));
+assert.equal(await page.locator(".phoenix-reset-account-link[href='/orders']").count(), 1);
+
+await page.goto(baseURL + "/settings");
+await page.locator(".phoenix-reset-settings-page").waitFor();
+await page.locator("#setting-notify-sms").check();
+await page.locator("[data-save-all-settings]").click();
+assert.equal(JSON.parse(await page.evaluate(() => localStorage.getItem("phoenix-notification-preferences") || "{}")).sms, true);
+await page.reload();
+assert.equal(await page.locator("#setting-notify-sms").isChecked(), true);
+assert.ok((await page.locator(".phoenix-reset-settings-page").innerText()).includes("اتصال ارسال پیامک هنوز فعال نیست"));
+
 await page.goto(baseURL + "/design-system");
 await page.getByText("Primitiveهای مشترک").waitFor();
 await page.locator(".ds-table").waitFor();

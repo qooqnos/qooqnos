@@ -3147,3 +3147,13 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The browser translation observer was translating part of a Latin order reference inside the RTL message context. References and IDs are not user-facing prose and must never be rewritten by a locale change.
 - Added support for `translate="no"` and `data-no-translate` subtrees in the shared DOM translation pass, and marked the context identifier explicitly.
 - E2E now asserts that the raw order reference remains unchanged after locale rendering and that the element is excluded from translation.
+
+
+## 2026-10-16 — Account and settings aligned to social commerce
+
+- Replaced the account screen's internal Actor/Tenant/Workspace identifiers and permission dump with a user-facing account overview, everyday shortcuts, profile details, and a seller activation entry point for the same account.
+- Rebuilt Settings into a responsive page for language, appearance, and locally stored notification preferences.
+- Notification preferences persist to browser storage. Copy clearly states SMS/email delivery is not connected; the UI does not imply a server-side delivery preference was saved.
+- The preference backup downloads only local UI preferences, not the user's full account data.
+- Put /account and /settings inside the social-commerce shell and made the mobile Profile destination active on both.
+- Added browser E2E for account copy, hiding technical identifiers, settings save persistence, and honest SMS integration wording. Verify current CI and browser E2E before considering the step complete.
