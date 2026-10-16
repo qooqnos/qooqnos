@@ -18,6 +18,40 @@ function context(): RequestContext {
 }
 
 describe("CommunicationRepository", () => {
+  it("lists only tenant/workspace conversations or conversations owned by the authenticated customer", async () => {
+    let sql = "";
+    let bound: readonly unknown[] = [];
+    const row = {
+      id: "conversation-1",
+      organizationId: "tenant-1",
+      workspaceId: "workspace-1",
+      customerId: "customer-1",
+      status: "open",
+      createdAt: "2026-10-16T00:00:00.000Z",
+      updatedAt: "2026-10-16T00:01:00.000Z",
+      lastMessagePreview: "Hello",
+      lastMessageAt: "2026-10-16T00:01:00.000Z",
+    };
+    const statement: D1PreparedStatementLike = {
+      bind(...params: readonly unknown[]) { bound = params; return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [row as T] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(query) { sql = query; return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CommunicationRepository(new D1Database(raw));
+    const result = await repository.listConversationsForActor(context(), 25);
+
+    expect(result).toEqual([row]);
+    expect(sql).toContain("c.organization_id = ?");
+    expect(sql).toContain("c.workspace_id = ?");
+    expect(sql).toContain("cu.user_id = ?");
+    expect(bound).toEqual(["tenant-1", "workspace-1", "user-1"]);
+  });
+
   it("rejects empty message content", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },

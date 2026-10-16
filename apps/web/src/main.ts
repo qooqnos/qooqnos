@@ -133,6 +133,8 @@ let studioPreviewUrl: string | undefined;
 let shellWorkspaces: WorkspaceSummary[] = [];
 let shellNotifications: NotificationView[] = [];
 let shellContext: { actorId?: string; tenantId?: string; workspaceId?: string } = {};
+let activeConversationId: string | null = null;
+let messagesLoadGeneration = 0;
 let shellLoadInFlight = false;
 const socialActionIds = new Map<string, string>();
 const socialState = {
@@ -850,6 +852,7 @@ function render(): void {
     });
   }
   if (route.path === "/activity") void loadActivityPage();
+  if (route.path === "/messages") void loadMessagesPage();
   void loadShellContext();
   if (route.path === "/booking") {
     const bookingParams = new URLSearchParams(location.search);
@@ -4419,6 +4422,29 @@ function loadSavedPage(): void {
    Messages / Conversations Surface (پیام‌ها و گفتگوها)
    ========================================================================= */
 
+type CommunicationConversationView = {
+  id: string;
+  organizationId: string;
+  workspaceId: string | null;
+  customerId: string | null;
+  status: "open" | "closed" | "archived";
+  createdAt: string;
+  updatedAt: string;
+  lastMessagePreview: string | null;
+  lastMessageAt: string | null;
+};
+
+type CommunicationMessageView = {
+  id: string;
+  conversationId: string;
+  senderReference: string;
+  content: string;
+  classification: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 function renderMessages(): string {
   const { token } = getStoredAuth();
   const params = new URLSearchParams(location.search);
@@ -4436,6 +4462,19 @@ function renderMessages(): string {
       '</section>'
     : '';
 
+  const inboxInitial = token
+    ? '<div class="slot-loading">' + socialCommerceUi("messagesInboxLoading") + '</div>'
+    : '<div class="phoenix-reset-messages-inbox-empty"><span class="phoenix-reset-messages-icon" aria-hidden="true">✉</span><h3>' +
+      socialCommerceUi("messagesSignInToRead") + '</h3><p>' + socialCommerceUi("messagesListUnavailableBody") + '</p>' +
+      '<button class="button button-primary" type="button" data-open-login>' + uiText("ورود به حساب") + '</button></div>';
+  const threadInitial = '<article class="phoenix-reset-messages-start-card"><div class="phoenix-reset-messages-start-icon" aria-hidden="true">✦</div>' +
+    '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesEyebrow") + '</span>' +
+    '<h2>' + socialCommerceUi("messagesThreadSelect") + '</h2>' +
+    '<p>' + socialCommerceUi("messagesStartBody") + '</p>' +
+    '<div class="phoenix-reset-messages-actions"><a class="button button-primary" href="/discover?tab=explore" data-nav>' +
+    socialCommerceUi("messagesExploreAction") + ' <span aria-hidden="true">←</span></a>' +
+    '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("messagesOrdersAction") + '</a></div></article>';
+
   return '<div class="phoenix-reset-page phoenix-reset-messages-page">' +
     '<section class="phoenix-reset-messages-hero">' +
       '<div class="phoenix-reset-messages-hero-copy">' +
@@ -4450,31 +4489,173 @@ function renderMessages(): string {
         '<div class="phoenix-reset-messages-inbox-heading">' +
           '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesInboxEyebrow") + '</span>' +
           '<h2>' + socialCommerceUi("messagesInboxTitle") + '</h2></div>' +
-          '<span class="phoenix-reset-messages-status">' + socialCommerceUi("messagesStatusLabel") + '</span>' +
+          '<span id="messages-inbox-status" class="phoenix-reset-messages-status" aria-live="polite">' + socialCommerceUi(token ? "messagesInboxLoading" : "messagesSignInToRead") + '</span>' +
         '</div>' +
-        '<div class="phoenix-reset-messages-inbox-empty">' +
-          '<span class="phoenix-reset-messages-icon" aria-hidden="true">◌</span>' +
-          '<h3>' + socialCommerceUi("messagesListUnavailableTitle") + '</h3>' +
-          '<p>' + socialCommerceUi("messagesListUnavailableBody") + '</p>' +
-        '</div>' +
+        '<div id="messages-inbox-list" class="phoenix-reset-messages-inbox-list" aria-live="polite" aria-busy="' + String(Boolean(token)) + '">' + inboxInitial + '</div>' +
       '</aside>' +
       '<section class="phoenix-reset-messages-main">' +
         contextPanel +
-        '<article class="phoenix-reset-messages-start-card">' +
-          '<div class="phoenix-reset-messages-start-icon" aria-hidden="true">✦</div>' +
-          '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesEyebrow") + '</span>' +
-          '<h2>' + socialCommerceUi("messagesStartTitle") + '</h2>' +
-          '<p>' + socialCommerceUi("messagesStartBody") + '</p>' +
-          '<div class="phoenix-reset-messages-actions">' +
-            (token ? '' : '<button class="button button-ghost" type="button" data-open-login>' + uiText("ورود به حساب") + '</button>') +
-            '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("messagesExploreAction") + ' <span aria-hidden="true">←</span></a>' +
-            '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("messagesOrdersAction") + '</a>' +
-          '</div>' +
-        '</article>' +
+        '<div id="messages-thread" class="phoenix-reset-messages-thread" aria-live="polite">' + threadInitial + '</div>' +
         '<p class="phoenix-reset-messages-integrity-note"><span aria-hidden="true">✓</span> ' + socialCommerceUi("messagesNoSyntheticNote") + '</p>' +
       '</section>' +
     '</div>' +
   '</div>';
+}
+
+function renderMessageInboxItems(items: CommunicationConversationView[], selectedId: string | null): string {
+  if (!items.length) {
+    return '<div class="phoenix-reset-messages-inbox-empty"><span class="phoenix-reset-messages-icon" aria-hidden="true">◌</span>' +
+      '<h3>' + socialCommerceUi("messagesInboxEmptyTitle") + '</h3><p>' + socialCommerceUi("messagesInboxEmptyBody") + '</p></div>';
+  }
+  return items.map((item) => {
+    const selected = item.id === selectedId;
+    const preview = item.lastMessagePreview?.trim() || socialCommerceUi("messagesNewConversation");
+    const date = item.lastMessageAt || item.updatedAt;
+    return '<button type="button" class="phoenix-reset-message-row' + (selected ? ' selected' : '') +
+      '" data-message-conversation="' + escapeAttr(item.id) + '" aria-pressed="' + String(selected) + '">' +
+      '<span class="phoenix-reset-message-row-icon" aria-hidden="true">✉</span>' +
+      '<span class="phoenix-reset-message-row-copy"><strong>' + socialCommerceUi("messagesConversationTitle") + '</strong>' +
+      '<small>' + escapeHtml(preview) + '</small></span>' +
+      '<span class="phoenix-reset-message-row-meta"><time>' + escapeHtml(formatDate(date)) + '</time>' +
+      '<small>' + socialCommerceUi(item.status === "open" ? "messagesConversationOpen" : "messagesConversationClosed") + '</small></span>' +
+      '</button>';
+  }).join("");
+}
+
+function renderMessageThread(
+  conversation: CommunicationConversationView,
+  messages: CommunicationMessageView[],
+): string {
+  const actorId = shellContext.actorId ?? "";
+  const messageRows = messages.length
+    ? messages.map((message) => {
+        const own = Boolean(actorId) && message.senderReference === actorId;
+        return '<article class="phoenix-reset-message-bubble ' + (own ? "own" : "other") + '">' +
+          '<div class="phoenix-reset-message-bubble-meta"><strong>' + socialCommerceUi(own ? "messagesYouLabel" : "messagesOtherParticipant") + '</strong>' +
+          '<time>' + escapeHtml(formatDate(message.createdAt)) + '</time></div>' +
+          '<p>' + escapeHtml(message.content) + '</p></article>';
+      }).join("")
+    : '<div class="phoenix-reset-message-thread-empty"><span class="phoenix-reset-messages-icon" aria-hidden="true">◌</span>' +
+      '<h3>' + socialCommerceUi("messagesThreadEmptyTitle") + '</h3><p>' + socialCommerceUi("messagesThreadEmptyBody") + '</p></div>';
+  const composer = conversation.status === "open"
+    ? '<form class="phoenix-reset-message-composer" data-communication-send>' +
+      '<label for="messages-compose">' + socialCommerceUi("messagesComposeLabel") + '</label>' +
+      '<textarea id="messages-compose" name="content" rows="3" maxlength="5000" required placeholder="' +
+        escapeAttr(socialCommerceUi("messagesComposePlaceholder")) + '"></textarea>' +
+      '<p id="messages-send-error" class="phoenix-reset-message-error" role="status" aria-live="polite"></p>' +
+      '<div class="phoenix-reset-message-composer-footer"><small>' + socialCommerceUi("messagesNoSyntheticNote") + '</small>' +
+      '<button class="button button-primary" type="submit" data-message-send>' + socialCommerceUi("messagesSendAction") + ' <span aria-hidden="true">←</span></button></div>' +
+      '</form>'
+    : '<p class="phoenix-reset-message-thread-closed">' + socialCommerceUi("messagesConversationClosedBody") + '</p>';
+  return '<article class="phoenix-reset-message-thread-card">' +
+    '<header class="phoenix-reset-message-thread-header"><span class="phoenix-reset-messages-mark" aria-hidden="true">✉</span>' +
+      '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesEyebrow") + '</span><h2>' + socialCommerceUi("messagesConversationTitle") + '</h2>' +
+      '<small>' + socialCommerceUi(conversation.status === "open" ? "messagesConversationOpen" : "messagesConversationClosed") + '</small></div></header>' +
+    '<div class="phoenix-reset-message-list" aria-busy="false">' + messageRows + '</div>' + composer +
+  '</article>';
+}
+
+async function loadMessagesPage(preferredConversationId?: string): Promise<void> {
+  const token = sessionStorage.getItem(STORAGE.accessToken);
+  const inbox = document.querySelector<HTMLElement>("#messages-inbox-list");
+  const status = document.querySelector<HTMLElement>("#messages-inbox-status");
+  const thread = document.querySelector<HTMLElement>("#messages-thread");
+  if (!inbox || !status || !thread) return;
+  const generation = ++messagesLoadGeneration;
+
+  if (!token) {
+    inbox.setAttribute("aria-busy", "false");
+    status.textContent = socialCommerceUi("messagesSignInToRead");
+    thread.innerHTML = '<article class="phoenix-reset-messages-start-card"><div class="phoenix-reset-messages-start-icon" aria-hidden="true">✦</div>' +
+      '<h2>' + socialCommerceUi("messagesSignInToRead") + '</h2><p>' + socialCommerceUi("messagesListUnavailableBody") + '</p>' +
+      '<button class="button button-primary" type="button" data-open-login>' + uiText("ورود به حساب") + '</button></article>';
+    return;
+  }
+
+  inbox.setAttribute("aria-busy", "true");
+  status.textContent = socialCommerceUi("messagesInboxLoading");
+  inbox.innerHTML = '<div class="slot-loading">' + socialCommerceUi("messagesInboxLoading") + '</div>';
+  try {
+    if (!shellContext.actorId) {
+      shellContext = await apiJson<{ actorId?: string; tenantId?: string; workspaceId?: string }>("/api/v1/context");
+    }
+    const response = await apiJson<{ data: CommunicationConversationView[] }>("/api/v1/communications/conversations?limit=50");
+    if (generation !== messagesLoadGeneration) return;
+    const items = Array.isArray(response.data) ? response.data : [];
+    const selectedId = preferredConversationId && items.some((item) => item.id === preferredConversationId)
+      ? preferredConversationId
+      : activeConversationId && items.some((item) => item.id === activeConversationId)
+        ? activeConversationId
+        : items[0]?.id ?? null;
+    activeConversationId = selectedId;
+    inbox.innerHTML = renderMessageInboxItems(items, selectedId);
+    inbox.setAttribute("aria-busy", "false");
+    status.textContent = socialCommerceUi("messagesConversationCount", { count: formatLocalizedNumber(items.length) });
+    inbox.querySelectorAll<HTMLButtonElement>("[data-message-conversation]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const id = button.dataset.messageConversation;
+        if (id) void loadMessagesPage(id);
+      });
+    });
+
+    if (!selectedId) {
+      thread.innerHTML = '<article class="phoenix-reset-messages-start-card"><div class="phoenix-reset-messages-start-icon" aria-hidden="true">✦</div>' +
+        '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesEyebrow") + '</span>' +
+        '<h2>' + socialCommerceUi("messagesInboxEmptyTitle") + '</h2><p>' + socialCommerceUi("messagesInboxEmptyBody") + '</p>' +
+        '<div class="phoenix-reset-messages-actions"><a class="button button-primary" href="/discover?tab=explore" data-nav>' +
+        socialCommerceUi("messagesExploreAction") + ' <span aria-hidden="true">←</span></a></div></article>';
+      return;
+    }
+
+    thread.innerHTML = '<article class="phoenix-reset-messages-start-card"><div class="slot-loading">' +
+      socialCommerceUi("messagesThreadLoading") + '</div></article>';
+    try {
+      const threadResponse = await apiJson<{ data: CommunicationMessageView[] }>(
+        "/api/v1/communications/conversations/" + encodeURIComponent(selectedId) + "/messages?limit=100",
+      );
+      if (generation !== messagesLoadGeneration || activeConversationId !== selectedId) return;
+      const conversation = items.find((item) => item.id === selectedId);
+      if (!conversation) return;
+      thread.innerHTML = renderMessageThread(conversation, Array.isArray(threadResponse.data) ? threadResponse.data : []);
+      const form = thread.querySelector<HTMLFormElement>("[data-communication-send]");
+      form?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const textarea = form.querySelector<HTMLTextAreaElement>("#messages-compose");
+        const send = form.querySelector<HTMLButtonElement>("[data-message-send]");
+        const error = form.querySelector<HTMLElement>("#messages-send-error");
+        const content = textarea?.value.trim() ?? "";
+        if (!content || send?.disabled) return;
+        if (send) { send.disabled = true; send.textContent = socialCommerceUi("messagesSending"); }
+        if (error) error.textContent = "";
+        try {
+          await apiJson("/api/v1/communications/messages", {
+            method: "POST",
+            body: { conversationId: selectedId, content, classification: "buyer_seller" },
+          });
+          showToast(socialCommerceUi("messagesSendSuccess"));
+          await loadMessagesPage(selectedId);
+        } catch {
+          if (error) error.textContent = socialCommerceUi("messagesSendError");
+          if (send) { send.disabled = false; send.innerHTML = socialCommerceUi("messagesSendAction") + ' <span aria-hidden="true">←</span>'; }
+        }
+      });
+    } catch {
+      if (generation !== messagesLoadGeneration) return;
+      thread.innerHTML = '<article class="phoenix-reset-messages-start-card"><h2>' + socialCommerceUi("messagesThreadLoadError") +
+        '</h2><button type="button" class="button button-primary" data-retry-message-thread>' + socialCommerceUi("messagesInboxRetry") + '</button></article>';
+      thread.querySelector<HTMLButtonElement>("[data-retry-message-thread]")?.addEventListener("click", () => void loadMessagesPage(selectedId));
+    }
+  } catch {
+    if (generation !== messagesLoadGeneration) return;
+    inbox.setAttribute("aria-busy", "false");
+    status.textContent = socialCommerceUi("messagesInboxLoadError");
+    inbox.innerHTML = '<div class="phoenix-reset-messages-inbox-empty"><h3>' + socialCommerceUi("messagesInboxLoadError") +
+      '</h3><p>' + socialCommerceUi("messagesListUnavailableBody") + '</p>' +
+      '<button type="button" class="button button-primary" data-retry-messages>' + socialCommerceUi("messagesInboxRetry") + '</button></div>';
+    inbox.querySelector<HTMLButtonElement>("[data-retry-messages]")?.addEventListener("click", () => void loadMessagesPage(activeConversationId ?? undefined));
+    thread.innerHTML = '<article class="phoenix-reset-messages-start-card"><h2>' + socialCommerceUi("messagesThreadSelect") +
+      '</h2><p>' + socialCommerceUi("messagesNoSyntheticNote") + '</p></article>';
+  }
 }
 
 /* =========================================================================
