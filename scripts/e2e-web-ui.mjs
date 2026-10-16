@@ -100,6 +100,7 @@ await page.route("**/api/v1/**", async (route) => {
       { id: "result-1", sourceType: "business", sourceId: "biz-1", title: "موجودیت واقعی تست", description: "نتیجهٔ canonical برای تست UI", locality: "مرکز شهر", score: 88, rating: 4.8 },
       { id: "result-product-1", sourceType: "product", sourceId: "prod-1", title: "میز چوبی", description: "کالای تست برای مقایسه", price: 25000000, currency: "ریال", metadata: { offeringType: "product", businessId: "biz-1" } },
       { id: "result-product-2", sourceType: "product", sourceId: "prod-2", title: "صندلی چوبی", description: "کالای دوم برای مقایسه", price: 12000000, currency: "ریال", metadata: { offeringType: "product", businessId: "biz-1" } },
+      { id: "result-product-user-1", sourceType: "product", sourceId: "prod-user-1", title: "ظرف سفالی دست‌ساز", description: "عرضهٔ فروشندهٔ مستقل برای آزمون دنبال‌کردن کاربر", price: 950000, currency: "ریال", metadata: { offeringType: "product", sellerUserId: "user-seller-2", sellerName: "هنرمند مستقل" } },
     ] },
     "/api/v1/discovery/following": { data: [
       { id: "followed-product", sourceType: "product", sourceId: "followed-product", title: "کالای فروشگاه دنبال‌شده", description: "کالای منتشرشده در فید دنبال‌شده‌ها", metadata: { offeringType: "product", businessId: "biz-1", businessName: "فروشگاه دنبال‌شده" } },
@@ -693,6 +694,10 @@ assert.equal(await page.locator(".phoenix-reset-compare-link").isVisible(), true
 assert.equal(await page.locator("#compare-count").innerText(), "۲");
 await page.locator('[data-follow="result-product-1"]').click();
 await page.locator('[data-follow="result-product-1"].selected').waitFor();
+await page.locator('[data-follow="result-product-user-1"]').click();
+await page.locator('[data-follow="result-product-user-1"].selected').waitFor();
+assert.ok(mockSocialFollows.has("user:user-seller-2"), "a person-owned offer must follow the seller user, not a fake business");
+assert.ok(mockSocialFollows.has("business:biz-1"), "a business-owned offer must follow the business");
 await page.locator("[data-discovery-index='0']").click();
 const detailFollowButton = page.locator(".phoenix-detail-modal [data-follow-seller-detail]");
 await detailFollowButton.waitFor();
