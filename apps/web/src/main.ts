@@ -38,7 +38,6 @@ import {
   renderCreateContentHub,
   renderContentDetailsForm,
   renderDealTypeSelection,
-  renderBusinessWelcome,
   renderBusinessCreateContent,
   renderBusinessContentDetails,
   renderBusinessDeals,
@@ -779,7 +778,7 @@ function render(): void {
   const route = currentRoute();
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
-  const isHome = route.path === "/welcome" || route.path === "/consumer/welcome";
+  const isHome = route.path === "/welcome" || route.path === "/consumer/welcome" || route.path === "/business/welcome";
   const isPublicBusiness = route.path.startsWith("/businesses/");
   const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/account" || route.path === "/settings" || route.path === "/cart" || route.path === "/checkout" || route.path === "/consumer/payment" || route.path === "/product/demo" || route.path === "/booking" || isPublicBusiness;
   const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
@@ -4998,6 +4997,39 @@ function renderWelcome(): string {
     return renderBusinessWelcome();
   }
   return renderConsumerWelcome();
+}
+
+function renderBusinessWelcome(): string {
+  return '<div class="phoenix-reset-page phoenix-reset-start-page phoenix-reset-seller-start-page">' +
+    '<section class="phoenix-reset-start-hero">' +
+      '<div class="phoenix-reset-start-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("sellerStartEyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("sellerStartTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("sellerStartIntro") + '</p>' +
+        '<div class="phoenix-reset-start-actions">' +
+          '<button class="button button-primary" type="button" data-open-register>' + socialCommerceUi("sellerStartSignIn") + ' <span aria-hidden="true">←</span></button>' +
+          '<a class="button button-ghost" href="/discover?tab=explore" data-nav>' + socialCommerceUi("sellerStartExplore") + '</a>' +
+        '</div>' +
+      '</div>' +
+      '<div class="phoenix-reset-start-visual" aria-hidden="true">' +
+        '<div class="phoenix-reset-start-orbit phoenix-reset-start-orbit-one"></div>' +
+        '<div class="phoenix-reset-start-orbit phoenix-reset-start-orbit-two"></div>' +
+        '<div class="phoenix-reset-start-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></div>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-one">＋</span>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-two">◇</span>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-three">↔</span>' +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-start-principles" aria-label="' + escapeAttr(socialCommerceUi("sellerStartStepsLabel")) + '">' +
+      '<article><span aria-hidden="true">✍</span><div><h2>' + socialCommerceUi("sellerStartDescribeTitle") + '</h2><p>' + socialCommerceUi("sellerStartDescribeBody") + '</p></div></article>' +
+      '<article><span aria-hidden="true">✓</span><div><h2>' + socialCommerceUi("sellerStartReviewTitle") + '</h2><p>' + socialCommerceUi("sellerStartReviewBody") + '</p></div></article>' +
+      '<article><span aria-hidden="true">♡</span><div><h2>' + socialCommerceUi("sellerStartRelationshipTitle") + '</h2><p>' + socialCommerceUi("sellerStartRelationshipBody") + '</p></div></article>' +
+    '</section>' +
+    '<section class="phoenix-reset-start-seller">' +
+      '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("sellerStartSameAccountEyebrow") + '</span><h2>' + socialCommerceUi("sellerStartSameAccountTitle") + '</h2><p>' + socialCommerceUi("sellerStartSameAccountBody") + '</p></div>' +
+      '<a class="button button-primary" href="/account" data-nav>' + socialCommerceUi("sellerStartAccountAction") + ' <span aria-hidden="true">←</span></a>' +
+    '</section>' +
+  '</div>';
 }
 
 function renderConsumerWelcome(): string {

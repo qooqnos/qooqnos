@@ -830,6 +830,14 @@ await page.reload();
 assert.equal(await page.locator("#setting-notify-sms").isChecked(), true);
 assert.ok((await page.locator(".phoenix-reset-settings-page").innerText()).includes("اتصال ارسال پیامک هنوز فعال نیست"));
 
+await page.goto(baseURL + "/business/welcome");
+await page.locator(".phoenix-reset-seller-start-page").waitFor();
+const sellerStartText = await page.locator(".phoenix-reset-seller-start-page").innerText();
+assert.ok(sellerStartText.includes("برای فروشندگی حساب جداگانه نمی‌خواهی."));
+assert.ok(sellerStartText.includes("فروشندگی را از پروفایل فعال کن"));
+assert.ok(!sellerStartText.includes("مناقصات"));
+assert.equal(await page.locator(".phoenix-reset-seller-start-page [data-open-register]").count(), 1);
+
 await page.goto(baseURL + "/consumer/welcome");
 await page.locator(".phoenix-reset-start-page").waitFor();
 const startPageText = await page.locator(".phoenix-reset-start-page").innerText();

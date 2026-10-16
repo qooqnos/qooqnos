@@ -2220,6 +2220,22 @@
     "startDecisionBody": "گزینه‌ها را ذخیره و مقایسه کن؛ اطلاعات ناموجود پنهان نمی‌شود.",
     "startForSellersEyebrow": "برای عرضه‌کنندگان",
     "startForSellersTitle": "کالا یا خدمتی برای معرفی داری؟",
-    "startForSellersBody": "با همان حساب، فروشندگی را فعال کن و پیش از انتشار، اطلاعات عرضه‌ات را بازبینی کن."
+    "startForSellersBody": "با همان حساب، فروشندگی را فعال کن و پیش از انتشار، اطلاعات عرضه‌ات را بازبینی کن.",
+    "sellerStartEyebrow": "برای عرضه‌کنندگان در ققنوس",
+    "sellerStartTitle": "چیزی برای عرضه داری؟ بیا ارتباط بهتری بسازیم.",
+    "sellerStartIntro": "کالا یا خدمتت را معرفی کن، اطلاعاتش را پیش از انتشار بازبینی کن و به خریداران کمک کن انتخاب آگاهانه‌تری داشته باشند.",
+    "sellerStartSignIn": "ورود یا ثبت‌نام",
+    "sellerStartExplore": "دیدن عرضه‌های موجود",
+    "sellerStartStepsLabel": "چطور عرضه را شروع کنی",
+    "sellerStartDescribeTitle": "معرفی کن",
+    "sellerStartDescribeBody": "توضیح آزاد یا تصویر کالا و خدمتت را وارد کن.",
+    "sellerStartReviewTitle": "بازبینی کن",
+    "sellerStartReviewBody": "اطلاعات و جزئیات را بررسی کن؛ چیزی بدون تأیید تو منتشر نمی‌شود.",
+    "sellerStartRelationshipTitle": "ارتباط را ادامه بده",
+    "sellerStartRelationshipBody": "با اطلاعات شفاف و گفت‌وگو به شناخت بهتر خریدار کمک کن.",
+    "sellerStartSameAccountEyebrow": "یک حساب، امکانات بیشتر",
+    "sellerStartSameAccountTitle": "برای فروشندگی حساب جداگانه نمی‌خواهی.",
+    "sellerStartSameAccountBody": "وارد حساب شو؛ سپس فروشندگی را از پروفایل فعال کن و فضای کسب‌وکار خودت را بساز.",
+    "sellerStartAccountAction": "رفتن به حساب من"
   }
 }

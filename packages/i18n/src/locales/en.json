@@ -2220,6 +2220,22 @@
     "startDecisionBody": "Save and compare options. Missing information is never made up.",
     "startForSellersEyebrow": "For sellers",
     "startForSellersTitle": "Have a product or service to share?",
-    "startForSellersBody": "Enable selling on the same account and review your offer before publishing."
+    "startForSellersBody": "Enable selling on the same account and review your offer before publishing.",
+    "sellerStartEyebrow": "For sellers on Phoenix",
+    "sellerStartTitle": "Have something to offer? Build a better relationship.",
+    "sellerStartIntro": "Introduce your product or service, review the details before publishing, and help buyers make informed choices.",
+    "sellerStartSignIn": "Sign in or sign up",
+    "sellerStartExplore": "Explore existing offers",
+    "sellerStartStepsLabel": "How to start an offer",
+    "sellerStartDescribeTitle": "Describe it",
+    "sellerStartDescribeBody": "Add a free-form description or an image of your product or service.",
+    "sellerStartReviewTitle": "Review it",
+    "sellerStartReviewBody": "Check the details first; nothing is published without your approval.",
+    "sellerStartRelationshipTitle": "Keep the relationship going",
+    "sellerStartRelationshipBody": "Clear information and conversation help buyers understand your offer.",
+    "sellerStartSameAccountEyebrow": "One account, more capabilities",
+    "sellerStartSameAccountTitle": "You do not need a separate seller account.",
+    "sellerStartSameAccountBody": "Sign in, activate selling from your profile, and set up your business workspace.",
+    "sellerStartAccountAction": "Go to my account"
   }
 }

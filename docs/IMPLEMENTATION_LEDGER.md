@@ -3174,3 +3174,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Both `/welcome` (default/non-business experience) and `/consumer/welcome` use the same start composition; explicit business onboarding remains available in its own route.
 - Added responsive hero and three principle cards, with Persian/English/Arabic copy and browser E2E assertions for honest purchase messaging and same-account seller activation.
 - Validate CI, Phoenix verification, and browser E2E on the current branch head before treating this step as complete.
+
+
+## 2026-10-16 — Seller welcome aligned to one-account onboarding
+
+- Replaced the prior seller welcome promises (corporate store upgrade, tenders, and several unverified feature claims) with a practical introduction to offering products/services and reviewing before publication.
+- The page uses the shared sign-up/sign-in flow; it explicitly tells users to enable selling from their existing profile rather than create a separate account.
+- Added responsive reuse of the approved start composition with dedicated Persian/English/Arabic seller copy and E2E checks for the one-account rule and removal of tender claims.
+- Run all CI, Phoenix verification, and browser E2E checks on the current head before accepting this slice.

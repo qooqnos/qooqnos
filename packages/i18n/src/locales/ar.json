@@ -2220,6 +2220,22 @@
     "startDecisionBody": "احفظ الخيارات وقارن بينها؛ لا نختلق المعلومات الناقصة.",
     "startForSellersEyebrow": "للبائعين",
     "startForSellersTitle": "هل لديك منتج أو خدمة ترغب في عرضها؟",
-    "startForSellersBody": "فعّل البيع في الحساب نفسه وراجع العرض قبل نشره."
+    "startForSellersBody": "فعّل البيع في الحساب نفسه وراجع العرض قبل نشره.",
+    "sellerStartEyebrow": "للبائعين في ققنوس",
+    "sellerStartTitle": "لديك ما تقدمه؟ لنَبْنِ علاقة أفضل.",
+    "sellerStartIntro": "عرّف بمنتجك أو خدمتك، وراجع التفاصيل قبل النشر، وساعد المشترين على اتخاذ قرارات واعية.",
+    "sellerStartSignIn": "التسجيل أو الدخول",
+    "sellerStartExplore": "استكشاف العروض الحالية",
+    "sellerStartStepsLabel": "كيف تبدأ عرضاً",
+    "sellerStartDescribeTitle": "عرّف بالعرض",
+    "sellerStartDescribeBody": "أضف وصفاً حراً أو صورة لمنتجك أو خدمتك.",
+    "sellerStartReviewTitle": "راجع التفاصيل",
+    "sellerStartReviewBody": "تحقق من التفاصيل أولاً؛ لن يُنشر شيء دون موافقتك.",
+    "sellerStartRelationshipTitle": "واصل العلاقة",
+    "sellerStartRelationshipBody": "تساعد المعلومات الواضحة والمحادثة المشتري على فهم العرض.",
+    "sellerStartSameAccountEyebrow": "حساب واحد وإمكانات أكثر",
+    "sellerStartSameAccountTitle": "لا تحتاج إلى حساب بائع منفصل.",
+    "sellerStartSameAccountBody": "سجّل الدخول، وفعّل البيع من ملفك الشخصي، ثم جهّز مساحة عمل نشاطك التجاري.",
+    "sellerStartAccountAction": "الانتقال إلى حسابي"
   }
 }
