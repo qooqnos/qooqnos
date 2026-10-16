@@ -787,7 +787,7 @@ const feedOverflow = await page.evaluate(() => {
         left: Math.round(rect.left),
         right: Math.round(rect.right),
         width: Math.round(rect.width),
-        scrollWidth: (element as HTMLElement).scrollWidth,
+        scrollWidth: element.scrollWidth,
       };
     })
     .filter((item) => item.width > 0 && (item.left < -1 || item.right > viewport + 1))
