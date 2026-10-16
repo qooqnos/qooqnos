@@ -528,7 +528,7 @@ assert.ok(createAr.includes("اكتب وصف العرض"));
 await page.goto(baseURL + "/create/deal-type");
 assert.ok((await page.locator(".phoenix-reset-deal-guard").innerText()).includes("برای ثبت معامله، اول عرضه را کامل کن"));
 assert.equal(await page.locator("#confirm-deal-btn").count(), 0);
-assert.equal(await page.locator("a[href='/product-studio']").count(), 1);
+assert.equal(await page.locator(".phoenix-reset-deal-guard a[href='/product-studio']").count(), 1);
 await page.goto(baseURL + "/create/details");
 assert.equal(await page.locator("#content-desc-input").inputValue(), "");
 assert.equal(await page.locator("#content-price-input").count(), 0);
