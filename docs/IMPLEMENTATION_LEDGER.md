@@ -3204,3 +3204,16 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
   - Phoenix web UI verification / browser smoke: https://github.com/qooqnos/qooqnos/actions/runs/38932202993
 - The Markdown design decision remains `docs/PHOENIX_SOCIAL_COMMERCE_INTERFACE_RESET.md`. The active implementation is on `feat/social-commerce-ui-reset` and the pull request is still draft: https://github.com/qooqnos/qooqnos/pull/11.
 - Scope note: canonical production checkout/payment integration is still not claimed complete; the current redesigned cart/checkout screens are honest review-only surfaces unless and until real order/payment APIs are wired and verified.
+
+
+## 2026-10-16 — Mobile social-shell overflow fixed and verified
+
+- Added a browser regression check at a 390px viewport for the social feed, the product-detail modal, and the seller workspace. The check reports offending elements and their bounds when horizontal overflow occurs.
+- The diagnostic found the mobile social header action cluster extending left of the viewport because duplicate sign-in/create controls competed with the language/theme controls. The compact mobile header now hides redundant entry points while retaining the registration action, language picker, and theme toggle.
+- The comparison tray now uses border-box sizing and a mobile viewport-aware maximum width.
+- Fixed a missing closing parenthesis in the seller welcome hero background gradient.
+- Verification passed on commit `fc6f2b85b66986c5835d33f09457c1789802b9e8`:
+  - CI: https://github.com/qooqnos/qooqnos/actions/runs/38933382400
+  - Phoenix verification: https://github.com/qooqnos/qooqnos/actions/runs/38933382423
+  - Phoenix web UI verification and mobile browser smoke: https://github.com/qooqnos/qooqnos/actions/runs/38933382369
+- Current working branch remains `feat/social-commerce-ui-reset`; PR #11 remains draft and is not deployed to `main`.
