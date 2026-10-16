@@ -2205,6 +2205,21 @@
     "productDetailUnavailableEyebrow": "تفاصيل العرض",
     "productDetailUnavailableTitle": "هذا الرابط غير مرتبط بعرض حقيقي",
     "productDetailUnavailableBody": "لا يحتوي هذا المسار القديم على معرّف لعرض منشور؛ لذلك لن نعرض سعراً أو تفاصيل تجريبية. افتح منتجاً أو خدمة حقيقية من موجز ققنوس.",
-    "productDetailDiscoverAction": "استكشاف العروض"
+    "productDetailDiscoverAction": "استكشاف العروض",
+    "startEyebrow": "ققنوس · التجارة الاجتماعية",
+    "startTitle": "قل لنا ما تحتاج إليه، واختر بثقة.",
+    "startIntro": "اكتشف المنتجات والخدمات، وتعرّف على البائع، واسأل وقارن الخيارات. صُمّم ققنوس لتحسين العلاقة بين المشتري والبائع.",
+    "startExploreAction": "استكشاف المنتجات والخدمات",
+    "startSignUpAction": "التسجيل أو الدخول",
+    "startPrinciplesLabel": "كيف يساعدك ققنوس",
+    "startDiscoverTitle": "اكتشف",
+    "startDiscoverBody": "اكتب احتياجك بلغتك أو تصفّح العروض المنشورة.",
+    "startRelationshipTitle": "تعرّف على البائع",
+    "startRelationshipBody": "تساعد الملفات الشخصية والمعلومات المتاحة والمحادثة على فهم أفضل.",
+    "startDecisionTitle": "اختر عن معرفة",
+    "startDecisionBody": "احفظ الخيارات وقارن بينها؛ لا نختلق المعلومات الناقصة.",
+    "startForSellersEyebrow": "للبائعين",
+    "startForSellersTitle": "هل لديك منتج أو خدمة ترغب في عرضها؟",
+    "startForSellersBody": "فعّل البيع في الحساب نفسه وراجع العرض قبل نشره."
   }
 }

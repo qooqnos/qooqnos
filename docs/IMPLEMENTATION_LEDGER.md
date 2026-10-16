@@ -3165,3 +3165,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added the cart, checkout review, and old consumer-payment path to the social-commerce shell, preserving the new header and mobile navigation through the purchase review.
 - The checkout screen remains review-only until canonical checkout/payment integration exists; the copy explicitly says no order is registered and no money is collected.
 - Added browser checks that the demo price/product is absent, cart/checkout retain the social shell, and no payment/confirmation action is exposed. Verify the latest CI and browser E2E before considering this slice complete.
+
+
+## 2026-10-16 — Unified customer/seller welcome surface
+
+- Replaced the old consumer welcome screen's unsupported claims about secure payment, payment on delivery, points, rankings, and special offers with the approved social-commerce start screen.
+- The page introduces discovery, seller relationship, and informed comparison without publicly labeling a person as an ordinary/buyer user. Selling is enabled on the same account.
+- Both `/welcome` (default/non-business experience) and `/consumer/welcome` use the same start composition; explicit business onboarding remains available in its own route.
+- Added responsive hero and three principle cards, with Persian/English/Arabic copy and browser E2E assertions for honest purchase messaging and same-account seller activation.
+- Validate CI, Phoenix verification, and browser E2E on the current branch head before treating this step as complete.

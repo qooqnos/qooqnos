@@ -2205,6 +2205,21 @@
     "productDetailUnavailableEyebrow": "جزئیات عرضه",
     "productDetailUnavailableTitle": "این نشانی به کالای واقعی وصل نیست",
     "productDetailUnavailableBody": "این صفحهٔ قدیمی شناسهٔ یک عرضهٔ منتشرشده را ندارد؛ بنابراین قیمت یا مشخصات نمونه نمایش داده نمی‌شود. از فید ققنوس یک کالا یا خدمت واقعی را باز کن.",
-    "productDetailDiscoverAction": "رفتن به اکسپلور"
+    "productDetailDiscoverAction": "رفتن به اکسپلور",
+    "startEyebrow": "ققنوس · شبکهٔ اجتماعی تجارت",
+    "startTitle": "فقط بگو چه می‌خواهی؛ با آگاهی انتخاب کن.",
+    "startIntro": "کالاها و خدمات را کشف کن، با فروشنده آشنا شو، سؤال بپرس و گزینه‌ها را کنار هم بسنج. ققنوس برای ارتباط بهتر میان خریدار و فروشنده ساخته شده است.",
+    "startExploreAction": "دیدن کالاها و خدمات",
+    "startSignUpAction": "ثبت‌نام و ورود",
+    "startPrinciplesLabel": "چطور ققنوس کمک می‌کند",
+    "startDiscoverTitle": "کشف کن",
+    "startDiscoverBody": "نیازت را به زبان خودت بگو یا بین عرضه‌های موجود جست‌وجو کن.",
+    "startRelationshipTitle": "فروشنده را بشناس",
+    "startRelationshipBody": "پروفایل، اطلاعات موجود و گفت‌وگو به شناخت بهتر کمک می‌کنند.",
+    "startDecisionTitle": "با آگاهی انتخاب کن",
+    "startDecisionBody": "گزینه‌ها را ذخیره و مقایسه کن؛ اطلاعات ناموجود پنهان نمی‌شود.",
+    "startForSellersEyebrow": "برای عرضه‌کنندگان",
+    "startForSellersTitle": "کالا یا خدمتی برای معرفی داری؟",
+    "startForSellersBody": "با همان حساب، فروشندگی را فعال کن و پیش از انتشار، اطلاعات عرضه‌ات را بازبینی کن."
   }
 }

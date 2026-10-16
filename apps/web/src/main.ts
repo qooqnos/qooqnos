@@ -35,7 +35,6 @@ import {
   getActivePersona,
   renderPersonaSwitcher,
   renderUnifiedBottomNav,
-  renderIndividualWelcome,
   renderCreateContentHub,
   renderContentDetailsForm,
   renderDealTypeSelection,
@@ -45,7 +44,6 @@ import {
   renderBusinessDeals,
   renderBusinessTeam as renderPhoenixBusinessTeam,
   renderBusinessOrgProfile,
-  renderConsumerWelcome,
   renderConsumerCart,
   renderConsumerPayment,
   renderConsumerLoyalty,
@@ -781,7 +779,7 @@ function render(): void {
   const route = currentRoute();
   const page = route.render();
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
-  const isHome = route.path === "/welcome";
+  const isHome = route.path === "/welcome" || route.path === "/consumer/welcome";
   const isPublicBusiness = route.path.startsWith("/businesses/");
   const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/account" || route.path === "/settings" || route.path === "/cart" || route.path === "/checkout" || route.path === "/consumer/payment" || route.path === "/product/demo" || route.path === "/booking" || isPublicBusiness;
   const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
@@ -4994,15 +4992,45 @@ function loadBusinessSettingsPage(): void {
    ========================================================================= */
 
 function renderWelcome(): string {
-  const persona = getActivePersona();
   const typeParam = new URLSearchParams(location.search).get("type") || new URLSearchParams(location.search).get("persona");
+  const persona = getActivePersona();
   if (typeParam === "business" || (!typeParam && persona === "business")) {
     return renderBusinessWelcome();
   }
-  if (typeParam === "consumer" || (!typeParam && persona === "consumer")) {
-    return renderConsumerWelcome();
-  }
-  return renderIndividualWelcome();
+  return renderConsumerWelcome();
+}
+
+function renderConsumerWelcome(): string {
+  return '<div class="phoenix-reset-page phoenix-reset-start-page">' +
+    '<section class="phoenix-reset-start-hero">' +
+      '<div class="phoenix-reset-start-copy">' +
+        '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("startEyebrow") + '</span></div>' +
+        '<h1>' + socialCommerceUi("startTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("startIntro") + '</p>' +
+        '<div class="phoenix-reset-start-actions">' +
+          '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("startExploreAction") + ' <span aria-hidden="true">←</span></a>' +
+          '<button class="button button-ghost" type="button" data-open-register>' + socialCommerceUi("startSignUpAction") + '</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="phoenix-reset-start-visual" aria-hidden="true">' +
+        '<div class="phoenix-reset-start-orbit phoenix-reset-start-orbit-one"></div>' +
+        '<div class="phoenix-reset-start-orbit phoenix-reset-start-orbit-two"></div>' +
+        '<div class="phoenix-reset-start-mark"><img src="/phoenix-mark.svg?v=2" alt="" /></div>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-one">⌕</span>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-two">♡</span>' +
+        '<span class="phoenix-reset-start-float phoenix-reset-start-float-three">↔</span>' +
+      '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-start-principles" aria-label="' + escapeAttr(socialCommerceUi("startPrinciplesLabel")) + '">' +
+      '<article><span aria-hidden="true">⌕</span><div><h2>' + socialCommerceUi("startDiscoverTitle") + '</h2><p>' + socialCommerceUi("startDiscoverBody") + '</p></div></article>' +
+      '<article><span aria-hidden="true">♡</span><div><h2>' + socialCommerceUi("startRelationshipTitle") + '</h2><p>' + socialCommerceUi("startRelationshipBody") + '</p></div></article>' +
+      '<article><span aria-hidden="true">⚖</span><div><h2>' + socialCommerceUi("startDecisionTitle") + '</h2><p>' + socialCommerceUi("startDecisionBody") + '</p></div></article>' +
+    '</section>' +
+    '<section class="phoenix-reset-start-seller">' +
+      '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("startForSellersEyebrow") + '</span><h2>' + socialCommerceUi("startForSellersTitle") + '</h2><p>' + socialCommerceUi("startForSellersBody") + '</p></div>' +
+      '<button class="button button-primary" type="button" data-open-register>' + socialCommerceUi("startSignUpAction") + ' <span aria-hidden="true">←</span></button>' +
+    '</section>' +
+  '</div>';
 }
 
 function _renderLegacyWelcome(): string {

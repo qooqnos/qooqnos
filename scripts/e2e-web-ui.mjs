@@ -830,6 +830,15 @@ await page.reload();
 assert.equal(await page.locator("#setting-notify-sms").isChecked(), true);
 assert.ok((await page.locator(".phoenix-reset-settings-page").innerText()).includes("اتصال ارسال پیامک هنوز فعال نیست"));
 
+await page.goto(baseURL + "/consumer/welcome");
+await page.locator(".phoenix-reset-start-page").waitFor();
+const startPageText = await page.locator(".phoenix-reset-start-page").innerText();
+assert.ok(startPageText.includes("فقط بگو چه می‌خواهی"));
+assert.ok(startPageText.includes("با همان حساب"));
+assert.ok(!startPageText.includes("خرید امن با درگاه"));
+assert.ok(!startPageText.includes("امتیاز، رتبه و تخفیف‌های ویژه"));
+assert.equal(await page.locator(".phoenix-reset-start-page [data-open-register]").count(), 2);
+
 await page.goto(baseURL + "/product/demo");
 await page.locator(".phoenix-reset-product-unavailable").waitFor();
 const unavailableProductText = await page.locator(".phoenix-reset-product-unavailable").innerText();

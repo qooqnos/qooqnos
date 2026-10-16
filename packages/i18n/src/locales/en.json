@@ -2205,6 +2205,21 @@
     "productDetailUnavailableEyebrow": "Offer details",
     "productDetailUnavailableTitle": "This link is not connected to a real offer",
     "productDetailUnavailableBody": "This legacy URL has no published-offer identifier, so no sample price or product details are shown. Open a real product or service from the Phoenix feed.",
-    "productDetailDiscoverAction": "Explore offers"
+    "productDetailDiscoverAction": "Explore offers",
+    "startEyebrow": "Phoenix · Social commerce",
+    "startTitle": "Say what you need. Choose with confidence.",
+    "startIntro": "Discover products and services, get to know sellers, ask questions, and compare your options. Phoenix is built to improve the relationship between buyers and sellers.",
+    "startExploreAction": "Explore products and services",
+    "startSignUpAction": "Sign up or sign in",
+    "startPrinciplesLabel": "How Phoenix helps",
+    "startDiscoverTitle": "Discover",
+    "startDiscoverBody": "Describe your need in your own words or browse published offers.",
+    "startRelationshipTitle": "Know the seller",
+    "startRelationshipBody": "Profiles, available information, and conversation help build understanding.",
+    "startDecisionTitle": "Make an informed choice",
+    "startDecisionBody": "Save and compare options. Missing information is never made up.",
+    "startForSellersEyebrow": "For sellers",
+    "startForSellersTitle": "Have a product or service to share?",
+    "startForSellersBody": "Enable selling on the same account and review your offer before publishing."
   }
 }
