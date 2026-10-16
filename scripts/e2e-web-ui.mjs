@@ -31,6 +31,7 @@ const bookingAvailabilityRequests = [];
 const mockSocialFollows = new Map();
 const mockSocialEngagements = new Map();
 const mockSocialComments = [];
+const mockBusinessUpdates = [];
 let socialSequence = 0;
 page.on("pageerror", (error) => runtimeErrors.push(String(error.stack || error)));
 page.on("console", (message) => {
@@ -92,6 +93,17 @@ await page.route("**/api/v1/**", async (route) => {
     "/api/v1/booking/holds": { data: { id: "hold-test-1", status: "active", expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(), slotReference: "slot-reference-1" } },
     "/api/v1/notifications": { data: [
       { id: "notice-1", intent: "booking.confirmed", channel: "in_app", priority: "high", status: "delivered", createdAt: new Date().toISOString(), variables: {} },
+    ] },
+    "/api/v1/businesses/biz-1/management": { data: {
+      business: { id: "biz-1", name: "store-test", displayName: "فروشگاه آزمایشی", businessType: "retail", primaryCategoryId: "retail", defaultLocale: "fa-IR", timezone: "Asia/Baku", defaultCurrency: "IRR", status: "active", publicationStatus: "unpublished" },
+      locations: [], hours: [], contacts: [], socialLinks: []
+    } },
+    "/api/v1/catalog/businesses/biz-1/offers": { data: [
+      { id: "offering-product-e2e", businessId: "biz-1", offeringType: "product", title: "کیف دست‌دوز", description: "کالای واقعی تست رابط", productId: "product-1", serviceId: null, status: "active", publicationStatus: "published", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: "offering-service-1", businessId: "biz-1", offeringType: "service", title: "مشاورهٔ تخصصی", description: "شرح خدمت ثبت‌شده", productId: null, serviceId: "service-1", status: "active", publicationStatus: "pending", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    ] },
+    "/api/v1/booking": { data: [
+      { id: "booking-e2e-1", organizationId: "tenant-1", workspaceId: workspace, businessId: "biz-1", customerId: "customer-private-e2e", status: "confirmed", currency: "IRR", totalAmountMinor: 450000, appointmentStatus: "confirmed", startsAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), endsAt: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(), timezone: "Asia/Baku", locationId: null, resourceId: null, offeringId: "offering-service-1", offeringTitle: "مشاورهٔ تخصصی", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ] },
     "/api/v1/business-access": { status: "authorized", tenantId: "tenant-1", workspaceId: workspace },
     "/api/v1/ai/usage": { data: [{ operationId: "op-1", operationType: "seller.product.extract", meterUnit: "provider_units", quantity: 17, modelId: "test-model", billingUsageReference: "bill-1", createdAt: new Date().toISOString() }] },
@@ -209,6 +221,15 @@ await page.route("**/api/v1/**", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ confirmed: true, catalogSaved: true, catalogProductId: "product-1", version: 1 }) });
     return;
   }
+  if (path === "/api/v1/businesses/biz-1" && request.method() === "PATCH") {
+    const update = request.postDataJSON();
+    mockBusinessUpdates.push(update);
+    const business = { ...payloads["/api/v1/businesses/biz-1/management"].data.business, ...update };
+    payloads["/api/v1/businesses/biz-1/management"].data.business = business;
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: business }) });
+    return;
+  }
+
   if (path === "/api/v1/catalog/offers" && request.method() === "POST") {
     await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify(payloads[path]) });
     return;
@@ -740,6 +761,53 @@ assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
 
 await page.goto(baseURL + "/business");
 assert.equal(await page.locator("[data-language-toggle]").count(), 1);
+
+// Seller catalog, services, bookings and settings must use canonical APIs, not fixture arrays inside UI code.
+await page.evaluate(() => {
+  localStorage.setItem("phoenix-business-id", "biz-1");
+  localStorage.setItem("phoenix.active_persona", "business");
+});
+await page.goto(baseURL + "/business/products");
+await page.locator("#business-products-table .phoenix-business-data-table").waitFor();
+const productCatalogText = await page.locator("#business-products-table").innerText();
+assert.ok(productCatalogText.includes("کیف دست‌دوز"));
+assert.ok(!productCatalogText.includes("prd-1"));
+assert.ok(!productCatalogText.includes("۳ محصول فعال"));
+await page.setViewportSize({ width: 390, height: 844 });
+assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, "seller product catalog must fit mobile width");
+await page.setViewportSize({ width: 1440, height: 900 });
+
+await page.goto(baseURL + "/business/services");
+await page.locator("#business-services-table .phoenix-business-data-table").waitFor();
+const serviceCatalogText = await page.locator("#business-services-table").innerText();
+assert.ok(serviceCatalogText.includes("مشاورهٔ تخصصی"));
+assert.ok(!serviceCatalogText.includes("svc-1"));
+assert.ok(!serviceCatalogText.includes("۲ خدمت فعال"));
+
+await page.goto(baseURL + "/business/bookings");
+await page.locator("#business-bookings-table .phoenix-business-data-table").waitFor();
+const businessBookingsText = await page.locator("#business-bookings-table").innerText();
+assert.ok(businessBookingsText.includes("مشاورهٔ تخصصی"));
+assert.ok(businessBookingsText.includes("تأییدشده"));
+assert.ok(!businessBookingsText.includes("customer-private-e2e"));
+assert.ok(!businessBookingsText.includes("bkg-101"));
+await page.setViewportSize({ width: 390, height: 844 });
+assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, "seller booking list must fit mobile width");
+await page.setViewportSize({ width: 1440, height: 900 });
+
+await page.goto(baseURL + "/business/settings");
+await page.locator("#business-settings-form:not([hidden])").waitFor();
+assert.equal(await page.locator("#biz-set-name").inputValue(), "store-test");
+assert.equal(await page.locator("#biz-set-display-name").inputValue(), "فروشگاه آزمایشی");
+assert.ok(!(await page.locator("#business-settings-status").innerText()).includes("تأییدشده"));
+await page.locator("#biz-set-display-name").fill("فروشگاه آزمایشی ویرایش‌شده");
+await page.locator("[data-save-biz-settings]").click();
+await page.locator("#business-settings-feedback").getByText("اطلاعات ذخیره شد.").waitFor();
+assert.equal(mockBusinessUpdates.length, 1);
+assert.equal(mockBusinessUpdates[0].displayName, "فروشگاه آزمایشی ویرایش‌شده");
+await page.setViewportSize({ width: 390, height: 844 });
+assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, "seller settings must fit mobile width");
+await page.setViewportSize({ width: 1440, height: 900 });
 
 await page.goto(baseURL + "/admin");
 assert.equal(await page.locator("[data-language-toggle]").count(), 1);

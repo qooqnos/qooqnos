@@ -13898,3 +13898,206 @@ button[aria-busy="true"] .btn-spinner {
     margin-inline: auto;
   }
 }
+
+
+/* Seller catalog/settings pages: one visual system, canonical read states only. */
+.phoenix-business-subpage {
+  width: min(1240px, calc(100% - 40px));
+  padding: 26px 0 76px;
+}
+.phoenix-business-subpage > .page-heading {
+  align-items: end;
+  gap: 22px;
+  padding: clamp(22px, 3.5vw, 36px);
+  border: 1px solid var(--line);
+  border-radius: 25px;
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 19rem),
+    linear-gradient(130deg, var(--surface), color-mix(in srgb, var(--surface-2) 45%, var(--surface)));
+  box-shadow: 0 16px 42px rgba(42, 28, 18, .045);
+}
+.phoenix-business-subpage > .page-heading > div:first-child { min-width: 0; }
+.phoenix-business-subpage > .page-heading .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--primary-strong);
+  font-size: 11px;
+  font-weight: 850;
+}
+.phoenix-business-subpage > .page-heading h1 {
+  margin: 7px 0 8px;
+  font-size: clamp(24px, 3vw, 35px);
+  font-weight: 850;
+  line-height: 1.45;
+  letter-spacing: -.03em;
+}
+.phoenix-business-subpage > .page-heading h1 em {
+  color: var(--primary-strong);
+  font-style: normal;
+}
+.phoenix-business-subpage > .page-heading p {
+  max-width: 660px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.9;
+}
+.phoenix-business-subpage .heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.phoenix-business-subpage .heading-actions .button {
+  min-height: 42px;
+  padding: 9px 14px;
+  border-radius: 13px;
+  white-space: nowrap;
+  font-size: 12px;
+  text-decoration: none;
+}
+.phoenix-business-subpage .business-subpage-card {
+  margin-top: 18px;
+  padding: clamp(17px, 2.6vw, 26px);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: 0 12px 34px rgba(42, 28, 18, .035);
+}
+.phoenix-business-subpage .card-section-heading {
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+.phoenix-business-subpage .card-section-heading h2 {
+  margin: 5px 0 0;
+  font-size: 19px;
+  font-weight: 850;
+  line-height: 1.55;
+}
+.phoenix-business-subpage .business-catalog-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  scrollbar-width: thin;
+}
+.phoenix-business-subpage .phoenix-business-data-table {
+  width: 100%;
+  min-width: 590px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--surface);
+}
+.phoenix-business-subpage .phoenix-business-data-table th {
+  padding: 13px 15px;
+  color: var(--muted);
+  background: var(--surface-2);
+  text-align: start;
+  font-size: 11px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+.phoenix-business-subpage .phoenix-business-data-table td {
+  padding: 14px 15px;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+  font-size: 12px;
+  vertical-align: middle;
+}
+.phoenix-business-subpage .phoenix-business-data-table td strong {
+  display: block;
+  font-weight: 800;
+  line-height: 1.7;
+}
+.phoenix-business-subpage .phoenix-business-row-description {
+  display: block;
+  max-width: 340px;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.phoenix-business-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px dashed var(--line-strong);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--surface-2) 55%, var(--surface));
+}
+.phoenix-business-empty-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  font-size: 20px;
+}
+.phoenix-business-empty h3 {
+  margin: 5px 0 0;
+  font-size: 16px;
+  font-weight: 850;
+  line-height: 1.65;
+}
+.phoenix-business-empty p {
+  max-width: 660px;
+  margin: 0 0 7px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.9;
+}
+.phoenix-business-empty .button { min-height: 40px; border-radius: 12px; }
+.phoenix-business-retry-row { display: flex; justify-content: flex-start; margin-top: 12px; }
+.phoenix-business-settings-form { margin-top: 16px; }
+.phoenix-business-settings-form .field-label { display: block; line-height: 1.6; }
+.phoenix-business-settings-form .studio-input-line {
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  margin-top: 5px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+.phoenix-business-settings-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.phoenix-business-settings-actions [role="status"] {
+  color: var(--muted);
+  font-size: 12px;
+}
+.phoenix-business-settings-actions .button { min-height: 42px; border-radius: 12px; }
+@media (max-width: 900px) {
+  .phoenix-business-subpage > .page-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .phoenix-business-subpage .heading-actions { width: 100%; }
+}
+@media (max-width: 720px) {
+  .phoenix-business-subpage { width: calc(100% - 24px); padding: 16px 0 38px; }
+  .phoenix-business-subpage > .page-heading { padding: 22px 17px; border-radius: 21px; gap: 16px; }
+  .phoenix-business-subpage > .page-heading h1 { font-size: 24px; }
+  .phoenix-business-subpage > .page-heading p { font-size: 12px; }
+  .phoenix-business-subpage .heading-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .phoenix-business-subpage .heading-actions .button { width: 100%; justify-content: center; }
+  .phoenix-business-subpage .business-subpage-card { padding: 16px; border-radius: 18px; }
+  .phoenix-business-subpage .card-section-heading h2 { font-size: 16px; }
+  .phoenix-business-subpage .phoenix-business-settings-form .booking-fields { grid-template-columns: minmax(0, 1fr); }
+  .phoenix-business-subpage .phoenix-business-settings-form .field-span-2 { grid-column: auto; }
+}

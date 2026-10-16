@@ -4573,244 +4573,305 @@ function loadSettingsPage(): void {
    Semantic Business Sub-Routes (محصولات، خدمات، نوبت‌ها، تیم، تنظیمات کسب‌وکار)
    ========================================================================= */
 
-function renderBusinessProducts(): string {
-  return `
-    <div class="phoenix-business-subpage">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · مدیریت کاتالوگ")}</span>
-          <h1>${uiText("محصولات و")} <em>${uiText("انبارداری")}</em></h1>
-          <p>${uiText("مدیریت کاتالوگ محصولات، موجودی انبار، قیمت‌گذاری و بارگذاری سریع با هوش مصنوعی.")}</p>
-        </div>
-        <div class="heading-actions">
-          <button type="button" class="button button-primary" id="open-product-form-btn">＋ ${uiText("افزودن محصول جدید")}</button>
-          <a class="button button-ghost" href="/product-studio" data-nav>${uiText("ایجاد با Seller AI")} ✦</a>
-          <a class="button button-ghost" href="/catalog" data-nav>${uiText("کاتالوگ کلی")}</a>
-        </div>
-      </section>
-
-      <div id="new-product-form-slot" style="display: none;"></div>
-
-      <section class="glass-card business-subpage-card">
-        <div class="card-section-heading">
-          <div><span class="section-kicker">${uiText("فهرست محصولات فعال")}</span><h2>${uiText("محصولات موجود")}</h2></div>
-          <span class="pill success">${uiText("۳ محصول فعال")}</span>
-        </div>
-        <div class="business-catalog-table-wrap" id="business-products-table">
-          <div class="slot-loading">${uiText("در حال بارگذاری کاتالوگ محصولات…")}</div>
-        </div>
-      </section>
-    </div>
-  `;
+function renderBusinessDataState(title: string, description: string, actionHref?: string, actionLabel?: string): string {
+  return '<div class="phoenix-business-empty" role="status">' +
+    '<span class="phoenix-business-empty-icon" aria-hidden="true">◇</span>' +
+    '<h3>' + escapeHtml(uiText(title)) + '</h3>' +
+    '<p>' + escapeHtml(description) + '</p>' +
+    (actionHref && actionLabel
+      ? '<a class="button button-primary" href="' + escapeAttr(actionHref) + '" data-nav>' + escapeHtml(uiText(actionLabel)) + ' <span aria-hidden="true">←</span></a>'
+      : '') +
+    '</div>';
 }
+
+function businessStatusLabel(value: unknown): string {
+  const status = typeof value === "string" ? value.toLowerCase() : "";
+  const labels: Record<string, string> = {
+    active: "فعال",
+    published: "منتشرشده",
+    pending: "در انتظار بررسی",
+    unpublished: "پیش‌نویس",
+    draft: "پیش‌نویس",
+    inactive: "غیرفعال",
+    archived: "بایگانی‌شده",
+    disabled: "غیرفعال",
+    confirmed: "تأییدشده",
+    requested: "درخواست‌شده",
+    completed: "تکمیل‌شده",
+    cancelled: "لغوشده",
+    canceled: "لغوشده",
+    rejected: "ردشده",
+    no_show: "عدم مراجعه",
+  };
+  return uiText(labels[status] ?? "وضعیت ثبت‌شده");
+}
+
+function businessStatusPillClass(value: unknown): string {
+  const status = typeof value === "string" ? value.toLowerCase() : "";
+  if (["active", "published", "confirmed", "completed"].includes(status)) return "pill success";
+  if (["inactive", "disabled", "cancelled", "canceled", "rejected", "archived"].includes(status)) return "pill warning";
+  return "pill";
+}
+
+function formatBusinessDateTime(value: unknown, timezone: unknown): string {
+  if (typeof value !== "string" || !value.trim()) return uiText("زمان تعیین نشده");
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return uiText("زمان قابل نمایش نیست");
+  const language = (document.documentElement.lang || "fa").split("-")[0];
+  const locale = language === "fa"
+    ? "fa-IR-u-ca-persian"
+    : language === "ar"
+      ? "ar-SA-u-ca-islamic-umalqura"
+      : "en-GB-u-ca-gregory";
+  const options: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short" };
+  if (typeof timezone === "string" && timezone.trim()) options.timeZone = timezone;
+  try {
+    return new Intl.DateTimeFormat(locale, options).format(date);
+  } catch {
+    return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+}
+
+function renderBusinessProducts(): string {
+  return '<div class="phoenix-business-subpage">' +
+    '<section class="page-heading">' +
+      '<div><span class="eyebrow"><i></i> ' + uiText("کسب‌وکار · کاتالوگ") + '</span>' +
+        '<h1>' + uiText("کالاها و") + ' <em>' + uiText("عرضه‌ها") + '</em></h1>' +
+        '<p>' + uiText("عرضه‌های ثبت‌شدهٔ کسب‌وکار را ببین؛ وضعیت انتشار از کاتالوگ واقعی خوانده می‌شود.") + '</p></div>' +
+      '<div class="heading-actions">' +
+        '<a class="button button-primary" href="/product-studio" data-nav>＋ ' + uiText("افزودن کالا یا خدمت") + '</a>' +
+        '<a class="button button-ghost" href="/business/profile" data-nav>' + uiText("پروفایل کسب‌وکار") + '</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="glass-card business-subpage-card">' +
+      '<div class="card-section-heading">' +
+        '<div><span class="section-kicker">' + uiText("کاتالوگ") + '</span><h2>' + uiText("عرضه‌های کالا") + '</h2></div>' +
+        '<span id="business-products-count" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span>' +
+      '</div>' +
+      '<div class="business-catalog-table-wrap" id="business-products-table"><div class="slot-loading">' + uiText("در حال دریافت کاتالوگ از سامانه…") + '</div></div>' +
+    '</section>' +
+  '</div>';
+}
+
 
 function loadBusinessProductsPage(): void {
   const tableWrap = document.querySelector<HTMLElement>("#business-products-table");
-  const openFormBtn = document.querySelector<HTMLButtonElement>("#open-product-form-btn");
-  const formSlot = document.querySelector<HTMLElement>("#new-product-form-slot");
+  const countNode = document.querySelector<HTMLElement>("#business-products-count");
+  if (!tableWrap || !countNode) return;
+  const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
 
-  const sampleProducts = [
-    { id: "prd-1", name: "بسته ابری هوش سازمانی ققنوس", category: "نرم‌افزار سازمانی", stock: 45, price: 12000000, status: "active" },
-    { id: "prd-2", name: "ماژول اتصال به کانال‌های فروش", category: "افزونه‌های پلتفرم", stock: 120, price: 3500000, status: "active" },
-    { id: "prd-3", name: "لایسنس سالانه تصمیم‌گیری هوشمند", category: "اشتراک و لایسنس", stock: 999, price: 28000000, status: "active" },
-  ];
-
-  if (openFormBtn && formSlot) {
-    const component = new ProductCreateFormComponent({
-      onSave: (data: NewProductFormData) => {
-        const newPrd = {
-          id: `prd-${Date.now().toString(36).slice(-4)}`,
-          name: data.title,
-          category: data.nature === "digital" ? "محصول دیجیتال" : "کالای فیزیکی",
-          stock: data.stockQuantity ?? (data.nature === "digital" ? 999 : 10),
-          price: data.basePriceConsumer,
-          status: "active",
-        };
-        sampleProducts.unshift(newPrd);
-        formSlot.style.display = "none";
-        renderProductsTable();
-        showToast(`محصول «${data.title}» با موفقیت اضافه شد.`);
-      },
-      onCancel: () => {
-        formSlot.style.display = "none";
-      },
-    });
-
-    openFormBtn.addEventListener("click", () => {
-      formSlot.innerHTML = component.render();
-      component.bindEvents(formSlot);
-      formSlot.style.display = "block";
-      formSlot.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    countNode.textContent = uiText("نیازمند ورود");
+    tableWrap.innerHTML = renderBusinessDataState("برای دیدن کاتالوگ وارد شو", "کالاها و وضعیت انتشار فقط پس از خواندن داده‌های معتبر نمایش داده می‌شوند.", "/profile", "ورود به حساب");
+    return;
+  }
+  if (!businessId) {
+    countNode.textContent = uiText("کسب‌وکار انتخاب نشده");
+    tableWrap.innerHTML = renderBusinessDataState("فضای کسب‌وکار آماده نیست", "ابتدا پروفایل کسب‌وکار را کامل کن؛ ققنوس برای کاتالوگ، دادهٔ نمونه نمایش نمی‌دهد.", "/business/profile", "تکمیل پروفایل");
+    return;
   }
 
-  function renderProductsTable() {
-    if (!tableWrap) return;
-    tableWrap.innerHTML = `
-      <table class="ds-table">
-        <thead>
-          <tr>
-            <th>${uiText("شناسه")}</th>
-            <th>${uiText("نام محصول")}</th>
-            <th>${uiText("دسته‌بندی")}</th>
-            <th>${uiText("موجودی")}</th>
-            <th>${uiText("قیمت")}</th>
-            <th>${uiText("وضعیت")}</th>
-            <th>${uiText("اقدامات")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${sampleProducts.map((p) => `
-            <tr>
-              <td><code>${escapeHtml(p.id)}</code></td>
-              <td><strong>${escapeHtml(p.name)}</strong></td>
-              <td>${escapeHtml(p.category)}</td>
-              <td>${formatLocalizedNumber(p.stock)}</td>
-              <td>${formatLocalizedNumber(p.price)} تومان</td>
-              <td><span class="pill success">${uiText("فعال")}</span></td>
-              <td>
-                <a class="button button-ghost button-sm" href="/product-studio" data-nav>${uiText("ویرایش")}</a>
-              </td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    `;
-  }
-
-  renderProductsTable();
+  const load = async (): Promise<void> => {
+    countNode.textContent = uiText("در حال دریافت اطلاعات");
+    countNode.className = "pill";
+    tableWrap.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت کاتالوگ از سامانه…") + '</div>';
+    try {
+      const response = await apiJson<{ data: Array<{
+        id: string;
+        offeringType: string;
+        title: string;
+        description: string | null;
+        productId: string | null;
+        serviceId: string | null;
+        status: string;
+        publicationStatus: string;
+      }> }>("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/offers?limit=48");
+      const products = (Array.isArray(response.data) ? response.data : []).filter((offering) => offering.offeringType === "product" || Boolean(offering.productId));
+      countNode.textContent = formatLocalizedNumber(products.length) + " " + uiText("عرضه");
+      countNode.className = "pill";
+      if (!products.length) {
+        tableWrap.innerHTML = renderBusinessDataState("هنوز کالایی در کاتالوگ نیست", "وقتی عرضهٔ کالا از مسیر استودیو ذخیره شود، اینجا با وضعیت واقعی نمایش داده می‌شود.", "/product-studio", "افزودن کالا یا خدمت");
+        return;
+      }
+      tableWrap.innerHTML = '<table class="ds-table phoenix-business-data-table"><thead><tr>' +
+        '<th>' + uiText("عنوان عرضه") + '</th><th>' + uiText("نوع") + '</th><th>' + uiText("وضعیت") + '</th><th>' + uiText("انتشار") + '</th>' +
+        '</tr></thead><tbody>' + products.map((offering) =>
+          '<tr><td><strong>' + escapeHtml(offering.title) + '</strong>' +
+            (offering.description ? '<small class="phoenix-business-row-description">' + escapeHtml(offering.description) + '</small>' : '') +
+          '</td><td>' + uiText("کالا") + '</td>' +
+          '<td><span class="' + businessStatusPillClass(offering.status) + '">' + businessStatusLabel(offering.status) + '</span></td>' +
+          '<td><span class="' + businessStatusPillClass(offering.publicationStatus) + '">' + businessStatusLabel(offering.publicationStatus) + '</span></td></tr>'
+        ).join("") + '</tbody></table>';
+    } catch (error) {
+      countNode.textContent = uiText("قابل دریافت نیست");
+      countNode.className = "pill warning";
+      tableWrap.innerHTML = renderBusinessDataState("کاتالوگ بارگذاری نشد", error instanceof Error ? error.message : uiText("خطا در دریافت کاتالوگ")) +
+        '<div class="phoenix-business-retry-row"><button class="button button-ghost" type="button" data-retry-business-products>' + uiText("تلاش دوباره") + '</button></div>';
+      tableWrap.querySelector<HTMLButtonElement>("[data-retry-business-products]")?.addEventListener("click", () => void load());
+    }
+  };
+  void load();
 }
+
 
 function renderBusinessServices(): string {
-  return `
-    <div class="phoenix-business-subpage">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · سبد خدمات")}</span>
-          <h1>${uiText("خدمات و")} <em>${uiText("مشاوره‌ها")}</em></h1>
-          <p>${uiText("تعریف و زمان‌بندی خدمات تخصصی، جلسات مشاوره، مدت زمان و سیاست‌های پذیرش.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-primary" href="/business/bookings" data-nav>${uiText("زمان‌بندی و نوبت‌ها")} ◷</a>
-          <a class="button button-ghost" href="/business" data-nav>${uiText("داشبورد کسب‌وکار")}</a>
-        </div>
-      </section>
-
-      <section class="glass-card business-subpage-card">
-        <div class="card-section-heading">
-          <div><span class="section-kicker">${uiText("خدمات تعریف‌شده")}</span><h2>${uiText("فهرست خدمات و مشاوره‌ها")}</h2></div>
-          <span class="pill success">${uiText("۲ خدمت فعال")}</span>
-        </div>
-        <div class="business-catalog-table-wrap" id="business-services-table">
-          <div class="slot-loading">${uiText("در حال بارگذاری لیست خدمات…")}</div>
-        </div>
-      </section>
-    </div>
-  `;
+  return '<div class="phoenix-business-subpage">' +
+    '<section class="page-heading">' +
+      '<div><span class="eyebrow"><i></i> ' + uiText("کسب‌وکار · خدمات") + '</span>' +
+        '<h1>' + uiText("خدمات و") + ' <em>' + uiText("مشاوره‌ها") + '</em></h1>' +
+        '<p>' + uiText("خدمات ثبت‌شده و وضعیت انتشار آن‌ها را از کاتالوگ واقعی مدیریت کن.") + '</p></div>' +
+      '<div class="heading-actions">' +
+        '<a class="button button-primary" href="/business/create" data-nav>＋ ' + uiText("افزودن خدمت") + '</a>' +
+        '<a class="button button-ghost" href="/business/bookings" data-nav>' + uiText("نوبت‌ها و زمان‌بندی") + ' ◷</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="glass-card business-subpage-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + uiText("کاتالوگ") + '</span><h2>' + uiText("فهرست خدمات") + '</h2></div>' +
+        '<span id="business-services-count" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span></div>' +
+      '<div class="business-catalog-table-wrap" id="business-services-table"><div class="slot-loading">' + uiText("در حال دریافت خدمات از سامانه…") + '</div></div>' +
+    '</section>' +
+  '</div>';
 }
+
 
 function loadBusinessServicesPage(): void {
   const tableWrap = document.querySelector<HTMLElement>("#business-services-table");
-  if (!tableWrap) return;
+  const countNode = document.querySelector<HTMLElement>("#business-services-count");
+  if (!tableWrap || !countNode) return;
+  const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
 
-  const sampleServices = [
-    { id: "svc-1", name: "مشاوره تخصصی کسب‌وکار و رشد", duration: "۶۰ دقیقه", price: 4500000, provider: "تیم استراتژی ققنوس", status: "active" },
-    { id: "svc-2", name: "طراحی و توسعه تجربه کاربری اختصاصی", duration: "پروژه‌ای", price: 7800000, provider: "استودیو طراحی محصول", status: "active" },
-  ];
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    countNode.textContent = uiText("نیازمند ورود");
+    tableWrap.innerHTML = renderBusinessDataState("برای دیدن خدمات وارد شو", "فهرست خدمات فقط از کاتالوگ معتبر کسب‌وکار خوانده می‌شود.", "/profile", "ورود به حساب");
+    return;
+  }
+  if (!businessId) {
+    countNode.textContent = uiText("کسب‌وکار انتخاب نشده");
+    tableWrap.innerHTML = renderBusinessDataState("فضای کسب‌وکار آماده نیست", "پس از تکمیل پروفایل، خدمات ثبت‌شده در این بخش نمایش داده می‌شوند.", "/business/profile", "تکمیل پروفایل");
+    return;
+  }
 
-  tableWrap.innerHTML = `
-    <table class="ds-table">
-      <thead>
-        <tr>
-          <th>${uiText("شناسه")}</th>
-          <th>${uiText("عنوان خدمت")}</th>
-          <th>${uiText("مدت زمان")}</th>
-          <th>${uiText("تعرفه")}</th>
-          <th>${uiText("متخصص / ارائه‌دهنده")}</th>
-          <th>${uiText("وضعیت")}</th>
-          <th>${uiText("اقدامات")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${sampleServices.map((s) => `
-          <tr>
-            <td><code>${escapeHtml(s.id)}</code></td>
-            <td><strong>${escapeHtml(s.name)}</strong></td>
-            <td>${escapeHtml(s.duration)}</td>
-            <td>${formatLocalizedNumber(s.price)} ریال</td>
-            <td>${escapeHtml(s.provider)}</td>
-            <td><span class="pill success">${uiText("فعال")}</span></td>
-            <td>
-              <a class="button button-ghost button-sm" href="/booking?business=biz-1&offering=${escapeAttr(s.id)}" data-nav>${uiText("تست رزرو")}</a>
-            </td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
+  const load = async (): Promise<void> => {
+    countNode.textContent = uiText("در حال دریافت اطلاعات");
+    countNode.className = "pill";
+    tableWrap.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت خدمات از سامانه…") + '</div>';
+    try {
+      const response = await apiJson<{ data: Array<{
+        id: string;
+        offeringType: string;
+        title: string;
+        description: string | null;
+        serviceId: string | null;
+        status: string;
+        publicationStatus: string;
+      }> }>("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/offers?limit=48");
+      const services = (Array.isArray(response.data) ? response.data : []).filter((offering) => offering.offeringType === "service" || Boolean(offering.serviceId));
+      countNode.textContent = formatLocalizedNumber(services.length) + " " + uiText("خدمت");
+      countNode.className = "pill";
+      if (!services.length) {
+        tableWrap.innerHTML = renderBusinessDataState("هنوز خدمتی در کاتالوگ نیست", "خدمات پس از ثبت در مسیر ایجاد عرضه در این فهرست ظاهر می‌شوند.", "/business/create", "افزودن خدمت");
+        return;
+      }
+      tableWrap.innerHTML = '<table class="ds-table phoenix-business-data-table"><thead><tr>' +
+        '<th>' + uiText("عنوان خدمت") + '</th><th>' + uiText("توضیحات") + '</th><th>' + uiText("وضعیت") + '</th><th>' + uiText("انتشار") + '</th><th>' + uiText("اقدام") + '</th>' +
+        '</tr></thead><tbody>' + services.map((offering) =>
+          '<tr><td><strong>' + escapeHtml(offering.title) + '</strong></td>' +
+          '<td>' + escapeHtml(offering.description ?? uiText("توضیحی ثبت نشده")) + '</td>' +
+          '<td><span class="' + businessStatusPillClass(offering.status) + '">' + businessStatusLabel(offering.status) + '</span></td>' +
+          '<td><span class="' + businessStatusPillClass(offering.publicationStatus) + '">' + businessStatusLabel(offering.publicationStatus) + '</span></td>' +
+          '<td><a class="button button-ghost button-sm" href="/booking?businessId=' + encodeURIComponent(businessId) + '&offering=' + encodeURIComponent(offering.id) + '" data-nav>' + uiText("مشاهدهٔ رزرو") + '</a></td></tr>'
+        ).join("") + '</tbody></table>';
+    } catch (error) {
+      countNode.textContent = uiText("قابل دریافت نیست");
+      countNode.className = "pill warning";
+      tableWrap.innerHTML = renderBusinessDataState("خدمات بارگذاری نشد", error instanceof Error ? error.message : uiText("خطا در دریافت خدمات")) +
+        '<div class="phoenix-business-retry-row"><button class="button button-ghost" type="button" data-retry-business-services>' + uiText("تلاش دوباره") + '</button></div>';
+      tableWrap.querySelector<HTMLButtonElement>("[data-retry-business-services]")?.addEventListener("click", () => void load());
+    }
+  };
+  void load();
 }
+
 
 function renderBusinessBookings(): string {
-  return `
-    <div class="phoenix-business-subpage">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · تقویم و نوبت‌ها")}</span>
-          <h1>${uiText("رزروهای فعال و")} <em>${uiText("تقویم زمانی")}</em></h1>
-          <p>${uiText("مدیریت وقت‌های ملاقات، نوبت‌های خدمات و ظرفیت‌های پذیرش در زمان‌بندی کسب‌وکار.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-primary" href="/booking" data-nav>${uiText("فرم رزرو مشتری")} ◷</a>
-        </div>
-      </section>
-
-      <section class="glass-card business-subpage-card">
-        <div class="card-section-heading">
-          <div><span class="section-kicker">${uiText("تقویم کاری")}</span><h2>${uiText("نوبت‌های رزروشده امروز و آینده")}</h2></div>
-          <span class="pill success">${uiText("زمان‌بندی متصل")}</span>
-        </div>
-        <div class="business-catalog-table-wrap" id="business-bookings-table">
-          <div class="slot-loading">${uiText("در حال بارگذاری نوبت‌ها…")}</div>
-        </div>
-      </section>
-    </div>
-  `;
+  return '<div class="phoenix-business-subpage">' +
+    '<section class="page-heading">' +
+      '<div><span class="eyebrow"><i></i> ' + uiText("کسب‌وکار · رزروها") + '</span>' +
+        '<h1>' + uiText("نوبت‌ها و") + ' <em>' + uiText("تقویم کاری") + '</em></h1>' +
+        '<p>' + uiText("رزروهای مشتریان و زمان‌های ثبت‌شده را از سامانه پیگیری کن؛ فهرست خالی به معنی رزرو ساختگی نیست.") + '</p></div>' +
+      '<div class="heading-actions">' +
+        '<a class="button button-primary" href="/business/services" data-nav>' + uiText("مدیریت خدمات") + '</a>' +
+        '<a class="button button-ghost" href="/business/profile" data-nav>' + uiText("پروفایل کسب‌وکار") + '</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="glass-card business-subpage-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + uiText("رزروهای واقعی") + '</span><h2>' + uiText("نوبت‌های ثبت‌شده") + '</h2></div>' +
+        '<span id="business-bookings-count" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span></div>' +
+      '<div class="business-catalog-table-wrap" id="business-bookings-table"><div class="slot-loading">' + uiText("در حال دریافت نوبت‌ها از سامانه…") + '</div></div>' +
+    '</section>' +
+  '</div>';
 }
+
 
 function loadBusinessBookingsPage(): void {
   const tableWrap = document.querySelector<HTMLElement>("#business-bookings-table");
-  if (!tableWrap) return;
+  const countNode = document.querySelector<HTMLElement>("#business-bookings-count");
+  if (!tableWrap || !countNode) return;
+  const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
 
-  const sampleBookings = [
-    { id: "bkg-101", customer: "کاربر ققنوس", service: "مشاوره تخصصی کسب‌وکار و رشد", time: "فردا - ۱۰:۰۰ الی ۱۱:۰۰", status: "confirmed" },
-    { id: "bkg-102", customer: "مشتری سازمانی", service: "طراحی و توسعه تجربه کاربری", time: "پس‌فردا - ۱۴:۳۰ الی ۱۵:۳۰", status: "confirmed" },
-  ];
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    countNode.textContent = uiText("نیازمند ورود");
+    tableWrap.innerHTML = renderBusinessDataState("برای دیدن رزروها وارد شو", "رزروها فقط از منبع معتبر کسب‌وکار خوانده می‌شوند.", "/profile", "ورود به حساب");
+    return;
+  }
+  if (!businessId) {
+    countNode.textContent = uiText("کسب‌وکار انتخاب نشده");
+    tableWrap.innerHTML = renderBusinessDataState("فضای کسب‌وکار آماده نیست", "پس از تکمیل پروفایل کسب‌وکار، رزروهای واقعی در اینجا ظاهر می‌شوند.", "/business/profile", "تکمیل پروفایل");
+    return;
+  }
 
-  tableWrap.innerHTML = `
-    <table class="ds-table">
-      <thead>
-        <tr>
-          <th>${uiText("شناسه")}</th>
-          <th>${uiText("نام مشتری")}</th>
-          <th>${uiText("خدمت")}</th>
-          <th>${uiText("زمان")}</th>
-          <th>${uiText("وضعیت")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${sampleBookings.map((b) => `
-          <tr>
-            <td><code>${escapeHtml(b.id)}</code></td>
-            <td><strong>${escapeHtml(b.customer)}</strong></td>
-            <td>${escapeHtml(b.service)}</td>
-            <td>${escapeHtml(b.time)}</td>
-            <td><span class="pill success">${uiText("تأییدشده")}</span></td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
+  const load = async (): Promise<void> => {
+    countNode.textContent = uiText("در حال دریافت اطلاعات");
+    countNode.className = "pill";
+    tableWrap.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت نوبت‌ها از سامانه…") + '</div>';
+    try {
+      const response = await apiJson<{ data: Array<{
+        id: string;
+        customerId: string;
+        status: string;
+        appointmentStatus: string | null;
+        startsAt: string | null;
+        endsAt: string | null;
+        timezone: string | null;
+        offeringTitle: string | null;
+      }> }>("/api/v1/booking?businessId=" + encodeURIComponent(businessId) + "&limit=24");
+      const bookings = Array.isArray(response.data) ? response.data : [];
+      countNode.textContent = formatLocalizedNumber(bookings.length) + " " + uiText("رزرو");
+      countNode.className = "pill";
+      if (!bookings.length) {
+        tableWrap.innerHTML = renderBusinessDataState("هنوز رزروی ثبت نشده", "پس از ثبت رزرو توسط مشتری، زمان و وضعیت واقعی آن در این فهرست دیده می‌شود.", "/business/services", "مشاهدهٔ خدمات");
+        return;
+      }
+      tableWrap.innerHTML = '<table class="ds-table phoenix-business-data-table"><thead><tr>' +
+        '<th>' + uiText("خدمت") + '</th><th>' + uiText("زمان شروع") + '</th><th>' + uiText("زمان پایان") + '</th><th>' + uiText("وضعیت") + '</th>' +
+        '</tr></thead><tbody>' + bookings.map((booking) => {
+          const status = booking.appointmentStatus || booking.status;
+          return '<tr><td><strong>' + escapeHtml(booking.offeringTitle || uiText("رزرو ثبت‌شده")) + '</strong></td>' +
+            '<td>' + escapeHtml(formatBusinessDateTime(booking.startsAt, booking.timezone)) + '</td>' +
+            '<td>' + escapeHtml(formatBusinessDateTime(booking.endsAt, booking.timezone)) + '</td>' +
+            '<td><span class="' + businessStatusPillClass(status) + '">' + escapeHtml(businessStatusLabel(status)) + '</span></td></tr>';
+        }).join("") + '</tbody></table>';
+    } catch (error) {
+      countNode.textContent = uiText("قابل دریافت نیست");
+      countNode.className = "pill warning";
+      tableWrap.innerHTML = renderBusinessDataState("رزروها بارگذاری نشدند", error instanceof Error ? error.message : uiText("خطا در دریافت رزروها")) +
+        '<div class="phoenix-business-retry-row"><button class="button button-ghost" type="button" data-retry-business-bookings>' + uiText("تلاش دوباره") + '</button></div>';
+      tableWrap.querySelector<HTMLButtonElement>("[data-retry-business-bookings]")?.addEventListener("click", () => void load());
+    }
+  };
+  void load();
 }
+
 
 function renderBusinessTeam(): string {
   return renderPhoenixBusinessTeam();
@@ -4908,47 +4969,144 @@ async function loadBusinessTeamPage(): Promise<void> {
 }
 
 function renderBusinessSettings(): string {
-  return `
-    <div class="phoenix-business-subpage">
-      <section class="page-heading">
-        <div>
-          <span class="eyebrow"><i></i> ${uiText("کسب‌وکار · تنظیمات")}</span>
-          <h1>${uiText("پروفایل و")} <em>${uiText("اطلاعات عمومی")}</em></h1>
-          <p>${uiText("تنظیم اطلاعات هویت، موقعیت جغرافیایی، ساعت کاری و وضعیت انتشار عمومی کسب‌وکار.")}</p>
-        </div>
-        <div class="heading-actions">
-          <a class="button button-ghost" href="/business/profile" data-nav>${uiText("مشاهده پروفایل")}</a>
-          <button class="button button-primary" type="button" data-save-biz-settings>${uiText("ذخیره تغییرات")}</button>
-        </div>
-      </section>
-
-      <section class="glass-card business-subpage-card">
-        <div class="card-section-heading">
-          <div><span class="section-kicker">${uiText("مشخصات اصلی")}</span><h2>${uiText("هویت کسب‌وکار")}</h2></div>
-          <span class="pill success">${uiText("تأییدشده")}</span>
-        </div>
-        <div class="booking-fields">
-          <div><label class="field-label" for="biz-set-name">${uiText("نام رسمی کسب‌وکار")}</label><input class="studio-input-line" id="biz-set-name" value="مرکز خدمات فناوری و نوآوری ققنوس" /></div>
-          <div><label class="field-label" for="biz-set-cat">${uiText("دسته‌بندی اصلی")}</label><input class="studio-input-line" id="biz-set-cat" value="خدمات فناوری و ابری" /></div>
-          <div><label class="field-label" for="biz-set-city">${uiText("شهر")}</label><input class="studio-input-line" id="biz-set-city" value="تهران" /></div>
-          <div><label class="field-label" for="biz-set-phone">${uiText("تلفن تماس عمومی")}</label><input class="studio-input-line" id="biz-set-phone" value="021-88880000" /></div>
-          <div class="field-span-2"><label class="field-label" for="biz-set-desc">${uiText("شرح فعالیت و ارزش پیشنهادی")}</label><textarea class="studio-input-line" id="biz-set-desc" rows="3">ارائه‌دهنده راهکارهای یکپارچه نرم‌افزاری و هوش مصنوعی تصمیم‌گیری برای رشد پایدار کسب‌وکارها.</textarea></div>
-        </div>
-      </section>
-    </div>
-  `;
+  return '<div class="phoenix-business-subpage">' +
+    '<section class="page-heading">' +
+      '<div><span class="eyebrow"><i></i> ' + uiText("کسب‌وکار · تنظیمات") + '</span>' +
+        '<h1>' + uiText("اطلاعات اصلی و") + ' <em>' + uiText("ترجیحات") + '</em></h1>' +
+        '<p>' + uiText("اطلاعات اصلی از پروفایل ثبت‌شده خوانده می‌شود؛ مکان‌ها و راه‌های تماس را از بخش پروفایل مدیریت کن.") + '</p></div>' +
+      '<div class="heading-actions"><a class="button button-ghost" href="/business/profile" data-nav>' + uiText("مکان‌ها و راه‌های تماس") + '</a></div>' +
+    '</section>' +
+    '<section class="glass-card business-subpage-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + uiText("اطلاعات canonical کسب‌وکار") + '</span><h2>' + uiText("هویت و ترجیحات") + '</h2></div>' +
+        '<span id="business-settings-status" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span></div>' +
+      '<div id="business-settings-load-state"><div class="slot-loading">' + uiText("در حال دریافت اطلاعات کسب‌وکار…") + '</div></div>' +
+      '<form id="business-settings-form" class="booking-fields phoenix-business-settings-form" hidden>' +
+        '<div><label class="field-label" for="biz-set-name">' + uiText("نام رسمی کسب‌وکار") + '</label><input class="studio-input-line" id="biz-set-name" required /></div>' +
+        '<div><label class="field-label" for="biz-set-display-name">' + uiText("نام نمایشی") + '</label><input class="studio-input-line" id="biz-set-display-name" required /></div>' +
+        '<div><label class="field-label" for="biz-set-type">' + uiText("نوع کسب‌وکار") + '</label><input class="studio-input-line" id="biz-set-type" /></div>' +
+        '<div><label class="field-label" for="biz-set-cat">' + uiText("شناسهٔ دسته‌بندی") + '</label><input class="studio-input-line" id="biz-set-cat" /></div>' +
+        '<div><label class="field-label" for="biz-set-locale">' + uiText("زبان پیش‌فرض") + '</label><input class="studio-input-line" id="biz-set-locale" /></div>' +
+        '<div><label class="field-label" for="biz-set-timezone">' + uiText("منطقهٔ زمانی") + '</label><input class="studio-input-line" id="biz-set-timezone" /></div>' +
+        '<div><label class="field-label" for="biz-set-currency">' + uiText("واحد پول پیش‌فرض") + '</label><input class="studio-input-line" id="biz-set-currency" /></div>' +
+        '<div class="field-span-2 phoenix-business-settings-actions"><span id="business-settings-feedback" role="status"></span><button class="button button-primary" type="button" data-save-biz-settings disabled>' + uiText("ذخیرهٔ تغییرات") + '</button></div>' +
+      '</form>' +
+    '</section>' +
+  '</div>';
 }
+
 
 function loadBusinessSettingsPage(): void {
-  document.querySelector<HTMLButtonElement>("[data-save-biz-settings]")?.addEventListener("click", () => {
-    showToast("مشخصات کسب‌وکار با موفقیت به‌روزرسانی شد.");
+  const form = document.querySelector<HTMLFormElement>("#business-settings-form");
+  const state = document.querySelector<HTMLElement>("#business-settings-load-state");
+  const statusNode = document.querySelector<HTMLElement>("#business-settings-status");
+  const saveButton = document.querySelector<HTMLButtonElement>("[data-save-biz-settings]");
+  const feedback = document.querySelector<HTMLElement>("#business-settings-feedback");
+  if (!form || !state || !statusNode || !saveButton) return;
+
+  let currentBusiness: Record<string, unknown> | null = null;
+  const field = (id: string): HTMLInputElement | null => form.querySelector<HTMLInputElement>("#" + id);
+  const setStatus = (label: string, className = "pill"): void => {
+    statusNode.textContent = label;
+    statusNode.className = className;
+  };
+  const load = async (): Promise<void> => {
+    const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
+    form.hidden = true;
+    saveButton.disabled = true;
+    state.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت اطلاعات کسب‌وکار…") + '</div>';
+    setStatus(uiText("در حال بارگذاری"));
+    if (!sessionStorage.getItem(STORAGE.accessToken)) {
+      setStatus(uiText("نیازمند ورود"), "pill warning");
+      state.innerHTML = renderBusinessDataState("برای مدیریت اطلاعات وارد شو", "اطلاعات کسب‌وکار فقط پس از احراز هویت خوانده یا ذخیره می‌شود.", "/profile", "ورود به حساب");
+      return;
+    }
+    if (!businessId) {
+      setStatus(uiText("کسب‌وکار انتخاب نشده"), "pill warning");
+      state.innerHTML = renderBusinessDataState("پروفایل کسب‌وکار ثبت نشده", "برای این حساب هنوز شناسهٔ کسب‌وکار انتخاب نشده است؛ هیچ اطلاعات پیش‌فرضی به‌جای آن نمایش داده نمی‌شود.", "/business/profile", "تکمیل پروفایل");
+      return;
+    }
+    try {
+      const response = await apiJson<{ data: { business: Record<string, unknown> } }>(
+        "/api/v1/businesses/" + encodeURIComponent(businessId) + "/management"
+      );
+      currentBusiness = response.data.business;
+      if (!currentBusiness || typeof currentBusiness !== "object") throw new Error(uiText("اطلاعات کسب‌وکار در پاسخ موجود نیست"));
+      const readText = (key: string): string => typeof currentBusiness?.[key] === "string" ? String(currentBusiness[key]) : "";
+      const values: Record<string, string> = {
+        "biz-set-name": readText("name"),
+        "biz-set-display-name": readText("displayName"),
+        "biz-set-type": readText("businessType"),
+        "biz-set-cat": readText("primaryCategoryId"),
+        "biz-set-locale": readText("defaultLocale"),
+        "biz-set-timezone": readText("timezone"),
+        "biz-set-currency": readText("defaultCurrency"),
+      };
+      for (const [id, value] of Object.entries(values)) {
+        const input = field(id);
+        if (input) input.value = value;
+      }
+      form.hidden = false;
+      state.innerHTML = "";
+      const publication = readText("publicationStatus");
+      setStatus(uiText("وضعیت انتشار") + ": " + businessStatusLabel(publication || "unpublished"), businessStatusPillClass(publication));
+      saveButton.disabled = false;
+    } catch (error) {
+      currentBusiness = null;
+      setStatus(uiText("اطلاعات بارگذاری نشد"), "pill warning");
+      state.innerHTML = renderBusinessDataState("تنظیمات بارگذاری نشد", error instanceof Error ? error.message : uiText("خطا در دریافت تنظیمات")) +
+        '<div class="phoenix-business-retry-row"><button class="button button-ghost" type="button" data-retry-business-settings>' + uiText("تلاش دوباره") + '</button></div>';
+      state.querySelector<HTMLButtonElement>("[data-retry-business-settings]")?.addEventListener("click", () => void load());
+    }
+  };
+
+  saveButton.addEventListener("click", async () => {
+    const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
+    if (!currentBusiness || !businessId) {
+      showToast(uiText("ابتدا اطلاعات واقعی کسب‌وکار را بارگذاری کن."));
+      return;
+    }
+    const name = field("biz-set-name")?.value.trim() ?? "";
+    const displayName = field("biz-set-display-name")?.value.trim() ?? "";
+    if (!name || !displayName) {
+      if (feedback) feedback.textContent = uiText("نام رسمی و نام نمایشی الزامی هستند.");
+      return;
+    }
+    const body: Record<string, string> = { name, displayName };
+    const optionalFields: Array<[string, string]> = [
+      ["businessType", "biz-set-type"],
+      ["primaryCategoryId", "biz-set-cat"],
+      ["defaultLocale", "biz-set-locale"],
+      ["timezone", "biz-set-timezone"],
+      ["defaultCurrency", "biz-set-currency"],
+    ];
+    for (const [key, id] of optionalFields) {
+      const value = field(id)?.value.trim() ?? "";
+      if (value) body[key] = value;
+    }
+    saveButton.disabled = true;
+    if (feedback) feedback.textContent = uiText("در حال ذخیره…");
+    setStatus(uiText("در حال ذخیره"), "pill");
+    try {
+      const response = await apiJson<{ data: Record<string, unknown> }>(
+        "/api/v1/businesses/" + encodeURIComponent(businessId),
+        { method: "PATCH", body }
+      );
+      currentBusiness = response.data;
+      if (feedback) feedback.textContent = uiText("اطلاعات ذخیره شد.");
+      const publication = typeof currentBusiness.publicationStatus === "string" ? currentBusiness.publicationStatus : "unpublished";
+      setStatus(uiText("وضعیت انتشار") + ": " + businessStatusLabel(publication), businessStatusPillClass(publication));
+      showToast(uiText("تغییرات کسب‌وکار ذخیره شد."));
+    } catch (error) {
+      if (feedback) feedback.textContent = error instanceof Error ? error.message : uiText("ذخیرهٔ اطلاعات ناموفق بود.");
+      setStatus(uiText("ذخیره انجام نشد"), "pill warning");
+    } finally {
+      saveButton.disabled = false;
+    }
   });
+
+  void load();
 }
 
-/* =========================================================================
-   Welcome & Onboarding Flow (/welcome)
-   Contract Section 5: Entry and Onboarding Experience
-   ========================================================================= */
 
 function renderWelcome(): string {
   const typeParam = new URLSearchParams(location.search).get("type") || new URLSearchParams(location.search).get("persona");
