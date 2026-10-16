@@ -1282,15 +1282,7 @@
     "createDetailsStepDraftDescription": "استخراج مشخصات و پرسش دربارهٔ موارد ناقص",
     "createDetailsStepReview": "بازبینی و انتشار",
     "createDetailsStepReviewDescription": "انتشار بعد از تأیید خودت",
-    "createDetailsAddImage": "افزودن تصویر در استودیو",
-    "dealGuardHeading": "برای ثبت معامله، اول عرضه را کامل کن",
-    "dealGuardDescription": "انتخاب معامله از روی متن خام انجام نمی‌شود. ابتدا کالا یا خدمت را در استودیو کامل کن و بعد از بازبینی، از مسیر سفارش یا رزرو واقعی ادامه بده.",
-    "dealGuardCreateOffer": "ساخت عرضه",
-    "dealGuardCreateDescription": "مشخصات را بنویس، در صورت نیاز تصویر اضافه کن و پیش‌نویس را بازبینی کن.",
-    "dealGuardContinueStudio": "ادامه در استودیو",
-    "dealGuardPublishTitle": "انتشار با تأیید خودت",
-    "dealGuardPublishDescription": "تا وقتی عرضه را تأیید نکرده‌ای، ققنوس آن را منتشرشده یا معامله را ثبت‌شده نشان نمی‌دهد.",
-    "dealGuardBackToCreate": "بازگشت به ایجاد"
+    "createDetailsAddImage": "افزودن تصویر در استودیو"
   },
   "taxonomy": {
     "industry": {

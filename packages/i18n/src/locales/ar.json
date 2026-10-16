@@ -1282,15 +1282,7 @@
     "createDetailsStepDraftDescription": "استخراج المواصفات والسؤال عن المعلومات الناقصة",
     "createDetailsStepReview": "المراجعة والنشر",
     "createDetailsStepReviewDescription": "النشر بعد موافقتك",
-    "createDetailsAddImage": "إضافة صورة في الاستوديو",
-    "dealGuardHeading": "أكمل العرض أولاً قبل بدء المعاملة",
-    "dealGuardDescription": "لا يمكن بدء معاملة من نص أولي فقط. أكمل المنتج أو الخدمة في الاستوديو أولاً، ثم راجعها وتابع عبر مسار طلب أو حجز فعلي.",
-    "dealGuardCreateOffer": "إنشاء عرض",
-    "dealGuardCreateDescription": "أضف التفاصيل، وأرفق صورة عند الحاجة، ثم راجع المسودة.",
-    "dealGuardContinueStudio": "المتابعة في الاستوديو",
-    "dealGuardPublishTitle": "أنت توافق قبل النشر",
-    "dealGuardPublishDescription": "لن يعرض ققنوس العرض على أنه منشور أو يسجل معاملة قبل موافقتك عليه.",
-    "dealGuardBackToCreate": "العودة إلى الإنشاء"
+    "createDetailsAddImage": "إضافة صورة في الاستوديو"
   },
   "taxonomy": {
     "industry": {

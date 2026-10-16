@@ -1282,15 +1282,7 @@
     "createDetailsStepDraftDescription": "Extract details and ask about missing information",
     "createDetailsStepReview": "Review and publish",
     "createDetailsStepReviewDescription": "Publish after your approval",
-    "createDetailsAddImage": "Add an image in Studio",
-    "dealGuardHeading": "Complete your offer before starting a transaction",
-    "dealGuardDescription": "A transaction cannot start from raw text. Complete the product or service in Studio first, review it, then continue through a real order or booking flow.",
-    "dealGuardCreateOffer": "Create an offer",
-    "dealGuardCreateDescription": "Add the details, include an image if needed, and review the draft.",
-    "dealGuardContinueStudio": "Continue in Studio",
-    "dealGuardPublishTitle": "You approve before publishing",
-    "dealGuardPublishDescription": "Until you approve the offer, Phoenix will not show it as published or mark a transaction as created.",
-    "dealGuardBackToCreate": "Back to create"
+    "createDetailsAddImage": "Add an image in Studio"
   },
   "taxonomy": {
     "industry": {
