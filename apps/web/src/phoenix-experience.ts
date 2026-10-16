@@ -742,10 +742,10 @@ export function renderCreateContentHub(): string {
         </article>
         <article class="phoenix-reset-create-card phoenix-reset-create-need-card">
           <span class="phoenix-reset-create-icon" aria-hidden="true">⌕</span>
-          <span class="phoenix-reset-section-kicker">${ui("createNeedEyebrow")}</span>
-          <h2>${ui("createNeedTitle")}</h2>
-          <p>${ui("createNeedBody")}</p>
-          <a class="button button-ghost" href="/discover?tab=explore&intent=need" data-nav data-create-need>${ui("createNeedAction")} <span aria-hidden="true">←</span></a>
+          <span class="phoenix-reset-section-kicker">${ui("برای پیدا کردن")}</span>
+          <h2>${ui("دنبال چیزی می‌گردی؟")}</h2>
+          <p>${ui("نیازت را به زبان خودت بنویس؛ از اکسپلور گزینه‌های موجود را بررسی کن و بعد سؤال یا مقایسه را ادامه بده.")}</p>
+          <a class="button button-ghost" href="/discover?tab=explore&intent=need" data-nav data-create-need>${ui("بیان نیاز")} <span aria-hidden="true">←</span></a>
         </article>
       </section>
 
