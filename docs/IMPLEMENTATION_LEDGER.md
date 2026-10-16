@@ -3052,3 +3052,18 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The action uses the canonical social follow API, synchronizes its visible pressed state with the feed, and opens authentication for signed-out users.
 - Detail modal now focuses its close control on open, closes with Escape, and restores focus to the originating card.
 - Added Persian, English and Arabic labels/toasts and E2E checks for follow-state synchronization and keyboard dismissal.
+
+
+## 2026-10-16 — Person and business following in the social feed
+
+- Feed cards can follow a business when a canonical business target exists, or an individual seller when owner metadata provides a user ID (`sellerUserId`, `ownerUserId`, `authorUserId`, `profileUserId`, or `userId`). No guessed target ID is sent.
+- The action uses the canonical `/api/v1/social/follows` contract, keeps selected state tied to `targetType + targetId`, and supports unfollow.
+- The canonical Discovery `searchFollowing` query now includes both followed businesses and followed users' published/eligible projections, scoped to the active actor, tenant and workspace. An `EXISTS` predicate prevents duplicate search rows when both target types match one offer.
+- Added repository coverage for the user/business follow query and browser E2E coverage for creating both follow types and seeing an independently owned offer in the Following feed.
+- Latest verification runs to inspect: CI, Phoenix verification and browser E2E on the current branch head. Do not mark this change complete until all three runs pass.
+
+## Known integration boundary — direct messages
+
+- The customer Messages screen is intentionally honest about being unavailable; it does not invent example conversations.
+- The current Communication API supports creating a conversation and sending a message, but has no participant-scoped conversation-list/read endpoint in the route layer. The current Conversation model also needs an explicit participant/ownership access rule before exposing message history in the customer UI.
+- Do not connect a list of conversations until read/list APIs enforce actor, tenant and workspace scope. This is a backend contract task, not a front-end-only placeholder to bypass.
