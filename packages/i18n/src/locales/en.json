@@ -2244,6 +2244,10 @@
     "sellerStartAccountAction": "Go to my account",
     "detailAskSeller": "Ask the seller",
     "messagesOrderSelected": "Selected order",
-    "messagesTopicSelected": "Selected topic"
+    "messagesTopicSelected": "Selected topic",
+    "createNeedEyebrow": "To discover",
+    "createNeedTitle": "Looking for something?",
+    "createNeedBody": "Describe what you need in your own words, explore available options, and continue with questions or comparison.",
+    "createNeedAction": "Describe your need"
   }
 }
