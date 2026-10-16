@@ -86,9 +86,12 @@ describe("Phoenix Unified Experience (apps/web/src/phoenix-experience.ts)", () =
     expect(contentDetails).toContain('id="content-details-form"');
     expect(contentDetails).not.toContain('id="content-price-input"');
     expect(contentDetails).not.toContain("150,000");
-    expect(renderDealTypeSelection()).toContain("الان می‌خوای با این محتوا چیکار کنی؟");
-    expect(renderDealTypeSelection()).toContain("بفروشم");
-    expect(renderDealTypeSelection()).toContain("معاوضه کنم");
+    const dealGuard = renderDealTypeSelection();
+    expect(dealGuard).toContain("برای ثبت معامله، اول عرضه را کامل کن");
+    expect(dealGuard).toContain('href="/product-studio"');
+    expect(dealGuard).toContain("معامله را ثبت‌شده نشان نمی‌دهد");
+    expect(dealGuard).not.toContain("confirm-deal-btn");
+    expect(dealGuard).not.toContain("مزایده بذارم");
     expect(renderIndividualProfile()).toContain("حساب من");
     expect(renderIndividualProfile()).toContain("امتیاز: ۲۸۰");
     expect(renderIndividualNotifications()).toContain("اعلان‌ها");

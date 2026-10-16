@@ -751,7 +751,15 @@
     "createDetailsStepDraftDesc": "Extract attributes and ask about missing details",
     "createDetailsStepReview": "Review and publish",
     "createDetailsStepReviewDesc": "Publish only after your approval",
-    "createDetailsStudioLink": "Add an image in Studio"
+    "createDetailsStudioLink": "Add an image in Studio",
+    "createDealGuardTitle": "Complete the offer before starting a transaction",
+    "createDealGuardIntro": "A transaction cannot be created from raw text alone. Complete the product or service in Studio and review it before continuing through a real order or booking flow.",
+    "createDealGuardStepOffer": "Create the offer",
+    "createDealGuardStepOfferDesc": "Add the details, include an image if useful, and review the draft.",
+    "createDealGuardStepReview": "Publish with your approval",
+    "createDealGuardStepReviewDesc": "Until you approve an offer, Phoenix will not claim it is published or that a transaction was created.",
+    "createDealGuardStudio": "Continue in Studio",
+    "createDealGuardBack": "Back to Create"
   },
   "canonical": {
     "identity": {

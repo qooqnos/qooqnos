@@ -799,44 +799,29 @@ export function renderContentDetailsForm(): string {
  * Screen 1.5: انتخاب نوع معامله
  */
 export function renderDealTypeSelection(): string {
-  const deals = [
-    { id: "sell", label: "بفروشم", desc: "پیشنهاد به خریداران مرتبط", icon: "🏷️" },
-    { id: "buy", label: "بخرم", desc: "جستجوی آگهی‌های مشابه", icon: "🛒" },
-    { id: "rent", label: "اجاره بدم", desc: "مدیریت قرارداد و پرداخت", icon: "🔑" },
-    { id: "trade", label: "معاوضه کنم", desc: "پیشنهاد برای معاوضه", icon: "🔄" },
-    { id: "auction", label: "مزایده بذارم", desc: "شروع مزایده و جذب پیشنهاد", icon: "⚡" },
-    { id: "tender", label: "مناقصه انجام بدم", desc: "برای پروژه‌های بزرگ", icon: "📋" },
-  ];
-
   return `
-    <div class="phoenix-screen-wrapper">
-      <div class="phoenix-screen-top">
-        <a href="/create/details" data-nav class="phoenix-screen-back-btn" aria-label="${ui("بازگشت")}">→</a>
-        <div class="phoenix-screen-title-wrap">
-          <h1 class="phoenix-screen-title">${ui("انتخاب معامله")}</h1>
-          <div class="phoenix-screen-subtitle">${ui("الان می‌خوای با این محتوا چیکار کنی؟")}</div>
+    <div class="phoenix-reset-page phoenix-reset-deal-guard">
+      <section class="phoenix-reset-hero">
+        <div class="phoenix-reset-hero-copy">
+          <div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>${ui("افزودن کالا یا خدمت")}</span></div>
+          <h1>${ui("برای ثبت معامله، اول عرضه را کامل کن")}</h1>
+          <p>${ui("انتخاب معامله از روی متن خام انجام نمی‌شود. ابتدا کالا یا خدمت را در استودیو کامل کن و بعد از بازبینی، از مسیر سفارش یا رزرو واقعی ادامه بده.")}</p>
         </div>
-        <div style="width: 38px;"></div>
-      </div>
-
-      <div class="phoenix-screen-content">
-        <div class="phoenix-deal-list" id="deal-options-list">
-          ${deals.map((d, index) => `
-            <button type="button" class="phoenix-deal-card ${index === 0 ? "selected" : ""}" data-deal-type="${d.id}">
-              <div class="phoenix-deal-card-icon" aria-hidden="true">${d.icon}</div>
-              <div class="phoenix-deal-card-copy">
-                <strong>${ui(d.label)}</strong>
-                <small>${ui(d.desc)}</small>
-              </div>
-            </button>
-          `).join("")}
-        </div>
-
-        <button type="button" class="phoenix-primary-cta" id="confirm-deal-btn" style="margin-top: 8px;">
-          <span>${ui("تأیید و انتشار معامله")}</span>
-          <span aria-hidden="true">✓</span>
-        </button>
-      </div>
+      </section>
+      <section class="phoenix-reset-deal-guard-grid">
+        <article class="phoenix-reset-deal-guard-card">
+          <span class="phoenix-reset-deal-guard-number">01</span>
+          <h2>${ui("ساخت عرضه")}</h2>
+          <p>${ui("مشخصات را بنویس، در صورت نیاز تصویر اضافه کن و پیش‌نویس را بازبینی کن.")}</p>
+          <a href="/product-studio" data-nav class="button button-primary">${ui("ادامه در استودیو")} <span aria-hidden="true">←</span></a>
+        </article>
+        <article class="phoenix-reset-deal-guard-card">
+          <span class="phoenix-reset-deal-guard-number">02</span>
+          <h2>${ui("انتشار با تأیید خودت")}</h2>
+          <p>${ui("تا وقتی عرضه را تأیید نکرده‌ای، ققنوس آن را منتشرشده یا معامله را ثبت‌شده نشان نمی‌دهد.")}</p>
+          <a href="/create" data-nav class="button button-ghost">${ui("بازگشت به ایجاد")} <span aria-hidden="true">←</span></a>
+        </article>
+      </section>
     </div>
   `;
 }
@@ -2171,15 +2156,6 @@ export function bindPhoenixExperienceEvents(container: HTMLElement, onNavigate: 
       card.classList.add("selected");
     };
   });
-
-  // Confirm deal button
-  const confirmDealBtn = container.querySelector<HTMLButtonElement>("#confirm-deal-btn");
-  if (confirmDealBtn) {
-    confirmDealBtn.onclick = () => {
-      showToast(ui("معامله با موفقیت ثبت شد و در سیستم قرار گرفت."));
-      onNavigate("/transactions");
-    };
-  }
 
   // Free-form content handoff to the canonical AI Product Studio.
   const contentForm = container.querySelector<HTMLFormElement>("#content-details-form");

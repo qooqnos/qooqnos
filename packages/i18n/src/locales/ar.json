@@ -751,7 +751,15 @@
     "createDetailsStepDraftDesc": "استخراج المواصفات والسؤال عن التفاصيل الناقصة",
     "createDetailsStepReview": "المراجعة والنشر",
     "createDetailsStepReviewDesc": "لا تنشر إلا بعد موافقتك",
-    "createDetailsStudioLink": "أضف صورة في الاستوديو"
+    "createDetailsStudioLink": "أضف صورة في الاستوديو",
+    "createDealGuardTitle": "أكمل العرض قبل بدء المعاملة",
+    "createDealGuardIntro": "لا يمكن إنشاء معاملة من نص أولي فقط. أكمل المنتج أو الخدمة في الاستوديو وراجعها قبل المتابعة عبر طلب أو حجز فعلي.",
+    "createDealGuardStepOffer": "إنشاء العرض",
+    "createDealGuardStepOfferDesc": "أضف التفاصيل، وأرفق صورة عند الحاجة، ثم راجع المسودة.",
+    "createDealGuardStepReview": "النشر بعد موافقتك",
+    "createDealGuardStepReviewDesc": "لن يعرض ققنوس العرض على أنه منشور أو المعاملة على أنها مسجلة قبل موافقتك.",
+    "createDealGuardStudio": "المتابعة في الاستوديو",
+    "createDealGuardBack": "العودة إلى الإضافة"
   },
   "canonical": {
     "identity": {

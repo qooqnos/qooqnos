@@ -3090,3 +3090,10 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 
 - Added explicit Persian, English and Arabic dictionary entries for every new customer-facing phrase on `/create/details`.
 - Extended E2E checks for Arabic, English and Persian rendering before validating the one-time handoff into Product Studio.
+
+
+## 2026-10-16 — Removed legacy fake transaction confirmation
+
+- The old `/create/deal-type` route used to show a success toast and navigate to transactions without a backend transaction creation call. That handler and its selectable fake deal list are removed.
+- The route now explains that an offer must be completed and reviewed before entering a real order/booking path, with links to Product Studio and Create.
+- Added unit and browser E2E assertions that the route does not expose the old confirmation button or claim a transaction was created.
