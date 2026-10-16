@@ -135,7 +135,6 @@ let shellNotifications: NotificationView[] = [];
 let shellContext: { actorId?: string; tenantId?: string; workspaceId?: string } = {};
 let activeConversationId: string | null = null;
 let messagesLoadGeneration = 0;
-let communicationSendDelegateBound = false;
 let communicationMessageSendInFlight = false;
 let shellLoadInFlight = false;
 const socialActionIds = new Map<string, string>();
@@ -4622,8 +4621,13 @@ async function loadMessagesPage(preferredConversationId?: string): Promise<void>
       const form = thread.querySelector<HTMLFormElement>("[data-communication-send]");
       const textarea = form?.querySelector<HTMLTextAreaElement>("#messages-compose");
       const send = form?.querySelector<HTMLButtonElement>("[data-message-send]");
-      // The button uses type="button"; click handling is delegated by bindGlobalEvents.
-      // Preserve accessible keyboard submission without creating a second message request.
+      // Bind to the freshly-rendered button because thread refresh replaces its DOM node.
+      // The shared handler guards against duplicate submissions.
+      send?.addEventListener("click", (event) => {
+        event.preventDefault();
+        void submitCommunicationMessage(send);
+      });
+      // Preserve accessible keyboard submission through the same guarded click path.
       form?.addEventListener("submit", (event) => {
         event.preventDefault();
         send?.click();
@@ -8087,48 +8091,38 @@ function bindBusinessWorkspaceDynamicEvents(): void {
   });
 }
 
-function bindGlobalEvents(): void {
-  // Message thread content is fetched asynchronously and can be replaced after a send.
-  // Delegate the send-button click once at document level so each refreshed thread
-  // remains actionable instead of relying on a listener attached to a disposable node.
-  if (!communicationSendDelegateBound) {
-    document.addEventListener("click", (event) => {
-      const eventTarget = event.target as Element | null;
-      const send = eventTarget?.closest<HTMLButtonElement>("[data-message-send]");
-      if (!send) return;
-      event.preventDefault();
-      const form = send.closest<HTMLFormElement>("[data-communication-send]");
-      const textarea = form?.querySelector<HTMLTextAreaElement>("#messages-compose");
-      const error = form?.querySelector<HTMLElement>("#messages-send-error");
-      const content = textarea?.value.trim() ?? "";
-      const conversationId = activeConversationId;
-      if (!form || !conversationId || !content || send.disabled || communicationMessageSendInFlight) return;
-      communicationMessageSendInFlight = true;
-      send.disabled = true;
-      send.textContent = socialCommerceUi("messagesSending");
-      if (error) error.textContent = "";
-      void (async () => {
-        try {
-          await apiJson("/api/v1/communications/messages", {
-            method: "POST",
-            body: { conversationId, content, classification: "buyer_seller" },
-          });
-          showToast(socialCommerceUi("messagesSendSuccess"));
-          await loadMessagesPage(conversationId);
-        } catch {
-          if (error) error.textContent = socialCommerceUi("messagesSendError");
-          if (send.isConnected) {
-            send.disabled = false;
-            send.innerHTML = socialCommerceUi("messagesSendAction") + ' <span aria-hidden="true">←</span>';
-          }
-        } finally {
-          communicationMessageSendInFlight = false;
-        }
-      })();
-    });
-    communicationSendDelegateBound = true;
-  }
+async function submitCommunicationMessage(send: HTMLButtonElement): Promise<void> {
+  const form = send.closest<HTMLFormElement>("[data-communication-send]");
+  const textarea = form?.querySelector<HTMLTextAreaElement>("#messages-compose");
+  const error = form?.querySelector<HTMLElement>("#messages-send-error");
+  const content = textarea?.value.trim() ?? "";
+  const conversationId = activeConversationId;
+  if (!form || !conversationId || !content || send.disabled || communicationMessageSendInFlight) return;
 
+  communicationMessageSendInFlight = true;
+  send.disabled = true;
+  send.textContent = socialCommerceUi("messagesSending");
+  if (error) error.textContent = "";
+
+  try {
+    await apiJson("/api/v1/communications/messages", {
+      method: "POST",
+      body: { conversationId, content, classification: "buyer_seller" },
+    });
+    showToast(socialCommerceUi("messagesSendSuccess"));
+    await loadMessagesPage(conversationId);
+  } catch {
+    if (error) error.textContent = socialCommerceUi("messagesSendError");
+    if (send.isConnected) {
+      send.disabled = false;
+      send.innerHTML = socialCommerceUi("messagesSendAction") + ' <span aria-hidden="true">←</span>';
+    }
+  } finally {
+    communicationMessageSendInFlight = false;
+  }
+}
+
+function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLElement>("[data-nav]").forEach((element) => {
     element.addEventListener("click", (event) => {
       const href = element.getAttribute("href");

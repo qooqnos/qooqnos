@@ -3303,3 +3303,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Fixed the main-branch browser verification failure in the Messages page: the test expected `Messages & conversations`, but the canonical English locale uses `Messages and conversations`.
 - Updated only the stale copy assertion; the Persian/English/Arabic switching checks and the "no fabricated messages" assertions remain in place.
 - Verification is required on this patch branch before merging.
+
+
+## 2026-10-17 — Bind send action to refreshed message composer
+
+- Latest browser E2E exposed that the conversation composer remained visible after clicking Send, but no Communication POST request was emitted.
+- Replaced the single document-level click delegate with a shared guarded submit handler bound to the message button each time a thread is rendered. This matches the app's asynchronous thread refresh lifecycle and preserves the no-double-submit guard.
+- Retained the real Communication API request, explicit error/success handling, and message reload from canonical conversation data. No local fake message is inserted by the UI.
+- Verification is required on the current PR before merge.
