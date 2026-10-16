@@ -9204,21 +9204,25 @@ function openNotificationCenter(): void {
     </section>`;
   document.body.appendChild(overlay);
   overlay.querySelectorAll<HTMLElement>("[data-close-notification]").forEach((node) => node.addEventListener("click", () => overlay.remove()));
-  overlay.querySelectorAll<HTMLButtonElement>("[data-mark-notification-read]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const id = button.dataset.markNotificationRead;
-      if (!id || button.disabled || button.parentElement?.classList.contains("read")) return;
-      button.disabled = true;
-      try {
-        await markNotificationReadOnServer(id);
-        button.textContent = socialCommerceUi("notificationsRead");
-        button.parentElement?.classList.remove("unread");
-        button.parentElement?.classList.add("read");
-      } catch (error) {
-        button.disabled = false;
-        showToast(error instanceof Error ? error.message : socialCommerceUi("notificationsStatusError"));
-      }
-    });
+  // Delegate from the persistent popover root so the read action remains bound
+  // even if the notification rows are refreshed/replaced by another shell render.
+  overlay.addEventListener("click", async (event) => {
+    const button = event.target instanceof Element
+      ? event.target.closest<HTMLButtonElement>("[data-mark-notification-read]")
+      : null;
+    if (!button || !overlay.contains(button)) return;
+    const id = button.dataset.markNotificationRead;
+    if (!id || button.disabled || button.parentElement?.classList.contains("read")) return;
+    button.disabled = true;
+    try {
+      await markNotificationReadOnServer(id);
+      button.textContent = socialCommerceUi("notificationsRead");
+      button.parentElement?.classList.remove("unread");
+      button.parentElement?.classList.add("read");
+    } catch (error) {
+      button.disabled = false;
+      showToast(error instanceof Error ? error.message : socialCommerceUi("notificationsStatusError"));
+    }
   });
 }
 

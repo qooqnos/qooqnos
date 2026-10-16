@@ -3328,3 +3328,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The visible composer keeps its conversation reference in a non-visible form data attribute. Submission uses that current form context before the global selected-conversation fallback.
 - Click, submit, and Ctrl/Meta+Enter share one guarded request function. Empty submissions focus the text area; missing conversation context displays an inline error instead of failing silently.
 - The required E2E remains unchanged: one real POST to the Communication API, refreshed canonical message history, and no locally fabricated messages.
+
+
+
+## 2026-10-17 — Stable notification popover action
+
+- Converted the notification popover's mark-read action to a delegated click listener on the persistent overlay root, matching the stable event-handling model used by Messages.
+- Kept the action bound to authenticated `POST /api/v1/notifications/:id/read`; unread/read styling changes only after the canonical API responds successfully.
+- Added focused E2E diagnostics for session presence, button state, popover state, runtime errors, and failed requests if the expected POST is absent.

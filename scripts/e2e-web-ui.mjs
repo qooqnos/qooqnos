@@ -1065,6 +1065,18 @@ await page.getByRole("heading", { name: "اعلان‌های شما" }).waitFor(
 await page.getByText("رزرو تأیید شد").waitFor();
 assert.ok(!(await page.locator(".notification-modal").innerText()).includes("booking.confirmed"));
 await page.locator("[data-mark-notification-read='notice-1']").click();
+if (!notificationReadRequests.length) {
+  const notificationDiagnostics = {
+    tokenPresent: await page.evaluate(() => Boolean(sessionStorage.getItem("phoenix-access-token"))),
+    buttonDisabled: await page.locator("[data-mark-notification-read='notice-1']").isDisabled().catch(() => null),
+    buttonParentClass: await page.locator("[data-mark-notification-read='notice-1']").evaluate((node) => node.parentElement?.className ?? ""),
+    popoverCount: await page.locator(".notification-overlay .notification-modal").count(),
+    mockStatus: mockNotifications[0]?.status,
+    runtimeErrors,
+    failedRequests,
+  };
+  process.stderr.write("Phoenix notification-read E2E diagnostics: " + JSON.stringify(notificationDiagnostics, null, 2) + "\n");
+}
 assert.deepEqual(notificationReadRequests, [{ id: "notice-1", method: "POST", path: "/api/v1/notifications/notice-1/read" }]);
 assert.equal(mockNotifications[0].status, "read");
 
