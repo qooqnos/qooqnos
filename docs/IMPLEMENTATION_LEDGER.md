@@ -3287,3 +3287,10 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - This does not yet add a safe “start a new conversation from any offer” command. That requires an explicit canonical mapping between the offer's seller/workspace and the authenticated user's Customer identity; the UI must not guess either identifier.
 - Production checkout/payment remains a separate incomplete capability and must not be described as ready for real transactions.
 - Current branch: `feat/communication-inbox-read-api`; verification and review are pending.
+
+
+## 2026-10-17 — Follow-up: messaging inbox browser assertion
+
+- PR #12 added the real Communication inbox/thread read/send path and the backend CI checks passed.
+- The first browser run completed the inbox read and message send steps but failed on a brittle exact-copy assertion for the integrity note. The UI renders that note as its own component; the E2E check now verifies the component is visible rather than pinning its sentence text.
+- The follow-up change is not considered verified until the current main-branch browser E2E passes.
