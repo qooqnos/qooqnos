@@ -4413,9 +4413,6 @@ function renderMessages(): string {
   const orderId = params.get("order")?.trim() ?? "";
   const topic = params.get("topic")?.trim() ?? "";
   const contextId = orderId || topic;
-  const contextLabel = orderId
-    ? socialCommerceUi("messagesContextOrderPrefix")
-    : socialCommerceUi("messagesContextTopicPrefix");
   const contextTitle = params.get("label")?.trim() || socialCommerceUi(orderId ? "messagesOrderSelected" : "messagesTopicSelected");
   const contextPanel = contextId
     ? '<section class="phoenix-reset-message-context">' +
