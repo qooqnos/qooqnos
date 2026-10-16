@@ -630,7 +630,19 @@ await page.locator(".phoenix-reset-message-bubble").first().waitFor();
 assert.ok((await page.locator(".phoenix-reset-message-thread-card").innerText()).includes("سلام، چطور می‌توانم راهنمایی‌ات کنم؟"));
 await page.locator("#messages-compose").fill("ممنون، لطفاً جزئیات بیشتری بفرستید.");
 await page.locator("[data-message-send]").click();
-await page.locator(".phoenix-reset-message-bubble").filter({ hasText: "ممنون، لطفاً جزئیات بیشتری بفرستید." }).waitFor();
+try {
+  await page.locator(".phoenix-reset-message-bubble").filter({ hasText: "ممنون، لطفاً جزئیات بیشتری بفرستید." }).waitFor({ timeout: 5000 });
+} catch (error) {
+  const diagnostics = {
+    sentRequests: communicationSendRequests,
+    messages: mockCommunicationMessages,
+    threadText: await page.locator("#messages-thread").innerText().catch(() => ""),
+    sendError: await page.locator("#messages-send-error").innerText().catch(() => ""),
+    inboxStatus: await page.locator("#messages-inbox-status").innerText().catch(() => ""),
+  };
+  process.stderr.write("Communication message-send E2E diagnostics: " + JSON.stringify(diagnostics, null, 2) + "\\n");
+  throw error;
+}
 assert.equal(communicationSendRequests.length, 1);
 assert.equal(communicationSendRequests[0].conversationId, "conversation-e2e-1");
 assert.ok(messagesText.includes("برای حفظ دقت، گفت‌وگوی نمونه‌ای نمایش نمی‌دهیم."));
