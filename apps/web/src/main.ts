@@ -4407,21 +4407,61 @@ function loadSavedPage(): void {
 
 function renderMessages(): string {
   const { token } = getStoredAuth();
-  return '<div class="phoenix-reset-messages-page">' +
-    '<section class="phoenix-reset-messages-hero"><div><span class="phoenix-reset-section-kicker">' + uiText("ارتباط در ققنوس") + '</span>' +
-      '<h1>' + uiText("پیام‌ها و گفت‌وگوها") + '</h1>' +
-      '<p>' + uiText("ارتباط دربارهٔ مشخصات، قیمت و شرایط کالا یا خدمت باید در ادامهٔ مسیر انتخاب تو قرار بگیرد.") + '</p></div>' +
-      '<span class="phoenix-reset-messages-mark" aria-hidden="true">✉</span></section>' +
-    '<section class="phoenix-reset-messages-empty">' +
-      '<div class="phoenix-reset-messages-icon" aria-hidden="true">◌</div>' +
-      '<h2>' + uiText(token ? "گفت‌وگوها هنوز در این صفحه در دسترس نیستند." : "برای پیگیری ارتباط‌ها وارد حساب شو.") + '</h2>' +
-      '<p>' + socialCommerceUi("messagesIntegrityDescription") + '</p>' +
-      '<div class="phoenix-reset-messages-actions">' +
-        (token ? '' : '<button class="button button-ghost" type="button" data-open-login>' + uiText("ورود به حساب") + '</button>') +
-        '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + uiText("رفتن به اکسپلور") + ' <span aria-hidden="true">←</span></a>' +
-        '<a class="button button-ghost" href="/orders" data-nav>' + uiText("پیگیری سفارش‌ها") + '</a>' +
+  const params = new URLSearchParams(location.search);
+  const orderId = params.get("order")?.trim() ?? "";
+  const topic = params.get("topic")?.trim() ?? "";
+  const contextId = orderId || topic;
+  const contextLabel = orderId
+    ? socialCommerceUi("messagesContextOrderPrefix")
+    : socialCommerceUi("messagesContextTopicPrefix");
+  const contextPanel = contextId
+    ? '<section class="phoenix-reset-message-context">' +
+        '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesContextTitle") + '</span>' +
+        '<h2>' + contextLabel + ' <bdi>' + escapeHtml(contextId) + '</bdi></h2>' +
+        '<p>' + socialCommerceUi("messagesContextBody") + '</p>' +
+        '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("messagesOrdersAction") + ' <span aria-hidden="true">←</span></a>' +
+      '</section>'
+    : '';
+
+  return '<div class="phoenix-reset-page phoenix-reset-messages-page">' +
+    '<section class="phoenix-reset-messages-hero">' +
+      '<div class="phoenix-reset-messages-hero-copy">' +
+        '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesEyebrow") + '</span>' +
+        '<h1>' + socialCommerceUi("messagesTitle") + '</h1>' +
+        '<p>' + socialCommerceUi("messagesIntro") + '</p>' +
       '</div>' +
-    '</section></div>';
+      '<div class="phoenix-reset-messages-mark" aria-hidden="true">✉</div>' +
+    '</section>' +
+    '<div class="phoenix-reset-messages-workspace">' +
+      '<aside class="phoenix-reset-messages-inbox" aria-label="' + escapeAttr(socialCommerceUi("messagesInboxTitle")) + '">' +
+        '<div class="phoenix-reset-messages-inbox-heading">' +
+          '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesInboxEyebrow") + '</span>' +
+          '<h2>' + socialCommerceUi("messagesInboxTitle") + '</h2></div>' +
+          '<span class="phoenix-reset-messages-status">' + socialCommerceUi("messagesStatusLabel") + '</span>' +
+        '</div>' +
+        '<div class="phoenix-reset-messages-inbox-empty">' +
+          '<span class="phoenix-reset-messages-icon" aria-hidden="true">◌</span>' +
+          '<h3>' + socialCommerceUi("messagesListUnavailableTitle") + '</h3>' +
+          '<p>' + socialCommerceUi("messagesListUnavailableBody") + '</p>' +
+        '</div>' +
+      '</aside>' +
+      '<section class="phoenix-reset-messages-main">' +
+        contextPanel +
+        '<article class="phoenix-reset-messages-start-card">' +
+          '<div class="phoenix-reset-messages-start-icon" aria-hidden="true">✦</div>' +
+          '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesEyebrow") + '</span>' +
+          '<h2>' + socialCommerceUi("messagesStartTitle") + '</h2>' +
+          '<p>' + socialCommerceUi("messagesStartBody") + '</p>' +
+          '<div class="phoenix-reset-messages-actions">' +
+            (token ? '' : '<button class="button button-ghost" type="button" data-open-login>' + uiText("ورود به حساب") + '</button>') +
+            '<a class="button button-primary" href="/discover?tab=explore" data-nav>' + socialCommerceUi("messagesExploreAction") + ' <span aria-hidden="true">←</span></a>' +
+            '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("messagesOrdersAction") + '</a>' +
+          '</div>' +
+        '</article>' +
+        '<p class="phoenix-reset-messages-integrity-note"><span aria-hidden="true">✓</span> ' + socialCommerceUi("messagesNoSyntheticNote") + '</p>' +
+      '</section>' +
+    '</div>' +
+  '</div>';
 }
 
 /* =========================================================================
