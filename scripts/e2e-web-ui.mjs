@@ -689,7 +689,7 @@ const notificationsFa = await page.locator(".phoenix-reset-notifications-page").
 assert.ok(notificationsFa.includes("خبرهای مهم ققنوس"));
 assert.ok(notificationsFa.includes("رزرو تأیید شد"));
 assert.ok(notificationsFa.includes("خوانده‌نشده"));
-assert.ok(notificationsFa.includes("خوانده شد"));
+assert.ok(notificationsFa.includes("خوانده شد"), "Expected server-read notification copy. Actual page text: " + notificationsFa);
 assert.ok(!notificationsFa.includes("booking.confirmed"));
 assert.ok(!notificationsFa.includes("رزرو شما تأیید شد"));
 await page.locator("[data-language-toggle]").click();
