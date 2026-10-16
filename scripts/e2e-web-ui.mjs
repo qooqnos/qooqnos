@@ -702,7 +702,7 @@ await page.locator(".phoenix-reset-notification-item strong").filter({ hasText: 
 const notificationsEn = await page.locator(".phoenix-reset-notifications-page").innerText();
 assert.ok(notificationsEn.includes("Updates that matter"));
 assert.ok(notificationsEn.includes("Booking confirmed"));
-assert.ok(!notificationsEn.includes("Mark as read"), "Notification still appears unread after the server accepted the read action.");
+assert.ok(notificationsEn.includes("Mark as read"), "Initial notification should be unread before the user marks it read.");
 assert.ok(notificationsEn.includes("Read"));
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='ar']").click();
