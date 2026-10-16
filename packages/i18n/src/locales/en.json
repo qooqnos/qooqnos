@@ -1265,7 +1265,24 @@
     "step5Desc": "Enter Catalog",
     "inputSectionTitle": "Free-form description",
     "imageOptional": "Optional",
-    "workflowTitle": "From raw input to a publishable offer"
+    "workflowTitle": "From raw input to a publishable offer",
+    "createDetailsHeading": "Describe your offer; Phoenix structures it.",
+    "createDetailsDescription": "No long form is needed. Write what you know about the product or service; review the draft in Studio and approve it yourself.",
+    "createDetailsBack": "Back",
+    "createDetailsFreeDescription": "Free-form description",
+    "createDetailsPlaceholder": "For example, write the material, size, use, service terms, or any important details in your own words.",
+    "createDetailsAiNote": "Phoenix structures the available information and asks questions if anything is missing. You review the final price and details yourself.",
+    "createDetailsCancel": "Cancel",
+    "createDetailsGoStudio": "Go to Studio",
+    "createDetailsWorkflowTitle": "Offer preparation flow",
+    "createDetailsWorkflowHeading": "From raw description to publication",
+    "createDetailsStepRaw": "Raw description",
+    "createDetailsStepRawDescription": "Initial information in your own words",
+    "createDetailsStepDraft": "Smart draft",
+    "createDetailsStepDraftDescription": "Extract details and ask about missing information",
+    "createDetailsStepReview": "Review and publish",
+    "createDetailsStepReviewDescription": "Publish after your approval",
+    "createDetailsAddImage": "Add an image in Studio"
   },
   "taxonomy": {
     "industry": {

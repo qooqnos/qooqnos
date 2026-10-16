@@ -1265,7 +1265,24 @@
     "step5Desc": "ورود به کاتالوگ",
     "inputSectionTitle": "توصیف آزاد",
     "imageOptional": "اختیاری",
-    "workflowTitle": "از ورودی خام تا عرضهٔ آماده"
+    "workflowTitle": "از ورودی خام تا عرضهٔ آماده",
+    "createDetailsHeading": "توصیفت را بنویس؛ ققنوس ساختار می‌دهد",
+    "createDetailsDescription": "لازم نیست فرم طولانی پر کنی. هرچه دربارهٔ کالا یا خدمت می‌دانی بنویس؛ در استودیو پیش‌نویس را می‌بینی و خودت تأیید می‌کنی.",
+    "createDetailsBack": "بازگشت",
+    "createDetailsFreeDescription": "توضیح آزاد",
+    "createDetailsPlaceholder": "برای نمونه، جنس، اندازه، کاربرد، شرایط ارائه یا نکته‌های مهم را با زبان خودت بنویس.",
+    "createDetailsAiNote": "ققنوس اطلاعات موجود را ساختارمند می‌کند و اگر چیزی کم باشد سؤال می‌پرسد. قیمت و جزئیات نهایی را خودت بازبینی می‌کنی.",
+    "createDetailsCancel": "انصراف",
+    "createDetailsGoStudio": "رفتن به استودیو",
+    "createDetailsWorkflowTitle": "مسیر آماده‌سازی عرضه",
+    "createDetailsWorkflowHeading": "از توضیح خام تا انتشار",
+    "createDetailsStepRaw": "توصیف خام",
+    "createDetailsStepRawDescription": "اطلاعات اولیه با زبان خودت",
+    "createDetailsStepDraft": "پیش‌نویس هوشمند",
+    "createDetailsStepDraftDescription": "استخراج مشخصات و پرسش دربارهٔ موارد ناقص",
+    "createDetailsStepReview": "بازبینی و انتشار",
+    "createDetailsStepReviewDescription": "انتشار بعد از تأیید خودت",
+    "createDetailsAddImage": "افزودن تصویر در استودیو"
   },
   "taxonomy": {
     "industry": {

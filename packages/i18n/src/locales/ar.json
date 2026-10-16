@@ -1265,7 +1265,24 @@
     "step5Desc": "إدخال إلى الكاتالوج",
     "inputSectionTitle": "وصف حر",
     "imageOptional": "اختياري",
-    "workflowTitle": "من الإدخال الخام إلى عرض جاهز للنشر"
+    "workflowTitle": "من الإدخال الخام إلى عرض جاهز للنشر",
+    "createDetailsHeading": "اكتب وصف العرض؛ سيُنظّم ققنوس التفاصيل.",
+    "createDetailsDescription": "لا حاجة إلى ملء نموذج طويل. اكتب ما تعرفه عن المنتج أو الخدمة؛ ثم راجع المسودة في الاستوديو واعتمدها بنفسك.",
+    "createDetailsBack": "رجوع",
+    "createDetailsFreeDescription": "وصف حر",
+    "createDetailsPlaceholder": "مثلاً، اكتب الخامة والمقاس والاستخدام وشروط تقديم الخدمة أو أي تفاصيل مهمة بلغتك.",
+    "createDetailsAiNote": "ينظّم ققنوس المعلومات المتاحة ويطرح أسئلة عند وجود نقص. راجع السعر والتفاصيل النهائية بنفسك.",
+    "createDetailsCancel": "إلغاء",
+    "createDetailsGoStudio": "الانتقال إلى الاستوديو",
+    "createDetailsWorkflowTitle": "مسار إعداد العرض",
+    "createDetailsWorkflowHeading": "من الوصف الأولي إلى النشر",
+    "createDetailsStepRaw": "وصف أولي",
+    "createDetailsStepRawDescription": "المعلومات الأولية بلغتك",
+    "createDetailsStepDraft": "مسودة ذكية",
+    "createDetailsStepDraftDescription": "استخراج المواصفات والسؤال عن المعلومات الناقصة",
+    "createDetailsStepReview": "المراجعة والنشر",
+    "createDetailsStepReviewDescription": "النشر بعد موافقتك",
+    "createDetailsAddImage": "إضافة صورة في الاستوديو"
   },
   "taxonomy": {
     "industry": {

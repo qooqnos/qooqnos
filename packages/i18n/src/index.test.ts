@@ -38,6 +38,9 @@ describe("@qooqnos/i18n", () => {
     expect(translateUiText("افزودن کالا یا خدمت", "en")).toBe("Add a product or service");
     expect(translateUiText("افزودن کالا یا خدمت", "ar")).toBe("إضافة منتج أو خدمة");
     expect(translateUiText("نیازت را بگو", "ar")).toBe("أخبر ققنوس بما تحتاج");
+    expect(translateUiText("توصیفت را بنویس؛ ققنوس ساختار می‌دهد", "en")).toBe("Describe your offer; Phoenix structures it.");
+    expect(translateUiText("توصیفت را بنویس؛ ققنوس ساختار می‌دهد", "ar")).toBe("اكتب وصف العرض؛ سيُنظّم ققنوس التفاصيل.");
+    expect(translateUiText("از توضیح خام تا انتشار", "en")).toBe("From raw description to publication");
     expect(translateUiText("Tell Phoenix what you need", "fa")).toBe("نیازت را بگو");
     expect(translateUiText("أخبر ققنوس بما تحتاج", "en")).toBe("Tell Phoenix what you need");
     expect(translateUiText("متن ناشناخته", "en")).toBe("متن ناشناخته");
