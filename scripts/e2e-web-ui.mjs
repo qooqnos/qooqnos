@@ -660,7 +660,7 @@ await page.goto(baseURL + "/messages");
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='en']").click();
 await page.waitForTimeout(100);
-assert.ok((await page.locator(".phoenix-reset-messages-page").innerText()).includes("Messages & conversations"));
+assert.ok((await page.locator(".phoenix-reset-messages-page").innerText()).includes("Messages and conversations"));
 assert.ok((await page.locator(".phoenix-reset-messages-page").innerText()).includes("Loading conversations") === false);
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='ar']").click();

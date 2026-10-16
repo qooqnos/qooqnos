@@ -3296,3 +3296,10 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The follow-up change is not considered verified until the current main-branch browser E2E passes.
 
 - Follow-up diagnosis: the browser test found that clicking the rendered send button did not dispatch a form submit in the E2E runtime, so the message action now has an explicit button click handler as well as form-submit and Ctrl+Enter handling. A send lock prevents duplicate requests; successful UI refresh still occurs only after the Communication API responds.
+
+
+## 2026-10-17 — Align Messages E2E with the canonical English label
+
+- Fixed the main-branch browser verification failure in the Messages page: the test expected `Messages & conversations`, but the canonical English locale uses `Messages and conversations`.
+- Updated only the stale copy assertion; the Persian/English/Arabic switching checks and the "no fabricated messages" assertions remain in place.
+- Verification is required on this patch branch before merging.
