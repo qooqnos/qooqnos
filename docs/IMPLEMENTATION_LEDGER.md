@@ -3121,3 +3121,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - E2E verifies that the public profile and offers render, the legacy checkout/payment action is absent, and English/Arabic do not expose raw locale/timezone/currency metadata.
 - Last verified implementation commit before this ledger entry: 6dfe1726152486930324ef79f58b41f568dc52a0. CI, Phoenix verification, browser E2E and Worker dry run passed at that commit.
 - The social commerce UI PR remains draft and is not merged; real checkout/payment is still a separate incomplete integration milestone.
+
+
+
+## 2026-10-16 — Prevent persona-dependent legacy checkout
+
+- The `/checkout` route previously switched to the retired stepwise demo checkout when the active persona was `business`. That flow used fixed sample products/addresses and a client-side order path.
+- Checkout now always renders the explicit review-only surface until canonical checkout and payment are connected. No persona can reach the old sample payment flow from the customer-facing checkout route.
+- Browser E2E now deliberately selects the business persona before visiting `/checkout` and verifies the legacy stepper/order action is absent while the no-payment warning remains visible.
+- This is a guardrail, not a claim that production payment is complete.

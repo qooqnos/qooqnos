@@ -635,8 +635,13 @@ assert.ok(cartPreviewText.includes("پیش‌نمایش سبد محلی"));
 assert.ok(cartPreviewText.includes("مجموع تقریبی اقلام محلی"));
 assert.ok(cartPreviewText.includes("هزینهٔ ارسال پس از بررسی سفارش مشخص می‌شود."));
 assert.ok(!cartPreviewText.includes("رایگان"));
+// Checkout must remain the honest review-only screen even when the account
+// is currently using the seller workspace persona.
+await page.evaluate(() => localStorage.setItem("phoenix.active_persona", "business"));
 await page.goto(baseURL + "/checkout");
 await page.locator(".phoenix-checkout-review").waitFor();
+assert.equal(await page.locator(".phoenix-checkout-container").count(), 0);
+assert.equal(await page.locator("[data-place-order]").count(), 0);
 assert.equal(await page.locator("#consumer-payment-form").count(), 0);
 assert.equal(await page.locator(".phoenix-checkout-review button[type='submit']").count(), 0);
 const checkoutPreviewFa = await page.locator(".phoenix-checkout-review").innerText();

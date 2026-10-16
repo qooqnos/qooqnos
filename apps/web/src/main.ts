@@ -30,10 +30,6 @@ import {
 if (typeof window !== "undefined") {
   (window as unknown as { openPhoenixAuthModal: typeof openAuthModal }).openPhoenixAuthModal = openAuthModal;
 }
-import {
-  renderCheckoutPage,
-  bindCheckoutEvents,
-} from "./checkout-flow.js";
 import { ProductCreateFormComponent, type NewProductFormData } from "./product-form-component.js";
 import {
   getActivePersona,
@@ -796,14 +792,6 @@ function render(): void {
   installLanguageObserver();
   installTabAccessibility(document);
   if (route.path === "/welcome") void loadWelcomePage();
-  if (route.path === "/checkout") {
-    const container = document.querySelector<HTMLElement>(".phoenix-checkout-container");
-    if (container) {
-      bindCheckoutEvents(container, (_orderId) => {
-        navigate("/orders");
-      });
-    }
-  }
   if (route.path === "/orders") void loadOrdersPage();
   if (route.path === "/saved") void loadSavedPage();
   if (route.path === "/settings") void loadSettingsPage();
@@ -5955,11 +5943,11 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
 }
 
 function renderCheckout(): string {
-  const persona = getActivePersona();
-  if (persona === "consumer" || persona === "individual") {
-    return renderConsumerPayment();
-  }
-  return renderCheckoutPage();
+  // Checkout is a buyer-facing surface for every account. Never route a
+  // business persona into the retired sample checkout, which contains local
+  // demo products and a client-only order flow. Until canonical checkout and
+  // payment are wired end-to-end, show the honest local-cart review only.
+  return renderConsumerPayment();
 }
 
 async function startCheckoutFlow(): Promise<void> {
