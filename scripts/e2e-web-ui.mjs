@@ -533,7 +533,7 @@ await page.goto(baseURL + "/create/details");
 assert.equal(await page.locator("#content-desc-input").inputValue(), "");
 assert.equal(await page.locator("#content-price-input").count(), 0);
 const detailArabic = await page.locator(".phoenix-reset-create-detail-page").innerText();
-assert.ok(detailArabic.includes("اكتب وصف العرض؛ سيُنظّم ققنوس التفاصيل."));
+assert.ok(detailArabic.includes("اكتب وصف العرض؛ سيُنظّم ققنوس التفاصيل."), "Arabic create-details copy: " + detailArabic);
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='en']").click();
 await page.waitForTimeout(50);
