@@ -775,10 +775,28 @@ assert.ok(mockSocialFollows.has("business:biz-1"), "a business-owned offer must 
 await page.setViewportSize({ width: 390, height: 844 });
 await page.waitForTimeout(60);
 assert.equal(await page.locator(".phoenix-social-mobile-nav").isVisible(), true);
-assert.equal(
-  await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-  true,
-  "the social feed must not overflow horizontally on a 390px viewport",
+const feedOverflow = await page.evaluate(() => {
+  const viewport = window.innerWidth;
+  const offenders = Array.from(document.querySelectorAll("body *"))
+    .map((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        tag: element.tagName.toLowerCase(),
+        className: typeof element.className === "string" ? element.className : "",
+        id: element.id,
+        left: Math.round(rect.left),
+        right: Math.round(rect.right),
+        width: Math.round(rect.width),
+        scrollWidth: (element as HTMLElement).scrollWidth,
+      };
+    })
+    .filter((item) => item.width > 0 && (item.left < -1 || item.right > viewport + 1))
+    .slice(0, 18);
+  return { viewport, documentWidth: document.documentElement.scrollWidth, offenders };
+});
+assert.ok(
+  feedOverflow.documentWidth <= feedOverflow.viewport,
+  "the social feed must not overflow horizontally on mobile: " + JSON.stringify(feedOverflow),
 );
 await page.locator("[data-discovery-index='0']").click();
 const detailFollowButton = page.locator(".phoenix-detail-modal [data-follow-seller-detail]");
