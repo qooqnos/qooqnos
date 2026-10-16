@@ -788,7 +788,7 @@ const detailBounds = await page.locator(".phoenix-detail-modal").boundingBox();
 assert.ok(detailBounds, "the product detail modal should be visible on mobile");
 assert.ok(detailBounds.width <= 390, "the product detail modal must fit the mobile viewport");
 const detailColumns = await page.locator(".phoenix-detail-layout").evaluate((element) => getComputedStyle(element).gridTemplateColumns);
-assert.equal(detailColumns.trim().split(/\\s+/).length, 1, "offer details should stack to one column on mobile");
+assert.equal(detailColumns.trim().split(/\s+/).length, 1, "offer details should stack to one column on mobile");
 await detailFollowButton.click();
 await page.waitForFunction(() => document.querySelector(".phoenix-detail-modal [data-follow-seller-detail]")?.getAttribute("aria-pressed") === "false");
 await detailFollowButton.click();
