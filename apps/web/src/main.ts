@@ -4417,7 +4417,7 @@ function renderMessages(): string {
   const contextPanel = contextId
     ? '<section class="phoenix-reset-message-context">' +
         '<span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesContextTitle") + '</span>' +
-        '<h2>' + contextLabel + ' <bdi>' + escapeHtml(contextId) + '</bdi></h2>' +
+        '<h2>' + contextLabel + ' <bdi dir="ltr" class="phoenix-reset-message-context-id">' + escapeHtml(contextId) + '</bdi></h2>' +
         '<p>' + socialCommerceUi("messagesContextBody") + '</p>' +
         '<a class="button button-ghost" href="/orders" data-nav>' + socialCommerceUi("messagesOrdersAction") + ' <span aria-hidden="true">←</span></a>' +
       '</section>'

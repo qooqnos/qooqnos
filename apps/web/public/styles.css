@@ -13732,3 +13732,11 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-reset-messages-start-card .phoenix-reset-messages-actions { width: 100%; flex-direction: column; }
   .phoenix-reset-messages-start-card .phoenix-reset-messages-actions .button { width: 100%; justify-content: center; }
 }
+
+
+.phoenix-reset-message-context-id {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+  text-align: left;
+}
