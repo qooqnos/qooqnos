@@ -741,14 +741,26 @@ assert.ok((await page.locator(".phoenix-reset-order-card").first().innerText()).
 await page.locator("#orders-search-input").fill("");
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='en']").click();
-await page.waitForTimeout(50);
+await page.waitForFunction(() => {
+  const text = document.querySelector(".phoenix-reset-orders-page")?.innerText ?? "";
+  return text.includes("From seller confirmation to delivery") && text.includes("Tracking code:") && text.includes("TRK-12345");
+}, undefined, { timeout: 5000 }).catch(async (error) => {
+  const text = await page.locator(".phoenix-reset-orders-page").innerText().catch(() => "");
+  throw new Error("English orders view did not finish translating its tracking label: " + text + "\\n" + String(error));
+});
 const ordersEn = await page.locator(".phoenix-reset-orders-page").innerText();
 assert.ok(ordersEn.includes("From seller confirmation to delivery"));
 assert.ok(ordersEn.includes("Awaiting / preparing") || ordersEn.includes("In transit"));
 assert.ok(ordersEn.includes("Tracking code:"));
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='ar']").click();
-await page.waitForTimeout(50);
+await page.waitForFunction(() => {
+  const text = document.querySelector(".phoenix-reset-orders-page")?.innerText ?? "";
+  return text.includes("من تأكيد البائع حتى التسليم") && text.includes("رمز التتبع:") && text.includes("TRK-12345");
+}, undefined, { timeout: 5000 }).catch(async (error) => {
+  const text = await page.locator(".phoenix-reset-orders-page").innerText().catch(() => "");
+  throw new Error("Arabic orders view did not finish translating its tracking label: " + text + "\\n" + String(error));
+});
 const ordersAr = await page.locator(".phoenix-reset-orders-page").innerText();
 assert.ok(ordersAr.includes("من تأكيد البائع حتى التسليم"));
 assert.ok(ordersAr.includes("رمز التتبع:"));
