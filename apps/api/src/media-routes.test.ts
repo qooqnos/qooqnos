@@ -5,6 +5,9 @@ import { hasMetadataFreeWebpContainer, hasValidWebpRiffHeader, registerMediaRout
 import type { ApiEnv } from "./env";
 
 const mediaRow = {
+  offeringId: "offering-1",
+  productId: "prod-1",
+  serviceId: null,
   assetId: "asset-photo-1",
   storageKey: "tenant-1/workspace-1/offering/offering-1/card.webp",
   mimeType: "image/webp",
@@ -58,6 +61,33 @@ function buildRouter(options: { exposeMedia?: boolean } = {}) {
 }
 
 describe("public published-offering media routes", () => {
+  it("batch-resolves only public ready media by offering, product or service reference", async () => {
+    const { router, statements } = buildRouter({ exposeMedia: true });
+    const response = await router.handle(new Request("https://example.test/api/v1/public/offerings/media-batch?ids=prod-1,offering-1"));
+    expect(response.status).toBe(200);
+    const body = await response.json() as { data: Array<Record<string, unknown>> };
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]).toMatchObject({
+      offeringId: "offering-1",
+      productId: "prod-1",
+      referenceIds: ["offering-1", "prod-1"],
+      src: "/api/v1/public/offerings/offering-1/media/asset-photo-1/content",
+    });
+    expect(body.data[0]).not.toHaveProperty("storageKey");
+    expect(statements[0]).toContain("o.id IN (?, ?)");
+    expect(statements[0]).toContain("o.product_id IN (?, ?)");
+    expect(statements[0]).toContain("o.publication_status = 'published'");
+    expect(statements[0]).toContain("a.status = 'ready'");
+  });
+
+  it("rejects excessive feed media references before querying", async () => {
+    const { router, statements } = buildRouter({ exposeMedia: true });
+    const ids = Array.from({ length: 13 }, (_, index) => "product-" + index).join(",");
+    const response = await router.handle(new Request("https://example.test/api/v1/public/offerings/media-batch?ids=" + encodeURIComponent(ids)));
+    expect(response.status).toBe(400);
+    expect(statements).toHaveLength(0);
+  });
+
   it("returns only a public content path for an eligible processed image", async () => {
     const { router, statements } = buildRouter({ exposeMedia: true });
     const response = await router.handle(new Request("https://example.test/api/v1/public/offerings/offering-1/media"));

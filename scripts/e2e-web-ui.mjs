@@ -37,6 +37,7 @@ const communicationSendRequests = [];
 const communicationStartRequests = [];
 const mediaAssetUploadRequests = [];
 const offeringMediaLinkRequests = [];
+const publicMediaBatchRequests = [];
 const mockConversations = [{
   id: "conversation-e2e-1",
   organizationId: "tenant-1",
@@ -373,6 +374,26 @@ await page.route("**/api/v1/**", async (route) => {
       contentType: "application/json",
       body: JSON.stringify({ data: { id: "link-studio-e2e-1", offeringId: "offer-1", assetId: "asset-studio-e2e-1", purpose: "primary", position: 0 } }),
     });
+    return;
+  }
+  if (path === "/api/v1/public/offerings/media-batch" && request.method() === "GET") {
+    const ids = (url.searchParams.get("ids") ?? "").split(",").filter(Boolean);
+    publicMediaBatchRequests.push(ids);
+    const data = ids.includes("prod-1") ? [{
+      offeringId: "offering-1",
+      productId: "prod-1",
+      serviceId: null,
+      referenceIds: ["prod-1"],
+      assetId: "asset-photo-1",
+      purpose: "primary",
+      position: 0,
+      mimeType: "image/svg+xml",
+      byteSize: 120,
+      width: 800,
+      height: 1000,
+      src: "/api/v1/public/offerings/offering-1/media/asset-photo-1/content",
+    }] : [];
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data }) });
     return;
   }
   if (path === "/api/v1/public/offerings/offering-1/media/asset-photo-1/content" && request.method() === "GET") {
@@ -910,6 +931,9 @@ await page.goto(baseURL + "/");
 await page.locator("#discover-query").fill("میز چوبی");
 await page.locator("[data-run-discovery]").click();
 await page.getByRole("heading", { name: "موجودیت واقعی تست" }).waitFor();
+await page.locator(".phoenix-post-card [data-discovery-index='1'] img.phoenix-post-image").waitFor();
+assert.ok(publicMediaBatchRequests.some((references) => references.includes("prod-1")), "feed should batch-load image media by the public product reference");
+assert.ok((await page.locator(".phoenix-post-card [data-discovery-index='1'] img.phoenix-post-image").getAttribute("src") ?? "").includes("/api/v1/public/offerings/offering-1/media/asset-photo-1/content"));
 await page.locator(".phoenix-post-card [data-discovery-index='1']").click();
 await page.locator(".phoenix-detail-modal").waitFor();
 assert.equal(await page.locator("[data-add-to-cart-detail]").count(), 1);

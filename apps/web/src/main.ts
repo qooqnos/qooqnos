@@ -177,6 +177,7 @@ function refreshSocialFeed(): void {
   const host = document.querySelector<HTMLElement>("#discovery-results");
   if (!host || !activeDiscoveryItems.length) return;
   host.innerHTML = renderSocialPosts(activeDiscoveryItems);
+  void hydrateSocialPostMedia();
   bindDiscoveryResultEvents();
   renderCompareTray();
 }
@@ -4354,7 +4355,7 @@ function loadSavedPage(): void {
       const locationLabel = [item.city, item.locality].filter((part) => Boolean(part?.trim())).join(" · ");
       const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ??
         item.metadata?.thumbnailUrl ?? (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
-      const mediaUrl = typeof mediaCandidate === "string" && (mediaCandidate.startsWith("/") || /^https?:\/\//i.test(mediaCandidate)) ? mediaCandidate : "";
+      const mediaUrl = typeof mediaCandidate === "string" && /^\/api\/v1\/public\/offerings\/[^/]+\/media\/[^/]+\/content$/.test(mediaCandidate) ? mediaCandidate : "";
       const media = mediaUrl
         ? '<img src="' + escapeAttr(mediaUrl) + '" alt="' + escapeAttr(title) + '" loading="lazy" />'
         : '<span class="phoenix-reset-saved-media-placeholder" aria-hidden="true">◇</span>';
@@ -5821,9 +5822,15 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
     const mediaUrl = typeof mediaCandidate === "string" && (mediaCandidate.startsWith("/") || /^https?:\/\//i.test(mediaCandidate)) ? mediaCandidate : "";
     const avatarCandidate = item.metadata?.businessAvatarUrl ?? item.metadata?.businessLogoUrl ?? item.metadata?.logoUrl;
     const avatarUrl = typeof avatarCandidate === "string" && (avatarCandidate.startsWith("/") || /^https?:\/\//i.test(avatarCandidate)) ? avatarCandidate : "";
+    const mediaReferenceCandidate = metadata.offeringId ?? item.sourceId ?? item.id ?? "";
+    const mediaReference = (sourceType === "product" || sourceType === "service") && typeof mediaReferenceCandidate === "string"
+      ? mediaReferenceCandidate.trim() : "";
     const media = mediaUrl
       ? '<img class="phoenix-post-image" src="' + escapeAttr(mediaUrl) + '" alt="' + title + '" loading="lazy" />'
       : '<span class="phoenix-post-placeholder"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("imageUnavailable") + '</span></span>';
+    const mediaReferenceMarkup = mediaReference
+      ? ' data-media-reference="' + escapeAttr(mediaReference) + '" data-media-hydrated="' + String(Boolean(mediaUrl)) + '"'
+      : '';
     const localityMarkup = locality ? '<span>⌖ ' + locality + '</span>' : "";
     const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
     const publicAction = sourceType === "business"
@@ -5839,7 +5846,7 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
         (avatarUrl ? '<span class="phoenix-avatar phoenix-avatar-image"><img src="' + escapeAttr(avatarUrl) + '" alt="" loading="lazy" /></span>' : '<span class="phoenix-avatar phoenix-avatar-image">' + avatarInitial + '</span>') +
         '<div class="phoenix-post-author-copy"><strong>' + escapeHtml(authorName) + '</strong><small>' + (locality ? locality + ' · ' : '') + escapeHtml(typeLabel) + '</small></div>' + followButton +
       '</header>' +
-      '<button type="button" class="phoenix-post-media media-' + (index % 3) + '" data-discovery-index="' + index + '" aria-label="' + title + '">' + media + '<span class="post-media-badge">' + typeLabel + '</span><span class="phoenix-post-media-copy"><strong>' + title + '</strong><small>' + discoveryUi("detailsAndDecision") + '</small></span></button>' +
+      '<button type="button" class="phoenix-post-media media-' + (index % 3) + '"' + mediaReferenceMarkup + ' data-discovery-index="' + index + '" aria-label="' + title + '">' + media + '<span class="post-media-badge">' + typeLabel + '</span><span class="phoenix-post-media-copy"><strong>' + title + '</strong><small>' + discoveryUi("detailsAndDecision") + '</small></span></button>' +
       '<div class="phoenix-post-body"><div class="phoenix-post-meta"><span class="phoenix-post-type">' + typeLabel + '</span>' + localityMarkup + '</div><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + price + '</div>' +
       '<div class="phoenix-post-actions">' +
       '<button type="button" class="social-action' + (liked ? ' selected' : '') + '" data-like="' + escapeAttr(key) + '">♡ <span>' + (liked ? discoveryUi("likeActive") : discoveryUi("like")) + '</span></button>' +
@@ -5849,6 +5856,66 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
       (sourceType === "product" ? '<button type="button" class="social-action ' + (compared ? "selected" : "") + '" data-compare="' + escapeAttr(key) + '">⚖ <span>' + (compared ? discoveryUi("selected") : discoveryUi("compare")) + '</span></button>' : '') +
       publicAction + '</div></div></article>';
   }).join("");
+}
+
+interface PublicFeedMediaItem {
+  readonly offeringId: string;
+  readonly productId: string | null;
+  readonly serviceId: string | null;
+  readonly referenceIds: readonly string[];
+  readonly assetId: string;
+  readonly purpose: string;
+  readonly position: number;
+  readonly mimeType: string;
+  readonly src: string;
+}
+
+async function hydrateSocialPostMedia(): Promise<void> {
+  const host = document.querySelector<HTMLElement>("#discovery-results");
+  if (!host) return;
+  const cards = Array.from(host.querySelectorAll<HTMLButtonElement>(".phoenix-post-media[data-media-reference]"))
+    .filter((card) => card.dataset.mediaHydrated !== "true" && !card.querySelector(".phoenix-post-image"));
+  if (!cards.length) return;
+
+  const references = [...new Set(cards.map((card) => card.dataset.mediaReference ?? "").filter(Boolean))];
+  for (let offset = 0; offset < references.length; offset += 12) {
+    const batch = references.slice(offset, offset + 12);
+    try {
+      const response = await apiJson<{ data: PublicFeedMediaItem[] }>(
+        "/api/v1/public/offerings/media-batch?" + new URLSearchParams({ ids: batch.join(",") }).toString(),
+      );
+      const results = Array.isArray(response.data) ? response.data : [];
+      for (const card of cards) {
+        const reference = card.dataset.mediaReference ?? "";
+        if (!batch.includes(reference)) continue;
+        const asset = results.find((candidate) =>
+          Array.isArray(candidate.referenceIds) && candidate.referenceIds.includes(reference)
+          && typeof candidate.src === "string"
+          && candidate.src.startsWith("/api/v1/public/offerings/")
+          && candidate.src.includes("/media/")
+          && candidate.src.endsWith("/content")
+          && typeof candidate.mimeType === "string"
+          && candidate.mimeType.toLowerCase().startsWith("image/")
+        );
+        card.dataset.mediaHydrated = "true";
+        if (!asset) continue;
+        const image = document.createElement("img");
+        image.className = "phoenix-post-image";
+        image.src = asset.src;
+        image.alt = card.getAttribute("aria-label") ?? "";
+        image.loading = "lazy";
+        image.decoding = "async";
+        image.addEventListener("error", () => image.remove(), { once: true });
+        const placeholder = card.querySelector(".phoenix-post-placeholder");
+        if (placeholder) placeholder.replaceWith(image);
+        else card.prepend(image);
+      }
+    } catch {
+      for (const card of cards) {
+        if (batch.includes(card.dataset.mediaReference ?? "")) card.dataset.mediaHydrated = "true";
+      }
+    }
+  }
 }
 
 function isComparableProduct(item: DiscoveryResult): boolean {
@@ -9008,6 +9075,7 @@ async function runDiscovery(reset = true): Promise<void> {
     discoveryHasMore = data.length === pageSize;
     const nextItems = reset ? data : [...activeDiscoveryItems, ...data];
     resultHost.innerHTML = renderSocialPosts(nextItems);
+    void hydrateSocialPostMedia();
     meta.textContent = discoveryUi("resultCount", { count: String(nextItems.length) + (discoveryHasMore ? "+" : "") });
     discoveryOffset += data.length;
     if (pagination) pagination.innerHTML = discoveryHasMore ? '<button class="button button-ghost" type="button" data-load-more-discovery>' + discoveryUi("loadMore") + ' <span>↓</span></button>' : "";

@@ -15,6 +15,55 @@ export function registerMediaRoutes(
 ): void {
   router.register({
     method: "GET",
+    path: "/api/v1/public/offerings/media-batch",
+    module: "media",
+    operation: "media.public.offering.batch_list",
+    requireAuthentication: false,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const rawIds = new URL(request.url).searchParams.get("ids") ?? "";
+      const references = [...new Set(rawIds.split(",").map((id) => id.trim()).filter(Boolean))];
+      if (references.length > 12 || references.some((id) => id.length > 128 || /[\\s,]/.test(id))) {
+        throw new AppError({ code: "VALIDATION_ERROR", message: "At most twelve valid media references may be requested.", requestId: context.requestId });
+      }
+      if (!references.length) return json({ data: [] }, 200, context.requestId);
+      const placeholders = references.map(() => "?").join(", ");
+      const query = publicOfferingMediaSelect.replace(
+        "WHERE o.id = ?",
+        "WHERE (o.id IN (" + placeholders + ") OR o.product_id IN (" + placeholders + ") OR o.service_id IN (" + placeholders + "))",
+      ) + " ORDER BY position ASC, offeringId ASC, assetId ASC LIMIT ?";
+      const rows = await database.all<PublicOfferingMediaRecord>(
+        query,
+        ...references,
+        ...references,
+        ...references,
+        references.length * 12,
+      );
+      const requested = new Set(references);
+      return json({
+        data: rows.map((asset) => ({
+          offeringId: asset.offeringId,
+          productId: asset.productId,
+          serviceId: asset.serviceId,
+          referenceIds: [asset.offeringId, asset.productId, asset.serviceId].filter(
+            (id): id is string => typeof id === "string" && requested.has(id),
+          ),
+          assetId: asset.assetId,
+          purpose: asset.purpose,
+          position: asset.position,
+          mimeType: asset.mimeType,
+          byteSize: asset.byteSize,
+          width: asset.width,
+          height: asset.height,
+          src: publicOfferingMediaContentPath(asset.offeringId, asset.assetId),
+        })),
+      }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/public/offerings/:offeringId/media",
     module: "media",
     operation: "media.public.offering.list",
@@ -325,6 +374,9 @@ export function registerMediaRoutes(
 
 
 interface PublicOfferingMediaRecord {
+  readonly offeringId: string;
+  readonly productId: string | null;
+  readonly serviceId: string | null;
   readonly assetId: string;
   readonly storageKey: string;
   readonly mimeType: string;
@@ -336,7 +388,10 @@ interface PublicOfferingMediaRecord {
 }
 
 const publicOfferingMediaSelect = `
-  SELECT a.id AS assetId,
+  SELECT o.id AS offeringId,
+         o.product_id AS productId,
+         o.service_id AS serviceId,
+         a.id AS assetId,
          COALESCE((
            SELECT v.storage_key FROM media_variants v
            WHERE v.asset_id = a.id AND v.status = 'ready'
