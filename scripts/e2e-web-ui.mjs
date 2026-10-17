@@ -379,11 +379,12 @@ await page.route("**/api/v1/**", async (route) => {
   if (path === "/api/v1/public/offerings/media-batch" && request.method() === "GET") {
     const ids = (url.searchParams.get("ids") ?? "").split(",").filter(Boolean);
     publicMediaBatchRequests.push(ids);
-    const data = ids.includes("prod-1") ? [{
+    const mediaReferences = ids.filter((id) => ["prod-1", "product-1", "offering-1"].includes(id));
+    const data = mediaReferences.length ? [{
       offeringId: "offering-1",
-      productId: "prod-1",
+      productId: "product-1",
       serviceId: null,
-      referenceIds: ["prod-1"],
+      referenceIds: mediaReferences,
       assetId: "asset-photo-1",
       purpose: "primary",
       position: 0,
@@ -546,6 +547,9 @@ assert.equal(await page.locator(".phoenix-social-mobile-nav").count(), 1);
 assert.equal(await page.locator("#public-business-page-name").innerText(), "ترنج");
 assert.ok((await page.locator("#public-business-page-offers").innerText()).includes("کیف دست‌دوز"));
 assert.equal(await page.locator("#public-business-page-offers a[href*='/checkout']").count(), 0);
+assert.equal(await page.locator("#public-business-page-offers a[href*='/offerings/offering-1?business=biz-1']").count(), 1);
+await page.locator("#public-business-page-offers .phoenix-public-offer-image").waitFor();
+assert.ok((await page.locator("#public-business-page-offers .phoenix-public-offer-image").getAttribute("src") ?? "").endsWith("/media/asset-photo-1/content"));
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='en']").click();
 await page.waitForTimeout(50);
@@ -566,11 +570,12 @@ assert.ok(!publicBusinessArabic.includes("Asia/Tehran"));
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);
-await page.locator("[data-public-offer-detail='0']").click();
-await page.locator(".phoenix-detail-modal").waitFor();
-assert.ok((await page.locator(".phoenix-detail-modal").innerText()).includes("کیف دست‌دوز"));
-assert.equal(await page.locator(".phoenix-detail-modal a[href*='/checkout']").count(), 0);
-const askSellerButton = page.locator(".phoenix-detail-modal button.phoenix-detail-ask-seller");
+await page.locator("#public-business-page-offers a[href*='/offerings/offering-1?business=biz-1']").click();
+await page.locator(".phoenix-public-offering-page").waitFor();
+assert.equal(await page.locator("#public-offer-title").innerText(), "کیف دست‌دوز");
+assert.ok((await page.locator(".phoenix-public-offering-page").innerText()).includes("کیف دست‌دوز"));
+assert.equal(await page.locator(".phoenix-public-offering-page a[href*='/checkout']").count(), 0);
+const askSellerButton = page.locator("#public-offer-ask");
 assert.equal(await askSellerButton.count(), 1);
 await askSellerButton.click();
 await page.waitForFunction(() => location.pathname === "/messages"
@@ -585,7 +590,7 @@ assert.equal(await page.locator(".phoenix-reset-message-context-id").textContent
 assert.equal(await page.locator(".phoenix-reset-message-context-id").isVisible(), false);
 assert.ok(contextualOfferText.includes("هیچ پیامی نمایش یا ارسال نمی‌شود"));
 await page.goto(baseURL + "/businesses/biz-1");
-await page.locator("[data-public-offer-detail='0']").waitFor();
+await page.locator("#public-business-page-offers a[href*='/offerings/offering-1?business=biz-1']").waitFor();
 
 await page.goto(baseURL + "/");
 assert.ok(await page.locator("#discover-query").count() > 0);

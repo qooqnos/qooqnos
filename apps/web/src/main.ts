@@ -8296,6 +8296,60 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   } catch { showUnavailable(); }
 }
 
+async function hydratePublicBusinessOfferMedia(host: HTMLElement): Promise<void> {
+  const cards = Array.from(host.querySelectorAll<HTMLElement>("[data-public-offer-media-ref]"));
+  const references = [...new Set(cards.map((card) => card.dataset.publicOfferMediaRef ?? "").filter(Boolean))];
+  if (!references.length) return;
+
+  for (let offset = 0; offset < references.length; offset += 12) {
+    const batch = references.slice(offset, offset + 12);
+    try {
+      const response = await apiJson<{ data: PublicFeedMediaItem[] }>(
+        "/api/v1/public/offerings/media-batch?" + new URLSearchParams({ ids: batch.join(",") }).toString(),
+      );
+      const mediaItems = Array.isArray(response.data) ? response.data : [];
+      for (const card of cards) {
+        const reference = card.dataset.publicOfferMediaRef ?? "";
+        if (!batch.includes(reference) || card.dataset.publicOfferMediaState === "loaded") continue;
+        const media = mediaItems.find((candidate) =>
+          Array.isArray(candidate.referenceIds)
+          && candidate.referenceIds.includes(reference)
+          && typeof candidate.src === "string"
+          && /^\/api\/v1\/public\/offerings\/[^/]+\/media\/[^/]+\/content$/.test(candidate.src)
+          && typeof candidate.mimeType === "string"
+          && candidate.mimeType.toLowerCase().startsWith("image/")
+        );
+        if (!media) {
+          card.dataset.publicOfferMediaState = "unavailable";
+          continue;
+        }
+        const image = document.createElement("img");
+        image.className = "phoenix-public-offer-image";
+        image.src = media.src;
+        image.alt = "";
+        image.loading = "lazy";
+        image.decoding = "async";
+        image.addEventListener("error", () => {
+          image.remove();
+          card.dataset.publicOfferMediaState = "unavailable";
+        }, { once: true });
+        image.addEventListener("load", () => {
+          card.dataset.publicOfferMediaState = "loaded";
+          card.classList.add("has-published-image");
+        }, { once: true });
+        card.querySelector(".phoenix-public-offer-media-placeholder")?.replaceWith(image);
+        if (!card.querySelector(".phoenix-public-offer-media-placeholder")) card.prepend(image);
+      }
+    } catch {
+      for (const card of cards) {
+        if (batch.includes(card.dataset.publicOfferMediaRef ?? "")) {
+          card.dataset.publicOfferMediaState = "unavailable";
+        }
+      }
+    }
+  }
+}
+
 async function loadBusinessPublicPage(routePath: string): Promise<void> {
   const businessId = routePath.split("/").filter(Boolean)[1] ?? "";
   const name = document.querySelector<HTMLElement>("#public-business-page-name");
@@ -8358,35 +8412,28 @@ async function loadBusinessPublicPage(routePath: string): Promise<void> {
       return;
     }
     const publicOffers = response.data.offers;
-    offersHost.innerHTML = publicOffers.map((offer, index) => {
+    offersHost.innerHTML = publicOffers.map((offer) => {
       const price = offer.priceAmountMinor !== null && offer.currency
         ? formatPublicMoney(offer.priceAmountMinor, offer.currency)
-        : uiText("استعلام قیمت");
-      const actionLabel = offer.offeringType === "product" ? uiText("مشاهده جزئیات") : uiText("بررسی خدمت و رزرو");
-      return '<article class="phoenix-public-offer-card"><div class="phoenix-public-offer-icon">' + (offer.offeringType === "product" ? "▦" : "◷") + '</div><div class="phoenix-public-offer-body"><span class="section-kicker">' + escapeHtml(offer.offeringType === "product" ? uiText("کالا") : uiText("خدمت")) + '</span><h3>' + escapeHtml(offer.title) + '</h3><p>' + escapeHtml(offer.description ?? uiText("توضیح تکمیلی برای این عرضه ثبت نشده است.")) + '</p><strong>' + escapeHtml(price) + '</strong></div><div class="phoenix-public-offer-action"><button class="button button-primary" type="button" data-public-offer-detail="' + index + '">' + actionLabel + ' <span aria-hidden="true">←</span></button></div></article>';
+        : socialCommerceUi("offerDetailPriceAsk");
+      const typeLabel = offer.offeringType === "product"
+        ? socialCommerceUi("offerDetailProduct")
+        : socialCommerceUi("offerDetailService");
+      const mediaReference = offer.productId || offer.serviceId || offer.id;
+      const detailHref = "/offerings/" + encodeURIComponent(offer.id) + "?business=" + encodeURIComponent(businessId);
+      const icon = offer.offeringType === "product" ? "▦" : "◷";
+      return '<article class="phoenix-public-offer-card">' +
+        '<div class="phoenix-public-offer-icon" data-public-offer-media-ref="' + escapeAttr(mediaReference) + '" data-public-offer-media-state="pending">' +
+          '<span class="phoenix-public-offer-media-placeholder" aria-hidden="true">' + icon + '</span></div>' +
+        '<div class="phoenix-public-offer-body"><span class="section-kicker">' + escapeHtml(typeLabel) + '</span>' +
+          '<h3>' + escapeHtml(offer.title) + '</h3>' +
+          '<p>' + escapeHtml(offer.description ?? socialCommerceUi("publicOfferNoDescription")) + '</p>' +
+          '<strong>' + escapeHtml(price) + '</strong></div>' +
+        '<div class="phoenix-public-offer-action"><a class="button button-primary" data-nav href="' + escapeAttr(detailHref) + '">' +
+          socialCommerceUi("offerDetailBreadcrumb") + ' <span aria-hidden="true">←</span></a></div>' +
+      '</article>';
     }).join("");
-    offersHost.querySelectorAll<HTMLButtonElement>("[data-public-offer-detail]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const index = Number(button.dataset.publicOfferDetail);
-        const offer = Number.isInteger(index) ? publicOffers[index] : undefined;
-        if (!offer) return;
-        const price = offer.priceAmountMinor;
-        openDiscoveryResultPanel({
-          id: offer.id,
-          sourceId: offer.id,
-          sourceType: offer.offeringType,
-          title: offer.title,
-          ...(offer.description !== null ? { description: offer.description } : {}),
-          ...(price !== null ? { price } : {}),
-          ...(offer.currency ? { currency: offer.currency } : {}),
-          metadata: {
-            businessId,
-            businessName: profile.displayName || profile.name,
-            offeringType: offer.offeringType,
-          },
-        });
-      });
-    });
+    void hydratePublicBusinessOfferMedia(offersHost);
   } catch (error) {
     summary.textContent = error instanceof Error ? error.message : "پروفایل عمومی در دسترس نیست.";
     facts.innerHTML = '<div class="slot-empty"><span>!</span><p>خواندن Business عمومی ناموفق بود.</p></div>';

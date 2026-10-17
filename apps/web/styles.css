@@ -14987,3 +14987,38 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-public-offering-gallery-image { max-height:none; aspect-ratio:4/4.6; }
   .phoenix-public-offering-gallery-thumb { flex-basis:59px; width:59px; height:64px; }
 }
+
+/* Public seller offer cards share the published-media pipeline with feed and detail pages. */
+.social-shell .phoenix-public-offer-icon {
+  position: relative;
+  min-height: 150px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb,var(--primary) 14%,transparent),transparent 60%),
+    var(--surface-2);
+}
+.social-shell .phoenix-public-offer-icon .phoenix-public-offer-media-placeholder {
+  display: grid;
+  width: 100%;
+  min-height: inherit;
+  place-items: center;
+  color: var(--primary-strong);
+  font-size: 34px;
+}
+.social-shell .phoenix-public-offer-icon .phoenix-public-offer-image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--surface-2);
+  transition: transform .25s ease;
+}
+.social-shell .phoenix-public-offer-card:hover .phoenix-public-offer-image { transform: scale(1.035); }
+.social-shell .phoenix-public-offer-icon.has-published-image { background: var(--surface-2); }
+.social-shell .phoenix-public-offer-action a { text-decoration: none; }
+@media(max-width:720px) {
+  .social-shell .phoenix-public-offer-icon { min-height: 112px; }
+  .social-shell .phoenix-public-offer-icon .phoenix-public-offer-media-placeholder { font-size: 28px; }
+}
