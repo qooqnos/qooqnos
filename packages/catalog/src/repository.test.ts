@@ -162,7 +162,14 @@ describe("CatalogRepository", () => {
       },
       async all<T>() {
         if (currentSql.includes("FROM product_variants pv") && currentSql.includes("WHERE pv.product_id = ?")) {
-          return { results: [{ id: "variant-1" }] as T[] };
+          return { results: [{
+            id: "variant-1",
+            priceAmountMinor: 1250000,
+            currency: "IRR",
+            pricingType: "fixed",
+            priceSource: "variant",
+            availability: "in_stock",
+          }] as T[] };
         }
         if (currentSql.includes("FROM attribute_values WHERE target_type = ?")) {
           return { results: [{
@@ -197,11 +204,19 @@ describe("CatalogRepository", () => {
     expect(variants).toEqual([{
       id: "variant-1",
       attributes: [{ key: "color", label: "Color", value: "Black" }],
+      priceAmountMinor: 1250000,
+      currency: "IRR",
+      pricingType: "fixed",
+      priceSource: "variant",
+      availability: "in_stock",
     }]);
     expect(statements[0]).toContain("o.status = 'active'");
     expect(statements[0]).toContain("o.publication_status = 'published'");
     expect(statements[0]).toContain("b.publication_status = 'published'");
     expect(statements.some((sql) => sql.includes("pv.status = 'active'"))).toBe(true);
+    expect(statements.some((sql) => sql.includes("pr.product_variant_id = pv.id"))).toBe(true);
+    expect(statements.some((sql) => sql.includes("pr.product_variant_id IS NULL"))).toBe(true);
+    expect(statements.some((sql) => sql.includes("inventory_items") && sql.includes("l.status = 'active'"))).toBe(true);
     expect(JSON.stringify(variants)).not.toContain("sku");
   });
 

@@ -100,6 +100,11 @@ export interface PublicOfferingVariantAttribute {
 export interface PublicOfferingVariantRecord {
   readonly id: EntityId;
   readonly attributes: readonly PublicOfferingVariantAttribute[];
+  readonly priceAmountMinor: number | null;
+  readonly currency: string | null;
+  readonly pricingType: "fixed" | "starting_at" | "from" | "custom" | "free" | null;
+  readonly priceSource: "variant" | "offering" | null;
+  readonly availability: "in_stock" | "out_of_stock" | "unknown";
 }
 
 export interface CreateProductInput {
@@ -217,9 +222,11 @@ export class CatalogRepository extends Repository {
         WHERE p.id = ?
           AND b.organization_id = ?
           AND b.workspace_id = ?
+          AND pr.product_variant_id IS NULL
           AND p.status = 'active'
           AND o.status = 'active'
           AND o.publication_status = 'published'
+          AND pr.product_variant_id IS NULL
           AND pr.status = 'active'
           AND pr.effective_from <= ?
           AND (pr.effective_to IS NULL OR pr.effective_to > ?)
@@ -478,6 +485,7 @@ export class CatalogRepository extends Repository {
     context: RequestContext,
     offeringId: EntityId,
     limit = 100,
+    now = new Date().toISOString(),
   ): Promise<readonly PublicOfferingVariantRecord[]> {
     const scope = await this.database.first<{
       readonly productId: EntityId;
@@ -503,13 +511,85 @@ export class CatalogRepository extends Repository {
     if (!scope) return [];
 
     const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
-    const variants = await this.database.all<{ readonly id: EntityId }>(
-      `SELECT pv.id
+    const variants = await this.database.all<{
+      readonly id: EntityId;
+      readonly priceAmountMinor: number | null;
+      readonly currency: string | null;
+      readonly pricingType: PublicOfferingVariantRecord["pricingType"];
+      readonly priceSource: PublicOfferingVariantRecord["priceSource"];
+      readonly availability: PublicOfferingVariantRecord["availability"];
+    }>(
+      `SELECT pv.id,
+              COALESCE(variant_price.amount_minor, offer_price.amount_minor) AS priceAmountMinor,
+              COALESCE(variant_price.currency, offer_price.currency) AS currency,
+              COALESCE(variant_price.pricing_type, offer_price.pricing_type) AS pricingType,
+              CASE
+                WHEN variant_price.id IS NOT NULL THEN 'variant'
+                WHEN offer_price.id IS NOT NULL THEN 'offering'
+                ELSE NULL
+              END AS priceSource,
+              CASE
+                WHEN EXISTS (
+                  SELECT 1
+                    FROM inventory_items ii
+                    INNER JOIN locations l ON l.id = ii.location_id
+                   WHERE ii.product_variant_id = pv.id
+                     AND l.business_id = o.business_id
+                     AND l.status = 'active'
+                ) THEN
+                  CASE WHEN COALESCE((
+                    SELECT SUM(ii.quantity_on_hand - ii.quantity_reserved)
+                      FROM inventory_items ii
+                      INNER JOIN locations l ON l.id = ii.location_id
+                     WHERE ii.product_variant_id = pv.id
+                       AND l.business_id = o.business_id
+                       AND l.status = 'active'
+                  ), 0) > 0 THEN 'in_stock' ELSE 'out_of_stock' END
+                ELSE 'unknown'
+              END AS availability
          FROM product_variants pv
+         INNER JOIN products p ON p.id = pv.product_id
+         INNER JOIN offerings o ON o.id = ?
+                                AND o.product_id = p.id
+         INNER JOIN businesses b ON b.id = o.business_id
+         LEFT JOIN prices variant_price
+           ON variant_price.id = (
+             SELECT pr.id
+               FROM prices pr
+              WHERE pr.offering_id = o.id
+                AND pr.product_variant_id = pv.id
+                AND pr.status = 'active'
+                AND pr.effective_from <= ?
+                AND (pr.effective_to IS NULL OR pr.effective_to > ?)
+              ORDER BY pr.effective_from DESC, pr.updated_at DESC, pr.id DESC
+              LIMIT 1
+           )
+         LEFT JOIN prices offer_price
+           ON offer_price.id = (
+             SELECT pr.id
+               FROM prices pr
+              WHERE pr.offering_id = o.id
+                AND pr.product_variant_id IS NULL
+                AND pr.status = 'active'
+                AND pr.effective_from <= ?
+                AND (pr.effective_to IS NULL OR pr.effective_to > ?)
+              ORDER BY pr.effective_from DESC, pr.updated_at DESC, pr.id DESC
+              LIMIT 1
+           )
         WHERE pv.product_id = ?
           AND pv.status = 'active'
+          AND p.status != 'archived'
+          AND b.status = 'active'
+          AND b.publication_status = 'published'
+          AND o.status = 'active'
+          AND o.publication_status = 'published'
         ORDER BY pv.updated_at DESC, pv.id ASC
         LIMIT ?`,
+      offeringId,
+      now,
+      now,
+      now,
+      now,
       scope.productId,
       safeLimit,
     );
@@ -566,7 +646,15 @@ export class CatalogRepository extends Repository {
           value: publicValue,
         });
       }
-      result.push({ id: variant.id, attributes });
+      result.push({
+        id: variant.id,
+        attributes,
+        priceAmountMinor: variant.priceAmountMinor ?? null,
+        currency: variant.currency ?? null,
+        pricingType: variant.pricingType ?? null,
+        priceSource: variant.priceSource ?? null,
+        availability: variant.availability ?? "unknown",
+      });
     }
     return result;
   }
