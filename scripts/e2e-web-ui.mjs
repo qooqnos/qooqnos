@@ -576,6 +576,16 @@ await page.waitForFunction(() => document.querySelector("#public-offer-title")?.
 assert.equal(await page.locator("#public-offer-title").innerText(), "کیف دست‌دوز");
 assert.ok((await page.locator(".phoenix-public-offering-page").innerText()).includes("کیف دست‌دوز"));
 assert.equal(await page.locator(".phoenix-public-offering-page a[href*='/checkout']").count(), 0);
+await page.evaluate(() => {
+  Object.defineProperty(navigator, "share", {
+    configurable: true,
+    value: async (payload) => { window.__phoenixOfferingSharedPayload = payload; },
+  });
+});
+await page.locator("[data-public-offer-secondary='share']").click();
+const offeringSharedPayload = await page.evaluate(() => window.__phoenixOfferingSharedPayload);
+assert.equal(new URL(offeringSharedPayload.url).pathname, "/offerings/offering-1");
+assert.equal(new URL(offeringSharedPayload.url).searchParams.get("business"), "biz-1");
 const askSellerButton = page.locator("#public-offer-ask");
 assert.equal(await askSellerButton.count(), 1);
 await askSellerButton.click();

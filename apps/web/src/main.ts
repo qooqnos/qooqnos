@@ -8221,7 +8221,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
       ...(offer.description !== null ? { description: offer.description } : {}),
       ...(offer.priceAmountMinor !== null ? { price: offer.priceAmountMinor } : {}),
       ...(offer.currency ? { currency: offer.currency } : {}),
-      metadata: { businessId, businessName, offeringType: offer.offeringType },
+      metadata: { businessId, businessName, offeringId: offer.id, offeringType: offer.offeringType },
     };
     const typeLabel = offer.offeringType === "product" ? socialCommerceUi("offerDetailProduct") : socialCommerceUi("offerDetailService");
     const description = offer.description?.trim() || socialCommerceUi("publicOfferNoDescription");
