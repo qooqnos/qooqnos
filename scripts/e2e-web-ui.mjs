@@ -1511,6 +1511,11 @@ assert.ok(persistedCartItems.some((item) => item.variantId === "variant-blue-s")
 assert.ok(persistedCartItems.some((item) => item.variantId === "variant-blue-s" && item.price === 1750000 && item.currency === "IRR"), "Variant-specific price/currency missing from local cart: " + JSON.stringify(persistedCartItems));
 assert.ok(persistedCartItems.some((item) => item.variantLabel === "رنگ: Blue · اندازه: S"), "Localized variant label missing from local cart: " + JSON.stringify(persistedCartItems));
 assert.ok(persistedCartItems.some((item) => item.title === "کیف دست‌دوز · رنگ: Blue · اندازه: S"), "Localized variant title missing from local cart: " + JSON.stringify(persistedCartItems));
+const cartVariantsForSameOffering = persistedCartItems.filter((item) => item.offeringId === "offering-1" && ["variant-red-s", "variant-blue-s"].includes(item.variantId));
+assert.equal(cartVariantsForSameOffering.length, 2, "Different variants of the same offering must stay as separate cart lines: " + JSON.stringify(persistedCartItems));
+assert.notEqual(cartVariantsForSameOffering[0].id, cartVariantsForSameOffering[1].id);
+assert.ok(cartVariantsForSameOffering.some((item) => item.variantId === "variant-red-s" && item.price === 1250000));
+assert.ok(cartVariantsForSameOffering.some((item) => item.variantId === "variant-blue-s" && item.price === 1750000));
 assert.ok(selectedVariantCartPreviewText.includes("رنگ: Blue"), "Cart preview omitted chosen color: " + selectedVariantCartPreviewText);
 assert.ok(selectedVariantCartPreviewText.includes("اندازه: S"), "Cart preview omitted chosen size: " + selectedVariantCartPreviewText);
 await page.goto(baseURL + "/offerings/offering-service-1?business=biz-1");
