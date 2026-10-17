@@ -2327,6 +2327,8 @@
     "offerDetailVariantCombinationUnavailable": "هذا الخيار المركب غير متاح. اختر تركيبة أخرى.",
     "offerDetailVariantLoadFailed": "تعذر تحميل خيارات المنتج. حاول مجدداً.",
     "offerDetailVariantPriceNote": "يجب تأكيد السعر النهائي والتوفر من البائع عند تقديم الطلب.",
-    "offerDetailVariantNoChoices": "لا توجد خيارات قابلة للاختيار لهذا المنتج."
+    "offerDetailVariantNoChoices": "لا توجد خيارات قابلة للاختيار لهذا المنتج.",
+    "offerDetailLoadingDetails": "جارٍ تحميل تفاصيل العرض.",
+    "offerDetailAskHeading": "اسأل البائع"
   }
 }

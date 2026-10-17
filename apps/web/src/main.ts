@@ -7370,8 +7370,8 @@ function renderPublicOfferingDetail(): string {
         '<p class="phoenix-public-offering-note" id="public-offer-note">' + socialCommerceUi("offerDetailVerifiedNote") + '</p></article>' +
     '</div>' +
     '<section class="phoenix-public-offering-lower">' +
-      '<article class="phoenix-public-offering-info"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("offerDetailAbout") + '</span><h2>' + socialCommerceUi("offerDetailRecordedDetails") + '</h2><p id="public-offer-details">' + uiText("جزئیات در حال بارگذاری است.") + '</p></article>' +
-      '<article class="phoenix-public-offering-info"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("offerDetailContact") + '</span><h2>' + uiText("پرسش از فروشنده") + '</h2><p>' + socialCommerceUi("offerDetailAskIntro") + '</p><button class="button button-ghost" id="public-offer-ask" type="button" disabled>' + socialCommerceUi("detailAskSeller") + '</button></article>' +
+      '<article class="phoenix-public-offering-info"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("offerDetailAbout") + '</span><h2 id="public-offer-details-heading">' + socialCommerceUi("offerDetailRecordedDetails") + '</h2><p id="public-offer-details">' + socialCommerceUi("offerDetailLoadingDetails") + '</p></article>' +
+      '<article class="phoenix-public-offering-info"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("offerDetailContact") + '</span><h2 id="public-offer-ask-heading">' + socialCommerceUi("offerDetailAskHeading") + '</h2><p>' + socialCommerceUi("offerDetailAskIntro") + '</p><button class="button button-ghost" id="public-offer-ask" type="button" disabled>' + socialCommerceUi("detailAskSeller") + '</button></article>' +
     '</section></div>';
 }
 

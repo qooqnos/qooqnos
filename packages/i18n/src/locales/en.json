@@ -2327,6 +2327,8 @@
     "offerDetailVariantCombinationUnavailable": "This combination is unavailable. Choose another option.",
     "offerDetailVariantLoadFailed": "Product options could not be loaded. Try again.",
     "offerDetailVariantPriceNote": "Final price and availability must be confirmed by the seller when placing an order.",
-    "offerDetailVariantNoChoices": "No selectable options are available for this product."
+    "offerDetailVariantNoChoices": "No selectable options are available for this product.",
+    "offerDetailLoadingDetails": "Loading offer details.",
+    "offerDetailAskHeading": "Ask the seller"
   }
 }

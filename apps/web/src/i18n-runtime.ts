@@ -2223,7 +2223,18 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "socialCommercePage.offerDetailSaved": "ذخیره شد",
     "socialCommercePage.offerDetailSavedToast": "عرضه ذخیره شد.",
     "socialCommercePage.offerDetailCompare": "مقایسه",
-    "socialCommercePage.offerDetailShare": "اشتراک‌گذاری"
+    "socialCommercePage.offerDetailShare": "اشتراک‌گذاری",
+    "socialCommercePage.offerDetailBrandName": "ققنوس",
+    "socialCommercePage.offerDetailVariantTitle": "انتخاب ویژگی‌های کالا",
+    "socialCommercePage.offerDetailVariantPlaceholder": "انتخاب کنید",
+    "socialCommercePage.offerDetailVariantPrompt": "برای ادامه، گزینه‌های دلخواهت را انتخاب کن.",
+    "socialCommercePage.offerDetailVariantChosen": "گزینهٔ انتخاب‌شده",
+    "socialCommercePage.offerDetailVariantCombinationUnavailable": "این ترکیب موجود نیست؛ گزینهٔ دیگری انتخاب کن.",
+    "socialCommercePage.offerDetailVariantLoadFailed": "گزینه‌های کالا بارگذاری نشدند؛ دوباره تلاش کن.",
+    "socialCommercePage.offerDetailVariantPriceNote": "قیمت نهایی و موجودی باید هنگام ثبت سفارش از فروشنده تأیید شوند.",
+    "socialCommercePage.offerDetailVariantNoChoices": "گزینه‌های قابل انتخاب برای این کالا در دسترس نیست.",
+    "socialCommercePage.offerDetailLoadingDetails": "جزئیات در حال بارگذاری است.",
+    "socialCommercePage.offerDetailAskHeading": "پرسش از فروشنده"
   },
   "en": {
     "common.appName": "Phoenix",
@@ -4444,7 +4455,18 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "socialCommercePage.offerDetailSaved": "Saved",
     "socialCommercePage.offerDetailSavedToast": "Offer saved.",
     "socialCommercePage.offerDetailCompare": "Compare",
-    "socialCommercePage.offerDetailShare": "Share"
+    "socialCommercePage.offerDetailShare": "Share",
+    "socialCommercePage.offerDetailBrandName": "Qooqnos",
+    "socialCommercePage.offerDetailVariantTitle": "Choose product options",
+    "socialCommercePage.offerDetailVariantPlaceholder": "Choose…",
+    "socialCommercePage.offerDetailVariantPrompt": "Select your preferred options to continue.",
+    "socialCommercePage.offerDetailVariantChosen": "Selected option",
+    "socialCommercePage.offerDetailVariantCombinationUnavailable": "This combination is unavailable. Choose another option.",
+    "socialCommercePage.offerDetailVariantLoadFailed": "Product options could not be loaded. Try again.",
+    "socialCommercePage.offerDetailVariantPriceNote": "Final price and availability must be confirmed by the seller when placing an order.",
+    "socialCommercePage.offerDetailVariantNoChoices": "No selectable options are available for this product.",
+    "socialCommercePage.offerDetailLoadingDetails": "Loading offer details.",
+    "socialCommercePage.offerDetailAskHeading": "Ask the seller"
   },
   "ar": {
     "common.appName": "فينيكس",
@@ -6665,7 +6687,18 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "socialCommercePage.offerDetailSaved": "تم الحفظ",
     "socialCommercePage.offerDetailSavedToast": "تم حفظ العرض.",
     "socialCommercePage.offerDetailCompare": "مقارنة",
-    "socialCommercePage.offerDetailShare": "مشاركة"
+    "socialCommercePage.offerDetailShare": "مشاركة",
+    "socialCommercePage.offerDetailBrandName": "ققنوس",
+    "socialCommercePage.offerDetailVariantTitle": "اختيار خيارات المنتج",
+    "socialCommercePage.offerDetailVariantPlaceholder": "اختر…",
+    "socialCommercePage.offerDetailVariantPrompt": "اختر الخيارات المفضلة للمتابعة.",
+    "socialCommercePage.offerDetailVariantChosen": "الخيار المحدد",
+    "socialCommercePage.offerDetailVariantCombinationUnavailable": "هذا الخيار المركب غير متاح. اختر تركيبة أخرى.",
+    "socialCommercePage.offerDetailVariantLoadFailed": "تعذر تحميل خيارات المنتج. حاول مجدداً.",
+    "socialCommercePage.offerDetailVariantPriceNote": "يجب تأكيد السعر النهائي والتوفر من البائع عند تقديم الطلب.",
+    "socialCommercePage.offerDetailVariantNoChoices": "لا توجد خيارات قابلة للاختيار لهذا المنتج.",
+    "socialCommercePage.offerDetailLoadingDetails": "جارٍ تحميل تفاصيل العرض.",
+    "socialCommercePage.offerDetailAskHeading": "اسأل البائع"
   }
 };
 

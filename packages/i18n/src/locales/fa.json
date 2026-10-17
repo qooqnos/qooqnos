@@ -2327,6 +2327,8 @@
     "offerDetailVariantCombinationUnavailable": "این ترکیب موجود نیست؛ گزینهٔ دیگری انتخاب کن.",
     "offerDetailVariantLoadFailed": "گزینه‌های کالا بارگذاری نشدند؛ دوباره تلاش کن.",
     "offerDetailVariantPriceNote": "قیمت نهایی و موجودی باید هنگام ثبت سفارش از فروشنده تأیید شوند.",
-    "offerDetailVariantNoChoices": "گزینه‌های قابل انتخاب برای این کالا در دسترس نیست."
+    "offerDetailVariantNoChoices": "گزینه‌های قابل انتخاب برای این کالا در دسترس نیست.",
+    "offerDetailLoadingDetails": "جزئیات در حال بارگذاری است.",
+    "offerDetailAskHeading": "پرسش از فروشنده"
   }
 }
