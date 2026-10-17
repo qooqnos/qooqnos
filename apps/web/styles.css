@@ -14350,3 +14350,10 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-reset-message-composer-footer small { max-width: none; }
   .phoenix-reset-message-composer-footer .button { width: 100%; justify-content: center; }
 }
+
+
+/* Social comment dialog keyboard accessibility */
+.phoenix-social-comment-dialog :focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 76%, white);
+  outline-offset: 3px;
+}
