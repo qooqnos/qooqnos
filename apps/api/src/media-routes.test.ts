@@ -123,7 +123,8 @@ describe("prepared WebP image validation", () => {
   function webpContainer(chunks: Array<{ type: string; data: readonly number[] }>): Uint8Array {
     const bodySize = chunks.reduce((sum, chunk) => sum + 8 + chunk.data.length + (chunk.data.length % 2), 0);
     const totalSize = 12 + bodySize;
-    const bytes = webpHeader(totalSize);
+    const bytes = new Uint8Array(totalSize);
+    bytes.set(webpHeader(totalSize));
     let offset = 12;
     for (const chunk of chunks) {
       for (let index = 0; index < 4; index += 1) bytes[offset + index] = chunk.type.charCodeAt(index);
