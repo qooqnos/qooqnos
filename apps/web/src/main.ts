@@ -8730,6 +8730,9 @@ async function submitCommunicationMessage(send: HTMLButtonElement, preferredConv
 function bindGlobalEvents(): void {
   document.querySelectorAll<HTMLElement>("[data-nav]").forEach((element) => {
     element.addEventListener("click", (event) => {
+      // Product-detail cart actions validate the selected option before navigating.
+      // Let their dedicated handler decide whether this link may move to the cart.
+      if (element.dataset.publicOfferAddToCart === "true") return;
       const href = element.getAttribute("href");
       if (!href || !href.startsWith("/")) return;
       event.preventDefault();
