@@ -1395,8 +1395,16 @@ assert.ok(persistedCartItems.some((item) => item.variantLabel === "رنگ: Blue 
 assert.ok(persistedCartItems.some((item) => item.title === "کیف دست‌دوز · رنگ: Blue · اندازه: S"), "Localized variant title missing from local cart: " + JSON.stringify(persistedCartItems));
 assert.ok(selectedVariantCartPreviewText.includes("رنگ: Blue"), "Cart preview omitted chosen color: " + selectedVariantCartPreviewText);
 assert.ok(selectedVariantCartPreviewText.includes("اندازه: S"), "Cart preview omitted chosen size: " + selectedVariantCartPreviewText);
-await page.goto(baseURL + "/offerings/offering-1?business=biz-1");
+await page.goto(baseURL + "/offerings/offering-service-1?business=biz-1");
 await page.locator(".phoenix-public-offering-page").waitFor();
+await page.waitForFunction(() => document.querySelector("#public-offer-title")?.textContent === "مشاورهٔ تخصصی");
+assert.ok((await page.locator("#public-offer-primary-action").getAttribute("href") || "").includes("/booking?"));
+await page.locator("#public-offer-primary-action").click();
+await page.locator(".phoenix-reset-booking-page").waitFor();
+assert.equal(await page.locator("#booking-business").inputValue(), "biz-1");
+assert.equal(await page.locator("#booking-offering").inputValue(), "offering-service-1");
+await page.locator(".phoenix-reset-booking-offer").waitFor();
+assert.ok((await page.locator("#booking-offering-context").innerText()).includes("مشاورهٔ تخصصی"));
 await page.goto(baseURL + "/offerings/does-not-exist?business=biz-1");
 await page.locator(".phoenix-public-offering-page").waitFor();
 await page.locator("#public-offer-published[data-state='unavailable']").waitFor();
