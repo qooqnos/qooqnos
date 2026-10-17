@@ -7240,7 +7240,7 @@ function renderPublicOfferingDetail(): string {
       '<a href="/discover?tab=explore" data-nav>' + socialCommerceUi("tabExplore") + '</a><span aria-hidden="true">/</span><span>' + uiText("جزئیات کالا یا خدمت") + '</span></nav>' +
     '<div class="phoenix-public-offering-layout">' +
       '<section class="phoenix-public-offering-media" aria-label="' + escapeAttr(uiText("تصویر عرضه")) + '">' +
-        '<div class="phoenix-public-offering-image-placeholder"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + uiText("در حال بارگذاری عرضه") + '</span></div></section>' +
+        '<div class="phoenix-public-offering-image-placeholder"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span id="public-offer-media-message">' + uiText("در حال بارگذاری عرضه") + '</span></div></section>' +
       '<article class="phoenix-public-offering-main">' +
         '<div class="phoenix-public-offering-badges"><span class="phoenix-public-offering-type" id="public-offer-type">' + uiText("در حال بارگذاری") + '</span><span class="phoenix-public-offering-published" id="public-offer-published">' + uiText("بررسی انتشار") + '</span></div>' +
         '<h1 id="public-offer-title">' + uiText("در حال بارگذاری عرضه") + '</h1>' +
@@ -7809,7 +7809,8 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   const noteNode = document.querySelector<HTMLElement>("#public-offer-note");
   const askButton = document.querySelector<HTMLButtonElement>("#public-offer-ask");
   const actionsHost = document.querySelector<HTMLElement>("#public-offer-actions");
-  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost) {
+  const mediaMessage = document.querySelector<HTMLElement>("#public-offer-media-message");
+  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage) {
     if (titleNode) titleNode.textContent = uiText("برای نمایش جزئیات، نشانی معتبر عرضه لازم است.");
     if (noteNode) noteNode.textContent = uiText("از صفحهٔ کشف یا پروفایل عمومی فروشنده وارد عرضه شو.");
     return;
@@ -7823,6 +7824,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     sellerNameNode.textContent = uiText("فروشنده در دسترس نیست");
     publishedNode.textContent = uiText("در دسترس نیست");
     noteNode.textContent = uiText("برای دیدن گزینه‌های دیگر به اکسپلور برگرد.");
+    mediaMessage.textContent = uiText("تصویر برای این عرضه در دسترس نیست.");
     primaryAction.href = "/discover?tab=explore";
     primaryAction.textContent = socialCommerceUi("tabExplore");
     primaryAction.hidden = false;
@@ -7855,6 +7857,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     priceNode.textContent = price;
     sellerNameNode.textContent = businessName;
     sellerAvatar.textContent = businessName.slice(0, 1) || "ق";
+    mediaMessage.textContent = uiText("تصویر منتشرشده‌ای برای این عرضه ثبت نشده است.");
     publishedNode.textContent = uiText("منتشرشده");
     askButton.disabled = false;
     sellerNode.href = "/businesses/" + encodeURIComponent(businessId);

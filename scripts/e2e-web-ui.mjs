@@ -1221,6 +1221,7 @@ assert.equal(await page.locator("#public-offer-title").innerText(), "کیف دس
 assert.equal(await page.locator("#public-offer-seller-name").innerText(), "ترنج");
 assert.ok((await page.locator("#public-offer-price").innerText()).length > 0);
 assert.ok((await page.locator("#public-offer-description").innerText()).includes("نمونهٔ کالای منتشرشده"));
+assert.ok(!(await page.locator("#public-offer-media-message").innerText()).includes("در حال بارگذاری"));
 assert.ok(await page.locator("#public-offer-primary-action").isVisible());
 await page.goto(baseURL + "/offerings/does-not-exist?business=biz-1");
 await page.locator(".phoenix-public-offering-page").waitFor();
