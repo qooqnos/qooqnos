@@ -183,6 +183,42 @@ describe("CommerceRepository", () => {
     })).rejects.toThrow("snapshot is invalid");
   });
 
+  it("scopes customer relationship lookup to an active relationship in the current tenant and workspace", async () => {
+    let sql = "";
+    let params: readonly unknown[] = [];
+    const statement: D1PreparedStatementLike = {
+      bind(...values: readonly unknown[]) {
+        params = values;
+        return this;
+      },
+      async first<T>() {
+        return { relationship_type: "partner" } as T;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(query: string) { sql = query; return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CommerceRepository(new D1Database(raw));
+    const type = await repository.getCustomerRelationshipType(
+      context(),
+      brandId<"EntityId">("customer-ali"),
+      brandId<"EntityId">("business-1"),
+    );
+    expect(type).toBe("partner");
+    expect(sql).toContain("INNER JOIN customers c");
+    expect(sql).toContain("INNER JOIN businesses b");
+    expect(sql).toContain("cr.status = 'active'");
+    expect(sql).toContain("c.status = 'active'");
+    expect(sql).toContain("b.status = 'active'");
+    expect(sql).toContain("c.organization_id = ?");
+    expect(sql).toContain("b.organization_id = ?");
+    expect(sql).toContain("b.workspace_id = ?");
+    expect(params).toEqual(["customer-ali", "business-1", "tenant-1", "tenant-1", "workspace-1"]);
+  });
+
   it("creates and retrieves a unified commerce offer", async () => {
     const store = new Map<string, unknown>();
     let boundParams: readonly unknown[] = [];

@@ -921,10 +921,27 @@ export class CommerceRepository extends Repository {
     customerId: EntityId,
     businessId: EntityId,
   ): Promise<string | null> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
     const row = await this.database.first<{ relationship_type: string }>(
-      "SELECT relationship_type FROM customer_relationships WHERE customer_id = ? AND business_id = ? LIMIT 1",
+      `SELECT cr.relationship_type
+         FROM customer_relationships cr
+         INNER JOIN customers c ON c.id = cr.customer_id
+         INNER JOIN businesses b ON b.id = cr.business_id
+        WHERE cr.customer_id = ?
+          AND cr.business_id = ?
+          AND cr.status = 'active'
+          AND c.status = 'active'
+          AND b.status = 'active'
+          AND c.organization_id = ?
+          AND b.organization_id = ?
+          AND b.workspace_id = ?
+        LIMIT 1`,
       customerId,
       businessId,
+      organizationId,
+      organizationId,
+      workspaceId,
     );
     return row?.relationship_type ?? null;
   }

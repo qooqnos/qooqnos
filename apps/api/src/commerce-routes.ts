@@ -23,18 +23,16 @@ export function registerCommerceRoutes(
       const sellerId = requiredParam(url.searchParams.get("sellerId") ?? undefined, context.requestId);
       const productId = requiredParam(url.searchParams.get("productId") ?? undefined, context.requestId);
       const variantId = url.searchParams.get("variantId") ?? undefined;
-      const customerId = url.searchParams.get("customerId") ?? (context.actorId ? String(context.actorId) : undefined);
-      const customerGroup = url.searchParams.get("customerGroup") ?? undefined;
-      const asOf = url.searchParams.get("asOf") ?? undefined;
-
+      // This endpoint is public: browser-supplied customer IDs, relationship groups,
+      // and time overrides must never unlock private or future pricing tiers.
+      // Consumer/base pricing is the only audience resolved without a canonical
+      // authenticated Customer mapping and seller-specific relationship check.
       const service = createService(database, authorization, context.requestId);
       const result = await service.resolveOffer(context, {
         sellerId: brandId<"EntityId">(sellerId),
         productId: brandId<"EntityId">(productId),
         ...(variantId ? { variantId: brandId<"EntityId">(variantId) } : {}),
-        ...(customerId ? { customerId: brandId<"EntityId">(customerId) } : {}),
-        ...(customerGroup ? { customerGroup } : {}),
-        ...(asOf ? { asOf } : {}),
+        customerGroup: "consumer",
       });
       if (!result || !result.offer) {
         return json({ data: null, message: "No available offer found for the specified context." }, 404, context.requestId);
@@ -56,18 +54,14 @@ export function registerCommerceRoutes(
       const sellerId = requiredId(body.sellerId, "sellerId", context.requestId);
       const productId = requiredId(body.productId, "productId", context.requestId);
       const variantId = body.variantId !== undefined ? requiredId(body.variantId, "variantId", context.requestId) : undefined;
-      const customerId = body.customerId !== undefined ? requiredId(body.customerId, "customerId", context.requestId) : (context.actorId ? brandId<"EntityId">(String(context.actorId)) : undefined);
-      const customerGroup = typeof body.customerGroup === "string" ? body.customerGroup : undefined;
-      const asOf = typeof body.asOf === "string" ? body.asOf : undefined;
-
+      // Keep the public POST contract aligned with GET. Audience, customer identity,
+      // and effective-time context are server-owned, never accepted from the payload.
       const service = createService(database, authorization, context.requestId);
       const result = await service.resolveOffer(context, {
         sellerId,
         productId,
         ...(variantId ? { variantId } : {}),
-        ...(customerId ? { customerId } : {}),
-        ...(customerGroup ? { customerGroup } : {}),
-        ...(asOf ? { asOf } : {}),
+        customerGroup: "consumer",
       });
 
       if (!result || !result.offer) {
