@@ -2338,7 +2338,20 @@
     "offerDetailVariantStartingAt": "ابتداءً من",
     "offerDetailRelationshipPrice": "السعر حسب علاقتك بالبائع",
     "offerDetailRelationshipPriceLoading": "جارٍ التحقق من السعر المناسب لعلاقتك…",
-    "offerDetailRelationshipPriceUnavailable": "تعذّر التحقق من السعر الخاص بحسابك. حاول مجددًا أو اسأل البائع."
+    "offerDetailRelationshipPriceUnavailable": "تعذّر التحقق من السعر الخاص بحسابك. حاول مجددًا أو اسأل البائع.",
+    "personalProfileSocialAria": "اختصارات اجتماعية",
+    "personalProfileSocialEyebrow": "شبكتك",
+    "personalProfileSocialTitle": "واصل التواصل",
+    "personalProfileFollowing": "المتابَعون",
+    "personalProfileFollowingDescription": "آخر تحديثات من تتابعهم",
+    "personalProfileExplore": "استكشاف",
+    "personalProfileExploreDescription": "اكتشف المنتجات والخدمات",
+    "personalProfileSaved": "المحفوظات",
+    "personalProfileSavedDescription": "عناصر للعودة إليها لاحقًا",
+    "personalProfileMessages": "الرسائل",
+    "personalProfileMessagesDescription": "محادثات حول العروض",
+    "personalProfileActivity": "النشاط",
+    "personalProfileActivityDescription": "تفاعلاتك الاجتماعية"
   },
   "catalogPage": {
     "eyebrow": "كتالوج البائع",

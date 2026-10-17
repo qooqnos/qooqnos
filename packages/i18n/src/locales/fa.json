@@ -2338,7 +2338,20 @@
     "offerDetailVariantStartingAt": "شروع از",
     "offerDetailRelationshipPrice": "قیمت متناسب با رابطهٔ شما",
     "offerDetailRelationshipPriceLoading": "در حال بررسی قیمت متناسب با رابطهٔ شما…",
-    "offerDetailRelationshipPriceUnavailable": "قیمت متناسب با حساب شما تأیید نشد؛ دوباره تلاش کن یا از فروشنده بپرس."
+    "offerDetailRelationshipPriceUnavailable": "قیمت متناسب با حساب شما تأیید نشد؛ دوباره تلاش کن یا از فروشنده بپرس.",
+    "personalProfileSocialAria": "میان‌برهای اجتماعی",
+    "personalProfileSocialEyebrow": "شبکهٔ تو",
+    "personalProfileSocialTitle": "ادامهٔ ارتباط",
+    "personalProfileFollowing": "دنبال‌شده‌ها",
+    "personalProfileFollowingDescription": "تازه‌های افرادی که دنبال می‌کنی",
+    "personalProfileExplore": "اکسپلور",
+    "personalProfileExploreDescription": "کشف کالاها و خدمات",
+    "personalProfileSaved": "ذخیره‌شده‌ها",
+    "personalProfileSavedDescription": "گزینه‌هایی برای بررسی بعد",
+    "personalProfileMessages": "پیام‌ها",
+    "personalProfileMessagesDescription": "گفت‌وگو دربارهٔ کالا و خدمت",
+    "personalProfileActivity": "فعالیت",
+    "personalProfileActivityDescription": "تعامل‌ها و ارتباط‌های اجتماعی"
   },
   "catalogPage": {
     "eyebrow": "کاتالوگ فروشنده",

@@ -2338,7 +2338,20 @@
     "offerDetailVariantStartingAt": "Starting at",
     "offerDetailRelationshipPrice": "Price based on your relationship",
     "offerDetailRelationshipPriceLoading": "Checking your relationship-based price…",
-    "offerDetailRelationshipPriceUnavailable": "We couldn't verify your account-specific price. Try again or ask the seller."
+    "offerDetailRelationshipPriceUnavailable": "We couldn't verify your account-specific price. Try again or ask the seller.",
+    "personalProfileSocialAria": "Social shortcuts",
+    "personalProfileSocialEyebrow": "Your network",
+    "personalProfileSocialTitle": "Keep connecting",
+    "personalProfileFollowing": "Following",
+    "personalProfileFollowingDescription": "Updates from people you follow",
+    "personalProfileExplore": "Explore",
+    "personalProfileExploreDescription": "Discover products and services",
+    "personalProfileSaved": "Saved",
+    "personalProfileSavedDescription": "Options to revisit later",
+    "personalProfileMessages": "Messages",
+    "personalProfileMessagesDescription": "Conversations about offers",
+    "personalProfileActivity": "Activity",
+    "personalProfileActivityDescription": "Your social interactions"
   },
   "catalogPage": {
     "eyebrow": "Seller catalog",
