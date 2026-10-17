@@ -161,7 +161,7 @@ export function addCartItem(input: AddPhoenixCartItemInput): PhoenixCartItem[] {
         currency,
         quantity: 1,
         ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}),
-        ...(variantId ? { offeringId, variantId, variantLabel } : {}),
+        ...(variantId && variantLabel ? { offeringId, variantId, variantLabel } : {}),
       }];
   saveCartItems(next);
   return next;
