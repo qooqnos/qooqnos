@@ -668,7 +668,7 @@ function canonicalUi(key: string): string {
 }
 
 function pageUi(
-  namespace: "businessPage" | "businessSurface" | "discoveryPage" | "productStudio" | "socialCommercePage",
+  namespace: "businessPage" | "businessSurface" | "discoveryPage" | "productStudio" | "socialCommercePage" | "catalogPage",
   key: string,
   variables?: Readonly<Record<string, string>>,
 ): string {
@@ -693,6 +693,10 @@ function socialCommerceUi(key: string, variables?: Readonly<Record<string, strin
 
 function productStudioUi(key: string, variables?: Readonly<Record<string, string>>): string {
   return pageUi("productStudio", key, variables);
+}
+
+function catalogUi(key: string, variables?: Readonly<Record<string, string>>): string {
+  return pageUi("catalogPage", key, variables);
 }
 
 function localizedUi(value: string): string {
@@ -2198,51 +2202,74 @@ async function recordAdvertisingClick(): Promise<void> {
   const state=document.querySelector<HTMLElement>("#ad-report-state");if(!state)return;
   try{const response=await apiJson<{data:{id:string}}>("/api/v1/advertising/clicks",{method:"POST",body:{impressionId:document.querySelector<HTMLInputElement>("#ad-impression-id")?.value.trim(),deduplicationKey:crypto.randomUUID()}});state.textContent="Click ثبت شد · "+response.data.id;state.className="connection-state success";}catch(error){state.textContent=error instanceof Error?error.message:"ثبت click ناموفق بود.";state.className="connection-state error";}
 }function renderCatalog(): string {
-  const business = localStorage.getItem(STORAGE.business) ?? "";
-  return `
-    <section class="page-heading">
-      <div><span class="eyebrow"><i></i> Catalog Studio</span><h1>عرضه را بسازید؛ <em>بدون لایه اضافه.</em></h1><p>Product creation مستقیماً به Catalog canonical می‌رود. برای enrich کردن محصول، Seller AI Studio مسیر اصلی است.</p></div>
-      <div class="heading-actions"><a class="button button-ghost" href="/product-studio" data-nav>Seller AI Studio ✦</a></div>
-    </section>
-    <section class="catalog-grid">
-      <article class="glass-card catalog-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Product Command</span><h2>ایجاد محصول</h2></div><span id="catalog-status" class="pill">آماده</span></div>
-        <div class="catalog-form">
-          <div class="field-span-2"><label class="field-label" for="catalog-business">Business ID</label><input id="catalog-business" class="studio-input-line" type="text" value="${escapeAttr(business)}" placeholder="Business ID" /></div>
-          <div><label class="field-label" for="catalog-name">نام محصول</label><input id="catalog-name" class="studio-input-line" type="text" placeholder="نام محصول" /></div>
-          <div><label class="field-label" for="catalog-idem">Idempotency Key <span class="field-optional">خودکار</span></label><input id="catalog-idem" class="studio-input-line" type="text" value="${crypto.randomUUID()}" /></div>
-          <div class="field-span-2"><label class="field-label" for="catalog-description">توضیحات</label><textarea id="catalog-description" class="studio-input-line catalog-textarea" rows="6" placeholder="توضیحات canonical محصول…"></textarea></div>
-        </div>
-        <div class="checkout-actions"><button class="button button-primary button-lg" type="button" data-catalog-create>ساخت محصول <span>→</span></button></div>
-        <div id="catalog-result" class="connection-state">هنوز command اجرا نشده است.</div>
-      </article>
-      <article class="glass-card catalog-card">
-        <span class="section-kicker">Product Direction</span>
-        <h2>دو مسیر، یک مالکیت</h2>
-        <div class="catalog-path"><span>01</span><div><strong>خام → Seller AI</strong><small>عکس/متن، غنی‌سازی، بازبینی</small></div></div>
-        <div class="catalog-path"><span>02</span><div><strong>داده آماده → Catalog</strong><small>ایجاد مستقیم موجودیت canonical</small></div></div>
-        <div class="connection-state">Catalog منبع حقیقت محصول است؛ Seller AI فقط orchestration و تولید پیش‌نویس را انجام می‌دهد.</div>
-      </article>
-    </section>
-  `;
+  const business = (localStorage.getItem(STORAGE.business) ?? "").trim();
+  const hasBusiness = Boolean(business);
+  return '<div class="phoenix-catalog-page">' +
+    '<section class="page-heading phoenix-catalog-heading">' +
+      '<div><span class="eyebrow"><i></i> ' + catalogUi("eyebrow") + '</span>' +
+        '<h1>' + catalogUi("title") + '</h1><p>' + catalogUi("description") + '</p></div>' +
+      '<div class="heading-actions"><a class="button button-ghost" href="/product-studio" data-nav>' + catalogUi("openProductStudio") + ' <span aria-hidden="true">✦</span></a></div>' +
+    '</section>' +
+    (hasBusiness
+      ? '<div class="phoenix-catalog-context phoenix-catalog-context-ready"><span class="phoenix-catalog-context-mark" aria-hidden="true">✓</span><span>' + catalogUi("activeContext") + '</span></div>'
+      : '<section class="phoenix-catalog-context phoenix-catalog-context-missing"><span class="phoenix-catalog-context-mark" aria-hidden="true">⌂</span><div><h2>' + catalogUi("contextTitle") + '</h2><p>' + catalogUi("contextBody") + '</p><a class="button button-primary" href="/business/welcome" data-nav>' + catalogUi("setupSellerSpace") + ' <span aria-hidden="true">←</span></a></div></section>') +
+    '<section class="catalog-grid phoenix-catalog-grid">' +
+      (hasBusiness
+        ? '<article class="glass-card catalog-card phoenix-catalog-create-card">' +
+          '<div class="card-section-heading"><div><span class="section-kicker">' + catalogUi("eyebrow") + '</span><h2>' + catalogUi("createSection") + '</h2></div><span id="catalog-status" class="pill">' + catalogUi("ready") + '</span></div>' +
+          '<p class="phoenix-catalog-card-intro">' + catalogUi("directPathDescription") + '</p>' +
+          '<input id="catalog-business" type="hidden" value="' + escapeAttr(business) + '" />' +
+          '<input id="catalog-idem" type="hidden" value="' + escapeAttr(crypto.randomUUID()) + '" />' +
+          '<div class="catalog-form phoenix-catalog-form">' +
+            '<div class="field-span-2"><label class="field-label" for="catalog-name">' + catalogUi("productName") + '</label><input id="catalog-name" class="studio-input-line" type="text" autocomplete="off" required placeholder="' + escapeAttr(catalogUi("productNamePlaceholder")) + '" /></div>' +
+            '<div class="field-span-2"><label class="field-label" for="catalog-description">' + catalogUi("descriptionLabel") + ' <span class="field-optional">' + catalogUi("optional") + '</span></label><textarea id="catalog-description" class="studio-input-line catalog-textarea" rows="5" placeholder="' + escapeAttr(catalogUi("descriptionPlaceholder")) + '"></textarea></div>' +
+          '</div>' +
+          '<div class="checkout-actions"><button class="button button-primary button-lg" type="button" data-catalog-create>' + catalogUi("submit") + ' <span aria-hidden="true">→</span></button></div>' +
+          '<div id="catalog-result" class="connection-state" role="status" aria-live="polite">' + catalogUi("resultInitial") + '</div>' +
+        '</article>'
+        : '<article class="glass-card catalog-card phoenix-catalog-create-card phoenix-catalog-form-locked"><span class="section-kicker">' + catalogUi("createSection") + '</span><h2>' + catalogUi("directPathTitle") + '</h2><p>' + catalogUi("contextBody") + '</p><a class="button button-primary" href="/business/welcome" data-nav>' + catalogUi("setupSellerSpace") + ' <span aria-hidden="true">←</span></a></article>') +
+      '<aside class="glass-card catalog-card phoenix-catalog-help-card">' +
+        '<span class="section-kicker">' + catalogUi("catalogHelpTitle") + '</span><h2>' + catalogUi("directPathTitle") + '</h2>' +
+        '<div class="catalog-path"><span>01</span><div><strong>' + catalogUi("directPathTitle") + '</strong><small>' + catalogUi("directPathDescription") + '</small></div></div>' +
+        '<div class="catalog-path"><span>02</span><div><strong>' + catalogUi("studioPathTitle") + '</strong><small>' + catalogUi("studioPathDescription") + '</small></div></div>' +
+        '<div class="phoenix-catalog-help-note">' + catalogUi("catalogHelpDescription") + '</div>' +
+        '<a class="button button-ghost phoenix-catalog-studio-link" href="/product-studio" data-nav>' + catalogUi("openProductStudio") + ' <span aria-hidden="true">✦</span></a>' +
+      '</aside>' +
+    '</section>' +
+  '</div>';
 }
 
 async function createCatalogProduct(): Promise<void> {
   const businessId = document.querySelector<HTMLInputElement>("#catalog-business")?.value.trim() ?? "";
   const name = document.querySelector<HTMLInputElement>("#catalog-name")?.value.trim() ?? "";
   const description = document.querySelector<HTMLTextAreaElement>("#catalog-description")?.value.trim() ?? "";
-  const idempotencyKey = document.querySelector<HTMLInputElement>("#catalog-idem")?.value.trim() || crypto.randomUUID();
+  const idempotencyInput = document.querySelector<HTMLInputElement>("#catalog-idem");
+  const idempotencyKey = idempotencyInput?.value.trim() || crypto.randomUUID();
   const status = document.querySelector<HTMLElement>("#catalog-status");
   const result = document.querySelector<HTMLElement>("#catalog-result");
-  if (!status || !result) return;
-  if (!businessId || !name) { showToast("Business ID و نام محصول لازم هستند."); return; }
+  const submit = document.querySelector<HTMLButtonElement>("[data-catalog-create]");
+  if (!status || !result || !submit) return;
+  if (!businessId) {
+    result.textContent = catalogUi("noBusinessContext");
+    result.className = "connection-state error";
+    showToast(catalogUi("noBusinessContext"));
+    return;
+  }
+  if (!name) {
+    result.textContent = catalogUi("nameRequired");
+    result.className = "connection-state error";
+    document.querySelector<HTMLInputElement>("#catalog-name")?.focus();
+    return;
+  }
   if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
-  localStorage.setItem(STORAGE.business, businessId);
-  status.textContent = "در حال ایجاد";
+
+  submit.disabled = true;
+  status.textContent = catalogUi("creating");
   status.className = "pill warning";
-  result.textContent = "در حال ارسال Catalog command…";
+  result.textContent = catalogUi("resultCreating");
+  result.className = "connection-state";
   try {
-    const response = await apiJson<{ data: { id: string; name?: string; description?: string | null } }>(
+    await apiJson<{ data: { id: string; name?: string; description?: string | null } }>(
       "/api/v1/catalog/products",
       {
         method: "POST",
@@ -2250,16 +2277,23 @@ async function createCatalogProduct(): Promise<void> {
         headers: { "Idempotency-Key": idempotencyKey },
       },
     );
-    status.textContent = "ساخته شد";
+    status.textContent = catalogUi("created");
     status.className = "pill success";
-    result.textContent = `محصول canonical ساخته شد · ${response.data.id}`;
+    result.textContent = catalogUi("resultCreated");
     result.className = "connection-state success";
-    showToast("محصول Catalog ساخته شد.");
-  } catch (error) {
-    status.textContent = "خطا";
+    const nameInput = document.querySelector<HTMLInputElement>("#catalog-name");
+    const descriptionInput = document.querySelector<HTMLTextAreaElement>("#catalog-description");
+    if (nameInput) nameInput.value = "";
+    if (descriptionInput) descriptionInput.value = "";
+    if (idempotencyInput) idempotencyInput.value = crypto.randomUUID();
+    showToast(catalogUi("createSuccess"));
+  } catch {
+    status.textContent = catalogUi("failed");
     status.className = "pill warning";
-    result.textContent = error instanceof Error ? error.message : "ساخت محصول ناموفق بود.";
+    result.textContent = catalogUi("createFailed");
     result.className = "connection-state error";
+  } finally {
+    submit.disabled = false;
   }
 }
 

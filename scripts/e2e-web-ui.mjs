@@ -37,6 +37,7 @@ const communicationSendRequests = [];
 const communicationStartRequests = [];
 const mediaAssetUploadRequests = [];
 const offeringMediaLinkRequests = [];
+const catalogProductCreateRequests = [];
 const publicMediaBatchRequests = [];
 const mockConversations = [{
   id: "conversation-e2e-1",
@@ -266,6 +267,19 @@ await page.route("**/api/v1/**", async (route) => {
     return;
   }
 
+  if (path === "/api/v1/catalog/products" && request.method() === "POST") {
+    const body = request.postDataJSON();
+    catalogProductCreateRequests.push({
+      body,
+      idempotencyKey: request.headers()["idempotency-key"] ?? "",
+    });
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ data: { id: "product-catalog-e2e-1", name: body.name, description: body.description ?? null } }),
+    });
+    return;
+  }
   if (path === "/api/v1/catalog/offers" && request.method() === "POST") {
     await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify(payloads[path]) });
     return;
@@ -1070,6 +1084,57 @@ assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
 
 await page.goto(baseURL + "/business");
 assert.equal(await page.locator("[data-language-toggle]").count(), 1);
+
+// Seller catalog hides technical identifiers and requires an active seller space.
+await page.evaluate(() => {
+  localStorage.setItem("qooqnos.locale", "fa");
+  localStorage.removeItem("phoenix-business-id");
+});
+await page.reload();
+await page.goto(baseURL + "/catalog");
+await page.locator(".phoenix-catalog-context-missing").waitFor();
+const catalogNoSpaceText = await page.locator(".phoenix-catalog-page").innerText();
+assert.ok(catalogNoSpaceText.includes("ابتدا فضای فروشنده را فعال کن"));
+assert.ok(!catalogNoSpaceText.includes("Business ID"));
+assert.equal(await page.locator("#catalog-name").count(), 0);
+assert.equal(await page.locator(".phoenix-catalog-context-missing a[href='/business/welcome']").count(), 1);
+
+await page.evaluate(() => localStorage.setItem("phoenix-business-id", "biz-1"));
+await page.goto(baseURL + "/catalog");
+await page.locator(".phoenix-catalog-context-ready").waitFor();
+assert.equal(await page.locator("#catalog-business").inputValue(), "biz-1");
+const catalogVisibleText = await page.locator(".phoenix-catalog-page").innerText();
+assert.ok(catalogVisibleText.includes("نام محصول"));
+assert.ok(!catalogVisibleText.includes("Business ID"));
+assert.ok(!catalogVisibleText.includes("Idempotency Key"));
+assert.ok(!catalogVisibleText.includes("canonical"));
+await page.locator("#catalog-name").fill("جاکلیدی دست‌ساز");
+await page.locator("#catalog-description").fill("ساخته‌شده از چوب طبیعی");
+await page.locator("[data-catalog-create]").click();
+await page.locator("#catalog-result.connection-state.success").waitFor();
+assert.equal(await page.locator("#catalog-result").innerText(), "محصولت با موفقیت ثبت شد.");
+assert.equal(catalogProductCreateRequests.length, 1);
+assert.deepEqual(catalogProductCreateRequests[0].body, {
+  businessId: "biz-1",
+  name: "جاکلیدی دست‌ساز",
+  description: "ساخته‌شده از چوب طبیعی",
+});
+assert.ok(catalogProductCreateRequests[0].idempotencyKey.length > 20);
+assert.ok(!catalogVisibleText.includes("product-catalog-e2e-1"));
+
+await page.evaluate(() => localStorage.setItem("qooqnos.locale", "en"));
+await page.reload();
+await page.goto(baseURL + "/catalog");
+await page.waitForFunction(() => document.querySelector(".phoenix-catalog-heading h1")?.textContent === "Manage your products simply");
+assert.ok((await page.locator(".phoenix-catalog-page").innerText()).includes("Your selected seller space is active."));
+assert.ok((await page.locator("#catalog-name").getAttribute("placeholder")).includes("handmade leather bag"));
+await page.evaluate(() => localStorage.setItem("qooqnos.locale", "ar"));
+await page.reload();
+await page.goto(baseURL + "/catalog");
+await page.waitForFunction(() => document.querySelector(".phoenix-catalog-heading h1")?.textContent === "أدر منتجاتك بسهولة");
+assert.ok((await page.locator(".phoenix-catalog-page").innerText()).includes("مساحة البائع المحددة نشطة."));
+await page.evaluate(() => localStorage.setItem("qooqnos.locale", "fa"));
+await page.reload();
 
 // Seller catalog, services, bookings and settings must use canonical APIs, not fixture arrays inside UI code.
 await page.evaluate(() => {
