@@ -7729,12 +7729,36 @@ async function togglePublicBusinessFollow(routePath: string): Promise<void> {
 }
 
 async function sharePublicBusiness(): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(window.location.href);
-    showToast(socialCommerceUi("publicLinkCopied"));
-  } catch {
-    showToast(window.location.href);
+  const url = window.location.href;
+  const title = document.querySelector<HTMLElement>("#public-business-page-name")?.textContent?.trim()
+    || socialCommerceUi("publicBusinessGenericType");
+  const payload = {
+    title,
+    text: socialCommerceUi("publicBusinessSharePrompt"),
+    url,
+  };
+
+  if (typeof navigator.share === "function") {
+    try {
+      await navigator.share(payload);
+      return;
+    } catch (error) {
+      // A user dismissing the native share sheet is not an application error.
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
   }
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      showToast(socialCommerceUi("publicLinkCopied"));
+      return;
+    }
+  } catch {
+    // Continue to the visible fallback when clipboard permission is unavailable.
+  }
+
+  showToast(url);
 }
 function publicBusinessTypeLabel(value: string | null | undefined): string {
   const type = (value ?? "").trim().toLowerCase().replace(/-/g, "_");

@@ -494,6 +494,32 @@ assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
 
 await page.goto(baseURL + "/businesses/biz-1");
 await page.locator(".social-shell").waitFor();
+const publicSharePayload = await page.evaluate(() => {
+  let payload = null;
+  Object.defineProperty(navigator, "share", {
+    configurable: true,
+    value: async (value) => { payload = value; },
+  });
+  return {
+    share: async () => {
+      await navigator.share({ title: "ترنج", text: "کسب‌وکار را ببین", url: location.href });
+    },
+  };
+});
+await page.evaluate(() => {
+  Object.defineProperty(navigator, "share", {
+    configurable: true,
+    value: async (value) => {
+      window.__phoenixSharePayload = value;
+    },
+  });
+});
+await page.locator("#public-business-share").click();
+await page.waitForFunction(() => Boolean(window.__phoenixSharePayload));
+const capturedShare = await page.evaluate(() => window.__phoenixSharePayload);
+assert.equal(capturedShare.title, "ترنج");
+assert.equal(capturedShare.url, location.href);
+assert.ok(capturedShare.text);
 assert.equal(await page.locator(".phoenix-social-tabs").count(), 1);
 assert.equal(await page.locator(".phoenix-social-mobile-nav").count(), 1);
 assert.equal(await page.locator("#public-business-page-name").innerText(), "ترنج");
