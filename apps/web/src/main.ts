@@ -8304,6 +8304,8 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   let variantLoadFailed = false;
   let priceResolutionVersion = 0;
   let personalizedVariantPrice: { variantId: string; priceAmountMinor: number; currency: string; precedenceMatched: string } | null = null;
+  let pendingPersonalizedVariantId: string | null = null;
+  let failedPersonalizedVariantId: string | null = null;
   let variantSelection: PublicOfferingVariantSelection = { hasVariants: false, getSelected: () => null };
   if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !priceContextNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage || !mediaHost || !variantsHost) {
     if (titleNode) titleNode.textContent = socialCommerceUi("offerDetailInvalidLink");
@@ -8372,10 +8374,25 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
       const resolveCustomerVariantPrice = (selected: SelectedPublicOfferingVariant | null): void => {
         const requestVersion = ++priceResolutionVersion;
         personalizedVariantPrice = null;
+        pendingPersonalizedVariantId = null;
+        failedPersonalizedVariantId = null;
+        primaryAction.removeAttribute("aria-disabled");
+        primaryAction.removeAttribute("aria-busy");
+        primaryAction.classList.remove("is-price-resolving");
+        primaryAction.removeAttribute("tabindex");
         delete priceNode.dataset.priceAudience;
         priceContextNode.hidden = true;
         priceContextNode.textContent = "";
-        if (!selected || !offer.productId || !sessionStorage.getItem(STORAGE.accessToken)) return;
+        const accessToken = sessionStorage.getItem(STORAGE.accessToken);
+        if (!selected || selected.availability === "out_of_stock" || !offer.productId || !accessToken) return;
+
+        pendingPersonalizedVariantId = selected.id;
+        primaryAction.setAttribute("aria-disabled", "true");
+        primaryAction.setAttribute("aria-busy", "true");
+        primaryAction.classList.add("is-price-resolving");
+        primaryAction.tabIndex = -1;
+        priceContextNode.textContent = socialCommerceUi("offerDetailRelationshipPriceLoading");
+        priceContextNode.hidden = false;
 
         void apiJson<{
           data: {
@@ -8409,13 +8426,31 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
           priceNode.setAttribute("data-price-currency", currency);
           priceNode.setAttribute("data-price-source", "commerce-resolver");
           priceNode.dataset.priceAudience = precedenceMatched;
+          priceContextNode.hidden = true;
+          priceContextNode.textContent = "";
           if (precedenceMatched === "customer" || precedenceMatched === "group") {
             priceContextNode.textContent = socialCommerceUi("offerDetailRelationshipPrice");
             priceContextNode.hidden = false;
           }
         }).catch(() => {
-          // Keep the public Catalog price if customer-specific resolution is unavailable.
           if (requestVersion === priceResolutionVersion) personalizedVariantPrice = null;
+        }).finally(() => {
+          if (requestVersion !== priceResolutionVersion || variantSelection.getSelected()?.id !== selected.id) return;
+          pendingPersonalizedVariantId = null;
+          primaryAction.removeAttribute("aria-disabled");
+          primaryAction.removeAttribute("aria-busy");
+          primaryAction.classList.remove("is-price-resolving");
+          primaryAction.removeAttribute("tabindex");
+          if (personalizedVariantPrice?.variantId !== selected.id) {
+            failedPersonalizedVariantId = selected.id;
+            priceNode.textContent = socialCommerceUi("offerDetailRelationshipPriceUnavailable");
+            priceNode.removeAttribute("data-price-amount-minor");
+            priceNode.removeAttribute("data-price-currency");
+            priceNode.removeAttribute("data-price-source");
+            delete priceNode.dataset.priceAudience;
+            priceContextNode.textContent = socialCommerceUi("offerDetailRelationshipPriceUnavailable");
+            priceContextNode.hidden = false;
+          }
         });
       };
       try {
@@ -8521,6 +8556,15 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
       }
       if (selectedVariant?.availability === "out_of_stock") {
         showToast(socialCommerceUi("offerDetailVariantOutOfStock"));
+        return;
+      }
+      if (selectedVariant && pendingPersonalizedVariantId === selectedVariant.id) {
+        showToast(socialCommerceUi("offerDetailRelationshipPriceLoading"));
+        return;
+      }
+      if (selectedVariant && sessionStorage.getItem(STORAGE.accessToken) && failedPersonalizedVariantId === selectedVariant.id) {
+        showToast(socialCommerceUi("offerDetailRelationshipPriceUnavailable"));
+        askButton.focus();
         return;
       }
       const matchingPersonalizedPrice = selectedVariant && personalizedVariantPrice?.variantId === selectedVariant.id
