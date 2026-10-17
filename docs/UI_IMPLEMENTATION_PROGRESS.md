@@ -3,7 +3,7 @@
 ## Status
 - Product/UI implementation pass: **complete for the requested current web scope**
 - Final external verification gate: **CI/E2E execution must be observed green before calling the production UI 100% verified**
-- Last implementation update: 2026-09-25
+- Last implementation update: 2026-10-17
 - Primary frontend: `apps/web`
 
 ## Completed in the implementation pass
@@ -131,3 +131,18 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - `42d55e940c3dc69fcca6b91a1cb3903fceb69006` — final implementation ledger and verification gate.
 - `7edd3793cf8d79f419af9ced1b1dd697cf2b45a8` — production SPA asset binding fix.
 - `0be4c6a7b09a91e14066c2bd4461702b6cfdd830` — workers.dev preview deployment workflow.
+
+
+## 2026-10-17 — Current main verification and social-commerce continuation
+
+- Verified current main commit: `a53266543c46bec2f00b8e8db894214428d6e16c`.
+- GitHub Actions completed successfully for this exact commit:
+  - [CI](https://github.com/qooqnos/qooqnos/actions/runs/39033421795)
+  - [Phoenix verification](https://github.com/qooqnos/qooqnos/actions/runs/39033421592)
+  - [Phoenix web UI verification](https://github.com/qooqnos/qooqnos/actions/runs/39033421569)
+- The social-commerce surface now has a shared Instagram-inspired feed/card layout with seller identity, product/service media, like, comment, save, share, follow, compare, and context-specific detail/booking actions. Follow/like/save state is loaded from the canonical Social Engagement API; unsupported synthetic targets are not presented as durable server-side actions.
+- Product detail includes seller profile navigation, safe media gallery, product variants, follow, save, compare, seller messaging, and a clearly labeled local review cart. The review cart is not a paid checkout or a confirmed order.
+- Seller Studio image flow now rasterizes the selected image in the browser to a metadata-free WebP, registers the prepared variant, and attaches it to an offering through an authenticated, workspace-scoped API. Media keys remain server-side. E2E covers upload and attachment.
+- The current branch also includes accessible social-comment modal behavior (focus trap/return, Escape dismissal, background-scroll lock), buyer message thread/send flows, and tests for variant selection and currency-safe review-cart persistence.
+- Scope guard: do not mark every product surface as commercially complete solely because its route renders. Payment/order finalization, per-variant authoritative pricing/inventory, production social-ranking signals, and external live-route/Cloudflare Access verification remain separate gates where noted in the page map and capability contracts.
+- Next implementation pass should continue from the canonical page map and prioritize any failing page-level browser checks or missing end-to-end buyer/seller flows; do not recreate the shell or duplicate canonical API state in local storage.
