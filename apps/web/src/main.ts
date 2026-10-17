@@ -8033,7 +8033,7 @@ interface PublicOfferingVariantSelection {
 }
 
 function localizedPublicVariantAttributeLabel(key: string, fallbackLabel: string): string {
-  switch (key.trim().toLowerCase().replace(/[\\s-]+/g, "_")) {
+  switch (key.trim().toLowerCase().replace(/-/g, "_")) {
     case "color":
     case "colour":
       return socialCommerceUi("attributeColor");
