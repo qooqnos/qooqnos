@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { D1Database, type D1DatabaseLike, type D1PreparedStatementLike } from "@qooqnos/database";
 import { ApiRouter } from "./router";
-import { hasValidWebpRiffHeader, registerMediaRoutes } from "./media-routes";
+import { hasMetadataFreeWebpContainer, hasValidWebpRiffHeader, registerMediaRoutes } from "./media-routes";
 import type { ApiEnv } from "./env";
 
 const mediaRow = {
@@ -118,5 +118,50 @@ describe("prepared WebP image validation", () => {
     expect(hasValidWebpRiffHeader(html, 120)).toBe(false);
     expect(hasValidWebpRiffHeader(webpHeader(120), 119)).toBe(false);
     expect(hasValidWebpRiffHeader(new Uint8Array(6), 6)).toBe(false);
+  });
+
+  function webpContainer(chunks: Array<{ type: string; data: readonly number[] }>): Uint8Array {
+    const bodySize = chunks.reduce((sum, chunk) => sum + 8 + chunk.data.length + (chunk.data.length % 2), 0);
+    const totalSize = 12 + bodySize;
+    const bytes = webpHeader(totalSize);
+    let offset = 12;
+    for (const chunk of chunks) {
+      for (let index = 0; index < 4; index += 1) bytes[offset + index] = chunk.type.charCodeAt(index);
+      const size = chunk.data.length;
+      bytes[offset + 4] = size & 0xff;
+      bytes[offset + 5] = (size >>> 8) & 0xff;
+      bytes[offset + 6] = (size >>> 16) & 0xff;
+      bytes[offset + 7] = (size >>> 24) & 0xff;
+      bytes.set(chunk.data, offset + 8);
+      offset += 8 + size + (size % 2);
+    }
+    return bytes;
+  }
+
+  it("accepts a complete image container without EXIF or XMP chunks", () => {
+    const bytes = webpContainer([{ type: "VP8L", data: [0x2f, 0x00, 0x00, 0x00, 0x00] }]);
+    expect(hasMetadataFreeWebpContainer(bytes)).toBe(true);
+  });
+
+  it("rejects EXIF/XMP chunks and VP8X metadata flags", () => {
+    const image = { type: "VP8L", data: [0x2f, 0x00, 0x00, 0x00, 0x00] };
+    expect(hasMetadataFreeWebpContainer(webpContainer([
+      image,
+      { type: "EXIF", data: [0x01, 0x02, 0x03] },
+    ]))).toBe(false);
+    expect(hasMetadataFreeWebpContainer(webpContainer([
+      image,
+      { type: "XMP ", data: [0x01, 0x02] },
+    ]))).toBe(false);
+    expect(hasMetadataFreeWebpContainer(webpContainer([
+      { type: "VP8X", data: [0x0c, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+      image,
+    ]))).toBe(false);
+  });
+
+  it("rejects truncated or non-image RIFF chunks", () => {
+    const valid = webpContainer([{ type: "VP8L", data: [0x2f, 0, 0, 0, 0] }]);
+    expect(hasMetadataFreeWebpContainer(valid.slice(0, valid.length - 1))).toBe(false);
+    expect(hasMetadataFreeWebpContainer(webpContainer([{ type: "JUNK", data: [1, 2, 3, 4] }]))).toBe(false);
   });
 });

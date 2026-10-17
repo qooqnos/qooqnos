@@ -100,9 +100,9 @@ export function registerMediaRoutes(
         if (file.size < 1 || file.size > 10 * 1024 * 1024) {
           throw new AppError({ code: "VALIDATION_ERROR", message: "Prepared image size is invalid.", requestId: context.requestId });
         }
-        const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
-        if (!hasValidWebpRiffHeader(header, file.size)) {
-          throw new AppError({ code: "VALIDATION_ERROR", message: "Prepared image is not a valid WebP RIFF container.", requestId: context.requestId });
+        const preparedBytes = new Uint8Array(await file.arrayBuffer());
+        if (!hasValidWebpRiffHeader(preparedBytes, file.size) || !hasMetadataFreeWebpContainer(preparedBytes)) {
+          throw new AppError({ code: "VALIDATION_ERROR", message: "Prepared image must be a complete WebP file without EXIF/XMP metadata.", requestId: context.requestId });
         }
         preparedDimensions = { width, height };
       }
@@ -502,6 +502,42 @@ export function hasValidWebpRiffHeader(header: Uint8Array, totalSize: number): b
   if (!isRiff || !isWebp) return false;
   const riffSize = (header[4]! | (header[5]! << 8) | (header[6]! << 16) | (header[7]! << 24)) >>> 0;
   return riffSize + 8 === totalSize;
+}
+
+
+export function hasMetadataFreeWebpContainer(bytes: Uint8Array): boolean {
+  if (bytes.length < 20 || !hasValidWebpRiffHeader(bytes, bytes.length)) return false;
+
+  let offset = 12;
+  let hasImagePayload = false;
+  while (offset < bytes.length) {
+    if (bytes.length - offset < 8) return false;
+    const chunkType = String.fromCharCode(bytes[offset]!, bytes[offset + 1]!, bytes[offset + 2]!, bytes[offset + 3]!);
+    const chunkSize = (
+      bytes[offset + 4]!
+      | (bytes[offset + 5]! << 8)
+      | (bytes[offset + 6]! << 16)
+      | (bytes[offset + 7]! << 24)
+    ) >>> 0;
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + chunkSize;
+    const paddedEnd = dataEnd + (chunkSize % 2);
+    if (dataEnd > bytes.length || paddedEnd > bytes.length) return false;
+
+    if (chunkType === "EXIF" || chunkType === "XMP ") return false;
+    if (chunkType === "VP8X") {
+      if (chunkSize !== 10) return false;
+      const features = bytes[dataStart]!;
+      // WebP extended-header bits 3 and 2 advertise EXIF and XMP chunks.
+      if ((features & 0x0c) !== 0) return false;
+    }
+    if (chunkType === "VP8 " || chunkType === "VP8L" || chunkType === "ANMF") {
+      hasImagePayload = true;
+    }
+    offset = paddedEnd;
+  }
+
+  return offset === bytes.length && hasImagePayload;
 }
 
 function requiredDimension(value: FormDataEntryValue | null, field: string, requestId: EntityId): number {
