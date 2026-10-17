@@ -8823,15 +8823,73 @@ function renderSkeletonCards(count: number): string {
   return Array.from({ length: count }, () => '<article class="result-card skeleton-card"><div class="skeleton skeleton-art"></div><div class="result-content"><div class="skeleton line short"></div><div class="skeleton line long"></div><div class="skeleton line medium"></div><div class="skeleton line short"></div></div></article>').join("");
 }
 
-async function uploadSellerMedia(file: File, businessId: string): Promise<string> {
+async function prepareSellerImageForUpload(file: File): Promise<{ file: File; width: number; height: number }> {
   if (!file.type.startsWith("image/")) throw new Error("فایل انتخاب‌شده تصویر نیست.");
   if (file.size > 10 * 1024 * 1024) throw new Error("حجم تصویر باید کمتر از 10MB باشد.");
+  if (typeof createImageBitmap !== "function") throw new Error("مرورگر از آماده‌سازی امن تصویر پشتیبانی نمی‌کند؛ تصویر دیگری انتخاب کن.");
+
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error("خواندن تصویر ممکن نشد؛ لطفاً تصویر JPG، PNG یا WebP دیگری انتخاب کن.");
+  }
+
+  try {
+    if (bitmap.width < 1 || bitmap.height < 1 || bitmap.width > 12000 || bitmap.height > 12000) {
+      throw new Error("ابعاد تصویر برای بارگذاری مناسب نیست.");
+    }
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("آماده‌سازی تصویر ممکن نشد.");
+    context.drawImage(bitmap, 0, 0, width, height);
+
+    const encode = (quality: number): Promise<Blob> => new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error("تبدیل تصویر به قالب امن انجام نشد."));
+      }, "image/webp", quality);
+    });
+    let blob = await encode(0.86);
+    if (blob.size > 10 * 1024 * 1024) blob = await encode(0.68);
+    if (blob.size < 1 || blob.size > 10 * 1024 * 1024) {
+      throw new Error("حجم تصویر پس از آماده‌سازی هنوز بیش از حد مجاز است.");
+    }
+    const parts = file.name.split(".");
+    const baseName = parts.length > 1 ? parts.slice(0, -1).join(".") : file.name;
+    return {
+      file: new File([blob], (baseName || "seller-image") + ".webp", {
+        type: "image/webp",
+        lastModified: Date.now(),
+      }),
+      width,
+      height,
+    };
+  } finally {
+    bitmap.close();
+  }
+}
+
+async function uploadSellerMedia(file: File, businessId: string): Promise<string> {
+  const prepared = await prepareSellerImageForUpload(file);
   const form = new FormData();
-  form.set("file", file);
+  form.set("file", prepared.file);
   form.set("ownerType", "business");
   form.set("ownerId", businessId);
-  form.set("metadata", JSON.stringify({ source: "seller-product-studio", originalName: file.name }));
-  const response = await apiFormData<{ data: { id: string; storageKey?: string; status?: string } }>("/api/v1/media/assets", form);
+  form.set("preparedImage", "browser-webp-v1");
+  form.set("imageWidth", String(prepared.width));
+  form.set("imageHeight", String(prepared.height));
+  form.set("metadata", JSON.stringify({
+    source: "seller-product-studio",
+    originalName: file.name,
+    imagePipeline: "browser-webp-v1",
+  }));
+  const response = await apiFormData<{ data: { id: string; status?: string } }>("/api/v1/media/assets", form);
   return response.data.id;
 }
 
@@ -8866,6 +8924,12 @@ async function generateDraft(): Promise<void> {
     return;
   }
 
+  delete draft.dataset.sessionId;
+  delete draft.dataset.draftVersion;
+  delete draft.dataset.mediaAssetId;
+  delete draft.dataset.mediaLinked;
+  delete draft.dataset.offeringId;
+  delete draft.dataset.catalogProductId;
   status.textContent = "در حال پردازش";
   status.className = "pill warning";
   draft.innerHTML = renderDraftSkeleton();
@@ -8913,6 +8977,7 @@ async function generateDraft(): Promise<void> {
       }
       draft.dataset.sessionId = sessionId;
       draft.dataset.draftVersion = String(sessionState.session.currentDraftVersion);
+      draft.dataset.mediaAssetId = mediaAssetId ?? "";
       draft.innerHTML = renderRemoteDraft(result.data, sessionId, sessionState.session.currentDraftVersion);
       status.textContent = "پیش‌نویس آماده";
       status.className = "pill success";
@@ -9066,23 +9131,39 @@ async function createSellerOffer(): Promise<void> {
   const draft = document.querySelector<HTMLElement>("#studio-draft");
   const state = document.querySelector<HTMLElement>("#seller-publication-state");
   const title = document.querySelector<HTMLInputElement>("#seller-offer-title")?.value.trim() ?? "";
-  if (!productId || !title || !draft || !state) {
+  if (!productId || !title || !draft || !state || !button) {
     showToast("لطفاً عنوان محصول را وارد کنید.");
     return;
   }
   button.disabled = true;
   try {
-    const response = await apiJson<{ data: { id: string; status: string; publicationStatus: string } }>("/api/v1/catalog/offers", {
-      method: "POST",
-      body: { businessId, productId, offeringType: "product", title },
-    });
-    draft.dataset.offeringId = response.data.id;
-    state.textContent = "Listing ساخته شد · " + response.data.id;
+    let offeringId = draft.dataset.offeringId;
+    if (!offeringId) {
+      const response = await apiJson<{ data: { id: string; status: string; publicationStatus: string } }>("/api/v1/catalog/offers", {
+        method: "POST",
+        body: { businessId, productId, offeringType: "product", title },
+      });
+      offeringId = response.data.id;
+      draft.dataset.offeringId = offeringId;
+    }
+
+    const mediaAssetId = draft.dataset.mediaAssetId?.trim();
+    if (mediaAssetId && draft.dataset.mediaLinked !== "true") {
+      await apiJson<{ data: { id: string; offeringId: string; assetId: string; purpose: string; position: number } }>(
+        "/api/v1/catalog/offers/" + encodeURIComponent(offeringId) + "/media/" + encodeURIComponent(mediaAssetId),
+        { method: "POST" },
+      );
+      draft.dataset.mediaLinked = "true";
+    }
+
+    state.textContent = mediaAssetId
+      ? "عرضه ساخته شد و تصویر به آن متصل شد · " + offeringId
+      : "عرضه ساخته شد · " + offeringId;
     state.className = "connection-state success";
     const publish = document.querySelector<HTMLButtonElement>("[data-publish-seller-offer]");
     if (publish) publish.disabled = false;
   } catch (error) {
-    state.textContent = error instanceof Error ? error.message : "ساخت Listing ناموفق بود.";
+    state.textContent = error instanceof Error ? error.message : "ساخت یا اتصال تصویر به عرضه ناموفق بود.";
     state.className = "connection-state error";
     button.disabled = false;
   }

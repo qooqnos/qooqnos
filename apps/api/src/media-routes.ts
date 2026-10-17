@@ -86,6 +86,19 @@ export function registerMediaRoutes(
 
       const ownerType = requiredString(form.get("ownerType"), "ownerType", context.requestId);
       const ownerId = brandId<EntityId>(requiredString(form.get("ownerId"), "ownerId", context.requestId));
+      const preparedImageVersion = form.get("preparedImage");
+      let preparedDimensions: { width: number; height: number } | null = null;
+      if (preparedImageVersion !== null) {
+        if (preparedImageVersion !== "browser-webp-v1" || ownerType !== "business" || file.type.toLowerCase() !== "image/webp") {
+          throw new AppError({ code: "VALIDATION_ERROR", message: "Prepared image declaration is invalid.", requestId: context.requestId });
+        }
+        const width = requiredDimension(form.get("imageWidth"), "imageWidth", context.requestId);
+        const height = requiredDimension(form.get("imageHeight"), "imageHeight", context.requestId);
+        if (file.size < 1 || file.size > 10 * 1024 * 1024) {
+          throw new AppError({ code: "VALIDATION_ERROR", message: "Prepared image size is invalid.", requestId: context.requestId });
+        }
+        preparedDimensions = { width, height };
+      }
       const suppliedStorageKey = typeof form.get("storageKey") === "string" ? String(form.get("storageKey")).trim() : "";
       const extension = inferExtension(file.type, file.name);
       const storageKey = suppliedStorageKey || [
@@ -118,7 +131,118 @@ export function registerMediaRoutes(
         },
       });
 
-      return json({ data: asset }, 201, context.requestId);
+      let responseAsset = asset;
+      if (preparedDimensions) {
+        const now = new Date().toISOString();
+        await database.run(
+          `INSERT INTO media_variants
+           (id, asset_id, variant_key, storage_key, mime_type, byte_size, width, height, checksum, status, created_at, updated_at)
+           VALUES (?, ?, 'detail', ?, 'image/webp', ?, ?, ?, ?, 'ready', ?, ?)`,
+          crypto.randomUUID(),
+          asset.id,
+          storageKey,
+          file.size,
+          preparedDimensions.width,
+          preparedDimensions.height,
+          asset.checksum ?? null,
+          now,
+          now,
+        );
+        responseAsset = await service.setStatus(context, asset.id, "ready");
+      }
+
+      return json({ data: responseAsset }, 201, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/catalog/offers/:offeringId/media/:assetId",
+    module: "media",
+    operation: "media.asset.link_offering",
+    permission: "media:upload",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const offeringId = brandId<EntityId>(requiredParam(params.offeringId, context.requestId));
+      const assetId = brandId<EntityId>(requiredParam(params.assetId, context.requestId));
+      const offering = await database.first<{ businessId: string }>(
+        `SELECT o.business_id AS businessId
+           FROM offerings o
+           INNER JOIN businesses b ON b.id = o.business_id
+          WHERE o.id = ? AND b.organization_id = ? AND b.workspace_id = ?
+          LIMIT 1`,
+        offeringId,
+        context.tenantId,
+        context.workspaceId,
+      );
+      if (!offering) throw new AppError({ code: "NOT_FOUND", message: "Offering is not available in the current workspace.", requestId: context.requestId });
+      const asset = await database.first<{ id: string }>(
+        `SELECT a.id
+           FROM media_assets a
+          WHERE a.id = ?
+            AND a.organization_id = ?
+            AND a.workspace_id = ?
+            AND a.owner_type = 'business'
+            AND a.owner_id = ?
+            AND a.status = 'ready'
+            AND a.mime_type = 'image/webp'
+            AND EXISTS (
+              SELECT 1 FROM media_variants v
+               WHERE v.asset_id = a.id
+                 AND v.variant_key = 'detail'
+                 AND v.status = 'ready'
+                 AND v.mime_type = 'image/webp'
+            )
+          LIMIT 1`,
+        assetId,
+        context.tenantId,
+        context.workspaceId,
+        offering.businessId,
+      );
+      if (!asset) throw new AppError({ code: "NOT_FOUND", message: "Prepared image is not available for this business.", requestId: context.requestId });
+
+      const existing = await database.first<{ id: string; purpose: string; position: number }>(
+        `SELECT id, purpose, position FROM media_links
+          WHERE asset_id = ? AND owner_type = 'offering' AND owner_id = ? LIMIT 1`,
+        assetId,
+        offeringId,
+      );
+      if (existing) return json({ data: { id: existing.id, offeringId, assetId, purpose: existing.purpose, position: existing.position, reused: true } }, 200, context.requestId);
+
+      const nextPositionRow = await database.first<{ nextPosition: number }>(
+        `SELECT COALESCE(MAX(position) + 1, 0) AS nextPosition
+           FROM media_links
+          WHERE owner_type = 'offering' AND owner_id = ?`,
+        offeringId,
+      );
+      const position = Number(nextPositionRow?.nextPosition ?? 0);
+      if (!Number.isSafeInteger(position) || position < 0 || position >= 12) {
+        throw new AppError({ code: "CONFLICT", message: "The offering has reached its image limit.", requestId: context.requestId });
+      }
+      const purpose = position === 0 ? "primary" : "gallery";
+      const id = brandId<EntityId>(crypto.randomUUID());
+      const now = new Date().toISOString();
+      await database.run(
+        `INSERT OR IGNORE INTO media_links
+         (id, asset_id, owner_type, owner_id, purpose, position, created_at)
+         VALUES (?, ?, 'offering', ?, ?, ?, ?)`,
+        id,
+        assetId,
+        offeringId,
+        purpose,
+        position,
+        now,
+      );
+      const link = await database.first<{ id: string; purpose: string; position: number }>(
+        `SELECT id, purpose, position FROM media_links
+          WHERE asset_id = ? AND owner_type = 'offering' AND owner_id = ? LIMIT 1`,
+        assetId,
+        offeringId,
+      );
+      if (!link) throw new AppError({ code: "INTERNAL_ERROR", message: "Offering media link could not be saved.", requestId: context.requestId });
+      return json({ data: { id: link.id, offeringId, assetId, purpose: link.purpose, position: link.position, reused: link.id !== id } }, link.id === id ? 201 : 200, context.requestId);
     },
   });
 
@@ -330,6 +454,15 @@ function requiredString(value: FormDataEntryValue | unknown, field: string, requ
     throw new AppError({ code: "VALIDATION_ERROR", message: field + " is required.", requestId });
   }
   return value.trim();
+}
+
+function requiredDimension(value: FormDataEntryValue | null, field: string, requestId: EntityId): number {
+  const text = requiredString(value, field, requestId);
+  const dimension = Number(text);
+  if (!Number.isSafeInteger(dimension) || dimension < 1 || dimension > 4096) {
+    throw new AppError({ code: "VALIDATION_ERROR", message: field + " must be an integer from 1 to 4096.", requestId });
+  }
+  return dimension;
 }
 
 function requiredParam(value: string | undefined, requestId: EntityId): string {

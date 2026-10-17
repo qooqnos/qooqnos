@@ -35,6 +35,8 @@ const mockBusinessUpdates = [];
 const notificationReadRequests = [];
 const communicationSendRequests = [];
 const communicationStartRequests = [];
+const mediaAssetUploadRequests = [];
+const offeringMediaLinkRequests = [];
 const mockConversations = [{
   id: "conversation-e2e-1",
   organizationId: "tenant-1",
@@ -350,6 +352,24 @@ await page.route("**/api/v1/**", async (route) => {
     return;
   }
 
+  if (path === "/api/v1/media/assets" && request.method() === "POST") {
+    mediaAssetUploadRequests.push(request.postData() ?? "");
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ data: { id: "asset-studio-e2e-1", status: "ready" } }),
+    });
+    return;
+  }
+  if (path === "/api/v1/catalog/offers/offer-1/media/asset-studio-e2e-1" && request.method() === "POST") {
+    offeringMediaLinkRequests.push({ path, body: request.postData() ?? "" });
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ data: { id: "link-studio-e2e-1", offeringId: "offer-1", assetId: "asset-studio-e2e-1", purpose: "primary", position: 0 } }),
+    });
+    return;
+  }
   if (path === "/api/v1/public/offerings/offering-1/media/asset-photo-1/content" && request.method() === "GET") {
     await route.fulfill({
       status: 200,
@@ -1295,6 +1315,11 @@ await page.locator("#studio-workspace").evaluate((element) => {
   element.dispatchEvent(new Event("change", { bubbles: true }));
 });
 await page.locator("#studio-text").fill("محصول تست برای E2E");
+await page.locator("#studio-file").setInputFiles({
+  name: "product-test.png",
+  mimeType: "image/png",
+  buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR4nGP4z8DAAMIM////ZwAAHu8E/KPItPcAAAAASUVORK5CYII=", "base64"),
+});
 await page.locator("[data-generate-draft]").click();
 await page.getByText("محصول تست").waitFor();
 await page.locator("[data-confirm-seller-draft]").click();
@@ -1304,6 +1329,12 @@ await page.locator("[data-create-seller-offer]").click();
 await page.getByText("Listing ساخته شد").waitFor();
 await page.locator("[data-publish-seller-offer]").click();
 await page.getByText("درخواست انتشار ثبت شد").waitFor();
+assert.equal(mediaAssetUploadRequests.length, 1, "Seller Studio should upload the prepared image once");
+assert.ok(mediaAssetUploadRequests[0].includes("browser-webp-v1"), "Seller Studio should declare its browser-rasterized variant");
+assert.ok(mediaAssetUploadRequests[0].includes("image/webp"), "Seller Studio should upload the metadata-free WebP result");
+assert.ok(mediaAssetUploadRequests[0].includes("imageWidth"));
+assert.equal(offeringMediaLinkRequests.length, 1, "Creating an offer should attach the uploaded image");
+assert.equal(offeringMediaLinkRequests[0].path, "/api/v1/catalog/offers/offer-1/media/asset-studio-e2e-1");
 
 await browser.close();
 server.kill("SIGTERM");
