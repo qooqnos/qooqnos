@@ -1294,13 +1294,13 @@ assert.ok((await page.locator(".phoenix-public-offering-variant-status").innerTe
 await page.locator('[data-public-offer-variant="size"]').selectOption("S");
 await page.locator("#public-offer-primary-action").click();
 await page.waitForURL("**/cart");
-const cartPreviewText = await page.locator(".phoenix-screen-wrapper").innerText();
+const selectedVariantCartPreviewText = await page.locator(".phoenix-screen-wrapper").innerText();
 const persistedCartItems = await page.evaluate(() => JSON.parse(localStorage.getItem("phoenix.cart_items") || "[]"));
 assert.ok(persistedCartItems.some((item) => item.variantId === "variant-blue-s"), "Variant ID missing from local cart: " + JSON.stringify(persistedCartItems));
 assert.ok(persistedCartItems.some((item) => item.variantLabel === "Color: Blue · Size: S"), "Variant label missing from local cart: " + JSON.stringify(persistedCartItems));
 assert.ok(persistedCartItems.some((item) => item.title === "کیف دست‌دوز · Color: Blue · Size: S"), "Variant title missing from local cart: " + JSON.stringify(persistedCartItems));
-assert.ok(cartPreviewText.includes("Color: Blue"), "Cart preview omitted chosen color: " + cartPreviewText);
-assert.ok(cartPreviewText.includes("Size: S"), "Cart preview omitted chosen size: " + cartPreviewText);
+assert.ok(selectedVariantCartPreviewText.includes("Color: Blue"), "Cart preview omitted chosen color: " + selectedVariantCartPreviewText);
+assert.ok(selectedVariantCartPreviewText.includes("Size: S"), "Cart preview omitted chosen size: " + selectedVariantCartPreviewText);
 await page.goto(baseURL + "/offerings/offering-1?business=biz-1");
 await page.locator(".phoenix-public-offering-page").waitFor();
 await page.goto(baseURL + "/offerings/does-not-exist?business=biz-1");
