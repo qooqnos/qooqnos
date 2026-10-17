@@ -397,15 +397,36 @@ await page.route("**/api/v1/**", async (route) => {
     return;
   }
   if (path === "/api/v1/commerce/offers/resolve-for-customer" && request.method() === "POST") {
+    const resolutionBody = request.postDataJSON();
     customerPriceResolutionRequests.push({
       method: request.method(),
-      body: request.postDataJSON(),
+      body: resolutionBody,
       authorization: request.headers()["authorization"] ?? "",
     });
+    const variantId = resolutionBody && typeof resolutionBody === "object" && "variantId" in resolutionBody
+      ? String(resolutionBody.variantId) : "";
+    const priceByVariant: Record<string, number> = {
+      "variant-red-s": 990000,
+      "variant-red-m": 1450000,
+      "variant-blue-s": 1750000,
+    };
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify(payloads[path]),
+      body: JSON.stringify({
+        data: {
+          offer: {
+            id: "commerce-offer-" + variantId,
+            variantId,
+            priceAmountMinor: priceByVariant[variantId] ?? 990000,
+            currency: "IRR",
+            available: true,
+            status: "ACTIVE",
+          },
+          precedenceMatched: "group",
+          isInheritedFromProduct: false,
+        },
+      }),
     });
     return;
   }
@@ -1013,6 +1034,7 @@ await page.locator('[data-public-offer-variant="size"]').selectOption("S");
 await page.waitForFunction(() => document.querySelector("#public-offer-price")?.getAttribute("data-price-source") === "commerce-resolver");
 assert.equal(await page.locator("#public-offer-price").getAttribute("data-price-amount-minor"), "990000");
 assert.equal(await page.locator("#public-offer-price").getAttribute("data-price-audience"), "group");
+assert.equal(await page.locator("#public-offer-price-context").innerText(), "قیمت متناسب با رابطهٔ شما");
 assert.equal(customerPriceResolutionRequests.length, 1);
 assert.deepEqual(customerPriceResolutionRequests[0].body, {
   sellerId: "biz-1",
