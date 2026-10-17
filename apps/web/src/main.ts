@@ -301,7 +301,7 @@ function requestSocialComment(item: DiscoveryResult, trigger?: HTMLButtonElement
       document.body.style.overflow = previousBodyOverflow;
       overlay.remove();
       window.requestAnimationFrame(() => {
-        if (returnFocusTarget?.isConnected && !returnFocusTarget.disabled) returnFocusTarget.focus();
+        if (returnFocusTarget?.isConnected) returnFocusTarget.focus();
       });
       resolve(value);
     };
