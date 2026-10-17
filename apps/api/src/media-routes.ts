@@ -97,6 +97,10 @@ export function registerMediaRoutes(
         if (file.size < 1 || file.size > 10 * 1024 * 1024) {
           throw new AppError({ code: "VALIDATION_ERROR", message: "Prepared image size is invalid.", requestId: context.requestId });
         }
+        const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+        if (!hasValidWebpRiffHeader(header, file.size)) {
+          throw new AppError({ code: "VALIDATION_ERROR", message: "Prepared image is not a valid WebP RIFF container.", requestId: context.requestId });
+        }
         preparedDimensions = { width, height };
       }
       const suppliedStorageKey = typeof form.get("storageKey") === "string" ? String(form.get("storageKey")).trim() : "";
@@ -454,6 +458,15 @@ function requiredString(value: FormDataEntryValue | unknown, field: string, requ
     throw new AppError({ code: "VALIDATION_ERROR", message: field + " is required.", requestId });
   }
   return value.trim();
+}
+
+export function hasValidWebpRiffHeader(header: Uint8Array, totalSize: number): boolean {
+  if (header.length < 12 || !Number.isSafeInteger(totalSize) || totalSize < 12) return false;
+  const isRiff = header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46;
+  const isWebp = header[8] === 0x57 && header[9] === 0x45 && header[10] === 0x42 && header[11] === 0x50;
+  if (!isRiff || !isWebp) return false;
+  const riffSize = (header[4]! | (header[5]! << 8) | (header[6]! << 16) | (header[7]! << 24)) >>> 0;
+  return riffSize + 8 === totalSize;
 }
 
 function requiredDimension(value: FormDataEntryValue | null, field: string, requestId: EntityId): number {

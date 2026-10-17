@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { D1Database, type D1DatabaseLike, type D1PreparedStatementLike } from "@qooqnos/database";
 import { ApiRouter } from "./router";
-import { registerMediaRoutes } from "./media-routes";
+import { hasValidWebpRiffHeader, registerMediaRoutes } from "./media-routes";
 import type { ApiEnv } from "./env";
 
 const mediaRow = {
@@ -92,5 +92,31 @@ describe("public published-offering media routes", () => {
     expect(response.status).toBe(404);
     expect(statements[0]).toContain("o.status = 'active'");
     expect(statements[0]).toContain("b.status = 'active'");
+  });
+});
+
+describe("prepared WebP image validation", () => {
+  function webpHeader(totalSize: number): Uint8Array {
+    const header = new Uint8Array(12);
+    header.set([0x52, 0x49, 0x46, 0x46], 0);
+    const riffSize = totalSize - 8;
+    header[4] = riffSize & 0xff;
+    header[5] = (riffSize >>> 8) & 0xff;
+    header[6] = (riffSize >>> 16) & 0xff;
+    header[7] = (riffSize >>> 24) & 0xff;
+    header.set([0x57, 0x45, 0x42, 0x50], 8);
+    return header;
+  }
+
+  it("accepts a WebP RIFF header whose declared size matches the uploaded file", () => {
+    expect(hasValidWebpRiffHeader(webpHeader(120), 120)).toBe(true);
+  });
+
+  it("rejects spoofed MIME content and mismatched RIFF lengths", () => {
+    const html = new Uint8Array(12);
+    html.set(new TextEncoder().encode("<html>nope"));
+    expect(hasValidWebpRiffHeader(html, 120)).toBe(false);
+    expect(hasValidWebpRiffHeader(webpHeader(120), 119)).toBe(false);
+    expect(hasValidWebpRiffHeader(new Uint8Array(6), 6)).toBe(false);
   });
 });
