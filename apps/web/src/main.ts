@@ -8387,20 +8387,21 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
           const resolvedOffer = resolved.data?.offer;
           const amount = resolvedOffer?.priceAmountMinor;
           const currency = typeof resolvedOffer?.currency === "string" ? resolvedOffer.currency.trim().toUpperCase() : "";
-          if (!resolvedOffer || !Number.isSafeInteger(amount) || amount < 0 || !/^[A-Z]{3}$/.test(currency)
+          if (!resolvedOffer || typeof amount !== "number" || !Number.isSafeInteger(amount) || amount < 0 || !/^[A-Z]{3}$/.test(currency)
             || resolvedOffer.available === false || (resolvedOffer.status && resolvedOffer.status.toUpperCase() !== "ACTIVE")) return;
 
+          const precedenceMatched = resolved.data?.precedenceMatched ?? "general";
           personalizedVariantPrice = {
             variantId: selected.id,
             priceAmountMinor: amount,
             currency,
-            precedenceMatched: resolved.data?.precedenceMatched ?? "general",
+            precedenceMatched,
           };
           priceNode.textContent = formatPublicMoney(amount, currency);
           priceNode.setAttribute("data-price-amount-minor", String(amount));
           priceNode.setAttribute("data-price-currency", currency);
           priceNode.setAttribute("data-price-source", "commerce-resolver");
-          priceNode.dataset.priceAudience = personalizedVariantPrice.precedenceMatched;
+          priceNode.dataset.priceAudience = precedenceMatched;
         }).catch(() => {
           // Keep the public Catalog price if customer-specific resolution is unavailable.
           if (requestVersion === priceResolutionVersion) personalizedVariantPrice = null;
