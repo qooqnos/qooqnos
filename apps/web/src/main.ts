@@ -5817,9 +5817,12 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
     const avatarInitial = escapeHtml(authorName.trim().slice(0, 1) || "ق");
     const canFollow = socialFollowTarget(item) !== null;
     const followLabel = followed ? discoveryUi("followActive") : discoveryUi("follow");
+    const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
     const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ?? item.metadata?.thumbnailUrl ??
       (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
-    const mediaUrl = typeof mediaCandidate === "string" && (mediaCandidate.startsWith("/") || /^https?:\/\//i.test(mediaCandidate)) ? mediaCandidate : "";
+    const mediaUrl = typeof mediaCandidate === "string"
+      && /^\/api\/v1\/public\/offerings\/[^/]+\/media\/[^/]+\/content$/.test(mediaCandidate)
+      ? mediaCandidate : "";
     const avatarCandidate = item.metadata?.businessAvatarUrl ?? item.metadata?.businessLogoUrl ?? item.metadata?.logoUrl;
     const avatarUrl = typeof avatarCandidate === "string" && (avatarCandidate.startsWith("/") || /^https?:\/\//i.test(avatarCandidate)) ? avatarCandidate : "";
     const mediaReferenceCandidate = item.metadata?.offeringId ?? item.sourceId ?? item.id ?? "";
@@ -5829,10 +5832,9 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
       ? '<img class="phoenix-post-image" src="' + escapeAttr(mediaUrl) + '" alt="' + title + '" loading="lazy" />'
       : '<span class="phoenix-post-placeholder"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("imageUnavailable") + '</span></span>';
     const mediaReferenceMarkup = mediaReference
-      ? ' data-media-reference="' + escapeAttr(mediaReference) + '" data-media-hydrated="' + String(Boolean(mediaUrl)) + '"'
+      ? ' data-media-reference="' + escapeAttr(mediaReference) + '" data-public-business-id="' + escapeAttr(businessId) + '" data-media-hydrated="' + String(Boolean(mediaUrl) && !businessId) + '"'
       : '';
     const localityMarkup = locality ? '<span>⌖ ' + locality + '</span>' : "";
-    const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
     const publicAction = sourceType === "business"
       ? '<a class="button button-primary post-buy" href="/businesses/' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>' + discoveryUi("viewBusiness") + ' <span>←</span></a>'
       : sourceType === "service"
@@ -5874,7 +5876,7 @@ async function hydrateSocialPostMedia(): Promise<void> {
   const host = document.querySelector<HTMLElement>("#discovery-results");
   if (!host) return;
   const cards = Array.from(host.querySelectorAll<HTMLButtonElement>(".phoenix-post-media[data-media-reference]"))
-    .filter((card) => card.dataset.mediaHydrated !== "true" && !card.querySelector(".phoenix-post-image"));
+    .filter((card) => card.dataset.mediaHydrated !== "true");
   if (!cards.length) return;
 
   const references = [...new Set(cards.map((card) => card.dataset.mediaReference ?? "").filter(Boolean))];
@@ -5899,16 +5901,44 @@ async function hydrateSocialPostMedia(): Promise<void> {
         );
         card.dataset.mediaHydrated = "true";
         if (!asset) continue;
-        const image = document.createElement("img");
+
+        const matchedItem = activeDiscoveryItems.find((item) => {
+          const metadataOfferingId = typeof item.metadata?.offeringId === "string" ? item.metadata.offeringId : "";
+          return metadataOfferingId === reference || (item.sourceId ?? item.id ?? "") === reference;
+        });
+        if (matchedItem) {
+          matchedItem.metadata = { ...(matchedItem.metadata ?? {}), offeringId: asset.offeringId };
+        }
+
+        const existingImage = card.querySelector<HTMLImageElement>(".phoenix-post-image");
+        const image = existingImage ?? document.createElement("img");
         image.className = "phoenix-post-image";
         image.src = asset.src;
         image.alt = card.getAttribute("aria-label") ?? "";
         image.loading = "lazy";
         image.decoding = "async";
         image.addEventListener("error", () => image.remove(), { once: true });
-        const placeholder = card.querySelector(".phoenix-post-placeholder");
-        if (placeholder) placeholder.replaceWith(image);
-        else card.prepend(image);
+        if (!existingImage) {
+          const placeholder = card.querySelector(".phoenix-post-placeholder");
+          if (placeholder) placeholder.replaceWith(image);
+          else card.prepend(image);
+        }
+
+        const businessId = card.dataset.publicBusinessId ?? "";
+        const quickAction = card.closest<HTMLElement>(".phoenix-post-card")
+          ?.querySelector<HTMLButtonElement | HTMLAnchorElement>(".phoenix-post-actions .post-buy");
+        if (businessId && asset.offeringId && quickAction) {
+          const detailLink = document.createElement("a");
+          detailLink.className = quickAction.className;
+          detailLink.innerHTML = quickAction.innerHTML;
+          detailLink.href = "/offerings/" + encodeURIComponent(asset.offeringId)
+            + "?" + new URLSearchParams({ business: businessId }).toString();
+          detailLink.setAttribute("data-nav", "");
+          detailLink.setAttribute("aria-label",
+            (matchedItem?.title ?? card.getAttribute("aria-label") ?? discoveryUi("productOrService"))
+            + " — " + discoveryUi("detailsAndDecision"));
+          quickAction.replaceWith(detailLink);
+        }
       }
     } catch {
       for (const card of cards) {
@@ -5954,13 +5984,16 @@ async function shareSocialItem(item: DiscoveryResult): Promise<void> {
   const type = item.sourceType ?? String(item.metadata?.offeringType ?? "product");
   const id = item.sourceId ?? item.id ?? "";
   const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
-  const url = type === "business" && id
-    ? new URL("/businesses/" + encodeURIComponent(id), location.origin).toString()
-    : type === "service" && id
-      ? new URL("/booking?offering=" + encodeURIComponent(id) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : ""), location.origin).toString()
-      : id
-        ? new URL("/discover?" + new URLSearchParams({ q: title }).toString(), location.origin).toString()
-        : location.href;
+  const offeringId = item.metadata && typeof item.metadata.offeringId === "string" ? item.metadata.offeringId.trim() : "";
+  const url = offeringId && businessId
+    ? new URL("/offerings/" + encodeURIComponent(offeringId) + "?" + new URLSearchParams({ business: businessId }).toString(), location.origin).toString()
+    : type === "business" && id
+      ? new URL("/businesses/" + encodeURIComponent(id), location.origin).toString()
+      : type === "service" && id
+        ? new URL("/booking?offering=" + encodeURIComponent(id) + (businessId ? "&businessId=" + encodeURIComponent(businessId) : ""), location.origin).toString()
+        : id
+          ? new URL("/discover?" + new URLSearchParams({ q: title }).toString(), location.origin).toString()
+          : location.href;
   const payload = { title, text: socialCommerceUi("sharePromptText"), url };
   try {
     if (navigator.share) {

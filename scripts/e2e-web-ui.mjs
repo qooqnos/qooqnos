@@ -451,7 +451,7 @@ await page.waitForTimeout(50);
 assert.equal(await page.locator("[data-language-current]").innerText(), "فا");
 
 // Asking about a product starts (or reuses) its canonical seller conversation.
-await page.locator('[data-open-view="result-product-1"]').click();
+await page.locator('.phoenix-post-card [data-discovery-index="1"]').click();
 await page.locator("[data-ask-seller-detail]").waitFor();
 await page.locator("[data-ask-seller-detail]").click();
 await page.waitForFunction(() => location.pathname === "/messages"
@@ -646,8 +646,8 @@ await page.evaluate(() => {
 });
 await page.locator(".phoenix-post-card [data-share]").nth(1).click();
 const sharedPayload = await page.evaluate(() => window.__phoenixSharedPayload);
-assert.equal(new URL(sharedPayload.url).pathname, "/discover");
-assert.equal(new URL(sharedPayload.url).searchParams.get("q"), "میز چوبی");
+assert.equal(new URL(sharedPayload.url).pathname, "/offerings/offering-1");
+assert.equal(new URL(sharedPayload.url).searchParams.get("business"), "biz-1");
 assert.ok(!sharedPayload.url.includes("/checkout"));
 
 await page.locator("[data-language-toggle]").click();
@@ -951,6 +951,9 @@ await page.getByRole("heading", { name: "موجودیت واقعی تست" }).wa
 await page.locator(".phoenix-post-card [data-discovery-index='1'] img.phoenix-post-image").waitFor();
 assert.ok(publicMediaBatchRequests.some((references) => references.includes("prod-1")), "feed should batch-load image media by the public product reference");
 assert.ok((await page.locator(".phoenix-post-card [data-discovery-index='1'] img.phoenix-post-image").getAttribute("src") ?? "").includes("/api/v1/public/offerings/offering-1/media/asset-photo-1/content"));
+const canonicalFeedLink = page.locator(".phoenix-post-card .post-buy[href*='/offerings/offering-1']");
+await canonicalFeedLink.waitFor();
+assert.equal(new URL(await canonicalFeedLink.getAttribute("href"), baseURL).searchParams.get("business"), "biz-1");
 await page.locator(".phoenix-post-card [data-discovery-index='1']").click();
 await page.locator(".phoenix-detail-modal").waitFor();
 assert.equal(await page.locator("[data-add-to-cart-detail]").count(), 1);
