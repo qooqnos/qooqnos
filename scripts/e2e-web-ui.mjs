@@ -1050,7 +1050,7 @@ assert.equal(await page.locator(".phoenix-checkout-review button[type='submit']"
 const checkoutPreviewFa = await page.locator(".phoenix-checkout-review").innerText();
 assert.ok(checkoutPreviewFa.includes("پرداخت امن هنوز متصل نشده است."));
 assert.ok(checkoutPreviewFa.includes("مبلغی کسر نخواهد شد"));
-assert.ok(checkoutPreviewFa.includes("میز چوبی"));
+assert.ok(checkoutPreviewFa.includes("کیف دست‌دوز"));
 assert.ok(checkoutPreviewFa.includes("ریال"));
 assert.ok(!checkoutPreviewFa.includes("محصول نمایشی محلی"));
 assert.ok(!checkoutPreviewFa.includes("سفارش با موفقیت ثبت و پرداخت شد"));
