@@ -3657,6 +3657,18 @@ function renderProfile(): string {
       '<span class="phoenix-reset-profile-link-copy"><strong>' + uiText(item.title) + '</strong><small>' + uiText(item.description) + '</small></span>' +
       '<span class="phoenix-reset-profile-arrow" aria-hidden="true">←</span></a>'
   ).join("");
+  const socialShortcuts = [
+    { href: "/discover?tab=following", icon: "◉", title: "دنبال‌شده‌ها", description: "تازه‌های افرادی که دنبال می‌کنی" },
+    { href: "/discover?tab=explore", icon: "⌕", title: "اکسپلور", description: "کشف کالاها و خدمات" },
+    { href: "/saved", icon: "☆", title: "ذخیره‌شده‌ها", description: "گزینه‌هایی برای بررسی بعد" },
+    { href: "/messages", icon: "✉", title: "پیام‌ها", description: "گفت‌وگو دربارهٔ کالا و خدمت" },
+    { href: "/activity", icon: "✦", title: "فعالیت", description: "تعامل‌ها و ارتباط‌های اجتماعی" },
+  ];
+  const socialShortcutsHtml = socialShortcuts.map((item) =>
+    '<a class="phoenix-reset-profile-social-shortcut" href="' + item.href + '" data-nav>' +
+      '<span class="phoenix-reset-profile-social-orbit"><span aria-hidden="true">' + item.icon + '</span></span>' +
+      '<strong>' + uiText(item.title) + '</strong><small>' + uiText(item.description) + '</small></a>'
+  ).join("");
 
   return '<div class="phoenix-reset-profile-page">' +
     '<section class="phoenix-reset-profile-hero">' +
@@ -3668,6 +3680,11 @@ function renderProfile(): string {
       '<div class="phoenix-reset-profile-hero-actions">' +
         (token ? '<a class="button button-ghost" href="/account" data-nav>' + uiText("اطلاعات حساب") + '</a>' : '<button class="button button-primary" type="button" data-open-login>' + uiText("ورود به حساب") + '</button>') +
       '</div>' +
+    '</section>' +
+    '<section class="phoenix-reset-profile-social-section" aria-label="' + escapeAttr(uiText("مسیرهای اجتماعی")) + '">' +
+      '<div class="phoenix-reset-profile-social-heading"><div><span class="phoenix-reset-section-kicker">' + uiText("شبکهٔ تو") + '</span><h2>' + uiText("ادامهٔ ارتباط") + '</h2></div>' +
+        '<a href="/discover?tab=following" data-nav>' + socialCommerceUi("tabFollowing") + ' <span aria-hidden="true">←</span></a></div>' +
+      '<div class="phoenix-reset-profile-social-rail">' + socialShortcutsHtml + '</div>' +
     '</section>' +
     '<section class="phoenix-reset-profile-section"><div class="phoenix-reset-profile-section-heading"><div><span class="phoenix-reset-section-kicker">' + uiText("حساب تو") + '</span><h2>' + uiText("دسترسی‌های روزمره") + '</h2></div></div>' +
       '<div class="phoenix-reset-profile-links">' + menuHtml + '</div></section>' +

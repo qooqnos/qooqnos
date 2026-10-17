@@ -753,6 +753,13 @@ assert.notEqual(await page.locator("html").getAttribute("data-theme"), initialTh
 await page.goto(baseURL + "/profile");
 const personalProfileText = await page.locator(".phoenix-reset-profile-page").innerText();
 assert.ok(personalProfileText.includes("دسترسی‌های روزمره"));
+assert.ok(personalProfileText.includes("ادامهٔ ارتباط"));
+assert.ok(personalProfileText.includes("دنبال‌شده‌ها"));
+assert.equal(await page.locator(".phoenix-reset-profile-social-shortcut[href='/discover?tab=following']").count(), 1);
+assert.equal(await page.locator(".phoenix-reset-profile-social-shortcut[href='/discover?tab=explore']").count(), 1);
+assert.equal(await page.locator(".phoenix-reset-profile-social-shortcut[href='/saved']").count(), 1);
+assert.equal(await page.locator(".phoenix-reset-profile-social-shortcut[href='/messages']").count(), 1);
+assert.equal(await page.locator(".phoenix-reset-profile-social-shortcut[href='/activity']").count(), 1);
 assert.ok(personalProfileText.includes("سفارش‌ها و پیگیری"));
 assert.ok(!personalProfileText.includes("۲۸۰"));
 assert.ok(!personalProfileText.includes("۵ خدمت"));

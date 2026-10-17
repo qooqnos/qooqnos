@@ -15164,3 +15164,31 @@ button[aria-busy="true"] .btn-spinner {
   pointer-events: none;
   filter: saturate(.75);
 }
+
+
+/* Personal profile also serves as a social entry point, not only an account menu. */
+.social-shell .phoenix-reset-profile-social-section {
+  margin: 15px 0 18px; padding: 17px 18px 15px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 22px;
+  background: radial-gradient(circle at 7% 0%, color-mix(in srgb,var(--primary) 7%,transparent),transparent 15rem), var(--surface);
+  box-shadow: 0 8px 24px rgba(20,25,32,.025);
+}
+.social-shell .phoenix-reset-profile-social-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.social-shell .phoenix-reset-profile-social-heading h2 { margin:3px 0 0; font-size:16px; font-weight:850; letter-spacing:-.025em; }
+.social-shell .phoenix-reset-profile-social-heading>a { display:inline-flex; align-items:center; gap:6px; color:var(--primary-strong); font-size:11px; font-weight:800; text-decoration:none; white-space:nowrap; }
+.social-shell .phoenix-reset-profile-social-rail { display:flex; align-items:flex-start; gap:clamp(12px,2.2vw,24px); overflow-x:auto; padding:3px 2px 9px; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+.social-shell .phoenix-reset-profile-social-shortcut { display:flex; flex:0 0 92px; min-width:0; flex-direction:column; align-items:center; gap:6px; color:var(--text); text-align:center; text-decoration:none; }
+.social-shell .phoenix-reset-profile-social-orbit { display:grid; place-items:center; width:66px; height:66px; padding:3px; border:2px solid color-mix(in srgb,var(--primary) 42%,#efbd61); border-radius:50%; background:var(--surface); box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 7%,transparent); transition:transform .18s ease,box-shadow .18s ease; }
+.social-shell .phoenix-reset-profile-social-orbit>span { display:grid; place-items:center; width:100%; height:100%; border-radius:50%; color:var(--primary-strong); background:color-mix(in srgb,var(--primary) 9%,var(--surface-2)); font-size:23px; font-weight:800; }
+.social-shell .phoenix-reset-profile-social-shortcut:hover .phoenix-reset-profile-social-orbit { transform:translateY(-2px); box-shadow:0 0 0 5px color-mix(in srgb,var(--primary) 10%,transparent); }
+.social-shell .phoenix-reset-profile-social-shortcut>strong { max-width:100%; overflow:hidden; font-size:10px; font-weight:850; text-overflow:ellipsis; white-space:nowrap; }
+.social-shell .phoenix-reset-profile-social-shortcut>small { display:-webkit-box; max-width:100%; overflow:hidden; color:var(--muted); font-size:9px; line-height:1.65; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.social-shell .phoenix-reset-profile-social-shortcut:focus-visible .phoenix-reset-profile-social-orbit { outline:3px solid color-mix(in srgb,var(--primary) 60%,white); outline-offset:3px; }
+@media(max-width:720px) {
+  .social-shell .phoenix-reset-profile-social-section { margin:11px 0 15px; padding:14px 12px 11px; border-radius:18px; }
+  .social-shell .phoenix-reset-profile-social-heading { margin-bottom:11px; }
+  .social-shell .phoenix-reset-profile-social-shortcut { flex-basis:76px; gap:5px; }
+  .social-shell .phoenix-reset-profile-social-orbit { width:55px; height:55px; }
+  .social-shell .phoenix-reset-profile-social-orbit>span { font-size:20px; }
+  .social-shell .phoenix-reset-profile-social-shortcut>small { font-size:8px; }
+}
