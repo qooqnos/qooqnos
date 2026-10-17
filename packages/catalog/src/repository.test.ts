@@ -207,7 +207,6 @@ describe("CatalogRepository", () => {
 
   it("does not return variants for an unpublished offering", async () => {
     const statements: string[] = [];
-    let currentSql = "";
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
       async first<T>() { return null as T | null; },
@@ -215,7 +214,7 @@ describe("CatalogRepository", () => {
       async run() { return { success: true }; },
     };
     const raw: D1DatabaseLike = {
-      prepare(sql: string) { currentSql = sql; statements.push(sql); return statement; },
+      prepare(sql: string) { statements.push(sql); return statement; },
       async batch() { return []; },
     };
     const repository = new CatalogRepository(new D1Database(raw));
