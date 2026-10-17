@@ -7402,7 +7402,7 @@ function renderPublicOfferingDetail(): string {
         '<div class="phoenix-public-offering-badges"><span class="phoenix-public-offering-type" id="public-offer-type">' + socialCommerceUi("offerDetailLoading") + '</span><span class="phoenix-public-offering-published" id="public-offer-published">' + socialCommerceUi("offerDetailCheckingPublication") + '</span></div>' +
         '<h1 id="public-offer-title">' + socialCommerceUi("offerDetailLoadingTitle") + '</h1>' +
         '<p class="phoenix-public-offering-description" id="public-offer-description">' + socialCommerceUi("offerDetailLoadingDescription") + '</p>' +
-        '<div class="phoenix-public-offering-price"><span>' + socialCommerceUi("offerDetailPriceLabel") + '</span><strong id="public-offer-price">—</strong></div>' +
+        '<div class="phoenix-public-offering-price"><span>' + socialCommerceUi("offerDetailPriceLabel") + '</span><div class="phoenix-public-offering-price-value"><strong id="public-offer-price">—</strong><small class="phoenix-public-offering-price-context" id="public-offer-price-context" hidden></small></div></div>' +
         '<div id="public-offer-variants" hidden></div>' +
         '<a class="phoenix-public-offering-seller" id="public-offer-seller" href="/discover?tab=explore" data-nav>' +
           '<span class="phoenix-public-offering-seller-avatar" id="public-offer-seller-avatar" aria-hidden="true">ق</span>' +
@@ -8289,6 +8289,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   const detailsNode = document.querySelector<HTMLElement>("#public-offer-details");
   const typeNode = document.querySelector<HTMLElement>("#public-offer-type");
   const priceNode = document.querySelector<HTMLElement>("#public-offer-price");
+  const priceContextNode = document.querySelector<HTMLElement>("#public-offer-price-context");
   const sellerNameNode = document.querySelector<HTMLElement>("#public-offer-seller-name");
   const sellerNode = document.querySelector<HTMLAnchorElement>("#public-offer-seller");
   const sellerAvatar = document.querySelector<HTMLElement>("#public-offer-seller-avatar");
@@ -8304,7 +8305,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   let priceResolutionVersion = 0;
   let personalizedVariantPrice: { variantId: string; priceAmountMinor: number; currency: string; precedenceMatched: string } | null = null;
   let variantSelection: PublicOfferingVariantSelection = { hasVariants: false, getSelected: () => null };
-  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage || !mediaHost || !variantsHost) {
+  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !priceContextNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage || !mediaHost || !variantsHost) {
     if (titleNode) titleNode.textContent = socialCommerceUi("offerDetailInvalidLink");
     if (noteNode) noteNode.textContent = socialCommerceUi("offerDetailOpenFromProfile");
     return;
@@ -8315,6 +8316,8 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     detailsNode.textContent = socialCommerceUi("offerDetailUnavailableBody");
     typeNode.hidden = true;
     priceNode.textContent = socialCommerceUi("offerDetailPriceUnavailable");
+    priceContextNode.hidden = true;
+    priceContextNode.textContent = "";
     sellerNameNode.textContent = socialCommerceUi("offerDetailSellerUnavailable");
     publishedNode.textContent = socialCommerceUi("offerDetailStatusUnavailable");
     publishedNode.dataset.state = "unavailable";
@@ -8352,6 +8355,8 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     detailsNode.textContent = description;
     typeNode.textContent = typeLabel;
     priceNode.textContent = price;
+    priceContextNode.hidden = true;
+    priceContextNode.textContent = "";
     sellerNameNode.textContent = businessName;
     sellerAvatar.textContent = businessName.slice(0, 1) || "ق";
     mediaMessage.textContent = socialCommerceUi("offerDetailImageNotPublished");
@@ -8368,6 +8373,8 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
         const requestVersion = ++priceResolutionVersion;
         personalizedVariantPrice = null;
         delete priceNode.dataset.priceAudience;
+        priceContextNode.hidden = true;
+        priceContextNode.textContent = "";
         if (!selected || !offer.productId || !sessionStorage.getItem(STORAGE.accessToken)) return;
 
         void apiJson<{
@@ -8402,6 +8409,10 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
           priceNode.setAttribute("data-price-currency", currency);
           priceNode.setAttribute("data-price-source", "commerce-resolver");
           priceNode.dataset.priceAudience = precedenceMatched;
+          if (precedenceMatched === "customer" || precedenceMatched === "group") {
+            priceContextNode.textContent = socialCommerceUi("offerDetailRelationshipPrice");
+            priceContextNode.hidden = false;
+          }
         }).catch(() => {
           // Keep the public Catalog price if customer-specific resolution is unavailable.
           if (requestVersion === priceResolutionVersion) personalizedVariantPrice = null;

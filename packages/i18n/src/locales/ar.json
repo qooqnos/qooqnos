@@ -2335,7 +2335,8 @@
     "offerDetailVariantStockUnknown": "سيتم تأكيد التوفر عند إتمام الطلب",
     "offerDetailVariantPriceUnavailable": "تواصل مع البائع لتأكيد السعر",
     "offerDetailVariantFree": "مجاني",
-    "offerDetailVariantStartingAt": "ابتداءً من"
+    "offerDetailVariantStartingAt": "ابتداءً من",
+    "offerDetailRelationshipPrice": "السعر حسب علاقتك بالبائع"
   },
   "catalogPage": {
     "eyebrow": "كتالوج البائع",

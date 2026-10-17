@@ -2335,7 +2335,8 @@
     "offerDetailVariantStockUnknown": "Availability will be confirmed at checkout",
     "offerDetailVariantPriceUnavailable": "Ask the seller to confirm this price",
     "offerDetailVariantFree": "Free",
-    "offerDetailVariantStartingAt": "Starting at"
+    "offerDetailVariantStartingAt": "Starting at",
+    "offerDetailRelationshipPrice": "Price based on your relationship"
   },
   "catalogPage": {
     "eyebrow": "Seller catalog",

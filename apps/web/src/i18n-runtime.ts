@@ -2235,6 +2235,13 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "socialCommercePage.offerDetailVariantNoChoices": "گزینه‌های قابل انتخاب برای این کالا در دسترس نیست.",
     "socialCommercePage.offerDetailLoadingDetails": "جزئیات در حال بارگذاری است.",
     "socialCommercePage.offerDetailAskHeading": "پرسش از فروشنده",
+    "socialCommercePage.offerDetailVariantInStock": "موجود",
+    "socialCommercePage.offerDetailVariantOutOfStock": "ناموجود",
+    "socialCommercePage.offerDetailVariantStockUnknown": "موجودی هنگام سفارش تأیید می‌شود",
+    "socialCommercePage.offerDetailVariantPriceUnavailable": "برای قیمت با فروشنده گفت‌وگو کن",
+    "socialCommercePage.offerDetailVariantFree": "رایگان",
+    "socialCommercePage.offerDetailVariantStartingAt": "شروع از",
+    "socialCommercePage.offerDetailRelationshipPrice": "قیمت متناسب با رابطهٔ شما",
     "catalogPage.eyebrow": "کاتالوگ فروشنده",
     "catalogPage.title": "محصولاتت را ساده مدیریت کن",
     "catalogPage.description": "محصول یا خدمت آماده را اینجا ثبت کن. برای تبدیل متن یا تصویر خام به پیش‌نویس، از استودیو محصول استفاده کن.",
@@ -2266,13 +2273,7 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "catalogPage.studioPathTitle": "می‌خواهی از متن یا عکس شروع کنی؟",
     "catalogPage.studioPathDescription": "ققنوس پیش‌نویس را آماده می‌کند؛ تو آن را بازبینی می‌کنی و بعد ادامه می‌دهی.",
     "catalogPage.catalogHelpTitle": "محصولات و خدمات در یک جا",
-    "catalogPage.catalogHelpDescription": "بعد از ثبت، می‌توانی عرضه‌ها را از فضای کاتالوگ مدیریت کنی. قیمت و موجودی نهایی باید از اطلاعات معتبر فروشنده پیروی کنند.",
-    "socialCommercePage.offerDetailVariantInStock": "موجود",
-    "socialCommercePage.offerDetailVariantOutOfStock": "ناموجود",
-    "socialCommercePage.offerDetailVariantStockUnknown": "موجودی هنگام سفارش تأیید می‌شود",
-    "socialCommercePage.offerDetailVariantPriceUnavailable": "برای قیمت با فروشنده گفت‌وگو کن",
-    "socialCommercePage.offerDetailVariantFree": "رایگان",
-    "socialCommercePage.offerDetailVariantStartingAt": "شروع از"
+    "catalogPage.catalogHelpDescription": "بعد از ثبت، می‌توانی عرضه‌ها را از فضای کاتالوگ مدیریت کنی. قیمت و موجودی نهایی باید از اطلاعات معتبر فروشنده پیروی کنند."
   },
   "en": {
     "common.appName": "Phoenix",
@@ -4505,6 +4506,13 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "socialCommercePage.offerDetailVariantNoChoices": "No selectable options are available for this product.",
     "socialCommercePage.offerDetailLoadingDetails": "Loading offer details.",
     "socialCommercePage.offerDetailAskHeading": "Ask the seller",
+    "socialCommercePage.offerDetailVariantInStock": "In stock",
+    "socialCommercePage.offerDetailVariantOutOfStock": "Out of stock",
+    "socialCommercePage.offerDetailVariantStockUnknown": "Availability will be confirmed at checkout",
+    "socialCommercePage.offerDetailVariantPriceUnavailable": "Ask the seller to confirm this price",
+    "socialCommercePage.offerDetailVariantFree": "Free",
+    "socialCommercePage.offerDetailVariantStartingAt": "Starting at",
+    "socialCommercePage.offerDetailRelationshipPrice": "Price based on your relationship",
     "catalogPage.eyebrow": "Seller catalog",
     "catalogPage.title": "Manage your products simply",
     "catalogPage.description": "Create a product or service directly. To turn raw text or an image into a reviewable draft, start in Product Studio.",
@@ -4536,13 +4544,7 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "catalogPage.studioPathTitle": "Starting from text or a photo?",
     "catalogPage.studioPathDescription": "Phoenix prepares a draft for you to review before continuing.",
     "catalogPage.catalogHelpTitle": "Products and services, together",
-    "catalogPage.catalogHelpDescription": "Manage your offerings from the catalog after creation. Final prices and stock must come from the seller's authoritative data.",
-    "socialCommercePage.offerDetailVariantInStock": "In stock",
-    "socialCommercePage.offerDetailVariantOutOfStock": "Out of stock",
-    "socialCommercePage.offerDetailVariantStockUnknown": "Availability will be confirmed at checkout",
-    "socialCommercePage.offerDetailVariantPriceUnavailable": "Ask the seller to confirm this price",
-    "socialCommercePage.offerDetailVariantFree": "Free",
-    "socialCommercePage.offerDetailVariantStartingAt": "Starting at"
+    "catalogPage.catalogHelpDescription": "Manage your offerings from the catalog after creation. Final prices and stock must come from the seller's authoritative data."
   },
   "ar": {
     "common.appName": "فينيكس",
@@ -6775,6 +6777,13 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "socialCommercePage.offerDetailVariantNoChoices": "لا توجد خيارات قابلة للاختيار لهذا المنتج.",
     "socialCommercePage.offerDetailLoadingDetails": "جارٍ تحميل تفاصيل العرض.",
     "socialCommercePage.offerDetailAskHeading": "اسأل البائع",
+    "socialCommercePage.offerDetailVariantInStock": "متوفر",
+    "socialCommercePage.offerDetailVariantOutOfStock": "غير متوفر",
+    "socialCommercePage.offerDetailVariantStockUnknown": "سيتم تأكيد التوفر عند إتمام الطلب",
+    "socialCommercePage.offerDetailVariantPriceUnavailable": "تواصل مع البائع لتأكيد السعر",
+    "socialCommercePage.offerDetailVariantFree": "مجاني",
+    "socialCommercePage.offerDetailVariantStartingAt": "ابتداءً من",
+    "socialCommercePage.offerDetailRelationshipPrice": "السعر حسب علاقتك بالبائع",
     "catalogPage.eyebrow": "كتالوج البائع",
     "catalogPage.title": "أدر منتجاتك بسهولة",
     "catalogPage.description": "أنشئ منتجًا أو خدمة مباشرة. لتحويل النص الخام أو الصورة إلى مسودة قابلة للمراجعة، ابدأ من استوديو المنتج.",
@@ -6806,13 +6815,7 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "catalogPage.studioPathTitle": "هل تريد البدء بنص أو صورة؟",
     "catalogPage.studioPathDescription": "يجهّز ققنوس مسودة لتراجعها قبل المتابعة.",
     "catalogPage.catalogHelpTitle": "المنتجات والخدمات في مكان واحد",
-    "catalogPage.catalogHelpDescription": "أدر العروض من الكتالوج بعد إنشائها. يجب أن تستند الأسعار والمخزونات النهائية إلى بيانات البائع المعتمدة.",
-    "socialCommercePage.offerDetailVariantInStock": "متوفر",
-    "socialCommercePage.offerDetailVariantOutOfStock": "غير متوفر",
-    "socialCommercePage.offerDetailVariantStockUnknown": "سيتم تأكيد التوفر عند إتمام الطلب",
-    "socialCommercePage.offerDetailVariantPriceUnavailable": "تواصل مع البائع لتأكيد السعر",
-    "socialCommercePage.offerDetailVariantFree": "مجاني",
-    "socialCommercePage.offerDetailVariantStartingAt": "ابتداءً من"
+    "catalogPage.catalogHelpDescription": "أدر العروض من الكتالوج بعد إنشائها. يجب أن تستند الأسعار والمخزونات النهائية إلى بيانات البائع المعتمدة."
   }
 };
 

@@ -2335,7 +2335,8 @@
     "offerDetailVariantStockUnknown": "موجودی هنگام سفارش تأیید می‌شود",
     "offerDetailVariantPriceUnavailable": "برای قیمت با فروشنده گفت‌وگو کن",
     "offerDetailVariantFree": "رایگان",
-    "offerDetailVariantStartingAt": "شروع از"
+    "offerDetailVariantStartingAt": "شروع از",
+    "offerDetailRelationshipPrice": "قیمت متناسب با رابطهٔ شما"
   },
   "catalogPage": {
     "eyebrow": "کاتالوگ فروشنده",
