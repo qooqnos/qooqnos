@@ -7823,6 +7823,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     priceNode.textContent = uiText("اطلاعات قیمت در دسترس نیست");
     sellerNameNode.textContent = uiText("فروشنده در دسترس نیست");
     publishedNode.textContent = uiText("در دسترس نیست");
+    publishedNode.dataset.state = "unavailable";
     noteNode.textContent = uiText("برای دیدن گزینه‌های دیگر به اکسپلور برگرد.");
     mediaMessage.textContent = uiText("تصویر برای این عرضه در دسترس نیست.");
     primaryAction.href = "/discover?tab=explore";
@@ -7859,6 +7860,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     sellerAvatar.textContent = businessName.slice(0, 1) || "ق";
     mediaMessage.textContent = uiText("تصویر منتشرشده‌ای برای این عرضه ثبت نشده است.");
     publishedNode.textContent = uiText("منتشرشده");
+    publishedNode.dataset.state = "published";
     askButton.disabled = false;
     sellerNode.href = "/businesses/" + encodeURIComponent(businessId);
     sellerNode.setAttribute("aria-label", uiText("مشاهده پروفایل فروشنده") + " " + businessName);

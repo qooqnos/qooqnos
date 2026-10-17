@@ -1225,7 +1225,7 @@ assert.ok(!(await page.locator("#public-offer-media-message").innerText()).inclu
 assert.ok(await page.locator("#public-offer-primary-action").isVisible());
 await page.goto(baseURL + "/offerings/does-not-exist?business=biz-1");
 await page.locator(".phoenix-public-offering-page").waitFor();
-await page.waitForFunction(() => document.querySelector("#public-offer-title")?.textContent === "این عرضه در دسترس نیست");
+await page.locator("#public-offer-published[data-state='unavailable']").waitFor();
 await page.goto(baseURL + "/product/demo");
 await page.locator(".phoenix-reset-product-unavailable").waitFor();
 const unavailableProductText = await page.locator(".phoenix-reset-product-unavailable").innerText();
