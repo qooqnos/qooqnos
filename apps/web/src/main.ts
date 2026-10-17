@@ -866,6 +866,8 @@ function render(): void {
     }
   }
   if (route.path === "/compare") {
+    const compareMediaHost = document.querySelector<HTMLElement>(".phoenix-reset-compare-products");
+    if (compareMediaHost) void hydratePublicBusinessOfferMedia(compareMediaHost, getCompareItems());
     document.querySelector<HTMLButtonElement>("[data-clear-compare]")?.addEventListener("click", () => {
       localStorage.removeItem("phoenix-compare-items");
       render();
@@ -4356,10 +4358,15 @@ function loadSavedPage(): void {
       const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ??
         item.metadata?.thumbnailUrl ?? (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
       const mediaUrl = typeof mediaCandidate === "string" && /^\/api\/v1\/public\/offerings\/[^/]+\/media\/[^/]+\/content$/.test(mediaCandidate) ? mediaCandidate : "";
-      const media = mediaUrl
-        ? '<img src="' + escapeAttr(mediaUrl) + '" alt="' + escapeAttr(title) + '" loading="lazy" />'
-        : '<span class="phoenix-reset-saved-media-placeholder" aria-hidden="true">◇</span>';
+      const mediaReference = (kind === "product" || kind === "service")
+        ? String(item.metadata?.offeringId ?? item.sourceId ?? item.id ?? "").trim() : "";
       const metadataBusiness = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
+      const mediaReferenceMarkup = mediaReference
+        ? ' data-public-offer-media-ref="' + escapeAttr(mediaReference) + '" data-public-business-id="' + escapeAttr(metadataBusiness) + '" data-public-offer-media-state="' + String(Boolean(mediaUrl) && !metadataBusiness ? "loaded" : "pending") + '"'
+        : "";
+      const media = mediaUrl
+        ? '<img class="phoenix-public-offer-image" src="' + escapeAttr(mediaUrl) + '" alt="' + escapeAttr(title) + '" loading="lazy" />'
+        : '<span class="phoenix-reset-saved-media-placeholder" aria-hidden="true">◇</span>';
       const compareButton = kind === "product"
         ? '<button class="button button-ghost" type="button" data-saved-compare="' + escapeAttr(key) + '">' + uiText("مقایسه") + ' ⚖</button>'
         : "";
@@ -4369,7 +4376,7 @@ function loadSavedPage(): void {
           ? "/booking?offering=" + encodeURIComponent(item.sourceId ?? item.id ?? "") + (metadataBusiness ? "&businessId=" + encodeURIComponent(metadataBusiness) : "")
           : "";
       return '<article class="phoenix-reset-saved-card">' +
-        '<button class="phoenix-reset-saved-media" type="button" data-saved-open="' + escapeAttr(key) + '" aria-label="' + escapeAttr(socialCommerceUi("viewDetailsSaved")) + '">' + media + '<span class="phoenix-reset-saved-kind">' + kindLabel + '</span></button>' +
+        '<button class="phoenix-reset-saved-media" type="button" data-saved-open="' + escapeAttr(key) + '"' + mediaReferenceMarkup + ' aria-label="' + escapeAttr(socialCommerceUi("viewDetailsSaved")) + '">' + media + '<span class="phoenix-reset-saved-kind">' + kindLabel + '</span></button>' +
         '<div class="phoenix-reset-saved-card-body"><div class="phoenix-reset-saved-card-kicker">' + kindLabel + (locationLabel ? ' · ' + escapeHtml(locationLabel) : '') + '</div>' +
           '<h2>' + escapeHtml(title) + '</h2>' + (description ? '<p>' + escapeHtml(description) + '</p>' : '') +
           '<div class="phoenix-reset-saved-card-price">' + escapeHtml(price) + '</div>' +
@@ -4381,6 +4388,7 @@ function loadSavedPage(): void {
           '</div></div></article>';
     }).join("");
 
+    void hydratePublicBusinessOfferMedia(grid, filtered);
     grid.querySelectorAll<HTMLButtonElement>("[data-saved-open]").forEach((button) => {
       button.addEventListener("click", () => {
         const key = button.dataset.savedOpen ?? "";
@@ -6245,12 +6253,19 @@ function renderCompare(): string {
     { label: socialCommerceUi("compareLocation"), value: (item) => item.locality ?? item.city },
     { label: socialCommerceUi("compareDescriptionRow"), value: (item) => item.description ?? item.body },
   ];
-  const columns = items.map((item) =>
-    '<article class="phoenix-reset-compare-product"><span class="phoenix-reset-compare-product-type">' + socialCommerceUi("product") + '</span>' +
+  const columns = items.map((item) => {
+    const key = keyOf(item);
+    const businessId = typeof item.metadata?.businessId === "string" ? item.metadata.businessId : "";
+    const mediaReference = String(item.metadata?.offeringId ?? item.sourceId ?? item.id ?? "").trim();
+    const mediaMarkup = mediaReference
+      ? '<div class="phoenix-reset-compare-media" data-public-offer-media-ref="' + escapeAttr(mediaReference) + '" data-public-business-id="' + escapeAttr(businessId) + '" data-public-offer-media-state="pending"><span class="phoenix-reset-compare-media-placeholder" aria-hidden="true">▦</span></div>'
+      : '<div class="phoenix-reset-compare-media"><span class="phoenix-reset-compare-media-placeholder" aria-hidden="true">▦</span></div>';
+    return '<article class="phoenix-reset-compare-product">' + mediaMarkup +
+      '<span class="phoenix-reset-compare-product-type">' + socialCommerceUi("product") + '</span>' +
       '<h2>' + escapeHtml(titleOf(item)) + '</h2><strong class="phoenix-reset-compare-price">' + escapeHtml(priceOf(item)) + '</strong>' +
-      '<div class="phoenix-reset-compare-product-actions"><button class="button button-ghost" type="button" data-open-compare-detail="' + escapeAttr(keyOf(item)) + '">' + socialCommerceUi("compareViewDetails") + '</button>' +
-      '<button class="phoenix-reset-compare-remove" type="button" data-remove-compare="' + escapeAttr(keyOf(item)) + '">' + socialCommerceUi("compareRemove") + '</button></div></article>'
-  ).join("");
+      '<div class="phoenix-reset-compare-product-actions"><button class="button button-ghost" type="button" data-open-compare-detail="' + escapeAttr(key) + '">' + socialCommerceUi("compareViewDetails") + '</button>' +
+      '<button class="phoenix-reset-compare-remove" type="button" data-remove-compare="' + escapeAttr(key) + '">' + socialCommerceUi("compareRemove") + '</button></div></article>';
+  }).join("");
   return '<div class="phoenix-reset-compare-page">' +
     '<section class="phoenix-reset-compare-hero"><div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("compareEyebrow") + ' · ' + socialCommerceUi("compareCountLabel", { count: formatLocalizedNumber(items.length) }) + '</span>' +
       '<h1>' + socialCommerceUi("compareHeadline") + '</h1>' +
