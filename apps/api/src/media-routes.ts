@@ -7,6 +7,12 @@ import type { ApiEnv } from "./env";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
 
+export function registerMediaRoutes(
+  router: ApiRouter,
+  database: D1Database | undefined,
+  env: ApiEnv,
+  authorization: AuthorizationRegistry | undefined,
+): void {
   router.register({
     method: "GET",
     path: "/api/v1/public/offerings/:offeringId/media",
@@ -60,12 +66,6 @@ import { json } from "./http";
     },
   });
 
-export function registerMediaRoutes(
-  router: ApiRouter,
-  database: D1Database | undefined,
-  env: ApiEnv,
-  authorization: AuthorizationRegistry | undefined,
-): void {
   router.register({
     method: "POST",
     path: "/api/v1/media/assets",
