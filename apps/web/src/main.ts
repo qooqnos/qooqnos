@@ -5822,7 +5822,7 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
     const mediaUrl = typeof mediaCandidate === "string" && (mediaCandidate.startsWith("/") || /^https?:\/\//i.test(mediaCandidate)) ? mediaCandidate : "";
     const avatarCandidate = item.metadata?.businessAvatarUrl ?? item.metadata?.businessLogoUrl ?? item.metadata?.logoUrl;
     const avatarUrl = typeof avatarCandidate === "string" && (avatarCandidate.startsWith("/") || /^https?:\/\//i.test(avatarCandidate)) ? avatarCandidate : "";
-    const mediaReferenceCandidate = metadata.offeringId ?? item.sourceId ?? item.id ?? "";
+    const mediaReferenceCandidate = item.metadata?.offeringId ?? item.sourceId ?? item.id ?? "";
     const mediaReference = (sourceType === "product" || sourceType === "service") && typeof mediaReferenceCandidate === "string"
       ? mediaReferenceCandidate.trim() : "";
     const media = mediaUrl
