@@ -7792,6 +7792,90 @@ function formatPublicBusinessDate(value: string | null | undefined): string {
   }
 }
 
+interface PublicOfferingMediaImage {
+  readonly assetId: string;
+  readonly purpose: string;
+  readonly position: number;
+  readonly mimeType: string;
+  readonly byteSize: number;
+  readonly width: number | null;
+  readonly height: number | null;
+  readonly src: string;
+}
+
+function mountPublicOfferingGallery(
+  host: HTMLElement,
+  images: readonly PublicOfferingMediaImage[],
+  offerTitle: string,
+): void {
+  const safeImages = images.filter((image) =>
+    image.mimeType.toLowerCase().startsWith("image/")
+    && image.src.startsWith("/api/v1/public/offerings/")
+    && image.src.includes("/media/")
+    && image.src.endsWith("/content")
+  ).slice(0, 12);
+  if (!safeImages.length) return;
+
+  const gallery = document.createElement("div");
+  gallery.className = "phoenix-public-offering-gallery";
+  gallery.setAttribute("aria-label", socialCommerceUi("offerDetailImageLabel"));
+  const stage = document.createElement("div");
+  stage.className = "phoenix-public-offering-gallery-stage";
+  const mainImage = document.createElement("img");
+  mainImage.className = "phoenix-public-offering-gallery-image";
+  mainImage.loading = "eager";
+  mainImage.decoding = "async";
+  stage.appendChild(mainImage);
+  gallery.appendChild(stage);
+
+  const thumbnails = document.createElement("div");
+  thumbnails.className = "phoenix-public-offering-gallery-thumbnails";
+  const buttons: HTMLButtonElement[] = [];
+  const selectImage = (index: number): void => {
+    const current = safeImages[index];
+    if (!current) return;
+    mainImage.src = current.src;
+    mainImage.alt = offerTitle;
+    mainImage.dataset.assetId = current.assetId;
+    buttons.forEach((button, buttonIndex) => {
+      const active = buttonIndex === index;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  };
+
+  safeImages.forEach((image, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "phoenix-public-offering-gallery-thumb";
+    button.setAttribute("aria-label", offerTitle + " " + String(index + 1));
+    button.setAttribute("aria-pressed", "false");
+    const thumb = document.createElement("img");
+    thumb.src = image.src;
+    thumb.alt = "";
+    thumb.loading = "lazy";
+    thumb.decoding = "async";
+    button.appendChild(thumb);
+    button.addEventListener("click", () => selectImage(index));
+    buttons.push(button);
+    thumbnails.appendChild(button);
+  });
+  if (safeImages.length > 1) gallery.appendChild(thumbnails);
+  mainImage.addEventListener("error", () => {
+    host.replaceChildren();
+    host.classList.remove("has-published-image");
+    const fallback = document.createElement("div");
+    fallback.className = "phoenix-public-offering-image-placeholder";
+    const message = document.createElement("span");
+    message.textContent = socialCommerceUi("offerDetailImageUnavailable");
+    fallback.appendChild(message);
+    host.appendChild(fallback);
+  }, { once: true });
+  host.replaceChildren(gallery);
+  host.classList.add("has-published-image");
+  selectImage(0);
+}
+
 async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   const offeringId = routePath.split("/").filter(Boolean)[1] ?? "";
   const params = new URLSearchParams(location.search);
@@ -7810,7 +7894,8 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   const askButton = document.querySelector<HTMLButtonElement>("#public-offer-ask");
   const actionsHost = document.querySelector<HTMLElement>("#public-offer-actions");
   const mediaMessage = document.querySelector<HTMLElement>("#public-offer-media-message");
-  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage) {
+  const mediaHost = document.querySelector<HTMLElement>(".phoenix-public-offering-media");
+  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage || !mediaHost) {
     if (titleNode) titleNode.textContent = socialCommerceUi("offerDetailInvalidLink");
     if (noteNode) noteNode.textContent = socialCommerceUi("offerDetailOpenFromProfile");
     return;
@@ -7819,7 +7904,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     titleNode.textContent = socialCommerceUi("offerDetailUnavailableTitle");
     descriptionNode.textContent = socialCommerceUi("offerDetailUnavailableDescription");
     detailsNode.textContent = socialCommerceUi("offerDetailUnavailableBody");
-    typeNode.textContent = uiText("عرضه");
+    typeNode.hidden = true;
     priceNode.textContent = socialCommerceUi("offerDetailPriceUnavailable");
     sellerNameNode.textContent = socialCommerceUi("offerDetailSellerUnavailable");
     publishedNode.textContent = socialCommerceUi("offerDetailStatusUnavailable");
@@ -7830,7 +7915,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     primaryAction.textContent = socialCommerceUi("tabExplore");
     primaryAction.hidden = false;
     askButton.disabled = true;
-    document.title = uiText("عرضه در دسترس نیست") + " | ققنوس";
+    document.title = socialCommerceUi("offerDetailUnavailableTitle") + " | Phoenix";
   };
   try {
     const response = await apiJson<{ data: {
@@ -7859,6 +7944,14 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     sellerNameNode.textContent = businessName;
     sellerAvatar.textContent = businessName.slice(0, 1) || "ق";
     mediaMessage.textContent = socialCommerceUi("offerDetailImageNotPublished");
+    try {
+      const mediaResponse = await apiJson<{ data: PublicOfferingMediaImage[] }>(
+        "/api/v1/public/offerings/" + encodeURIComponent(offer.id) + "/media",
+      );
+      mountPublicOfferingGallery(mediaHost, mediaResponse.data, offer.title);
+    } catch {
+      mediaMessage.textContent = socialCommerceUi("offerDetailImageUnavailable");
+    }
     publishedNode.textContent = socialCommerceUi("offerDetailPublished");
     publishedNode.dataset.state = "published";
     askButton.disabled = false;
@@ -7883,7 +7976,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
       compare.textContent = "⚖ " + socialCommerceUi("offerDetailCompare"); actionsHost.appendChild(compare);
       compare.addEventListener("click", () => {
         const exists = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === offer.id);
-        toggleCompare(item); showToast(uiText(exists ? "از مقایسه حذف شد." : "به مقایسه اضافه شد."));
+        toggleCompare(item); showToast(socialCommerceUi(exists ? "offerDetailCompareRemoved" : "offerDetailCompareAdded"));
       });
     }
     const save = document.createElement("button");
@@ -7897,8 +7990,8 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
         const active = await persistSocialAction("save", item);
         setShortlistItem(item, active); renderShortlist();
         save.textContent = active ? "★ " + socialCommerceUi("offerDetailSaved") : "☆ " + socialCommerceUi("offerDetailSave");
-        showToast(uiText(active ? "عرضه ذخیره شد." : "از ذخیره‌شده‌ها حذف شد."));
-      } catch (error) { showToast(error instanceof Error ? error.message : uiText("ذخیره‌سازی انجام نشد.")); }
+        showToast(socialCommerceUi(active ? "offerDetailSavedToast" : "savedRemovedToast"));
+      } catch (error) { showToast(error instanceof Error ? error.message : socialCommerceUi("socialActionUnavailable")); }
       finally { save.disabled = false; }
     });
     const share = document.createElement("button");

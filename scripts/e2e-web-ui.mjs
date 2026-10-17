@@ -162,6 +162,9 @@ await page.route("**/api/v1/**", async (route) => {
     "/api/v1/ai/seller/product-creation-sessions": { session: { id: "seller-session-1" } },
     "/api/v1/ai/seller/product-creation-sessions/seller-session-1": { session: { id: "seller-session-1", currentDraftVersion: 1 }, draft: {} },
     "/api/v1/ai/seller/product-creation-sessions/seller-session-1/inputs": { accepted: true },
+    "/api/v1/public/offerings/offering-1/media": { data: [
+      { assetId: "asset-photo-1", purpose: "primary", position: 0, mimeType: "image/svg+xml", byteSize: 120, width: 800, height: 1000, src: "/api/v1/public/offerings/offering-1/media/asset-photo-1/content" }
+    ] },
     "/api/v1/catalog/offers": { data: { id: "offer-1", status: "active", publicationStatus: "unpublished" } },
     "/api/v1/catalog/offers/offer-1/publish": { data: { id: "offer-1", publicationStatus: "pending" } },
   };
@@ -347,6 +350,14 @@ await page.route("**/api/v1/**", async (route) => {
     return;
   }
 
+  if (path === "/api/v1/public/offerings/offering-1/media/asset-photo-1/content" && request.method() === "GET") {
+    await route.fulfill({
+      status: 200,
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000"><rect width="800" height="1000" fill="#e9dfd2"/><circle cx="400" cy="380" r="150" fill="#b99b76"/><rect x="200" y="520" width="400" height="240" rx="40" fill="#735c49"/></svg>',
+    });
+    return;
+  }
   if (payloads[path] !== undefined) {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payloads[path]) });
     return;
@@ -1222,6 +1233,9 @@ assert.equal(await page.locator("#public-offer-seller-name").innerText(), "تر�
 assert.ok((await page.locator("#public-offer-price").innerText()).length > 0);
 assert.ok((await page.locator("#public-offer-description").innerText()).includes("نمونهٔ کالای منتشرشده"));
 assert.ok(!(await page.locator("#public-offer-media-message").innerText()).includes("در حال بارگذاری"));
+await page.locator(".phoenix-public-offering-gallery-image").waitFor();
+assert.ok((await page.locator(".phoenix-public-offering-gallery-image").getAttribute("src") || "").endsWith("/media/asset-photo-1/content"));
+assert.ok(await page.locator(".phoenix-public-offering-gallery-image").isVisible());
 assert.ok(await page.locator("#public-offer-primary-action").isVisible());
 await page.evaluate(() => localStorage.setItem("qooqnos.locale", "en"));
 await page.reload();

@@ -7,6 +7,59 @@ import type { ApiEnv } from "./env";
 import type { ApiRouter } from "./router";
 import { json } from "./http";
 
+  router.register({
+    method: "GET",
+    path: "/api/v1/public/offerings/:offeringId/media",
+    module: "media",
+    operation: "media.public.offering.list",
+    requireAuthentication: false,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const offeringId = requiredParam(params.offeringId, context.requestId);
+      const assets = await listPublishedOfferingMedia(database, offeringId);
+      return json({
+        data: assets.map((asset) => ({
+          assetId: asset.assetId,
+          purpose: asset.purpose,
+          position: asset.position,
+          mimeType: asset.mimeType,
+          byteSize: asset.byteSize,
+          width: asset.width,
+          height: asset.height,
+          src: publicOfferingMediaContentPath(offeringId, asset.assetId),
+        })),
+      }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
+    path: "/api/v1/public/offerings/:offeringId/media/:assetId/content",
+    module: "media",
+    operation: "media.public.offering.content",
+    requireAuthentication: false,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      if (!env.MEDIA_BUCKET) throw new AppError({ code: "NOT_READY", message: "R2 media bucket is not configured.", requestId: context.requestId });
+      const offeringId = requiredParam(params.offeringId, context.requestId);
+      const assetId = requiredParam(params.assetId, context.requestId);
+      const asset = await getPublishedOfferingMedia(database, offeringId, assetId);
+      if (!asset) throw new AppError({ code: "NOT_FOUND", message: "Published offering image not found.", requestId: context.requestId });
+      const object = await env.MEDIA_BUCKET.get(asset.storageKey);
+      if (!object || typeof object !== "object" || !("body" in object)) {
+        throw new AppError({ code: "NOT_FOUND", message: "Published offering image content not found.", requestId: context.requestId });
+      }
+      const headers = new Headers();
+      headers.set("Content-Type", asset.mimeType);
+      headers.set("Content-Length", String(asset.byteSize));
+      headers.set("Cache-Control", "public, max-age=300, stale-while-revalidate=60");
+      headers.set("X-Content-Type-Options", "nosniff");
+      return new Response((object as { body: ReadableStream<Uint8Array> }).body, { status: 200, headers });
+    },
+  });
+
 export function registerMediaRoutes(
   router: ApiRouter,
   database: D1Database | undefined,
@@ -136,6 +189,126 @@ export function registerMediaRoutes(
       return json({ data: asset }, 200, context.requestId);
     },
   });
+}
+
+
+interface PublicOfferingMediaRecord {
+  readonly assetId: string;
+  readonly storageKey: string;
+  readonly mimeType: string;
+  readonly byteSize: number;
+  readonly width: number | null;
+  readonly height: number | null;
+  readonly purpose: string;
+  readonly position: number;
+}
+
+const publicOfferingMediaSelect = `
+  SELECT a.id AS assetId,
+         COALESCE((
+           SELECT v.storage_key FROM media_variants v
+           WHERE v.asset_id = a.id AND v.status = 'ready'
+             AND v.variant_key IN ('detail', 'card', 'thumbnail')
+             AND v.mime_type LIKE 'image/%'
+           ORDER BY CASE v.variant_key WHEN 'detail' THEN 0 WHEN 'card' THEN 1 ELSE 2 END
+           LIMIT 1
+         ), '') AS storageKey,
+         COALESCE((
+           SELECT v.mime_type FROM media_variants v
+           WHERE v.asset_id = a.id AND v.status = 'ready'
+             AND v.variant_key IN ('detail', 'card', 'thumbnail')
+             AND v.mime_type LIKE 'image/%'
+           ORDER BY CASE v.variant_key WHEN 'detail' THEN 0 WHEN 'card' THEN 1 ELSE 2 END
+           LIMIT 1
+         ), '') AS mimeType,
+         COALESCE((
+           SELECT v.byte_size FROM media_variants v
+           WHERE v.asset_id = a.id AND v.status = 'ready'
+             AND v.variant_key IN ('detail', 'card', 'thumbnail')
+             AND v.mime_type LIKE 'image/%'
+           ORDER BY CASE v.variant_key WHEN 'detail' THEN 0 WHEN 'card' THEN 1 ELSE 2 END
+           LIMIT 1
+         ), 0) AS byteSize,
+         (
+           SELECT v.width FROM media_variants v
+           WHERE v.asset_id = a.id AND v.status = 'ready'
+             AND v.variant_key IN ('detail', 'card', 'thumbnail')
+             AND v.mime_type LIKE 'image/%'
+           ORDER BY CASE v.variant_key WHEN 'detail' THEN 0 WHEN 'card' THEN 1 ELSE 2 END
+           LIMIT 1
+         ) AS width,
+         (
+           SELECT v.height FROM media_variants v
+           WHERE v.asset_id = a.id AND v.status = 'ready'
+             AND v.variant_key IN ('detail', 'card', 'thumbnail')
+             AND v.mime_type LIKE 'image/%'
+           ORDER BY CASE v.variant_key WHEN 'detail' THEN 0 WHEN 'card' THEN 1 ELSE 2 END
+           LIMIT 1
+         ) AS height,
+         COALESCE((
+           SELECT l.purpose FROM media_links l
+           WHERE l.asset_id = a.id AND l.owner_type = 'offering' AND l.owner_id = o.id
+           ORDER BY l.position ASC, l.created_at ASC
+           LIMIT 1
+         ), 'primary') AS purpose,
+         COALESCE((
+           SELECT l.position FROM media_links l
+           WHERE l.asset_id = a.id AND l.owner_type = 'offering' AND l.owner_id = o.id
+           ORDER BY l.position ASC, l.created_at ASC
+           LIMIT 1
+         ), 0) AS position
+    FROM offerings o
+    INNER JOIN businesses b ON b.id = o.business_id
+    INNER JOIN media_assets a
+      ON a.organization_id = b.organization_id
+     AND a.workspace_id = b.workspace_id
+   WHERE o.id = ?
+     AND o.status = 'active'
+     AND o.publication_status = 'published'
+     AND b.status = 'active'
+     AND b.publication_status = 'published'
+     AND a.status = 'ready'
+     AND a.mime_type LIKE 'image/%'
+     AND (
+       (a.owner_type = 'offering' AND a.owner_id = o.id)
+       OR EXISTS (
+         SELECT 1 FROM media_links l
+         WHERE l.asset_id = a.id AND l.owner_type = 'offering' AND l.owner_id = o.id
+       )
+     )
+     AND EXISTS (
+       SELECT 1 FROM media_variants v
+       WHERE v.asset_id = a.id AND v.status = 'ready'
+         AND v.variant_key IN ('detail', 'card', 'thumbnail')
+         AND v.mime_type LIKE 'image/%'
+     )
+`;
+
+async function listPublishedOfferingMedia(
+  database: D1Database,
+  offeringId: string,
+): Promise<PublicOfferingMediaRecord[]> {
+  return database.all<PublicOfferingMediaRecord>(
+    publicOfferingMediaSelect + " ORDER BY position ASC, assetId ASC LIMIT 12",
+    offeringId,
+  );
+}
+
+async function getPublishedOfferingMedia(
+  database: D1Database,
+  offeringId: string,
+  assetId: string,
+): Promise<PublicOfferingMediaRecord | null> {
+  return database.first<PublicOfferingMediaRecord>(
+    publicOfferingMediaSelect + " AND a.id = ? LIMIT 1",
+    offeringId,
+    assetId,
+  );
+}
+
+function publicOfferingMediaContentPath(offeringId: string, assetId: string): string {
+  return "/api/v1/public/offerings/" + encodeURIComponent(offeringId)
+    + "/media/" + encodeURIComponent(assetId) + "/content";
 }
 
 function createService(
