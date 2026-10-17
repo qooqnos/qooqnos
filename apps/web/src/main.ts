@@ -8703,6 +8703,7 @@ function renderProductStudio(): string {
           <label class="media-dropzone phoenix-reset-studio-dropzone" for="studio-file">
             <input id="studio-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic" />
             <span class="media-drop-icon">＋</span>
+            <img id="studio-image-preview" class="phoenix-reset-studio-image-preview" alt="" hidden />
             <span class="phoenix-reset-studio-drop-copy"><strong>${ps("addProductPhoto")}</strong><small>${ps("imageFormats")}</small></span>
             <span id="studio-file-name" class="media-file-name">${ps("noImage")}</span>
           </label>
@@ -9157,6 +9158,7 @@ function bindGlobalEvents(): void {
     const name = document.querySelector<HTMLElement>("#studio-file-name");
     if (name) name.textContent = file ? `${file.name} · ${Math.round(file.size / 1024)}KB` : "بدون تصویر";
     const preview = document.querySelector<HTMLImageElement>("#studio-image-preview");
+    document.querySelector<HTMLElement>(".phoenix-reset-studio-dropzone")?.classList.toggle("has-preview", Boolean(file));
     if (preview) {
       if (studioPreviewUrl) URL.revokeObjectURL(studioPreviewUrl);
       if (file) {

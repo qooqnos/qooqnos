@@ -15065,3 +15065,22 @@ button[aria-busy="true"] .btn-spinner {
 @media(max-width:720px) {
   .social-shell .phoenix-reset-compare-media { height:112px; margin:-16px -16px 12px; }
 }
+
+
+/* Product Studio image selection: make the actual chosen image visible before draft generation. */
+.phoenix-reset-studio-image-preview {
+  display: block;
+  flex: 0 0 58px;
+  width: 58px;
+  height: 58px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+.phoenix-reset-studio-image-preview[hidden] { display: none; }
+.phoenix-reset-studio-dropzone.has-preview .media-drop-icon { display: none; }
+@media (max-width: 720px) {
+  .phoenix-reset-studio-image-preview { flex-basis: 50px; width: 50px; height: 50px; }
+}

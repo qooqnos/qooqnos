@@ -1450,6 +1450,12 @@ await page.locator("#studio-file").setInputFiles({
   mimeType: "image/png",
   buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR4nGP4z8DAAMIM////ZwAAHu8E/KPItPcAAAAASUVORK5CYII=", "base64"),
 });
+await page.waitForFunction(() => {
+  const image = document.querySelector("#studio-image-preview");
+  return image instanceof HTMLImageElement && !image.hidden && image.complete && image.naturalWidth > 0;
+});
+assert.ok(await page.locator("#studio-image-preview").isVisible(), "Seller Studio should show the selected image before generating a draft.");
+assert.ok(await page.locator(".phoenix-reset-studio-dropzone").evaluate((el) => el.classList.contains("has-preview")));
 await page.locator("[data-generate-draft]").click();
 await page.getByText("محصول تست").waitFor();
 await page.locator("[data-confirm-seller-draft]").click();
