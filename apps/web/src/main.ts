@@ -8032,6 +8032,20 @@ interface PublicOfferingVariantSelection {
   getSelected(): { readonly id: string; readonly label: string } | null;
 }
 
+function localizedPublicVariantAttributeLabel(key: string, fallbackLabel: string): string {
+  switch (key.trim().toLowerCase().replace(/[\\s-]+/g, "_")) {
+    case "color":
+    case "colour":
+      return socialCommerceUi("attributeColor");
+    case "size":
+      return socialCommerceUi("attributeSize");
+    case "material":
+      return socialCommerceUi("attributeMaterial");
+    default:
+      return fallbackLabel.trim() || key.trim();
+  }
+}
+
 function mountPublicOfferingVariantPicker(host: HTMLElement, variants: readonly PublicOfferingVariant[]): PublicOfferingVariantSelection {
   const safeVariants = variants.filter((variant) => typeof variant.id === "string" && variant.id.length > 0 && Array.isArray(variant.attributes));
   host.replaceChildren();
@@ -8058,7 +8072,7 @@ function mountPublicOfferingVariantPicker(host: HTMLElement, variants: readonly 
         && ["string", "number", "boolean"].includes(typeof attribute.value)
     ).map((attribute) => ({
       key: attribute.key.trim(),
-      label: attribute.label.trim() || attribute.key.trim(),
+      label: localizedPublicVariantAttributeLabel(attribute.key, attribute.label),
       value: String(attribute.value),
     })),
   }));
