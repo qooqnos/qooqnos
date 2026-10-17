@@ -3337,3 +3337,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The Customer mapping is resolved from the authenticated actor inside the current organization (or created for that actor only); suspended/deactivated mappings cannot initiate new conversations.
 - Reuses an existing open conversation for the same customer and seller workspace before creating one. The returned conversation ID is passed to Messages so the correct thread is selected.
 - Added repository scope tests and Playwright coverage for the product-detail → seller conversation path. Check Build, CI, Phoenix verification, and browser E2E before merging.
+
+
+## 2026-10-17 — Social comment dialog accessibility
+
+- The comment composer now locks background scrolling while open, traps keyboard focus within the modal, closes on Escape, and restores focus to the originating comment action after dismissal.
+- The original action element is carried explicitly while the feed button is disabled during the asynchronous comment request.
+- Added a visible keyboard-focus treatment for dialog controls and browser E2E assertions for focus cycling, empty-comment validation, Escape/cancel behavior, body-scroll restoration, and focus return.
+- No local comment is displayed as sent; a success message still follows the real Communication API response only.

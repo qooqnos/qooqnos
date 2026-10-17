@@ -264,10 +264,13 @@ async function persistSocialFollow(item: DiscoveryResult): Promise<boolean> {
   return true;
 }
 
-function requestSocialComment(item: DiscoveryResult): Promise<string | null> {
+function requestSocialComment(item: DiscoveryResult, trigger?: HTMLButtonElement): Promise<string | null> {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
     overlay.className = "phoenix-social-comment-backdrop";
+    const returnFocusTarget = trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const offerTitle = item.title ?? item.displayName ?? item.name ?? socialCommerceUi("feedTitle");
     overlay.innerHTML =
       '<section class="phoenix-social-comment-dialog" role="dialog" aria-modal="true" aria-labelledby="phoenix-social-comment-title" aria-describedby="phoenix-social-comment-description">' +
@@ -295,7 +298,11 @@ function requestSocialComment(item: DiscoveryResult): Promise<string | null> {
       if (settled) return;
       settled = true;
       document.removeEventListener("keydown", onDocumentKeydown);
+      document.body.style.overflow = previousBodyOverflow;
       overlay.remove();
+      window.requestAnimationFrame(() => {
+        if (returnFocusTarget?.isConnected && !returnFocusTarget.disabled) returnFocusTarget.focus();
+      });
       resolve(value);
     };
     const cancel = (): void => finish(null);
@@ -303,6 +310,26 @@ function requestSocialComment(item: DiscoveryResult): Promise<string | null> {
       if (event.key === "Escape") {
         event.preventDefault();
         cancel();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(
+        overlay.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => !element.hasAttribute("hidden"));
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) {
+        event.preventDefault();
+        return;
+      }
+      if (event.shiftKey && (document.activeElement === first || !overlay.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
@@ -336,10 +363,10 @@ function requestSocialComment(item: DiscoveryResult): Promise<string | null> {
   });
 }
 
-async function persistSocialComment(item: DiscoveryResult): Promise<boolean> {
+async function persistSocialComment(item: DiscoveryResult, trigger?: HTMLButtonElement): Promise<boolean> {
   const target = socialTarget(item);
   if (!target) throw new Error(socialCommerceUi("commentTargetMissing"));
-  const body = await requestSocialComment(item);
+  const body = await requestSocialComment(item, trigger);
   if (!body) return false;
   await apiJson("/api/v1/social/comments", {
     method: "POST",
@@ -7996,7 +8023,7 @@ function bindDiscoveryResultEvents(): void {
           else openDiscoveryResultPanel(item);
           active = true;
         } else if (button.dataset.comment !== undefined) {
-          active = await persistSocialComment(item);
+          active = await persistSocialComment(item, button);
         }
         if (button.dataset.comment !== undefined) {
           if (active) showToast(socialCommerceUi("commentSent"));
