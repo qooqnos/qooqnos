@@ -410,7 +410,18 @@ await page.route("**/api/v1/**", async (route) => {
       "variant-red-m": 1450000,
       "variant-blue-s": 1750000,
     };
-    if (variantId === "variant-blue-s") await new Promise((resolve) => setTimeout(resolve, 350));
+    if (variantId === "variant-blue-s") {
+      const sameVariantRequests = customerPriceResolutionRequests.filter((item) => item.body?.variantId === variantId).length;
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      if (sameVariantRequests > 1) {
+        await route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({ error: { code: "PRICE_RESOLUTION_UNAVAILABLE", message: "Price resolution unavailable." } }),
+        });
+        return;
+      }
+    }
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -1579,6 +1590,27 @@ assert.ok(cartVariantsForSameOffering.some((item) => item.variantId === "variant
 assert.ok(cartVariantsForSameOffering.some((item) => item.variantId === "variant-blue-s" && item.price === 1750000));
 assert.ok(selectedVariantCartPreviewText.includes("رنگ: Blue"), "Cart preview omitted chosen color: " + selectedVariantCartPreviewText);
 assert.ok(selectedVariantCartPreviewText.includes("اندازه: S"), "Cart preview omitted chosen size: " + selectedVariantCartPreviewText);
+
+await page.goto(baseURL + "/offerings/offering-1?business=biz-1");
+await page.locator(".phoenix-public-offering-page").waitFor();
+await page.locator('[data-public-offer-variant="color"]').selectOption("Blue");
+await page.locator('[data-public-offer-variant="size"]').selectOption("S");
+await page.waitForFunction(() =>
+  document.querySelector("#public-offer-price-context")?.textContent
+    === "قیمت متناسب با حساب شما تأیید نشد؛ دوباره تلاش کن یا از فروشنده بپرس."
+);
+assert.equal(await page.locator("#public-offer-price").getAttribute("data-price-amount-minor"), null,
+  "An unverified public price must not remain purchasable after customer-price lookup fails.");
+assert.equal(await page.locator("#public-offer-price").getAttribute("data-price-source"), null);
+assert.equal(await page.locator("#public-offer-primary-action").getAttribute("aria-disabled"), null);
+const cartBeforeFailedPriceClick = await page.evaluate(() => JSON.parse(localStorage.getItem("phoenix.cart_items") || "[]"));
+await page.locator("#public-offer-primary-action").click();
+assert.ok(page.url().includes("/offerings/offering-1"), "A failed customer-price lookup must not route the user to the cart.");
+assert.deepEqual(
+  await page.evaluate(() => JSON.parse(localStorage.getItem("phoenix.cart_items") || "[]")),
+  cartBeforeFailedPriceClick,
+  "A failed customer-price lookup must not mutate cart lines.",
+);
 await page.goto(baseURL + "/offerings/offering-service-1?business=biz-1");
 await page.locator(".phoenix-public-offering-page").waitFor();
 await page.waitForFunction(() => document.querySelector("#public-offer-title")?.textContent === "مشاورهٔ تخصصی");
