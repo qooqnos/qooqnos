@@ -142,4 +142,86 @@ describe("CatalogRepository", () => {
     expect(productLookup).toContain("organization_id = ?");
     expect(productLookup).toContain("workspace_id = ?");
   });
+
+  it("returns only active variants for a published public product offering and omits internal SKU fields", async () => {
+    const statements: string[] = [];
+    let currentSql = "";
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        if (currentSql.includes("FROM offerings o") && currentSql.includes("o.publication_status = 'published'")) {
+          return { productId: "product-1", organizationId: "tenant-1", workspaceId: "workspace-1" } as T;
+        }
+        if (currentSql.includes("SELECT pv.id FROM product_variants pv")) {
+          return { id: "variant-1" } as T;
+        }
+        if (currentSql.includes("FROM attribute_definitions")) {
+          return { canonicalKey: "color", name: "Color", dataType: "text", status: "active" } as T;
+        }
+        return null as T | null;
+      },
+      async all<T>() {
+        if (currentSql.includes("FROM product_variants pv") && currentSql.includes("WHERE pv.product_id = ?")) {
+          return { results: [{ id: "variant-1" }] as T[] };
+        }
+        if (currentSql.includes("FROM attribute_values WHERE target_type = ?")) {
+          return { results: [{
+            id: "value-color-1",
+            attributeDefinitionId: "attribute-color",
+            targetType: "product_variant",
+            targetId: "variant-1",
+            sourceType: "seller_input",
+            sourceReference: null,
+            confidence: 1,
+            optionId: null,
+            textValue: "Black",
+            integerValue: null,
+            numberValue: null,
+            booleanValue: null,
+            dateValue: null,
+            datetimeValue: null,
+            createdAt: "2026-10-01T00:00:00.000Z",
+            updatedAt: "2026-10-01T00:00:00.000Z",
+          }] as T[] };
+        }
+        return { results: [] as T[] };
+      },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { currentSql = sql; statements.push(sql); return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CatalogRepository(new D1Database(raw));
+    const variants = await repository.listPublishedOfferingVariants(context(), brandId<"EntityId">("offering-1"));
+    expect(variants).toEqual([{
+      id: "variant-1",
+      attributes: [{ key: "color", label: "Color", value: "Black" }],
+    }]);
+    expect(statements[0]).toContain("o.status = 'active'");
+    expect(statements[0]).toContain("o.publication_status = 'published'");
+    expect(statements[0]).toContain("b.publication_status = 'published'");
+    expect(statements.some((sql) => sql.includes("pv.status = 'active'"))).toBe(true);
+    expect(JSON.stringify(variants)).not.toContain("sku");
+  });
+
+  it("does not return variants for an unpublished offering", async () => {
+    const statements: string[] = [];
+    let currentSql = "";
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { currentSql = sql; statements.push(sql); return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CatalogRepository(new D1Database(raw));
+    await expect(repository.listPublishedOfferingVariants(context(), brandId<"EntityId">("unpublished-offer"))).resolves.toEqual([]);
+    expect(statements).toHaveLength(1);
+    expect(statements[0]).toContain("o.publication_status = 'published'");
+  });
+
 });

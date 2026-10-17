@@ -1,4 +1,4 @@
-import type { EntityId, RequestContext } from "@qooqnos/core";
+import { brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import { DatabaseError, D1Database, Repository } from "@qooqnos/database";
 import { CatalogAttributeValueRepository } from "./attribute-value-repository";
 
@@ -91,6 +91,17 @@ export interface PublicBusinessOfferingRecord {
   readonly currency: string | null;
   readonly pricingType: string | null;
 }
+export interface PublicOfferingVariantAttribute {
+  readonly key: string;
+  readonly label: string;
+  readonly value: string | number | boolean;
+}
+
+export interface PublicOfferingVariantRecord {
+  readonly id: EntityId;
+  readonly attributes: readonly PublicOfferingVariantAttribute[];
+}
+
 export interface CreateProductInput {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -463,6 +474,103 @@ export class CatalogRepository extends Repository {
       now, now, businessId, safeLimit,
     );
   }
+  async listPublishedOfferingVariants(
+    context: RequestContext,
+    offeringId: EntityId,
+    limit = 100,
+  ): Promise<readonly PublicOfferingVariantRecord[]> {
+    const scope = await this.database.first<{
+      readonly productId: EntityId;
+      readonly organizationId: EntityId;
+      readonly workspaceId: EntityId;
+    }>(
+      `SELECT o.product_id AS productId,
+              b.organization_id AS organizationId,
+              b.workspace_id AS workspaceId
+         FROM offerings o
+         INNER JOIN businesses b ON b.id = o.business_id
+         INNER JOIN products p ON p.id = o.product_id
+        WHERE o.id = ?
+          AND o.offering_type = 'product'
+          AND o.status = 'active'
+          AND o.publication_status = 'published'
+          AND b.status = 'active'
+          AND b.publication_status = 'published'
+          AND p.status != 'archived'
+        LIMIT 1`,
+      offeringId,
+    );
+    if (!scope) return [];
+
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 200);
+    const variants = await this.database.all<{ readonly id: EntityId }>(
+      `SELECT pv.id
+         FROM product_variants pv
+        WHERE pv.product_id = ?
+          AND pv.status = 'active'
+        ORDER BY pv.updated_at DESC, pv.id ASC
+        LIMIT ?`,
+      scope.productId,
+      safeLimit,
+    );
+    if (!variants.length) return [];
+
+    // The public request is intentionally unauthenticated, so scope attribute reads
+    // through the owning published business rather than any client-supplied tenant.
+    const scopedContext: RequestContext = {
+      ...context,
+      tenantId: brandId<"EntityId">(scope.organizationId),
+      workspaceId: brandId<"EntityId">(scope.workspaceId),
+    };
+    const attributesRepository = new CatalogAttributeValueRepository(this.database);
+    const result: PublicOfferingVariantRecord[] = [];
+
+    for (const variant of variants) {
+      const values = await attributesRepository.listForTarget(scopedContext, "product_variant", variant.id);
+      const attributes: PublicOfferingVariantAttribute[] = [];
+      for (const value of values) {
+        const definition = await this.database.first<{
+          readonly canonicalKey: string;
+          readonly name: string;
+          readonly dataType: string;
+          readonly status: string;
+        }>(
+          `SELECT canonical_key AS canonicalKey, name, data_type AS dataType, status
+             FROM attribute_definitions
+            WHERE id = ?
+            LIMIT 1`,
+          value.attributeDefinitionId,
+        );
+        if (!definition || definition.status !== "active" || definition.dataType === "multi_enum") continue;
+
+        let publicValue: string | number | boolean | null = null;
+        if (value.scalar) {
+          publicValue = value.scalar.value;
+        } else if (value.optionId) {
+          const option = await this.database.first<{ readonly displayLabel: string }>(
+            `SELECT display_label AS displayLabel
+               FROM attribute_options
+              WHERE id = ?
+                AND attribute_definition_id = ?
+                AND status = 'active'
+              LIMIT 1`,
+            value.optionId,
+            value.attributeDefinitionId,
+          );
+          if (option) publicValue = option.displayLabel;
+        }
+        if (publicValue === null) continue;
+        attributes.push({
+          key: definition.canonicalKey,
+          label: definition.name,
+          value: publicValue,
+        });
+      }
+      result.push({ id: variant.id, attributes });
+    }
+    return result;
+  }
+
   async getOffering(context: RequestContext, id: EntityId): Promise<OfferingRecord | null> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });

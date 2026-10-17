@@ -604,6 +604,21 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
 
   router.register({
     method: "GET",
+    path: "/api/v1/public/offerings/:offeringId/variants",
+    module: "catalog",
+    operation: "catalog.offering.public_variants",
+    requireAuthentication: false,
+    requireWorkspace: false,
+    handler: async ({ context, params }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const offeringId = brandId<"EntityId">(requiredRouteParam(params, "offeringId", context.requestId));
+      const data = await new CatalogRepository(database).listPublishedOfferingVariants(context, offeringId, 100);
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "GET",
     path: "/api/v1/public/businesses/:businessId",
     module: "business",
     operation: "business.public.read",
