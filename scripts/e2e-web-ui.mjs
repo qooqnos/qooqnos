@@ -1040,6 +1040,7 @@ assert.equal(new URL(await canonicalOfferLink.getAttribute("href"), baseURL).pat
 assert.equal(new URL(await canonicalOfferLink.getAttribute("href"), baseURL).searchParams.get("business"), "biz-1");
 await canonicalOfferLink.click();
 await page.locator(".phoenix-public-offering-page").waitFor();
+await page.waitForFunction(() => document.querySelector("#public-offer-title")?.textContent === "کیف دست‌دوز");
 assert.equal(await page.locator("#public-offer-title").innerText(), "کیف دست‌دوز");
 await page.locator('[data-public-offer-variant="color"]').selectOption("Red");
 await page.locator('[data-public-offer-variant="size"]').selectOption("S");
