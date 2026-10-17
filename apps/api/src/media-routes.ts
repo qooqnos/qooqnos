@@ -1,7 +1,7 @@
 import { MediaRepository, MediaService, type MediaAssetStatus } from "@qooqnos/media";
 import { AuthorizationRepository } from "@qooqnos/database";
 import { createAuthorizationService, type AuthorizationRegistry } from "@qooqnos/runtime";
-import { AppError, brandId, type EntityId } from "@qooqnos/core";
+import { AppError, brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
 import type { ApiEnv } from "./env";
 import type { ApiRouter } from "./router";
@@ -86,6 +86,9 @@ export function registerMediaRoutes(
 
       const ownerType = requiredString(form.get("ownerType"), "ownerType", context.requestId);
       const ownerId = brandId<EntityId>(requiredString(form.get("ownerId"), "ownerId", context.requestId));
+      if (ownerType === "business") {
+        await assertBusinessMediaAccess(database, authorization, context, ownerId);
+      }
       const preparedImageVersion = form.get("preparedImage");
       let preparedDimensions: { width: number; height: number } | null = null;
       if (preparedImageVersion !== null) {
@@ -182,6 +185,7 @@ export function registerMediaRoutes(
         context.workspaceId,
       );
       if (!offering) throw new AppError({ code: "NOT_FOUND", message: "Offering is not available in the current workspace.", requestId: context.requestId });
+      await assertBusinessMediaAccess(database, authorization, context, brandId<EntityId>(offering.businessId));
       const asset = await database.first<{ id: string }>(
         `SELECT a.id
            FROM media_assets a
@@ -437,6 +441,37 @@ async function getPublishedOfferingMedia(
 function publicOfferingMediaContentPath(offeringId: string, assetId: string): string {
   return "/api/v1/public/offerings/" + encodeURIComponent(offeringId)
     + "/media/" + encodeURIComponent(assetId) + "/content";
+}
+
+
+async function assertBusinessMediaAccess(
+  database: D1Database,
+  authorization: AuthorizationRegistry | undefined,
+  context: RequestContext,
+  businessId: EntityId,
+): Promise<void> {
+  const business = await database.first<{ organizationId: EntityId; workspaceId: EntityId }>(
+    `SELECT organization_id AS organizationId, workspace_id AS workspaceId
+       FROM businesses
+      WHERE id = ? AND organization_id = ? AND workspace_id = ?
+      LIMIT 1`,
+    businessId,
+    context.tenantId,
+    context.workspaceId,
+  );
+  if (!business) {
+    throw new AppError({ code: "NOT_FOUND", message: "Business is not available in the current workspace.", requestId: context.requestId });
+  }
+  if (!authorization) {
+    throw new AppError({ code: "INTERNAL_ERROR", message: "Authorization registry is not configured.", requestId: context.requestId });
+  }
+  await createAuthorizationService(new AuthorizationRepository(database), authorization).assert({
+    context,
+    permission: "business.update",
+    resource: { tenantId: business.organizationId, workspaceId: business.workspaceId },
+    requireAuthentication: true,
+    requireWorkspace: true,
+  });
 }
 
 function createService(
