@@ -27,6 +27,7 @@ import {
   renderConsumerMessages,
   renderConsumerLoyalty,
   getCartItems,
+  addCartItem,
   saveCartItems,
   updateCartQuantity,
   removeCartItem,
@@ -119,10 +120,12 @@ describe("Phoenix Unified Experience (apps/web/src/phoenix-experience.ts)", () =
     expect(renderConsumerHome()).toContain("هر چی می‌خوای بگو تا ققنوس برات پیداش کنه");
     expect(renderConsumerProductDetails()).toContain("جزئیات محصول");
     expect(renderConsumerProductDetails()).toContain("افزودن به سبد خرید");
-    expect(renderConsumerCart()).toContain("سبد خرید");
-    expect(renderConsumerCart()).toContain("مجموع تقریبی اقلام محلی");
-    expect(renderConsumerCart()).toContain("پیش‌نمایش سبد محلی");
-    expect(renderConsumerCart()).toContain("هزینهٔ ارسال پس از بررسی سفارش مشخص می‌شود.");
+    const emptyCart = renderConsumerCart();
+    expect(emptyCart).toContain("سبد خرید");
+    expect(emptyCart).toContain("سبد خرید شما خالی است");
+    expect(emptyCart).toContain("پیش‌نمایش سبد محلی");
+    expect(emptyCart).not.toContain("مجموع تقریبی اقلام محلی");
+    expect(emptyCart).not.toContain("بسته هوشمند سازمانی ققنوس");
     expect(renderConsumerPayment()).toContain("پرداخت امن هنوز متصل نشده است.");
     expect(renderConsumerPayment()).toContain("سفارشی ثبت نمی‌شود و مبلغی کسر نخواهد شد.");
     expect(renderConsumerPayment()).toContain("اقلام انتخاب‌شده");
@@ -135,6 +138,32 @@ describe("Phoenix Unified Experience (apps/web/src/phoenix-experience.ts)", () =
     expect(renderConsumerMessages()).toContain("پشتیبانی ققنوس");
     expect(renderConsumerLoyalty()).toContain("امتیاز و رتبه");
     expect(renderConsumerLoyalty()).toContain("۴۰٪");
+  });
+
+  it("starts empty, adds a priced offer, and merges repeated additions", () => {
+    if (typeof localStorage !== "undefined") localStorage.removeItem("phoenix.cart_items");
+    expect(getCartItems()).toEqual([]);
+
+    const input = {
+      id: "offer-cart-unit-test",
+      title: "میز چوبی",
+      category: "کالا",
+      price: 25000000,
+      currency: "ریال",
+    };
+    expect(addCartItem(input)).toHaveLength(1);
+    expect(addCartItem(input)[0]?.quantity).toBe(2);
+    expect(getCartItems()[0]).toMatchObject({
+      id: "offer-cart-unit-test",
+      title: "میز چوبی",
+      price: 25000000,
+      currency: "ریال",
+      quantity: 2,
+    });
+    expect(renderConsumerCart()).toContain("میز چوبی");
+    expect(renderConsumerCart()).toContain("ریال");
+    expect(renderConsumerCart()).toContain("مجموع تقریبی اقلام محلی");
+    saveCartItems([]);
   });
 
   it("manages cart items and financial calculations", () => {

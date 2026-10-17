@@ -44,6 +44,7 @@ import {
   renderBusinessOrgProfile,
   renderConsumerCart,
   renderConsumerPayment,
+  addCartItem,
   renderConsumerLoyalty,
   bindPhoenixExperienceEvents,
 } from "./phoenix-experience.js";
@@ -6296,6 +6297,10 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
       : businessId
         ? '<a class="button button-primary" href="/businesses/' + encodeURIComponent(businessId) + '" data-nav>' + uiText("شناخت فروشنده") + ' <span aria-hidden="true">←</span></a>'
         : '<span class="phoenix-detail-contact-note">' + uiText("اطلاعات عمومی فروشنده در این عرضه موجود نیست.") + '</span>';
+  const cartPrice = item.price === null || item.price === undefined ? Number.NaN : Number(item.price);
+  const cartCurrency = typeof item.currency === "string" ? item.currency.trim() : "";
+  const canAddToReviewCart = isProduct && Boolean((item.sourceId ?? key).trim())
+    && Number.isFinite(cartPrice) && cartPrice >= 0 && Boolean(cartCurrency);
 
   const overlay = document.createElement("div");
   overlay.className = "connection-overlay phoenix-detail-overlay";
@@ -6324,6 +6329,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
           ${metadataEntries.length ? '<section class="phoenix-detail-attributes"><h3>' + uiText("مشخصات ثبت‌شده") + '</h3><dl>' + metadataEntries.map(([label, value]) => '<div><dt>' + escapeHtml(uiText(label)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>').join("") + '</dl></section>' : ""}
           <div class="phoenix-detail-actions">
             ${mainAction}
+            ${canAddToReviewCart ? '<button class="button button-primary phoenix-detail-add-to-cart" type="button" data-add-to-cart-detail>＋ ' + socialCommerceUi("addToReviewCart") + '</button>' : ""}
             ${businessId ? '<button class="button button-primary phoenix-detail-ask-seller" type="button" data-ask-seller-detail>' + socialCommerceUi("detailAskSeller") + ' <span aria-hidden="true">←</span></button>' : ""}
             ${followTargetId ? '<button class="button button-ghost phoenix-detail-follow-button' + (initiallyFollowing ? ' selected' : '') + '" type="button" data-follow-seller-detail aria-pressed="' + String(initiallyFollowing) + '">' + (initiallyFollowing ? socialCommerceUi("detailFollowingSeller") : socialCommerceUi("detailFollowSeller")) + '</button>' : ""}
             ${isProduct ? '<button class="button button-ghost" type="button" data-compare-detail="' + escapeAttr(key) + '">⚖ ' + uiText("مقایسه") + '</button>' : ""}
@@ -6352,6 +6358,28 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
   document.addEventListener("keydown", handleDetailKeydown);
   overlay.querySelectorAll<HTMLElement>("[data-close-discovery]").forEach((node) => node.addEventListener("click", closeDetail));
   overlay.querySelector<HTMLButtonElement>(".connection-close")?.focus();
+
+  const addToReviewCartButton = overlay.querySelector<HTMLButtonElement>("[data-add-to-cart-detail]");
+  addToReviewCartButton?.addEventListener("click", () => {
+    if (!canAddToReviewCart || addToReviewCartButton.disabled) return;
+    addToReviewCartButton.disabled = true;
+    try {
+      addCartItem({
+        id: item.sourceId ?? key,
+        title,
+        category: typeLabel,
+        price: cartPrice,
+        currency: cartCurrency,
+        ...(mediaUrl ? { imageUrl: mediaUrl } : {}),
+      });
+      closeDetail();
+      showToast(socialCommerceUi("addedToReviewCartToast"));
+      navigate("/cart");
+    } catch {
+      addToReviewCartButton.disabled = false;
+      showToast(socialCommerceUi("reviewCartAddError"));
+    }
+  });
 
   const askSellerButton = overlay.querySelector<HTMLButtonElement>("[data-ask-seller-detail]");
   askSellerButton?.addEventListener("click", async () => {

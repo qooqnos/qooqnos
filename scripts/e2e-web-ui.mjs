@@ -727,12 +727,10 @@ await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);
 
-// Legacy local cart and checkout must never pretend a payment or order succeeded.
+// Start with an empty cart; the browser test adds a real-priced discovery result below.
 await page.evaluate(() => {
   localStorage.setItem("phoenix.active_persona", "consumer");
-  localStorage.setItem("phoenix.cart_items", JSON.stringify([
-    { id: "local-preview-item", title: "محصول نمایشی محلی", category: "پیش‌نمایش", price: 1234, quantity: 2 },
-  ]));
+  localStorage.removeItem("phoenix.cart_items");
 });
 await page.goto(baseURL + "/create");
 assert.ok(await page.locator(".phoenix-reset-create-page").count() > 0);
@@ -843,6 +841,19 @@ assert.ok(notificationsAr.includes("تم تأكيد الحجز"), "Arabic notifi
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='fa']").click();
 
+await page.goto(baseURL + "/");
+await page.locator("#discover-query").fill("میز چوبی");
+await page.locator("[data-run-discovery]").click();
+await page.getByRole("heading", { name: "موجودیت واقعی تست" }).waitFor();
+await page.locator(".phoenix-post-card [data-discovery-index='1']").click();
+await page.locator(".phoenix-detail-modal").waitFor();
+assert.equal(await page.locator("[data-add-to-cart-detail]").count(), 1);
+await page.locator("[data-add-to-cart-detail]").click();
+await page.locator(".phoenix-screen-wrapper").waitFor();
+const localCartAfterAdd = await page.locator(".phoenix-screen-wrapper").innerText();
+assert.ok(localCartAfterAdd.includes("میز چوبی"));
+assert.ok(localCartAfterAdd.includes("ریال"));
+assert.ok(!localCartAfterAdd.includes("محصول نمایشی محلی"));
 await page.goto(baseURL + "/cart");
 const cartPreviewText = await page.locator(".phoenix-screen-wrapper").innerText();
 assert.ok(cartPreviewText.includes("پیش‌نمایش سبد محلی"));
@@ -861,7 +872,9 @@ assert.equal(await page.locator(".phoenix-checkout-review button[type='submit']"
 const checkoutPreviewFa = await page.locator(".phoenix-checkout-review").innerText();
 assert.ok(checkoutPreviewFa.includes("پرداخت امن هنوز متصل نشده است."));
 assert.ok(checkoutPreviewFa.includes("مبلغی کسر نخواهد شد"));
-assert.ok(checkoutPreviewFa.includes("محصول نمایشی محلی"));
+assert.ok(checkoutPreviewFa.includes("میز چوبی"));
+assert.ok(checkoutPreviewFa.includes("ریال"));
+assert.ok(!checkoutPreviewFa.includes("محصول نمایشی محلی"));
 assert.ok(!checkoutPreviewFa.includes("سفارش با موفقیت ثبت و پرداخت شد"));
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='en']").click();

@@ -81,37 +81,88 @@ export interface PhoenixCartItem {
   category: string;
   price: number;
   quantity: number;
+  currency?: string;
   imageUrl?: string;
 }
 
-const DEFAULT_CART_ITEMS: PhoenixCartItem[] = [
-  {
-    id: "item-1",
-    title: "بسته هوشمند سازمانی ققنوس",
-    category: "محصول دیجیتال",
-    price: 120000,
-    quantity: 1,
-  },
-  {
-    id: "item-2",
-    title: "صنایع دستی و هنر خاتم‌کاری",
-    category: "محصول فیزیکی",
-    price: 30000,
-    quantity: 1,
-  },
-];
+function isPhoenixCartItem(value: unknown): value is PhoenixCartItem {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return typeof item.id === "string"
+    && typeof item.title === "string"
+    && typeof item.category === "string"
+    && typeof item.price === "number"
+    && Number.isFinite(item.price)
+    && item.price >= 0
+    && typeof item.quantity === "number"
+    && Number.isSafeInteger(item.quantity)
+    && item.quantity > 0;
+}
+
+function isLegacySampleCartItem(item: PhoenixCartItem): boolean {
+  return (item.id === "item-1" && item.title === "بسته هوشمند سازمانی ققنوس")
+    || (item.id === "item-2" && item.title === "صنایع دستی و هنر خاتم‌کاری");
+}
 
 export function getCartItems(): PhoenixCartItem[] {
   try {
     const raw = getStorageItem(CART_STORAGE_KEY);
-    if (!raw) {
-      setStorageItem(CART_STORAGE_KEY, JSON.stringify(DEFAULT_CART_ITEMS));
-      return DEFAULT_CART_ITEMS;
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      setStorageItem(CART_STORAGE_KEY, "[]");
+      return [];
     }
-    return JSON.parse(raw);
+    const validItems = parsed.filter(isPhoenixCartItem);
+    const items = validItems.filter((item) => !isLegacySampleCartItem(item));
+    if (items.length !== parsed.length) setStorageItem(CART_STORAGE_KEY, JSON.stringify(items));
+    return items;
   } catch {
-    return DEFAULT_CART_ITEMS;
+    return [];
   }
+}
+
+export interface AddPhoenixCartItemInput {
+  readonly id: string;
+  readonly title: string;
+  readonly category: string;
+  readonly price: number;
+  readonly currency: string;
+  readonly imageUrl?: string;
+}
+
+export function addCartItem(input: AddPhoenixCartItemInput): PhoenixCartItem[] {
+  const id = input.id.trim();
+  const title = input.title.trim();
+  const currency = input.currency.trim();
+  if (!id || !title || !currency || !Number.isFinite(input.price) || input.price < 0) {
+    throw new Error("A real item ID, title, non-negative price and currency are required.");
+  }
+
+  const items = getCartItems();
+  const existing = items.find((item) => item.id === id && (item.currency?.trim() || ui("تومان")) === currency);
+  const next = existing
+    ? items.map((item) => item === existing ? { ...item, quantity: item.quantity + 1 } : item)
+    : [...items, {
+        id,
+        title,
+        category: input.category,
+        price: input.price,
+        currency,
+        quantity: 1,
+        ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}),
+      }];
+  saveCartItems(next);
+  return next;
+}
+
+function getCartCurrencyTotals(items: readonly PhoenixCartItem[]): Array<{ currency: string; subtotal: number }> {
+  const totals = new Map<string, number>();
+  for (const item of items) {
+    const currency = item.currency?.trim() || ui("تومان");
+    totals.set(currency, (totals.get(currency) ?? 0) + item.price * item.quantity);
+  }
+  return [...totals.entries()].map(([currency, subtotal]) => ({ currency, subtotal }));
 }
 
 export function saveCartItems(items: PhoenixCartItem[]): void {
@@ -1909,9 +1960,16 @@ export function renderConsumerProductDetails(): string {
  */
 export function renderConsumerCart(): string {
   const items = getCartItems();
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = items.length > 0 ? 0 : 0;
-  const total = subtotal + shipping;
+  const currencyTotals = getCartCurrencyTotals(items);
+  const currencySubtotalRows = currencyTotals.length > 1
+    ? currencyTotals.map((entry) =>
+        '<div class="phoenix-cart-row"><span>' + ui("مجموع") + ' (' + escapeHtml(entry.currency) + ')</span><span>' +
+        entry.subtotal.toLocaleString("fa-IR") + ' ' + escapeHtml(entry.currency) + '</span></div>'
+      ).join("")
+    : "";
+  const singleCurrencyTotal = currencyTotals.length === 1
+    ? currencyTotals[0]!.subtotal.toLocaleString("fa-IR") + " " + currencyTotals[0]!.currency
+    : ui("مجموع به تفکیک ارز");
 
   return `
     <div class="phoenix-screen-wrapper">
@@ -1939,7 +1997,7 @@ export function renderConsumerCart(): string {
               <div class="phoenix-cart-item" data-item-id="${item.id}">
                 <div>
                   <strong style="display:block; font-size:14px;">${escapeHtml(item.title)}</strong>
-                  <small style="color: var(--muted);">${escapeHtml(item.category)} · ${item.price.toLocaleString("fa-IR")} تومان</small>
+                  <small style="color: var(--muted);">${escapeHtml(item.category)} · ${item.price.toLocaleString("fa-IR")} ${escapeHtml(item.currency || ui("تومان"))}</small>
                 </div>
                 <div class="phoenix-cart-qty-ctrl">
                   <button type="button" class="phoenix-cart-qty-btn" data-cart-minus="${item.id}">−</button>
@@ -1952,18 +2010,16 @@ export function renderConsumerCart(): string {
 
           <!-- Financial Calculation Summary -->
           <div class="phoenix-cart-summary">
-            <div class="phoenix-cart-row">
-              <span>${ui("جمع کل")}</span>
-              <span>${subtotal.toLocaleString("fa-IR")} ${ui("تومان")}</span>
-            </div>
+            ${currencyTotals.length > 1 ? currencySubtotalRows : '<div class="phoenix-cart-row"><span>' + ui("جمع کل") + '</span><span>' + (currencyTotals[0]?.subtotal ?? 0).toLocaleString("fa-IR") + ' ' + escapeHtml(currencyTotals[0]?.currency ?? ui("تومان")) + '</span></div>'}
             <div class="phoenix-cart-row">
               <span>${ui("هزینه ارسال")}</span>
               <span>${ui("هزینهٔ ارسال پس از بررسی سفارش مشخص می‌شود.")}</span>
             </div>
             <div class="phoenix-cart-row phoenix-cart-total">
               <span>${ui("مجموع تقریبی اقلام محلی")}</span>
-              <span style="color: var(--primary);">${total.toLocaleString("fa-IR")} ${ui("تومان")}</span>
+              <span style="color: var(--primary);">${escapeHtml(singleCurrencyTotal)}</span>
             </div>
+            ${currencyTotals.length > 1 ? '<small class="phoenix-checkout-preview-note">' + ui("ارزهای متفاوت جداگانه نمایش داده می‌شوند.") + '</small>' : ""}
           </div>
 
           <a href="/checkout" data-nav class="phoenix-primary-cta" style="margin-top: 8px;">
@@ -1981,7 +2037,10 @@ export function renderConsumerCart(): string {
  */
 export function renderConsumerPayment(): string {
   const items = getCartItems();
-  const estimatedSubtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const currencyTotals = getCartCurrencyTotals(items);
+  const estimatedSubtotal = currencyTotals.length === 1
+    ? currencyTotals[0]!.subtotal.toLocaleString("fa-IR") + " " + currencyTotals[0]!.currency
+    : ui("مجموع به تفکیک ارز");
 
   return `
     <div class="phoenix-screen-wrapper phoenix-checkout-review">
@@ -2019,13 +2078,13 @@ export function renderConsumerPayment(): string {
                     <strong>${escapeHtml(item.title)}</strong>
                     <small>${escapeHtml(item.category)} · ${ui("تعداد")} ${item.quantity.toLocaleString("fa-IR")}</small>
                   </div>
-                  <span class="phoenix-checkout-review-item-total">${(item.price * item.quantity).toLocaleString("fa-IR")} ${ui("تومان")}</span>
+                  <span class="phoenix-checkout-review-item-total">${(item.price * item.quantity).toLocaleString("fa-IR")} ${escapeHtml(item.currency || ui("تومان"))}</span>
                 </article>
               `).join("")}
             </div>
             <div class="phoenix-checkout-review-total">
               <span>${ui("مجموع تقریبی اقلام محلی")}</span>
-              <strong>${estimatedSubtotal.toLocaleString("fa-IR")} ${ui("تومان")}</strong>
+              <strong>${escapeHtml(estimatedSubtotal)}</strong>
             </div>
           ` : `
             <div class="phoenix-checkout-review-empty">
