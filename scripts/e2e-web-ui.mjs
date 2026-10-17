@@ -572,6 +572,7 @@ await page.locator("[data-language-option='fa']").click();
 await page.waitForTimeout(50);
 await page.locator("#public-business-page-offers a[href*='/offerings/offering-1?business=biz-1']").click();
 await page.locator(".phoenix-public-offering-page").waitFor();
+await page.waitForFunction(() => document.querySelector("#public-offer-title")?.textContent === "کیف دست‌دوز");
 assert.equal(await page.locator("#public-offer-title").innerText(), "کیف دست‌دوز");
 assert.ok((await page.locator(".phoenix-public-offering-page").innerText()).includes("کیف دست‌دوز"));
 assert.equal(await page.locator(".phoenix-public-offering-page a[href*='/checkout']").count(), 0);
@@ -1324,6 +1325,7 @@ assert.equal(await page.locator(".phoenix-reset-start-page [data-open-register]"
 
 await page.goto(baseURL + "/offerings/offering-1?business=biz-1");
 await page.locator(".phoenix-public-offering-page").waitFor();
+await page.waitForFunction(() => document.querySelector("#public-offer-title")?.textContent === "کیف دست‌دوز");
 assert.equal(await page.locator("#public-offer-title").innerText(), "کیف دست‌دوز");
 assert.equal(await page.locator("#public-offer-seller-name").innerText(), "ترنج");
 assert.ok((await page.locator("#public-offer-price").innerText()).length > 0);
