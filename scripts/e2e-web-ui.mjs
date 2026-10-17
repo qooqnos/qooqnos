@@ -1214,6 +1214,17 @@ assert.ok(!startPageText.includes("خرید امن با درگاه"));
 assert.ok(!startPageText.includes("امتیاز، رتبه و تخفیف‌های ویژه"));
 assert.equal(await page.locator(".phoenix-reset-start-page [data-open-register]").count(), 2);
 
+
+await page.goto(baseURL + "/offerings/offering-1?business=biz-1");
+await page.locator(".phoenix-public-offering-page").waitFor();
+assert.equal(await page.locator("#public-offer-title").innerText(), "کیف دست‌دوز");
+assert.equal(await page.locator("#public-offer-seller-name").innerText(), "ترنج");
+assert.ok((await page.locator("#public-offer-price").innerText()).length > 0);
+assert.ok((await page.locator("#public-offer-description").innerText()).includes("نمونهٔ کالای منتشرشده"));
+assert.ok(await page.locator("#public-offer-primary-action").isVisible());
+await page.goto(baseURL + "/offerings/does-not-exist?business=biz-1");
+await page.locator(".phoenix-public-offering-page").waitFor();
+await page.waitForFunction(() => document.querySelector("#public-offer-title")?.textContent === "این عرضه در دسترس نیست");
 await page.goto(baseURL + "/product/demo");
 await page.locator(".phoenix-reset-product-unavailable").waitFor();
 const unavailableProductText = await page.locator(".phoenix-reset-product-unavailable").innerText();

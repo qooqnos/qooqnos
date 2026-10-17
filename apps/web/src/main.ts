@@ -758,6 +758,9 @@ function currentRoute(): Route {
   // route owns that URL; /business?module=... remains an intentional dynamic route.
   const businessModule = parseBusinessModuleRequest(normalized)
     ?? (staticRoute ? null : parseBusinessModuleAliasPath(normalized));
+  if (/^\/offerings\/[^/]+$/.test(normalized)) {
+    return { path: normalized, label: "جزئیات عرضه", icon: "▣", render: renderPublicOfferingDetail };
+  }
   if (normalized.startsWith("/businesses/") && normalized.split("/").filter(Boolean).length === 2) {
     return {
       path: normalized,
@@ -794,7 +797,7 @@ function navigate(path: string): void {
   const targetPath = normalizePath(url.pathname);
   const targetUrl = targetPath + url.search + url.hash;
   const currentUrl = normalizePath(location.pathname) + location.search + location.hash;
-  const isKnownDynamicBusinessPath = Boolean(parseBusinessModulePath(targetPath) || parseBusinessModuleAliasPath(targetPath, url.search)) || targetPath.startsWith("/businesses/");
+  const isKnownDynamicBusinessPath = Boolean(parseBusinessModulePath(targetPath) || parseBusinessModuleAliasPath(targetPath, url.search)) || targetPath.startsWith("/businesses/") || /^\/offerings\/[^/]+$/.test(targetPath);
   if (targetPath !== normalizePath(location.pathname) && !routes.some((route) => route.path === targetPath) && !isKnownDynamicBusinessPath) {
     window.location.assign(targetUrl);
     return;
@@ -814,7 +817,8 @@ function render(): void {
   if (route.label !== "صفحه عمومی") clearHydratedSeoSurface(route);
   const isHome = route.path === "/welcome" || route.path === "/consumer/welcome" || route.path === "/business/welcome";
   const isPublicBusiness = route.path.startsWith("/businesses/");
-  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || (route.path === "/transactions" && getActivePersona() !== "business") || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/account" || route.path === "/settings" || route.path === "/cart" || route.path === "/checkout" || route.path === "/consumer/payment" || route.path === "/product/demo" || route.path === "/booking" || isPublicBusiness;
+  const isPublicOffering = /^\/offerings\/[^/]+$/.test(route.path);
+  const isSocial = route.path === "/" || route.path === "/discover" || route.path === "/create" || route.path === "/compare" || route.path === "/activity" || route.path === "/messages" || route.path === "/orders" || (route.path === "/transactions" && getActivePersona() !== "business") || route.path === "/saved" || route.path === "/profile" || route.path === "/notifications" || route.path === "/account" || route.path === "/settings" || route.path === "/cart" || route.path === "/checkout" || route.path === "/consumer/payment" || route.path === "/product/demo" || route.path === "/booking" || isPublicBusiness || isPublicOffering;
   const socialActive: "feed" | "following" | "explore" | "activity" | "none" =
     route.path === "/" ? "feed"
       : route.path === "/activity" || route.path === "/notifications" ? "activity"
@@ -923,6 +927,7 @@ function render(): void {
     document.querySelector<HTMLButtonElement>("#public-business-review")?.addEventListener("click", () => void openPublicBusinessReview(route.path));
     document.querySelector<HTMLButtonElement>("#public-business-share")?.addEventListener("click", () => void sharePublicBusiness());
   }
+  if (/^\/offerings\/[^/]+$/.test(route.path)) void loadPublicOfferingDetail(route.path);
   if (route.path === "/trust") void loadTrustSignals();
   if (route.path === "/operations") void loadCases();
   if (route.path === "/seo") void loadSeoHealth();
@@ -6383,6 +6388,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
           ${metadataEntries.length ? '<section class="phoenix-detail-attributes"><h3>' + uiText("مشخصات ثبت‌شده") + '</h3><dl>' + metadataEntries.map(([label, value]) => '<div><dt>' + escapeHtml(uiText(label)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>').join("") + '</dl></section>' : ""}
           <div class="phoenix-detail-actions">
             ${mainAction}
+            ${businessId ? '<a class="button button-ghost phoenix-detail-open-full" href="/offerings/' + encodeURIComponent(key) + '?business=' + encodeURIComponent(businessId) + '" data-nav>' + uiText("صفحه کامل عرضه") + ' <span aria-hidden="true">←</span></a>' : ""}
             ${canAddToReviewCart ? '<button class="button button-primary phoenix-detail-add-to-cart" type="button" data-add-to-cart-detail>＋ ' + socialCommerceUi("addToReviewCart") + '</button>' : ""}
             ${businessId ? '<button class="button button-primary phoenix-detail-ask-seller" type="button" data-ask-seller-detail>' + socialCommerceUi("detailAskSeller") + ' <span aria-hidden="true">←</span></button>' : ""}
             ${followTargetId ? '<button class="button button-ghost phoenix-detail-follow-button' + (initiallyFollowing ? ' selected' : '') + '" type="button" data-follow-seller-detail aria-pressed="' + String(initiallyFollowing) + '">' + (initiallyFollowing ? socialCommerceUi("detailFollowingSeller") : socialCommerceUi("detailFollowSeller")) + '</button>' : ""}
@@ -7228,6 +7234,32 @@ function renderBusinessPublic(): string {
   '</div>';
 }
 
+function renderPublicOfferingDetail(): string {
+  return '<div class="phoenix-reset-page phoenix-public-offering-page">' +
+    '<nav class="phoenix-public-offering-breadcrumb" aria-label="' + escapeAttr(uiText("مسیر صفحه")) + '">' +
+      '<a href="/discover?tab=explore" data-nav>' + socialCommerceUi("tabExplore") + '</a><span aria-hidden="true">/</span><span>' + uiText("جزئیات کالا یا خدمت") + '</span></nav>' +
+    '<div class="phoenix-public-offering-layout">' +
+      '<section class="phoenix-public-offering-media" aria-label="' + escapeAttr(uiText("تصویر عرضه")) + '">' +
+        '<div class="phoenix-public-offering-image-placeholder"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + uiText("در حال بارگذاری عرضه") + '</span></div></section>' +
+      '<article class="phoenix-public-offering-main">' +
+        '<div class="phoenix-public-offering-badges"><span class="phoenix-public-offering-type" id="public-offer-type">' + uiText("در حال بارگذاری") + '</span><span class="phoenix-public-offering-published" id="public-offer-published">' + uiText("بررسی انتشار") + '</span></div>' +
+        '<h1 id="public-offer-title">' + uiText("در حال بارگذاری عرضه") + '</h1>' +
+        '<p class="phoenix-public-offering-description" id="public-offer-description">' + uiText("جزئیات عرضهٔ منتشرشده از منبع اصلی خوانده می‌شود.") + '</p>' +
+        '<div class="phoenix-public-offering-price"><span>' + uiText("قیمت ثبت‌شده") + '</span><strong id="public-offer-price">—</strong></div>' +
+        '<a class="phoenix-public-offering-seller" id="public-offer-seller" href="/discover?tab=explore" data-nav>' +
+          '<span class="phoenix-public-offering-seller-avatar" id="public-offer-seller-avatar" aria-hidden="true">ق</span>' +
+          '<span><small>' + uiText("ارائه‌دهنده") + '</small><strong id="public-offer-seller-name">' + uiText("در حال خواندن اطلاعات فروشنده") + '</strong></span><span aria-hidden="true">←</span></a>' +
+        '<div class="phoenix-public-offering-actions" id="public-offer-actions">' +
+          '<a class="button button-primary" id="public-offer-primary-action" href="/discover?tab=explore" data-nav>' + uiText("بازگشت به کشف") + '</a></div>' +
+        '<p class="phoenix-public-offering-note" id="public-offer-note">' + uiText("تنها اطلاعات منتشرشده و معتبر نمایش داده می‌شود.") + '</p></article>' +
+    '</div>' +
+    '<section class="phoenix-public-offering-lower">' +
+      '<article class="phoenix-public-offering-info"><span class="phoenix-reset-section-kicker">' + uiText("درباره عرضه") + '</span><h2>' + uiText("جزئیات قابل اتکا") + '</h2><p id="public-offer-details">' + uiText("جزئیات در حال بارگذاری است.") + '</p></article>' +
+      '<article class="phoenix-public-offering-info"><span class="phoenix-reset-section-kicker">' + uiText("ارتباط") + '</span><h2>' + uiText("پرسش از فروشنده") + '</h2><p>' + uiText("برای سؤال دربارهٔ این کالا یا خدمت، از همین صفحه گفت‌وگو را شروع کن.") + '</p><button class="button button-ghost" id="public-offer-ask" type="button" disabled>' + socialCommerceUi("detailAskSeller") + '</button></article>' +
+    '</section></div>';
+}
+
+
 function renderBusinessProfile(): string {
   const bt = (key: string): string => escapeHtml(businessUi(key));
   const bs = (key: string): string => escapeHtml(businessSurfaceUi(key));
@@ -7758,6 +7790,142 @@ function formatPublicBusinessDate(value: string | null | undefined): string {
   } catch {
     return new Intl.DateTimeFormat("en-GB", { year: "numeric", month: "short", day: "numeric" }).format(date);
   }
+}
+
+async function loadPublicOfferingDetail(routePath: string): Promise<void> {
+  const offeringId = routePath.split("/").filter(Boolean)[1] ?? "";
+  const params = new URLSearchParams(location.search);
+  const businessId = params.get("business")?.trim() || params.get("businessId")?.trim() || "";
+  const titleNode = document.querySelector<HTMLElement>("#public-offer-title");
+  const descriptionNode = document.querySelector<HTMLElement>("#public-offer-description");
+  const detailsNode = document.querySelector<HTMLElement>("#public-offer-details");
+  const typeNode = document.querySelector<HTMLElement>("#public-offer-type");
+  const priceNode = document.querySelector<HTMLElement>("#public-offer-price");
+  const sellerNameNode = document.querySelector<HTMLElement>("#public-offer-seller-name");
+  const sellerNode = document.querySelector<HTMLAnchorElement>("#public-offer-seller");
+  const sellerAvatar = document.querySelector<HTMLElement>("#public-offer-seller-avatar");
+  const publishedNode = document.querySelector<HTMLElement>("#public-offer-published");
+  const primaryAction = document.querySelector<HTMLAnchorElement>("#public-offer-primary-action");
+  const noteNode = document.querySelector<HTMLElement>("#public-offer-note");
+  const askButton = document.querySelector<HTMLButtonElement>("#public-offer-ask");
+  const actionsHost = document.querySelector<HTMLElement>("#public-offer-actions");
+  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost) {
+    if (titleNode) titleNode.textContent = uiText("برای نمایش جزئیات، نشانی معتبر عرضه لازم است.");
+    if (noteNode) noteNode.textContent = uiText("از صفحهٔ کشف یا پروفایل عمومی فروشنده وارد عرضه شو.");
+    return;
+  }
+  const showUnavailable = (): void => {
+    titleNode.textContent = uiText("این عرضه در دسترس نیست");
+    descriptionNode.textContent = uiText("این نشانی به عرضهٔ منتشرشده‌ای متصل نیست یا اطلاعات عمومی آن دیگر قابل مشاهده نیست.");
+    detailsNode.textContent = uiText("فقط کالاها و خدمات فعال و منتشرشده در این صفحه نمایش داده می‌شوند.");
+    typeNode.textContent = uiText("عرضه");
+    priceNode.textContent = uiText("اطلاعات قیمت در دسترس نیست");
+    sellerNameNode.textContent = uiText("فروشنده در دسترس نیست");
+    publishedNode.textContent = uiText("در دسترس نیست");
+    noteNode.textContent = uiText("برای دیدن گزینه‌های دیگر به اکسپلور برگرد.");
+    primaryAction.href = "/discover?tab=explore";
+    primaryAction.textContent = socialCommerceUi("tabExplore");
+    primaryAction.hidden = false;
+    askButton.disabled = true;
+    document.title = uiText("عرضه در دسترس نیست") + " | ققنوس";
+  };
+  try {
+    const response = await apiJson<{ data: {
+      profile: { id: string; name: string; displayName: string; status: string; publicationStatus: string; businessType: string | null; defaultCurrency: string | null };
+      offers: Array<{ id: string; businessId: string; offeringType: "product" | "service"; title: string; description: string | null; productId: string | null; serviceId: string | null; priceAmountMinor: number | null; currency: string | null; pricingType: string | null }>;
+    } }>("/api/v1/public/businesses/" + encodeURIComponent(businessId) + "?limit=50");
+    const profile = response.data.profile;
+    const offer = response.data.offers.find((candidate) => candidate.id === offeringId);
+    if (!offer || profile.publicationStatus !== "published" || profile.status !== "active") { showUnavailable(); return; }
+    const businessName = profile.displayName || profile.name;
+    const item: DiscoveryResult = {
+      id: offer.id, sourceId: offer.id, sourceType: offer.offeringType, title: offer.title,
+      ...(offer.description !== null ? { description: offer.description } : {}),
+      ...(offer.priceAmountMinor !== null ? { price: offer.priceAmountMinor } : {}),
+      ...(offer.currency ? { currency: offer.currency } : {}),
+      metadata: { businessId, businessName, offeringType: offer.offeringType },
+    };
+    const typeLabel = offer.offeringType === "product" ? uiText("کالا") : uiText("خدمت");
+    const description = offer.description?.trim() || uiText("توضیح تکمیلی برای این عرضه ثبت نشده است.");
+    const price = offer.priceAmountMinor !== null && offer.currency ? formatPublicMoney(offer.priceAmountMinor, offer.currency) : uiText("برای اطلاع از قیمت پرس‌وجو کن");
+    titleNode.textContent = offer.title;
+    descriptionNode.textContent = description;
+    detailsNode.textContent = description;
+    typeNode.textContent = typeLabel;
+    priceNode.textContent = price;
+    sellerNameNode.textContent = businessName;
+    sellerAvatar.textContent = businessName.slice(0, 1) || "ق";
+    publishedNode.textContent = uiText("منتشرشده");
+    askButton.disabled = false;
+    sellerNode.href = "/businesses/" + encodeURIComponent(businessId);
+    sellerNode.setAttribute("aria-label", uiText("مشاهده پروفایل فروشنده") + " " + businessName);
+    primaryAction.hidden = false;
+    if (offer.offeringType === "service") {
+      primaryAction.href = "/booking?" + new URLSearchParams({ businessId, offering: offer.id }).toString();
+      primaryAction.textContent = uiText("بررسی زمان‌های رزرو");
+    } else if (offer.priceAmountMinor !== null && offer.currency) {
+      primaryAction.href = "/cart";
+      primaryAction.textContent = socialCommerceUi("addToReviewCart");
+      primaryAction.dataset.publicOfferAddToCart = "true";
+    } else {
+      primaryAction.href = "#public-offer-ask";
+      primaryAction.dataset.scrollToAsk = "true";
+      primaryAction.textContent = socialCommerceUi("detailAskSeller");
+    }
+    if (offer.offeringType === "product") {
+      const compare = document.createElement("button");
+      compare.type = "button"; compare.className = "button button-ghost"; compare.dataset.publicOfferSecondary = "compare";
+      compare.textContent = "⚖ " + uiText("مقایسه"); actionsHost.appendChild(compare);
+      compare.addEventListener("click", () => {
+        const exists = getCompareItems().some((entry) => (entry.id ?? entry.sourceId) === offer.id);
+        toggleCompare(item); showToast(uiText(exists ? "از مقایسه حذف شد." : "به مقایسه اضافه شد."));
+      });
+    }
+    const save = document.createElement("button");
+    save.type = "button"; save.className = "button button-ghost"; save.dataset.publicOfferSecondary = "save";
+    save.textContent = "☆ " + uiText("ذخیره"); actionsHost.appendChild(save);
+    save.addEventListener("click", async () => {
+      if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+      save.disabled = true;
+      try {
+        await loadSocialState();
+        const active = await persistSocialAction("save", item);
+        setShortlistItem(item, active); renderShortlist();
+        save.textContent = active ? "★ " + uiText("ذخیره شد") : "☆ " + uiText("ذخیره");
+        showToast(uiText(active ? "عرضه ذخیره شد." : "از ذخیره‌شده‌ها حذف شد."));
+      } catch (error) { showToast(error instanceof Error ? error.message : uiText("ذخیره‌سازی انجام نشد.")); }
+      finally { save.disabled = false; }
+    });
+    const share = document.createElement("button");
+    share.type = "button"; share.className = "button button-ghost"; share.dataset.publicOfferSecondary = "share";
+    share.textContent = "↗ " + uiText("اشتراک‌گذاری"); actionsHost.appendChild(share);
+    share.addEventListener("click", async () => {
+      try { await shareSocialItem(item); }
+      catch (error) { showToast(error instanceof Error ? error.message : socialCommerceUi("shareUnavailable")); }
+    });
+    primaryAction.addEventListener("click", (event) => {
+      if (primaryAction.dataset.scrollToAsk === "true") { event.preventDefault(); askButton.focus(); return; }
+      if (primaryAction.dataset.publicOfferAddToCart !== "true") return;
+      event.preventDefault();
+      try {
+        addCartItem({ id: offer.id, title: offer.title, category: typeLabel, price: offer.priceAmountMinor ?? 0, currency: offer.currency ?? profile.defaultCurrency ?? "" });
+        showToast(socialCommerceUi("addedToReviewCartToast")); navigate("/cart");
+      } catch { showToast(socialCommerceUi("reviewCartAddError")); }
+    });
+    askButton.addEventListener("click", async () => {
+      if (!sessionStorage.getItem(STORAGE.accessToken)) { openConnectionPanel(); return; }
+      askButton.disabled = true;
+      try {
+        const conversation = await apiJson<{ data: { id: string } }>("/api/v1/communications/conversations/from-business", { method: "POST", body: { businessId } });
+        if (!conversation.data.id) throw new Error(socialCommerceUi("socialActionUnavailable"));
+        navigate("/messages?" + new URLSearchParams({ conversation: conversation.data.id, topic: offer.id, label: offer.title }).toString());
+      } catch (error) { showToast(error instanceof Error ? error.message : socialCommerceUi("socialActionUnavailable")); }
+      finally { askButton.disabled = false; }
+    });
+    document.title = offer.title + " | ققنوس";
+    setMeta("description", description);
+    setLink("canonical", new URL(routePath + "?business=" + encodeURIComponent(businessId), location.origin).toString());
+  } catch { showUnavailable(); }
 }
 
 async function loadBusinessPublicPage(routePath: string): Promise<void> {
