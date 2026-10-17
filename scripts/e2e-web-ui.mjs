@@ -39,6 +39,7 @@ const mediaAssetUploadRequests = [];
 const offeringMediaLinkRequests = [];
 const catalogProductCreateRequests = [];
 const publicMediaBatchRequests = [];
+const customerPriceResolutionRequests = [];
 const mockConversations = [{
   id: "conversation-e2e-1",
   organizationId: "tenant-1",
@@ -174,6 +175,11 @@ await page.route("**/api/v1/**", async (route) => {
       { id: "variant-red-m", attributes: [{ key: "color", label: "Color", value: "Red" }, { key: "size", label: "Size", value: "M" }], priceAmountMinor: 1450000, currency: "IRR", pricingType: "fixed", priceSource: "variant", availability: "out_of_stock" },
       { id: "variant-blue-s", attributes: [{ key: "color", label: "Color", value: "Blue" }, { key: "size", label: "Size", value: "S" }], priceAmountMinor: 1750000, currency: "IRR", pricingType: "fixed", priceSource: "variant", availability: "in_stock" }
     ] },
+    "/api/v1/commerce/offers/resolve-for-customer": { data: {
+      offer: { id: "commerce-offer-partner-red-s", variantId: "variant-red-s", priceAmountMinor: 990000, currency: "IRR", available: true, status: "ACTIVE" },
+      precedenceMatched: "group",
+      isInheritedFromProduct: false
+    } },
     "/api/v1/catalog/offers": { data: { id: "offer-1", status: "active", publicationStatus: "unpublished" } },
     "/api/v1/catalog/offers/offer-1/publish": { data: { id: "offer-1", publicationStatus: "pending" } },
   };
@@ -387,6 +393,19 @@ await page.route("**/api/v1/**", async (route) => {
       status: 201,
       contentType: "application/json",
       body: JSON.stringify({ data: { id: "link-studio-e2e-1", offeringId: "offer-1", assetId: "asset-studio-e2e-1", purpose: "primary", position: 0 } }),
+    });
+    return;
+  }
+  if (path === "/api/v1/commerce/offers/resolve-for-customer" && request.method() === "POST") {
+    customerPriceResolutionRequests.push({
+      method: request.method(),
+      body: request.postDataJSON(),
+      authorization: request.headers()["authorization"] ?? "",
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(payloads[path]),
     });
     return;
   }
@@ -991,6 +1010,16 @@ await page.locator(".phoenix-public-offering-page").waitFor();
 assert.equal(await page.locator("#public-offer-title").innerText(), "کیف دست‌دوز");
 await page.locator('[data-public-offer-variant="color"]').selectOption("Red");
 await page.locator('[data-public-offer-variant="size"]').selectOption("S");
+await page.waitForFunction(() => document.querySelector("#public-offer-price")?.getAttribute("data-price-source") === "commerce-resolver");
+assert.equal(await page.locator("#public-offer-price").getAttribute("data-price-amount-minor"), "990000");
+assert.equal(await page.locator("#public-offer-price").getAttribute("data-price-audience"), "group");
+assert.equal(customerPriceResolutionRequests.length, 1);
+assert.deepEqual(customerPriceResolutionRequests[0].body, {
+  sellerId: "biz-1",
+  productId: "product-1",
+  variantId: "variant-red-s",
+});
+assert.ok(customerPriceResolutionRequests[0].authorization.startsWith("Bearer "));
 await page.locator("#public-offer-primary-action").click();
 await page.waitForURL("**/cart");
 const localCartAfterAdd = await page.locator(".phoenix-screen-wrapper").innerText();

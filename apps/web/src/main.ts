@@ -8106,6 +8106,7 @@ function localizedPublicVariantAttributeLabel(key: string, fallbackLabel: string
 function mountPublicOfferingVariantPicker(
   host: HTMLElement, variants: readonly PublicOfferingVariant[], priceNode: HTMLElement,
   basePriceText: string, basePriceAmountMinor: number | null, baseCurrency: string | null,
+  onSelectionChange?: (selected: SelectedPublicOfferingVariant | null) => void,
 ): PublicOfferingVariantSelection {
   const safeVariants = variants.filter((variant) => typeof variant.id === "string" && variant.id.length > 0 && Array.isArray(variant.attributes));
   host.replaceChildren();
@@ -8214,8 +8215,18 @@ function mountPublicOfferingVariantPicker(
       priceNode.removeAttribute("data-price-source");
     }
   };
+  const getSelectedSnapshot = (): SelectedPublicOfferingVariant | null => selectedVariant ? {
+    id: selectedVariant.id,
+    label: selectedVariant.attributes.map((attribute) => attribute.label + ": " + attribute.value).join(" · "),
+    priceAmountMinor: selectedVariant.priceAmountMinor,
+    currency: selectedVariant.currency,
+    pricingType: selectedVariant.pricingType,
+    priceSource: selectedVariant.priceSource,
+    availability: selectedVariant.availability,
+  } : null;
   const refresh = (): void => {
     selectedVariant = matchingVariant();
+    onSelectionChange?.(getSelectedSnapshot());
     if (selectedVariant) {
       const label = selectedVariant.attributes.map((attribute) => attribute.label + ": " + attribute.value).join(" · ");
       const availabilityText = selectedVariant.availability === "in_stock"
@@ -8265,15 +8276,7 @@ function mountPublicOfferingVariantPicker(
   host.replaceChildren(panel);
   return {
     hasVariants: true,
-    getSelected: () => selectedVariant ? {
-      id: selectedVariant.id,
-      label: selectedVariant.attributes.map((attribute) => attribute.label + ": " + attribute.value).join(" · "),
-      priceAmountMinor: selectedVariant.priceAmountMinor,
-      currency: selectedVariant.currency,
-      pricingType: selectedVariant.pricingType,
-      priceSource: selectedVariant.priceSource,
-      availability: selectedVariant.availability,
-    } : null,
+    getSelected: getSelectedSnapshot,
   };
 }
 
@@ -8298,6 +8301,8 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   const mediaHost = document.querySelector<HTMLElement>(".phoenix-public-offering-media");
   const variantsHost = document.querySelector<HTMLElement>("#public-offer-variants");
   let variantLoadFailed = false;
+  let priceResolutionVersion = 0;
+  let personalizedVariantPrice: { variantId: string; priceAmountMinor: number; currency: string; precedenceMatched: string } | null = null;
   let variantSelection: PublicOfferingVariantSelection = { hasVariants: false, getSelected: () => null };
   if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage || !mediaHost || !variantsHost) {
     if (titleNode) titleNode.textContent = socialCommerceUi("offerDetailInvalidLink");
@@ -8359,11 +8364,56 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
       mediaMessage.textContent = socialCommerceUi("offerDetailImageUnavailable");
     }
     if (offer.offeringType === "product") {
+      const resolveCustomerVariantPrice = (selected: SelectedPublicOfferingVariant | null): void => {
+        const requestVersion = ++priceResolutionVersion;
+        personalizedVariantPrice = null;
+        delete priceNode.dataset.priceAudience;
+        if (!selected || !offer.productId || !sessionStorage.getItem(STORAGE.accessToken)) return;
+
+        void apiJson<{
+          data: {
+            offer: { priceAmountMinor: number; currency: string; available?: boolean; status?: string };
+            precedenceMatched: string;
+          } | null;
+        }>("/api/v1/commerce/offers/resolve-for-customer", {
+          method: "POST",
+          body: {
+            sellerId: businessId,
+            productId: offer.productId,
+            variantId: selected.id,
+          },
+        }).then((resolved) => {
+          if (requestVersion !== priceResolutionVersion || variantSelection.getSelected()?.id !== selected.id) return;
+          const resolvedOffer = resolved.data?.offer;
+          const amount = resolvedOffer?.priceAmountMinor;
+          const currency = typeof resolvedOffer?.currency === "string" ? resolvedOffer.currency.trim().toUpperCase() : "";
+          if (!resolvedOffer || !Number.isSafeInteger(amount) || amount < 0 || !/^[A-Z]{3}$/.test(currency)
+            || resolvedOffer.available === false || (resolvedOffer.status && resolvedOffer.status.toUpperCase() !== "ACTIVE")) return;
+
+          personalizedVariantPrice = {
+            variantId: selected.id,
+            priceAmountMinor: amount,
+            currency,
+            precedenceMatched: resolved.data?.precedenceMatched ?? "general",
+          };
+          priceNode.textContent = formatPublicMoney(amount, currency);
+          priceNode.setAttribute("data-price-amount-minor", String(amount));
+          priceNode.setAttribute("data-price-currency", currency);
+          priceNode.setAttribute("data-price-source", "commerce-resolver");
+          priceNode.dataset.priceAudience = personalizedVariantPrice.precedenceMatched;
+        }).catch(() => {
+          // Keep the public Catalog price if customer-specific resolution is unavailable.
+          if (requestVersion === priceResolutionVersion) personalizedVariantPrice = null;
+        });
+      };
       try {
         const variantResponse = await apiJson<{ data: PublicOfferingVariant[] }>(
           "/api/v1/public/offerings/" + encodeURIComponent(offer.id) + "/variants",
         );
-        variantSelection = mountPublicOfferingVariantPicker(variantsHost, variantResponse.data, priceNode, price, offer.priceAmountMinor, offer.currency);
+        variantSelection = mountPublicOfferingVariantPicker(
+          variantsHost, variantResponse.data, priceNode, price, offer.priceAmountMinor, offer.currency,
+          resolveCustomerVariantPrice,
+        );
         const hasPricedVariant = variantResponse.data.some((variant) =>
           (Number.isSafeInteger(variant.priceAmountMinor) && Number(variant.priceAmountMinor) >= 0
             && typeof variant.currency === "string" && Boolean(variant.currency.trim()) && variant.pricingType !== "custom")
@@ -8461,13 +8511,16 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
         showToast(socialCommerceUi("offerDetailVariantOutOfStock"));
         return;
       }
-      const selectedPrice = selectedVariant?.pricingType === "free" ? 0
-        : selectedVariant ? selectedVariant.priceAmountMinor : offer.priceAmountMinor;
-      const selectedCurrency = selectedVariant
+      const matchingPersonalizedPrice = selectedVariant && personalizedVariantPrice?.variantId === selectedVariant.id
+        ? personalizedVariantPrice : null;
+      const selectedPrice = matchingPersonalizedPrice?.priceAmountMinor
+        ?? (selectedVariant?.pricingType === "free" ? 0
+          : selectedVariant ? selectedVariant.priceAmountMinor : offer.priceAmountMinor);
+      const selectedCurrency = matchingPersonalizedPrice?.currency ?? (selectedVariant
         ? (selectedVariant.pricingType === "free"
           ? selectedVariant.currency ?? offer.currency ?? profile.defaultCurrency ?? ""
           : selectedVariant.currency ?? "")
-        : offer.currency ?? profile.defaultCurrency ?? "";
+        : offer.currency ?? profile.defaultCurrency ?? "");
       if (selectedVariant && (selectedVariant.pricingType === "custom" || selectedPrice === null || !selectedCurrency)) {
         showToast(socialCommerceUi("offerDetailVariantPriceUnavailable"));
         askButton.focus();

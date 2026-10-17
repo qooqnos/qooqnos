@@ -15150,3 +15150,9 @@ button[aria-busy="true"] .btn-spinner {
 #public-offer-variants[data-variant-availability="in_stock"] .phoenix-public-offering-variant-status { color: var(--success, #16804a); font-weight: 800; }
 .phoenix-public-offering-variant-price-note { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.8; }
 @media(max-width:520px) { .phoenix-public-offering-variants { padding: 13px; border-radius: 14px; } }
+
+/* Compact two-line price layout for responsive product-detail pages. */
+.phoenix-public-offering-price { align-items:center; }
+.phoenix-public-offering-price strong { display:block; }
+.phoenix-public-offering-price [data-price-audience] { font-variant-numeric:tabular-nums; }
+@media(max-width:520px) { .phoenix-public-offering-price { align-items:flex-start; } }
