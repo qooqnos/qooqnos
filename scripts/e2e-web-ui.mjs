@@ -405,7 +405,7 @@ await page.route("**/api/v1/**", async (route) => {
     });
     const variantId = resolutionBody && typeof resolutionBody === "object" && "variantId" in resolutionBody
       ? String(resolutionBody.variantId) : "";
-    const priceByVariant: Record<string, number> = {
+    const priceByVariant = {
       "variant-red-s": 990000,
       "variant-red-m": 1450000,
       "variant-blue-s": 1750000,
