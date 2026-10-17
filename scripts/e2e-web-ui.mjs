@@ -1565,7 +1565,7 @@ assert.ok(persistedCartItems.some((item) => item.title === "کیف دست‌دو
 const cartVariantsForSameOffering = persistedCartItems.filter((item) => item.offeringId === "offering-1" && ["variant-red-s", "variant-blue-s"].includes(item.variantId));
 assert.equal(cartVariantsForSameOffering.length, 2, "Different variants of the same offering must stay as separate cart lines: " + JSON.stringify(persistedCartItems));
 assert.notEqual(cartVariantsForSameOffering[0].id, cartVariantsForSameOffering[1].id);
-assert.ok(cartVariantsForSameOffering.some((item) => item.variantId === "variant-red-s" && item.price === 1250000));
+assert.ok(cartVariantsForSameOffering.some((item) => item.variantId === "variant-red-s" && item.price === 990000));
 assert.ok(cartVariantsForSameOffering.some((item) => item.variantId === "variant-blue-s" && item.price === 1750000));
 assert.ok(selectedVariantCartPreviewText.includes("رنگ: Blue"), "Cart preview omitted chosen color: " + selectedVariantCartPreviewText);
 assert.ok(selectedVariantCartPreviewText.includes("اندازه: S"), "Cart preview omitted chosen size: " + selectedVariantCartPreviewText);
