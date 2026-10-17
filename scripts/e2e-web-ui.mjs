@@ -792,6 +792,8 @@ await page.locator("[data-create-post-submit]").click();
 await page.waitForURL(/\/product-studio$/);
 assert.equal(await page.locator("#studio-text").inputValue(), "میز چوبی دست‌ساز برای اتاق کوچک");
 await page.goto(baseURL + "/");
+await page.locator("#phoenix-commerce-people-rail").waitFor();
+assert.equal(await page.locator(".phoenix-social-mobile-nav").count(), 1, "Social shell should expose the shared mobile navigation");
 await page.goto(baseURL + "/activity");
 await page.locator(".phoenix-activity-row").first().waitFor();
 const activityFa = await page.locator(".phoenix-reset-activity-page").innerText();

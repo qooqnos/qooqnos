@@ -5734,8 +5734,61 @@ function renderSocialMobileNav(): string {
     '<a href="/profile" data-nav class="' + (profileActive ? "active" : "") + '"' + (profileActive ? ' aria-current="page"' : '') + '>◉<small>' + localizedUi("پروفایل") + '</small></a></nav>';
 }
 
+function updateCommercePeopleRail(items: DiscoveryResult[]): void {
+  const host = document.querySelector<HTMLElement>("#phoenix-commerce-people-rail");
+  if (!host) return;
+
+  const people = new Map<string, { name: string; href: string; avatarUrl: string }>();
+  for (const item of items) {
+    const metadata = item.metadata ?? {};
+    const sourceType = String(item.sourceType ?? metadata.offeringType ?? "product").toLowerCase();
+    const businessId = typeof metadata.businessId === "string" ? metadata.businessId.trim() : "";
+    const profileId = businessId || (sourceType === "business" ? String(item.sourceId ?? item.id ?? "").trim() : "");
+    const userKeys = ["sellerUserId", "ownerUserId", "authorUserId", "profileUserId", "userId"];
+    const userIdValue = userKeys.map((key) => metadata[key]).find((value) => typeof value === "string" && value.trim());
+    const userId = typeof userIdValue === "string" ? userIdValue.trim() : "";
+    const nameCandidates = [
+      metadata.businessName, metadata.sellerName, metadata.ownerName,
+      metadata.authorName, metadata.userName,
+      sourceType === "business" || sourceType === "user" || sourceType === "person" || sourceType === "profile"
+        ? item.displayName ?? item.name ?? item.title : "",
+    ];
+    const nameValue = nameCandidates.find((value) => typeof value === "string" && value.trim());
+    const name = typeof nameValue === "string" ? nameValue.trim() : "";
+    if (!name || (!profileId && !userId)) continue;
+
+    const key = profileId ? "business:" + profileId : "user:" + userId;
+    if (people.has(key)) continue;
+    const rawAvatar = metadata.businessAvatarUrl ?? metadata.businessLogoUrl ?? metadata.logoUrl ?? metadata.avatarUrl;
+    const avatarUrl = typeof rawAvatar === "string" &&
+      (rawAvatar.startsWith("/") || rawAvatar.startsWith("https://") || rawAvatar.startsWith("http://"))
+      ? rawAvatar : "";
+    const href = profileId
+      ? "/businesses/" + encodeURIComponent(profileId)
+      : "/discover?tab=explore&q=" + encodeURIComponent(name);
+    people.set(key, { name, href, avatarUrl });
+    if (people.size >= 10) break;
+  }
+
+  if (!people.size) {
+    host.innerHTML = '<div class="phoenix-commerce-rail-heading"><strong>' + discoveryUi("seller") + '</strong><a href="/discover?tab=explore" data-nav>' + socialCommerceUi("tabExplore") + ' ←</a></div>' +
+      '<div class="phoenix-commerce-rail-empty"><span class="phoenix-commerce-rail-orb">⌕</span><span>' + socialCommerceUi("emptyFeedBody") + '</span></div>';
+    return;
+  }
+
+  host.innerHTML = '<div class="phoenix-commerce-rail-heading"><strong>' + discoveryUi("seller") + '</strong><a href="/discover?tab=explore" data-nav>' + socialCommerceUi("tabExplore") + ' ←</a></div>' +
+    '<div class="phoenix-commerce-people-list">' + Array.from(people.values()).map((person) => {
+      const avatar = person.avatarUrl
+        ? '<img src="' + escapeAttr(person.avatarUrl) + '" alt="" loading="lazy" />'
+        : '<span aria-hidden="true">' + escapeHtml(person.name.slice(0, 1) || "ق") + '</span>';
+      return '<a class="phoenix-commerce-person" href="' + escapeAttr(person.href) + '" data-nav title="' + escapeAttr(person.name) + '">' +
+        '<span class="phoenix-commerce-person-avatar">' + avatar + '</span><span class="phoenix-commerce-person-name">' + escapeHtml(person.name) + '</span></a>';
+    }).join("") + '</div>';
+}
+
 function renderSocialPosts(items: DiscoveryResult[]): string {
   activeDiscoveryItems = items;
+  updateCommercePeopleRail(items);
   if (!items.length) return '<div class="glass-card social-empty-state phoenix-reset-empty"><div class="draft-orb">⌕</div><h3>' + socialCommerceUi("emptyFeedTitle") + '</h3><p>' + socialCommerceUi("emptyFeedBody") + '</p><a class="button button-primary" href="/discover?tab=explore" data-nav>' + discoveryUi("goExplore") + '</a></div>';
   return items.map((item, index) => {
     const titleRaw = item.title ?? item.displayName ?? item.name ?? discoveryUi("productOrService");
@@ -6126,7 +6179,7 @@ function renderDiscover(): string {
     '<a class="phoenix-reset-tab' + (tab === key ? ' active' : '') + '" href="' + href + '" data-nav' +
     (tab === key ? ' aria-current="page"' : '') + '>' + label + '</a>';
 
-  return '<div class="phoenix-reset-page">' +
+  return '<div class="phoenix-reset-page ' + (normalizePath(location.pathname) === "/" ? "phoenix-feed-home" : "phoenix-feed-discovery") + '">' +
     '<section class="phoenix-reset-hero">' +
       '<div class="phoenix-reset-hero-copy">' +
         '<div class="phoenix-reset-brandline"><img src="/phoenix-mark.svg?v=2" alt="" aria-hidden="true" /><span>' + socialCommerceUi("eyebrow") + '</span></div>' +
@@ -6148,6 +6201,7 @@ function renderDiscover(): string {
           tabLink("following", "/discover?tab=following", socialCommerceUi("tabFollowing")) +
           tabLink("explore", "/discover?tab=explore", socialCommerceUi("tabExplore")) +
         '</nav>' +
+        '<section class="phoenix-commerce-people-rail" id="phoenix-commerce-people-rail" aria-label="' + escapeAttr(discoveryUi("seller")) + '"><div class="phoenix-commerce-rail-empty"><span class="phoenix-commerce-rail-orb">◉</span><span>' + discoveryUi("preparing") + '</span></div></section>' +
         '<div class="phoenix-reset-feed-heading">' +
           '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("sectionKicker") + '</span><h2 id="results-title">' + escapeHtml(title) + '</h2><p>' + escapeHtml(intro) + '</p><small id="results-meta">' + discoveryUi("preparing") + '</small></div>' +
           '<div class="phoenix-reset-feed-tools">' +

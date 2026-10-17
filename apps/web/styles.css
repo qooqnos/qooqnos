@@ -14357,3 +14357,511 @@ button[aria-busy="true"] .btn-spinner {
   outline: 3px solid color-mix(in srgb, var(--primary) 76%, white);
   outline-offset: 3px;
 }
+
+/* Phoenix social-commerce completion pass — shared skin for customer and seller surfaces. */
+.social-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 85% 0%, color-mix(in srgb, var(--primary) 5%, transparent), transparent 23rem),
+    var(--bg);
+}
+.social-shell .app-body {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0 auto;
+}
+.social-shell .social-page-content {
+  display: block;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+.social-shell .phoenix-social-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 80;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: 0 5px 22px rgba(23, 28, 35, .035);
+  backdrop-filter: blur(18px);
+}
+.social-shell .phoenix-social-header-inner {
+  width: min(1240px, calc(100% - 48px));
+  min-height: 68px;
+  margin-inline: auto;
+  gap: clamp(12px, 2vw, 26px);
+}
+.social-shell .phoenix-public-brand { flex: 0 0 auto; text-decoration: none; }
+.social-shell .phoenix-social-tabs { gap: 4px; }
+.social-shell .phoenix-social-tabs a {
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  transition: color .16s ease, background .16s ease, border-color .16s ease;
+}
+.social-shell .phoenix-social-tabs a:hover,
+.social-shell .phoenix-social-tabs a.active {
+  color: var(--primary-strong);
+  border-color: color-mix(in srgb, var(--primary) 15%, var(--line));
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+}
+.social-shell .phoenix-social-actions { gap: 8px; }
+.social-shell .phoenix-social-quick-links a {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+.social-shell .phoenix-social-quick-links a:hover,
+.social-shell .phoenix-social-quick-links a.active {
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+.social-shell .phoenix-social-actions .icon-button {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+.social-shell .phoenix-reset-page,
+.social-shell .phoenix-reset-profile-page,
+.social-shell .phoenix-reset-messages-page,
+.social-shell .phoenix-reset-compare-page,
+.social-shell .phoenix-reset-saved-page,
+.social-shell .phoenix-orders-page {
+  width: min(1160px, calc(100% - 48px));
+  margin-inline: auto;
+  padding: 24px 0 80px;
+}
+.social-shell .phoenix-reset-hero {
+  align-items: center;
+  padding: clamp(22px, 3vw, 34px);
+  border-radius: 24px;
+  border-color: var(--line);
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 18rem),
+    var(--surface);
+  box-shadow: 0 12px 34px rgba(25, 31, 40, .035);
+}
+.social-shell .phoenix-reset-hero h1 { letter-spacing: -.035em; }
+.social-shell .phoenix-reset-hero p { max-width: 64ch; }
+.social-shell .phoenix-reset-search {
+  min-height: 58px;
+  padding: 7px 8px;
+  border-radius: 15px;
+  border-color: var(--line);
+  background: var(--surface);
+  box-shadow: 0 6px 22px rgba(25, 31, 40, .025);
+}
+.social-shell .phoenix-reset-search input { min-width: 0; }
+.social-shell .phoenix-reset-discover-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 660px) minmax(240px, 292px);
+  justify-content: center;
+  align-items: start;
+  gap: clamp(20px, 3vw, 34px);
+  margin-top: 22px;
+}
+.social-shell .phoenix-reset-main-column { min-width: 0; }
+.social-shell .phoenix-reset-feed-tabs {
+  gap: 5px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--line);
+}
+.social-shell .phoenix-reset-tab {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+}
+.social-shell .phoenix-reset-tab:hover,
+.social-shell .phoenix-reset-tab.active {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+.social-shell .phoenix-feed-home > .phoenix-reset-hero { display: none; }
+.social-shell .phoenix-feed-home .phoenix-reset-search { margin-top: 2px; }
+.social-shell .phoenix-feed-home .phoenix-reset-discover-grid { margin-top: 18px; }
+.social-shell .phoenix-feed-home .phoenix-reset-feed-heading { margin-top: 8px; }
+.social-shell .phoenix-reset-feed-heading {
+  align-items: center;
+  gap: 12px;
+  margin-block: 15px 17px;
+}
+.social-shell .phoenix-reset-feed-heading h2 {
+  margin: 2px 0 3px;
+  font-size: clamp(19px, 2vw, 24px);
+  font-weight: 850;
+  letter-spacing: -.025em;
+}
+.social-shell .phoenix-reset-feed-heading p { margin: 0; font-size: 12px; }
+.social-shell .phoenix-reset-sidebar {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: 12px;
+}
+.social-shell .phoenix-reset-side-card {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 7px 22px rgba(25, 31, 40, .025);
+}
+.social-shell .phoenix-reset-side-card h2 { font-size: 15px; }
+.social-shell .phoenix-reset-side-card p { line-height: 1.9; }
+.social-shell .phoenix-commerce-people-rail {
+  margin: 14px 0 7px;
+  padding: 14px 14px 13px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+.social-shell .phoenix-commerce-rail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.social-shell .phoenix-commerce-rail-heading strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 850;
+}
+.social-shell .phoenix-commerce-rail-heading a {
+  color: var(--primary-strong);
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.social-shell .phoenix-commerce-people-list {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 2px 1px 5px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.social-shell .phoenix-commerce-person {
+  display: flex;
+  flex: 0 0 76px;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+.social-shell .phoenix-commerce-person-avatar {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  padding: 3px;
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--primary) 65%, #f7b447);
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 7%, transparent);
+}
+.social-shell .phoenix-commerce-person-avatar > img,
+.social-shell .phoenix-commerce-person-avatar > span {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.social-shell .phoenix-commerce-person-avatar > span {
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  font-size: 20px;
+  font-weight: 850;
+}
+.social-shell .phoenix-commerce-person-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.social-shell .phoenix-commerce-person:hover .phoenix-commerce-person-name { color: var(--primary-strong); }
+.social-shell .phoenix-commerce-rail-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 49px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.8;
+}
+.social-shell .phoenix-commerce-rail-orb {
+  display: grid;
+  flex: 0 0 38px;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface));
+  font-size: 18px;
+}
+.social-shell .phoenix-reset-posts.phoenix-social-feed {
+  width: min(660px, 100%);
+  gap: 22px;
+}
+.social-shell .phoenix-reset-posts .phoenix-post-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 8px 30px rgba(20, 25, 32, .045);
+  transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease;
+}
+.social-shell .phoenix-reset-posts .phoenix-post-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 20%, var(--line));
+  box-shadow: 0 14px 38px rgba(20, 25, 32, .07);
+}
+.social-shell .phoenix-reset-posts .phoenix-post-author {
+  min-height: 61px;
+  padding: 13px 15px;
+}
+.social-shell .phoenix-reset-posts .phoenix-avatar {
+  width: 41px;
+  height: 41px;
+  flex-basis: 41px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface));
+}
+.social-shell .phoenix-reset-posts .phoenix-post-media {
+  width: 100%;
+  margin: 0;
+  aspect-ratio: 4 / 5;
+  border-radius: 0;
+  background: var(--surface-2);
+}
+.social-shell .phoenix-reset-posts .phoenix-post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.social-shell .phoenix-reset-posts .phoenix-post-placeholder {
+  background:
+    radial-gradient(circle at 35% 20%, color-mix(in srgb, var(--primary) 13%, transparent), transparent 45%),
+    var(--surface-2);
+}
+.social-shell .phoenix-reset-posts .phoenix-post-body { padding: 15px 17px 18px; }
+.social-shell .phoenix-reset-posts .phoenix-post-body h2 { margin-bottom: 6px; font-size: 16px; font-weight: 850; }
+.social-shell .phoenix-reset-posts .phoenix-post-body p { font-size: 12px; line-height: 1.9; }
+.social-shell .phoenix-reset-posts .phoenix-post-price { color: var(--primary-strong); font-size: 15px; }
+.social-shell .phoenix-reset-posts .phoenix-post-actions { gap: 6px; align-items: center; }
+.social-shell .phoenix-reset-posts .phoenix-post-actions > button:not(.post-buy) {
+  min-height: 36px;
+  padding: 0 10px;
+  border-color: transparent;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 11px;
+}
+.social-shell .phoenix-reset-posts .phoenix-post-actions > button:not(.post-buy):hover,
+.social-shell .phoenix-reset-posts .phoenix-post-actions > button.selected {
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+.social-shell .phoenix-reset-posts .phoenix-post-actions .post-buy {
+  min-height: 38px;
+  padding-inline: 14px;
+  border-radius: 12px;
+}
+.social-shell .phoenix-reset-posts .phoenix-post-actions .post-buy { margin-inline-start: auto; }
+.social-shell .phoenix-reset-empty,
+.social-shell .phoenix-reset-compare-empty,
+.social-shell .phoenix-reset-saved-empty,
+.social-shell .phoenix-reset-activity-empty {
+  border: 1px dashed var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+}
+.social-shell .phoenix-reset-profile-hero,
+.social-shell .phoenix-reset-messages-hero,
+.social-shell .phoenix-reset-compare-hero,
+.social-shell .phoenix-reset-saved-hero {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--primary) 9%, transparent), transparent 18rem),
+    var(--surface);
+  box-shadow: 0 10px 30px rgba(20, 25, 32, .035);
+}
+.social-shell .phoenix-reset-profile-hero { gap: clamp(18px, 4vw, 42px); }
+.social-shell .phoenix-reset-profile-avatar,
+.social-shell .phoenix-reset-profile-mark { border-radius: 50%; }
+.social-shell .phoenix-reset-messages-grid { gap: 16px; }
+.social-shell .phoenix-reset-message-thread-card,
+.social-shell .phoenix-reset-messages-inbox,
+.social-shell .phoenix-reset-activity-panel,
+.social-shell .phoenix-reset-compare-selected,
+.social-shell .phoenix-reset-compare-table-wrap,
+.social-shell .phoenix-reset-saved-toolbar {
+  border: 1px solid var(--line);
+  border-radius: 19px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(20, 25, 32, .03);
+}
+.social-shell .phoenix-reset-message-list { background: color-mix(in srgb, var(--bg) 65%, var(--surface)); }
+.social-shell .phoenix-reset-message-bubble { border-radius: 17px; }
+.social-shell .phoenix-reset-message-bubble.own { background: color-mix(in srgb, var(--primary) 9%, var(--surface)); }
+.social-shell .phoenix-reset-saved-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+}
+.social-shell .phoenix-reset-saved-grid > * { min-width: 0; }
+.social-shell .phoenix-reset-compare-table-wrap { overflow-x: auto; }
+.social-shell .phoenix-reset-compare-table { min-width: 560px; }
+.social-shell .phoenix-social-mobile-nav { display: none; }
+.social-shell .phoenix-compare-tray {
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--line));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  box-shadow: 0 18px 48px rgba(20, 25, 32, .15);
+  backdrop-filter: blur(18px);
+}
+.social-shell .button { border-radius: 12px; }
+.social-shell .button-primary { box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 13%, transparent); }
+.social-shell input,
+.social-shell textarea,
+.social-shell select { border-radius: 12px; }
+.social-shell :focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 64%, white);
+  outline-offset: 3px;
+}
+
+/* Keep seller workspaces operational, but visually part of the same product. */
+.app-shell:not(.social-shell) .page-content { min-width: 0; }
+.app-shell:not(.social-shell) .page-heading {
+  border-radius: 22px;
+  border-color: var(--line);
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--primary) 8%, transparent), transparent 18rem),
+    var(--surface);
+  box-shadow: 0 8px 26px rgba(20, 25, 32, .03);
+}
+.app-shell:not(.social-shell) .glass-card {
+  border-radius: 18px;
+  box-shadow: 0 8px 26px rgba(20, 25, 32, .035);
+}
+.app-shell:not(.social-shell) .button { border-radius: 12px; }
+.app-shell:not(.social-shell) input,
+.app-shell:not(.social-shell) textarea,
+.app-shell:not(.social-shell) select { border-radius: 11px; }
+
+@media (max-width: 1040px) {
+  .social-shell .phoenix-reset-discover-grid { grid-template-columns: minmax(0, 660px); }
+  .social-shell .phoenix-reset-sidebar { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .social-shell .phoenix-social-header-inner { width: calc(100% - 22px); min-height: 59px; gap: 8px; }
+  .social-shell .phoenix-public-brand .brand-mark { width: 36px; height: 36px; }
+  .social-shell .phoenix-public-brand small { display: none; }
+  .social-shell .phoenix-social-tabs,
+  .social-shell .phoenix-social-quick-links { display: none; }
+  .social-shell .phoenix-social-header .profile-chip .profile-copy { display: none; }
+  .social-shell .phoenix-social-header .phoenix-social-actions { gap: 4px; }
+  .social-shell .phoenix-social-actions .icon-button { width: 35px; height: 35px; }
+  .social-shell .phoenix-reset-page,
+  .social-shell .phoenix-reset-profile-page,
+  .social-shell .phoenix-reset-messages-page,
+  .social-shell .phoenix-reset-compare-page,
+  .social-shell .phoenix-reset-saved-page,
+  .social-shell .phoenix-orders-page { width: calc(100% - 22px); padding: 13px 0 102px; }
+  .social-shell .phoenix-reset-search { grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px; }
+  .social-shell .phoenix-reset-search .button[data-run-discovery] { display: none; }
+  .social-shell .phoenix-reset-discover-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 13px; }
+  .social-shell .phoenix-reset-sidebar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .social-shell .phoenix-reset-sidebar .phoenix-reset-side-card:not(.phoenix-reset-intent-card) { display: none; }
+  .social-shell .phoenix-reset-feed-tabs { margin: 0; padding-bottom: 10px; }
+  .social-shell .phoenix-reset-tab { min-height: 36px; padding: 7px 11px; font-size: 11px; }
+  .social-shell .phoenix-commerce-people-rail { margin: 10px 0 4px; padding: 12px 11px; border-radius: 16px; }
+  .social-shell .phoenix-commerce-people-list { gap: 10px; }
+  .social-shell .phoenix-commerce-person { flex-basis: 65px; }
+  .social-shell .phoenix-commerce-person-avatar { width: 52px; height: 52px; }
+  .social-shell .phoenix-reset-feed-heading { margin: 11px 0 13px; }
+  .social-shell .phoenix-reset-feed-heading p { display: none; }
+  .social-shell .phoenix-reset-feed-tools { gap: 5px; }
+  .social-shell .phoenix-reset-posts.phoenix-social-feed { gap: 15px; }
+  .social-shell .phoenix-reset-posts .phoenix-post-card { border-radius: 17px; }
+  .social-shell .phoenix-reset-posts .phoenix-post-author { padding: 11px 12px; }
+  .social-shell .phoenix-reset-posts .phoenix-post-media { aspect-ratio: 4 / 4.6; }
+  .social-shell .phoenix-reset-posts .phoenix-post-body { padding: 13px 13px 15px; }
+  .social-shell .phoenix-reset-posts .phoenix-post-actions .post-buy { min-height: 35px; padding-inline: 11px; }
+  .social-shell .phoenix-reset-profile-hero,
+  .social-shell .phoenix-reset-messages-hero,
+  .social-shell .phoenix-reset-compare-hero,
+  .social-shell .phoenix-reset-saved-hero { padding: 18px 15px; border-radius: 19px; }
+  .social-shell .phoenix-reset-saved-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .social-shell .phoenix-reset-sidebar .phoenix-reset-side-card { padding: 15px; }
+  .social-shell .phoenix-social-mobile-nav {
+    position: fixed;
+    z-index: 100;
+    inset-inline: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: center;
+    min-height: calc(62px + env(safe-area-inset-bottom));
+    padding: 7px 10px calc(7px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface) 95%, transparent);
+    box-shadow: 0 -8px 28px rgba(20, 25, 32, .06);
+    backdrop-filter: blur(18px);
+  }
+  .social-shell .phoenix-social-mobile-nav > a,
+  .social-shell .phoenix-social-mobile-nav > button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 42px;
+    border: 0;
+    border-radius: 13px;
+    color: var(--muted);
+    background: transparent;
+    font-size: 21px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .social-shell .phoenix-social-mobile-nav > a.active { color: var(--primary-strong); }
+  .social-shell .phoenix-social-mobile-nav > a small { font-size: 9px; font-weight: 750; }
+  .social-shell .phoenix-social-mobile-nav > button {
+    width: 42px;
+    height: 42px;
+    justify-self: center;
+    color: #fff;
+    background: var(--primary);
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 28%, transparent);
+    font-size: 27px;
+  }
+  .social-shell .phoenix-compare-tray { bottom: 74px; }
+  .app-shell:not(.social-shell) .page-content { padding-inline: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .social-shell *,
+  .app-shell:not(.social-shell) * { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
