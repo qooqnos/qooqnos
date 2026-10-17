@@ -1232,8 +1232,11 @@ assert.equal(await page.locator("#public-offer-title").innerText(), "کیف دس
 assert.equal(await page.locator("#public-offer-seller-name").innerText(), "ترنج");
 assert.ok((await page.locator("#public-offer-price").innerText()).length > 0);
 assert.ok((await page.locator("#public-offer-description").innerText()).includes("نمونهٔ کالای منتشرشده"));
-assert.ok(!(await page.locator("#public-offer-media-message").innerText()).includes("در حال بارگذاری"));
 await page.locator(".phoenix-public-offering-gallery-image").waitFor();
+await page.waitForFunction(() => {
+  const image = document.querySelector(".phoenix-public-offering-gallery-image");
+  return image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0;
+});
 assert.ok((await page.locator(".phoenix-public-offering-gallery-image").getAttribute("src") || "").endsWith("/media/asset-photo-1/content"));
 assert.ok(await page.locator(".phoenix-public-offering-gallery-image").isVisible());
 assert.ok(await page.locator("#public-offer-primary-action").isVisible());
