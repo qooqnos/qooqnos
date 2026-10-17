@@ -549,6 +549,7 @@ await commentButton.click();
 await page.locator(".phoenix-social-comment-dialog").waitFor();
 assert.equal(await page.locator(".phoenix-social-comment-dialog").getAttribute("role"), "dialog");
 assert.equal(await page.evaluate(() => document.body.style.overflow), "hidden");
+await page.waitForFunction(() => document.querySelector("#phoenix-social-comment-body") === document.activeElement);
 assert.equal(await page.locator("#phoenix-social-comment-body").evaluate((element) => element === document.activeElement), true);
 await page.keyboard.press("Shift+Tab");
 assert.equal(await page.locator(".phoenix-social-comment-close").evaluate((element) => element === document.activeElement), true);
