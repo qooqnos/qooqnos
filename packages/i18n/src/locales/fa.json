@@ -2336,7 +2336,9 @@
     "offerDetailVariantPriceUnavailable": "برای قیمت با فروشنده گفت‌وگو کن",
     "offerDetailVariantFree": "رایگان",
     "offerDetailVariantStartingAt": "شروع از",
-    "offerDetailRelationshipPrice": "قیمت متناسب با رابطهٔ شما"
+    "offerDetailRelationshipPrice": "قیمت متناسب با رابطهٔ شما",
+    "offerDetailRelationshipPriceLoading": "در حال بررسی قیمت متناسب با رابطهٔ شما…",
+    "offerDetailRelationshipPriceUnavailable": "قیمت متناسب با حساب شما تأیید نشد؛ دوباره تلاش کن یا از فروشنده بپرس."
   },
   "catalogPage": {
     "eyebrow": "کاتالوگ فروشنده",

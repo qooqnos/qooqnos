@@ -15156,3 +15156,11 @@ button[aria-busy="true"] .btn-spinner {
 .phoenix-public-offering-price strong { display:block; }
 .phoenix-public-offering-price [data-price-audience] { font-variant-numeric:tabular-nums; }
 @media(max-width:520px) { .phoenix-public-offering-price { align-items:flex-start; } }
+
+.social-shell .phoenix-public-offering-actions .button.is-price-resolving,
+.social-shell .phoenix-public-offering-actions .button[aria-disabled="true"] {
+  opacity: .62;
+  cursor: progress;
+  pointer-events: none;
+  filter: saturate(.75);
+}

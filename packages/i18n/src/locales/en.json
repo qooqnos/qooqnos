@@ -2336,7 +2336,9 @@
     "offerDetailVariantPriceUnavailable": "Ask the seller to confirm this price",
     "offerDetailVariantFree": "Free",
     "offerDetailVariantStartingAt": "Starting at",
-    "offerDetailRelationshipPrice": "Price based on your relationship"
+    "offerDetailRelationshipPrice": "Price based on your relationship",
+    "offerDetailRelationshipPriceLoading": "Checking your relationship-based price…",
+    "offerDetailRelationshipPriceUnavailable": "We couldn't verify your account-specific price. Try again or ask the seller."
   },
   "catalogPage": {
     "eyebrow": "Seller catalog",

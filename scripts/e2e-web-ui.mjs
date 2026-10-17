@@ -410,6 +410,7 @@ await page.route("**/api/v1/**", async (route) => {
       "variant-red-m": 1450000,
       "variant-blue-s": 1750000,
     };
+    if (variantId === "variant-blue-s") await new Promise((resolve) => setTimeout(resolve, 350));
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -1552,6 +1553,15 @@ await page.locator("#public-offer-primary-action").click();
 assert.ok(page.url().includes("/offerings/offering-1"), "Unavailable variant combinations must not be added to the cart.");
 assert.ok((await page.locator(".phoenix-public-offering-variant-status").innerText()).includes("موجود نیست"));
 await page.locator('[data-public-offer-variant="size"]').selectOption("S");
+assert.equal(await page.locator("#public-offer-primary-action").getAttribute("aria-disabled"), "true", "Do not allow adding to cart while the relationship price is being resolved.");
+assert.equal(await page.locator("#public-offer-primary-action").getAttribute("aria-busy"), "true");
+assert.equal(await page.locator("#public-offer-price-context").innerText(), "در حال بررسی قیمت متناسب با رابطهٔ شما…");
+await page.waitForFunction(() => {
+  const action = document.querySelector("#public-offer-primary-action");
+  const price = document.querySelector("#public-offer-price");
+  return action instanceof HTMLAnchorElement && action.getAttribute("aria-disabled") !== "true"
+    && price?.getAttribute("data-price-source") === "commerce-resolver";
+});
 assert.equal(await page.locator("#public-offer-price").getAttribute("data-price-amount-minor"), "1750000");
 assert.ok((await page.locator(".phoenix-public-offering-variant-status").innerText()).includes("موجود"));
 await page.locator("#public-offer-primary-action").click();
