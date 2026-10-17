@@ -8116,7 +8116,10 @@ function mountPublicOfferingVariantPicker(
   heading.textContent = socialCommerceUi("offerDetailVariantTitle");
   panel.appendChild(heading);
 
-  const normalized: PublicOfferingVariant[] = safeVariants.map((variant) => ({
+  type NormalizedPublicOfferingVariant = Omit<PublicOfferingVariant, "attributes"> & {
+    readonly attributes: readonly { readonly key: string; readonly label: string; readonly value: string }[];
+  };
+  const normalized: NormalizedPublicOfferingVariant[] = safeVariants.map((variant) => ({
     id: variant.id,
     attributes: variant.attributes.filter((attribute) =>
       attribute && typeof attribute.key === "string" && attribute.key.trim()
