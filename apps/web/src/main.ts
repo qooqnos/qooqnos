@@ -8162,6 +8162,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
       if (primaryAction.dataset.scrollToAsk === "true") { event.preventDefault(); askButton.focus(); return; }
       if (primaryAction.dataset.publicOfferAddToCart !== "true") return;
       event.preventDefault();
+      event.stopPropagation();
       if (variantLoadFailed) {
         showToast(socialCommerceUi("offerDetailVariantLoadFailed"));
         return;
