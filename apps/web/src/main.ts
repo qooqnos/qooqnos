@@ -8344,7 +8344,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   } catch { showUnavailable(); }
 }
 
-async function hydratePublicBusinessOfferMedia(host: HTMLElement): Promise<void> {
+async function hydratePublicBusinessOfferMedia(host: HTMLElement, sourceItems: readonly DiscoveryResult[] = []): Promise<void> {
   const cards = Array.from(host.querySelectorAll<HTMLElement>("[data-public-offer-media-ref]"));
   const references = [...new Set(cards.map((card) => card.dataset.publicOfferMediaRef ?? "").filter(Boolean))];
   if (!references.length) return;
@@ -8371,7 +8371,34 @@ async function hydratePublicBusinessOfferMedia(host: HTMLElement): Promise<void>
           card.dataset.publicOfferMediaState = "unavailable";
           continue;
         }
-        const image = document.createElement("img");
+
+        const matchesReference = (item: DiscoveryResult): boolean => {
+          const candidates = [item.id, item.sourceId, item.metadata?.offeringId];
+          return candidates.some((candidate) => typeof candidate === "string" && candidate === reference);
+        };
+        const updateOfferingReference = (items: readonly DiscoveryResult[]): { items: DiscoveryResult[]; changed: boolean } => {
+          let changed = false;
+          const updated = items.map((item) => {
+            if (!matchesReference(item) || item.metadata?.offeringId === media.offeringId) return item;
+            changed = true;
+            return { ...item, metadata: { ...(item.metadata ?? {}), offeringId: media.offeringId } };
+          });
+          return { items: updated, changed };
+        };
+        const activeUpdate = updateOfferingReference(activeDiscoveryItems);
+        if (activeUpdate.changed) activeDiscoveryItems = activeUpdate.items;
+        const providedUpdate = updateOfferingReference(sourceItems);
+        const savedUpdate = updateOfferingReference(getShortlist());
+        if (savedUpdate.changed) saveShortlist(savedUpdate.items);
+        const compareUpdate = updateOfferingReference(getCompareItems());
+        if (compareUpdate.changed) saveCompareItems(compareUpdate.items);
+        const matchedItem = providedUpdate.items.find(matchesReference)
+          ?? activeDiscoveryItems.find(matchesReference)
+          ?? savedUpdate.items.find(matchesReference)
+          ?? compareUpdate.items.find(matchesReference);
+
+        const existingImage = card.querySelector<HTMLImageElement>("img.phoenix-public-offer-image");
+        const image = existingImage ?? document.createElement("img");
         image.className = "phoenix-public-offer-image";
         image.src = media.src;
         image.alt = "";
@@ -8385,8 +8412,31 @@ async function hydratePublicBusinessOfferMedia(host: HTMLElement): Promise<void>
           card.dataset.publicOfferMediaState = "loaded";
           card.classList.add("has-published-image");
         }, { once: true });
-        card.querySelector(".phoenix-public-offer-media-placeholder")?.replaceWith(image);
-        if (!card.querySelector(".phoenix-public-offer-media-placeholder")) card.prepend(image);
+        if (!existingImage) {
+          const placeholder = card.querySelector(".phoenix-public-offer-media-placeholder, .phoenix-reset-saved-media-placeholder, .phoenix-reset-compare-media-placeholder");
+          if (placeholder) placeholder.replaceWith(image);
+          else card.prepend(image);
+        }
+
+        const businessId = card.dataset.publicBusinessId
+          || (typeof matchedItem?.metadata?.businessId === "string" ? matchedItem.metadata.businessId : "");
+        const savedAction = card.closest<HTMLElement>(".phoenix-reset-saved-card")
+          ?.querySelector<HTMLButtonElement>(".phoenix-reset-saved-card-actions button[data-saved-open]");
+        const compareAction = card.closest<HTMLElement>(".phoenix-reset-compare-product")
+          ?.querySelector<HTMLButtonElement>(".phoenix-reset-compare-product-actions button[data-open-compare-detail]");
+        const action = savedAction ?? compareAction;
+        if (businessId && media.offeringId && action) {
+          const detailLink = document.createElement("a");
+          detailLink.className = action.className;
+          detailLink.innerHTML = action.innerHTML;
+          detailLink.href = "/offerings/" + encodeURIComponent(media.offeringId)
+            + "?" + new URLSearchParams({ business: businessId }).toString();
+          detailLink.setAttribute("data-nav", "");
+          detailLink.setAttribute("aria-label",
+            (matchedItem?.title ?? card.getAttribute("aria-label") ?? discoveryUi("productOrService"))
+            + " — " + discoveryUi("detailsAndDecision"));
+          action.replaceWith(detailLink);
+        }
       }
     } catch {
       for (const card of cards) {
