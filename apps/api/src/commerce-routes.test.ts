@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { D1Database, type D1DatabaseLike, type D1PreparedStatementLike } from "@qooqnos/database";
 import { ApiRouter } from "./router";
-import { registerCommerceRoutes } from "./commerce-routes";
 import { createAuthorizationRegistry } from "@qooqnos/runtime";
 
 describe("GET & POST /api/v1/commerce/offers/resolve endpoint", () => {
@@ -120,7 +119,6 @@ describe("GET & POST /api/v1/commerce/offers/resolve endpoint", () => {
     const database = new D1Database(raw);
     const authorization = createAuthorizationRegistry();
     const router = new ApiRouter({ database, authorization });
-    registerCommerceRoutes(router, database, authorization);
     return router;
   }
 
