@@ -8056,14 +8056,29 @@ interface PublicOfferingVariantAttribute {
   readonly value: string | number | boolean;
 }
 
+type PublicVariantAvailability = "in_stock" | "out_of_stock" | "unknown";
+type PublicVariantPricingType = "fixed" | "starting_at" | "from" | "custom" | "free" | null;
 interface PublicOfferingVariant {
   readonly id: string;
   readonly attributes: readonly PublicOfferingVariantAttribute[];
+  readonly priceAmountMinor: number | null;
+  readonly currency: string | null;
+  readonly pricingType: PublicVariantPricingType;
+  readonly priceSource: "variant" | "offering" | null;
+  readonly availability: PublicVariantAvailability;
 }
-
+interface SelectedPublicOfferingVariant {
+  readonly id: string;
+  readonly label: string;
+  readonly priceAmountMinor: number | null;
+  readonly currency: string | null;
+  readonly pricingType: PublicVariantPricingType;
+  readonly priceSource: "variant" | "offering" | null;
+  readonly availability: PublicVariantAvailability;
+}
 interface PublicOfferingVariantSelection {
   readonly hasVariants: boolean;
-  getSelected(): { readonly id: string; readonly label: string } | null;
+  getSelected(): SelectedPublicOfferingVariant | null;
 }
 
 function localizedPublicVariantAttributeLabel(key: string, fallbackLabel: string): string {
@@ -8080,7 +8095,10 @@ function localizedPublicVariantAttributeLabel(key: string, fallbackLabel: string
   }
 }
 
-function mountPublicOfferingVariantPicker(host: HTMLElement, variants: readonly PublicOfferingVariant[]): PublicOfferingVariantSelection {
+function mountPublicOfferingVariantPicker(
+  host: HTMLElement, variants: readonly PublicOfferingVariant[], priceNode: HTMLElement,
+  basePriceText: string, basePriceAmountMinor: number | null, baseCurrency: string | null,
+): PublicOfferingVariantSelection {
   const safeVariants = variants.filter((variant) => typeof variant.id === "string" && variant.id.length > 0 && Array.isArray(variant.attributes));
   host.replaceChildren();
   if (!safeVariants.length) {
@@ -8098,8 +8116,8 @@ function mountPublicOfferingVariantPicker(host: HTMLElement, variants: readonly 
   heading.textContent = socialCommerceUi("offerDetailVariantTitle");
   panel.appendChild(heading);
 
-  const normalized = safeVariants.map((variant) => ({
-    ...variant,
+  const normalized: PublicOfferingVariant[] = safeVariants.map((variant) => ({
+    id: variant.id,
     attributes: variant.attributes.filter((attribute) =>
       attribute && typeof attribute.key === "string" && attribute.key.trim()
         && typeof attribute.label === "string"
@@ -8109,6 +8127,11 @@ function mountPublicOfferingVariantPicker(host: HTMLElement, variants: readonly 
       label: localizedPublicVariantAttributeLabel(attribute.key, attribute.label),
       value: String(attribute.value),
     })),
+    priceAmountMinor: Number.isSafeInteger(variant.priceAmountMinor) && Number(variant.priceAmountMinor) >= 0 ? Number(variant.priceAmountMinor) : null,
+    currency: typeof variant.currency === "string" && variant.currency.trim() ? variant.currency.trim().toUpperCase() : null,
+    pricingType: ["fixed", "starting_at", "from", "custom", "free"].includes(String(variant.pricingType)) ? variant.pricingType : null,
+    priceSource: variant.priceSource === "variant" || variant.priceSource === "offering" ? variant.priceSource : null,
+    availability: variant.availability === "in_stock" || variant.availability === "out_of_stock" ? variant.availability : "unknown",
   }));
   const definitions = new Map<string, { label: string; values: string[] }>();
   for (const variant of normalized) {
@@ -8168,14 +8191,56 @@ function mountPublicOfferingVariantPicker(host: HTMLElement, variants: readonly 
       variant.attributes.some((attribute) => attribute.key === dimension.key && attribute.value === selectors.get(dimension.key)?.value)
     )) ?? null;
   };
+  const restoreBasePrice = (): void => {
+    priceNode.textContent = basePriceText;
+    if (basePriceAmountMinor !== null && baseCurrency) {
+      priceNode.setAttribute("data-price-amount-minor", String(basePriceAmountMinor));
+      priceNode.setAttribute("data-price-currency", baseCurrency);
+      priceNode.setAttribute("data-price-source", "offering");
+    } else {
+      priceNode.removeAttribute("data-price-amount-minor");
+      priceNode.removeAttribute("data-price-currency");
+      priceNode.removeAttribute("data-price-source");
+    }
+  };
   const refresh = (): void => {
     selectedVariant = matchingVariant();
     if (selectedVariant) {
       const label = selectedVariant.attributes.map((attribute) => attribute.label + ": " + attribute.value).join(" · ");
-      status.textContent = socialCommerceUi("offerDetailVariantChosen") + (label ? ": " + label : "");
-      host.dataset.variantState = "selected";
+      const availabilityText = selectedVariant.availability === "in_stock"
+        ? socialCommerceUi("offerDetailVariantInStock")
+        : selectedVariant.availability === "out_of_stock"
+          ? socialCommerceUi("offerDetailVariantOutOfStock")
+          : socialCommerceUi("offerDetailVariantStockUnknown");
+      status.textContent = socialCommerceUi("offerDetailVariantChosen") + (label ? ": " + label : "") + " · " + availabilityText;
+      host.dataset.variantState = selectedVariant.availability === "out_of_stock" ? "out-of-stock" : "selected";
+      host.dataset.variantAvailability = selectedVariant.availability;
+      host.dataset.variantPriceSource = selectedVariant.priceSource ?? "none";
+      const amount = selectedVariant.pricingType === "free" ? 0 : selectedVariant.priceAmountMinor;
+      const currency = selectedVariant.currency;
+      if (selectedVariant.pricingType === "custom" || amount === null || !currency) {
+        priceNode.textContent = socialCommerceUi("offerDetailVariantPriceUnavailable");
+        priceNode.removeAttribute("data-price-amount-minor");
+        priceNode.removeAttribute("data-price-currency");
+        priceNode.removeAttribute("data-price-source");
+      } else if (selectedVariant.pricingType === "free") {
+        priceNode.textContent = socialCommerceUi("offerDetailVariantFree");
+        priceNode.setAttribute("data-price-amount-minor", "0");
+        priceNode.setAttribute("data-price-currency", currency);
+        priceNode.setAttribute("data-price-source", selectedVariant.priceSource ?? "none");
+      } else {
+        const formatted = formatPublicMoney(amount, currency);
+        priceNode.textContent = selectedVariant.pricingType === "starting_at" || selectedVariant.pricingType === "from"
+          ? socialCommerceUi("offerDetailVariantStartingAt") + " " + formatted : formatted;
+        priceNode.setAttribute("data-price-amount-minor", String(amount));
+        priceNode.setAttribute("data-price-currency", currency);
+        priceNode.setAttribute("data-price-source", selectedVariant.priceSource ?? "none");
+      }
       return;
     }
+    delete host.dataset.variantAvailability;
+    delete host.dataset.variantPriceSource;
+    restoreBasePrice();
     const complete = dimensions.length > 0 && dimensions.every((dimension) => Boolean(selectors.get(dimension.key)?.value));
     status.textContent = dimensions.length === 0
       ? socialCommerceUi("offerDetailVariantNoChoices")
@@ -8189,9 +8254,15 @@ function mountPublicOfferingVariantPicker(host: HTMLElement, variants: readonly 
   host.replaceChildren(panel);
   return {
     hasVariants: true,
-    getSelected: () => selectedVariant
-      ? { id: selectedVariant.id, label: selectedVariant.attributes.map((attribute) => attribute.label + ": " + attribute.value).join(" · ") }
-      : null,
+    getSelected: () => selectedVariant ? {
+      id: selectedVariant.id,
+      label: selectedVariant.attributes.map((attribute) => attribute.label + ": " + attribute.value).join(" · "),
+      priceAmountMinor: selectedVariant.priceAmountMinor,
+      currency: selectedVariant.currency,
+      pricingType: selectedVariant.pricingType,
+      priceSource: selectedVariant.priceSource,
+      availability: selectedVariant.availability,
+    } : null,
   };
 }
 
@@ -8281,7 +8352,18 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
         const variantResponse = await apiJson<{ data: PublicOfferingVariant[] }>(
           "/api/v1/public/offerings/" + encodeURIComponent(offer.id) + "/variants",
         );
-        variantSelection = mountPublicOfferingVariantPicker(variantsHost, variantResponse.data);
+        variantSelection = mountPublicOfferingVariantPicker(variantsHost, variantResponse.data, priceNode, price, offer.priceAmountMinor, offer.currency);
+        const hasPricedVariant = variantResponse.data.some((variant) =>
+          (Number.isSafeInteger(variant.priceAmountMinor) && Number(variant.priceAmountMinor) >= 0
+            && typeof variant.currency === "string" && Boolean(variant.currency.trim()) && variant.pricingType !== "custom")
+          || (variant.pricingType === "free" && Boolean(variant.currency || offer.currency || profile.defaultCurrency))
+        );
+        if (hasPricedVariant) {
+          primaryAction.href = "/cart";
+          primaryAction.textContent = socialCommerceUi("addToReviewCart");
+          delete primaryAction.dataset.scrollToAsk;
+          primaryAction.dataset.publicOfferAddToCart = "true";
+        }
       } catch {
         variantLoadFailed = true;
         variantsHost.replaceChildren();
@@ -8364,13 +8446,34 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
         variantsHost.querySelector<HTMLSelectElement>("select")?.focus();
         return;
       }
+      if (selectedVariant?.availability === "out_of_stock") {
+        showToast(socialCommerceUi("offerDetailVariantOutOfStock"));
+        return;
+      }
+      const selectedPrice = selectedVariant?.pricingType === "free" ? 0
+        : selectedVariant ? selectedVariant.priceAmountMinor : offer.priceAmountMinor;
+      const selectedCurrency = selectedVariant
+        ? (selectedVariant.pricingType === "free"
+          ? selectedVariant.currency ?? offer.currency ?? profile.defaultCurrency ?? ""
+          : selectedVariant.currency ?? "")
+        : offer.currency ?? profile.defaultCurrency ?? "";
+      if (selectedVariant && (selectedVariant.pricingType === "custom" || selectedPrice === null || !selectedCurrency)) {
+        showToast(socialCommerceUi("offerDetailVariantPriceUnavailable"));
+        askButton.focus();
+        return;
+      }
+      if (selectedPrice === null || !selectedCurrency) {
+        showToast(socialCommerceUi("offerDetailVariantPriceUnavailable"));
+        askButton.focus();
+        return;
+      }
       try {
         addCartItem({
           id: offer.id,
           title: offer.title,
           category: typeLabel,
-          price: offer.priceAmountMinor ?? 0,
-          currency: offer.currency ?? profile.defaultCurrency ?? "",
+          price: selectedPrice,
+          currency: selectedCurrency,
           ...(selectedVariant ? { variantId: selectedVariant.id, variantLabel: selectedVariant.label } : {}),
         });
         showToast(socialCommerceUi("addedToReviewCartToast")); navigate("/cart");

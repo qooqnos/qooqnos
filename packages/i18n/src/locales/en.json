@@ -2329,7 +2329,13 @@
     "offerDetailVariantPriceNote": "Final price and availability must be confirmed by the seller when placing an order.",
     "offerDetailVariantNoChoices": "No selectable options are available for this product.",
     "offerDetailLoadingDetails": "Loading offer details.",
-    "offerDetailAskHeading": "Ask the seller"
+    "offerDetailAskHeading": "Ask the seller",
+    "offerDetailVariantInStock": "In stock",
+    "offerDetailVariantOutOfStock": "Out of stock",
+    "offerDetailVariantStockUnknown": "Availability will be confirmed at checkout",
+    "offerDetailVariantPriceUnavailable": "Ask the seller to confirm this price",
+    "offerDetailVariantFree": "Free",
+    "offerDetailVariantStartingAt": "Starting at"
   },
   "catalogPage": {
     "eyebrow": "Seller catalog",

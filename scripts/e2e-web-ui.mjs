@@ -170,9 +170,9 @@ await page.route("**/api/v1/**", async (route) => {
       { assetId: "asset-photo-1", purpose: "primary", position: 0, mimeType: "image/svg+xml", byteSize: 120, width: 800, height: 1000, src: "/api/v1/public/offerings/offering-1/media/asset-photo-1/content" }
     ] },
     "/api/v1/public/offerings/offering-1/variants": { data: [
-      { id: "variant-red-s", attributes: [{ key: "color", label: "Color", value: "Red" }, { key: "size", label: "Size", value: "S" }] },
-      { id: "variant-red-m", attributes: [{ key: "color", label: "Color", value: "Red" }, { key: "size", label: "Size", value: "M" }] },
-      { id: "variant-blue-s", attributes: [{ key: "color", label: "Color", value: "Blue" }, { key: "size", label: "Size", value: "S" }] }
+      { id: "variant-red-s", attributes: [{ key: "color", label: "Color", value: "Red" }, { key: "size", label: "Size", value: "S" }], priceAmountMinor: 1250000, currency: "IRR", pricingType: "fixed", priceSource: "offering", availability: "in_stock" },
+      { id: "variant-red-m", attributes: [{ key: "color", label: "Color", value: "Red" }, { key: "size", label: "Size", value: "M" }], priceAmountMinor: 1450000, currency: "IRR", pricingType: "fixed", priceSource: "variant", availability: "out_of_stock" },
+      { id: "variant-blue-s", attributes: [{ key: "color", label: "Color", value: "Blue" }, { key: "size", label: "Size", value: "S" }], priceAmountMinor: 1750000, currency: "IRR", pricingType: "fixed", priceSource: "variant", availability: "in_stock" }
     ] },
     "/api/v1/catalog/offers": { data: { id: "offer-1", status: "active", publicationStatus: "unpublished" } },
     "/api/v1/catalog/offers/offer-1/publish": { data: { id: "offer-1", publicationStatus: "pending" } },
@@ -1445,17 +1445,26 @@ assert.equal(await page.locator("#public-offer-ask-heading").innerText(), "پر�
 assert.equal(await page.locator("#public-offer-details-heading").innerText(), "جزئیات قابل اتکا");
 assert.equal(await page.locator('[data-public-offer-variant="color"]').getAttribute("aria-label"), "رنگ");
 assert.equal(await page.locator('[data-public-offer-variant="size"]').getAttribute("aria-label"), "اندازه");
+await page.locator('[data-public-offer-variant="color"]').selectOption("Red");
+await page.locator('[data-public-offer-variant="size"]').selectOption("M");
+assert.equal(await page.locator("#public-offer-price").getAttribute("data-price-amount-minor"), "1450000");
+assert.ok((await page.locator(".phoenix-public-offering-variant-status").innerText()).includes("ناموجود"));
+await page.locator("#public-offer-primary-action").click();
+assert.ok(page.url().includes("/offerings/offering-1"), "Out-of-stock variants must not be added to the cart.");
 await page.locator('[data-public-offer-variant="color"]').selectOption("Blue");
 await page.locator('[data-public-offer-variant="size"]').selectOption("M");
 await page.locator("#public-offer-primary-action").click();
 assert.ok(page.url().includes("/offerings/offering-1"), "Unavailable variant combinations must not be added to the cart.");
 assert.ok((await page.locator(".phoenix-public-offering-variant-status").innerText()).includes("موجود نیست"));
 await page.locator('[data-public-offer-variant="size"]').selectOption("S");
+assert.equal(await page.locator("#public-offer-price").getAttribute("data-price-amount-minor"), "1750000");
+assert.ok((await page.locator(".phoenix-public-offering-variant-status").innerText()).includes("موجود"));
 await page.locator("#public-offer-primary-action").click();
 await page.waitForURL("**/cart");
 const selectedVariantCartPreviewText = await page.locator(".phoenix-screen-wrapper").innerText();
 const persistedCartItems = await page.evaluate(() => JSON.parse(localStorage.getItem("phoenix.cart_items") || "[]"));
 assert.ok(persistedCartItems.some((item) => item.variantId === "variant-blue-s"), "Variant ID missing from local cart: " + JSON.stringify(persistedCartItems));
+assert.ok(persistedCartItems.some((item) => item.variantId === "variant-blue-s" && item.price === 1750000 && item.currency === "IRR"), "Variant-specific price/currency missing from local cart: " + JSON.stringify(persistedCartItems));
 assert.ok(persistedCartItems.some((item) => item.variantLabel === "رنگ: Blue · اندازه: S"), "Localized variant label missing from local cart: " + JSON.stringify(persistedCartItems));
 assert.ok(persistedCartItems.some((item) => item.title === "کیف دست‌دوز · رنگ: Blue · اندازه: S"), "Localized variant title missing from local cart: " + JSON.stringify(persistedCartItems));
 assert.ok(selectedVariantCartPreviewText.includes("رنگ: Blue"), "Cart preview omitted chosen color: " + selectedVariantCartPreviewText);

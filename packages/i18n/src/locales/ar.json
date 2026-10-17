@@ -2329,7 +2329,13 @@
     "offerDetailVariantPriceNote": "يجب تأكيد السعر النهائي والتوفر من البائع عند تقديم الطلب.",
     "offerDetailVariantNoChoices": "لا توجد خيارات قابلة للاختيار لهذا المنتج.",
     "offerDetailLoadingDetails": "جارٍ تحميل تفاصيل العرض.",
-    "offerDetailAskHeading": "اسأل البائع"
+    "offerDetailAskHeading": "اسأل البائع",
+    "offerDetailVariantInStock": "متوفر",
+    "offerDetailVariantOutOfStock": "غير متوفر",
+    "offerDetailVariantStockUnknown": "سيتم تأكيد التوفر عند إتمام الطلب",
+    "offerDetailVariantPriceUnavailable": "تواصل مع البائع لتأكيد السعر",
+    "offerDetailVariantFree": "مجاني",
+    "offerDetailVariantStartingAt": "ابتداءً من"
   },
   "catalogPage": {
     "eyebrow": "كتالوج البائع",

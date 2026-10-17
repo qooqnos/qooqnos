@@ -2329,7 +2329,13 @@
     "offerDetailVariantPriceNote": "قیمت نهایی و موجودی باید هنگام ثبت سفارش از فروشنده تأیید شوند.",
     "offerDetailVariantNoChoices": "گزینه‌های قابل انتخاب برای این کالا در دسترس نیست.",
     "offerDetailLoadingDetails": "جزئیات در حال بارگذاری است.",
-    "offerDetailAskHeading": "پرسش از فروشنده"
+    "offerDetailAskHeading": "پرسش از فروشنده",
+    "offerDetailVariantInStock": "موجود",
+    "offerDetailVariantOutOfStock": "ناموجود",
+    "offerDetailVariantStockUnknown": "موجودی هنگام سفارش تأیید می‌شود",
+    "offerDetailVariantPriceUnavailable": "برای قیمت با فروشنده گفت‌وگو کن",
+    "offerDetailVariantFree": "رایگان",
+    "offerDetailVariantStartingAt": "شروع از"
   },
   "catalogPage": {
     "eyebrow": "کاتالوگ فروشنده",
