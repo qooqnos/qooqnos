@@ -167,6 +167,21 @@ export function addCartItem(input: AddPhoenixCartItemInput): PhoenixCartItem[] {
   return next;
 }
 
+function formatCartMoney(amount: number, rawCurrency?: string | null): string {
+  const currency = rawCurrency?.trim() || "";
+  const storedLanguage = getStorageItem("qooqnos.locale");
+  const language: SupportedLanguage = storedLanguage === "en" || storedLanguage === "ar" ? storedLanguage : "fa";
+  const locale = language === "fa" ? "fa-IR" : language === "ar" ? "ar" : "en-GB";
+  if (!currency) return new Intl.NumberFormat(locale).format(amount) + " " + ui("تومان");
+  try {
+    const formatter = new Intl.NumberFormat(locale, { style: "currency", currency, currencyDisplay: "name" });
+    const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 0;
+    return formatter.format(amount / (10 ** fractionDigits));
+  } catch {
+    return new Intl.NumberFormat(locale).format(amount) + " " + currency;
+  }
+}
+
 function getCartCurrencyTotals(items: readonly PhoenixCartItem[]): Array<{ currency: string; subtotal: number }> {
   const totals = new Map<string, number>();
   for (const item of items) {
@@ -1975,11 +1990,11 @@ export function renderConsumerCart(): string {
   const currencySubtotalRows = currencyTotals.length > 1
     ? currencyTotals.map((entry) =>
         '<div class="phoenix-cart-row"><span>' + ui("مجموع") + ' (' + escapeHtml(entry.currency) + ')</span><span>' +
-        entry.subtotal.toLocaleString("fa-IR") + ' ' + escapeHtml(entry.currency) + '</span></div>'
+        escapeHtml(formatCartMoney(entry.subtotal, entry.currency)) + '</span></div>'
       ).join("")
     : "";
   const singleCurrencyTotal = currencyTotals.length === 1
-    ? currencyTotals[0]!.subtotal.toLocaleString("fa-IR") + " " + currencyTotals[0]!.currency
+    ? formatCartMoney(currencyTotals[0]!.subtotal, currencyTotals[0]!.currency)
     : ui("مجموع به تفکیک ارز");
 
   return `
@@ -2008,7 +2023,7 @@ export function renderConsumerCart(): string {
               <div class="phoenix-cart-item" data-item-id="${item.id}">
                 <div>
                   <strong style="display:block; font-size:14px;">${escapeHtml(item.title)}</strong>
-                  <small style="color: var(--muted);">${escapeHtml(item.category)} · ${item.price.toLocaleString("fa-IR")} ${escapeHtml(item.currency || ui("تومان"))}</small>
+                  <small style="color: var(--muted);">${escapeHtml(item.category)} · ${escapeHtml(formatCartMoney(item.price, item.currency))}</small>
                 </div>
                 <div class="phoenix-cart-qty-ctrl">
                   <button type="button" class="phoenix-cart-qty-btn" data-cart-minus="${item.id}">−</button>
@@ -2021,7 +2036,7 @@ export function renderConsumerCart(): string {
 
           <!-- Financial Calculation Summary -->
           <div class="phoenix-cart-summary">
-            ${currencyTotals.length > 1 ? currencySubtotalRows : '<div class="phoenix-cart-row"><span>' + ui("جمع کل") + '</span><span>' + (currencyTotals[0]?.subtotal ?? 0).toLocaleString("fa-IR") + ' ' + escapeHtml(currencyTotals[0]?.currency ?? ui("تومان")) + '</span></div>'}
+            ${currencyTotals.length > 1 ? currencySubtotalRows : '<div class="phoenix-cart-row"><span>' + ui("جمع کل") + '</span><span>' + escapeHtml(formatCartMoney(currencyTotals[0]?.subtotal ?? 0, currencyTotals[0]?.currency ?? ui("تومان"))) + '</span></div>'}
             <div class="phoenix-cart-row">
               <span>${ui("هزینه ارسال")}</span>
               <span>${ui("هزینهٔ ارسال پس از بررسی سفارش مشخص می‌شود.")}</span>
@@ -2050,7 +2065,7 @@ export function renderConsumerPayment(): string {
   const items = getCartItems();
   const currencyTotals = getCartCurrencyTotals(items);
   const estimatedSubtotal = currencyTotals.length === 1
-    ? currencyTotals[0]!.subtotal.toLocaleString("fa-IR") + " " + currencyTotals[0]!.currency
+    ? formatCartMoney(currencyTotals[0]!.subtotal, currencyTotals[0]!.currency)
     : ui("مجموع به تفکیک ارز");
 
   return `
@@ -2089,7 +2104,7 @@ export function renderConsumerPayment(): string {
                     <strong>${escapeHtml(item.title)}</strong>
                     <small>${escapeHtml(item.category)} · ${ui("تعداد")} ${item.quantity.toLocaleString("fa-IR")}</small>
                   </div>
-                  <span class="phoenix-checkout-review-item-total">${(item.price * item.quantity).toLocaleString("fa-IR")} ${escapeHtml(item.currency || ui("تومان"))}</span>
+                  <span class="phoenix-checkout-review-item-total">${escapeHtml(formatCartMoney(item.price * item.quantity, item.currency))}</span>
                 </article>
               `).join("")}
             </div>

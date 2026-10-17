@@ -997,7 +997,7 @@ const localCartAfterAdd = await page.locator(".phoenix-screen-wrapper").innerTex
 assert.ok(localCartAfterAdd.includes("کیف دست‌دوز"));
 assert.ok(localCartAfterAdd.includes("رنگ: Red"));
 assert.ok(localCartAfterAdd.includes("اندازه: S"));
-assert.ok(localCartAfterAdd.includes("ریال"));
+assert.ok(localCartAfterAdd.includes("ریال") || localCartAfterAdd.includes("IRR"), "The cart should render the canonical currency in a readable form.");
 assert.ok(!localCartAfterAdd.includes("محصول نمایشی محلی"));
 await page.goto(baseURL + "/cart");
 const cartPreviewText = await page.locator(".phoenix-screen-wrapper").innerText();
