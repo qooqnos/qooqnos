@@ -518,7 +518,7 @@ await page.locator("#public-business-share").click();
 await page.waitForFunction(() => Boolean(window.__phoenixSharePayload));
 const capturedShare = await page.evaluate(() => window.__phoenixSharePayload);
 assert.equal(capturedShare.title, "ترنج");
-assert.equal(capturedShare.url, location.href);
+assert.equal(capturedShare.url, await page.evaluate(() => window.location.href));
 assert.ok(capturedShare.text);
 assert.equal(await page.locator(".phoenix-social-tabs").count(), 1);
 assert.equal(await page.locator(".phoenix-social-mobile-nav").count(), 1);
