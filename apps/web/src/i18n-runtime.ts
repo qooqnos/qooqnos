@@ -2266,7 +2266,13 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "catalogPage.studioPathTitle": "می‌خواهی از متن یا عکس شروع کنی؟",
     "catalogPage.studioPathDescription": "ققنوس پیش‌نویس را آماده می‌کند؛ تو آن را بازبینی می‌کنی و بعد ادامه می‌دهی.",
     "catalogPage.catalogHelpTitle": "محصولات و خدمات در یک جا",
-    "catalogPage.catalogHelpDescription": "بعد از ثبت، می‌توانی عرضه‌ها را از فضای کاتالوگ مدیریت کنی. قیمت و موجودی نهایی باید از اطلاعات معتبر فروشنده پیروی کنند."
+    "catalogPage.catalogHelpDescription": "بعد از ثبت، می‌توانی عرضه‌ها را از فضای کاتالوگ مدیریت کنی. قیمت و موجودی نهایی باید از اطلاعات معتبر فروشنده پیروی کنند.",
+    "socialCommercePage.offerDetailVariantInStock": "موجود",
+    "socialCommercePage.offerDetailVariantOutOfStock": "ناموجود",
+    "socialCommercePage.offerDetailVariantStockUnknown": "موجودی هنگام سفارش تأیید می‌شود",
+    "socialCommercePage.offerDetailVariantPriceUnavailable": "برای قیمت با فروشنده گفت‌وگو کن",
+    "socialCommercePage.offerDetailVariantFree": "رایگان",
+    "socialCommercePage.offerDetailVariantStartingAt": "شروع از"
   },
   "en": {
     "common.appName": "Phoenix",
@@ -4530,7 +4536,13 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "catalogPage.studioPathTitle": "Starting from text or a photo?",
     "catalogPage.studioPathDescription": "Phoenix prepares a draft for you to review before continuing.",
     "catalogPage.catalogHelpTitle": "Products and services, together",
-    "catalogPage.catalogHelpDescription": "Manage your offerings from the catalog after creation. Final prices and stock must come from the seller's authoritative data."
+    "catalogPage.catalogHelpDescription": "Manage your offerings from the catalog after creation. Final prices and stock must come from the seller's authoritative data.",
+    "socialCommercePage.offerDetailVariantInStock": "In stock",
+    "socialCommercePage.offerDetailVariantOutOfStock": "Out of stock",
+    "socialCommercePage.offerDetailVariantStockUnknown": "Availability will be confirmed at checkout",
+    "socialCommercePage.offerDetailVariantPriceUnavailable": "Ask the seller to confirm this price",
+    "socialCommercePage.offerDetailVariantFree": "Free",
+    "socialCommercePage.offerDetailVariantStartingAt": "Starting at"
   },
   "ar": {
     "common.appName": "فينيكس",
@@ -6794,7 +6806,13 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "catalogPage.studioPathTitle": "هل تريد البدء بنص أو صورة؟",
     "catalogPage.studioPathDescription": "يجهّز ققنوس مسودة لتراجعها قبل المتابعة.",
     "catalogPage.catalogHelpTitle": "المنتجات والخدمات في مكان واحد",
-    "catalogPage.catalogHelpDescription": "أدر العروض من الكتالوج بعد إنشائها. يجب أن تستند الأسعار والمخزونات النهائية إلى بيانات البائع المعتمدة."
+    "catalogPage.catalogHelpDescription": "أدر العروض من الكتالوج بعد إنشائها. يجب أن تستند الأسعار والمخزونات النهائية إلى بيانات البائع المعتمدة.",
+    "socialCommercePage.offerDetailVariantInStock": "متوفر",
+    "socialCommercePage.offerDetailVariantOutOfStock": "غير متوفر",
+    "socialCommercePage.offerDetailVariantStockUnknown": "سيتم تأكيد التوفر عند إتمام الطلب",
+    "socialCommercePage.offerDetailVariantPriceUnavailable": "تواصل مع البائع لتأكيد السعر",
+    "socialCommercePage.offerDetailVariantFree": "مجاني",
+    "socialCommercePage.offerDetailVariantStartingAt": "ابتداءً من"
   }
 };
 

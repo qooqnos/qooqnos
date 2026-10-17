@@ -15128,3 +15128,25 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-catalog-create-card .checkout-actions,.phoenix-catalog-create-card [data-catalog-create] { width:100%; }
   .phoenix-catalog-context-missing { padding:16px; }
 }
+
+/* Variant selection surfaces canonical price and inventory facts without inventing status. */
+.phoenix-public-offering-variants {
+  margin-top: 16px;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: var(--surface-2);
+}
+.phoenix-public-offering-variants h2 { margin: 0 0 13px; font-size: 14px; font-weight: 850; }
+.phoenix-public-offering-variant-field { display: grid; gap: 6px; margin-top: 10px; }
+.phoenix-public-offering-variant-field label { color: var(--muted); font-size: 11px; font-weight: 750; }
+.phoenix-public-offering-variant-field select {
+  width: 100%; min-height: 42px; padding: 8px 11px;
+  border: 1px solid var(--line); border-radius: 11px;
+  color: var(--text); background: var(--surface); font: inherit; font-size: 12px;
+}
+.phoenix-public-offering-variant-status { margin: 12px 0 0; color: var(--text); font-size: 11px; line-height: 1.9; }
+#public-offer-variants[data-variant-availability="out_of_stock"] .phoenix-public-offering-variant-status { color: var(--danger, #b42318); font-weight: 800; }
+#public-offer-variants[data-variant-availability="in_stock"] .phoenix-public-offering-variant-status { color: var(--success, #16804a); font-weight: 800; }
+.phoenix-public-offering-variant-price-note { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.8; }
+@media(max-width:520px) { .phoenix-public-offering-variants { padding: 13px; border-radius: 14px; } }
