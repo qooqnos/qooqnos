@@ -1,5 +1,6 @@
 import { CommerceRepository, CommerceService, type OrderStatus } from "@qooqnos/commerce";
-import { AuthorizationRepository } from "@qooqnos/database";
+import { BusinessRepository } from "@qooqnos/business";
+import { AuthorizationRepository, CustomerRepository } from "@qooqnos/database";
 import { createAuthorizationService, type AuthorizationRegistry } from "@qooqnos/runtime";
 import { AppError, brandId, type EntityId, type RequestContext } from "@qooqnos/core";
 import type { D1Database } from "@qooqnos/database";
@@ -69,6 +70,82 @@ export function registerCommerceRoutes(
       }
 
       return json({ data: result }, 200, context.requestId);
+    },
+  });
+
+  router.register({
+    method: "POST",
+    path: "/api/v1/commerce/offers/resolve-for-customer",
+    module: "commerce",
+    operation: "commerce.offer.resolve",
+    requireAuthentication: false,
+    requireWorkspace: false,
+    handler: async ({ context, request }) => {
+      // Authenticate the actor directly, then derive every pricing entitlement
+      // from canonical records. A customer does not need seller-workspace
+      // membership, so tenant/workspace scope comes from the published Business.
+      if (!context.authenticated || !context.actorId) {
+        throw new AppError({
+          code: "UNAUTHORIZED",
+          message: "Authentication is required to resolve customer-specific pricing.",
+          requestId: context.requestId,
+        });
+      }
+      if (!database || !authorization) {
+        throw new AppError({
+          code: "INTERNAL_ERROR",
+          message: "Commerce pricing dependencies are not configured.",
+          requestId: context.requestId,
+        });
+      }
+      const body = await bodyObject(request, context.requestId);
+      const sellerId = requiredId(body.sellerId, "sellerId", context.requestId);
+      const productId = requiredId(body.productId, "productId", context.requestId);
+      const variantId = body.variantId !== undefined ? requiredId(body.variantId, "variantId", context.requestId) : undefined;
+      const target = await new BusinessRepository(database).getPublishedConversationTarget(sellerId);
+      if (!target) {
+        return json({ data: null, message: "Published seller was not found." }, 404, context.requestId);
+      }
+
+      const scopedContext = {
+        ...context,
+        tenantId: target.organizationId,
+        workspaceId: target.workspaceId,
+      };
+      const customer = await new CustomerRepository(database).getByUserId(scopedContext, context.actorId);
+      if (customer && customer.status !== "active") {
+        throw new AppError({
+          code: "FORBIDDEN",
+          message: "This customer account cannot access personalized pricing.",
+          requestId: context.requestId,
+        });
+      }
+
+      const relationshipType = customer
+        ? await new CommerceRepository(database).getCustomerRelationshipType(scopedContext, customer.id, sellerId)
+        : null;
+      const service = createService(database, authorization, context.requestId);
+      const result = await service.resolveOffer(scopedContext, {
+        sellerId,
+        productId,
+        ...(variantId ? { variantId } : {}),
+        ...(customer ? { customerId: customer.id } : {}),
+        customerGroup: relationshipType ?? "consumer",
+      });
+      if (!result || !result.offer) {
+        return json({ data: null, message: "No available offer found for this customer context." }, 404, context.requestId);
+      }
+
+      // Never echo the private Customer ID from an offer's audience back to the buyer.
+      const { audience, ...offer } = result.offer;
+      const safeAudience = audience.type === "customer" ? { type: "customer" as const } : audience;
+      return json({
+        data: {
+          offer: { ...offer, audience: safeAudience },
+          precedenceMatched: result.precedenceMatched,
+          isInheritedFromProduct: result.isInheritedFromProduct,
+        },
+      }, 200, context.requestId);
     },
   });
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { D1Database, type D1DatabaseLike, type D1PreparedStatementLike } from "@qooqnos/database";
 import { ApiRouter } from "./router";
+import { registerCommerceRoutes } from "./commerce-routes";
 import { createAuthorizationRegistry } from "@qooqnos/runtime";
 
 describe("GET & POST /api/v1/commerce/offers/resolve endpoint", () => {
@@ -9,6 +10,31 @@ describe("GET & POST /api/v1/commerce/offers/resolve endpoint", () => {
   const customerId = "customer-ali";
 
   const rows = [
+    {
+      id: "off-future-general",
+      organization_id: "tenant-1",
+      workspace_id: "workspace-1",
+      seller_id: sellerId,
+      product_id: productId,
+      variant_id: null,
+      audience_type: "general",
+      customer_group: null,
+      customer_id: null,
+      available: 1,
+      price_amount_minor: 100,
+      currency: "IRR",
+      min_quantity: null,
+      max_quantity: null,
+      effective_from: "2027-01-01T00:00:00Z",
+      effective_to: null,
+      valid_from: "2027-01-01T00:00:00Z",
+      valid_to: null,
+      digital_entitlement_id: null,
+      conditions_json: null,
+      status: "ACTIVE",
+      created_at: "2027-01-01T00:00:00Z",
+      updated_at: "2027-01-01T00:00:00Z",
+    },
     {
       id: "off-general",
       organization_id: "tenant-1",
@@ -56,31 +82,6 @@ describe("GET & POST /api/v1/commerce/offers/resolve endpoint", () => {
       updated_at: "2026-01-01T00:00:00Z",
     },
     {
-      id: "off-future-general",
-      organization_id: "tenant-1",
-      workspace_id: "workspace-1",
-      seller_id: sellerId,
-      product_id: productId,
-      variant_id: null,
-      audience_type: "general",
-      customer_group: null,
-      customer_id: null,
-      available: 1,
-      price_amount_minor: 100,
-      currency: "IRR",
-      min_quantity: null,
-      max_quantity: null,
-      effective_from: "2027-01-01T00:00:00Z",
-      effective_to: null,
-      valid_from: "2027-01-01T00:00:00Z",
-      valid_to: null,
-      digital_entitlement_id: null,
-      conditions_json: null,
-      status: "ACTIVE",
-      created_at: "2027-01-01T00:00:00Z",
-      updated_at: "2027-01-01T00:00:00Z",
-    },
-    {
       id: "off-customer-ali",
       organization_id: "tenant-1",
       workspace_id: "workspace-1",
@@ -119,8 +120,20 @@ describe("GET & POST /api/v1/commerce/offers/resolve endpoint", () => {
     const database = new D1Database(raw);
     const authorization = createAuthorizationRegistry();
     const router = new ApiRouter({ database, authorization });
+    registerCommerceRoutes(router, database, authorization);
     return router;
   }
+
+  it("requires authentication to resolve customer-specific pricing", async () => {
+    const router = createRouter();
+    const response = await router.handle(new Request("http://localhost/api/v1/commerce/offers/resolve-for-customer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sellerId, productId, customerId, customerGroup: "partner" }),
+    }));
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "UNAUTHORIZED" } });
+  });
 
   it("GET /api/v1/commerce/offers/resolve ignores caller-supplied customer, group and effective time", async () => {
     const router = createRouter();
