@@ -3346,3 +3346,9 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Cart items preserve their currency. If multiple currencies are present, the UI shows subtotals by currency rather than summing unlike currencies into a misleading total.
 - Browser E2E now adds the real mocked Discovery product through the detail UI, reloads the cart, and verifies the item/currency persist. Checkout remains review-only and tests still reject claims that an order or payment succeeded.
 - Required checks on this branch: CI, Phoenix verification, Phoenix web UI E2E, and preview deploy. This increment does not integrate a payment provider or create a canonical order.
+## 2026-10-17 — Social comment dialog accessibility
+
+- The comment composer now locks background scrolling while open, traps keyboard focus within the modal, closes on Escape, and restores focus to the originating comment action after dismissal.
+- The original action element is carried explicitly while the feed button is disabled during the asynchronous comment request.
+- Added a visible keyboard-focus treatment for dialog controls and browser E2E assertions for focus cycling, empty-comment validation, Escape/cancel behavior, body-scroll restoration, and focus return.
+- No local comment is displayed as sent; a success message still follows the real Communication API response only.

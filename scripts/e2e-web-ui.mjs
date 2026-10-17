@@ -513,15 +513,33 @@ await page.getByRole("heading", { name: "موجودیت واقعی تست" }).wa
 
 const commentButton = page.locator(".phoenix-post-card [data-comment]").nth(1);
 await commentButton.waitFor();
+const commentBodyOverflow = await page.evaluate(() => document.body.style.overflow);
 await commentButton.click();
 await page.locator(".phoenix-social-comment-dialog").waitFor();
 assert.equal(await page.locator(".phoenix-social-comment-dialog").getAttribute("role"), "dialog");
+assert.equal(await page.evaluate(() => document.body.style.overflow), "hidden");
+assert.equal(await page.locator("#phoenix-social-comment-body").evaluate((element) => element === document.activeElement), true);
+await page.keyboard.press("Shift+Tab");
+assert.equal(await page.locator(".phoenix-social-comment-close").evaluate((element) => element === document.activeElement), true);
+await page.keyboard.press("Shift+Tab");
+assert.equal(await page.locator("[data-submit-social-comment]").evaluate((element) => element === document.activeElement), true);
+await page.keyboard.press("Tab");
+assert.equal(await page.locator(".phoenix-social-comment-close").evaluate((element) => element === document.activeElement), true);
 await page.locator("[data-submit-social-comment]").click();
 assert.ok((await page.locator("#phoenix-social-comment-error").innerText()).includes("متن دیدگاه را بنویس"));
 assert.equal(mockSocialComments.length, 0);
 await page.locator("[data-cancel-social-comment]").last().click();
 assert.equal(await page.locator(".phoenix-social-comment-dialog").count(), 0);
 assert.equal(mockSocialComments.length, 0);
+assert.equal(await page.evaluate(() => document.body.style.overflow), commentBodyOverflow);
+await page.waitForFunction(() => document.activeElement?.matches(".phoenix-post-card [data-comment]") === true);
+
+await page.locator(".phoenix-post-card [data-comment]").nth(1).click();
+await page.locator(".phoenix-social-comment-dialog").waitFor();
+await page.keyboard.press("Escape");
+await page.locator(".phoenix-social-comment-dialog").waitFor({ state: "detached" });
+assert.equal(await page.evaluate(() => document.body.style.overflow), commentBodyOverflow);
+await page.waitForFunction(() => document.activeElement?.matches(".phoenix-post-card [data-comment]") === true);
 
 await page.locator(".phoenix-post-card [data-comment]").nth(1).click();
 await page.locator("#phoenix-social-comment-body").fill("توضیحات محصول روشن و کاربردی است.");
