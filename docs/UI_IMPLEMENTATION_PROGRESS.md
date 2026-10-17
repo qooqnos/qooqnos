@@ -146,3 +146,14 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - The current branch also includes accessible social-comment modal behavior (focus trap/return, Escape dismissal, background-scroll lock), buyer message thread/send flows, and tests for variant selection and currency-safe review-cart persistence.
 - Scope guard: do not mark every product surface as commercially complete solely because its route renders. Payment/order finalization, per-variant authoritative pricing/inventory, production social-ranking signals, and external live-route/Cloudflare Access verification remain separate gates where noted in the page map and capability contracts.
 - Next implementation pass should continue from the canonical page map and prioritize any failing page-level browser checks or missing end-to-end buyer/seller flows; do not recreate the shell or duplicate canonical API state in local storage.
+
+## 2026-10-17 — Follow-up verification checkpoint
+
+- Re-checked branch `main` at `11ea66b86f47cced3f4dd8974d96a9fba332b5cc`.
+- All three GitHub Actions checks on that exact commit completed successfully:
+  - [CI](https://github.com/qooqnos/qooqnos/actions/runs/39043221294)
+  - [Phoenix verification](https://github.com/qooqnos/qooqnos/actions/runs/39043221296)
+  - [Phoenix web UI verification](https://github.com/qooqnos/qooqnos/actions/runs/39043221277)
+- The verified code includes the Seller Studio prepared-WebP upload and owner/workspace-scoped offering-media attachment flow; E2E asserts both upload and attachment. This is test verification, not a claim that every production storage provider and public CDN configuration has been live-tested.
+- Next functional priority remains authoritative per-variant price and inventory resolution before any real checkout/order finalization. Keep the existing cart explicitly in review-only mode until server-side price, availability, buyer/seller relationship rules, payment confirmation, and order creation share one canonical contract.
+- Continue to keep page-route rendering separate from capability completion: passing route/UI tests does not imply production payment, booking, inventory, recommendation ranking, or Cloudflare Access are fully operational.
