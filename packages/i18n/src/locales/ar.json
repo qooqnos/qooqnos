@@ -2318,6 +2318,15 @@
     "offerDetailSaved": "تم الحفظ",
     "offerDetailSavedToast": "تم حفظ العرض.",
     "offerDetailCompare": "مقارنة",
-    "offerDetailShare": "مشاركة"
+    "offerDetailShare": "مشاركة",
+    "offerDetailBrandName": "ققنوس",
+    "offerDetailVariantTitle": "اختيار خيارات المنتج",
+    "offerDetailVariantPlaceholder": "اختر…",
+    "offerDetailVariantPrompt": "اختر الخيارات المفضلة للمتابعة.",
+    "offerDetailVariantChosen": "الخيار المحدد",
+    "offerDetailVariantCombinationUnavailable": "هذا الخيار المركب غير متاح. اختر تركيبة أخرى.",
+    "offerDetailVariantLoadFailed": "تعذر تحميل خيارات المنتج. حاول مجدداً.",
+    "offerDetailVariantPriceNote": "يجب تأكيد السعر النهائي والتوفر من البائع عند تقديم الطلب.",
+    "offerDetailVariantNoChoices": "لا توجد خيارات قابلة للاختيار لهذا المنتج."
   }
 }

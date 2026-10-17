@@ -167,6 +167,11 @@ await page.route("**/api/v1/**", async (route) => {
     "/api/v1/public/offerings/offering-1/media": { data: [
       { assetId: "asset-photo-1", purpose: "primary", position: 0, mimeType: "image/svg+xml", byteSize: 120, width: 800, height: 1000, src: "/api/v1/public/offerings/offering-1/media/asset-photo-1/content" }
     ] },
+    "/api/v1/public/offerings/offering-1/variants": { data: [
+      { id: "variant-red-s", attributes: [{ key: "color", label: "Color", value: "Red" }, { key: "size", label: "Size", value: "S" }] },
+      { id: "variant-red-m", attributes: [{ key: "color", label: "Color", value: "Red" }, { key: "size", label: "Size", value: "M" }] },
+      { id: "variant-blue-s", attributes: [{ key: "color", label: "Color", value: "Blue" }, { key: "size", label: "Size", value: "S" }] }
+    ] },
     "/api/v1/catalog/offers": { data: { id: "offer-1", status: "active", publicationStatus: "unpublished" } },
     "/api/v1/catalog/offers/offer-1/publish": { data: { id: "offer-1", publicationStatus: "pending" } },
   };
@@ -1265,17 +1270,33 @@ await page.evaluate(() => localStorage.setItem("qooqnos.locale", "en"));
 await page.reload();
 await page.locator(".phoenix-public-offering-page").waitFor();
 await page.waitForFunction(() => document.querySelector("#public-offer-type")?.textContent === "Product");
+assert.equal(await page.title(), "کیف دست‌دوز | Qooqnos");
 assert.equal(await page.locator("#public-offer-price").evaluate((el) => el.parentElement?.querySelector("span")?.textContent), "Recorded price");
+assert.equal(await page.locator('[data-public-offer-variant="color"]').count(), 1);
+assert.equal(await page.locator('[data-public-offer-variant="size"]').count(), 1);
 assert.equal(await page.locator("#public-offer-ask").innerText(), "Ask the seller");
 await page.evaluate(() => localStorage.setItem("qooqnos.locale", "ar"));
 await page.reload();
 await page.locator(".phoenix-public-offering-page").waitFor();
 await page.waitForFunction(() => document.querySelector("#public-offer-type")?.textContent === "منتج");
+assert.equal(await page.title(), "کیف دست‌دوز | ققنوس");
 assert.equal(await page.locator("#public-offer-price").evaluate((el) => el.parentElement?.querySelector("span")?.textContent), "السعر المسجّل");
 await page.evaluate(() => localStorage.setItem("qooqnos.locale", "fa"));
 await page.reload();
 await page.locator(".phoenix-public-offering-page").waitFor();
 await page.waitForFunction(() => document.querySelector("#public-offer-type")?.textContent === "کالا");
+assert.equal(await page.title(), "کیف دست‌دوز | ققنوس");
+await page.locator('[data-public-offer-variant="color"]').selectOption("Blue");
+await page.locator('[data-public-offer-variant="size"]').selectOption("M");
+await page.locator("#public-offer-primary-action").click();
+assert.ok(page.url().includes("/offerings/offering-1"), "Unavailable variant combinations must not be added to the cart.");
+assert.ok((await page.locator(".phoenix-public-offering-variant-status").innerText()).includes("موجود نیست"));
+await page.locator('[data-public-offer-variant="size"]').selectOption("S");
+await page.locator("#public-offer-primary-action").click();
+await page.waitForURL("**/cart");
+assert.ok((await page.locator(".phoenix-screen-wrapper").innerText()).includes("کیف دست‌دوز · Color: Blue · Size: S"));
+await page.goto(baseURL + "/offerings/offering-1?business=biz-1");
+await page.locator(".phoenix-public-offering-page").waitFor();
 await page.goto(baseURL + "/offerings/does-not-exist?business=biz-1");
 await page.locator(".phoenix-public-offering-page").waitFor();
 await page.locator("#public-offer-published[data-state='unavailable']").waitFor();

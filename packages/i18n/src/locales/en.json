@@ -2318,6 +2318,15 @@
     "offerDetailSaved": "Saved",
     "offerDetailSavedToast": "Offer saved.",
     "offerDetailCompare": "Compare",
-    "offerDetailShare": "Share"
+    "offerDetailShare": "Share",
+    "offerDetailBrandName": "Qooqnos",
+    "offerDetailVariantTitle": "Choose product options",
+    "offerDetailVariantPlaceholder": "Choose…",
+    "offerDetailVariantPrompt": "Select your preferred options to continue.",
+    "offerDetailVariantChosen": "Selected option",
+    "offerDetailVariantCombinationUnavailable": "This combination is unavailable. Choose another option.",
+    "offerDetailVariantLoadFailed": "Product options could not be loaded. Try again.",
+    "offerDetailVariantPriceNote": "Final price and availability must be confirmed by the seller when placing an order.",
+    "offerDetailVariantNoChoices": "No selectable options are available for this product."
   }
 }

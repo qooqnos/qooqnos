@@ -7246,6 +7246,7 @@ function renderPublicOfferingDetail(): string {
         '<h1 id="public-offer-title">' + socialCommerceUi("offerDetailLoadingTitle") + '</h1>' +
         '<p class="phoenix-public-offering-description" id="public-offer-description">' + socialCommerceUi("offerDetailLoadingDescription") + '</p>' +
         '<div class="phoenix-public-offering-price"><span>' + socialCommerceUi("offerDetailPriceLabel") + '</span><strong id="public-offer-price">—</strong></div>' +
+        '<div id="public-offer-variants" hidden></div>' +
         '<a class="phoenix-public-offering-seller" id="public-offer-seller" href="/discover?tab=explore" data-nav>' +
           '<span class="phoenix-public-offering-seller-avatar" id="public-offer-seller-avatar" aria-hidden="true">ق</span>' +
           '<span><small>' + socialCommerceUi("offerDetailSellerLabel") + '</small><strong id="public-offer-seller-name">' + socialCommerceUi("offerDetailLoadingSeller") + '</strong></span><span aria-hidden="true">←</span></a>' +
@@ -7876,6 +7877,137 @@ function mountPublicOfferingGallery(
   selectImage(0);
 }
 
+interface PublicOfferingVariantAttribute {
+  readonly key: string;
+  readonly label: string;
+  readonly value: string | number | boolean;
+}
+
+interface PublicOfferingVariant {
+  readonly id: string;
+  readonly attributes: readonly PublicOfferingVariantAttribute[];
+}
+
+interface PublicOfferingVariantSelection {
+  readonly hasVariants: boolean;
+  getSelected(): { readonly id: string; readonly label: string } | null;
+}
+
+function mountPublicOfferingVariantPicker(host: HTMLElement, variants: readonly PublicOfferingVariant[]): PublicOfferingVariantSelection {
+  const safeVariants = variants.filter((variant) => typeof variant.id === "string" && variant.id.length > 0 && Array.isArray(variant.attributes));
+  host.replaceChildren();
+  if (!safeVariants.length) {
+    host.hidden = true;
+    host.dataset.variantState = "none";
+    return { hasVariants: false, getSelected: () => null };
+  }
+
+  host.hidden = false;
+  const panel = document.createElement("section");
+  panel.className = "phoenix-public-offering-variants";
+  panel.setAttribute("aria-labelledby", "public-offer-variants-title");
+  const heading = document.createElement("h2");
+  heading.id = "public-offer-variants-title";
+  heading.textContent = socialCommerceUi("offerDetailVariantTitle");
+  panel.appendChild(heading);
+
+  const normalized = safeVariants.map((variant) => ({
+    ...variant,
+    attributes: variant.attributes.filter((attribute) =>
+      attribute && typeof attribute.key === "string" && attribute.key.trim()
+        && typeof attribute.label === "string"
+        && ["string", "number", "boolean"].includes(typeof attribute.value)
+    ).map((attribute) => ({
+      key: attribute.key.trim(),
+      label: attribute.label.trim() || attribute.key.trim(),
+      value: String(attribute.value),
+    })),
+  }));
+  const definitions = new Map<string, { label: string; values: string[] }>();
+  for (const variant of normalized) {
+    for (const attribute of variant.attributes) {
+      const definition = definitions.get(attribute.key) ?? { label: attribute.label, values: [] };
+      if (!definition.values.includes(attribute.value)) definition.values.push(attribute.value);
+      definitions.set(attribute.key, definition);
+    }
+  }
+  const dimensions = [...definitions.entries()]
+    .filter(([, definition]) => definition.values.length > 1)
+    .map(([key, definition]) => ({ key, label: definition.label, values: definition.values.slice().sort((a, b) => a.localeCompare(b)) }));
+  const selectors = new Map<string, HTMLSelectElement>();
+  for (const dimension of dimensions) {
+    const field = document.createElement("div");
+    field.className = "phoenix-public-offering-variant-field";
+    const label = document.createElement("label");
+    const select = document.createElement("select");
+    select.id = "public-offer-variant-" + dimension.key;
+    label.htmlFor = select.id;
+    label.textContent = dimension.label;
+    select.dataset.publicOfferVariant = dimension.key;
+    select.required = true;
+    select.setAttribute("aria-label", dimension.label);
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = socialCommerceUi("offerDetailVariantPlaceholder");
+    select.appendChild(placeholder);
+    for (const value of dimension.values) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = value;
+      select.appendChild(option);
+    }
+    field.append(label, select);
+    panel.appendChild(field);
+    selectors.set(dimension.key, select);
+  }
+
+  const status = document.createElement("p");
+  status.className = "phoenix-public-offering-variant-status";
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+  panel.appendChild(status);
+  const priceNote = document.createElement("p");
+  priceNote.className = "phoenix-public-offering-variant-price-note";
+  priceNote.textContent = socialCommerceUi("offerDetailVariantPriceNote");
+  panel.appendChild(priceNote);
+
+  let selectedVariant: typeof normalized[number] | null = dimensions.length === 0 && normalized.length === 1 ? normalized[0]! : null;
+  const matchingVariant = (): typeof normalized[number] | null => {
+    if (dimensions.length === 0) return normalized.length === 1 ? normalized[0]! : null;
+    for (const dimension of dimensions) {
+      if (!selectors.get(dimension.key)?.value) return null;
+    }
+    return normalized.find((variant) => dimensions.every((dimension) =>
+      variant.attributes.some((attribute) => attribute.key === dimension.key && attribute.value === selectors.get(dimension.key)?.value)
+    )) ?? null;
+  };
+  const refresh = (): void => {
+    selectedVariant = matchingVariant();
+    if (selectedVariant) {
+      const label = selectedVariant.attributes.map((attribute) => attribute.label + ": " + attribute.value).join(" · ");
+      status.textContent = socialCommerceUi("offerDetailVariantChosen") + (label ? ": " + label : "");
+      host.dataset.variantState = "selected";
+      return;
+    }
+    const complete = dimensions.length > 0 && dimensions.every((dimension) => Boolean(selectors.get(dimension.key)?.value));
+    status.textContent = dimensions.length === 0
+      ? socialCommerceUi("offerDetailVariantNoChoices")
+      : complete
+        ? socialCommerceUi("offerDetailVariantCombinationUnavailable")
+        : socialCommerceUi("offerDetailVariantPrompt");
+    host.dataset.variantState = complete ? "unavailable" : dimensions.length === 0 ? "unavailable" : "incomplete";
+  };
+  for (const select of selectors.values()) select.addEventListener("change", refresh);
+  refresh();
+  host.replaceChildren(panel);
+  return {
+    hasVariants: true,
+    getSelected: () => selectedVariant
+      ? { id: selectedVariant.id, label: selectedVariant.attributes.map((attribute) => attribute.label + ": " + attribute.value).join(" · ") }
+      : null,
+  };
+}
+
 async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   const offeringId = routePath.split("/").filter(Boolean)[1] ?? "";
   const params = new URLSearchParams(location.search);
@@ -7895,7 +8027,10 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   const actionsHost = document.querySelector<HTMLElement>("#public-offer-actions");
   const mediaMessage = document.querySelector<HTMLElement>("#public-offer-media-message");
   const mediaHost = document.querySelector<HTMLElement>(".phoenix-public-offering-media");
-  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage || !mediaHost) {
+  const variantsHost = document.querySelector<HTMLElement>("#public-offer-variants");
+  let variantLoadFailed = false;
+  let variantSelection: PublicOfferingVariantSelection = { hasVariants: false, getSelected: () => null };
+  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage || !mediaHost || !variantsHost) {
     if (titleNode) titleNode.textContent = socialCommerceUi("offerDetailInvalidLink");
     if (noteNode) noteNode.textContent = socialCommerceUi("offerDetailOpenFromProfile");
     return;
@@ -7911,11 +8046,13 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     publishedNode.dataset.state = "unavailable";
     noteNode.textContent = socialCommerceUi("offerDetailReturnToExplore");
     mediaMessage.textContent = socialCommerceUi("offerDetailImageUnavailable");
+    variantsHost.replaceChildren();
+    variantsHost.hidden = true;
     primaryAction.href = "/discover?tab=explore";
     primaryAction.textContent = socialCommerceUi("tabExplore");
     primaryAction.hidden = false;
     askButton.disabled = true;
-    document.title = socialCommerceUi("offerDetailUnavailableTitle") + " | Phoenix";
+    document.title = socialCommerceUi("offerDetailUnavailableTitle") + " | " + socialCommerceUi("offerDetailBrandName");
   };
   try {
     const response = await apiJson<{ data: {
@@ -7951,6 +8088,26 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
       mountPublicOfferingGallery(mediaHost, mediaResponse.data, offer.title);
     } catch {
       mediaMessage.textContent = socialCommerceUi("offerDetailImageUnavailable");
+    }
+    if (offer.offeringType === "product") {
+      try {
+        const variantResponse = await apiJson<{ data: PublicOfferingVariant[] }>(
+          "/api/v1/public/offerings/" + encodeURIComponent(offer.id) + "/variants",
+        );
+        variantSelection = mountPublicOfferingVariantPicker(variantsHost, variantResponse.data);
+      } catch {
+        variantLoadFailed = true;
+        variantsHost.replaceChildren();
+        variantsHost.hidden = false;
+        const message = document.createElement("p");
+        message.className = "phoenix-public-offering-variant-status";
+        message.setAttribute("role", "alert");
+        message.textContent = socialCommerceUi("offerDetailVariantLoadFailed");
+        variantsHost.appendChild(message);
+      }
+    } else {
+      variantsHost.replaceChildren();
+      variantsHost.hidden = true;
     }
     publishedNode.textContent = socialCommerceUi("offerDetailPublished");
     publishedNode.dataset.state = "published";
@@ -8005,8 +8162,29 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
       if (primaryAction.dataset.scrollToAsk === "true") { event.preventDefault(); askButton.focus(); return; }
       if (primaryAction.dataset.publicOfferAddToCart !== "true") return;
       event.preventDefault();
+      if (variantLoadFailed) {
+        showToast(socialCommerceUi("offerDetailVariantLoadFailed"));
+        return;
+      }
+      const selectedVariant = variantSelection.getSelected();
+      if (variantSelection.hasVariants && !selectedVariant) {
+        const statusKey = variantsHost.dataset.variantState === "unavailable"
+          ? (variantsHost.querySelector("select") ? "offerDetailVariantCombinationUnavailable" : "offerDetailVariantNoChoices")
+          : "offerDetailVariantPrompt";
+        showToast(socialCommerceUi(statusKey));
+        variantsHost.scrollIntoView({ behavior: "smooth", block: "center" });
+        variantsHost.querySelector<HTMLSelectElement>("select")?.focus();
+        return;
+      }
       try {
-        addCartItem({ id: offer.id, title: offer.title, category: typeLabel, price: offer.priceAmountMinor ?? 0, currency: offer.currency ?? profile.defaultCurrency ?? "" });
+        addCartItem({
+          id: offer.id,
+          title: offer.title,
+          category: typeLabel,
+          price: offer.priceAmountMinor ?? 0,
+          currency: offer.currency ?? profile.defaultCurrency ?? "",
+          ...(selectedVariant ? { variantId: selectedVariant.id, variantLabel: selectedVariant.label } : {}),
+        });
         showToast(socialCommerceUi("addedToReviewCartToast")); navigate("/cart");
       } catch { showToast(socialCommerceUi("reviewCartAddError")); }
     });
@@ -8020,7 +8198,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
       } catch (error) { showToast(error instanceof Error ? error.message : socialCommerceUi("socialActionUnavailable")); }
       finally { askButton.disabled = false; }
     });
-    document.title = offer.title + " | ققنوس";
+    document.title = offer.title + " | " + socialCommerceUi("offerDetailBrandName");
     setMeta("description", description);
     setLink("canonical", new URL(routePath + "?business=" + encodeURIComponent(businessId), location.origin).toString());
   } catch { showUnavailable(); }

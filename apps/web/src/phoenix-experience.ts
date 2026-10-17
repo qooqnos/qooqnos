@@ -83,6 +83,9 @@ export interface PhoenixCartItem {
   quantity: number;
   currency?: string;
   imageUrl?: string;
+  offeringId?: string;
+  variantId?: string;
+  variantLabel?: string;
 }
 
 function isPhoenixCartItem(value: unknown): value is PhoenixCartItem {
@@ -129,15 +132,22 @@ export interface AddPhoenixCartItemInput {
   readonly price: number;
   readonly currency: string;
   readonly imageUrl?: string;
+  readonly variantId?: string;
+  readonly variantLabel?: string;
 }
 
 export function addCartItem(input: AddPhoenixCartItemInput): PhoenixCartItem[] {
-  const id = input.id.trim();
-  const title = input.title.trim();
+  const offeringId = input.id.trim();
+  const variantId = input.variantId?.trim() || undefined;
+  const variantLabel = input.variantLabel?.trim() || undefined;
+  const id = variantId ? offeringId + "::variant::" + variantId : offeringId;
+  const baseTitle = input.title.trim();
+  const title = variantId && variantLabel ? baseTitle + " · " + variantLabel : baseTitle;
   const currency = input.currency.trim();
-  if (!id || !title || !currency || !Number.isFinite(input.price) || input.price < 0) {
+  if (!offeringId || !title || !currency || !Number.isFinite(input.price) || input.price < 0) {
     throw new Error("A real item ID, title, non-negative price and currency are required.");
   }
+  if (variantId && !variantLabel) throw new Error("A selected variant must have a readable label.");
 
   const items = getCartItems();
   const existing = items.find((item) => item.id === id && (item.currency?.trim() || ui("تومان")) === currency);
@@ -151,6 +161,7 @@ export function addCartItem(input: AddPhoenixCartItemInput): PhoenixCartItem[] {
         currency,
         quantity: 1,
         ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}),
+        ...(variantId ? { offeringId, variantId, variantLabel } : {}),
       }];
   saveCartItems(next);
   return next;

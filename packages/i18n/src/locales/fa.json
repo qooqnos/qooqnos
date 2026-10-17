@@ -2318,6 +2318,15 @@
     "offerDetailSaved": "ذخیره شد",
     "offerDetailSavedToast": "عرضه ذخیره شد.",
     "offerDetailCompare": "مقایسه",
-    "offerDetailShare": "اشتراک‌گذاری"
+    "offerDetailShare": "اشتراک‌گذاری",
+    "offerDetailBrandName": "ققنوس",
+    "offerDetailVariantTitle": "انتخاب ویژگی‌های کالا",
+    "offerDetailVariantPlaceholder": "انتخاب کنید",
+    "offerDetailVariantPrompt": "برای ادامه، گزینه‌های دلخواهت را انتخاب کن.",
+    "offerDetailVariantChosen": "گزینهٔ انتخاب‌شده",
+    "offerDetailVariantCombinationUnavailable": "این ترکیب موجود نیست؛ گزینهٔ دیگری انتخاب کن.",
+    "offerDetailVariantLoadFailed": "گزینه‌های کالا بارگذاری نشدند؛ دوباره تلاش کن.",
+    "offerDetailVariantPriceNote": "قیمت نهایی و موجودی باید هنگام ثبت سفارش از فروشنده تأیید شوند.",
+    "offerDetailVariantNoChoices": "گزینه‌های قابل انتخاب برای این کالا در دسترس نیست."
   }
 }
