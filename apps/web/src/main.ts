@@ -3654,7 +3654,7 @@ function renderProfile(): string {
   const menuHtml = menuItems.map((item) =>
     '<a class="phoenix-reset-profile-link" href="' + item.href + '" data-nav>' +
       '<span class="phoenix-reset-profile-link-icon" aria-hidden="true">' + item.icon + '</span>' +
-      '<span class="phoenix-reset-profile-link-copy"><strong>' + socialCommerceUi(item.titleKey) + '</strong><small>' + socialCommerceUi(item.descriptionKey) + '</small></span>' +
+      '<span class="phoenix-reset-profile-link-copy"><strong>' + uiText(item.title) + '</strong><small>' + uiText(item.description) + '</small></span>' +
       '<span class="phoenix-reset-profile-arrow" aria-hidden="true">←</span></a>'
   ).join("");
   const socialShortcuts = [
@@ -3667,7 +3667,7 @@ function renderProfile(): string {
   const socialShortcutsHtml = socialShortcuts.map((item) =>
     '<a class="phoenix-reset-profile-social-shortcut" href="' + item.href + '" data-nav>' +
       '<span class="phoenix-reset-profile-social-orbit"><span aria-hidden="true">' + item.icon + '</span></span>' +
-      '<strong>' + uiText(item.title) + '</strong><small>' + uiText(item.description) + '</small></a>'
+      '<strong>' + socialCommerceUi(item.titleKey) + '</strong><small>' + socialCommerceUi(item.descriptionKey) + '</small></a>'
   ).join("");
 
   return '<div class="phoenix-reset-profile-page">' +
