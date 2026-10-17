@@ -1327,7 +1327,7 @@ await page.locator("[data-confirm-seller-draft]").click();
 await page.getByText("محصول Catalog ساخته شد").waitFor();
 await page.getByRole("button", { name: "تأیید و افزودن به ویترین" }).waitFor();
 await page.locator("[data-create-seller-offer]").click();
-await page.getByText("Listing ساخته شد").waitFor();
+await page.getByText("عرضه ساخته شد و تصویر به آن متصل شد").waitFor();
 await page.locator("[data-publish-seller-offer]").click();
 await page.getByText("درخواست انتشار ثبت شد").waitFor();
 assert.equal(mediaAssetUploadRequests.length, 1, "Seller Studio should upload the prepared image once");
