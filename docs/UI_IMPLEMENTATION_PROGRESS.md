@@ -157,3 +157,16 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - The verified code includes the Seller Studio prepared-WebP upload and owner/workspace-scoped offering-media attachment flow; E2E asserts both upload and attachment. This is test verification, not a claim that every production storage provider and public CDN configuration has been live-tested.
 - Next functional priority remains authoritative per-variant price and inventory resolution before any real checkout/order finalization. Keep the existing cart explicitly in review-only mode until server-side price, availability, buyer/seller relationship rules, payment confirmation, and order creation share one canonical contract.
 - Continue to keep page-route rendering separate from capability completion: passing route/UI tests does not imply production payment, booking, inventory, recommendation ranking, or Cloudflare Access are fully operational.
+
+
+## 2026-10-18 — Continuation checkpoint
+
+- Re-checked `main` at `1233a0284bd855299c1702a4476797d17ff899ac`; no pull request was opened. Work continues directly on the requested branch.
+- The exact current commit has successful GitHub Actions results for CI, Phoenix verification, Phoenix web UI verification, and the workers.dev preview deployment:
+  - [CI](https://github.com/qooqnos/qooqnos/actions/runs/39077118016)
+  - [Phoenix verification](https://github.com/qooqnos/qooqnos/actions/runs/39077117999)
+  - [Phoenix web UI verification](https://github.com/qooqnos/qooqnos/actions/runs/39077118020)
+  - [Phoenix web preview deploy](https://github.com/qooqnos/qooqnos/actions/runs/39077118002)
+- Re-confirmed the seller Studio media path, safe public offering media, variant selection, relationship-price resolution, currency-aware review cart, buyer/seller messaging, social shortcuts, and localization changes are present in current `main`.
+- These checks establish that the configured build and browser test suites passed; they do not certify live payment capture, canonical order finalization, production ranking quality, or visual review of every route at mobile and desktop breakpoints.
+- Next implementation priority remains end-to-end capability closure rather than adding more page shells: authoritative price/availability validation at order creation, payment-provider integration, and a route-by-route visual/accessibility audit. Until the canonical checkout contract is complete, the cart must remain clearly labeled as a review cart and must not imply that an order or payment has succeeded.
