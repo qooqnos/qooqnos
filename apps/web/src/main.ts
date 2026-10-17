@@ -6507,7 +6507,15 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
         : '<span class="phoenix-detail-contact-note">' + uiText("اطلاعات عمومی فروشنده در این عرضه موجود نیست.") + '</span>';
   const cartPrice = item.price === null || item.price === undefined ? Number.NaN : Number(item.price);
   const cartCurrency = typeof item.currency === "string" ? item.currency.trim() : "";
-  const canAddToReviewCart = isProduct && Boolean((item.sourceId ?? key).trim())
+  const canonicalOfferingId = typeof item.metadata?.offeringId === "string"
+    ? item.metadata.offeringId.trim()
+    : "";
+  const canonicalOfferingHref = businessId && canonicalOfferingId
+    ? "/offerings/" + encodeURIComponent(canonicalOfferingId) + "?" + new URLSearchParams({ business: businessId }).toString()
+    : "";
+  // Business-linked items must go through the canonical offer page, preserving
+  // the variant selection and availability guard instead of bypassing it here.
+  const canAddToReviewCart = isProduct && !businessId && Boolean((item.sourceId ?? key).trim())
     && Number.isFinite(cartPrice) && cartPrice >= 0 && Boolean(cartCurrency);
 
   const overlay = document.createElement("div");
@@ -6537,7 +6545,7 @@ function openDiscoveryResultPanel(item: DiscoveryResult): void {
           ${metadataEntries.length ? '<section class="phoenix-detail-attributes"><h3>' + uiText("مشخصات ثبت‌شده") + '</h3><dl>' + metadataEntries.map(([label, value]) => '<div><dt>' + escapeHtml(uiText(label)) + '</dt><dd>' + escapeHtml(value) + '</dd></div>').join("") + '</dl></section>' : ""}
           <div class="phoenix-detail-actions">
             ${mainAction}
-            ${businessId ? '<a class="button button-ghost phoenix-detail-open-full" href="/offerings/' + encodeURIComponent(key) + '?business=' + encodeURIComponent(businessId) + '" data-nav>' + uiText("صفحه کامل عرضه") + ' <span aria-hidden="true">←</span></a>' : ""}
+            ${canonicalOfferingHref ? '<a class="button button-primary phoenix-detail-open-full" href="' + escapeAttr(canonicalOfferingHref) + '" data-nav>' + uiText("صفحه کامل عرضه") + ' <span aria-hidden="true">←</span></a>' : ""}
             ${canAddToReviewCart ? '<button class="button button-primary phoenix-detail-add-to-cart" type="button" data-add-to-cart-detail>＋ ' + socialCommerceUi("addToReviewCart") + '</button>' : ""}
             ${businessId ? '<button class="button button-primary phoenix-detail-ask-seller" type="button" data-ask-seller-detail>' + socialCommerceUi("detailAskSeller") + ' <span aria-hidden="true">←</span></button>' : ""}
             ${followTargetId ? '<button class="button button-ghost phoenix-detail-follow-button' + (initiallyFollowing ? ' selected' : '') + '" type="button" data-follow-seller-detail aria-pressed="' + String(initiallyFollowing) + '">' + (initiallyFollowing ? socialCommerceUi("detailFollowingSeller") : socialCommerceUi("detailFollowSeller")) + '</button>' : ""}
