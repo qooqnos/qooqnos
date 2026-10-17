@@ -1005,6 +1005,39 @@ assert.ok(cartPreviewText.includes("پیش‌نمایش سبد محلی"));
 assert.ok(cartPreviewText.includes("مجموع تقریبی اقلام محلی"));
 assert.ok(cartPreviewText.includes("هزینهٔ ارسال پس از بررسی سفارش مشخص می‌شود."));
 assert.ok(!cartPreviewText.includes("رایگان"));
+const originalCartJson = await page.evaluate(() => localStorage.getItem("phoenix.cart_items"));
+await page.evaluate(() => {
+  const items = JSON.parse(localStorage.getItem("phoenix.cart_items") || "[]");
+  items.push({ id: "currency-display-e2e-usd", title: "کالای آزمون ارز دیگر", category: "کالا", price: 23, quantity: 1, currency: "USD" });
+  localStorage.setItem("phoenix.cart_items", JSON.stringify(items));
+});
+await page.reload();
+await page.locator(".phoenix-cart-item").nth(1).waitFor();
+const multiCurrencyFa = await page.locator(".phoenix-screen-wrapper").innerText();
+assert.ok(multiCurrencyFa.includes("ریال"), "Persian cart should name IRR.");
+assert.ok(multiCurrencyFa.includes("دلار"), "Persian mixed-currency subtotal should name USD.");
+assert.ok(!multiCurrencyFa.includes("IRR") && !multiCurrencyFa.includes("USD"), "Persian currency labels should not expose ISO codes.");
+await page.evaluate(() => localStorage.setItem("qooqnos.locale", "en"));
+await page.reload();
+await page.locator(".phoenix-cart-item").nth(1).waitFor();
+const multiCurrencyEn = await page.locator(".phoenix-screen-wrapper").innerText();
+assert.ok(multiCurrencyEn.includes("Iranian"), "English cart should name IRR.");
+assert.ok(multiCurrencyEn.includes("US dollars"), "English cart should name USD.");
+assert.ok(!multiCurrencyEn.includes("IRR") && !multiCurrencyEn.includes("USD"), "English currency labels should not expose ISO codes.");
+await page.evaluate(() => localStorage.setItem("qooqnos.locale", "ar"));
+await page.reload();
+await page.locator(".phoenix-cart-item").nth(1).waitFor();
+const multiCurrencyAr = await page.locator(".phoenix-screen-wrapper").innerText();
+assert.ok(multiCurrencyAr.includes("ريال"), "Arabic cart should name IRR.");
+assert.ok(multiCurrencyAr.includes("دولار"), "Arabic cart should name USD.");
+assert.ok(!multiCurrencyAr.includes("IRR") && !multiCurrencyAr.includes("USD"), "Arabic currency labels should not expose ISO codes.");
+await page.evaluate((cartJson) => {
+  if (cartJson === null) localStorage.removeItem("phoenix.cart_items");
+  else localStorage.setItem("phoenix.cart_items", cartJson);
+  localStorage.setItem("qooqnos.locale", "fa");
+}, originalCartJson);
+await page.reload();
+await page.locator(".phoenix-cart-item").first().waitFor();
 // Checkout must remain the honest review-only screen even when the account
 // is currently using the seller workspace persona.
 await page.evaluate(() => localStorage.setItem("phoenix.active_persona", "business"));

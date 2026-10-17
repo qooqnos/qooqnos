@@ -182,6 +182,20 @@ function formatCartMoney(amount: number, rawCurrency?: string | null): string {
   }
 }
 
+function formatCartCurrencyName(rawCurrency: string): string {
+  const currency = rawCurrency.trim();
+  if (!currency) return ui("تومان");
+  const storedLanguage = getStorageItem("qooqnos.locale");
+  const language: SupportedLanguage = storedLanguage === "en" || storedLanguage === "ar" ? storedLanguage : "fa";
+  const locale = language === "fa" ? "fa-IR" : language === "ar" ? "ar" : "en-GB";
+  try {
+    const formatter = new Intl.NumberFormat(locale, { style: "currency", currency, currencyDisplay: "name" });
+    return formatter.formatToParts(2).find((part) => part.type === "currency")?.value?.trim() || currency;
+  } catch {
+    return currency;
+  }
+}
+
 function getCartCurrencyTotals(items: readonly PhoenixCartItem[]): Array<{ currency: string; subtotal: number }> {
   const totals = new Map<string, number>();
   for (const item of items) {
@@ -1989,7 +2003,7 @@ export function renderConsumerCart(): string {
   const currencyTotals = getCartCurrencyTotals(items);
   const currencySubtotalRows = currencyTotals.length > 1
     ? currencyTotals.map((entry) =>
-        '<div class="phoenix-cart-row"><span>' + ui("مجموع") + ' (' + escapeHtml(entry.currency) + ')</span><span>' +
+        '<div class="phoenix-cart-row"><span>' + ui("مجموع") + ' (' + escapeHtml(formatCartCurrencyName(entry.currency)) + ')</span><span>' +
         escapeHtml(formatCartMoney(entry.subtotal, entry.currency)) + '</span></div>'
       ).join("")
     : "";
