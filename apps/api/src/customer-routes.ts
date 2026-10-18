@@ -200,6 +200,23 @@ export function registerCustomerRoutes(
   });
 
   router.register({
+    method: "GET",
+    path: "/api/v1/customers/:customerId/relationships",
+    module: "customer",
+    operation: "customer.manage_relationship",
+    permission: "customer.manage_relationship",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, request, params }) => {
+      const service = createService(database, authorization, context.requestId);
+      const customerId = requiredParam(params.customerId, context.requestId);
+      const businessId = requiredId(new URL(request.url).searchParams.get("businessId"), "businessId", context.requestId);
+      const relationships = await service.listRelationships(context, customerId, businessId, 50);
+      return json({ data: relationships }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "POST",
     path: "/api/v1/customers/:customerId/relationships",
     module: "customer",

@@ -205,6 +205,21 @@ export class CustomerService {
     return this.options.addressRepository.list(context, customerId);
   }
 
+  async listRelationships(
+    context: RequestContext,
+    customerId: EntityId,
+    businessId: EntityId,
+    limit = 50,
+  ): Promise<readonly CustomerRelationshipRecord[]> {
+    await this.options.authorization.assert({
+      context,
+      permission: "customer.manage_relationship",
+      requireAuthentication: true,
+      requireWorkspace: true,
+    });
+    return this.options.relationshipRepository.listForCustomerBusiness(context, customerId, businessId, limit);
+  }
+
   async createRelationship(
     context: RequestContext,
     input: {
