@@ -3369,3 +3369,14 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Added responsive styles and browser E2E assertions for the true API-backed rows and mobile overflow.
 - No mutation controls are exposed: the current API contracts provide canonical read routes but still need approved variant-create/update and inventory-adjustment commands.
 - Commit `20033922341b578c197429f56c2e659ee9522808`: CI, Phoenix verification, Phoenix web UI E2E, and preview deployment succeeded.
+
+## 2026-10-18 — Public offer gallery, seller-media linking, and variant-aware review cart
+
+- Completed the shareable `/offerings/:offeringId?business=:businessId` detail surface with Persian, English, and Arabic labels, product/service paths, seller identity, save/compare/share and canonical navigation from feed detail.
+- Added public Media list/content endpoints scoped to an active, published offer and active, published business. The API exposes only ready processed image variants and a content path; it does not return R2 storage keys or original private object metadata.
+- Product Studio prepares selected images as browser-rasterized WebP, bounded by file and dimensions limits. The API checks the RIFF/WebP container and rejects metadata-bearing or mismatched uploads before marking the detail variant ready.
+- Added an authenticated, organization/workspace/business-scoped API to link a ready business-owned image to its offering. Seller Studio uses this canonical route after creating/reusing the offering; the page can show a responsive gallery when published images exist and an honest fallback otherwise.
+- The public offering variants contract feeds the option picker with active variants, canonical attributes, active prices and stock status. Cart navigation is blocked for incomplete combinations, unavailable/out-of-stock variants, and untrusted or unresolved customer-specific prices; selected variant and the resolved amount/currency are preserved in the local review cart. This is not canonical order creation or payment.
+- Fixed the UI E2E fixture so created catalog variants persist across separate mocked API requests. The fixture now models a persistent server read after the create command instead of recreating the variant array per request.
+- Verified on commit `0e0f14b85f20f1bdf9dd246a631a234f84fd7973`: CI, Phoenix verification, and Phoenix web UI verification passed. The test fix was committed directly to `main`; no PR was opened.
+- Remaining commerce boundary: the review cart remains local and checkout/payment/order creation must be connected to canonical Commerce APIs before a real purchase may be claimed.
