@@ -3360,3 +3360,12 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Inbox API derives the display name from that canonical business relation and the viewer side from the authenticated actor/customer mapping. Buyer inbox and thread header show the business name; seller view uses a localized generic customer label. Older unlinked conversations retain the safe generic title.
 - Registered migration 0096 in the API catalog and migration lock. Fixed the migration-change validator to resolve lock filenames relative to `migrations/`.
 - Validation on commit `797f06544df13ecd7e73b4fa75ed6d2f13d77f30`: CI, Phoenix verification, and Phoenix web UI E2E passed. These are automated checks; cross-organization messaging remains disabled until Communication has a first-class participant model.
+
+## 2026-10-18 — Seller catalog variants and inventory
+
+- Connected the seller catalog page to canonical `GET /api/v1/catalog/businesses/:businessId/variants` and `GET /api/v1/catalog/businesses/:businessId/inventory`, alongside the existing offer list.
+- Variant cards show recorded SKU, attributes and lifecycle status. Inventory rows show recorded location, on-hand, reserved and available counts, with locale-aware numbers.
+- No stock values or variant attributes are fabricated. Missing inventory rows are reported as “not registered”; they are not treated as proof that stock is zero.
+- Added responsive styles and browser E2E assertions for the true API-backed rows and mobile overflow.
+- No mutation controls are exposed: the current API contracts provide canonical read routes but still need approved variant-create/update and inventory-adjustment commands.
+- Commit `20033922341b578c197429f56c2e659ee9522808`: CI, Phoenix verification, Phoenix web UI E2E, and preview deployment succeeded.

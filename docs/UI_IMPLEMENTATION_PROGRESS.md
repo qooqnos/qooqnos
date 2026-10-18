@@ -221,3 +221,12 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - Added mobile (390px) and desktop (1440px) layout smoke checks for seller services, team/access, business profile editing, and Product Studio.
 - Checks require each route to render its intended surface and prevent document-level horizontal overflow at both breakpoints.
 - These are automated layout smoke tests, not a replacement for manual visual review, keyboard navigation, or accessibility testing.
+
+## 2026-10-18 — Seller catalog variant and inventory read surfaces
+
+- Extended `/business/products` to load catalog offers, product variants, and location inventory from the existing workspace-scoped Catalog APIs.
+- Shows canonical variant attributes/SKU/status and on-hand, reserved, and available quantities per location; quantities are formatted with the active locale.
+- Empty inventory is explicitly described as “no location inventory record,” never inferred as zero stock.
+- Added responsive cards/table styling and Playwright assertions for the variant and inventory rows, SKU, location, available quantity, and 390px overflow.
+- The surface is intentionally read-only. A write route for product variants and a canonical inventory-adjustment route are still required before enabling creation/edit/stock mutation controls.
+- Commit: `20033922341b578c197429f56c2e659ee9522808`; CI, Phoenix verification, browser E2E, and preview deploy passed.
