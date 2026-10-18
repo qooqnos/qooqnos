@@ -782,6 +782,20 @@ for (const [path, label] of mobileSocialRoutes) {
 }
 await page.setViewportSize({ width: 1440, height: 900 });
 
+// The same core templates must also fit a desktop viewport without document-level overflow.
+for (const [path, label] of mobileSocialRoutes) {
+  await page.goto(baseURL + path);
+  await page.locator(".social-shell").waitFor();
+  const dimensions = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+    mainVisible: Boolean(document.querySelector("main, #app-main, .phoenix-main-content, .social-content")),
+  }));
+  assert.ok(dimensions.document <= dimensions.viewport,
+    label + " must not overflow horizontally at 1440px: " + JSON.stringify(dimensions));
+  assert.ok(dimensions.mainVisible, label + " should expose a main content region on desktop.");
+}
+
 await page.goto(baseURL + "/");
 assert.ok(await page.locator("#discover-query").count() > 0);
 await page.locator("#discover-query").fill("یک کسب‌وکار مناسب نزدیک من می‌خواهم");

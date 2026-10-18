@@ -207,3 +207,10 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - Inbox API derives the display name from that canonical business relation and the viewer side from the authenticated actor/customer mapping. Buyer inbox and thread header show the business name; seller view uses a localized generic customer label. Older unlinked conversations retain the safe generic title.
 - Registered migration 0096 in the API catalog and migration lock. Fixed the migration-change validator to resolve lock filenames relative to `migrations/`.
 - Validation on commit `797f06544df13ecd7e73b4fa75ed6d2f13d77f30`: CI, Phoenix verification, and Phoenix web UI E2E passed. These are automated checks; cross-organization messaging remains disabled until Communication has a first-class participant model.
+
+
+## 2026-10-18 — Desktop route coverage
+
+- Extended the shared buyer/social route matrix so the same profile, saved, compare, messaging, activity, notification, order, account, settings, Following, and Explore templates are checked at both 390px and 1440px.
+- Desktop checks assert no document-level horizontal overflow and the presence of a main content region. This supplements the mobile navigation/overflow checks; it is not a substitute for a manual visual audit or accessibility review.
+- Current main before this change: `ccc255ff567bf335f2376d4a7b773e3482228be3`. Keep the cart explicitly review-only until authoritative inventory, final pricing, payment confirmation, and order creation are connected.
