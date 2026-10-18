@@ -1110,6 +1110,15 @@ assert.ok(localCartAfterAdd.includes("اندازه: S"));
 assert.ok(localCartAfterAdd.includes("ریال") || localCartAfterAdd.includes("IRR"), "The cart should render the canonical currency in a readable form.");
 assert.ok(!localCartAfterAdd.includes("محصول نمایشی محلی"));
 await page.goto(baseURL + "/cart");
+assert.equal(await page.locator(".phoenix-cart-item").count(), 1);
+assert.equal(await page.locator("[data-cart-remove]").count(), 1, "Every cart line should have an explicit remove action.");
+const firstCartLine = page.locator(".phoenix-cart-item").first();
+assert.ok((await firstCartLine.locator(".phoenix-cart-item-subtotal").innerText()).includes("ریال"));
+await firstCartLine.locator("[data-cart-plus]").click();
+await page.waitForFunction(() => document.querySelector(".phoenix-cart-item .phoenix-cart-qty-value")?.textContent?.trim() === "2");
+assert.equal(JSON.parse(await page.evaluate(() => localStorage.getItem("phoenix.cart_items") || "[]"))[0].quantity, 2);
+await page.locator(".phoenix-cart-item").first().locator("[data-cart-minus]").click();
+await page.waitForFunction(() => document.querySelector(".phoenix-cart-item .phoenix-cart-qty-value")?.textContent?.trim() === "1");
 const cartPreviewText = await page.locator(".phoenix-screen-wrapper").innerText();
 assert.ok(cartPreviewText.includes("پیش‌نمایش سبد محلی"));
 assert.ok(cartPreviewText.includes("مجموع تقریبی اقلام محلی"));
@@ -1141,6 +1150,10 @@ const multiCurrencyAr = await page.locator(".phoenix-screen-wrapper").innerText(
 assert.ok(multiCurrencyAr.includes("ريال"), "Arabic cart should name IRR.");
 assert.ok(multiCurrencyAr.includes("دولار"), "Arabic cart should name USD.");
 assert.ok(!multiCurrencyAr.includes("IRR") && !multiCurrencyAr.includes("USD"), "Arabic currency labels should not expose ISO codes.");
+await page.locator(".phoenix-cart-item").nth(1).locator("[data-cart-remove]").click();
+await page.waitForFunction(() => document.querySelectorAll(".phoenix-cart-item").length === 1);
+assert.equal(JSON.parse(await page.evaluate(() => localStorage.getItem("phoenix.cart_items") || "[]")).length, 1,
+  "Explicit removal should remove only the selected cart line.");
 await page.evaluate((cartJson) => {
   if (cartJson === null) localStorage.removeItem("phoenix.cart_items");
   else localStorage.setItem("phoenix.cart_items", cartJson);

@@ -170,3 +170,11 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - Re-confirmed the seller Studio media path, safe public offering media, variant selection, relationship-price resolution, currency-aware review cart, buyer/seller messaging, social shortcuts, and localization changes are present in current `main`.
 - These checks establish that the configured build and browser test suites passed; they do not certify live payment capture, canonical order finalization, production ranking quality, or visual review of every route at mobile and desktop breakpoints.
 - Next implementation priority remains end-to-end capability closure rather than adding more page shells: authoritative price/availability validation at order creation, payment-provider integration, and a route-by-route visual/accessibility audit. Until the canonical checkout contract is complete, the cart must remain clearly labeled as a review cart and must not imply that an order or payment has succeeded.
+
+
+## 2026-10-18 — Social-commerce cart continuity
+
+- Added an explicit, accessible remove action for each local cart line; quantity decrease/increase continues to preserve the selected variant, unit price, currency, and separate line identity.
+- Cart lines now show an estimated line subtotal next to the unit price, without presenting it as a server-confirmed payable total.
+- Added browser E2E coverage for quantity persistence and removing one line while preserving other cart entries.
+- Scope guard: cart values remain local review estimates. This change does not create an order, confirm inventory, charge payment, or imply that shipping/tax has been finalized.

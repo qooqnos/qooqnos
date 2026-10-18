@@ -2034,17 +2034,26 @@ export function renderConsumerCart(): string {
           <!-- Cart Items List -->
           <div class="phoenix-deal-list" id="cart-items-list">
             ${items.map((item) => `
-              <div class="phoenix-cart-item" data-item-id="${item.id}">
-                <div>
-                  <strong style="display:block; font-size:14px;">${escapeHtml(item.title)}</strong>
-                  <small style="color: var(--muted);">${escapeHtml(item.category)} · ${escapeHtml(formatCartMoney(item.price, item.currency))}</small>
+              <article class="phoenix-cart-item" data-item-id="${escapeHtml(item.id)}">
+                <div class="phoenix-cart-item-copy">
+                  <strong class="phoenix-cart-item-title">${escapeHtml(item.title)}</strong>
+                  <small class="phoenix-cart-item-meta">${escapeHtml(item.category)} · ${escapeHtml(formatCartMoney(item.price, item.currency))}</small>
+                  <div class="phoenix-cart-item-subtotal">
+                    <span>${ui("مجموع")}</span>
+                    <strong>${escapeHtml(formatCartMoney(item.price * item.quantity, item.currency))}</strong>
+                  </div>
                 </div>
-                <div class="phoenix-cart-qty-ctrl">
-                  <button type="button" class="phoenix-cart-qty-btn" data-cart-minus="${item.id}">−</button>
-                  <span style="font-size: 13px; font-weight:700;">${item.quantity}</span>
-                  <button type="button" class="phoenix-cart-qty-btn" data-cart-plus="${item.id}">＋</button>
+                <div class="phoenix-cart-item-controls">
+                  <div class="phoenix-cart-qty-ctrl" role="group" aria-label="${ui("تعداد")}">
+                    <button type="button" class="phoenix-cart-qty-btn" data-cart-minus="${escapeHtml(item.id)}" aria-label="${ui("کاهش")} ${escapeHtml(item.title)}">−</button>
+                    <span class="phoenix-cart-qty-value" aria-live="polite">${item.quantity.toLocaleString()}</span>
+                    <button type="button" class="phoenix-cart-qty-btn" data-cart-plus="${escapeHtml(item.id)}" aria-label="${ui("افزودن")} ${escapeHtml(item.title)}">＋</button>
+                  </div>
+                  <button type="button" class="phoenix-cart-remove-btn" data-cart-remove="${escapeHtml(item.id)}" aria-label="${ui("حذف")} ${escapeHtml(item.title)}">
+                    <span aria-hidden="true">×</span><span>${ui("حذف")}</span>
+                  </button>
                 </div>
-              </div>
+              </article>
             `).join("")}
           </div>
 
@@ -2447,6 +2456,16 @@ export function bindPhoenixExperienceEvents(container: HTMLElement, onNavigate: 
       const id = btn.getAttribute("data-cart-minus");
       if (id) {
         updateCartQuantity(id, -1);
+        onNavigate("/cart");
+      }
+    };
+  });
+
+  container.querySelectorAll<HTMLButtonElement>("[data-cart-remove]").forEach((btn) => {
+    btn.onclick = () => {
+      const id = btn.getAttribute("data-cart-remove");
+      if (id) {
+        removeCartItem(id);
         onNavigate("/cart");
       }
     };
