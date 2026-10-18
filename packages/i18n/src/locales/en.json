@@ -2440,5 +2440,29 @@
     "stockAvailable": "Available",
     "quantityUnit": "units",
     "catalogViewDetails": "View on Qooqnos"
+  },
+  "customerPage": {
+    "relationshipTitle": "Relationship with this seller",
+    "relationshipDescription": "This level applies only to this business-customer relationship; it does not change the customer’s account type.",
+    "relationshipLoading": "Loading seller relationship…",
+    "relationshipNeedsCustomer": "Create or select a customer first.",
+    "relationshipNeedsBusiness": "Set up the seller space first.",
+    "relationshipNeedsSession": "Sign in to manage this relationship.",
+    "relationshipLoadError": "Could not load this relationship. Try again.",
+    "relationshipNone": "No relationship level has been recorded for this customer and seller yet.",
+    "relationshipTierLabel": "Relationship level",
+    "relationshipStatusLabel": "Relationship status",
+    "relationshipStatusProspect": "In progress",
+    "relationshipStatusActive": "Active",
+    "relationshipStatusInactive": "Inactive",
+    "relationshipTierConsumer": "Consumer",
+    "relationshipTierPartner": "Partner",
+    "relationshipTierRepresentative": "Representative",
+    "relationshipSave": "Save relationship level",
+    "relationshipChange": "Change relationship level",
+    "relationshipSaving": "Saving…",
+    "relationshipSaved": "Relationship level updated successfully.",
+    "relationshipSaveFailed": "Could not save the relationship level. Try again.",
+    "relationshipHistoryNote": "Previous levels remain in the CRM history; only one level can be active."
   }
 }

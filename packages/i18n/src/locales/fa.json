@@ -2440,5 +2440,29 @@
     "stockAvailable": "قابل ارائه",
     "quantityUnit": "عدد",
     "catalogViewDetails": "مشاهده در ققنوس"
+  },
+  "customerPage": {
+    "relationshipTitle": "سطح رابطه با این فروشنده",
+    "relationshipDescription": "سطح همکاری برای همین کسب‌وکار تنظیم می‌شود و نوع حساب عمومی مشتری را تغییر نمی‌دهد.",
+    "relationshipLoading": "در حال خواندن رابطه با فروشنده…",
+    "relationshipNeedsCustomer": "ابتدا یک مشتری ایجاد یا انتخاب کن.",
+    "relationshipNeedsBusiness": "ابتدا فضای فروشنده را فعال کن.",
+    "relationshipNeedsSession": "برای مدیریت رابطه وارد ققنوس شو.",
+    "relationshipLoadError": "اطلاعات رابطه بارگذاری نشد. دوباره تلاش کن.",
+    "relationshipNone": "هنوز سطح رابطه‌ای برای این مشتری و فروشنده ثبت نشده است.",
+    "relationshipTierLabel": "سطح رابطه",
+    "relationshipStatusLabel": "وضعیت رابطه",
+    "relationshipStatusProspect": "در حال شکل‌گیری",
+    "relationshipStatusActive": "فعال",
+    "relationshipStatusInactive": "غیرفعال",
+    "relationshipTierConsumer": "مصرف‌کننده",
+    "relationshipTierPartner": "همکار",
+    "relationshipTierRepresentative": "نماینده",
+    "relationshipSave": "ثبت سطح رابطه",
+    "relationshipChange": "تغییر سطح رابطه",
+    "relationshipSaving": "در حال ذخیره…",
+    "relationshipSaved": "سطح رابطه با موفقیت به‌روزرسانی شد.",
+    "relationshipSaveFailed": "ثبت سطح رابطه انجام نشد. دوباره تلاش کن.",
+    "relationshipHistoryNote": "سطوح قبلی در سابقهٔ CRM باقی می‌مانند؛ فقط یک سطح می‌تواند فعال باشد."
   }
 }

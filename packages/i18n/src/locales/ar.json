@@ -2440,5 +2440,29 @@
     "stockAvailable": "متاح",
     "quantityUnit": "وحدة",
     "catalogViewDetails": "عرض في ققنوس"
+  },
+  "customerPage": {
+    "relationshipTitle": "مستوى العلاقة مع هذا البائع",
+    "relationshipDescription": "يُطبّق هذا المستوى على العلاقة مع هذا النشاط التجاري فقط، ولا يغيّر نوع حساب العميل العام.",
+    "relationshipLoading": "جارٍ تحميل العلاقة مع البائع…",
+    "relationshipNeedsCustomer": "أنشئ عميلًا أو اختره أولًا.",
+    "relationshipNeedsBusiness": "أعد مساحة البائع أولًا.",
+    "relationshipNeedsSession": "سجّل الدخول لإدارة هذه العلاقة.",
+    "relationshipLoadError": "تعذر تحميل العلاقة. حاول مرة أخرى.",
+    "relationshipNone": "لم يُسجّل مستوى علاقة لهذا العميل والبائع بعد.",
+    "relationshipTierLabel": "مستوى العلاقة",
+    "relationshipStatusLabel": "حالة العلاقة",
+    "relationshipStatusProspect": "قيد التكوين",
+    "relationshipStatusActive": "نشط",
+    "relationshipStatusInactive": "غير نشط",
+    "relationshipTierConsumer": "مستهلك",
+    "relationshipTierPartner": "شريك",
+    "relationshipTierRepresentative": "ممثل",
+    "relationshipSave": "حفظ مستوى العلاقة",
+    "relationshipChange": "تغيير مستوى العلاقة",
+    "relationshipSaving": "جارٍ الحفظ…",
+    "relationshipSaved": "تم تحديث مستوى العلاقة بنجاح.",
+    "relationshipSaveFailed": "تعذر حفظ مستوى العلاقة. حاول مرة أخرى.",
+    "relationshipHistoryNote": "تبقى المستويات السابقة في سجل CRM؛ ويمكن تفعيل مستوى واحد فقط."
   }
 }
