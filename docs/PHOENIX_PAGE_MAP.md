@@ -175,3 +175,8 @@
 - Inbox API derives the display name from that canonical business relation and the viewer side from the authenticated actor/customer mapping. Buyer inbox and thread header show the business name; seller view uses a localized generic customer label. Older unlinked conversations retain the safe generic title.
 - Registered migration 0096 in the API catalog and migration lock. Fixed the migration-change validator to resolve lock filenames relative to `migrations/`.
 - Validation on commit `797f06544df13ecd7e73b4fa75ed6d2f13d77f30`: CI, Phoenix verification, and Phoenix web UI E2E passed. These are automated checks; cross-organization messaging remains disabled until Communication has a first-class participant model.
+
+
+## 2026-10-18 — Inventory management boundary
+
+The seller catalog now offers an authorized, versioned stock adjustment for an existing inventory record, with an append-only audit record for each accepted change. First-time stock receipt for a product/location without an inventory row remains a distinct workflow; variant editing/deletion and real order/payment completion remain separate follow-up work.

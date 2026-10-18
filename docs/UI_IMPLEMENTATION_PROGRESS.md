@@ -237,3 +237,13 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - No-image records keep a neutral media placeholder while remaining navigable; incomplete records retain the safe detail-panel fallback.
 - Playwright checks cover the canonical link on a feed card without media, a saved service without media, and a compare item without media.
 - Validation on commit `6d5c77e478d7dc2b868b52f4305b0b0a3b495c4d`: [CI](https://github.com/qooqnos/qooqnos/actions/runs/39153380678), [Phoenix verification](https://github.com/qooqnos/qooqnos/actions/runs/39153380588), [Phoenix web UI E2E](https://github.com/qooqnos/qooqnos/actions/runs/39153380523), and [preview deploy](https://github.com/qooqnos/qooqnos/actions/runs/39153380626) passed.
+
+
+## 2026-10-18 — Audited inventory adjustments
+
+- Added a permissioned, workspace-scoped inventory adjustment API for existing inventory rows only.
+- Quantity updates use optimistic version checks and an atomic database batch that records the before/after quantity, actor, reason, timestamp and version in an append-only audit table.
+- On-hand stock cannot fall below reserved stock; missing inventory records are not silently created or interpreted as zero.
+- Seller catalog has a quantity-and-reason form; Persian, English and Arabic labels are included. E2E covers reserved-stock rejection and a successful versioned adjustment.
+- Access resolution returns canonical permission IDs alongside resource/action aliases so persisted catalog permissions remain compatible with the runtime checks.
+- This adjustment path does not create a commercial order or charge payment.
