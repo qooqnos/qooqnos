@@ -15236,3 +15236,22 @@ button[aria-busy="true"] .btn-spinner {
 /* Published catalog links lead back to the public social-commerce surface. */
 .phoenix-catalog-public-link{display:inline-flex;align-items:center;gap:7px;min-height:32px;margin-top:9px;padding:6px 10px;font-size:10px;font-weight:800}
 @media(max-width:720px){.phoenix-catalog-public-link{min-height:36px;width:100%;justify-content:center}}
+
+
+/* A seller-specific relationship tier belongs to the current customer/business pair. */
+.customer-relationship-card{min-width:0}
+.customer-relationship-card .customer-relationship-description{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.9}
+.customer-relationship-mark{display:grid;flex:0 0 38px;place-items:center;width:38px;height:38px;border:1px solid color-mix(in srgb,var(--primary) 25%,var(--line));border-radius:13px;color:var(--primary-strong);background:color-mix(in srgb,var(--primary) 7%,var(--surface));font-size:20px}
+.customer-relationship-summary{padding:12px 14px;border:1px solid color-mix(in srgb,var(--primary) 20%,var(--line));border-radius:13px;color:var(--text);background:color-mix(in srgb,var(--primary) 5%,var(--surface));font-size:12px;font-weight:800;line-height:1.8}
+.customer-relationship-summary.is-error{color:var(--danger,#b42318);border-color:color-mix(in srgb,var(--danger,#b42318) 25%,var(--line));background:color-mix(in srgb,var(--danger,#b42318) 5%,var(--surface))}
+.customer-relationship-list{display:grid;gap:8px;margin:10px 0 15px}
+.customer-relationship-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.customer-relationship-tier-name{min-width:0;color:var(--text);font-size:11px;font-weight:800}
+.customer-relationship-status{flex:0 0 auto;display:inline-flex;align-items:center;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--surface-2);font-size:10px;font-weight:750}
+.customer-relationship-status.active{color:var(--success,#18794e);border-color:color-mix(in srgb,var(--success,#18794e) 25%,var(--line));background:color-mix(in srgb,var(--success,#18794e) 6%,var(--surface))}
+.customer-relationship-status.prospect{color:var(--warning,#94640c);border-color:color-mix(in srgb,var(--warning,#94640c) 25%,var(--line));background:color-mix(in srgb,var(--warning,#94640c) 6%,var(--surface))}
+.customer-relationship-empty{padding:10px;border:1px dashed var(--line);border-radius:12px}
+.customer-relationship-card .field-label{display:block;margin:0 0 7px;color:var(--muted);font-size:11px;font-weight:750}
+.customer-relationship-card #customer-relationship-tier{width:100%;min-height:43px;margin-bottom:10px}
+.customer-relationship-submit{width:100%;justify-content:center;min-height:42px}
+.customer-relationship-note{margin:12px 0 0;color:var(--muted);font-size:10px;line-height:1.8}

@@ -668,7 +668,7 @@ function canonicalUi(key: string): string {
 }
 
 function pageUi(
-  namespace: "businessPage" | "businessSurface" | "discoveryPage" | "productStudio" | "socialCommercePage" | "catalogPage",
+  namespace: "businessPage" | "businessSurface" | "discoveryPage" | "productStudio" | "socialCommercePage" | "catalogPage" | "customerPage",
   key: string,
   variables?: Readonly<Record<string, string>>,
 ): string {
@@ -697,6 +697,10 @@ function productStudioUi(key: string, variables?: Readonly<Record<string, string
 
 function catalogUi(key: string, variables?: Readonly<Record<string, string>>): string {
   return pageUi("catalogPage", key, variables);
+}
+
+function customerUi(key: string, variables?: Readonly<Record<string, string>>): string {
+  return pageUi("customerPage", key, variables);
 }
 
 function localizedUi(value: string): string {
@@ -915,7 +919,10 @@ function render(): void {
   if (route.path === "/notifications") void loadNotificationsPage();
   if (route.path === "/profile" && document.querySelector("[data-buyer-tab]")) void loadProfilePage();
   if (route.path === "/transactions") void loadTransactionsPage();
-  if (route.path === "/customer") void loadCustomerState();
+  if (route.path === "/customer") {
+    void loadCustomerState();
+    void loadCustomerRelationshipState();
+  }
   if (route.path === "/communication") void loadCommunicationState();
   if (route.path === "/billing") void loadBillingState();
   if (parseBusinessModulePath(route.path)) bindVerticalWorkflowCanvas(appRoot);
@@ -3531,13 +3538,19 @@ function renderCustomer(): string {
           <button class="button button-primary" type="button" data-customer-add-pref>ثبت ترجیح</button>
         </div>
       </article>
-      <article class="glass-card customer-profile-card">
-        <div class="card-section-heading"><div><span class="section-kicker">Context</span><h2>شناسه‌های فعال</h2></div></div>
-        <div class="account-details">
-          <div class="account-row"><span>${canonicalUi("canonical.customer.customer")} ID</span><strong id="customer-id-display">${escapeHtml(customerId || "—")}</strong></div>
-          <div class="account-row"><span>Workspace</span><strong>${escapeHtml(localStorage.getItem(STORAGE.workspace) ?? "—")}</strong></div>
-          <div class="account-row"><span>${canonicalUi("canonical.business.business")}</span><strong>${escapeHtml(localStorage.getItem(STORAGE.business) ?? "—")}</strong></div>
-        </div>
+      <article class="glass-card customer-relationship-card" id="customer-relationship-panel" data-customer-id="\${escapeHtml(customerId)}" data-business-id="\${escapeHtml(localStorage.getItem(STORAGE.business) ?? "")}">
+        <div class="card-section-heading"><div><span class="section-kicker">CRM · SELLER RELATIONSHIP</span><h2>\${customerUi("relationshipTitle")}</h2></div><span class="customer-relationship-mark" aria-hidden="true">◎</span></div>
+        <p class="customer-relationship-description">\${customerUi("relationshipDescription")}</p>
+        <div id="customer-relationship-summary" class="customer-relationship-summary" aria-live="polite">\${customerUi("relationshipLoading")}</div>
+        <div id="customer-relationship-list" class="customer-relationship-list" aria-live="polite"></div>
+        <label class="field-label" for="customer-relationship-tier">\${customerUi("relationshipTierLabel")}</label>
+        <select id="customer-relationship-tier" class="studio-input-line">
+          <option value="consumer">\${customerUi("relationshipTierConsumer")}</option>
+          <option value="partner">\${customerUi("relationshipTierPartner")}</option>
+          <option value="representative">\${customerUi("relationshipTierRepresentative")}</option>
+        </select>
+        <button class="button button-primary customer-relationship-submit" type="button" data-customer-save-tier>\${customerUi("relationshipSave")}</button>
+        <p class="customer-relationship-note">\${customerUi("relationshipHistoryNote")}</p>
       </article>
     </section>
   `;
@@ -3622,6 +3635,192 @@ async function loadCustomerState(): Promise<void> {
     historyMeta.textContent = "خطا";
   }
 }
+
+type CustomerBusinessRelationshipView = {
+  id: string;
+  customerId: string;
+  businessId: string;
+  relationshipType: string;
+  status: "prospect" | "active" | "inactive";
+  source: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+const CUSTOMER_RELATIONSHIP_TIERS = ["consumer", "partner", "representative"] as const;
+type CustomerRelationshipTier = typeof CUSTOMER_RELATIONSHIP_TIERS[number];
+
+function customerRelationshipTierLabel(tier: string): string {
+  const keys: Record<string,string> = {
+    consumer: "relationshipTierConsumer",
+    partner: "relationshipTierPartner",
+    representative: "relationshipTierRepresentative",
+  };
+  return customerUi(keys[tier] ?? "relationshipTierConsumer");
+}
+
+function customerRelationshipStatusLabel(status: string): string {
+  const keys: Record<string,string> = {
+    prospect: "relationshipStatusProspect",
+    active: "relationshipStatusActive",
+    inactive: "relationshipStatusInactive",
+  };
+  return customerUi(keys[status] ?? "relationshipStatusProspect");
+}
+
+function customerRelationshipStatusClass(status: string): string {
+  return status === "active" ? "active" : status === "inactive" ? "inactive" : "prospect";
+}
+
+async function getCustomerBusinessRelationships(
+  customerId: string,
+  businessId: string,
+): Promise<CustomerBusinessRelationshipView[]> {
+  const response = await apiJson<{data: CustomerBusinessRelationshipView[]}>(
+    "/api/v1/customers/" + encodeURIComponent(customerId) + "/relationships?businessId=" + encodeURIComponent(businessId),
+  );
+  return response.data ?? [];
+}
+
+async function loadCustomerRelationshipState(): Promise<void> {
+  const panel = document.querySelector<HTMLElement>("#customer-relationship-panel");
+  if (!panel) return;
+  const customerId = panel.dataset.customerId?.trim() ?? "";
+  const businessId = panel.dataset.businessId?.trim() ?? "";
+  const summary = document.querySelector<HTMLElement>("#customer-relationship-summary");
+  const list = document.querySelector<HTMLElement>("#customer-relationship-list");
+  const select = document.querySelector<HTMLSelectElement>("#customer-relationship-tier");
+  const saveButton = document.querySelector<HTMLButtonElement>("[data-customer-save-tier]");
+  if (!summary || !list || !select || !saveButton) return;
+
+  const setState = (message: string, isError = false): void => {
+    summary.textContent = message;
+    summary.classList.toggle("is-error", isError);
+  };
+
+  if (!customerId) {
+    setState(customerUi("relationshipNeedsCustomer"));
+    list.replaceChildren();
+    saveButton.disabled = true;
+    return;
+  }
+  if (!businessId) {
+    setState(customerUi("relationshipNeedsBusiness"));
+    list.replaceChildren();
+    saveButton.disabled = true;
+    return;
+  }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    setState(customerUi("relationshipNeedsSession"));
+    list.replaceChildren();
+    saveButton.disabled = true;
+    return;
+  }
+
+  saveButton.disabled = true;
+  setState(customerUi("relationshipLoading"));
+  list.innerHTML = '<div class="slot-loading">' + escapeHtml(customerUi("relationshipLoading")) + '</div>';
+
+  try {
+    const relationships = await getCustomerBusinessRelationships(customerId, businessId);
+    const tierRows = relationships
+      .filter((item) => CUSTOMER_RELATIONSHIP_TIERS.includes(item.relationshipType as CustomerRelationshipTier))
+      .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
+    const selected = tierRows.find((item) => item.status === "active")
+      ?? tierRows.find((item) => item.status !== "inactive");
+    if (selected) select.value = selected.relationshipType;
+
+    setState(selected
+      ? customerUi("relationshipTierLabel") + ": " + customerRelationshipTierLabel(selected.relationshipType)
+        + " · " + customerRelationshipStatusLabel(selected.status)
+      : customerUi("relationshipNone"));
+
+    list.innerHTML = tierRows.length
+      ? tierRows.map((item) =>
+          '<div class="customer-relationship-row">' +
+            '<span class="customer-relationship-tier-name">' + escapeHtml(customerRelationshipTierLabel(item.relationshipType)) + '</span>' +
+            '<span class="customer-relationship-status ' + customerRelationshipStatusClass(item.status) + '">' + escapeHtml(customerRelationshipStatusLabel(item.status)) + '</span>' +
+          '</div>'
+        ).join("")
+      : '<div class="slot-empty customer-relationship-empty"><span>◎</span><p>' + escapeHtml(customerUi("relationshipNone")) + '</p></div>';
+
+    saveButton.textContent = selected ? customerUi("relationshipChange") : customerUi("relationshipSave");
+    saveButton.disabled = false;
+  } catch {
+    setState(customerUi("relationshipLoadError"), true);
+    list.innerHTML = "";
+    saveButton.disabled = false;
+  }
+}
+
+async function saveCustomerRelationshipTier(): Promise<void> {
+  const panel = document.querySelector<HTMLElement>("#customer-relationship-panel");
+  const select = document.querySelector<HTMLSelectElement>("#customer-relationship-tier");
+  const saveButton = document.querySelector<HTMLButtonElement>("[data-customer-save-tier]");
+  if (!panel || !select || !saveButton) return;
+  const customerId = panel.dataset.customerId?.trim() ?? "";
+  const businessId = panel.dataset.businessId?.trim() ?? "";
+  const selectedTier = select.value;
+  if (!customerId || !businessId) {
+    await loadCustomerRelationshipState();
+    return;
+  }
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    openConnectionPanel();
+    return;
+  }
+  if (!CUSTOMER_RELATIONSHIP_TIERS.includes(selectedTier as CustomerRelationshipTier)) return;
+
+  saveButton.disabled = true;
+  saveButton.textContent = customerUi("relationshipSaving");
+  try {
+    const existing = await getCustomerBusinessRelationships(customerId, businessId);
+    const tierRows = existing.filter((item) =>
+      CUSTOMER_RELATIONSHIP_TIERS.includes(item.relationshipType as CustomerRelationshipTier)
+    );
+
+    // Keep one seller-specific tier active; retain prior choices as inactive CRM history.
+    for (const relationship of tierRows) {
+      if (relationship.relationshipType !== selectedTier && relationship.status !== "inactive") {
+        await apiJson(
+          "/api/v1/customers/relationships/" + encodeURIComponent(relationship.id) + "/status",
+          { method: "POST", body: { status: "inactive" } },
+        );
+      }
+    }
+
+    const chosen = tierRows.find((item) => item.relationshipType === selectedTier);
+    if (chosen) {
+      if (chosen.status !== "active") {
+        await apiJson(
+          "/api/v1/customers/relationships/" + encodeURIComponent(chosen.id) + "/status",
+          { method: "POST", body: { status: "active" } },
+        );
+      }
+    } else {
+      const created = await apiJson<{data: CustomerBusinessRelationshipView}>(
+        "/api/v1/customers/" + encodeURIComponent(customerId) + "/relationships",
+        {
+          method: "POST",
+          body: { businessId, relationshipType: selectedTier, source: "seller-workspace" },
+        },
+      );
+      await apiJson(
+        "/api/v1/customers/relationships/" + encodeURIComponent(created.data.id) + "/status",
+        { method: "POST", body: { status: "active" } },
+      );
+    }
+
+    showToast(customerUi("relationshipSaved"));
+    await loadCustomerRelationshipState();
+  } catch {
+    showToast(customerUi("relationshipSaveFailed"));
+    await loadCustomerRelationshipState();
+  } finally {
+    saveButton.disabled = false;
+  }
+}
+
 
 type CustomerRecordView = {
   id: string;
@@ -9457,6 +9656,7 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-customer-refresh]")?.addEventListener("click", loadCustomerState);
   document.querySelector<HTMLButtonElement>("[data-customer-create]")?.addEventListener("click", openCustomerCreatePanel);
   document.querySelector<HTMLButtonElement>("[data-customer-add-pref]")?.addEventListener("click", addCustomerPreference);
+  document.querySelector<HTMLButtonElement>("[data-customer-save-tier]")?.addEventListener("click", () => { void saveCustomerRelationshipTier(); });
   document.querySelector<HTMLButtonElement>("[data-comm-load]")?.addEventListener("click", loadCommunicationState);
   document.querySelector<HTMLButtonElement>("[data-send-notification]")?.addEventListener("click", sendCommunicationNotification);
   document.querySelector<HTMLButtonElement>("[data-save-comm-pref]")?.addEventListener("click", saveCommunicationPreference);
