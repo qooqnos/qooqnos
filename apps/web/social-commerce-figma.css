@@ -51,3 +51,132 @@ img { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* Figma: "خانه و پست‌های خریدنی" — node 3:9041.
+   Target the real social-commerce feed rather than generic dashboard widgets. */
+:root {
+  --qooqnos-feed-ink: #191919;
+  --qooqnos-feed-muted: #777777;
+  --qooqnos-feed-line: #ececec;
+  --qooqnos-feed-paper: #ffffff;
+  --qooqnos-feed-radius: 18px;
+}
+.phoenix-social-header {
+  background: var(--qooqnos-feed-paper);
+  border-bottom: 1px solid var(--qooqnos-feed-line);
+  box-shadow: none;
+}
+.phoenix-social-header-inner { min-height: 58px; }
+.phoenix-social-header .phoenix-public-brand small { color: var(--qooqnos-feed-muted); }
+.phoenix-social-tabs { gap: 22px; }
+.phoenix-social-tabs a { border-radius: 0; }
+.phoenix-social-tabs a.active {
+  color: var(--qooqnos-feed-ink);
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--qooqnos-brand);
+}
+.phoenix-post-card {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #ededed;
+  border-radius: var(--qooqnos-feed-radius);
+  box-shadow: 0 3px 16px rgb(25 25 25 / 4%);
+}
+.phoenix-post-author {
+  min-height: 58px;
+  padding: 12px 14px;
+  gap: 10px;
+  border: 0;
+}
+.phoenix-post-seller-link { gap: 10px; min-width: 0; }
+.phoenix-post-author-copy { gap: 2px; }
+.phoenix-post-author-copy strong { color: var(--qooqnos-feed-ink); font-size: 13px; font-weight: 700; }
+.phoenix-post-author-copy small { color: var(--qooqnos-feed-muted); font-size: 11px; }
+.phoenix-avatar { width: 38px; height: 38px; flex: 0 0 38px; }
+.post-follow {
+  min-height: 30px;
+  padding: 4px 12px;
+  border: 1px solid #e7e7e7;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--qooqnos-feed-ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+.post-follow.selected { border-color: #ffd8bf; background: #fff5ed; color: #bd4b08; }
+.phoenix-post-media {
+  display: block;
+  position: relative;
+  width: 100%;
+  min-height: 250px;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: #f4f2ef;
+  color: #fff;
+  text-align: start;
+}
+.phoenix-post-image { display: block; width: 100%; height: 100%; object-fit: cover; }
+.phoenix-post-placeholder { position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; color: #777; }
+.phoenix-post-placeholder img { width: 54px; height: 54px; margin: auto; opacity: .55; }
+.post-media-badge {
+  position: absolute; inset-block-start: 12px; inset-inline-start: 12px;
+  padding: 5px 10px; border-radius: 999px;
+  background: rgb(25 25 25 / 70%); color: #fff; font-size: 11px;
+  backdrop-filter: blur(8px);
+}
+.phoenix-post-media-copy {
+  position: absolute; inset-inline: 0; inset-block-end: 0;
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 36px 16px 14px;
+  background: linear-gradient(transparent, rgb(0 0 0 / 64%));
+  color: #fff;
+}
+.phoenix-post-media-copy strong { font-size: 17px; line-height: 1.7; }
+.phoenix-post-media-copy small { font-size: 11px; opacity: .9; }
+.phoenix-post-body { padding: 14px 16px 16px; }
+.phoenix-post-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--qooqnos-feed-muted); font-size: 11px; }
+.phoenix-post-type { padding: 3px 8px; border-radius: 999px; background: #f5f5f5; color: #555; }
+.phoenix-post-body h2 { margin: 8px 0 4px; color: var(--qooqnos-feed-ink); font-size: 17px; line-height: 1.75; font-weight: 750; }
+.phoenix-post-body > p { margin: 0; color: #646464; font-size: 13px; line-height: 1.9; }
+.phoenix-post-price { margin-top: 10px; color: var(--qooqnos-feed-ink); font-size: 16px; font-weight: 800; }
+.phoenix-post-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+.phoenix-post-actions .social-action {
+  min-height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 5px 9px; border: 1px solid transparent; border-radius: 10px;
+  background: transparent; color: #555; font-size: 12px;
+}
+.phoenix-post-actions .social-action:hover { background: #f7f7f7; }
+.phoenix-post-actions .social-action.selected { color: #c64d12; background: #fff3eb; }
+.phoenix-post-actions .post-buy {
+  min-height: 38px; margin-inline-start: auto; padding: 8px 14px;
+  border-radius: 12px; font-size: 12px; font-weight: 750;
+}
+.phoenix-social-mobile-nav {
+  background: rgb(255 255 255 / 96%);
+  border-top: 1px solid #ededed;
+  box-shadow: 0 -5px 22px rgb(0 0 0 / 3%);
+  backdrop-filter: blur(18px);
+}
+.phoenix-social-mobile-nav a,
+.phoenix-social-mobile-nav button { color: #777; }
+.phoenix-social-mobile-nav .active { color: var(--qooqnos-brand); }
+@media (min-width: 761px) {
+  .phoenix-post-card { margin-inline: auto; max-width: 650px; }
+  .phoenix-post-media { aspect-ratio: 1.08 / 1; }
+}
+@media (max-width: 760px) {
+  .phoenix-social-header-inner { padding-inline: 16px; }
+  .phoenix-social-header .phoenix-public-brand small { display: none; }
+  .phoenix-social-tabs { gap: 14px; }
+  .phoenix-post-card { border-inline: 0; border-radius: 0; box-shadow: none; }
+  .phoenix-post-media { min-height: 280px; aspect-ratio: 1 / 1.08; }
+  .phoenix-post-body { padding: 12px 14px 16px; }
+  .phoenix-post-actions { gap: 2px; }
+  .phoenix-post-actions .social-action { padding-inline: 7px; font-size: 11px; }
+  .phoenix-post-actions .post-buy { flex: 1 0 100%; margin-inline-start: 0; }
+  .phoenix-social-mobile-nav { min-height: 62px; padding-bottom: env(safe-area-inset-bottom); }
+}
