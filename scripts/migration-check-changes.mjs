@@ -67,7 +67,10 @@ if (lockChanged && migrationChanges.length === 0) {
       }
     }
 
-    const sql = readFileSync(entry.filename);
+    const migrationPath = entry.filename.startsWith("migrations/")
+      ? entry.filename
+      : `migrations/${entry.filename}`;
+    const sql = readFileSync(migrationPath);
     // A checksum-only correction is safe only when the lock now matches the
     // canonical SQL source exactly. A newly appended lock entry is also valid
     // when its SQL source exists and the checksum matches the canonical file.
