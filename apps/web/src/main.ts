@@ -4829,6 +4829,9 @@ type CommunicationConversationView = {
   organizationId: string;
   workspaceId: string | null;
   customerId: string | null;
+  businessId: string | null;
+  businessName: string | null;
+  viewerRole: "buyer" | "seller";
   status: "open" | "closed" | "archived";
   createdAt: string;
   updatedAt: string;
@@ -4904,6 +4907,16 @@ function renderMessages(): string {
   '</div>';
 }
 
+function messageConversationDisplayName(conversation: CommunicationConversationView): string {
+  if (conversation.viewerRole === "buyer" && conversation.businessName?.trim()) {
+    return conversation.businessName.trim();
+  }
+  if (conversation.viewerRole === "seller" && conversation.businessId) {
+    return socialCommerceUi("messagesOtherParticipant");
+  }
+  return socialCommerceUi("messagesConversationTitle");
+}
+
 function renderMessageInboxItems(items: CommunicationConversationView[], selectedId: string | null): string {
   if (!items.length) {
     return '<div class="phoenix-reset-messages-inbox-empty"><span class="phoenix-reset-messages-icon" aria-hidden="true">◌</span>' +
@@ -4911,12 +4924,14 @@ function renderMessageInboxItems(items: CommunicationConversationView[], selecte
   }
   return items.map((item) => {
     const selected = item.id === selectedId;
+    const displayName = messageConversationDisplayName(item);
+    const initials = displayName.trim().slice(0, 1) || "✉";
     const preview = item.lastMessagePreview?.trim() || socialCommerceUi("messagesNewConversation");
     const date = item.lastMessageAt || item.updatedAt;
     return '<button type="button" class="phoenix-reset-message-row' + (selected ? ' selected' : '') +
       '" data-message-conversation="' + escapeAttr(item.id) + '" aria-pressed="' + String(selected) + '">' +
-      '<span class="phoenix-reset-message-row-icon" aria-hidden="true">✉</span>' +
-      '<span class="phoenix-reset-message-row-copy"><strong>' + socialCommerceUi("messagesConversationTitle") + '</strong>' +
+      '<span class="phoenix-reset-message-row-icon" aria-hidden="true">' + escapeHtml(initials) + '</span>' +
+      '<span class="phoenix-reset-message-row-copy"><strong>' + escapeHtml(displayName) + '</strong>' +
       '<small>' + escapeHtml(preview) + '</small></span>' +
       '<span class="phoenix-reset-message-row-meta"><time>' + escapeHtml(formatDate(date)) + '</time>' +
       '<small>' + socialCommerceUi(item.status === "open" ? "messagesConversationOpen" : "messagesConversationClosed") + '</small></span>' +
@@ -4950,8 +4965,8 @@ function renderMessageThread(
       '</form>'
     : '<p class="phoenix-reset-message-thread-closed">' + socialCommerceUi("messagesConversationClosedBody") + '</p>';
   return '<article class="phoenix-reset-message-thread-card">' +
-    '<header class="phoenix-reset-message-thread-header"><span class="phoenix-reset-messages-mark" aria-hidden="true">✉</span>' +
-      '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesEyebrow") + '</span><h2>' + socialCommerceUi("messagesConversationTitle") + '</h2>' +
+    '<header class="phoenix-reset-message-thread-header"><span class="phoenix-reset-messages-mark" aria-hidden="true">' + escapeHtml(messageConversationDisplayName(conversation).slice(0, 1) || "✉") + '</span>' +
+      '<div><span class="phoenix-reset-section-kicker">' + socialCommerceUi("messagesEyebrow") + '</span><h2>' + escapeHtml(messageConversationDisplayName(conversation)) + '</h2>' +
       '<small>' + socialCommerceUi(conversation.status === "open" ? "messagesConversationOpen" : "messagesConversationClosed") + '</small></div></header>' +
     '<div class="phoenix-reset-message-list" aria-busy="false">' + messageRows + '</div>' + composer +
   '</article>';

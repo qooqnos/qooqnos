@@ -330,6 +330,9 @@ await page.route("**/api/v1/**", async (route) => {
         organizationId: "tenant-1",
         workspaceId: "seller-workspace-1",
         customerId: "customer-e2e-1",
+        businessId: body.businessId,
+        businessName: "ترنج",
+        viewerRole: "buyer",
         status: "open",
         createdAt: "2026-10-17T00:00:00.000Z",
         updatedAt: "2026-10-17T00:00:00.000Z",
@@ -548,6 +551,10 @@ await page.locator("[data-ask-seller-detail]").click();
 await page.waitForFunction(() => location.pathname === "/messages"
   && new URLSearchParams(location.search).get("conversation") === "conversation-from-offer-e2e");
 await page.locator("#messages-compose").waitFor();
+const sellerConversationRow = page.locator('[data-message-conversation="conversation-from-offer-e2e"]');
+await sellerConversationRow.waitFor();
+assert.ok((await sellerConversationRow.innerText()).includes("ترنج"), "Buyer inbox should show the canonical business name");
+assert.ok((await page.locator(".phoenix-reset-message-thread-header").innerText()).includes("ترنج"), "Buyer thread header should show the canonical business name");
 assert.equal(communicationStartRequests.length, 1);
 assert.deepEqual(communicationStartRequests[0], { businessId: "biz-1" });
 assert.equal(await page.locator("#messages-compose").count(), 1);
