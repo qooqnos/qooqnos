@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T07:50:00.000Z",
+  "generatedAt": "2026-10-18T18:24:54.318Z",
   "migrations": [
     {
       "id": "0001_foundation",
@@ -651,6 +651,13 @@
       "moduleId": "communication",
       "checksum": "1af855abfdec59ac9e364eb5977ac9ffbbf734e84ac2093324aeb762d38f0829",
       "filename": "0096_communication_conversation_business.sql"
+    },
+    {
+      "id": "0097_catalog_inventory_adjustments",
+      "version": 97,
+      "moduleId": "catalog",
+      "checksum": "7239558abf0504af0f29426bfa204caa6761bd72924aed83763c2321641b9e32",
+      "filename": "0097_catalog_inventory_adjustments.sql"
     }
   ]
 }

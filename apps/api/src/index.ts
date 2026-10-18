@@ -477,6 +477,35 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
 
   router.register({
     method: "POST",
+    path: "/api/v1/catalog/businesses/:businessId/inventory/:inventoryItemId/adjustments",
+    module: "catalog",
+    operation: "catalog.inventory.adjust",
+    permission: "catalog.inventory.adjust",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const command = await parseJsonCommand(request, isInventoryAdjustmentCommand, "Inventory adjustment payload is invalid.", context.requestId);
+      const businessId = brandId<"EntityId">(requiredRouteParam(params, "businessId", context.requestId));
+      const inventoryItemId = brandId<"EntityId">(requiredRouteParam(params, "inventoryItemId", context.requestId));
+      try {
+        const data = await getCatalogService(database, authorization).adjustBusinessInventory(context, {
+          businessId, inventoryItemId, expectedVersion: command.expectedVersion,
+          quantityOnHand: command.quantityOnHand, reason: command.reason,
+        });
+        return json({ data }, 200, context.requestId);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "";
+        if (/not available in this business/i.test(message)) throw new AppError({ code: "NOT_FOUND", message: "Inventory item was not found in this business.", requestId: context.requestId });
+        if (/changed since it was loaded/i.test(message)) throw new AppError({ code: "CONFLICT", message: "Inventory changed since it was loaded; refresh and retry.", requestId: context.requestId });
+        if (/quantity|reserved|reason|version/i.test(message)) throw new AppError({ code: "VALIDATION_ERROR", message, requestId: context.requestId });
+        throw error;
+      }
+    },
+  });
+
+  router.register({
+    method: "POST",
     path: "/api/v1/catalog/offers",
     module: "catalog",
     operation: "catalog.offering.create",
@@ -1239,6 +1268,19 @@ function isCreateProductCommand(value: unknown): value is {
   if (!value || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;
   return typeof body.businessId === "string" && typeof body.name === "string" && optionalStrings(body, ["description"]);
+}
+
+function isInventoryAdjustmentCommand(value: unknown): value is {
+  expectedVersion: number;
+  quantityOnHand: number;
+  reason: string;
+} {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const body = value as Record<string, unknown>;
+  return Number.isSafeInteger(body.expectedVersion) && Number(body.expectedVersion) > 0
+    && Number.isSafeInteger(body.quantityOnHand) && Number(body.quantityOnHand) >= 0
+    && Number(body.quantityOnHand) <= 2_147_483_647
+    && typeof body.reason === "string" && body.reason.trim().length >= 3 && body.reason.trim().length <= 250;
 }
 
 function isCreateProductVariantCommand(value: unknown): value is {
