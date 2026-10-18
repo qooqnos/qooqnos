@@ -1453,7 +1453,7 @@ await page.setViewportSize({ width: 1440, height: 900 });
 // Complete responsive smoke coverage for the remaining high-use seller templates.
 for (const [path, label, readySelector] of [
   ["/business/services", "Seller services", "#business-services-table"],
-  ["/business/team", "Seller team and permissions", ".phoenix-business-team-page, .phoenix-business-page"],
+  ["/business/team", "Seller team and permissions", ".phoenix-screen-wrapper, .phoenix-business-team-page, .phoenix-business-page"],
   ["/business/profile", "Public-facing business profile editor", ".phoenix-business-profile-page, .phoenix-business-page"],
   ["/product-studio", "AI product studio", "#studio-text"],
 ]) {
