@@ -67,6 +67,11 @@ const mockCommunicationMessages = [{
 const mockNotifications = [
   { id: "notice-1", intent: "booking.confirmed", channel: "in_app", priority: "high", status: "delivered", createdAt: new Date().toISOString(), variables: {} },
 ];
+const mockCatalogVariants = [{
+  id: "variant-catalog-e2e-1", productId: "product-1", productName: "کیف دست‌دوز",
+  sku: "BAG-RED-M", attributes: { color: "زرشکی", size: "متوسط" }, status: "active",
+  createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+}];
 let socialSequence = 0;
 page.on("pageerror", (error) => runtimeErrors.push(String(error.stack || error)));
 page.on("console", (message) => {
@@ -142,9 +147,7 @@ await page.route("**/api/v1/**", async (route) => {
       { id: "catalog-offer-e2e-1", businessId: "biz-1", offeringType: "product", title: "کیف دست‌دوز", description: "محصول کاتالوگ تست", productId: "product-1", serviceId: null, status: "active", publicationStatus: "published", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       { id: "catalog-offer-e2e-2", businessId: "biz-1", offeringType: "service", title: "مشاورهٔ تخصصی", description: "خدمت نمونه", productId: null, serviceId: "service-1", status: "active", publicationStatus: "pending", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ] },
-    "/api/v1/catalog/businesses/biz-1/variants": { data: [
-      { id: "variant-catalog-e2e-1", productId: "product-1", productName: "کیف دست‌دوز", sku: "BAG-RED-M", attributes: { color: "زرشکی", size: "متوسط" }, status: "active", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-    ] },
+    "/api/v1/catalog/businesses/biz-1/variants": { data: mockCatalogVariants },
     "/api/v1/catalog/businesses/biz-1/inventory": { data: [
       { id: "inventory-e2e-1", businessId: "biz-1", productId: "product-1", productName: "کیف دست‌دوز", variantId: "variant-catalog-e2e-1", sku: "BAG-RED-M", attributesJson: JSON.stringify({ color: "زرشکی", size: "متوسط" }), variantStatus: "active", locationId: "location-1", locationName: "شعبه مرکزی", quantityOnHand: 8, quantityReserved: 2, availableQuantity: 6, version: 1, updatedAt: new Date().toISOString() }
     ] },
@@ -308,7 +311,7 @@ await page.route("**/api/v1/**", async (route) => {
       sku: body.sku ?? null, attributes: body.attributes ?? null, status: "draft",
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
-    const current = payloads["/api/v1/catalog/businesses/biz-1/variants"].data;
+    const current = mockCatalogVariants;
     if (!current.some((item) => item.id === variant.id)) current.push(variant);
     await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ data: variant }) });
     return;
