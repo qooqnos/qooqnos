@@ -2288,7 +2288,7 @@
     "messagesThreadEmptyBody": "پیام‌های ثبت‌شده پس از ارسال واقعی در اینجا نمایش داده می‌شوند.",
     "messagesThreadLoadError": "پیام‌های این گفت‌وگو دریافت نشدند.",
     "messagesYouLabel": "شما",
-    "messagesOtherParticipant": "طرف گفت‌وگو",
+    "messagesOtherParticipant": "مشتری",
     "messagesComposeLabel": "پیام",
     "messagesComposePlaceholder": "پیامت را بنویس…",
     "messagesSendAction": "ارسال پیام",

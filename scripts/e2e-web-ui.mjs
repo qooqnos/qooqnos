@@ -34,6 +34,7 @@ const mockSocialComments = [];
 const mockBusinessUpdates = [];
 const notificationReadRequests = [];
 const communicationSendRequests = [];
+let mockCommunicationViewerRole = "buyer";
 const communicationStartRequests = [];
 const mediaAssetUploadRequests = [];
 const offeringMediaLinkRequests = [];
@@ -345,7 +346,12 @@ await page.route("**/api/v1/**", async (route) => {
     return;
   }
   if (path === "/api/v1/communications/conversations" && request.method() === "GET") {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: mockConversations }) });
+    const conversationsForViewer = mockConversations.map((conversation) =>
+      conversation.businessId
+        ? { ...conversation, viewerRole: mockCommunicationViewerRole }
+        : conversation
+    );
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: conversationsForViewer }) });
     return;
   }
   if (path.startsWith("/api/v1/communications/conversations/") && path.endsWith("/messages") && request.method() === "GET") {
@@ -558,6 +564,16 @@ assert.ok((await page.locator(".phoenix-reset-message-thread-header").innerText(
 assert.equal(communicationStartRequests.length, 1);
 assert.deepEqual(communicationStartRequests[0], { businessId: "biz-1" });
 assert.equal(await page.locator("#messages-compose").count(), 1);
+
+// Seller-side view uses the localized customer counterpart label for this business-bound thread.
+mockCommunicationViewerRole = "seller";
+await page.goto(baseURL + "/messages");
+const sellerInboxRow = page.locator('[data-message-conversation="conversation-from-offer-e2e"]');
+await sellerInboxRow.waitFor();
+assert.ok((await sellerInboxRow.innerText()).includes("مشتری"), "Seller inbox should identify its counterpart as a customer");
+await sellerInboxRow.click();
+await page.waitForFunction(() => document.querySelector(".phoenix-reset-message-thread-header h2")?.textContent === "مشتری");
+mockCommunicationViewerRole = "buyer";
 const sellerMessageText = await page.locator(".phoenix-reset-messages-page").innerText();
 assert.ok(sellerMessageText.includes("میز چوبی"));
 assert.ok(!sellerMessageText.includes("seller-workspace-1"));

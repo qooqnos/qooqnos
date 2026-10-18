@@ -2288,7 +2288,7 @@
     "messagesThreadEmptyBody": "ستظهر هنا الرسائل التي أُرسلت فعلياً فقط.",
     "messagesThreadLoadError": "تعذّر تحميل رسائل هذه المحادثة.",
     "messagesYouLabel": "أنت",
-    "messagesOtherParticipant": "الطرف الآخر",
+    "messagesOtherParticipant": "العميل",
     "messagesComposeLabel": "الرسالة",
     "messagesComposePlaceholder": "اكتب رسالتك…",
     "messagesSendAction": "إرسال الرسالة",
