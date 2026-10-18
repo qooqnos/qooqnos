@@ -3388,3 +3388,10 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Thumbnails reuse the bounded public Media batch hydrator and show a neutral placeholder when no ready, published image exists; no sample products or invented prices are added.
 - Added Persian, English, and Arabic labels, responsive card styling, and E2E assertions for related offers and locale switching.
 - Required validation: CI, Phoenix verification, and Phoenix web UI E2E must pass on this commit.
+
+## 2026-10-18 — Canonical navigation from feed, Saved, and Compare
+
+- Feed card primary actions now link directly to the canonical public offer detail when the discovery record contains both a published offering reference and business reference, even if the public media batch returns no image.
+- Saved and Compare cards follow the same rule. Cards with known canonical references do not depend on image hydration; records without complete references retain the existing detail-panel fallback rather than guessing an offer or business ID.
+- Added Playwright coverage for a no-image canonical offer in the feed, a saved service without media, and a comparison item without media.
+- Validation on code commit 6d5c77e478d7dc2b868b52f4305b0b0a3b495c4d: CI, Phoenix verification, Phoenix web UI E2E, and preview deploy passed.

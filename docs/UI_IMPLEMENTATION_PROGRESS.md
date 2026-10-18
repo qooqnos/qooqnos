@@ -230,3 +230,10 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - Added responsive cards/table styling and Playwright assertions for the variant and inventory rows, SKU, location, available quantity, and 390px overflow.
 - The surface is intentionally read-only. A write route for product variants and a canonical inventory-adjustment route are still required before enabling creation/edit/stock mutation controls.
 - Commit: `20033922341b578c197429f56c2e659ee9522808`; CI, Phoenix verification, browser E2E, and preview deploy passed.
+
+## 2026-10-18 — Canonical offer navigation across social surfaces
+
+- Feed, Saved, and Compare primary detail actions route to `/offerings/:offeringId?business=:businessId` as soon as both canonical references are present, rather than waiting for a media response.
+- No-image records keep a neutral media placeholder while remaining navigable; incomplete records retain the safe detail-panel fallback.
+- Playwright checks cover the canonical link on a feed card without media, a saved service without media, and a compare item without media.
+- Validation on commit `6d5c77e478d7dc2b868b52f4305b0b0a3b495c4d`: [CI](https://github.com/qooqnos/qooqnos/actions/runs/39153380678), [Phoenix verification](https://github.com/qooqnos/qooqnos/actions/runs/39153380588), [Phoenix web UI E2E](https://github.com/qooqnos/qooqnos/actions/runs/39153380523), and [preview deploy](https://github.com/qooqnos/qooqnos/actions/runs/39153380626) passed.
