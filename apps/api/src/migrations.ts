@@ -90,6 +90,7 @@ import businessPublicContactLinks from "../../../migrations/0092_business_public
 import commerceFulfillmentPolicies from "../../../migrations/0093_commerce_fulfillment_policies.sql";
 import socialEngagementGraph from "../../../migrations/0094_social_engagement_graph.sql";
 import catalogVariantPricing from "../../../migrations/0095_catalog_variant_pricing.sql";
+import communicationConversationBusiness from "../../../migrations/0096_communication_conversation_business.sql";
 import type { MigrationSource } from "@qooqnos/database";
 
 export const migrationSources: readonly MigrationSource[] = [
@@ -185,4 +186,5 @@ export const migrationSources: readonly MigrationSource[] = [
   { path: "migrations/0093_commerce_fulfillment_policies.sql", sql: commerceFulfillmentPolicies },
   { path: "migrations/0094_social_engagement_graph.sql", sql: socialEngagementGraph },
   { path: "migrations/0095_catalog_variant_pricing.sql", sql: catalogVariantPricing },
-  ];
+  { path: "migrations/0096_communication_conversation_business.sql", sql: communicationConversationBusiness },
+];

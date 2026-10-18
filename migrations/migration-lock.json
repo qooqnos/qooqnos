@@ -644,6 +644,13 @@
       "moduleId": "catalog",
       "checksum": "eca453e3c97370c96cbb160a7ffec3b57d9a7a52284303bc462d67c8204e6911",
       "filename": "0095_catalog_variant_pricing.sql"
+    },
+    {
+      "id": "0096_communication_conversation_business",
+      "version": 96,
+      "moduleId": "communication",
+      "checksum": "1af855abfdec59ac9e364eb5977ac9ffbbf734e84ac2093324aeb762d38f0829",
+      "filename": "0096_communication_conversation_business.sql"
     }
   ]
 }
