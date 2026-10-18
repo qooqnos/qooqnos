@@ -178,3 +178,10 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - Cart lines now show an estimated line subtotal next to the unit price, without presenting it as a server-confirmed payable total.
 - Added browser E2E coverage for quantity persistence and removing one line while preserving other cart entries.
 - Scope guard: cart values remain local review estimates. This change does not create an order, confirm inventory, charge payment, or imply that shipping/tax has been finalized.
+
+
+## 2026-10-18 — Feed seller identity navigation
+
+- Made the avatar and seller identity in each social-commerce feed card a single accessible navigation target.
+- Business-owned offers lead to their canonical public business profile. Person-owned offers without a public user-profile endpoint lead to a targeted Explore search instead of a fabricated profile route.
+- Added E2E assertions for both business-profile navigation and the independent-seller fallback.

@@ -15296,3 +15296,45 @@ button[aria-busy="true"] .btn-spinner {
   .social-shell .phoenix-cart-qty-ctrl { justify-content:flex-start; width:max-content; max-width:100%; }
   .social-shell .phoenix-cart-remove-btn { min-height:38px; }
 }
+
+
+/* Make the identity on every social-commerce post open the canonical seller destination. */
+.social-shell .phoenix-post-seller-link {
+  display:flex;
+  flex:1 1 auto;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  padding:3px 4px;
+  border-radius:12px;
+  color:inherit;
+  text-decoration:none;
+  transition:background .16s ease,color .16s ease;
+}
+.social-shell .phoenix-post-seller-link:hover {
+  background:color-mix(in srgb,var(--primary) 5%,transparent);
+}
+.social-shell .phoenix-post-seller-link:focus-visible {
+  outline:3px solid color-mix(in srgb,var(--primary) 55%,white);
+  outline-offset:2px;
+}
+.social-shell .phoenix-post-seller-link .phoenix-post-author-copy {
+  display:flex;
+  flex:1 1 auto;
+  flex-direction:column;
+  min-width:0;
+}
+.social-shell .phoenix-post-seller-link .phoenix-post-author-copy strong {
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  transition:color .16s ease;
+}
+.social-shell .phoenix-post-seller-link:hover .phoenix-post-author-copy strong {
+  color:var(--primary-strong);
+}
+.social-shell .phoenix-post-author .post-follow { flex:0 0 auto; }
+@media(max-width:520px) {
+  .social-shell .phoenix-post-seller-link { gap:8px; padding:2px; }
+  .social-shell .phoenix-post-author .post-follow { max-width:100px; padding-inline:9px; }
+}

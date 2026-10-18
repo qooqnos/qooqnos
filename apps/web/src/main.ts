@@ -6209,8 +6209,10 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
       : '<span class="post-follow post-follow-disabled">' + discoveryUi("viewSeller") + '</span>';
     return '<article class="phoenix-post-card">' +
       '<header class="phoenix-post-author">' +
-        (avatarUrl ? '<span class="phoenix-avatar phoenix-avatar-image"><img src="' + escapeAttr(avatarUrl) + '" alt="" loading="lazy" /></span>' : '<span class="phoenix-avatar phoenix-avatar-image">' + avatarInitial + '</span>') +
-        '<div class="phoenix-post-author-copy"><strong>' + escapeHtml(authorName) + '</strong><small>' + (locality ? locality + ' · ' : '') + escapeHtml(typeLabel) + '</small></div>' + followButton +
+        '<a class="phoenix-post-seller-link" href="' + escapeAttr(businessId ? "/businesses/" + encodeURIComponent(businessId) : sourceType === "business" && (item.sourceId ?? item.id) ? "/businesses/" + encodeURIComponent(item.sourceId ?? item.id ?? "") : "/discover?tab=explore&q=" + encodeURIComponent(authorName)) + '" data-nav aria-label="' + escapeAttr(authorName + " — " + (businessId || sourceType === "business" ? discoveryUi("viewBusiness") : discoveryUi("viewSeller"))) + '">' +
+          (avatarUrl ? '<span class="phoenix-avatar phoenix-avatar-image"><img src="' + escapeAttr(avatarUrl) + '" alt="" loading="lazy" /></span>' : '<span class="phoenix-avatar phoenix-avatar-image">' + avatarInitial + '</span>') +
+          '<span class="phoenix-post-author-copy"><strong>' + escapeHtml(authorName) + '</strong><small>' + (locality ? locality + ' · ' : '') + escapeHtml(typeLabel) + '</small></span>' +
+        '</a>' + followButton +
       '</header>' +
       '<button type="button" class="phoenix-post-media media-' + (index % 3) + '"' + mediaReferenceMarkup + ' data-discovery-index="' + index + '" aria-label="' + title + '">' + media + '<span class="post-media-badge">' + typeLabel + '</span><span class="phoenix-post-media-copy"><strong>' + title + '</strong><small>' + discoveryUi("detailsAndDecision") + '</small></span></button>' +
       '<div class="phoenix-post-body"><div class="phoenix-post-meta"><span class="phoenix-post-type">' + typeLabel + '</span>' + localityMarkup + '</div><h2>' + title + '</h2><p>' + description + '</p><div class="phoenix-post-price">' + price + '</div>' +

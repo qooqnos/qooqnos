@@ -1399,6 +1399,13 @@ await page.locator('[data-follow="result-product-user-1"]').click();
 await page.locator('[data-follow="result-product-user-1"].selected').waitFor();
 assert.ok(mockSocialFollows.has("user:user-seller-2"), "a person-owned offer must follow the seller user, not a fake business");
 assert.ok(mockSocialFollows.has("business:biz-1"), "a business-owned offer must follow the business");
+const businessSellerProfileLink = page.locator('.phoenix-post-card .phoenix-post-seller-link[href="/businesses/biz-1"]').first();
+await businessSellerProfileLink.waitFor();
+assert.equal(await businessSellerProfileLink.getAttribute("data-nav"), "");
+const independentSellerSearchLink = page.locator('.phoenix-post-card .phoenix-post-seller-link[href*="q="]').first();
+await independentSellerSearchLink.waitFor();
+assert.ok((await independentSellerSearchLink.getAttribute("href") || "").includes("هنرمند") || (await independentSellerSearchLink.getAttribute("href") || "").includes("%D9%87%D9%86%D8%B1"),
+  "Independent seller identity should open a targeted Explore search until a public user-profile endpoint exists.");
 
 // Mobile regression: feed and offer detail stay within the viewport without horizontal scrolling.
 await page.setViewportSize({ width: 390, height: 844 });
