@@ -602,8 +602,8 @@ assert.ok(!sellerMessageText.includes("customer-e2e-1"));
 
 // Comparison is data-led, responsive, and must not expose arbitrary internal metadata.
 await page.evaluate(() => localStorage.setItem("phoenix-compare-items", JSON.stringify([
-  { id: "compare-one", sourceId: "compare-one", title: "محصول مقایسه یک", sourceType: "product", price: 125, currency: "ریال", description: "توضیح اول", metadata: { brand: "برند نمونه", privateToken: "internal-secret" } },
-  { id: "compare-two", sourceId: "compare-two", title: "محصول مقایسه دو", sourceType: "product", price: 180, currency: "ریال", description: "توضیح دوم", metadata: { color: "آبی", businessId: "internal-business" } }
+  { id: "compare-one", sourceId: "compare-one", title: "محصول مقایسه یک", sourceType: "product", price: 125, currency: "ریال", description: "توضیح اول", metadata: { brand: "برند نمونه", privateToken: "internal-secret", businessId: "biz-1", offeringId: "offering-1" } },
+  { id: "compare-two", sourceId: "compare-two", title: "محصول مقایسه دو", sourceType: "product", price: 180, currency: "ریال", description: "توضیح دوم", metadata: { color: "آبی", businessId: "biz-1", offeringId: "offering-without-media", privateBusinessToken: "internal-business" } }
 ])));
 await page.goto(baseURL + "/compare");
 const compareText = await page.locator(".phoenix-reset-compare-page").innerText();
@@ -613,6 +613,10 @@ assert.ok(compareText.includes("برند نمونه"));
 assert.ok(!compareText.includes("internal-secret"));
 assert.ok(!compareText.includes("internal-business"));
 assert.equal(await page.locator(".phoenix-reset-compare-row-head strong").count(), 2);
+await page.locator('.phoenix-reset-compare-product-actions a[href*="/offerings/offering-1?business=biz-1"]').waitFor();
+await page.locator('.phoenix-reset-compare-product-actions a[href*="/offerings/offering-without-media?business=biz-1"]').waitFor();
+assert.equal(await page.locator(".phoenix-reset-compare-product-actions button[data-open-compare-detail]").count(), 0,
+  "Known offerings should not depend on successful image hydration for canonical navigation.");
 assert.equal(await page.locator("a[href*='/checkout']").count(), 0);
 await page.locator("[data-language-toggle]").click();
 await page.locator("[data-language-option='en']").click();
@@ -1672,6 +1676,23 @@ assert.ok(!(await page.locator("#saved-items-grid").innerText()).includes("خد�
 await page.locator('[data-saved-remove="result-1"]').click();
 await page.getByRole("heading", { name: "هنوز چیزی ذخیره نکرده‌ای." }).waitFor();
 assert.equal(await page.locator("#saved-items-count").innerText(), "۰");
+await page.evaluate(() => localStorage.setItem("phoenix-shortlist", JSON.stringify([{
+  id: "saved-service-canonical-e2e",
+  sourceId: "saved-service-canonical-e2e",
+  title: "سرویس ذخیره‌شدهٔ بدون تصویر",
+  sourceType: "service",
+  description: "خدمت آزمایشی برای پیوند canonical",
+  price: 450000,
+  currency: "IRR",
+  metadata: { businessId: "biz-1", offeringId: "offering-service-1", offeringType: "service" },
+}])));
+await page.goto(baseURL + "/saved");
+await page.locator('.phoenix-reset-saved-media[href*="/offerings/offering-service-1?business=biz-1"]').waitFor();
+await page.locator('.phoenix-reset-saved-card-actions a[href*="/offerings/offering-service-1?business=biz-1"]').waitFor();
+assert.equal(await page.locator('#saved-items-grid button[data-saved-open="saved-service-canonical-e2e"]').count(), 0,
+  "Known published offerings should use canonical detail links even if no media is available.");
+await page.locator('[data-saved-remove="saved-service-canonical-e2e"]').click();
+await page.getByRole("heading", { name: "هنوز چیزی ذخیره نکرده‌ای." }).waitFor();
 
 await page.goto(baseURL + "/business");
 await page.locator("[data-workspace-toggle]").first().click();
