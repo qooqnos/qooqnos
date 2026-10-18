@@ -566,6 +566,7 @@ assert.deepEqual(communicationStartRequests[0], { businessId: "biz-1" });
 assert.equal(await page.locator("#messages-compose").count(), 1);
 
 // Seller-side view uses the localized customer counterpart label for this business-bound thread.
+const buyerMessageUrl = page.url();
 mockCommunicationViewerRole = "seller";
 await page.goto(baseURL + "/messages");
 const sellerInboxRow = page.locator('[data-message-conversation="conversation-from-offer-e2e"]');
@@ -574,6 +575,8 @@ assert.ok((await sellerInboxRow.innerText()).includes("مشتری"), "Seller inb
 await sellerInboxRow.click();
 await page.waitForFunction(() => document.querySelector(".phoenix-reset-message-thread-header h2")?.textContent === "مشتری");
 mockCommunicationViewerRole = "buyer";
+await page.goto(buyerMessageUrl);
+await page.locator("#messages-compose").waitFor();
 const sellerMessageText = await page.locator(".phoenix-reset-messages-page").innerText();
 assert.ok(sellerMessageText.includes("میز چوبی"));
 assert.ok(!sellerMessageText.includes("seller-workspace-1"));
