@@ -2370,7 +2370,10 @@
     "personalProfileMessages": "پیام‌ها",
     "personalProfileMessagesDescription": "گفت‌وگو دربارهٔ کالا و خدمت",
     "personalProfileActivity": "فعالیت",
-    "personalProfileActivityDescription": "تعامل‌ها و ارتباط‌های اجتماعی"
+    "personalProfileActivityDescription": "تعامل‌ها و ارتباط‌های اجتماعی",
+    "offerDetailRelatedTitle": "عرضه‌های دیگر این فروشنده",
+    "offerDetailRelatedDescription": "گزینه‌های منتشرشدهٔ دیگر از همین فروشنده را ببین.",
+    "offerDetailRelatedOpen": "مشاهدهٔ عرضه"
   },
   "catalogPage": {
     "eyebrow": "کاتالوگ فروشنده",

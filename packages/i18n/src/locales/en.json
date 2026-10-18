@@ -2370,7 +2370,10 @@
     "personalProfileMessages": "Messages",
     "personalProfileMessagesDescription": "Conversations about offers",
     "personalProfileActivity": "Activity",
-    "personalProfileActivityDescription": "Your social interactions"
+    "personalProfileActivityDescription": "Your social interactions",
+    "offerDetailRelatedTitle": "More from this seller",
+    "offerDetailRelatedDescription": "Explore other published products and services from the same seller.",
+    "offerDetailRelatedOpen": "View offer"
   },
   "catalogPage": {
     "eyebrow": "Seller catalog",

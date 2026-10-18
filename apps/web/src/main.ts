@@ -8068,6 +8068,10 @@ function renderPublicOfferingDetail(): string {
     '<section class="phoenix-public-offering-lower">' +
       '<article class="phoenix-public-offering-info"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("offerDetailAbout") + '</span><h2 id="public-offer-details-heading">' + socialCommerceUi("offerDetailRecordedDetails") + '</h2><p id="public-offer-details">' + socialCommerceUi("offerDetailLoadingDetails") + '</p></article>' +
       '<article class="phoenix-public-offering-info"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("offerDetailContact") + '</span><h2 id="public-offer-ask-heading">' + socialCommerceUi("offerDetailAskHeading") + '</h2><p>' + socialCommerceUi("offerDetailAskIntro") + '</p><button class="button button-ghost" id="public-offer-ask" type="button" disabled>' + socialCommerceUi("detailAskSeller") + '</button></article>' +
+    '</section>' +
+    '<section class="phoenix-public-offering-related" id="public-offer-related" aria-labelledby="public-offer-related-title" hidden>' +
+      '<div class="phoenix-public-offering-related-heading"><span class="phoenix-reset-section-kicker">' + socialCommerceUi("offerDetailContact") + '</span><h2 id="public-offer-related-title">' + socialCommerceUi("offerDetailRelatedTitle") + '</h2><p>' + socialCommerceUi("offerDetailRelatedDescription") + '</p></div>' +
+      '<div class="phoenix-public-offering-related-grid" id="public-offer-related-grid"></div>' +
     '</section></div>';
 }
 
@@ -8934,6 +8938,90 @@ function mountPublicOfferingVariantPicker(
   };
 }
 
+function renderRelatedPublicOfferings(
+  host: HTMLElement,
+  offers: readonly {
+    id: string;
+    offeringType: "product" | "service";
+    title: string;
+    description: string | null;
+    priceAmountMinor: number | null;
+    currency: string | null;
+    pricingType: string | null;
+  }[],
+  currentOfferId: string,
+  businessId: string,
+  businessName: string,
+): void {
+  const related = offers.filter((offer) => offer.id !== currentOfferId).slice(0, 4);
+  host.replaceChildren();
+  if (!related.length) {
+    host.hidden = true;
+    return;
+  }
+
+  for (const offer of related) {
+    const card = document.createElement("a");
+    card.className = "phoenix-public-offering-related-card";
+    card.href = "/offerings/" + encodeURIComponent(offer.id) + "?" + new URLSearchParams({ business: businessId }).toString();
+    card.dataset.nav = "";
+    card.dataset.publicOfferMediaRef = offer.id;
+    card.dataset.publicBusinessId = businessId;
+    card.dataset.relatedOfferingId = offer.id;
+    card.setAttribute("aria-label", offer.title);
+
+    const media = document.createElement("span");
+    media.className = "phoenix-public-offering-related-media";
+    const placeholder = document.createElement("span");
+    placeholder.className = "phoenix-public-offer-media-placeholder";
+    placeholder.setAttribute("aria-hidden", "true");
+    placeholder.textContent = "▦";
+    media.appendChild(placeholder);
+
+    const kind = document.createElement("span");
+    kind.className = "phoenix-public-offering-related-kind";
+    kind.textContent = offer.offeringType === "service" ? socialCommerceUi("offerDetailService") : socialCommerceUi("offerDetailProduct");
+    const title = document.createElement("strong");
+    title.className = "phoenix-public-offering-related-name";
+    title.textContent = offer.title;
+    const description = document.createElement("span");
+    description.className = "phoenix-public-offering-related-description";
+    description.textContent = offer.description?.trim() || socialCommerceUi("publicOfferNoDescription");
+    const price = document.createElement("strong");
+    price.className = "phoenix-public-offering-related-price";
+    if (offer.pricingType !== "custom" && offer.priceAmountMinor !== null && offer.currency) {
+      try {
+        const formatted = formatPublicMoney(offer.priceAmountMinor, offer.currency);
+        price.textContent = offer.pricingType === "from" || offer.pricingType === "starting_at"
+          ? socialCommerceUi("offerDetailVariantStartingAt") + " " + formatted
+          : formatted;
+      } catch {
+        price.textContent = socialCommerceUi("offerDetailPriceAsk");
+      }
+    } else {
+      price.textContent = socialCommerceUi("offerDetailPriceAsk");
+    }
+    const action = document.createElement("span");
+    action.className = "phoenix-public-offering-related-action";
+    action.textContent = socialCommerceUi("offerDetailRelatedOpen") + " ←";
+    card.append(media, kind, title, description, price, action);
+    host.appendChild(card);
+  }
+
+  host.hidden = false;
+  const sourceItems: DiscoveryResult[] = related.map((offer) => ({
+    id: offer.id,
+    sourceId: offer.id,
+    sourceType: offer.offeringType,
+    title: offer.title,
+    ...(offer.description ? { description: offer.description } : {}),
+    ...(offer.priceAmountMinor !== null ? { price: offer.priceAmountMinor } : {}),
+    ...(offer.currency ? { currency: offer.currency } : {}),
+    metadata: { businessId, businessName, offeringId: offer.id, offeringType: offer.offeringType },
+  }));
+  void hydratePublicBusinessOfferMedia(host, sourceItems);
+}
+
 async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   const offeringId = routePath.split("/").filter(Boolean)[1] ?? "";
   const params = new URLSearchParams(location.search);
@@ -8955,13 +9043,14 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
   const mediaMessage = document.querySelector<HTMLElement>("#public-offer-media-message");
   const mediaHost = document.querySelector<HTMLElement>(".phoenix-public-offering-media");
   const variantsHost = document.querySelector<HTMLElement>("#public-offer-variants");
+  const relatedHost = document.querySelector<HTMLElement>("#public-offer-related-grid");
   let variantLoadFailed = false;
   let priceResolutionVersion = 0;
   let personalizedVariantPrice: { variantId: string; priceAmountMinor: number; currency: string; precedenceMatched: string } | null = null;
   let pendingPersonalizedVariantId: string | null = null;
   let failedPersonalizedVariantId: string | null = null;
   let variantSelection: PublicOfferingVariantSelection = { hasVariants: false, getSelected: () => null };
-  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !priceContextNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage || !mediaHost || !variantsHost) {
+  if (!offeringId || !businessId || !titleNode || !descriptionNode || !detailsNode || !typeNode || !priceNode || !priceContextNode || !sellerNameNode || !sellerNode || !sellerAvatar || !publishedNode || !primaryAction || !noteNode || !askButton || !actionsHost || !mediaMessage || !mediaHost || !variantsHost || !relatedHost) {
     if (titleNode) titleNode.textContent = socialCommerceUi("offerDetailInvalidLink");
     if (noteNode) noteNode.textContent = socialCommerceUi("offerDetailOpenFromProfile");
     return;
@@ -8996,6 +9085,7 @@ async function loadPublicOfferingDetail(routePath: string): Promise<void> {
     const offer = response.data.offers.find((candidate) => candidate.id === offeringId);
     if (!offer || profile.publicationStatus !== "published" || profile.status !== "active") { showUnavailable(); return; }
     const businessName = profile.displayName || profile.name;
+    renderRelatedPublicOfferings(relatedHost, response.data.offers, offer.id, businessId, businessName);
     const item: DiscoveryResult = {
       id: offer.id, sourceId: offer.id, sourceType: offer.offeringType, title: offer.title,
       ...(offer.description !== null ? { description: offer.description } : {}),

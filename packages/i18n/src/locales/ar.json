@@ -2370,7 +2370,10 @@
     "personalProfileMessages": "الرسائل",
     "personalProfileMessagesDescription": "محادثات حول العروض",
     "personalProfileActivity": "النشاط",
-    "personalProfileActivityDescription": "تفاعلاتك الاجتماعية"
+    "personalProfileActivityDescription": "تفاعلاتك الاجتماعية",
+    "offerDetailRelatedTitle": "المزيد من هذا البائع",
+    "offerDetailRelatedDescription": "اكتشف منتجات وخدمات أخرى منشورة من البائع نفسه.",
+    "offerDetailRelatedOpen": "عرض التفاصيل"
   },
   "catalogPage": {
     "eyebrow": "كتالوج البائع",
