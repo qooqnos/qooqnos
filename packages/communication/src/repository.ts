@@ -12,12 +12,15 @@ export interface ConversationRecord {
   readonly organizationId: EntityId;
   readonly workspaceId: EntityId | null;
   readonly customerId: EntityId | null;
+  readonly businessId: EntityId | null;
   readonly status: "open" | "closed" | "archived";
   readonly createdAt: string;
   readonly updatedAt: string;
 }
 
 export interface ConversationInboxRecord extends ConversationRecord {
+  readonly businessName: string | null;
+  readonly viewerRole: "buyer" | "seller";
   readonly lastMessagePreview: string | null;
   readonly lastMessageAt: string | null;
 }
@@ -240,13 +243,13 @@ export class CommunicationRepository extends Repository {
   }
 
   async createConversation(context: RequestContext, input: {
-    id: EntityId; customerId?: EntityId; workspaceId?: EntityId; now: string;
+    id: EntityId; customerId?: EntityId; workspaceId?: EntityId; businessId?: EntityId; now: string;
   }): Promise<ConversationRecord> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     const workspaceId = input.workspaceId ?? context.workspaceId ?? null;
     await this.database.run(
-      "INSERT INTO communication_conversations (id, organization_id, workspace_id, customer_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, 'open', ?, ?)",
-      input.id, organizationId, workspaceId, input.customerId ?? null, input.now, input.now,
+      "INSERT INTO communication_conversations (id, organization_id, workspace_id, customer_id, business_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'open', ?, ?)",
+      input.id, organizationId, workspaceId, input.customerId ?? null, input.businessId ?? null, input.now, input.now,
     );
     const record = await this.getConversation(context, input.id);
     if (!record) throw new DatabaseError("Communication conversation not found after creation");
@@ -257,18 +260,22 @@ export class CommunicationRepository extends Repository {
     context: RequestContext,
     customerId: EntityId,
     workspaceId: EntityId,
+    businessId: EntityId,
   ): Promise<ConversationRecord | null> {
     const organizationId = this.requireOrganization({ organizationId: context.tenantId });
     return this.database.first<ConversationRecord>(
       `SELECT id, organization_id AS organizationId, workspace_id AS workspaceId,
-              customer_id AS customerId, status, created_at AS createdAt, updated_at AS updatedAt
+              customer_id AS customerId, business_id AS businessId, status,
+              created_at AS createdAt, updated_at AS updatedAt
        FROM communication_conversations
-       WHERE organization_id = ? AND workspace_id = ? AND customer_id = ? AND status = 'open'
+       WHERE organization_id = ? AND workspace_id = ? AND customer_id = ?
+         AND business_id = ? AND status = 'open'
        ORDER BY updated_at DESC, id DESC
        LIMIT 1`,
       organizationId,
       workspaceId,
       customerId,
+      businessId,
     );
   }
 
@@ -280,12 +287,24 @@ export class CommunicationRepository extends Repository {
     const safeLimit = Math.min(Math.max(Number.isSafeInteger(limit) ? limit : 50, 1), 100);
     return this.database.all<ConversationInboxRecord>(
       `SELECT c.id, c.organization_id AS organizationId, c.workspace_id AS workspaceId,
-              c.customer_id AS customerId, c.status, c.created_at AS createdAt, c.updated_at AS updatedAt,
+              c.customer_id AS customerId, c.business_id AS businessId,
+              b.display_name AS businessName,
+              CASE WHEN EXISTS (
+                SELECT 1 FROM customers viewer_customer
+                WHERE viewer_customer.id = c.customer_id
+                  AND viewer_customer.organization_id = c.organization_id
+                  AND viewer_customer.user_id = ?
+              ) THEN 'buyer' ELSE 'seller' END AS viewerRole,
+              c.status, c.created_at AS createdAt, c.updated_at AS updatedAt,
               (SELECT m.content FROM communication_messages m WHERE m.conversation_id = c.id
                ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS lastMessagePreview,
               (SELECT m.created_at FROM communication_messages m WHERE m.conversation_id = c.id
                ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS lastMessageAt
        FROM communication_conversations c
+       LEFT JOIN businesses b
+         ON b.id = c.business_id
+        AND b.organization_id = c.organization_id
+        AND b.workspace_id = c.workspace_id
        WHERE c.organization_id = ? AND (
          (c.workspace_id IS NOT NULL AND c.workspace_id = ?)
          OR EXISTS (
@@ -297,6 +316,7 @@ export class CommunicationRepository extends Repository {
        )
        ORDER BY COALESCE(lastMessageAt, c.updated_at) DESC, c.id DESC
        LIMIT ${safeLimit}`,
+      actorId,
       organizationId,
       workspaceId,
       actorId,
@@ -308,7 +328,8 @@ export class CommunicationRepository extends Repository {
     if (!actorId) return null;
     return this.database.first<ConversationRecord>(
       `SELECT c.id, c.organization_id AS organizationId, c.workspace_id AS workspaceId,
-              c.customer_id AS customerId, c.status, c.created_at AS createdAt, c.updated_at AS updatedAt
+              c.customer_id AS customerId, c.business_id AS businessId,
+              c.status, c.created_at AS createdAt, c.updated_at AS updatedAt
        FROM communication_conversations c
        WHERE c.id = ? AND c.organization_id = ? AND (
          (c.workspace_id IS NOT NULL AND c.workspace_id = ?)

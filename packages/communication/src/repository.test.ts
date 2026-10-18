@@ -26,6 +26,9 @@ describe("CommunicationRepository", () => {
       organizationId: "tenant-1",
       workspaceId: "workspace-1",
       customerId: "customer-1",
+      businessId: "business-1",
+      businessName: "Toranj",
+      viewerRole: "buyer",
       status: "open",
       createdAt: "2026-10-16T00:00:00.000Z",
       updatedAt: "2026-10-16T00:01:00.000Z",
@@ -48,11 +51,13 @@ describe("CommunicationRepository", () => {
     expect(result).toEqual([row]);
     expect(sql).toContain("c.organization_id = ?");
     expect(sql).toContain("c.workspace_id = ?");
+    expect(sql).toContain("LEFT JOIN businesses b");
+    expect(sql).toContain("AS viewerRole");
     expect(sql).toContain("cu.user_id = ?");
-    expect(bound).toEqual(["tenant-1", "workspace-1", "user-1"]);
+    expect(bound).toEqual(["user-1", "tenant-1", "workspace-1", "user-1"]);
   });
 
-  it("finds an open conversation only for the same tenant, seller workspace, and customer", async () => {
+  it("finds an open conversation only for the same tenant, seller workspace, customer, and business", async () => {
     let sql = "";
     let bound: readonly unknown[] = [];
     const row = {
@@ -60,6 +65,7 @@ describe("CommunicationRepository", () => {
       organizationId: "tenant-1",
       workspaceId: "seller-workspace-1",
       customerId: "customer-1",
+      businessId: "business-1",
       status: "open",
       createdAt: "2026-10-17T00:00:00.000Z",
       updatedAt: "2026-10-17T00:01:00.000Z",
@@ -79,10 +85,12 @@ describe("CommunicationRepository", () => {
       context(),
       brandId<"EntityId">("customer-1"),
       brandId<"EntityId">("seller-workspace-1"),
+      brandId<"EntityId">("business-1"),
     );
     expect(result).toEqual(row);
-    expect(sql).toContain("organization_id = ? AND workspace_id = ? AND customer_id = ? AND status = 'open'");
-    expect(bound).toEqual(["tenant-1", "seller-workspace-1", "customer-1"]);
+    expect(sql).toContain("customer_id = ?");
+    expect(sql).toContain("business_id = ? AND status = 'open'");
+    expect(bound).toEqual(["tenant-1", "seller-workspace-1", "customer-1", "business-1"]);
   });
 
   it("rejects empty message content", async () => {

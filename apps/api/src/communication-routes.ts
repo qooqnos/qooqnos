@@ -102,6 +102,7 @@ export function registerCommunicationRoutes(
         context,
         customer.id,
         target.workspaceId,
+        target.id,
       );
       if (existing) return json({ data: existing }, 200, context.requestId);
 
@@ -109,6 +110,7 @@ export function registerCommunicationRoutes(
       const conversation = await service.createConversation(context, {
         customerId: customer.id,
         workspaceId: target.workspaceId,
+        businessId: target.id,
       });
       return json({ data: conversation }, 201, context.requestId);
     },

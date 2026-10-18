@@ -73,6 +73,7 @@ export class CommunicationService {
   async createConversation(context: RequestContext, input: {
     readonly customerId?: EntityId | undefined;
     readonly workspaceId?: EntityId | undefined;
+    readonly businessId?: EntityId | undefined;
   }) {
     await this.options.authorization.assert({
       context,
@@ -84,6 +85,7 @@ export class CommunicationService {
       id: this.options.id(),
       ...(input.customerId ? { customerId: input.customerId } : {}),
       ...(input.workspaceId ? { workspaceId: input.workspaceId } : {}),
+      ...(input.businessId ? { businessId: input.businessId } : {}),
       now: this.options.now(),
     });
   }
