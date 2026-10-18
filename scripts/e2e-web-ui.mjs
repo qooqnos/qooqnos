@@ -694,6 +694,41 @@ assert.ok(contextualOfferText.includes("هیچ پیامی نمایش یا ارس
 await page.goto(baseURL + "/businesses/biz-1");
 await page.locator("#public-business-page-offers a[href*='/offerings/offering-1?business=biz-1']").waitFor();
 
+await page.setViewportSize({ width: 390, height: 844 });
+await page.goto(baseURL + "/businesses/biz-1");
+await page.locator(".phoenix-public-business-page").waitFor();
+assert.equal(await page.locator(".phoenix-social-mobile-nav").isVisible(), true);
+assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true,
+  "public business profile must not overflow horizontally on mobile");
+assert.ok((await page.locator(".phoenix-public-business-page").boundingBox())?.width <= 390);
+
+await page.goto(baseURL + "/offerings/offering-1?business=biz-1");
+await page.locator(".phoenix-public-offering-page").waitFor();
+await page.waitForFunction(() => document.querySelector("#public-offer-title")?.textContent === "کیف دست‌دوز");
+assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true,
+  "public offering details must not overflow horizontally on mobile");
+assert.equal(await page.locator("#public-offer-primary-action").isVisible(), true);
+const mobileOfferActions = await page.locator("#public-offer-actions").boundingBox();
+assert.ok(mobileOfferActions && mobileOfferActions.x >= 0 && mobileOfferActions.x + mobileOfferActions.width <= 390,
+  "public offering actions must stay within the mobile viewport");
+
+await page.goto(baseURL + "/cart");
+await page.locator(".phoenix-screen-wrapper").waitFor();
+assert.equal(await page.locator(".phoenix-social-mobile-nav").isVisible(), true);
+assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true,
+  "review cart must not overflow horizontally on mobile");
+if (await page.locator(".phoenix-cart-item").count()) {
+  assert.equal(await page.locator(".phoenix-cart-remove-btn").first().isVisible(), true);
+}
+
+await page.goto(baseURL + "/checkout");
+await page.locator(".phoenix-checkout-review-hero").waitFor();
+assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true,
+  "review-only checkout must not overflow horizontally on mobile");
+assert.equal(await page.locator(".phoenix-checkout-review-hero h2").isVisible(), true);
+assert.equal(await page.locator("[data-submit-payment], [data-confirm-order]").count(), 0);
+await page.setViewportSize({ width: 1440, height: 900 });
+
 await page.goto(baseURL + "/");
 assert.ok(await page.locator("#discover-query").count() > 0);
 await page.locator("#discover-query").fill("یک کسب‌وکار مناسب نزدیک من می‌خواهم");

@@ -185,3 +185,10 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - Made the avatar and seller identity in each social-commerce feed card a single accessible navigation target.
 - Business-owned offers lead to their canonical public business profile. Person-owned offers without a public user-profile endpoint lead to a targeted Explore search instead of a fabricated profile route.
 - Added E2E assertions for both business-profile navigation and the independent-seller fallback.
+
+
+## 2026-10-18 — Mobile coverage for buyer pages
+
+- Extended Playwright checks to public business profiles, published offer details, the local review cart, and review-only checkout at a 390px viewport.
+- Assertions cover horizontal overflow, visible mobile navigation, offer primary-action bounds, and the continued absence of fake payment/order submission controls.
+- The cart remains a local review surface; these checks make no claim about production order/payment completion.
