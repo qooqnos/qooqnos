@@ -27,7 +27,7 @@ function databaseForSubject(found = true): D1Database {
             return { results: [{ roleId: "owner" }] as T[] };
           }
           if (sql.includes("FROM membership_roles mr") && sql.includes("p.resource")) {
-            return { results: [{ permission: "business:create" }] as T[] };
+            return { results: [{ permission: "business.create" }, { permission: "business:create" }] as T[] };
           }
           return { results: [] as T[] };
         },
@@ -51,7 +51,7 @@ describe("RequestAuthorizationRepository", () => {
       workspaceId: "workspace-1",
       membershipStatus: "active",
       roles: ["owner"],
-      permissions: ["business:create"],
+      permissions: ["business.create", "business:create"],
     });
   });
 

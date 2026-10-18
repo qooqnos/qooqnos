@@ -291,4 +291,44 @@ describe("CatalogRepository", () => {
     expect(statements[0]).toContain("o.publication_status = 'published'");
   });
 
+
+  it("records inventory adjustments and increments the version atomically", async () => {
+    const statements: string[] = [];
+    const current = { id: brandId<"EntityId">("inventory-1"), businessId: brandId<"EntityId">("business-1"),
+      productId: brandId<"EntityId">("product-1"), productName: "Product", variantId: brandId<"EntityId">("variant-1"),
+      sku: "SKU-1", attributesJson: null, variantStatus: "active" as const, locationId: brandId<"EntityId">("location-1"),
+      locationName: "Main", quantityOnHand: 8, quantityReserved: 2, availableQuantity: 6, version: 4, updatedAt: "2026-10-18T12:00:00.000Z" };
+    const statement=(sql:string):D1PreparedStatementLike=>({bind(){return this;},async first<T>(){return (sql.includes("FROM inventory_items ii")?current:null) as T|null;},async all<T>(){return {results:[] as T[]};},async run(){return {success:true,meta:{changes:1}};}});
+    const raw:D1DatabaseLike={prepare(sql:string){statements.push(sql);return statement(sql);},async batch(){return [{success:true,meta:{changes:1}},{success:true,meta:{changes:1}}];}};
+    const result=await new CatalogRepository(new D1Database(raw)).adjustBusinessInventory(context(),{
+      id:brandId<"EntityId">("adjustment-1"),inventoryItemId:current.id,businessId:current.businessId,
+      expectedVersion:4,quantityOnHand:11,reason:"cycle count",now:"2026-10-18T13:00:00.000Z",
+    });
+    expect(result).toMatchObject({quantityBefore:8,quantityAfter:11,quantityReserved:2,availableQuantity:9,versionBefore:4,versionAfter:5,reason:"cycle count"});
+    expect(statements.some(sql=>sql.includes("UPDATE inventory_items")&&sql.includes("version = version + 1"))).toBe(true);
+    expect(statements.some(sql=>sql.includes("INSERT INTO inventory_adjustments"))).toBe(true);
+  });
+
+  it("rejects stale inventory versions before the adjustment batch", async () => {
+    let batches=0;
+    const current={id:"inventory-1",businessId:"business-1",productId:"product-1",productName:"Product",variantId:"variant-1",sku:null,attributesJson:null,variantStatus:"active",locationId:"location-1",locationName:"Main",quantityOnHand:8,quantityReserved:2,availableQuantity:6,version:5,updatedAt:"2026-10-18T12:00:00.000Z"};
+    const raw:D1DatabaseLike={prepare(sql:string){return {bind(){return this;},async first<T>(){return (sql.includes("FROM inventory_items ii")?current:null) as T|null;},async all<T>(){return {results:[] as T[]};},async run(){return {success:true};}};},async batch(){batches++;return [];}};
+    await expect(new CatalogRepository(new D1Database(raw)).adjustBusinessInventory(context(),{
+      id:brandId<"EntityId">("adjustment-1"),inventoryItemId:brandId<"EntityId">("inventory-1"),businessId:brandId<"EntityId">("business-1"),
+      expectedVersion:4,quantityOnHand:10,reason:"cycle count",now:"2026-10-18T13:00:00.000Z",
+    })).rejects.toThrow("Inventory changed since it was loaded");
+    expect(batches).toBe(0);
+  });
+
+  it("rejects reducing inventory below reserved stock", async () => {
+    let batches=0;
+    const current={id:"inventory-1",businessId:"business-1",productId:"product-1",productName:"Product",variantId:"variant-1",sku:null,attributesJson:null,variantStatus:"active",locationId:"location-1",locationName:"Main",quantityOnHand:8,quantityReserved:2,availableQuantity:6,version:4,updatedAt:"2026-10-18T12:00:00.000Z"};
+    const raw:D1DatabaseLike={prepare(sql:string){return {bind(){return this;},async first<T>(){return (sql.includes("FROM inventory_items ii")?current:null) as T|null;},async all<T>(){return {results:[] as T[]};},async run(){return {success:true};}};},async batch(){batches++;return [];}};
+    await expect(new CatalogRepository(new D1Database(raw)).adjustBusinessInventory(context(),{
+      id:brandId<"EntityId">("adjustment-1"),inventoryItemId:brandId<"EntityId">("inventory-1"),businessId:brandId<"EntityId">("business-1"),
+      expectedVersion:4,quantityOnHand:1,reason:"cycle count",now:"2026-10-18T13:00:00.000Z",
+    })).rejects.toThrow("less than reserved");
+    expect(batches).toBe(0);
+  });
+
 });

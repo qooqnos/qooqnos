@@ -73,6 +73,15 @@ export class CatalogService {
     return this.options.repository.listBusinessInventory(context, businessId, limit);
   }
 
+  async adjustBusinessInventory(context: RequestContext, command: Omit<import("./repository").AdjustBusinessInventoryInput,"id"|"now">) {
+    await this.authorize(context, "catalog.inventory.adjust");
+    if (!Number.isSafeInteger(command.expectedVersion) || command.expectedVersion < 1) throw new Error("Inventory version is invalid");
+    if (!Number.isSafeInteger(command.quantityOnHand) || command.quantityOnHand < 0 || command.quantityOnHand > 2_147_483_647) throw new Error("On-hand quantity must be a non-negative supported integer");
+    const reason=command.reason.trim();
+    if (reason.length<3 || reason.length>250) throw new Error("Inventory adjustment reason must be between 3 and 250 characters");
+    return this.options.repository.adjustBusinessInventory(context,{...command,reason,id:this.options.id(),now:this.options.now()});
+  }
+
   async createOffering(context: RequestContext, command: Omit<CreateOfferingInput, "id" | "now">): Promise<OfferingRecord> {
     await this.authorize(context, "catalog.offering.create");
     validateText(command.title, "title");
@@ -128,6 +137,7 @@ export const CATALOG_PERMISSIONS = [
   "catalog.product_variant.create",
   "catalog.offering.create",
   "catalog.offering.publish",
+  "catalog.inventory.adjust",
 ] as const;
 
 function validateText(value: string, field: string): void {

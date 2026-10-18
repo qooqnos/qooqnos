@@ -107,6 +107,34 @@ export interface PublicOfferingVariantRecord {
   readonly availability: "in_stock" | "out_of_stock" | "unknown";
 }
 
+export interface AdjustBusinessInventoryInput {
+  readonly id: EntityId;
+  readonly inventoryItemId: EntityId;
+  readonly businessId: EntityId;
+  readonly expectedVersion: number;
+  readonly quantityOnHand: number;
+  readonly reason: string;
+  readonly now: string;
+}
+
+export interface InventoryAdjustmentRecord {
+  readonly id: EntityId;
+  readonly inventoryItemId: EntityId;
+  readonly businessId: EntityId;
+  readonly productId: EntityId;
+  readonly variantId: EntityId;
+  readonly locationId: EntityId;
+  readonly quantityBefore: number;
+  readonly quantityAfter: number;
+  readonly quantityReserved: number;
+  readonly availableQuantity: number;
+  readonly versionBefore: number;
+  readonly versionAfter: number;
+  readonly reason: string;
+  readonly actorId: EntityId | null;
+  readonly createdAt: string;
+}
+
 export interface CreateProductInput {
   readonly id: EntityId;
   readonly businessId: EntityId;
@@ -481,6 +509,91 @@ export class CatalogRepository extends Repository {
       workspaceId,
       safeLimit,
     );
+  }
+
+  async adjustBusinessInventory(context: RequestContext, input: AdjustBusinessInventoryInput): Promise<InventoryAdjustmentRecord> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const reason = input.reason.trim();
+    if (!Number.isSafeInteger(input.expectedVersion) || input.expectedVersion < 1) throw new DatabaseError("Inventory version is invalid");
+    if (!Number.isSafeInteger(input.quantityOnHand) || input.quantityOnHand < 0 || input.quantityOnHand > 2_147_483_647) throw new DatabaseError("On-hand quantity must be a non-negative supported integer");
+    if (reason.length < 3 || reason.length > 250) throw new DatabaseError("Inventory adjustment reason must be between 3 and 250 characters");
+
+    const current = await this.database.first<BusinessInventoryRecord>(
+      `SELECT ii.id, p.business_id AS businessId, p.id AS productId, p.name AS productName,
+              pv.id AS variantId, pv.sku, pv.attributes_json AS attributesJson, pv.status AS variantStatus,
+              l.id AS locationId, l.name AS locationName, ii.quantity_on_hand AS quantityOnHand,
+              ii.quantity_reserved AS quantityReserved, (ii.quantity_on_hand - ii.quantity_reserved) AS availableQuantity,
+              ii.version, ii.updated_at AS updatedAt
+         FROM inventory_items ii
+         INNER JOIN product_variants pv ON pv.id = ii.product_variant_id
+         INNER JOIN products p ON p.id = pv.product_id
+         INNER JOIN locations l ON l.id = ii.location_id
+         INNER JOIN businesses b ON b.id = p.business_id
+        WHERE ii.id = ? AND p.business_id = ? AND b.organization_id = ? AND b.workspace_id = ?
+          AND p.status != 'archived' AND pv.status != 'archived' AND l.status != 'archived'
+        LIMIT 1`,
+      input.inventoryItemId, input.businessId, organizationId, workspaceId,
+    );
+    if (!current) throw new DatabaseError("Inventory item is not available in this business");
+    if (current.version !== input.expectedVersion) throw new DatabaseError("Inventory changed since it was loaded; refresh and retry");
+    if (input.quantityOnHand < current.quantityReserved) throw new DatabaseError("On-hand quantity cannot be less than reserved quantity");
+    if (input.quantityOnHand === current.quantityOnHand) throw new DatabaseError("New quantity must differ from current inventory");
+
+    const nextVersion = input.expectedVersion + 1;
+    const actorId = context.actorId ?? null;
+    let results;
+    try {
+      results = await this.database.transaction([
+        {
+          sql: `UPDATE inventory_items
+                   SET quantity_on_hand = ?, version = version + 1, updated_at = ?
+                 WHERE id = ? AND version = ? AND quantity_reserved <= ?
+                   AND EXISTS (
+                     SELECT 1 FROM product_variants pv
+                     INNER JOIN products p ON p.id = pv.product_id
+                     INNER JOIN businesses b ON b.id = p.business_id
+                      WHERE pv.id = inventory_items.product_variant_id
+                        AND p.business_id = ? AND b.organization_id = ? AND b.workspace_id = ?
+                   )`,
+          params: [input.quantityOnHand,input.now,input.inventoryItemId,input.expectedVersion,input.quantityOnHand,input.businessId,organizationId,workspaceId],
+        },
+        {
+          sql: `INSERT INTO inventory_adjustments
+                 (id,organization_id,workspace_id,business_id,inventory_item_id,product_variant_id,location_id,
+                  version_before,version_after,quantity_before,quantity_after,quantity_reserved,reason,actor_id,created_at)
+                SELECT ?,b.organization_id,b.workspace_id,b.id,ii.id,ii.product_variant_id,ii.location_id,
+                       ?,ii.version,?,ii.quantity_on_hand,ii.quantity_reserved,?,?,?
+                  FROM inventory_items ii
+                  INNER JOIN product_variants pv ON pv.id=ii.product_variant_id
+                  INNER JOIN products p ON p.id=pv.product_id
+                  INNER JOIN businesses b ON b.id=p.business_id
+                 WHERE ii.id=? AND ii.version=? AND ii.quantity_on_hand=? AND ii.updated_at=?
+                   AND p.business_id=? AND b.organization_id=? AND b.workspace_id=?`,
+          params: [input.id,input.expectedVersion,current.quantityOnHand,reason,actorId,input.now,input.inventoryItemId,nextVersion,input.quantityOnHand,input.now,input.businessId,organizationId,workspaceId],
+        },
+      ]);
+    } catch (error) {
+      const latest = await this.database.first<{version:number}>(
+        `SELECT ii.version FROM inventory_items ii
+          INNER JOIN product_variants pv ON pv.id=ii.product_variant_id
+          INNER JOIN products p ON p.id=pv.product_id
+          INNER JOIN businesses b ON b.id=p.business_id
+         WHERE ii.id=? AND p.business_id=? AND b.organization_id=? AND b.workspace_id=? LIMIT 1`,
+        input.inventoryItemId,input.businessId,organizationId,workspaceId,
+      );
+      if (!latest) throw new DatabaseError("Inventory item is not available in this business");
+      if (latest.version !== input.expectedVersion) throw new DatabaseError("Inventory changed since it was loaded; refresh and retry");
+      throw error;
+    }
+    if (results[0]?.meta?.changes !== 1 || results[1]?.meta?.changes !== 1) throw new DatabaseError("Inventory changed since it was loaded; refresh and retry");
+    return {
+      id:input.id,inventoryItemId:current.id,businessId:current.businessId,productId:current.productId,
+      variantId:current.variantId,locationId:current.locationId,quantityBefore:current.quantityOnHand,
+      quantityAfter:input.quantityOnHand,quantityReserved:current.quantityReserved,
+      availableQuantity:input.quantityOnHand-current.quantityReserved,versionBefore:current.version,
+      versionAfter:nextVersion,reason,actorId,createdAt:input.now,
+    };
   }
 
   async listPublishedBusinessOfferings(businessId: EntityId, now: string, limit = 50): Promise<readonly PublicBusinessOfferingRecord[]> {

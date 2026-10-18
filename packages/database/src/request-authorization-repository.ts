@@ -46,17 +46,16 @@ export class RequestAuthorizationRepository extends Repository {
     );
 
     const permissionRows = await this.database.all<{ permission: string }>(
-      `SELECT DISTINCT p.resource || ':' || p.action AS permission
-       FROM membership_roles mr
-       JOIN roles r ON r.id = mr.role_id
-       JOIN role_permissions rp ON rp.role_id = r.id
-       JOIN permissions p ON p.id = rp.permission_id
-       WHERE mr.membership_id = (
-         SELECT id FROM memberships WHERE workspace_id = ? AND user_id = ? LIMIT 1
-       )
-       ORDER BY permission ASC`,
-      workspaceId,
-      userId,
+      `SELECT permission FROM (
+         SELECT p.id AS permission FROM membership_roles mr
+           JOIN roles r ON r.id=mr.role_id JOIN role_permissions rp ON rp.role_id=r.id JOIN permissions p ON p.id=rp.permission_id
+          WHERE mr.membership_id=(SELECT id FROM memberships WHERE workspace_id=? AND user_id=? LIMIT 1)
+         UNION
+         SELECT p.resource || ':' || p.action AS permission FROM membership_roles mr
+           JOIN roles r ON r.id=mr.role_id JOIN role_permissions rp ON rp.role_id=r.id JOIN permissions p ON p.id=rp.permission_id
+          WHERE mr.membership_id=(SELECT id FROM memberships WHERE workspace_id=? AND user_id=? LIMIT 1)
+       ) effective_permissions ORDER BY permission ASC`,
+      workspaceId,userId,workspaceId,userId,
     );
 
     return {
