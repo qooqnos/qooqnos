@@ -2373,7 +2373,18 @@
     "personalProfileActivityDescription": "Your social interactions",
     "offerDetailRelatedTitle": "More from this seller",
     "offerDetailRelatedDescription": "Explore other published products and services from the same seller.",
-    "offerDetailRelatedOpen": "View offer"
+    "offerDetailRelatedOpen": "View offer",
+    "inventoryAdjustAction": "Save stock",
+    "inventoryAdjustQuantity": "New on-hand quantity",
+    "inventoryAdjustReason": "Reason for change",
+    "inventoryAdjustReasonPlaceholder": "e.g. cycle count",
+    "inventoryAdjustPending": "Saving stock adjustment…",
+    "inventoryAdjustSuccess": "Inventory updated successfully.",
+    "inventoryAdjustFailed": "Inventory was not updated.",
+    "inventoryAdjustConflict": "Inventory changed. The latest values were reloaded.",
+    "inventoryAdjustReservedConflict": "On-hand quantity cannot be below reserved quantity.",
+    "inventoryAdjustNoReason": "Enter a short reason for the adjustment.",
+    "inventoryAdjustHistoryNote": "Every change is audited with its reason, time, actor and version."
   },
   "catalogPage": {
     "eyebrow": "Seller catalog",

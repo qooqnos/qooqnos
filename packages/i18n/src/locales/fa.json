@@ -2373,7 +2373,18 @@
     "personalProfileActivityDescription": "تعامل‌ها و ارتباط‌های اجتماعی",
     "offerDetailRelatedTitle": "عرضه‌های دیگر این فروشنده",
     "offerDetailRelatedDescription": "گزینه‌های منتشرشدهٔ دیگر از همین فروشنده را ببین.",
-    "offerDetailRelatedOpen": "مشاهدهٔ عرضه"
+    "offerDetailRelatedOpen": "مشاهدهٔ عرضه",
+    "inventoryAdjustAction": "ثبت تغییر",
+    "inventoryAdjustQuantity": "موجودی جدید",
+    "inventoryAdjustReason": "دلیل تغییر",
+    "inventoryAdjustReasonPlaceholder": "مثلاً شمارش دوره‌ای",
+    "inventoryAdjustPending": "در حال ذخیرهٔ تغییر…",
+    "inventoryAdjustSuccess": "موجودی با موفقیت به‌روزرسانی شد.",
+    "inventoryAdjustFailed": "موجودی به‌روزرسانی نشد.",
+    "inventoryAdjustConflict": "موجودی تغییر کرده است؛ اطلاعات تازه شد، دوباره بررسی کن.",
+    "inventoryAdjustReservedConflict": "موجودی جدید نمی‌تواند از مقدار رزروشده کمتر باشد.",
+    "inventoryAdjustNoReason": "برای تغییر، دلیل کوتاهی وارد کن.",
+    "inventoryAdjustHistoryNote": "هر تغییر با دلیل، زمان، کاربر و نسخه در سابقه ثبت می‌شود."
   },
   "catalogPage": {
     "eyebrow": "کاتالوگ فروشنده",

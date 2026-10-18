@@ -2373,7 +2373,18 @@
     "personalProfileActivityDescription": "تفاعلاتك الاجتماعية",
     "offerDetailRelatedTitle": "المزيد من هذا البائع",
     "offerDetailRelatedDescription": "اكتشف منتجات وخدمات أخرى منشورة من البائع نفسه.",
-    "offerDetailRelatedOpen": "عرض التفاصيل"
+    "offerDetailRelatedOpen": "عرض التفاصيل",
+    "inventoryAdjustAction": "حفظ المخزون",
+    "inventoryAdjustQuantity": "الكمية الجديدة",
+    "inventoryAdjustReason": "سبب التغيير",
+    "inventoryAdjustReasonPlaceholder": "مثلًا جرد دوري",
+    "inventoryAdjustPending": "جارٍ حفظ تعديل المخزون…",
+    "inventoryAdjustSuccess": "تم تحديث المخزون بنجاح.",
+    "inventoryAdjustFailed": "لم يتم تحديث المخزون.",
+    "inventoryAdjustConflict": "تغيّر المخزون؛ تم تحميل القيم الأحدث.",
+    "inventoryAdjustReservedConflict": "لا يمكن أن تكون الكمية أقل من المحجوز.",
+    "inventoryAdjustNoReason": "أدخل سببًا موجزًا للتعديل.",
+    "inventoryAdjustHistoryNote": "يُسجَّل كل تعديل مع السبب والوقت والمستخدم والإصدار."
   },
   "catalogPage": {
     "eyebrow": "كتالوج البائع",
