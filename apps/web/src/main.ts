@@ -9854,7 +9854,7 @@ function parseOfferingDisplayAmountToMinor(value: string, currency: string): num
   const amount = Number(trimmed);
   if (!Number.isFinite(amount) || amount < 0) return null;
   try {
-    const digits = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits;
+    const digits = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 0;
     const factor = 10 ** digits;
     const scaled = amount * factor;
     const rounded = Math.round(scaled);
@@ -9911,7 +9911,7 @@ async function createSellerOffer(): Promise<void> {
     if (draft.dataset.priceSavedKey !== priceSaveKey) {
       await apiJson<{ data: { id: string; offeringId: string; amountMinor: number; currency: string; pricingType: string; status: string } }>(
         "/api/v1/catalog/offers/" + encodeURIComponent(offeringId) + "/price",
-        { method: "PUT", body: { amountMinor, currency, pricingType } },
+        { method: "PATCH", body: { amountMinor, currency, pricingType } },
       );
       draft.dataset.priceSavedKey = priceSaveKey;
     }
@@ -9937,7 +9937,7 @@ async function publishSellerOffer(): Promise<void> {
   state.textContent = productStudioUi("offerPublishing");
   state.className = "connection-state";
   try {
-    const response = await apiJson<{ data: { id: string; publicationStatus: string } }>(
+    await apiJson<{ data: { id: string; publicationStatus: string } }>(
       "/api/v1/catalog/offers/" + encodeURIComponent(offeringId) + "/publish",
       { method: "POST" },
     );

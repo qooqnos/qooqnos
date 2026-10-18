@@ -397,7 +397,7 @@ await page.route("**/api/v1/**", async (route) => {
     });
     return;
   }
-  if (path === "/api/v1/catalog/offers/offer-1/price" && request.method() === "PUT") {
+  if (path === "/api/v1/catalog/offers/offer-1/price" && request.method() === "PATCH") {
     const body = request.postDataJSON();
     offeringPriceRequests.push(body);
     await route.fulfill({

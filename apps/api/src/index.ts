@@ -500,7 +500,7 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   });
 
   router.register({
-    method: "PUT",
+    method: "PATCH",
     path: "/api/v1/catalog/offers/:offeringId/price",
     module: "catalog",
     operation: "catalog.offering.create",
