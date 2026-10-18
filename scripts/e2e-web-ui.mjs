@@ -1694,6 +1694,8 @@ await page.evaluate(() => localStorage.setItem("phoenix-shortlist", JSON.stringi
 await page.goto(baseURL + "/saved");
 await page.locator('.phoenix-reset-saved-media[href*="/offerings/offering-service-1?business=biz-1"]').waitFor();
 await page.locator('.phoenix-reset-saved-card-actions a[href*="/offerings/offering-service-1?business=biz-1"]').waitFor();
+assert.ok((await page.locator('#saved-items-grid [data-saved-route]').getAttribute("data-saved-route") || "").includes("offering=offering-service-1"),
+  "The booking shortcut must use the canonical offering id.");
 assert.equal(await page.locator('#saved-items-grid button[data-saved-open="saved-service-canonical-e2e"]').count(), 0,
   "Known published offerings should use canonical detail links even if no media is available.");
 await page.locator('[data-saved-remove="saved-service-canonical-e2e"]').click();
