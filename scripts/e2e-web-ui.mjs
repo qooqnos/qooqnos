@@ -727,6 +727,33 @@ assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= w
   "review-only checkout must not overflow horizontally on mobile");
 assert.equal(await page.locator(".phoenix-checkout-review-hero h2").isVisible(), true);
 assert.equal(await page.locator("[data-submit-payment], [data-confirm-order]").count(), 0);
+
+// Core buyer/social routes should remain inside a 390px viewport and expose the same mobile shell.
+const mobileSocialRoutes = [
+  ["/profile", "personal profile"],
+  ["/saved", "saved items"],
+  ["/compare", "comparison"],
+  ["/messages", "messages"],
+  ["/activity", "activity"],
+  ["/notifications", "notifications"],
+  ["/orders", "orders"],
+  ["/account", "account"],
+  ["/settings", "settings"],
+  ["/discover?tab=following", "following feed"],
+  ["/discover?tab=explore", "explore"],
+];
+for (const [path, label] of mobileSocialRoutes) {
+  await page.goto(baseURL + path);
+  await page.locator(".social-shell").waitFor();
+  assert.equal(await page.locator(".phoenix-social-mobile-nav").isVisible(), true,
+    label + " should keep the shared mobile navigation visible.");
+  const dimensions = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  assert.ok(dimensions.document <= dimensions.viewport,
+    label + " must not overflow horizontally at 390px: " + JSON.stringify(dimensions));
+}
 await page.setViewportSize({ width: 1440, height: 900 });
 
 await page.goto(baseURL + "/");

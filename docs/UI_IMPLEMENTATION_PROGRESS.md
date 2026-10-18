@@ -192,3 +192,10 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - Extended Playwright checks to public business profiles, published offer details, the local review cart, and review-only checkout at a 390px viewport.
 - Assertions cover horizontal overflow, visible mobile navigation, offer primary-action bounds, and the continued absence of fake payment/order submission controls.
 - The cart remains a local review surface; these checks make no claim about production order/payment completion.
+
+
+## 2026-10-18 — Expanded responsive route checks
+
+- Added one mobile-width E2E matrix for the main buyer/social templates: profile, saved items, comparison, messages, activity, notifications, orders, account, settings, Following, and Explore.
+- Each route is checked for shared mobile navigation and document-level horizontal overflow at 390px.
+- This is a responsive smoke matrix, not a claim that every screen has had a full manual visual or accessibility review.
