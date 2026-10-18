@@ -72,6 +72,14 @@ const mockCatalogVariants = [{
   sku: "BAG-RED-M", attributes: { color: "زرشکی", size: "متوسط" }, status: "active",
   createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
 }];
+const mockBusinessInventory = [{
+  id: "inventory-e2e-1", businessId: "biz-1", productId: "product-1", productName: "کیف دست‌دوز",
+  variantId: "variant-catalog-e2e-1", sku: "BAG-RED-M",
+  attributesJson: JSON.stringify({ color: "زرشکی", size: "متوسط" }), variantStatus: "active",
+  locationId: "location-1", locationName: "شعبه مرکزی", quantityOnHand: 8, quantityReserved: 2,
+  availableQuantity: 6, version: 1, updatedAt: new Date().toISOString(),
+}];
+const inventoryAdjustmentRequests = [];
 let socialSequence = 0;
 page.on("pageerror", (error) => runtimeErrors.push(String(error.stack || error)));
 page.on("console", (message) => {
@@ -148,9 +156,7 @@ await page.route("**/api/v1/**", async (route) => {
       { id: "catalog-offer-e2e-2", businessId: "biz-1", offeringType: "service", title: "مشاورهٔ تخصصی", description: "خدمت نمونه", productId: null, serviceId: "service-1", status: "active", publicationStatus: "pending", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ] },
     "/api/v1/catalog/businesses/biz-1/variants": { data: mockCatalogVariants },
-    "/api/v1/catalog/businesses/biz-1/inventory": { data: [
-      { id: "inventory-e2e-1", businessId: "biz-1", productId: "product-1", productName: "کیف دست‌دوز", variantId: "variant-catalog-e2e-1", sku: "BAG-RED-M", attributesJson: JSON.stringify({ color: "زرشکی", size: "متوسط" }), variantStatus: "active", locationId: "location-1", locationName: "شعبه مرکزی", quantityOnHand: 8, quantityReserved: 2, availableQuantity: 6, version: 1, updatedAt: new Date().toISOString() }
-    ] },
+    "/api/v1/catalog/businesses/biz-1/inventory": { data: mockBusinessInventory },
     "/api/v1/business-access": { status: "authorized", tenantId: "tenant-1", workspaceId: workspace },
     "/api/v1/ai/usage": { data: [{ operationId: "op-1", operationType: "seller.product.extract", meterUnit: "provider_units", quantity: 17, modelId: "test-model", billingUsageReference: "bill-1", createdAt: new Date().toISOString() }] },
     "/api/v1/audit": { data: [{ id: "audit-1", action: "business.updated", targetType: "business", targetId: "biz-1", outcome: "succeeded", createdAt: new Date().toISOString() }] },
@@ -314,6 +320,32 @@ await page.route("**/api/v1/**", async (route) => {
     const current = mockCatalogVariants;
     if (!current.some((item) => item.id === variant.id)) current.push(variant);
     await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ data: variant }) });
+    return;
+  }
+  if (path === "/api/v1/catalog/businesses/biz-1/inventory/inventory-e2e-1/adjustments" && request.method() === "POST") {
+    const body = request.postDataJSON();
+    inventoryAdjustmentRequests.push({ path, body });
+    const item = mockBusinessInventory[0];
+    if (body.expectedVersion !== item.version) {
+      await route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: { code: "CONFLICT", message: "Inventory changed since it was loaded; refresh and retry." } }) });
+      return;
+    }
+    if (!Number.isSafeInteger(body.quantityOnHand) || body.quantityOnHand < item.quantityReserved || typeof body.reason !== "string" || body.reason.trim().length < 3) {
+      await route.fulfill({ status: 422, contentType: "application/json", body: JSON.stringify({ error: { code: "VALIDATION_ERROR", message: "Inventory adjustment payload is invalid." } }) });
+      return;
+    }
+    const quantityBefore = item.quantityOnHand;
+    const versionBefore = item.version;
+    item.quantityOnHand = body.quantityOnHand;
+    item.availableQuantity = body.quantityOnHand - item.quantityReserved;
+    item.version += 1;
+    item.updatedAt = new Date().toISOString();
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: {
+      id: "inventory-adjustment-e2e-" + item.version, inventoryItemId: item.id,
+      quantityBefore, quantityAfter: item.quantityOnHand, quantityReserved: item.quantityReserved,
+      availableQuantity: item.availableQuantity, versionBefore, versionAfter: item.version,
+      reason: body.reason, createdAt: item.updatedAt,
+    } }) });
     return;
   }
   if (path === "/api/v1/catalog/offers" && request.method() === "POST") {
@@ -1465,6 +1497,20 @@ const inventoryView = await page.locator("#business-products-inventory").innerTe
 assert.ok(inventoryView.includes("شعبه مرکزی"));
 assert.ok(inventoryView.includes("BAG-RED-M"));
 assert.ok(inventoryView.includes("۶") || inventoryView.includes("6"));
+const inventoryAdjustmentForm = page.locator('#business-products-inventory [data-inventory-adjustment]');
+await inventoryAdjustmentForm.locator("[data-inventory-adjust-quantity]").fill("1");
+await inventoryAdjustmentForm.locator("[data-inventory-adjust-reason]").fill("شمارش دوره‌ای");
+await inventoryAdjustmentForm.locator('button[type="submit"]').click();
+assert.equal(inventoryAdjustmentRequests.length, 0, "The UI must block on-hand quantities below reserved stock");
+await inventoryAdjustmentForm.locator("[data-inventory-adjust-quantity]").fill("11");
+await inventoryAdjustmentForm.locator("[data-inventory-adjust-reason]").fill("شمارش دوره‌ای");
+await inventoryAdjustmentForm.locator('button[type="submit"]').click();
+await page.waitForFunction(() => document.querySelector('[data-inventory-id="inventory-e2e-1"]')?.getAttribute("data-quantity-on-hand") === "11");
+assert.equal(inventoryAdjustmentRequests.length, 1, "Valid stock changes should call the canonical adjustment API");
+assert.deepEqual(inventoryAdjustmentRequests[0].body, { expectedVersion: 1, quantityOnHand: 11, reason: "شمارش دوره‌ای" });
+const adjustedInventoryRow = page.locator('[data-inventory-id="inventory-e2e-1"]');
+assert.equal(await adjustedInventoryRow.getAttribute("data-version"), "2");
+assert.ok((await page.locator("#business-products-inventory").innerText()).includes("9"));
 await page.locator("#business-variant-create-form").waitFor();
 await page.locator("#business-variant-product").selectOption("product-1");
 await page.locator("#business-variant-sku").fill("BAG-BLUE-L");

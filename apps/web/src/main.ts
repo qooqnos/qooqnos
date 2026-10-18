@@ -5306,7 +5306,7 @@ function renderBusinessProducts(): string {
       '<div class="card-section-heading phoenix-business-inventory-heading"><div><span class="section-kicker">' + uiText("موجودی مکانی") + '</span><h2>' + uiText("موجودی و ظرفیت") + '</h2><p>' + uiText("موجودی، رزروشده و قابل‌عرضه از سامانهٔ موجودی خوانده می‌شوند.") + '</p></div>' +
         '<span id="business-products-inventory-count" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span></div>' +
       '<div class="business-catalog-table-wrap" id="business-products-inventory"><div class="slot-loading">' + uiText("در حال دریافت موجودی…") + '</div></div>' +
-      '<p class="phoenix-business-catalog-readonly-note">' + uiText("این بخش فعلاً برای مشاهده است. تغییر گونه یا ثبت گردش موجودی، پس از اتصال مسیرهای مجاز مدیریت کاتالوگ فعال خواهد شد.") + '</p>' +
+      '<p class="phoenix-business-catalog-readonly-note">' + socialCommerceUi("inventoryAdjustHistoryNote") + '</p>' +
     '</section>' +
   '</div>';
 }
@@ -5461,15 +5461,68 @@ function loadBusinessProductsPage(): void {
       } else {
         inventoryWrap.innerHTML = '<div class="phoenix-business-inventory-table-wrap"><table class="ds-table phoenix-business-inventory-table">' +
           '<thead><tr><th>' + uiText("کالا") + '</th><th>' + uiText("گونه / SKU") + '</th><th>' + uiText("مکان") + '</th><th>' +
-          uiText("موجود") + '</th><th>' + uiText("رزروشده") + '</th><th>' + uiText("قابل‌عرضه") + '</th></tr></thead><tbody>' +
+          uiText("موجود") + '</th><th>' + uiText("رزروشده") + '</th><th>' + uiText("قابل‌عرضه") + '</th><th>' + socialCommerceUi("inventoryAdjustAction") + '</th></tr></thead><tbody>' +
           visibleInventory.map((row) =>
-            '<tr class="phoenix-business-inventory-row" data-business-inventory data-inventory-id="' + escapeAttr(row.id) + '">' +
+            '<tr class="phoenix-business-inventory-row" data-business-inventory data-inventory-id="' + escapeAttr(row.id) + '" data-quantity-on-hand="' + String(row.quantityOnHand) + '" data-version="' + String(row.version) + '">' +
               '<td><strong>' + escapeHtml(row.productName) + '</strong></td>' +
               '<td><span>' + escapeHtml(row.sku || uiText("SKU ثبت نشده")) + '</span></td>' +
               '<td>' + escapeHtml(row.locationName) + '</td>' +
               '<td>' + safeQuantity(row.quantityOnHand) + '</td><td>' + safeQuantity(row.quantityReserved) + '</td>' +
-              '<td><strong>' + safeQuantity(row.availableQuantity) + '</strong></td></tr>'
+              '<td><strong>' + safeQuantity(row.availableQuantity) + '</strong></td>' +
+              '<td><form class="phoenix-business-inventory-adjustment" data-inventory-adjustment data-inventory-item-id="' + escapeAttr(row.id) + '" data-expected-version="' + String(row.version) + '" data-reserved-quantity="' + String(row.quantityReserved) + '">' +
+                '<label><span>' + socialCommerceUi("inventoryAdjustQuantity") + '</span><input data-inventory-adjust-quantity type="number" inputmode="numeric" required min="' + String(row.quantityReserved) + '" max="2147483647" step="1" value="' + String(row.quantityOnHand) + '" /></label>' +
+                '<label><span>' + socialCommerceUi("inventoryAdjustReason") + '</span><input data-inventory-adjust-reason type="text" required minlength="3" maxlength="250" placeholder="' + escapeAttr(socialCommerceUi("inventoryAdjustReasonPlaceholder")) + '" /></label>' +
+                '<button class="button button-ghost button-sm" type="submit">' + socialCommerceUi("inventoryAdjustAction") + '</button>' +
+                '<span data-inventory-adjustment-status role="status" aria-live="polite"></span>' +
+              '</form></td></tr>'
           ).join("") + '</tbody></table></div>';
+        inventoryWrap.querySelectorAll<HTMLFormElement>("[data-inventory-adjustment]").forEach((form) => {
+          form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const quantityInput = form.querySelector<HTMLInputElement>("[data-inventory-adjust-quantity]");
+            const reasonInput = form.querySelector<HTMLInputElement>("[data-inventory-adjust-reason]");
+            const status = form.querySelector<HTMLElement>("[data-inventory-adjustment-status]");
+            const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+            const quantityOnHand = quantityInput ? Number(quantityInput.value) : Number.NaN;
+            const reason = reasonInput?.value.trim() ?? "";
+            const expectedVersion = Number(form.dataset.expectedVersion);
+            const inventoryItemId = form.dataset.inventoryItemId ?? "";
+            if (!Number.isSafeInteger(quantityOnHand) || quantityOnHand < Number(form.dataset.reservedQuantity) || quantityOnHand > 2_147_483_647) {
+              if (status) status.textContent = socialCommerceUi("inventoryAdjustReservedConflict");
+              return;
+            }
+            if (reason.length < 3 || reason.length > 250) {
+              if (status) status.textContent = socialCommerceUi("inventoryAdjustNoReason");
+              return;
+            }
+            if (!inventoryItemId || !Number.isSafeInteger(expectedVersion) || expectedVersion < 1) {
+              if (status) status.textContent = socialCommerceUi("inventoryAdjustFailed");
+              return;
+            }
+            if (submit) submit.disabled = true;
+            if (status) status.textContent = socialCommerceUi("inventoryAdjustPending");
+            try {
+              await apiJson<{ data: { id: string; quantityAfter: number; versionAfter: number } }>(
+                "/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/inventory/" + encodeURIComponent(inventoryItemId) + "/adjustments",
+                { method: "POST", body: { expectedVersion, quantityOnHand, reason } },
+              );
+              await load();
+              showToast(socialCommerceUi("inventoryAdjustSuccess"));
+            } catch (error) {
+              const message = error instanceof Error ? error.message : "";
+              if (/changed since it was loaded|version conflict|inventory changed/i.test(message)) {
+                await load();
+                showToast(socialCommerceUi("inventoryAdjustConflict"));
+              } else if (/reserved quantity|less than reserved/i.test(message)) {
+                if (status) status.textContent = socialCommerceUi("inventoryAdjustReservedConflict");
+              } else {
+                if (status) status.textContent = socialCommerceUi("inventoryAdjustFailed");
+              }
+            } finally {
+              if (submit) submit.disabled = false;
+            }
+          });
+        });
       }
     } catch (error) {
       countNode.textContent = variantsCountNode.textContent = inventoryCountNode.textContent = uiText("قابل دریافت نیست");

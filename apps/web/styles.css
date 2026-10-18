@@ -15471,3 +15471,13 @@ button[aria-busy="true"] .btn-spinner {
 
 .social-shell .phoenix-reset-saved-media[data-nav] { color:inherit; text-decoration:none; }
 .social-shell .phoenix-reset-saved-card-actions a.button { text-decoration:none; }
+
+
+/* Audited stock adjustment controls in the seller catalog. */
+.phoenix-business-inventory-table { min-width: 880px; }
+.phoenix-business-inventory-adjustment { display:grid; min-width:190px; gap:7px; padding:4px 0; }
+.phoenix-business-inventory-adjustment label { display:grid; gap:4px; }
+.phoenix-business-inventory-adjustment label>span { color:var(--muted); font-size:10px; font-weight:800; }
+.phoenix-business-inventory-adjustment input { width:100%; min-width:0; min-height:34px; padding:7px 9px; border:1px solid var(--line); border-radius:9px; color:var(--text); background:var(--surface); font:inherit; font-size:11px; }
+.phoenix-business-inventory-adjustment [data-inventory-adjustment-status] { display:block; max-width:240px; color:var(--muted); font-size:10px; line-height:1.7; }
+.phoenix-business-inventory-adjustment button { justify-content:center; }
