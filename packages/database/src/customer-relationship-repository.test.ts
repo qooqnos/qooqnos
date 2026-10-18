@@ -39,6 +39,37 @@ describe("CustomerRelationshipRepository", () => {
     expect(statements[0]).toContain("b.workspace_id = ?");
   });
 
+  it("lists relationships for exactly one customer-business pair inside the active tenant/workspace", async () => {
+    const queries: Array<{ sql: string; values: unknown[] }> = [];
+    const statement: D1PreparedStatementLike = {
+      bind(...values: unknown[]) {
+        const current = queries[queries.length - 1];
+        if (current) current.values = values;
+        return this;
+      },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { queries.push({ sql, values: [] }); return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CustomerRelationshipRepository(new D1Database(raw));
+    const result = await repository.listForCustomerBusiness(
+      context(),
+      brandId<"EntityId">("customer-1"),
+      brandId<"EntityId">("business-1"),
+      20,
+    );
+    expect(result).toEqual([]);
+    expect(queries[0]?.sql).toContain("cr.customer_id = ?");
+    expect(queries[0]?.sql).toContain("cr.business_id = ?");
+    expect(queries[0]?.sql).toContain("c.organization_id = ?");
+    expect(queries[0]?.sql).toContain("b.workspace_id = ?");
+    expect(queries[0]?.values).toEqual(["customer-1", "business-1", "tenant-1", "tenant-1", "workspace-1", 20]);
+  });
+
   it("rejects relationship creation when customer or business is outside the workspace", async () => {
     const statement: D1PreparedStatementLike = {
       bind() { return this; },
