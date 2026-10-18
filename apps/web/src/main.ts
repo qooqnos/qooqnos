@@ -4732,7 +4732,7 @@ function loadSavedPage(): void {
       const routePath = kind === "business"
         ? "/businesses/" + encodeURIComponent(item.sourceId ?? item.id ?? "")
         : kind === "service"
-          ? "/booking?offering=" + encodeURIComponent(item.sourceId ?? item.id ?? "") + (metadataBusiness ? "&businessId=" + encodeURIComponent(metadataBusiness) : "")
+          ? "/booking?offering=" + encodeURIComponent(canonicalOfferingId || (item.sourceId ?? item.id ?? "")) + (metadataBusiness ? "&businessId=" + encodeURIComponent(metadataBusiness) : "")
           : "";
       return '<article class="phoenix-reset-saved-card">' +
         (canonicalOfferingHref
