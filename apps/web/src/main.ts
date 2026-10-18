@@ -5269,6 +5269,15 @@ function renderBusinessProducts(): string {
       '</div>' +
       '<div class="business-catalog-table-wrap" id="business-products-table"><div class="slot-loading">' + uiText("در حال دریافت کاتالوگ از سامانه…") + '</div></div>' +
     '</section>' +
+    '<section class="glass-card business-subpage-card phoenix-business-products-detail-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + uiText("کاتالوگ و موجودی") + '</span><h2>' + uiText("گونه‌های کالا") + '</h2><p>' + uiText("گونه‌ها و ویژگی‌ها از کاتالوگ ثبت‌شده خوانده می‌شوند.") + '</p></div>' +
+        '<span id="business-products-variants-count" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span></div>' +
+      '<div class="business-catalog-table-wrap" id="business-products-variants"><div class="slot-loading">' + uiText("در حال دریافت گونه‌ها…") + '</div></div>' +
+      '<div class="card-section-heading phoenix-business-inventory-heading"><div><span class="section-kicker">' + uiText("موجودی مکانی") + '</span><h2>' + uiText("موجودی و ظرفیت") + '</h2><p>' + uiText("موجودی، رزروشده و قابل‌عرضه از سامانهٔ موجودی خوانده می‌شوند.") + '</p></div>' +
+        '<span id="business-products-inventory-count" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span></div>' +
+      '<div class="business-catalog-table-wrap" id="business-products-inventory"><div class="slot-loading">' + uiText("در حال دریافت موجودی…") + '</div></div>' +
+      '<p class="phoenix-business-catalog-readonly-note">' + uiText("این بخش فعلاً برای مشاهده است. تغییر گونه یا ثبت گردش موجودی، پس از اتصال مسیرهای مجاز مدیریت کاتالوگ فعال خواهد شد.") + '</p>' +
+    '</section>' +
   '</div>';
 }
 
@@ -5276,62 +5285,151 @@ function renderBusinessProducts(): string {
 function loadBusinessProductsPage(): void {
   const tableWrap = document.querySelector<HTMLElement>("#business-products-table");
   const countNode = document.querySelector<HTMLElement>("#business-products-count");
-  if (!tableWrap || !countNode) return;
+  const variantsWrap = document.querySelector<HTMLElement>("#business-products-variants");
+  const variantsCountNode = document.querySelector<HTMLElement>("#business-products-variants-count");
+  const inventoryWrap = document.querySelector<HTMLElement>("#business-products-inventory");
+  const inventoryCountNode = document.querySelector<HTMLElement>("#business-products-inventory-count");
+  if (!tableWrap || !countNode || !variantsWrap || !variantsCountNode || !inventoryWrap || !inventoryCountNode) return;
   const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
+
+  const showAllState = (message: string, kind: "loading" | "empty" | "error" | "signin" = "error"): void => {
+    tableWrap.innerHTML = renderBusinessDataState(message, "", "/profile", uiText("ورود به حساب"));
+    variantsWrap.innerHTML = '<div class="phoenix-business-products-state">' + escapeHtml(message) + '</div>';
+    inventoryWrap.innerHTML = '<div class="phoenix-business-products-state">' + escapeHtml(message) + '</div>';
+    for (const wrap of [tableWrap, variantsWrap, inventoryWrap]) wrap.dataset.state = kind;
+  };
 
   if (!sessionStorage.getItem(STORAGE.accessToken)) {
     countNode.textContent = uiText("نیازمند ورود");
-    tableWrap.innerHTML = renderBusinessDataState("برای دیدن کاتالوگ وارد شو", "کالاها و وضعیت انتشار فقط پس از خواندن داده‌های معتبر نمایش داده می‌شوند.", "/profile", "ورود به حساب");
+    variantsCountNode.textContent = "—";
+    inventoryCountNode.textContent = "—";
+    showAllState("برای دیدن کاتالوگ، گونه‌ها و موجودی وارد شو", "signin");
     return;
   }
   if (!businessId) {
     countNode.textContent = uiText("کسب‌وکار انتخاب نشده");
+    variantsCountNode.textContent = "—";
+    inventoryCountNode.textContent = "—";
     tableWrap.innerHTML = renderBusinessDataState("فضای کسب‌وکار آماده نیست", "ابتدا پروفایل کسب‌وکار را کامل کن؛ ققنوس برای کاتالوگ، دادهٔ نمونه نمایش نمی‌دهد.", "/business/profile", "تکمیل پروفایل");
+    variantsWrap.innerHTML = '<div class="phoenix-business-products-state">' + uiText("ابتدا کسب‌وکار را انتخاب کن.") + '</div>';
+    inventoryWrap.innerHTML = '<div class="phoenix-business-products-state">' + uiText("ابتدا کسب‌وکار را انتخاب کن.") + '</div>';
     return;
   }
 
+  const safeQuantity = (value: unknown): string =>
+    typeof value === "number" && Number.isFinite(value) && Number.isSafeInteger(value)
+      ? formatLocalizedNumber(value) : "—";
+  const displayAttributes = (attributes: Record<string, unknown> | null | undefined): string => {
+    if (!attributes || typeof attributes !== "object" || Array.isArray(attributes)) return uiText("ویژگی ثبت نشده");
+    const entries = Object.entries(attributes).filter(([, value]) =>
+      ["string", "number", "boolean"].includes(typeof value) && String(value).trim().length > 0
+    );
+    if (!entries.length) return uiText("ویژگی ثبت نشده");
+    return entries.map(([key, value]) => {
+      const normalizedKey = key.toLowerCase().replace(/-/g, "_");
+      const label = normalizedKey === "color" || normalizedKey === "colour" ? uiText("رنگ")
+        : normalizedKey === "size" ? uiText("اندازه")
+          : normalizedKey === "material" ? uiText("جنس")
+            : key.replace(/[_-]+/g, " ");
+      return escapeHtml(label) + ": " + escapeHtml(String(value));
+    }).join(" · ");
+  };
+
   const load = async (): Promise<void> => {
     countNode.textContent = uiText("در حال دریافت اطلاعات");
-    countNode.className = "pill";
+    variantsCountNode.textContent = uiText("در حال دریافت اطلاعات");
+    inventoryCountNode.textContent = uiText("در حال دریافت اطلاعات");
+    countNode.className = variantsCountNode.className = inventoryCountNode.className = "pill";
     tableWrap.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت کاتالوگ از سامانه…") + '</div>';
+    variantsWrap.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت گونه‌ها…") + '</div>';
+    inventoryWrap.innerHTML = '<div class="slot-loading">' + uiText("در حال دریافت موجودی…") + '</div>';
+
     try {
-      const response = await apiJson<{ data: Array<{
-        id: string;
-        offeringType: string;
-        title: string;
-        description: string | null;
-        productId: string | null;
-        serviceId: string | null;
-        status: string;
-        publicationStatus: string;
-      }> }>("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/offers?limit=48");
-      const products = (Array.isArray(response.data) ? response.data : []).filter((offering) => offering.offeringType === "product" || Boolean(offering.productId));
+      const [offerResponse, variantResponse, inventoryResponse] = await Promise.all([
+        apiJson<{ data: Array<{
+          id: string; offeringType: string; title: string; description: string | null;
+          productId: string | null; serviceId: string | null; status: string; publicationStatus: string;
+        }> }>("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/offers?limit=48"),
+        apiJson<{ data: Array<{
+          id: string; productId: string; productName: string; sku: string | null;
+          attributes: Record<string, unknown> | null; status: string; updatedAt: string;
+        }> }>("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/variants?limit=100"),
+        apiJson<{ data: Array<{
+          id: string; productId: string; productName: string; variantId: string; sku: string | null;
+          attributesJson: string | null; variantStatus: string; locationId: string; locationName: string;
+          quantityOnHand: number; quantityReserved: number; availableQuantity: number; version: number; updatedAt: string;
+        }> }>("/api/v1/catalog/businesses/" + encodeURIComponent(businessId) + "/inventory?limit=100"),
+      ]);
+      const products = (Array.isArray(offerResponse.data) ? offerResponse.data : [])
+        .filter((offering) => offering.offeringType === "product" || Boolean(offering.productId));
+      const variants = Array.isArray(variantResponse.data) ? variantResponse.data : [];
+      const inventory = Array.isArray(inventoryResponse.data) ? inventoryResponse.data : [];
       countNode.textContent = formatLocalizedNumber(products.length) + " " + uiText("عرضه");
       countNode.className = "pill";
+
       if (!products.length) {
         tableWrap.innerHTML = renderBusinessDataState("هنوز کالایی در کاتالوگ نیست", "وقتی عرضهٔ کالا از مسیر استودیو ذخیره شود، اینجا با وضعیت واقعی نمایش داده می‌شود.", "/product-studio", "افزودن کالا یا خدمت");
-        return;
+      } else {
+        tableWrap.innerHTML = '<table class="ds-table phoenix-business-data-table"><thead><tr>' +
+          '<th>' + uiText("عنوان عرضه") + '</th><th>' + uiText("نوع") + '</th><th>' + uiText("وضعیت") + '</th><th>' + uiText("انتشار") + '</th>' +
+          '</tr></thead><tbody>' + products.map((offering) =>
+            '<tr data-business-offering="' + escapeAttr(offering.id) + '"><td><strong>' + escapeHtml(offering.title) + '</strong>' +
+              (offering.description ? '<small class="phoenix-business-row-description">' + escapeHtml(offering.description) + '</small>' : '') +
+            '</td><td>' + uiText("کالا") + '</td>' +
+            '<td><span class="' + businessStatusPillClass(offering.status) + '">' + businessStatusLabel(offering.status) + '</span></td>' +
+            '<td><span class="' + businessStatusPillClass(offering.publicationStatus) + '">' + businessStatusLabel(offering.publicationStatus) + '</span></td></tr>'
+          ).join("") + '</tbody></table>';
       }
-      tableWrap.innerHTML = '<table class="ds-table phoenix-business-data-table"><thead><tr>' +
-        '<th>' + uiText("عنوان عرضه") + '</th><th>' + uiText("نوع") + '</th><th>' + uiText("وضعیت") + '</th><th>' + uiText("انتشار") + '</th>' +
-        '</tr></thead><tbody>' + products.map((offering) =>
-          '<tr><td><strong>' + escapeHtml(offering.title) + '</strong>' +
-            (offering.description ? '<small class="phoenix-business-row-description">' + escapeHtml(offering.description) + '</small>' : '') +
-          '</td><td>' + uiText("کالا") + '</td>' +
-          '<td><span class="' + businessStatusPillClass(offering.status) + '">' + businessStatusLabel(offering.status) + '</span></td>' +
-          '<td><span class="' + businessStatusPillClass(offering.publicationStatus) + '">' + businessStatusLabel(offering.publicationStatus) + '</span></td></tr>'
-        ).join("") + '</tbody></table>';
+
+      const visibleProductIds = new Set(products.map((product) => product.productId).filter((id): id is string => Boolean(id)));
+      const visibleVariants = variants.filter((variant) => visibleProductIds.has(variant.productId));
+      variantsCountNode.textContent = formatLocalizedNumber(visibleVariants.length) + " " + uiText("گونه");
+      variantsCountNode.className = "pill";
+      if (!visibleVariants.length) {
+        variantsWrap.innerHTML = '<div class="phoenix-business-products-state">' + uiText("برای کالاهای ثبت‌شده هنوز گونه‌ای در کاتالوگ پیدا نشد.") + '</div>';
+      } else {
+        variantsWrap.innerHTML = '<div class="phoenix-business-variants-list">' + visibleVariants.map((variant) =>
+          '<article class="phoenix-business-variant-card" data-business-variant data-variant-id="' + escapeAttr(variant.id) + '">' +
+            '<div class="phoenix-business-variant-mark" aria-hidden="true">▦</div>' +
+            '<div class="phoenix-business-variant-copy"><strong>' + escapeHtml(variant.productName) + '</strong>' +
+              '<p>' + displayAttributes(variant.attributes) + '</p>' +
+              '<small>' + uiText("شناسه کالا") + ': ' + escapeHtml(variant.sku || uiText("SKU ثبت نشده")) + '</small></div>' +
+            '<span class="' + businessStatusPillClass(variant.status) + '">' + businessStatusLabel(variant.status) + '</span>' +
+          '</article>'
+        ).join("") + '</div>';
+      }
+
+      const visibleInventory = inventory.filter((row) => visibleProductIds.has(row.productId));
+      inventoryCountNode.textContent = formatLocalizedNumber(visibleInventory.length) + " " + uiText("ردیف موجودی");
+      inventoryCountNode.className = "pill";
+      if (!visibleInventory.length) {
+        inventoryWrap.innerHTML = '<div class="phoenix-business-products-state">' + uiText("برای این کالاها موجودی مکانی ثبت نشده است؛ از روی نبودن رکورد، موجودی صفر فرض نمی‌شود.") + '</div>';
+      } else {
+        inventoryWrap.innerHTML = '<div class="phoenix-business-inventory-table-wrap"><table class="ds-table phoenix-business-inventory-table">' +
+          '<thead><tr><th>' + uiText("کالا") + '</th><th>' + uiText("گونه / SKU") + '</th><th>' + uiText("مکان") + '</th><th>' +
+          uiText("موجود") + '</th><th>' + uiText("رزروشده") + '</th><th>' + uiText("قابل‌عرضه") + '</th></tr></thead><tbody>' +
+          visibleInventory.map((row) =>
+            '<tr class="phoenix-business-inventory-row" data-business-inventory data-inventory-id="' + escapeAttr(row.id) + '">' +
+              '<td><strong>' + escapeHtml(row.productName) + '</strong></td>' +
+              '<td><span>' + escapeHtml(row.sku || uiText("SKU ثبت نشده")) + '</span></td>' +
+              '<td>' + escapeHtml(row.locationName) + '</td>' +
+              '<td>' + safeQuantity(row.quantityOnHand) + '</td><td>' + safeQuantity(row.quantityReserved) + '</td>' +
+              '<td><strong>' + safeQuantity(row.availableQuantity) + '</strong></td></tr>'
+          ).join("") + '</tbody></table></div>';
+      }
     } catch (error) {
-      countNode.textContent = uiText("قابل دریافت نیست");
-      countNode.className = "pill warning";
-      tableWrap.innerHTML = renderBusinessDataState("کاتالوگ بارگذاری نشد", error instanceof Error ? error.message : uiText("خطا در دریافت کاتالوگ")) +
+      countNode.textContent = variantsCountNode.textContent = inventoryCountNode.textContent = uiText("قابل دریافت نیست");
+      countNode.className = variantsCountNode.className = inventoryCountNode.className = "pill warning";
+      const message = error instanceof Error ? error.message : uiText("دریافت اطلاعات کاتالوگ ناموفق بود.");
+      tableWrap.innerHTML = renderBusinessDataState("کاتالوگ بارگذاری نشد", message) +
         '<div class="phoenix-business-retry-row"><button class="button button-ghost" type="button" data-retry-business-products>' + uiText("تلاش دوباره") + '</button></div>';
+      variantsWrap.innerHTML = '<div class="phoenix-business-products-state is-error">' + uiText("خواندن گونه‌ها ناموفق بود.") + '</div>';
+      inventoryWrap.innerHTML = '<div class="phoenix-business-products-state is-error">' + uiText("خواندن موجودی ناموفق بود.") + '</div>';
       tableWrap.querySelector<HTMLButtonElement>("[data-retry-business-products]")?.addEventListener("click", () => void load());
     }
   };
   void load();
 }
-
 
 function renderBusinessServices(): string {
   return '<div class="phoenix-business-subpage">' +

@@ -1428,6 +1428,16 @@ const productCatalogText = await page.locator("#business-products-table").innerT
 assert.ok(productCatalogText.includes("کیف دست‌دوز"));
 assert.ok(!productCatalogText.includes("prd-1"));
 assert.ok(!productCatalogText.includes("۳ محصول فعال"));
+await page.locator("#business-products-variants [data-business-variant]").waitFor();
+assert.equal(await page.locator("#business-products-variants [data-business-variant]").count(), 1);
+assert.ok((await page.locator("#business-products-variants").innerText()).includes("BAG-RED-M"));
+assert.ok((await page.locator("#business-products-variants").innerText()).includes("زرشکی"));
+await page.locator("#business-products-inventory [data-business-inventory]").waitFor();
+assert.equal(await page.locator("#business-products-inventory [data-business-inventory]").count(), 1);
+const inventoryView = await page.locator("#business-products-inventory").innerText();
+assert.ok(inventoryView.includes("شعبه مرکزی"));
+assert.ok(inventoryView.includes("BAG-RED-M"));
+assert.ok(inventoryView.includes("۶") || inventoryView.includes("6"));
 await page.setViewportSize({ width: 390, height: 844 });
 assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, "seller product catalog must fit mobile width");
 await page.setViewportSize({ width: 1440, height: 900 });
