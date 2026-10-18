@@ -1713,7 +1713,7 @@ await page.locator("[data-generate-draft]").click();
 await page.getByText("محصول تست").waitFor();
 await page.locator("[data-confirm-seller-draft]").click();
 await page.getByText("محصول Catalog ساخته شد").waitFor();
-await page.getByRole("button", { name: "تأیید و افزودن به ویترین" }).waitFor();
+await page.locator("[data-create-seller-offer]").waitFor({ state: "visible" });
 await page.locator("#seller-offer-title").fill("کیف دست‌دوز");
 await page.locator("#seller-offer-price").fill("1250000");
 await page.locator("#seller-offer-currency").selectOption("IRR");

@@ -269,6 +269,8 @@ describe("CatalogRepository", () => {
       brandId<"EntityId">("business-1"), "2026-10-18T12:00:00.000Z",
     );
     expect(statements[0]).toContain("pr.product_variant_id IS NULL");
+    expect(statements[0]).toContain("pr.effective_from <= ?");
+    expect(statements[0]).toContain("pr.status = 'active'");
   });
 
   it("does not return variants for an unpublished offering", async () => {

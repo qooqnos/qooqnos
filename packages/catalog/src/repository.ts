@@ -494,6 +494,7 @@ export class CatalogRepository extends Repository {
          LEFT JOIN prices pr
            ON pr.offering_id = o.id
           AND pr.status = 'active'
+          AND pr.product_variant_id IS NULL
           AND pr.effective_from <= ?
           AND (pr.effective_to IS NULL OR pr.effective_to > ?)
         WHERE o.business_id = ?
