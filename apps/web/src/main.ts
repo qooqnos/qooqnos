@@ -6520,6 +6520,10 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
     const canFollow = socialFollowTarget(item) !== null;
     const followLabel = followed ? discoveryUi("followActive") : discoveryUi("follow");
     const businessId = item.metadata && typeof item.metadata.businessId === "string" ? item.metadata.businessId : "";
+    const canonicalOfferingId = typeof item.metadata?.offeringId === "string" ? item.metadata.offeringId.trim() : "";
+    const canonicalOfferingHref = businessId && canonicalOfferingId && (sourceType === "product" || sourceType === "service")
+      ? "/offerings/" + encodeURIComponent(canonicalOfferingId) + "?" + new URLSearchParams({ business: businessId }).toString()
+      : "";
     const mediaCandidate = item.metadata?.primaryImageUrl ?? item.metadata?.imageUrl ?? item.metadata?.coverImageUrl ?? item.metadata?.thumbnailUrl ??
       (Array.isArray(item.metadata?.images) ? item.metadata.images[0] : undefined);
     const mediaUrl = typeof mediaCandidate === "string"
@@ -6539,9 +6543,11 @@ function renderSocialPosts(items: DiscoveryResult[]): string {
     const localityMarkup = locality ? '<span>⌖ ' + locality + '</span>' : "";
     const publicAction = sourceType === "business"
       ? '<a class="button button-primary post-buy" href="/businesses/' + encodeURIComponent(item.sourceId ?? item.id ?? "") + '" data-nav>' + discoveryUi("viewBusiness") + ' <span>←</span></a>'
-      : sourceType === "service"
-        ? '<a class="button button-primary post-buy" href="/booking?offering=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + (businessId ? '&businessId=' + encodeURIComponent(businessId) : '') + '" data-nav>' + discoveryUi("checkBooking") + ' <span>←</span></a>'
-        : '<button type="button" class="button button-primary post-buy" data-open-view="' + escapeAttr(key) + '">' + discoveryUi("detailsAndDecision") + ' <span>←</span></button>';
+      : canonicalOfferingHref
+        ? '<a class="button button-primary post-buy" href="' + escapeAttr(canonicalOfferingHref) + '" data-nav>' + discoveryUi("detailsAndDecision") + ' <span>←</span></a>'
+        : sourceType === "service"
+          ? '<a class="button button-primary post-buy" href="/booking?offering=' + encodeURIComponent(item.sourceId ?? item.id ?? "") + (businessId ? '&businessId=' + encodeURIComponent(businessId) : '') + '" data-nav>' + discoveryUi("checkBooking") + ' <span>←</span></a>'
+          : '<button type="button" class="button button-primary post-buy" data-open-view="' + escapeAttr(key) + '">' + discoveryUi("detailsAndDecision") + ' <span>←</span></button>';
     const followButton = canFollow
       ? '<button type="button" class="post-follow' + (followed ? ' selected' : '') + '" data-follow="' + escapeAttr(key) + '">' + followLabel + '</button>'
       : '<span class="post-follow post-follow-disabled">' + discoveryUi("viewSeller") + '</span>';
