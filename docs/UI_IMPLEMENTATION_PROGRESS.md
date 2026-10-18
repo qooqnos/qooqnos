@@ -199,3 +199,11 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - Added one mobile-width E2E matrix for the main buyer/social templates: profile, saved items, comparison, messages, activity, notifications, orders, account, settings, Following, and Explore.
 - Each route is checked for shared mobile navigation and document-level horizontal overflow at 390px.
 - This is a responsive smoke matrix, not a claim that every screen has had a full manual visual or accessibility review.
+
+## 2026-10-18 — Canonical business identity in social messages
+
+- Added nullable `communication_conversations.business_id` with database triggers enforcing that the linked business belongs to the same organization and workspace. Existing threads remain unassigned rather than being guessed from a shared seller workspace.
+- Buyer-initiated seller conversations now persist the exact published business and are reused only for the same customer + workspace + business combination.
+- Inbox API derives the display name from that canonical business relation and the viewer side from the authenticated actor/customer mapping. Buyer inbox and thread header show the business name; seller view uses a localized generic customer label. Older unlinked conversations retain the safe generic title.
+- Registered migration 0096 in the API catalog and migration lock. Fixed the migration-change validator to resolve lock filenames relative to `migrations/`.
+- Validation on commit `797f06544df13ecd7e73b4fa75ed6d2f13d77f30`: CI, Phoenix verification, and Phoenix web UI E2E passed. These are automated checks; cross-organization messaging remains disabled until Communication has a first-class participant model.

@@ -54,7 +54,7 @@
 | 7 | مقایسه | `/compare` و نوار شناور مقایسه | کارت گزینه‌ها از رسانهٔ عمومی آماده استفاده می‌کند؛ لینک جزئیات در صورت تطبیق امن شناسهٔ عرضه فعال می‌شود؛ انتخاب چند گزینه حفظ شود و دادهٔ ناموجود جعل نشود |
 | 8 | ذخیره‌شده‌ها | `/saved` | کالاها، خدمات و کسب‌وکارهای ذخیره‌شده با گالری امن در صورت وجود رسانهٔ منتشرشده؛ لینک جزئیات کالا/خدمت پس از نگاشت به شناسهٔ عرضه به مسیر canonical تبدیل می‌شود |
 | 9 | فعالیت اجتماعی | `/activity` | تعامل‌های واقعی مانند دنبال‌کردن، پسندیدن و دیدگاه؛ جدا از اعلان‌های عملیاتی سفارش |
-| 10 | پیام‌ها و گفت‌وگو | `/messages` | گفت‌وگوی خریدار و فروشنده با حفظ زمینهٔ کالا/خدمت و سفارش؛ آغاز ارتباط از محتوای عرضه |
+| 10 | پیام‌ها و گفت‌وگو | `/messages` | صندوق گفت‌وگو با نام کسب‌وکار canonical برای خریدار، عنوان مشتری برای فروشنده، پیش‌نمایش پیام و حفظ زمینهٔ کالا/خدمت و سفارش. گفت‌وگو به کسب‌وکار مشخص متصل است؛ گفت‌وگوهای قدیمی بدون نگاشت معتبر عنوان عمومی امن دارند |
 | 11 | اعلان‌ها | `/notifications` | اعلان اجتماعی، پاسخ، سفارش، ارسال و رزرو با پیوند مستقیم به اقدام مربوط |
 | 12 | پروفایل شخصی | `/profile` | هویت و اطلاعات قابل نمایش عمومی؛ از اطلاعات خصوصی و اسناد احراز جدا |
 | 13 | حساب، نشانی‌ها و ترجیحات | `/account`, `/settings` | یک قالب حساب با بخش‌ها یا تب‌های روشن؛ نشانی خانه/محل کار، زبان، ترجیحات و حریم خصوصی |
@@ -166,3 +166,12 @@
 برای پذیرش هر تغییر، بررسی‌های `CI`، `Phoenix verification` و `Phoenix web UI verification` باید روی همان commit موفق باشند. این بررسی‌ها خطای ساخت و رفتار تحت آزمون را پوشش می‌دهند؛ جایگزین بازبینی بصری همهٔ ۲۸ قالب در اندازه‌های دسکتاپ و موبایل نیستند.
 
 **تصمیم نهایی این نقشه:** تجربه را حول ۲۸ قالب اصلی سازمان بده و سطوح داخلی را از فضای اجتماعی خریدار جدا نگه دار. استودیوی فروشنده اکنون قیمت پایه را در جدول canonical `prices` به‌صورت نسخه‌دار ذخیره می‌کند؛ کارت‌های عمومی فقط قیمت پایه را می‌خوانند و قیمت گونه‌ها در مسیر جزئیات/Resolver باقی می‌ماند. شکاف‌های باقی‌مانده: مدیریت کامل گونه و موجودی از پنل فروشنده، اتصال واقعی پرداخت و سفارش، تکمیل آزمون‌های مجوز رسانه، و بازبینی بصری همهٔ قالب‌ها در موبایل و دسکتاپ.
+
+
+## 2026-10-18 — Canonical business identity in social messages
+
+- Added nullable `communication_conversations.business_id` with database triggers enforcing that the linked business belongs to the same organization and workspace. Existing threads remain unassigned rather than being guessed from a shared seller workspace.
+- Buyer-initiated seller conversations now persist the exact published business and are reused only for the same customer + workspace + business combination.
+- Inbox API derives the display name from that canonical business relation and the viewer side from the authenticated actor/customer mapping. Buyer inbox and thread header show the business name; seller view uses a localized generic customer label. Older unlinked conversations retain the safe generic title.
+- Registered migration 0096 in the API catalog and migration lock. Fixed the migration-change validator to resolve lock filenames relative to `migrations/`.
+- Validation on commit `797f06544df13ecd7e73b4fa75ed6d2f13d77f30`: CI, Phoenix verification, and Phoenix web UI E2E passed. These are automated checks; cross-organization messaging remains disabled until Communication has a first-class participant model.

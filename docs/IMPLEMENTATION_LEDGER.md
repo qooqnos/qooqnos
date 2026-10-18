@@ -3352,3 +3352,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - The original action element is carried explicitly while the feed button is disabled during the asynchronous comment request.
 - Added a visible keyboard-focus treatment for dialog controls and browser E2E assertions for focus cycling, empty-comment validation, Escape/cancel behavior, body-scroll restoration, and focus return.
 - No local comment is displayed as sent; a success message still follows the real Communication API response only.
+
+## 2026-10-18 — Canonical business identity in social messages
+
+- Added nullable `communication_conversations.business_id` with database triggers enforcing that the linked business belongs to the same organization and workspace. Existing threads remain unassigned rather than being guessed from a shared seller workspace.
+- Buyer-initiated seller conversations now persist the exact published business and are reused only for the same customer + workspace + business combination.
+- Inbox API derives the display name from that canonical business relation and the viewer side from the authenticated actor/customer mapping. Buyer inbox and thread header show the business name; seller view uses a localized generic customer label. Older unlinked conversations retain the safe generic title.
+- Registered migration 0096 in the API catalog and migration lock. Fixed the migration-change validator to resolve lock filenames relative to `migrations/`.
+- Validation on commit `797f06544df13ecd7e73b4fa75ed6d2f13d77f30`: CI, Phoenix verification, and Phoenix web UI E2E passed. These are automated checks; cross-organization messaging remains disabled until Communication has a first-class participant model.
