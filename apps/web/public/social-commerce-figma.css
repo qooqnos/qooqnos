@@ -1,0 +1,53 @@
+/* Figma-aligned social commerce visual pass — mobile-first, RTL */
+:root {
+  --qooqnos-ink: #242424;
+  --qooqnos-muted: #777780;
+  --qooqnos-canvas: #f7f7f8;
+  --qooqnos-card: #fff;
+  --qooqnos-line: #ededf0;
+  --qooqnos-brand: #ff6a00;
+  --qooqnos-radius-card: 18px;
+}
+html[dir="rtl"] body { direction: rtl; }
+body { background: var(--qooqnos-canvas); color: var(--qooqnos-ink); }
+button, input, textarea, select { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+a { text-decoration-thickness: .06em; text-underline-offset: .18em; }
+img { max-width: 100%; }
+:where(.app-shell, .app-layout, .main-content, main, #app, #app-root) { min-width: 0; }
+:where(.card, .panel, .surface, .feed-card, .post-card, .product-card, .seller-card, [data-card]) {
+  border: 1px solid var(--qooqnos-line);
+  border-radius: var(--qooqnos-radius-card);
+  box-shadow: 0 2px 10px rgb(20 20 30 / 3%);
+}
+:where(.feed-card, .post-card, .product-card, .seller-card) { overflow: clip; background: var(--qooqnos-card); }
+:where(.feed-card, .post-card) img, :where(.product-card, .seller-card) img {
+  display: block; object-fit: cover;
+}
+:where(button, .button, [role="button"], .btn) { transition: background-color .16s ease, border-color .16s ease, transform .16s ease; }
+:where(button, .button, [role="button"], .btn):active { transform: scale(.985); }
+:where(input, textarea, select) { border-radius: 12px; }
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid rgb(255 106 0 / 36%); outline-offset: 2px;
+}
+:where(.primary, .btn-primary, .button-primary, [data-variant="primary"]) {
+  background: var(--qooqnos-brand); border-color: var(--qooqnos-brand); color: #fff;
+}
+@media (max-width: 760px) {
+  body { background: #fff; }
+  :where(.app-shell, .app-layout, .main-content, main, #app, #app-root) { width: 100%; max-width: 100%; }
+  :where(.card, .panel, .surface, .feed-card, .post-card, .product-card, .seller-card, [data-card]) {
+    border-radius: 16px;
+  }
+  :where(.sidebar, .desktop-sidebar, .right-sidebar, .secondary-sidebar) { display: none; }
+  :where(.mobile-nav, .bottom-nav, .primary-navigation, [data-mobile-nav]) {
+    position: fixed; inset-inline: 0; bottom: 0; z-index: 50;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgb(255 255 255 / 96%); border-top: 1px solid var(--qooqnos-line);
+    backdrop-filter: blur(16px);
+  }
+  :where(.main-content, main, #app, #app-root) { padding-bottom: max(84px, calc(68px + env(safe-area-inset-bottom))); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
