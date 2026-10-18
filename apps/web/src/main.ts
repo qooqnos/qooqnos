@@ -40,7 +40,6 @@ import {
   renderBusinessCreateContent,
   renderBusinessContentDetails,
   renderBusinessDeals,
-  renderBusinessTeam as renderPhoenixBusinessTeam,
   renderBusinessOrgProfile,
   renderConsumerCart,
   renderConsumerPayment,
@@ -5494,7 +5493,35 @@ function loadBusinessBookingsPage(): void {
 
 
 function renderBusinessTeam(): string {
-  return renderPhoenixBusinessTeam();
+  return '<div class="phoenix-screen-wrapper phoenix-business-team-page">' +
+    '<header class="phoenix-business-team-heading">' +
+      '<a href="/business" data-nav class="phoenix-screen-back-btn" aria-label="' + escapeAttr(uiText("بازگشت")) + '">→</a>' +
+      '<div class="phoenix-business-team-heading-copy"><span class="phoenix-reset-section-kicker">' + uiText("فضای کسب‌وکار") + '</span>' +
+        '<h1>' + uiText("تیم و دسترسی‌ها") + '</h1>' +
+        '<p>' + uiText("اعضای فعال فضای کاری و دسترسی ثبت‌شده را ببین.") + '</p></div>' +
+      '<span class="phoenix-business-team-readonly-pill"><span aria-hidden="true">◉</span>' + uiText("نمایش فقط‌خواندنی") + '</span>' +
+    '</header>' +
+    '<section class="phoenix-business-team-summary">' +
+      '<article class="phoenix-business-team-summary-card">' +
+        '<span class="phoenix-business-team-summary-icon" aria-hidden="true">▦</span><div><small>' + uiText("فضای کاری فعال") + '</small>' +
+        '<strong id="business-team-workspace-name">' + uiText("در حال خواندن اطلاعات") + '</strong></div>' +
+        '<span class="phoenix-business-team-status" id="business-team-workspace-status">' + uiText("در انتظار بررسی") + '</span></article>' +
+      '<article class="phoenix-business-team-summary-card">' +
+        '<span class="phoenix-business-team-summary-icon" aria-hidden="true">✓</span><div><small>' + uiText("دسترسی حساب شما") + '</small>' +
+        '<strong id="business-team-role-summary">' + uiText("در حال خواندن دسترسی‌ها") + '</strong></div></article>' +
+    '</section>' +
+    '<section class="phoenix-business-team-panel">' +
+      '<header class="phoenix-business-team-panel-heading"><div><span class="phoenix-reset-section-kicker">' + uiText("عضویت در فضای کاری") + '</span>' +
+        '<h2>' + uiText("اعضای فعال") + '</h2><p>' + uiText("فهرست از منبع رسمی فضای کاری دریافت می‌شود.") + '</p></div>' +
+        '<span class="phoenix-business-team-count" id="business-team-count">—</span></header>' +
+      '<div id="business-team-table" data-workspace-member-list aria-live="polite" aria-busy="true">' +
+        '<div class="phoenix-business-team-loading"><span class="slot-loading">' + uiText("در حال خواندن اعضای تیم…") + '</span></div>' +
+      '</div>' +
+    '</section>' +
+    '<aside class="phoenix-business-team-readonly-note"><span aria-hidden="true">ⓘ</span><p>' +
+      uiText("این صفحه وضعیت عضویت ثبت‌شده را نمایش می‌دهد. دعوت عضو یا تغییر مجوز تا اتصال مسیر امن مدیریت دسترسی در دسترس نیست.") +
+    '</p></aside>' +
+  '</div>';
 }
 
 function _renderLegacyBusinessTeam(): string {
@@ -5526,65 +5553,103 @@ function _renderLegacyBusinessTeam(): string {
 
 async function loadBusinessTeamPage(): Promise<void> {
   const tableWrap = document.querySelector<HTMLElement>("#business-team-table");
-  const inviteBtn = document.querySelector<HTMLButtonElement>("[data-invite-team-member]");
-  if (!tableWrap) return;
+  const countNode = document.querySelector<HTMLElement>("#business-team-count");
+  const workspaceNameNode = document.querySelector<HTMLElement>("#business-team-workspace-name");
+  const workspaceStatusNode = document.querySelector<HTMLElement>("#business-team-workspace-status");
+  const roleNode = document.querySelector<HTMLElement>("#business-team-role-summary");
+  if (!tableWrap || !countNode || !workspaceNameNode || !workspaceStatusNode || !roleNode) return;
 
-  const currentWorkspace = localStorage.getItem(STORAGE.workspace) ?? "ws-phoenix-1";
+  const renderState = (message: string, kind: "loading" | "empty" | "error" | "signin" = "error"): void => {
+    tableWrap.setAttribute("aria-busy", kind === "loading" ? "true" : "false");
+    if (kind === "signin") {
+      tableWrap.innerHTML = '<div class="phoenix-business-team-state"><span class="phoenix-business-team-state-icon">♙</span><h3>' +
+        uiText("ورود به حساب لازم است") + '</h3><p>' + escapeHtml(message) + '</p><button class="button button-primary" type="button" data-open-login>' +
+        uiText("ورود به حساب") + '</button></div>';
+    } else {
+      tableWrap.innerHTML = '<div class="phoenix-business-team-state ' + (kind === "error" ? "is-error" : "") + '">' +
+        '<span class="phoenix-business-team-state-icon">' + (kind === "empty" ? "♙" : kind === "loading" ? "◌" : "ⓘ") + '</span>' +
+        '<p>' + escapeHtml(message) + '</p>' +
+        (kind === "error" ? '<button class="button button-ghost" type="button" data-retry-business-team>' + uiText("تلاش دوباره") + '</button>' : '') +
+        '</div>';
+      tableWrap.querySelector<HTMLButtonElement>("[data-retry-business-team]")?.addEventListener("click", () => void loadBusinessTeamPage());
+    }
+  };
 
-  try {
-    const res = await apiJson<{ data: Array<{ id: string; userId: string; role?: string; status?: string }> }>(
-      `/api/v1/workspaces/${encodeURIComponent(currentWorkspace)}/members`
-    );
-    const members = Array.isArray(res.data) ? res.data : [];
-
-    tableWrap.innerHTML = `
-      <table class="ds-table">
-        <thead>
-          <tr>
-            <th>${uiText("شناسه")}</th>
-            <th>${uiText("کاربر")}</th>
-            <th>${uiText("نقش")}</th>
-            <th>${uiText("وضعیت")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${members.map((m) => `
-            <tr>
-              <td><code>${escapeHtml(m.id)}</code></td>
-              <td><strong>${escapeHtml(m.userId)}</strong></td>
-              <td><span class="pill">${escapeHtml(m.role ?? "admin")}</span></td>
-              <td><span class="pill success">${escapeHtml(m.status ?? "active")}</span></td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    `;
-  } catch {
-    tableWrap.innerHTML = `
-      <table class="ds-table">
-        <thead>
-          <tr>
-            <th>${uiText("کاربر")}</th>
-            <th>${uiText("نقش")}</th>
-            <th>${uiText("وضعیت")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>کاربر مدیر ققنوس</strong></td>
-            <td><span class="pill">مدیر ارشد (Admin)</span></td>
-            <td><span class="pill success">فعال</span></td>
-          </tr>
-        </tbody>
-      </table>
-    `;
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    workspaceNameNode.textContent = uiText("پس از ورود مشخص می‌شود");
+    workspaceStatusNode.textContent = uiText("نیازمند ورود");
+    roleNode.textContent = uiText("پس از ورود مشخص می‌شود");
+    countNode.textContent = "—";
+    renderState(uiText("برای دیدن اعضا و دسترسی‌های ثبت‌شده، وارد حساب شو."), "signin");
+    return;
   }
 
-  if (inviteBtn) {
-    inviteBtn.addEventListener("click", () => {
-      const email = window.prompt("ایمیل یا شناسه کاربری همکار را وارد کنید:", "");
-      if (email?.trim()) showToast("دعوت‌نامه برای " + email.trim() + " ارسال شد.");
-    });
+  renderState(uiText("در حال خواندن اعضای فضای کاری…"), "loading");
+  countNode.textContent = "—";
+  try {
+    const [context, workspaceResponse] = await Promise.all([
+      apiJson<{ actorId?: string; tenantId?: string; workspaceId?: string | null; roles?: string[]; permissions?: string[] }>("/api/v1/context"),
+      apiJson<{ data: WorkspaceSummary[]; currentWorkspaceId?: string | null }>("/api/v1/workspaces"),
+    ]);
+    shellContext = {
+      ...shellContext,
+      ...(context.actorId ? { actorId: context.actorId } : {}),
+      ...(context.tenantId ? { tenantId: context.tenantId } : {}),
+      ...(context.workspaceId ? { workspaceId: context.workspaceId } : {}),
+    };
+    shellWorkspaces = Array.isArray(workspaceResponse.data) ? workspaceResponse.data : [];
+    const workspaceId = typeof context.workspaceId === "string" ? context.workspaceId.trim() : "";
+    if (!workspaceId) {
+      workspaceNameNode.textContent = uiText("فضای کاری در دسترس نیست");
+      workspaceStatusNode.textContent = uiText("نیازمند بررسی");
+      roleNode.textContent = uiText("دسترسی در دسترس نیست");
+      countNode.textContent = "—";
+      renderState(uiText("برای این حساب فضای کاری فعال از سرویس دسترسی دریافت نشد."), "error");
+      return;
+    }
+
+    const activeWorkspace = shellWorkspaces.find((workspace) => workspace.id === workspaceId);
+    workspaceNameNode.textContent = activeWorkspace?.name ?? uiText("فضای کاری فعال");
+    workspaceStatusNode.textContent = uiText(activeWorkspace?.status ?? "وضعیت نامشخص");
+    workspaceStatusNode.dataset.status = activeWorkspace?.status ?? "unknown";
+
+    const roles = Array.isArray(context.roles) ? context.roles.filter((role): role is string => typeof role === "string" && role.trim().length > 0) : [];
+    roleNode.textContent = roles.length ? roles.join(" · ") : uiText("نقش از منبع دسترسی اعلام نشده است");
+
+    const response = await apiJson<{ data: Array<{ id: string; workspaceId?: string; userId: string; status: string; createdAt?: string }> }>(
+      "/api/v1/workspaces/" + encodeURIComponent(workspaceId) + "/members",
+    );
+    const members = Array.isArray(response.data) ? response.data.filter((member) => typeof member.userId === "string" && member.userId.length > 0) : [];
+    countNode.textContent = String(members.length);
+    countNode.dataset.memberCount = String(members.length);
+    tableWrap.setAttribute("aria-busy", "false");
+
+    if (!members.length) {
+      renderState(uiText("هنوز عضوی برای این فضای کاری ثبت نشده است."), "empty");
+      return;
+    }
+
+    tableWrap.innerHTML = '<div class="phoenix-business-team-member-list">' + members.map((member, index) => {
+      const accountReference = member.userId.length > 18
+        ? member.userId.slice(0, 7) + "…" + member.userId.slice(-5)
+        : member.userId;
+      const memberStatus = member.status === "active" ? uiText("فعال")
+        : member.status === "suspended" ? uiText("تعلیق‌شده")
+          : member.status === "pending" ? uiText("در انتظار")
+            : uiText(member.status || "وضعیت نامشخص");
+      return '<article class="phoenix-business-team-member" data-workspace-member data-member-status="' + escapeAttr(member.status || "unknown") + '">' +
+        '<span class="phoenix-business-team-member-avatar" aria-hidden="true">♙</span>' +
+        '<div class="phoenix-business-team-member-copy"><strong>' + uiText("عضو فضای کاری") + ' ' + String(index + 1) + '</strong>' +
+          '<small>' + uiText("شناسه حساب") + ': ' + escapeHtml(accountReference) + '</small></div>' +
+        '<span class="phoenix-business-team-member-status ' + (member.status === "active" ? "is-active" : "") + '">' + escapeHtml(memberStatus) + '</span>' +
+      '</article>';
+    }).join("") + '</div>';
+  } catch {
+    workspaceNameNode.textContent = uiText("فضای کاری فعال");
+    workspaceStatusNode.textContent = uiText("اطلاعات در دسترس نیست");
+    roleNode.textContent = uiText("دسترسی در دسترس نیست");
+    countNode.textContent = "—";
+    renderState(uiText("خواندن اعضای فضای کاری انجام نشد. اتصال و دسترسی حساب را بررسی کن."), "error");
   }
 }
 

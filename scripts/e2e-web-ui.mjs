@@ -1459,6 +1459,15 @@ for (const [path, label, readySelector] of [
 ]) {
   await page.goto(baseURL + path);
   await page.locator(readySelector).first().waitFor({ timeout: 10000 });
+  if (path === "/business/team") {
+    await page.locator("[data-workspace-member]").waitFor();
+    assert.equal(await page.locator("[data-workspace-member]").count(), 1);
+    assert.ok((await page.locator("#business-team-workspace-name").innerText()).includes("Workspace اصلی"));
+    assert.ok((await page.locator("#business-team-role-summary").innerText()).includes("admin"));
+    assert.equal(await page.locator("[data-invite-team-member], [data-edit-team-member]").count(), 0,
+      "Team page must not claim membership mutations without a canonical API");
+    assert.ok((await page.locator("#business-team-table").innerText()).includes("user-1"));
+  }
   await page.setViewportSize({ width: 390, height: 844 });
   const mobileLayout = await page.evaluate(() => ({
     viewport: window.innerWidth,
