@@ -59,6 +59,21 @@ export class CustomerRelationshipRepository extends Repository {
     );
   }
 
+  async listForCustomerBusiness(
+    context: RequestContext,
+    customerId: EntityId,
+    businessId: EntityId,
+    limit = 50,
+  ): Promise<readonly CustomerRelationshipRecord[]> {
+    const organizationId = this.requireOrganization({ organizationId: context.tenantId });
+    const workspaceId = this.requireWorkspace({ workspaceId: context.workspaceId });
+    const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
+    return this.database.all<CustomerRelationshipRecord>(
+      "SELECT cr.id, cr.customer_id AS customerId, cr.business_id AS businessId, cr.relationship_type AS relationshipType, cr.status, cr.first_interaction_at AS firstInteractionAt, cr.last_interaction_at AS lastInteractionAt, cr.source, cr.created_at AS createdAt, cr.updated_at AS updatedAt FROM customer_relationships cr INNER JOIN customers c ON c.id = cr.customer_id INNER JOIN businesses b ON b.id = cr.business_id WHERE cr.customer_id = ? AND cr.business_id = ? AND c.organization_id = ? AND b.organization_id = ? AND b.workspace_id = ? ORDER BY cr.updated_at DESC, cr.id DESC LIMIT ?",
+      customerId, businessId, organizationId, organizationId, workspaceId, safeLimit,
+    );
+  }
+
   async create(
     context: RequestContext,
     input: CreateCustomerRelationshipInput,
