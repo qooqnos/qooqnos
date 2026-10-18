@@ -37,6 +37,7 @@ const communicationSendRequests = [];
 const communicationStartRequests = [];
 const mediaAssetUploadRequests = [];
 const offeringMediaLinkRequests = [];
+const offeringPriceRequests = [];
 const catalogProductCreateRequests = [];
 const publicMediaBatchRequests = [];
 const customerPriceResolutionRequests = [];
@@ -393,6 +394,20 @@ await page.route("**/api/v1/**", async (route) => {
       status: 201,
       contentType: "application/json",
       body: JSON.stringify({ data: { id: "link-studio-e2e-1", offeringId: "offer-1", assetId: "asset-studio-e2e-1", purpose: "primary", position: 0 } }),
+    });
+    return;
+  }
+  if (path === "/api/v1/catalog/offers/offer-1/price" && request.method() === "PUT") {
+    const body = request.postDataJSON();
+    offeringPriceRequests.push(body);
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ data: {
+        id: "price-studio-e2e-1", offeringId: "offer-1", productVariantId: null,
+        amountMinor: body.amountMinor, currency: body.currency, pricingType: body.pricingType,
+        effectiveFrom: new Date().toISOString(), effectiveTo: null, status: "active",
+      } }),
     });
     return;
   }
@@ -1699,8 +1714,11 @@ await page.getByText("محصول تست").waitFor();
 await page.locator("[data-confirm-seller-draft]").click();
 await page.getByText("محصول Catalog ساخته شد").waitFor();
 await page.getByRole("button", { name: "تأیید و افزودن به ویترین" }).waitFor();
+await page.locator("#seller-offer-title").fill("کیف دست‌دوز");
+await page.locator("#seller-offer-price").fill("1250000");
+await page.locator("#seller-offer-currency").selectOption("IRR");
 await page.locator("[data-create-seller-offer]").click();
-await page.getByText("عرضه ساخته شد و تصویر به آن متصل شد").waitFor();
+await page.getByText("عرضه، قیمت پایه و تصویر ثبت شدند.").waitFor();
 await page.locator("[data-publish-seller-offer]").click();
 await page.getByText("درخواست انتشار ثبت شد").waitFor();
 assert.equal(mediaAssetUploadRequests.length, 1, "Seller Studio should upload the prepared image once");
@@ -1709,6 +1727,8 @@ assert.ok(mediaAssetUploadRequests[0].includes("image/webp"), "Seller Studio sho
 assert.ok(mediaAssetUploadRequests[0].includes("imageWidth"));
 assert.equal(offeringMediaLinkRequests.length, 1, "Creating an offer should attach the uploaded image");
 assert.equal(offeringMediaLinkRequests[0].path, "/api/v1/catalog/offers/offer-1/media/asset-studio-e2e-1");
+assert.equal(offeringPriceRequests.length, 1, "Creating an offer should save a canonical base price");
+assert.deepEqual(offeringPriceRequests[0], { amountMinor: 1250000, currency: "IRR", pricingType: "fixed" });
 
 await browser.close();
 server.kill("SIGTERM");

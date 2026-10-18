@@ -9817,20 +9817,51 @@ async function confirmSellerDraft(): Promise<void> {
 function renderSellerPublicationControls(container: HTMLElement, productId: string): void {
   const host = container.querySelector<HTMLElement>("#seller-publication-controls");
   if (!host) return;
+  const ps = (key: string): string => escapeHtml(productStudioUi(key));
   host.innerHTML = `
     <div class="publication-mini-card">
-      <div class="card-section-heading"><div><span class="section-kicker">ویترین فروشگاه</span><strong>انتشار در فروشگاه</strong></div><span class="pill success">مرحله بعد</span></div>
-      <label class="field-label" for="seller-offer-title">عنوان نمایشی برای خریداران</label>
-      <input id="seller-offer-title" class="studio-input-line" value="محصول جدید" placeholder="عنوان قابل نمایش برای خریدار" />
-      <p>با تأیید نهایی، این محصول در ویترین فروشگاه شما برای خریداران فعال خواهد شد.</p>
-      <div class="engine-actions">
-        <button class="button button-primary" type="button" data-create-seller-offer data-product-id="${escapeAttr(productId)}">تأیید و افزودن به ویترین</button>
-        <button class="button button-ghost" type="button" data-publish-seller-offer disabled>انتشار نهایی</button>
+      <div class="card-section-heading">
+        <div><span class="section-kicker">${ps("offerStorefrontTitle")}</span><strong>${ps("offerStorefrontTitle")}</strong></div>
+        <span class="pill success">${ps("step5")}</span>
       </div>
-      <div id="seller-publication-state" class="connection-state">آماده ثبت نهایی در فروشگاه</div>
+      <label class="field-label" for="seller-offer-title">${ps("offerTitleLabel")}
+        <input id="seller-offer-title" class="studio-input-line" value="" placeholder="${ps("offerTitlePlaceholder")}" autocomplete="off" />
+      </label>
+      <div class="publication-price-grid">
+        <label class="field-label" for="seller-offer-price">${ps("offerPriceLabel")}
+          <input id="seller-offer-price" class="studio-input-line" type="number" min="0" step="any" inputmode="decimal" required placeholder="${ps("offerPricePlaceholder")}" />
+        </label>
+        <label class="field-label" for="seller-offer-currency">${ps("offerCurrencyLabel")}
+          <select id="seller-offer-currency" class="studio-input-line">
+            <option value="IRR" selected>IRR</option><option value="AZN">AZN</option><option value="USD">USD</option>
+          </select>
+        </label>
+      </div>
+      <p>${ps("offerPriceNote")}</p>
+      <div class="engine-actions">
+        <button class="button button-primary" type="button" data-create-seller-offer data-product-id="${escapeAttr(productId)}">${ps("offerCreateButton")}</button>
+        <button class="button button-ghost" type="button" data-publish-seller-offer disabled>${ps("offerPublishButton")}</button>
+      </div>
+      <div id="seller-publication-state" class="connection-state">${ps("offerPriceHelper")}</div>
     </div>`;
   host.querySelector<HTMLButtonElement>("[data-create-seller-offer]")?.addEventListener("click", () => { void createSellerOffer(); });
   host.querySelector<HTMLButtonElement>("[data-publish-seller-offer]")?.addEventListener("click", () => { void publishSellerOffer(); });
+}
+
+function parseOfferingDisplayAmountToMinor(value: string, currency: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const amount = Number(trimmed);
+  if (!Number.isFinite(amount) || amount < 0) return null;
+  try {
+    const digits = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits;
+    const factor = 10 ** digits;
+    const scaled = amount * factor;
+    const rounded = Math.round(scaled);
+    return Number.isSafeInteger(rounded) && Math.abs(scaled - rounded) <= 1e-6 ? rounded : null;
+  } catch {
+    return null;
+  }
 }
 
 async function createSellerOffer(): Promise<void> {
@@ -9840,11 +9871,23 @@ async function createSellerOffer(): Promise<void> {
   const draft = document.querySelector<HTMLElement>("#studio-draft");
   const state = document.querySelector<HTMLElement>("#seller-publication-state");
   const title = document.querySelector<HTMLInputElement>("#seller-offer-title")?.value.trim() ?? "";
-  if (!productId || !title || !draft || !state || !button) {
-    showToast("لطفاً عنوان محصول را وارد کنید.");
+  const priceInput = document.querySelector<HTMLInputElement>("#seller-offer-price");
+  const currency = document.querySelector<HTMLSelectElement>("#seller-offer-currency")?.value ?? "IRR";
+  const amountMinor = parseOfferingDisplayAmountToMinor(priceInput?.value ?? "", currency);
+  if (!productId || !title || !draft || !state || !button || !priceInput) {
+    if (state) state.textContent = productStudioUi("offerPriceRequired");
+    showToast(productStudioUi("offerPriceRequired"));
+    return;
+  }
+  if (amountMinor === null) {
+    state.textContent = productStudioUi("offerPriceInvalid");
+    state.className = "connection-state error";
+    priceInput.focus();
     return;
   }
   button.disabled = true;
+  state.textContent = productStudioUi("offerPriceHelper");
+  state.className = "connection-state";
   try {
     let offeringId = draft.dataset.offeringId;
     if (!offeringId) {
@@ -9855,7 +9898,6 @@ async function createSellerOffer(): Promise<void> {
       offeringId = response.data.id;
       draft.dataset.offeringId = offeringId;
     }
-
     const mediaAssetId = draft.dataset.mediaAssetId?.trim();
     if (mediaAssetId && draft.dataset.mediaLinked !== "true") {
       await apiJson<{ data: { id: string; offeringId: string; assetId: string; purpose: string; position: number } }>(
@@ -9864,20 +9906,27 @@ async function createSellerOffer(): Promise<void> {
       );
       draft.dataset.mediaLinked = "true";
     }
-
-    state.textContent = mediaAssetId
-      ? "عرضه ساخته شد و تصویر به آن متصل شد · " + offeringId
-      : "عرضه ساخته شد · " + offeringId;
+    const pricingType = amountMinor === 0 ? "free" : "fixed";
+    const priceSaveKey = currency + ":" + String(amountMinor) + ":" + pricingType;
+    if (draft.dataset.priceSavedKey !== priceSaveKey) {
+      await apiJson<{ data: { id: string; offeringId: string; amountMinor: number; currency: string; pricingType: string; status: string } }>(
+        "/api/v1/catalog/offers/" + encodeURIComponent(offeringId) + "/price",
+        { method: "PUT", body: { amountMinor, currency, pricingType } },
+      );
+      draft.dataset.priceSavedKey = priceSaveKey;
+    }
+    state.textContent = mediaAssetId ? productStudioUi("offerSavedWithImage") : productStudioUi("offerSavedWithoutImage");
     state.className = "connection-state success";
+    button.textContent = productStudioUi("offerSavedButton");
+    button.disabled = false;
     const publish = document.querySelector<HTMLButtonElement>("[data-publish-seller-offer]");
     if (publish) publish.disabled = false;
   } catch (error) {
-    state.textContent = error instanceof Error ? error.message : "ساخت یا اتصال تصویر به عرضه ناموفق بود.";
+    state.textContent = error instanceof Error ? error.message : productStudioUi("offerSaveError");
     state.className = "connection-state error";
     button.disabled = false;
   }
 }
-
 async function publishSellerOffer(): Promise<void> {
   const draft = document.querySelector<HTMLElement>("#studio-draft");
   const state = document.querySelector<HTMLElement>("#seller-publication-state");
@@ -9885,17 +9934,17 @@ async function publishSellerOffer(): Promise<void> {
   const offeringId = draft?.dataset.offeringId;
   if (!offeringId || !state || !button) return;
   button.disabled = true;
-  state.textContent = "در حال ثبت درخواست انتشار…";
+  state.textContent = productStudioUi("offerPublishing");
   state.className = "connection-state";
   try {
     const response = await apiJson<{ data: { id: string; publicationStatus: string } }>(
       "/api/v1/catalog/offers/" + encodeURIComponent(offeringId) + "/publish",
       { method: "POST" },
     );
-    state.textContent = "درخواست انتشار ثبت شد · " + response.data.publicationStatus;
+    state.textContent = productStudioUi("offerPublishRequested");
     state.className = "connection-state success";
   } catch (error) {
-    state.textContent = error instanceof Error ? error.message : "درخواست انتشار ناموفق بود.";
+    state.textContent = error instanceof Error ? error.message : productStudioUi("offerPublishError");
     state.className = "connection-state error";
     button.disabled = false;
   }

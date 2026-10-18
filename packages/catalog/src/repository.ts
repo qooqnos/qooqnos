@@ -134,6 +134,30 @@ export interface CreateOfferingInput {
   readonly now: string;
 }
 
+export type OfferingPricingType = "fixed" | "starting_at" | "from" | "custom" | "free";
+export interface OfferingPriceRecord {
+  readonly id: EntityId;
+  readonly offeringId: EntityId;
+  readonly productVariantId: EntityId | null;
+  readonly amountMinor: number;
+  readonly currency: string;
+  readonly pricingType: OfferingPricingType;
+  readonly effectiveFrom: string;
+  readonly effectiveTo: string | null;
+  readonly status: "active" | "inactive" | "archived";
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+export interface SetOfferingPriceInput {
+  readonly id: EntityId;
+  readonly offeringId: EntityId;
+  readonly productVariantId?: EntityId | undefined;
+  readonly amountMinor: number;
+  readonly currency: string;
+  readonly pricingType: OfferingPricingType;
+  readonly now: string;
+}
+
 interface ProductVariantRow {
   readonly id: EntityId;
   readonly productId: EntityId;
@@ -228,6 +252,7 @@ export class CatalogRepository extends Repository {
           AND o.publication_status = 'published'
           AND pr.product_variant_id IS NULL
           AND pr.status = 'active'
+          AND pr.product_variant_id IS NULL
           AND pr.effective_from <= ?
           AND (pr.effective_to IS NULL OR pr.effective_to > ?)
         ORDER BY pr.effective_from DESC, pr.updated_at DESC
@@ -671,6 +696,57 @@ export class CatalogRepository extends Repository {
        WHERE o.id = ? AND b.organization_id = ? AND b.workspace_id = ? LIMIT 1`,
       id, organizationId, workspaceId,
     );
+  }
+
+  async setOfferingPrice(context: RequestContext, input: SetOfferingPriceInput): Promise<OfferingPriceRecord> {
+    const offering = await this.getOffering(context, input.offeringId);
+    if (!offering) throw new DatabaseError("Offering is not available in the current workspace");
+    const currency = input.currency.trim().toUpperCase();
+    if (!/^[A-Z]{3}$/.test(currency)) throw new DatabaseError("Currency must be a three-letter code");
+    if (!Number.isSafeInteger(input.amountMinor) || input.amountMinor < 0) throw new DatabaseError("Offering price must be a non-negative integer in minor units");
+    if (input.pricingType === "free" && input.amountMinor !== 0) throw new DatabaseError("Free pricing must have a zero amount");
+    if (input.pricingType === "fixed" && input.amountMinor === 0) throw new DatabaseError("A zero amount must use the free pricing type");
+    const nowMillis = Date.parse(input.now);
+    if (!Number.isFinite(nowMillis)) throw new DatabaseError("Price timestamp is invalid");
+    const productVariantId = input.productVariantId ?? null;
+    if (productVariantId) {
+      if (offering.offeringType !== "product" || !offering.productId) throw new DatabaseError("Only product offerings can have variant-specific prices");
+      const variant = await this.database.first<{ id: EntityId }>(
+        `SELECT pv.id FROM product_variants pv
+           INNER JOIN products p ON p.id = pv.product_id
+           INNER JOIN offerings o ON o.id = ?
+           INNER JOIN businesses b ON b.id = o.business_id
+          WHERE pv.id = ? AND o.product_id = p.id AND o.offering_type = 'product'
+            AND p.business_id = o.business_id AND b.organization_id = ? AND b.workspace_id = ? LIMIT 1`,
+        input.offeringId, productVariantId,
+        this.requireOrganization({ organizationId: context.tenantId }),
+        this.requireWorkspace({ workspaceId: context.workspaceId }),
+      );
+      if (!variant) throw new DatabaseError("Product variant is not available for this offering");
+    }
+    const previous = await this.database.first<{ effectiveFrom: string }>(
+      `SELECT effective_from AS effectiveFrom FROM prices
+        WHERE offering_id = ? AND product_variant_id IS ? AND status = 'active'
+        ORDER BY effective_from DESC, updated_at DESC, id DESC LIMIT 1`,
+      input.offeringId, productVariantId,
+    );
+    const previousMillis = previous ? Date.parse(previous.effectiveFrom) : Number.NaN;
+    const effectiveFrom = Number.isFinite(previousMillis) && previousMillis >= nowMillis
+      ? new Date(previousMillis + 1).toISOString() : input.now;
+    await this.database.run(
+      `UPDATE prices SET effective_to = ?, status = 'inactive', updated_at = ?
+        WHERE offering_id = ? AND product_variant_id IS ? AND status = 'active'
+          AND effective_from < ? AND (effective_to IS NULL OR effective_to > ?)`,
+      effectiveFrom, input.now, input.offeringId, productVariantId, effectiveFrom, effectiveFrom,
+    );
+    await this.database.run(
+      `INSERT INTO prices
+       (id, offering_id, product_variant_id, amount_minor, currency, pricing_type, effective_from, effective_to, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 'active', ?, ?)`,
+      input.id, input.offeringId, productVariantId, input.amountMinor, currency, input.pricingType, effectiveFrom, input.now, input.now,
+    );
+    return { id: input.id, offeringId: input.offeringId, productVariantId, amountMinor: input.amountMinor, currency,
+      pricingType: input.pricingType, effectiveFrom, effectiveTo: null, status: "active", createdAt: input.now, updatedAt: input.now };
   }
 
   async createProduct(context: RequestContext, input: CreateProductInput): Promise<ProductRecord> {

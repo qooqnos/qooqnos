@@ -220,6 +220,57 @@ describe("CatalogRepository", () => {
     expect(JSON.stringify(variants)).not.toContain("sku");
   });
 
+  it("versions an offering base price and preserves price history", async () => {
+    const statements: string[] = [];
+    let currentSql = "";
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() {
+        if (currentSql.includes("FROM offerings o INNER JOIN businesses b")) return {
+          id: "offering-1", businessId: "business-1", offeringType: "product", title: "Test product",
+          description: null, productId: "product-1", serviceId: null, status: "active", publicationStatus: "unpublished",
+          createdAt: "2026-10-17T00:00:00.000Z", updatedAt: "2026-10-17T00:00:00.000Z",
+        } as T;
+        if (currentSql.includes("SELECT effective_from AS effectiveFrom FROM prices")) return { effectiveFrom: "2026-10-17T12:00:00.000Z" } as T;
+        return null as T | null;
+      },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { currentSql = sql; statements.push(sql); return statement; },
+      async batch() { return []; },
+    };
+    const repository = new CatalogRepository(new D1Database(raw));
+    const price = await repository.setOfferingPrice(context(), {
+      id: brandId<"EntityId">("price-new"), offeringId: brandId<"EntityId">("offering-1"),
+      amountMinor: 1250000, currency: "irr", pricingType: "fixed", now: "2026-10-18T12:00:00.000Z",
+    });
+    expect(price).toMatchObject({ id: "price-new", offeringId: "offering-1", productVariantId: null, amountMinor: 1250000,
+      currency: "IRR", pricingType: "fixed", effectiveFrom: "2026-10-18T12:00:00.000Z", effectiveTo: null, status: "active" });
+    expect(statements.some((sql) => sql.includes("UPDATE prices") && sql.includes("effective_to = ?"))).toBe(true);
+    expect(statements.some((sql) => sql.includes("INSERT INTO prices") && sql.includes("product_variant_id"))).toBe(true);
+    expect(statements.some((sql) => sql.includes("product_variant_id IS ?"))).toBe(true);
+  });
+
+  it("uses only the base price on public business listing cards", async () => {
+    const statements: string[] = [];
+    const statement: D1PreparedStatementLike = {
+      bind() { return this; },
+      async first<T>() { return null as T | null; },
+      async all<T>() { return { results: [] as T[] }; },
+      async run() { return { success: true }; },
+    };
+    const raw: D1DatabaseLike = {
+      prepare(sql: string) { statements.push(sql); return statement; },
+      async batch() { return []; },
+    };
+    await new CatalogRepository(new D1Database(raw)).listPublishedBusinessOfferings(
+      brandId<"EntityId">("business-1"), "2026-10-18T12:00:00.000Z",
+    );
+    expect(statements[0]).toContain("pr.product_variant_id IS NULL");
+  });
+
   it("does not return variants for an unpublished offering", async () => {
     const statements: string[] = [];
     const statement: D1PreparedStatementLike = {

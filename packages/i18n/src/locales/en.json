@@ -1289,7 +1289,26 @@
     "createDetailsStepDraftDescription": "Extract details and ask about missing information",
     "createDetailsStepReview": "Review and publish",
     "createDetailsStepReviewDescription": "Publish after your approval",
-    "createDetailsAddImage": "Add an image in Studio"
+    "createDetailsAddImage": "Add an image in Studio",
+    "offerStorefrontTitle": "Storefront listing",
+    "offerTitleLabel": "Title shown to buyers",
+    "offerTitlePlaceholder": "A clear title buyers will recognize",
+    "offerPriceLabel": "Base price",
+    "offerCurrencyLabel": "Currency",
+    "offerPricePlaceholder": "Amount",
+    "offerPriceHelper": "Enter the amount in the selected currency's main unit. Prices are versioned, not overwritten.",
+    "offerCreateButton": "Save listing and price",
+    "offerSavedButton": "Save listing changes",
+    "offerPublishButton": "Request publication",
+    "offerPriceRequired": "Enter a title and price.",
+    "offerPriceInvalid": "The price amount is invalid.",
+    "offerSavedWithImage": "Listing, base price, and image saved.",
+    "offerSavedWithoutImage": "Listing and base price saved.",
+    "offerSaveError": "The listing or price could not be saved.",
+    "offerPublishing": "Sending the publication request…",
+    "offerPublishRequested": "Publication request submitted.",
+    "offerPublishError": "The publication request failed.",
+    "offerPriceNote": "This sets the base listing price. Variant-specific overrides can be set separately."
   },
   "taxonomy": {
     "industry": {

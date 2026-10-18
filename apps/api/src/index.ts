@@ -500,6 +500,29 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   });
 
   router.register({
+    method: "PUT",
+    path: "/api/v1/catalog/offers/:offeringId/price",
+    module: "catalog",
+    operation: "catalog.offering.create",
+    permission: "catalog.offering.create",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const command = await parseJsonCommand(request, isSetOfferingPriceCommand, "Offering price payload is invalid.", context.requestId);
+      const offeringId = brandId<"EntityId">(requiredRouteParam(params, "offeringId", context.requestId));
+      const data = await getCatalogService(database, authorization).setOfferingPrice(context, {
+        offeringId,
+        amountMinor: command.amountMinor,
+        currency: command.currency,
+        pricingType: command.pricingType,
+        ...(command.productVariantId ? { productVariantId: brandId<"EntityId">(command.productVariantId) } : {}),
+      });
+      return json({ data }, 200, context.requestId);
+    },
+  });
+
+  router.register({
     method: "POST",
     path: "/api/v1/catalog/offers/:offeringId/publish",
     module: "catalog",
@@ -1150,6 +1173,23 @@ function isBusinessLocationStatusCommand(value: unknown): value is { status: "ac
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const status = (value as Record<string, unknown>).status;
   return status === "active" || status === "inactive" || status === "archived";
+}
+
+function isSetOfferingPriceCommand(value: unknown): value is {
+  amountMinor: number;
+  currency: string;
+  pricingType: "fixed" | "free";
+  productVariantId?: string;
+} {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const body = value as Record<string, unknown>;
+  if (typeof body.amountMinor !== "number" || !Number.isSafeInteger(body.amountMinor) || body.amountMinor < 0) return false;
+  if (typeof body.currency !== "string" || !/^[A-Za-z]{3}$/.test(body.currency.trim())) return false;
+  if (body.pricingType !== "fixed" && body.pricingType !== "free") return false;
+  if (body.pricingType === "free" && body.amountMinor !== 0) return false;
+  if (body.pricingType === "fixed" && body.amountMinor === 0) return false;
+  if (body.productVariantId !== undefined && (typeof body.productVariantId !== "string" || !body.productVariantId.trim())) return false;
+  return true;
 }
 
 function isCreateOfferingCommand(value: unknown): value is {

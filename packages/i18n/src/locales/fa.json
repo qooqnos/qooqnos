@@ -1289,7 +1289,26 @@
     "createDetailsStepDraftDescription": "استخراج مشخصات و پرسش دربارهٔ موارد ناقص",
     "createDetailsStepReview": "بازبینی و انتشار",
     "createDetailsStepReviewDescription": "انتشار بعد از تأیید خودت",
-    "createDetailsAddImage": "افزودن تصویر در استودیو"
+    "createDetailsAddImage": "افزودن تصویر در استودیو",
+    "offerStorefrontTitle": "انتشار در فروشگاه",
+    "offerTitleLabel": "عنوان نمایشی برای خریداران",
+    "offerTitlePlaceholder": "عنوان قابل نمایش برای خریدار",
+    "offerPriceLabel": "قیمت پایه",
+    "offerCurrencyLabel": "واحد پول",
+    "offerPricePlaceholder": "مبلغ",
+    "offerPriceHelper": "مبلغ را به واحد اصلی ارز انتخاب‌شده وارد کن. قیمت به‌صورت نسخه‌دار ثبت می‌شود.",
+    "offerCreateButton": "ثبت عرضه و قیمت",
+    "offerSavedButton": "ذخیرهٔ تغییرات عرضه",
+    "offerPublishButton": "درخواست انتشار",
+    "offerPriceRequired": "عنوان و قیمت را وارد کن.",
+    "offerPriceInvalid": "مبلغ واردشده معتبر نیست.",
+    "offerSavedWithImage": "عرضه، قیمت پایه و تصویر ثبت شدند.",
+    "offerSavedWithoutImage": "عرضه و قیمت پایه ثبت شدند.",
+    "offerSaveError": "ثبت عرضه یا قیمت انجام نشد.",
+    "offerPublishing": "در حال ارسال درخواست انتشار…",
+    "offerPublishRequested": "درخواست انتشار ثبت شد.",
+    "offerPublishError": "درخواست انتشار ناموفق بود.",
+    "offerPriceNote": "قیمت پایه برای عرضه ثبت می‌شود؛ قیمت اختصاصی هر گونه را می‌توان جداگانه تنظیم کرد."
   },
   "taxonomy": {
     "industry": {

@@ -1289,7 +1289,26 @@
     "createDetailsStepDraftDescription": "استخراج المواصفات والسؤال عن المعلومات الناقصة",
     "createDetailsStepReview": "المراجعة والنشر",
     "createDetailsStepReviewDescription": "النشر بعد موافقتك",
-    "createDetailsAddImage": "إضافة صورة في الاستوديو"
+    "createDetailsAddImage": "إضافة صورة في الاستوديو",
+    "offerStorefrontTitle": "عرض المتجر",
+    "offerTitleLabel": "العنوان الظاهر للمشترين",
+    "offerTitlePlaceholder": "عنوان واضح للمشتري",
+    "offerPriceLabel": "السعر الأساسي",
+    "offerCurrencyLabel": "العملة",
+    "offerPricePlaceholder": "المبلغ",
+    "offerPriceHelper": "أدخل المبلغ بالوحدة الرئيسية للعملة المختارة. تُحفظ الأسعار بإصدارات ولا تُستبدل.",
+    "offerCreateButton": "حفظ العرض والسعر",
+    "offerSavedButton": "حفظ تغييرات العرض",
+    "offerPublishButton": "طلب النشر",
+    "offerPriceRequired": "أدخل العنوان والسعر.",
+    "offerPriceInvalid": "قيمة السعر غير صالحة.",
+    "offerSavedWithImage": "تم حفظ العرض والسعر الأساسي والصورة.",
+    "offerSavedWithoutImage": "تم حفظ العرض والسعر الأساسي.",
+    "offerSaveError": "تعذر حفظ العرض أو السعر.",
+    "offerPublishing": "جارٍ إرسال طلب النشر…",
+    "offerPublishRequested": "تم إرسال طلب النشر.",
+    "offerPublishError": "فشل طلب النشر.",
+    "offerPriceNote": "يحدد هذا السعر الأساسي للعرض. يمكن ضبط سعر خاص لكل خيار بشكل منفصل."
   },
   "taxonomy": {
     "industry": {

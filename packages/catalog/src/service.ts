@@ -1,7 +1,7 @@
 import type { EntityId, RequestContext } from "@qooqnos/core";
 import type { CatalogCommandRepository, CreateProductCommandInput } from "@qooqnos/database";
 import type { AuthorizationService } from "@qooqnos/runtime";
-import { CatalogRepository, type CreateOfferingInput, type CreateProductInput, type CreateProductVariantInput, type OfferingRecord, type ProductRecord, type ProductVariantRecord } from "./repository";
+import { CatalogRepository, type CreateOfferingInput, type CreateProductInput, type CreateProductVariantInput, type OfferingPriceRecord, type OfferingRecord, type ProductRecord, type ProductVariantRecord, type SetOfferingPriceInput } from "./repository";
 
 export interface CatalogServiceOptions {
   readonly repository: CatalogRepository;
@@ -81,6 +81,19 @@ export class CatalogService {
       id: this.options.id(),
       title: command.title.trim(),
       ...(command.description !== undefined ? { description: command.description.trim() } : {}),
+      now: this.options.now(),
+    });
+  }
+
+  async setOfferingPrice(
+    context: RequestContext,
+    command: Omit<SetOfferingPriceInput, "id" | "now">,
+  ): Promise<OfferingPriceRecord> {
+    await this.authorize(context, "catalog.offering.create");
+    return this.options.repository.setOfferingPrice(context, {
+      ...command,
+      currency: command.currency.trim().toUpperCase(),
+      id: this.options.id(),
       now: this.options.now(),
     });
   }
