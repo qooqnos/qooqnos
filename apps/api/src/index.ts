@@ -719,6 +719,27 @@ function createRouter(version: string, database: D1Database | undefined, env: Ap
   });
 
   router.register({
+    method: "POST",
+    path: "/api/v1/catalog/products/:productId/variants",
+    module: "catalog",
+    operation: "catalog.product_variant.create",
+    permission: "catalog.product_variant.create",
+    requireAuthentication: true,
+    requireWorkspace: true,
+    handler: async ({ context, params, request }) => {
+      if (!database) throw new AppError({ code: "INTERNAL_ERROR", message: "Database is not configured.", requestId: context.requestId });
+      const command = await parseJsonCommand(request, isCreateProductVariantCommand, "Product variant payload is invalid.", context.requestId);
+      const productId = brandId<"EntityId">(requiredRouteParam(params, "productId", context.requestId));
+      const data = await getCatalogService(database, authorization).createProductVariant(context, {
+        productId,
+        ...(typeof command.sku === "string" && command.sku.trim() ? { sku: command.sku.trim() } : {}),
+        attributes: command.attributes,
+      });
+      return json({ data }, 201, context.requestId);
+    },
+  });
+
+  router.register({
     method: "GET",
     path: "/api/v1/businesses/:businessId/management",
     module: "business",
@@ -1218,6 +1239,31 @@ function isCreateProductCommand(value: unknown): value is {
   if (!value || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;
   return typeof body.businessId === "string" && typeof body.name === "string" && optionalStrings(body, ["description"]);
+}
+
+function isCreateProductVariantCommand(value: unknown): value is {
+  sku?: string;
+  attributes: Readonly<Record<string, unknown>>;
+} {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const body = value as Record<string, unknown>;
+  if (!optionalStrings(body, ["sku"])) return false;
+  if (typeof body.sku === "string" && body.sku.trim().length > 100) return false;
+  if (!body.attributes || typeof body.attributes !== "object" || Array.isArray(body.attributes)) return false;
+  const attributes = body.attributes as Record<string, unknown>;
+  const entries = Object.entries(attributes);
+  if (entries.length < 1 || entries.length > 12) return false;
+  return entries.every(([key, attributeValue]) => {
+    if (!/^[a-z][a-z0-9_-]{0,79}$/.test(key)) return false;
+    if (typeof attributeValue === "string") return attributeValue.trim().length > 0 && attributeValue.length <= 160;
+    if (typeof attributeValue === "number") return Number.isFinite(attributeValue);
+    if (typeof attributeValue === "boolean") return true;
+    if (Array.isArray(attributeValue)) {
+      return attributeValue.length > 0 && attributeValue.length <= 20
+        && attributeValue.every((item) => typeof item === "string" && item.trim().length > 0 && item.length <= 120);
+    }
+    return false;
+  });
 }
 
 function isSellerProductSessionCommand(value: unknown): value is { businessId: string } {

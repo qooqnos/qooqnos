@@ -40,6 +40,7 @@ const mediaAssetUploadRequests = [];
 const offeringMediaLinkRequests = [];
 const offeringPriceRequests = [];
 const catalogProductCreateRequests = [];
+const catalogVariantCreateRequests = [];
 const publicMediaBatchRequests = [];
 const customerPriceResolutionRequests = [];
 const mockConversations = [{
@@ -296,6 +297,20 @@ await page.route("**/api/v1/**", async (route) => {
       contentType: "application/json",
       body: JSON.stringify({ data: { id: "product-catalog-e2e-1", name: body.name, description: body.description ?? null } }),
     });
+    return;
+  }
+  if (/^\/api\/v1\/catalog\/products\/[^/]+\/variants$/.test(path) && request.method() === "POST") {
+    const body = request.postDataJSON();
+    const productId = path.split("/")[5] ?? "";
+    catalogVariantCreateRequests.push({ path, body });
+    const variant = {
+      id: "variant-created-e2e-1", productId, productName: "کیف دست‌دوز",
+      sku: body.sku ?? null, attributes: body.attributes ?? null, status: "draft",
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    };
+    const current = payloads["/api/v1/catalog/businesses/biz-1/variants"].data;
+    if (!current.some((item) => item.id === variant.id)) current.push(variant);
+    await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ data: variant }) });
     return;
   }
   if (path === "/api/v1/catalog/offers" && request.method() === "POST") {
@@ -1438,6 +1453,17 @@ const inventoryView = await page.locator("#business-products-inventory").innerTe
 assert.ok(inventoryView.includes("شعبه مرکزی"));
 assert.ok(inventoryView.includes("BAG-RED-M"));
 assert.ok(inventoryView.includes("۶") || inventoryView.includes("6"));
+await page.locator("#business-variant-create-form").waitFor();
+await page.locator("#business-variant-product").selectOption("product-1");
+await page.locator("#business-variant-sku").fill("BAG-BLUE-L");
+await page.locator("[data-business-variant-attribute-key]").first().fill("color");
+await page.locator("[data-business-variant-attribute-value]").first().fill("آبی");
+await page.locator("[data-submit-business-variant]").click();
+await page.locator("#business-variant-create-status").filter({ hasText: "گونه ثبت شد" }).waitFor();
+assert.equal(catalogVariantCreateRequests.length, 1);
+assert.equal(catalogVariantCreateRequests[0].path, "/api/v1/catalog/products/product-1/variants");
+assert.deepEqual(catalogVariantCreateRequests[0].body, { sku: "BAG-BLUE-L", attributes: { color: "آبی" } });
+await page.locator('#business-products-variants [data-variant-id="variant-created-e2e-1"]').waitFor();
 await page.setViewportSize({ width: 390, height: 844 });
 assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, "seller product catalog must fit mobile width");
 await page.setViewportSize({ width: 1440, height: 900 });

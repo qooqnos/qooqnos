@@ -15411,3 +15411,33 @@ button[aria-busy="true"] .btn-spinner {
   .phoenix-business-variant-card { padding:11px; }
   .phoenix-business-inventory-table-wrap { border-radius:12px; }
 }
+
+
+/* Seller-side creation of product variants through the canonical permission-checked API. */
+.phoenix-business-variant-create-card { display:grid; gap:15px; }
+.phoenix-business-variant-create-form { display:grid; gap:17px; }
+.phoenix-business-variant-create-form[hidden],#business-variant-create-empty[hidden] { display:none !important; }
+.phoenix-business-variant-create-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
+.phoenix-business-variant-create-fields>div,.phoenix-business-variant-attribute-row label { display:grid; min-width:0; gap:7px; }
+.phoenix-business-variant-create-fields label,.phoenix-business-variant-attribute-row label>span { color:var(--muted); font-size:11px; font-weight:800; }
+.phoenix-business-variant-create-fields input,.phoenix-business-variant-create-fields select,.phoenix-business-variant-attribute-row input { width:100%; min-width:0; min-height:42px; padding:10px 12px; border:1px solid var(--line); border-radius:11px; color:var(--text); background:var(--surface); font:inherit; font-size:12px; }
+.phoenix-business-variant-attributes-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.phoenix-business-variant-attributes-heading>div { display:grid; gap:5px; }
+.phoenix-business-variant-attributes-heading strong { font-size:12px; font-weight:850; }
+.phoenix-business-variant-attributes-heading small { color:var(--muted); font-size:10px; line-height:1.8; }
+#business-variant-attribute-rows { display:grid; gap:9px; }
+.phoenix-business-variant-attribute-row { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1fr) 36px; align-items:end; gap:9px; padding:11px; border:1px solid var(--line); border-radius:13px; background:var(--surface-2); }
+.phoenix-business-variant-remove { display:grid; width:36px; height:40px; place-items:center; border:1px solid var(--line); border-radius:10px; color:var(--muted); background:var(--surface); font-size:18px; cursor:pointer; }
+.phoenix-business-variant-remove:disabled { opacity:.35; cursor:not-allowed; }
+.phoenix-business-variant-create-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.phoenix-business-variant-feedback { margin:0; color:var(--muted); font-size:11px; line-height:1.8; }
+.phoenix-business-variant-feedback.is-success { color:var(--success,#16794b); }
+.phoenix-business-variant-feedback.is-error { color:var(--danger,#b42318); }
+@media(max-width:720px) {
+  .phoenix-business-variant-create-fields { grid-template-columns:minmax(0,1fr); }
+  .phoenix-business-variant-attributes-heading { align-items:flex-start; flex-direction:column; }
+  .phoenix-business-variant-attribute-row { grid-template-columns:minmax(0,1fr); }
+  .phoenix-business-variant-remove { width:100%; height:34px; }
+  .phoenix-business-variant-create-footer { align-items:stretch; flex-direction:column; }
+  .phoenix-business-variant-create-footer .button { width:100%; }
+}

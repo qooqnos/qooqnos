@@ -5269,6 +5269,28 @@ function renderBusinessProducts(): string {
       '</div>' +
       '<div class="business-catalog-table-wrap" id="business-products-table"><div class="slot-loading">' + uiText("در حال دریافت کاتالوگ از سامانه…") + '</div></div>' +
     '</section>' +
+    '<section class="glass-card business-subpage-card phoenix-business-variant-create-card">' +
+      '<div class="card-section-heading"><div><span class="section-kicker">' + uiText("کاتالوگ") + '</span><h2>' + uiText("افزودن گونهٔ کالا") + '</h2>' +
+        '<p>' + uiText("گونه را با ویژگی‌های تعریف‌شده در کاتالوگ ثبت کن؛ ثبت موفق فقط پس از پاسخ سرور نمایش داده می‌شود.") + '</p></div></div>' +
+      '<div id="business-variant-create-empty" class="phoenix-business-products-state">' + uiText("در حال خواندن کالاهای قابل انتخاب…") + '</div>' +
+      '<form id="business-variant-create-form" class="phoenix-business-variant-create-form" hidden>' +
+        '<div class="phoenix-business-variant-create-fields">' +
+          '<div><label for="business-variant-product">' + uiText("کالا") + '</label><select id="business-variant-product" required></select></div>' +
+          '<div><label for="business-variant-sku">' + uiText("کد SKU (اختیاری)") + '</label><input id="business-variant-sku" maxlength="100" autocomplete="off" placeholder="' + escapeAttr(uiText("مثلاً BAG-RED-M")) + '" /></div>' +
+        '</div>' +
+        '<div class="phoenix-business-variant-attributes-heading"><div><strong>' + uiText("ویژگی‌های گونه") + '</strong><small>' + uiText("از کلیدهای انگلیسی تعریف‌شده در کاتالوگ استفاده کن؛ مثلاً color یا size.") + '</small></div>' +
+          '<button class="button button-ghost button-sm" type="button" data-add-business-variant-attribute>＋ ' + uiText("افزودن ویژگی") + '</button></div>' +
+        '<div id="business-variant-attribute-rows">' +
+          '<div class="phoenix-business-variant-attribute-row" data-business-variant-attribute-row>' +
+            '<label><span>' + uiText("کلید ویژگی") + '</span><input data-business-variant-attribute-key required maxlength="80" pattern="[a-z][a-z0-9_-]{0,79}" placeholder="color" autocomplete="off" /></label>' +
+            '<label><span>' + uiText("مقدار") + '</span><input data-business-variant-attribute-value required maxlength="160" placeholder="' + escapeAttr(uiText("مثلاً قرمز")) + '" /></label>' +
+            '<button class="phoenix-business-variant-remove" type="button" data-remove-business-variant-attribute aria-label="' + escapeAttr(uiText("حذف ویژگی")) + '" disabled>×</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="phoenix-business-variant-create-footer"><p id="business-variant-create-status" role="status" aria-live="polite"></p>' +
+          '<button class="button button-primary" type="submit" data-submit-business-variant>' + uiText("ثبت گونه") + ' <span aria-hidden="true">←</span></button></div>' +
+      '</form>' +
+    '</section>' +
     '<section class="glass-card business-subpage-card phoenix-business-products-detail-card">' +
       '<div class="card-section-heading"><div><span class="section-kicker">' + uiText("کاتالوگ و موجودی") + '</span><h2>' + uiText("گونه‌های کالا") + '</h2><p>' + uiText("گونه‌ها و ویژگی‌ها از کاتالوگ ثبت‌شده خوانده می‌شوند.") + '</p></div>' +
         '<span id="business-products-variants-count" class="pill">' + uiText("در انتظار دریافت اطلاعات") + '</span></div>' +
@@ -5289,13 +5311,25 @@ function loadBusinessProductsPage(): void {
   const variantsCountNode = document.querySelector<HTMLElement>("#business-products-variants-count");
   const inventoryWrap = document.querySelector<HTMLElement>("#business-products-inventory");
   const inventoryCountNode = document.querySelector<HTMLElement>("#business-products-inventory-count");
-  if (!tableWrap || !countNode || !variantsWrap || !variantsCountNode || !inventoryWrap || !inventoryCountNode) return;
+  const variantForm = document.querySelector<HTMLFormElement>("#business-variant-create-form");
+  const variantProductSelect = document.querySelector<HTMLSelectElement>("#business-variant-product");
+  const variantEmptyState = document.querySelector<HTMLElement>("#business-variant-create-empty");
+  const variantAttributeRows = document.querySelector<HTMLElement>("#business-variant-attribute-rows");
+  const variantStatus = document.querySelector<HTMLElement>("#business-variant-create-status");
+  const variantSubmit = document.querySelector<HTMLButtonElement>("[data-submit-business-variant]");
+  const addVariantAttribute = document.querySelector<HTMLButtonElement>("[data-add-business-variant-attribute]");
+  if (!tableWrap || !countNode || !variantsWrap || !variantsCountNode || !inventoryWrap || !inventoryCountNode ||
+      !variantForm || !variantProductSelect || !variantEmptyState || !variantAttributeRows || !variantStatus || !variantSubmit || !addVariantAttribute) return;
   const businessId = localStorage.getItem(STORAGE.business)?.trim() ?? "";
+  let variantableProducts: Array<{ productId: string; title: string }> = [];
 
   const showAllState = (message: string, kind: "loading" | "empty" | "error" | "signin" = "error"): void => {
     tableWrap.innerHTML = renderBusinessDataState(message, "", "/profile", uiText("ورود به حساب"));
     variantsWrap.innerHTML = '<div class="phoenix-business-products-state">' + escapeHtml(message) + '</div>';
     inventoryWrap.innerHTML = '<div class="phoenix-business-products-state">' + escapeHtml(message) + '</div>';
+    variantForm.hidden = true;
+    variantEmptyState.hidden = false;
+    variantEmptyState.textContent = message;
     for (const wrap of [tableWrap, variantsWrap, inventoryWrap]) wrap.dataset.state = kind;
   };
 
@@ -5381,6 +5415,18 @@ function loadBusinessProductsPage(): void {
           ).join("") + '</tbody></table>';
       }
 
+      variantableProducts = Array.from(new Map(products.filter((product) => Boolean(product.productId)).map((product) => [
+        product.productId as string,
+        { productId: product.productId as string, title: product.title },
+      ])).values());
+      variantProductSelect.innerHTML = variantableProducts.map((product) =>
+        '<option value="' + escapeAttr(product.productId) + '">' + escapeHtml(product.title) + '</option>'
+      ).join("");
+      variantForm.hidden = variantableProducts.length === 0;
+      variantEmptyState.hidden = variantableProducts.length > 0;
+      variantEmptyState.textContent = variantableProducts.length
+        ? "" : uiText("ابتدا یک کالا در استودیو بساز تا بتوانی گونه‌هایش را ثبت کنی.");
+      if (!variantableProducts.length) variantStatus.textContent = "";
       const visibleProductIds = new Set(products.map((product) => product.productId).filter((id): id is string => Boolean(id)));
       const visibleVariants = variants.filter((variant) => visibleProductIds.has(variant.productId));
       variantsCountNode.textContent = formatLocalizedNumber(visibleVariants.length) + " " + uiText("گونه");
@@ -5393,7 +5439,7 @@ function loadBusinessProductsPage(): void {
             '<div class="phoenix-business-variant-mark" aria-hidden="true">▦</div>' +
             '<div class="phoenix-business-variant-copy"><strong>' + escapeHtml(variant.productName) + '</strong>' +
               '<p>' + displayAttributes(variant.attributes) + '</p>' +
-              '<small>' + uiText("شناسه کالا") + ': ' + escapeHtml(variant.sku || uiText("SKU ثبت نشده")) + '</small></div>' +
+              '<small>' + uiText("کد SKU") + ': ' + escapeHtml(variant.sku || uiText("SKU ثبت نشده")) + '</small></div>' +
             '<span class="' + businessStatusPillClass(variant.status) + '">' + businessStatusLabel(variant.status) + '</span>' +
           '</article>'
         ).join("") + '</div>';
@@ -5428,6 +5474,112 @@ function loadBusinessProductsPage(): void {
       tableWrap.querySelector<HTMLButtonElement>("[data-retry-business-products]")?.addEventListener("click", () => void load());
     }
   };
+  if (!variantForm.dataset.bound) {
+    variantForm.dataset.bound = "true";
+
+    const wireRemoveAttribute = (row: HTMLElement): void => {
+      const remove = row.querySelector<HTMLButtonElement>("[data-remove-business-variant-attribute]");
+      remove?.addEventListener("click", () => {
+        const rows = Array.from(variantAttributeRows.querySelectorAll<HTMLElement>("[data-business-variant-attribute-row]"));
+        if (rows.length <= 1) {
+          row.querySelector<HTMLInputElement>("[data-business-variant-attribute-key]")!.value = "";
+          row.querySelector<HTMLInputElement>("[data-business-variant-attribute-value]")!.value = "";
+          return;
+        }
+        row.remove();
+        const remaining = Array.from(variantAttributeRows.querySelectorAll<HTMLElement>("[data-business-variant-attribute-row]"));
+        remaining.forEach((item) => {
+          const removeButton = item.querySelector<HTMLButtonElement>("[data-remove-business-variant-attribute]");
+          if (removeButton) removeButton.disabled = remaining.length === 1;
+        });
+      });
+    };
+    variantAttributeRows.querySelectorAll<HTMLElement>("[data-business-variant-attribute-row]").forEach(wireRemoveAttribute);
+    addVariantAttribute.addEventListener("click", () => {
+      const existing = variantAttributeRows.querySelectorAll("[data-business-variant-attribute-row]").length;
+      if (existing >= 8) {
+        variantStatus.textContent = uiText("حداکثر ۸ ویژگی برای هر گونه ثبت کن.");
+        return;
+      }
+      const row = document.createElement("div");
+      row.className = "phoenix-business-variant-attribute-row";
+      row.dataset.businessVariantAttributeRow = "";
+      row.innerHTML =
+        '<label><span>' + uiText("کلید ویژگی") + '</span><input data-business-variant-attribute-key required maxlength="80" pattern="[a-z][a-z0-9_-]{0,79}" placeholder="color" autocomplete="off" /></label>' +
+        '<label><span>' + uiText("مقدار") + '</span><input data-business-variant-attribute-value required maxlength="160" placeholder="' + escapeAttr(uiText("مثلاً قرمز")) + '" /></label>' +
+        '<button class="phoenix-business-variant-remove" type="button" data-remove-business-variant-attribute aria-label="' + escapeAttr(uiText("حذف ویژگی")) + '">×</button>';
+      variantAttributeRows.appendChild(row);
+      wireRemoveAttribute(row);
+      const rows = Array.from(variantAttributeRows.querySelectorAll<HTMLElement>("[data-business-variant-attribute-row]"));
+      rows.forEach((item) => {
+        const removeButton = item.querySelector<HTMLButtonElement>("[data-remove-business-variant-attribute]");
+        if (removeButton) removeButton.disabled = rows.length === 1;
+      });
+      row.querySelector<HTMLInputElement>("[data-business-variant-attribute-key]")?.focus();
+      variantStatus.textContent = "";
+    });
+
+    variantForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const productId = variantProductSelect.value;
+      if (!variantableProducts.some((product) => product.productId === productId)) {
+        variantStatus.textContent = uiText("ابتدا کالای معتبر را انتخاب کن.");
+        return;
+      }
+      const attributes: Record<string, string> = {};
+      let invalidAttribute = false;
+      const seenKeys = new Set<string>();
+      for (const row of Array.from(variantAttributeRows.querySelectorAll<HTMLElement>("[data-business-variant-attribute-row]"))) {
+        const key = row.querySelector<HTMLInputElement>("[data-business-variant-attribute-key]")?.value.trim() ?? "";
+        const value = row.querySelector<HTMLInputElement>("[data-business-variant-attribute-value]")?.value.trim() ?? "";
+        if (!key && !value) continue;
+        if (!/^[a-z][a-z0-9_-]{0,79}$/.test(key) || !value || value.length > 160 || seenKeys.has(key)) {
+          invalidAttribute = true;
+          break;
+        }
+        seenKeys.add(key);
+        attributes[key] = value;
+      }
+      if (invalidAttribute || !Object.keys(attributes).length) {
+        variantStatus.textContent = uiText("برای هر ویژگی، یک کلید انگلیسی معتبر و مقدار وارد کن؛ کلیدها تکراری نباشند.");
+        return;
+      }
+      const sku = document.querySelector<HTMLInputElement>("#business-variant-sku")?.value.trim() ?? "";
+      variantSubmit.disabled = true;
+      variantStatus.className = "phoenix-business-variant-feedback";
+      variantStatus.textContent = uiText("در حال ثبت گونه در کاتالوگ…");
+      try {
+        const response = await apiJson<{ data: { id: string; status: string } }>(
+          "/api/v1/catalog/products/" + encodeURIComponent(productId) + "/variants",
+          { method: "POST", body: { ...(sku ? { sku } : {}), attributes } },
+        );
+        for (const row of Array.from(variantAttributeRows.querySelectorAll<HTMLElement>("[data-business-variant-attribute-row]"))) {
+          if (row !== variantAttributeRows.querySelector("[data-business-variant-attribute-row]")) row.remove();
+        }
+        const firstRow = variantAttributeRows.querySelector<HTMLElement>("[data-business-variant-attribute-row]");
+        firstRow?.querySelector<HTMLInputElement>("[data-business-variant-attribute-key]")?.setAttribute("value", "");
+        if (firstRow) {
+          const keyInput = firstRow.querySelector<HTMLInputElement>("[data-business-variant-attribute-key]");
+          const valueInput = firstRow.querySelector<HTMLInputElement>("[data-business-variant-attribute-value]");
+          if (keyInput) keyInput.value = "";
+          if (valueInput) valueInput.value = "";
+          const removeButton = firstRow.querySelector<HTMLButtonElement>("[data-remove-business-variant-attribute]");
+          if (removeButton) removeButton.disabled = true;
+        }
+        const skuInput = document.querySelector<HTMLInputElement>("#business-variant-sku");
+        if (skuInput) skuInput.value = "";
+        await load();
+        variantStatus.className = "phoenix-business-variant-feedback is-success";
+        variantStatus.textContent = uiText("گونه ثبت شد؛ وضعیت و ویژگی‌ها از کاتالوگ دوباره خوانده شدند.");
+      } catch (error) {
+        variantStatus.className = "phoenix-business-variant-feedback is-error";
+        variantStatus.textContent = error instanceof Error ? error.message : uiText("ثبت گونه ناموفق بود.");
+      } finally {
+        variantSubmit.disabled = false;
+      }
+    });
+  }
+
   void load();
 }
 
