@@ -214,3 +214,10 @@ Future coding sessions must start from this ledger. Do not reimplement these com
 - Extended the shared buyer/social route matrix so the same profile, saved, compare, messaging, activity, notification, order, account, settings, Following, and Explore templates are checked at both 390px and 1440px.
 - Desktop checks assert no document-level horizontal overflow and the presence of a main content region. This supplements the mobile navigation/overflow checks; it is not a substitute for a manual visual audit or accessibility review.
 - Current main before this change: `ccc255ff567bf335f2376d4a7b773e3482228be3`. Keep the cart explicitly review-only until authoritative inventory, final pricing, payment confirmation, and order creation are connected.
+
+
+## 2026-10-18 — Seller route responsive coverage
+
+- Added mobile (390px) and desktop (1440px) layout smoke checks for seller services, team/access, business profile editing, and Product Studio.
+- Checks require each route to render its intended surface and prevent document-level horizontal overflow at both breakpoints.
+- These are automated layout smoke tests, not a replacement for manual visual review, keyboard navigation, or accessibility testing.

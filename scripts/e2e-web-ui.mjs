@@ -1450,6 +1450,35 @@ await page.setViewportSize({ width: 390, height: 844 });
 assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, "seller booking list must fit mobile width");
 await page.setViewportSize({ width: 1440, height: 900 });
 
+// Complete responsive smoke coverage for the remaining high-use seller templates.
+for (const [path, label, readySelector] of [
+  ["/business/services", "Seller services", "#business-services-table"],
+  ["/business/team", "Seller team and permissions", ".phoenix-business-team-page, .phoenix-business-page"],
+  ["/business/profile", "Public-facing business profile editor", ".phoenix-business-profile-page, .phoenix-business-page"],
+  ["/product-studio", "AI product studio", "#studio-text"],
+]) {
+  await page.goto(baseURL + path);
+  await page.locator(readySelector).first().waitFor({ timeout: 10000 });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileLayout = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+    mainVisible: Boolean(document.querySelector("main, [role='main'], .phoenix-page")),
+  }));
+  assert.ok(mobileLayout.document <= mobileLayout.viewport,
+    label + " must not overflow on mobile: " + JSON.stringify(mobileLayout));
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const desktopLayout = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+    mainVisible: Boolean(document.querySelector("main, [role='main'], .phoenix-page")),
+  }));
+  assert.ok(desktopLayout.document <= desktopLayout.viewport,
+    label + " must not overflow on desktop: " + JSON.stringify(desktopLayout));
+  assert.ok(desktopLayout.mainVisible, label + " should expose a main content region on desktop.");
+}
+await page.setViewportSize({ width: 1440, height: 900 });
+
 await page.goto(baseURL + "/business/settings");
 await page.locator("#business-settings-form:not([hidden])").waitFor();
 assert.equal(await page.locator("#biz-set-name").inputValue(), "store-test");
