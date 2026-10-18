@@ -2438,6 +2438,7 @@
     "stockOnHand": "موجودی کل",
     "stockReserved": "رزروشده",
     "stockAvailable": "قابل ارائه",
-    "quantityUnit": "عدد"
+    "quantityUnit": "عدد",
+    "catalogViewDetails": "مشاهده در ققنوس"
   }
 }

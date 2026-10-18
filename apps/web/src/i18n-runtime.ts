@@ -2341,7 +2341,8 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "catalogPage.stockOnHand": "موجودی کل",
     "catalogPage.stockReserved": "رزروشده",
     "catalogPage.stockAvailable": "قابل ارائه",
-    "catalogPage.quantityUnit": "عدد"
+    "catalogPage.quantityUnit": "عدد",
+    "catalogPage.catalogViewDetails": "مشاهده در ققنوس"
   },
   "en": {
     "common.appName": "Phoenix",
@@ -4680,7 +4681,8 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "catalogPage.stockOnHand": "On hand",
     "catalogPage.stockReserved": "Reserved",
     "catalogPage.stockAvailable": "Available",
-    "catalogPage.quantityUnit": "units"
+    "catalogPage.quantityUnit": "units",
+    "catalogPage.catalogViewDetails": "View on Qooqnos"
   },
   "ar": {
     "common.appName": "فينيكس",
@@ -7019,7 +7021,8 @@ export const translations: Record<SupportedLanguage, Readonly<Record<string, str
     "catalogPage.stockOnHand": "المخزون الكلي",
     "catalogPage.stockReserved": "محجوز",
     "catalogPage.stockAvailable": "متاح",
-    "catalogPage.quantityUnit": "وحدة"
+    "catalogPage.quantityUnit": "وحدة",
+    "catalogPage.catalogViewDetails": "عرض في ققنوس"
   }
 };
 
