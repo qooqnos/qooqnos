@@ -3380,3 +3380,11 @@ Implementation commits: `12ad26e` (module blueprints), `cf086986` (Canvas render
 - Fixed the UI E2E fixture so created catalog variants persist across separate mocked API requests. The fixture now models a persistent server read after the create command instead of recreating the variant array per request.
 - Verified on commit `0e0f14b85f20f1bdf9dd246a631a234f84fd7973`: CI, Phoenix verification, and Phoenix web UI verification passed. The test fix was committed directly to `main`; no PR was opened.
 - Remaining commerce boundary: the review cart remains local and checkout/payment/order creation must be connected to canonical Commerce APIs before a real purchase may be claimed.
+
+## 2026-10-18 — Related offers on the public detail page
+
+- Added a "more from this seller" shelf to the public product/service detail template, using only the other published offers returned by the canonical business endpoint.
+- Related cards link to each offering's canonical detail URL, preserving variant selection, buyer-specific price resolution, stock checks, and service booking instead of bypassing them with a quick card action.
+- Thumbnails reuse the bounded public Media batch hydrator and show a neutral placeholder when no ready, published image exists; no sample products or invented prices are added.
+- Added Persian, English, and Arabic labels, responsive card styling, and E2E assertions for related offers and locale switching.
+- Required validation: CI, Phoenix verification, and Phoenix web UI E2E must pass on this commit.

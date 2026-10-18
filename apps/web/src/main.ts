@@ -8954,9 +8954,11 @@ function renderRelatedPublicOfferings(
   businessName: string,
 ): void {
   const related = offers.filter((offer) => offer.id !== currentOfferId).slice(0, 4);
+  const section = host.closest<HTMLElement>("#public-offer-related");
+  if (!section) return;
   host.replaceChildren();
   if (!related.length) {
-    host.hidden = true;
+    section.hidden = true;
     return;
   }
 
@@ -9008,7 +9010,7 @@ function renderRelatedPublicOfferings(
     host.appendChild(card);
   }
 
-  host.hidden = false;
+  section.hidden = false;
   const sourceItems: DiscoveryResult[] = related.map((offer) => ({
     id: offer.id,
     sourceId: offer.id,
