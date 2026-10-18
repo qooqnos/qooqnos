@@ -2319,7 +2319,10 @@ async function loadCatalogOverview(): Promise<void> {
     else offersHost.innerHTML = rows.map((offer) => {
       const type = offer.offeringType === "service" ? catalogUi("serviceLabel") : catalogUi("productLabel");
       const summary = offer.description?.trim() ? '<p>' + escapeHtml(offer.description.trim()) + '</p>' : "";
-      return '<article class="phoenix-catalog-data-row"><div class="phoenix-catalog-data-copy"><div class="phoenix-catalog-data-meta"><span>' + escapeHtml(type) + '</span><span class="phoenix-catalog-status ' + catalogOverviewStatusClass(offer.status) + '">' + escapeHtml(catalogOverviewStatusLabel(offer.status)) + '</span><span class="phoenix-catalog-status ' + catalogOverviewStatusClass(offer.publicationStatus) + '">' + escapeHtml(catalogOverviewStatusLabel(offer.publicationStatus)) + '</span></div><h4>' + escapeHtml(offer.title) + '</h4>' + summary + '<small>' + catalogUi("updatedLabel") + ': ' + escapeHtml(catalogOverviewDate(offer.updatedAt)) + '</small></div></article>';
+      const publicLink = offer.status === "active" && offer.publicationStatus === "published"
+        ? '<a class="button button-ghost phoenix-catalog-public-link" href="/offerings/' + encodeURIComponent(offer.id) + '?business=' + encodeURIComponent(businessId) + '" data-nav>' + catalogUi("catalogViewDetails") + ' <span aria-hidden="true">↗</span></a>'
+        : "";
+      return '<article class="phoenix-catalog-data-row"><div class="phoenix-catalog-data-copy"><div class="phoenix-catalog-data-meta"><span>' + escapeHtml(type) + '</span><span class="phoenix-catalog-status ' + catalogOverviewStatusClass(offer.status) + '">' + escapeHtml(catalogOverviewStatusLabel(offer.status)) + '</span><span class="phoenix-catalog-status ' + catalogOverviewStatusClass(offer.publicationStatus) + '">' + escapeHtml(catalogOverviewStatusLabel(offer.publicationStatus)) + '</span></div><h4>' + escapeHtml(offer.title) + '</h4>' + summary + '<small>' + catalogUi("updatedLabel") + ': ' + escapeHtml(catalogOverviewDate(offer.updatedAt)) + '</small>' + publicLink + '</div></article>';
     }).join("");
   } else { offersCount.textContent = "—"; setCatalogOverviewState(offersHost,catalogUi("overviewLoadError"),true); }
   if (variantResult.status === "fulfilled") {

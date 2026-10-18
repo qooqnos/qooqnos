@@ -1262,6 +1262,9 @@ await page.waitForFunction(() => document.querySelector("#catalog-variants-list"
 await page.waitForFunction(() => document.querySelector("#catalog-inventory-list")?.textContent?.includes("شعبه مرکزی") === true);
 assert.ok((await page.locator("#catalog-offers-list").innerText()).includes("منتشرشده"));
 assert.ok((await page.locator("#catalog-offers-list").innerText()).includes("در انتظار بررسی"));
+assert.equal(await page.locator("#catalog-offers-list a[href*='/offerings/catalog-offer-e2e-1']").count(), 1);
+assert.ok((await page.locator("#catalog-offers-list a[href*='/offerings/catalog-offer-e2e-1']").getAttribute("href") || "").includes("business=biz-1"));
+assert.equal(await page.locator("#catalog-offers-list a[href*='/offerings/catalog-offer-e2e-2']").count(), 0);
 assert.ok((await page.locator("#catalog-variants-list").innerText()).includes("زرشکی"));
 assert.ok((await page.locator("#catalog-inventory-list").innerText()).includes("قابل ارائه"));
 assert.ok((await page.locator("#catalog-inventory-list").innerText()).includes("۶"));
