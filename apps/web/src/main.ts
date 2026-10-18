@@ -5549,7 +5549,7 @@ function loadBusinessProductsPage(): void {
       variantStatus.className = "phoenix-business-variant-feedback";
       variantStatus.textContent = uiText("در حال ثبت گونه در کاتالوگ…");
       try {
-        const response = await apiJson<{ data: { id: string; status: string } }>(
+        await apiJson<{ data: { id: string; status: string } }>(
           "/api/v1/catalog/products/" + encodeURIComponent(productId) + "/variants",
           { method: "POST", body: { ...(sku ? { sku } : {}), attributes } },
         );
