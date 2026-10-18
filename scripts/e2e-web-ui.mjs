@@ -136,6 +136,16 @@ await page.route("**/api/v1/**", async (route) => {
     "/api/v1/booking": { data: [
       { id: "booking-e2e-1", organizationId: "tenant-1", workspaceId: workspace, businessId: "biz-1", customerId: "customer-private-e2e", status: "confirmed", currency: "IRR", totalAmountMinor: 450000, appointmentStatus: "confirmed", startsAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), endsAt: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(), timezone: "Asia/Baku", locationId: null, resourceId: null, offeringId: "offering-service-1", offeringTitle: "مشاورهٔ تخصصی", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ] },
+    "/api/v1/catalog/businesses/biz-1/offers": { data: [
+      { id: "catalog-offer-e2e-1", businessId: "biz-1", offeringType: "product", title: "کیف دست‌دوز", description: "محصول کاتالوگ تست", productId: "product-1", serviceId: null, status: "active", publicationStatus: "published", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: "catalog-offer-e2e-2", businessId: "biz-1", offeringType: "service", title: "مشاورهٔ تخصصی", description: "خدمت نمونه", productId: null, serviceId: "service-1", status: "active", publicationStatus: "pending", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    ] },
+    "/api/v1/catalog/businesses/biz-1/variants": { data: [
+      { id: "variant-catalog-e2e-1", productId: "product-1", productName: "کیف دست‌دوز", sku: "BAG-RED-M", attributes: { color: "زرشکی", size: "متوسط" }, status: "active", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    ] },
+    "/api/v1/catalog/businesses/biz-1/inventory": { data: [
+      { id: "inventory-e2e-1", businessId: "biz-1", productId: "product-1", productName: "کیف دست‌دوز", variantId: "variant-catalog-e2e-1", sku: "BAG-RED-M", attributesJson: JSON.stringify({ color: "زرشکی", size: "متوسط" }), variantStatus: "active", locationId: "location-1", locationName: "شعبه مرکزی", quantityOnHand: 8, quantityReserved: 2, availableQuantity: 6, version: 1, updatedAt: new Date().toISOString() }
+    ] },
     "/api/v1/business-access": { status: "authorized", tenantId: "tenant-1", workspaceId: workspace },
     "/api/v1/ai/usage": { data: [{ operationId: "op-1", operationType: "seller.product.extract", meterUnit: "provider_units", quantity: 17, modelId: "test-model", billingUsageReference: "bill-1", createdAt: new Date().toISOString() }] },
     "/api/v1/audit": { data: [{ id: "audit-1", action: "business.updated", targetType: "business", targetId: "biz-1", outcome: "succeeded", createdAt: new Date().toISOString() }] },
@@ -1246,6 +1256,15 @@ assert.equal(await page.locator(".phoenix-catalog-context-missing a[href='/busin
 await page.evaluate(() => localStorage.setItem("phoenix-business-id", "biz-1"));
 await page.goto(baseURL + "/catalog");
 await page.locator(".phoenix-catalog-context-ready").waitFor();
+await page.locator("#catalog-overview").waitFor();
+await page.waitForFunction(() => document.querySelector("#catalog-offers-list")?.textContent?.includes("کیف دست‌دوز") === true);
+await page.waitForFunction(() => document.querySelector("#catalog-variants-list")?.textContent?.includes("BAG-RED-M") === true);
+await page.waitForFunction(() => document.querySelector("#catalog-inventory-list")?.textContent?.includes("شعبه مرکزی") === true);
+assert.ok((await page.locator("#catalog-offers-list").innerText()).includes("منتشرشده"));
+assert.ok((await page.locator("#catalog-offers-list").innerText()).includes("در انتظار بررسی"));
+assert.ok((await page.locator("#catalog-variants-list").innerText()).includes("زرشکی"));
+assert.ok((await page.locator("#catalog-inventory-list").innerText()).includes("قابل ارائه"));
+assert.ok((await page.locator("#catalog-inventory-list").innerText()).includes("۶"));
 assert.equal(await page.locator("#catalog-business").inputValue(), "biz-1");
 const catalogVisibleText = await page.locator(".phoenix-catalog-page").innerText();
 assert.ok(catalogVisibleText.includes("نام محصول"));

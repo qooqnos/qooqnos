@@ -2236,7 +2236,110 @@ async function recordAdvertisingClick(): Promise<void> {
         '<a class="button button-ghost phoenix-catalog-studio-link" href="/product-studio" data-nav>' + catalogUi("openProductStudio") + ' <span aria-hidden="true">✦</span></a>' +
       '</aside>' +
     '</section>' +
+    (hasBusiness
+      ? '<section class="phoenix-catalog-overview" id="catalog-overview" data-business-id="' + escapeAttr(business) + '" aria-labelledby="catalog-overview-title">' +
+          '<header class="phoenix-catalog-overview-header"><div><span class="section-kicker">' + catalogUi("eyebrow") + '</span><h2 id="catalog-overview-title">' + catalogUi("overviewTitle") + '</h2><p>' + catalogUi("overviewDescription") + '</p></div><button type="button" class="button button-ghost" id="catalog-overview-refresh"><span aria-hidden="true">↻</span> ' + catalogUi("refreshOverview") + '</button></header>' +
+          '<div class="phoenix-catalog-overview-grid">' +
+            '<article class="phoenix-catalog-data-panel"><header><div><h3>' + catalogUi("offersTitle") + '</h3><p>' + catalogUi("offersDescription") + '</p></div><span class="phoenix-catalog-data-count" id="catalog-offers-count">—</span></header><div id="catalog-offers-list" class="phoenix-catalog-data-list" aria-live="polite"><p class="phoenix-catalog-data-state">' + catalogUi("overviewLoading") + '</p></div></article>' +
+            '<article class="phoenix-catalog-data-panel"><header><div><h3>' + catalogUi("variantsTitle") + '</h3><p>' + catalogUi("variantsDescription") + '</p></div><span class="phoenix-catalog-data-count" id="catalog-variants-count">—</span></header><div id="catalog-variants-list" class="phoenix-catalog-data-list" aria-live="polite"><p class="phoenix-catalog-data-state">' + catalogUi("overviewLoading") + '</p></div></article>' +
+            '<article class="phoenix-catalog-data-panel"><header><div><h3>' + catalogUi("inventoryTitle") + '</h3><p>' + catalogUi("inventoryDescription") + '</p></div><span class="phoenix-catalog-data-count" id="catalog-inventory-count">—</span></header><div id="catalog-inventory-list" class="phoenix-catalog-data-list" aria-live="polite"><p class="phoenix-catalog-data-state">' + catalogUi("overviewLoading") + '</p></div></article>' +
+          '</div></section>'
+      : '') +
   '</div>';
+}
+
+interface CatalogOverviewOffering {
+  readonly id: string; readonly businessId: string; readonly offeringType: "product" | "service";
+  readonly title: string; readonly description: string | null; readonly productId: string | null; readonly serviceId: string | null;
+  readonly status: string; readonly publicationStatus: string; readonly updatedAt: string;
+}
+interface CatalogOverviewVariant {
+  readonly id: string; readonly productId: string; readonly productName: string; readonly sku: string | null;
+  readonly attributes: Readonly<Record<string, unknown>> | null; readonly status: string; readonly updatedAt: string;
+}
+interface CatalogOverviewInventory {
+  readonly id: string; readonly productName: string; readonly variantId: string; readonly sku: string | null;
+  readonly attributesJson: string | null; readonly variantStatus: string; readonly locationName: string;
+  readonly quantityOnHand: number; readonly quantityReserved: number; readonly availableQuantity: number; readonly updatedAt: string;
+}
+function catalogOverviewStatusLabel(status: string): string {
+  const keys: Record<string,string> = {published:"statusPublished",pending:"statusPending",unpublished:"statusUnpublished",blocked:"statusBlocked",active:"statusActive",inactive:"statusInactive",archived:"statusArchived",draft:"statusDraft"};
+  return catalogUi(keys[status.toLowerCase()] ?? "statusUnpublished");
+}
+function catalogOverviewStatusClass(status: string): string {
+  return ["published","pending","unpublished","blocked","active","inactive","archived","draft"].includes(status.toLowerCase()) ? status.toLowerCase() : "unknown";
+}
+function catalogOverviewAttributes(attributes: unknown): string {
+  if (!attributes || typeof attributes !== "object" || Array.isArray(attributes)) return catalogUi("attributesUnavailable");
+  const entries = Object.entries(attributes as Record<string, unknown>)
+    .filter(([,value]) => ["string","number","boolean"].includes(typeof value) || Array.isArray(value))
+    .map(([key,value]) => key + ": " + (Array.isArray(value) ? value.map((entry) => String(entry)).join(", ") : String(value)));
+  return entries.length ? entries.join(" · ") : catalogUi("attributesUnavailable");
+}
+function catalogOverviewInventoryAttributes(value: string | null): string {
+  if (!value) return catalogUi("attributesUnavailable");
+  try { return catalogOverviewAttributes(JSON.parse(value)); } catch { return catalogUi("attributesUnavailable"); }
+}
+function catalogOverviewDate(value: string): string {
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? new Intl.DateTimeFormat(globalLocaleService.getLocale(),{dateStyle:"medium",timeStyle:"short"}).format(new Date(timestamp)) : "";
+}
+function setCatalogOverviewState(host: HTMLElement, message: string, isError = false): void {
+  host.innerHTML = '<p class="phoenix-catalog-data-state' + (isError ? ' is-error' : '') + '">' + escapeHtml(message) + '</p>';
+}
+async function loadCatalogOverview(): Promise<void> {
+  const overview = document.querySelector<HTMLElement>("#catalog-overview");
+  if (!overview) return;
+  const businessId = overview.dataset.businessId?.trim() ?? "";
+  const refresh = document.querySelector<HTMLButtonElement>("#catalog-overview-refresh");
+  const offersHost = document.querySelector<HTMLElement>("#catalog-offers-list");
+  const variantsHost = document.querySelector<HTMLElement>("#catalog-variants-list");
+  const inventoryHost = document.querySelector<HTMLElement>("#catalog-inventory-list");
+  const offersCount = document.querySelector<HTMLElement>("#catalog-offers-count");
+  const variantsCount = document.querySelector<HTMLElement>("#catalog-variants-count");
+  const inventoryCount = document.querySelector<HTMLElement>("#catalog-inventory-count");
+  if (!businessId || !offersHost || !variantsHost || !inventoryHost || !offersCount || !variantsCount || !inventoryCount) return;
+  if (!sessionStorage.getItem(STORAGE.accessToken)) {
+    [offersHost,variantsHost,inventoryHost].forEach((host) => setCatalogOverviewState(host,catalogUi("overviewSignIn")));
+    return;
+  }
+  if (refresh) refresh.disabled = true;
+  [offersHost,variantsHost,inventoryHost].forEach((host) => setCatalogOverviewState(host,catalogUi("overviewLoading")));
+  const base = "/api/v1/catalog/businesses/" + encodeURIComponent(businessId);
+  const results = await Promise.allSettled([
+    apiJson<{data:CatalogOverviewOffering[]}>(base + "/offers?limit=100"),
+    apiJson<{data:CatalogOverviewVariant[]}>(base + "/variants?limit=200"),
+    apiJson<{data:CatalogOverviewInventory[]}>(base + "/inventory?limit=200"),
+  ]);
+  const [offerResult,variantResult,inventoryResult] = results;
+  if (offerResult.status === "fulfilled") {
+    const rows = offerResult.value.data;
+    offersCount.textContent = formatLocalizedNumber(rows.length);
+    if (!rows.length) setCatalogOverviewState(offersHost,catalogUi("offersEmpty"));
+    else offersHost.innerHTML = rows.map((offer) => {
+      const type = offer.offeringType === "service" ? catalogUi("serviceLabel") : catalogUi("productLabel");
+      const summary = offer.description?.trim() ? '<p>' + escapeHtml(offer.description.trim()) + '</p>' : "";
+      return '<article class="phoenix-catalog-data-row"><div class="phoenix-catalog-data-copy"><div class="phoenix-catalog-data-meta"><span>' + escapeHtml(type) + '</span><span class="phoenix-catalog-status ' + catalogOverviewStatusClass(offer.status) + '">' + escapeHtml(catalogOverviewStatusLabel(offer.status)) + '</span><span class="phoenix-catalog-status ' + catalogOverviewStatusClass(offer.publicationStatus) + '">' + escapeHtml(catalogOverviewStatusLabel(offer.publicationStatus)) + '</span></div><h4>' + escapeHtml(offer.title) + '</h4>' + summary + '<small>' + catalogUi("updatedLabel") + ': ' + escapeHtml(catalogOverviewDate(offer.updatedAt)) + '</small></div></article>';
+    }).join("");
+  } else { offersCount.textContent = "—"; setCatalogOverviewState(offersHost,catalogUi("overviewLoadError"),true); }
+  if (variantResult.status === "fulfilled") {
+    const rows = variantResult.value.data;
+    variantsCount.textContent = formatLocalizedNumber(rows.length);
+    if (!rows.length) setCatalogOverviewState(variantsHost,catalogUi("variantsEmpty"));
+    else variantsHost.innerHTML = rows.map((variant) => '<article class="phoenix-catalog-data-row"><div class="phoenix-catalog-data-copy"><div class="phoenix-catalog-data-meta"><span>' + catalogUi("productLabel") + '</span><span class="phoenix-catalog-status ' + catalogOverviewStatusClass(variant.status) + '">' + escapeHtml(catalogOverviewStatusLabel(variant.status)) + '</span></div><h4>' + escapeHtml(variant.productName) + '</h4><p>' + escapeHtml(catalogOverviewAttributes(variant.attributes)) + '</p><small>' + catalogUi("skuLabel") + ': ' + escapeHtml(variant.sku?.trim() || catalogUi("noSku")) + '</small></div></article>').join("");
+  } else { variantsCount.textContent = "—"; setCatalogOverviewState(variantsHost,catalogUi("overviewLoadError"),true); }
+  if (inventoryResult.status === "fulfilled") {
+    const rows = inventoryResult.value.data;
+    inventoryCount.textContent = formatLocalizedNumber(rows.length);
+    if (!rows.length) setCatalogOverviewState(inventoryHost,catalogUi("inventoryEmpty"));
+    else inventoryHost.innerHTML = rows.map((entry) => {
+      const onHand = Number.isFinite(entry.quantityOnHand) ? entry.quantityOnHand : 0;
+      const reserved = Number.isFinite(entry.quantityReserved) ? entry.quantityReserved : 0;
+      const available = Number.isFinite(entry.availableQuantity) ? entry.availableQuantity : onHand - reserved;
+      return '<article class="phoenix-catalog-data-row"><div class="phoenix-catalog-data-copy"><div class="phoenix-catalog-data-meta"><span>' + escapeHtml(catalogUi("locationLabel")) + ': ' + escapeHtml(entry.locationName) + '</span><span class="phoenix-catalog-status ' + (available > 0 ? 'active' : 'inactive') + '">' + escapeHtml(available > 0 ? catalogUi("stockAvailable") : catalogUi("statusInactive")) + '</span></div><h4>' + escapeHtml(entry.productName) + '</h4><p>' + escapeHtml(catalogOverviewInventoryAttributes(entry.attributesJson)) + '</p><div class="phoenix-catalog-stock-grid"><div><span>' + catalogUi("stockOnHand") + '</span><strong>' + escapeHtml(formatLocalizedNumber(onHand)) + ' ' + catalogUi("quantityUnit") + '</strong></div><div><span>' + catalogUi("stockReserved") + '</span><strong>' + escapeHtml(formatLocalizedNumber(reserved)) + ' ' + catalogUi("quantityUnit") + '</strong></div><div><span>' + catalogUi("stockAvailable") + '</span><strong>' + escapeHtml(formatLocalizedNumber(available)) + ' ' + catalogUi("quantityUnit") + '</strong></div></div></div></article>';
+    }).join("");
+  } else { inventoryCount.textContent = "—"; setCatalogOverviewState(inventoryHost,catalogUi("overviewLoadError"),true); }
+  if (refresh) refresh.disabled = false;
 }
 
 async function createCatalogProduct(): Promise<void> {
@@ -9375,6 +9478,8 @@ function bindGlobalEvents(): void {
   document.querySelector<HTMLButtonElement>("[data-privacy-consent]")?.addEventListener("click", () => { void grantPrivacyConsent(); });
   document.querySelector<HTMLButtonElement>("[data-privacy-request]")?.addEventListener("click", () => { void createPrivacyRequest(); });
   document.querySelector<HTMLButtonElement>("[data-catalog-create]")?.addEventListener("click", () => { void createCatalogProduct(); });
+  document.querySelector<HTMLButtonElement>("#catalog-overview-refresh")?.addEventListener("click", () => { void loadCatalogOverview(); });
+  if (document.querySelector("#catalog-overview")) void loadCatalogOverview();
   document.querySelector<HTMLButtonElement>("[data-promo-create]")?.addEventListener("click", () => { void createPromotion(); });
   document.querySelector<HTMLButtonElement>("[data-promo-version]")?.addEventListener("click", () => { void createPromotionVersion(); });
   document.querySelector<HTMLButtonElement>("[data-promo-activate]")?.addEventListener("click", () => { void activatePromotion(); });
