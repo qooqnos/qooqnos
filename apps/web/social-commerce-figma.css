@@ -532,3 +532,57 @@ img { max-width: 100%; }
  .phoenix-checkout-review-actions { flex-direction: column; }
  .phoenix-checkout-review-actions .button { flex-basis: auto; width: 100%; }
 }
+
+
+/* Seller catalog workspace: listing, variants and inventory controls. */
+.phoenix-business-subpage { display: grid; gap: 18px; width: min(100% - 32px, 1120px); margin: 0 auto 48px; }
+.phoenix-business-subpage .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: clamp(20px, 3vw, 32px); border: 1px solid #eee7e0; border-radius: 22px; background: linear-gradient(135deg, #fff9f4, #fff 72%); }
+.phoenix-business-subpage .page-heading h1 { margin: 8px 0; color: #222; font-size: clamp(23px, 3vw, 32px); line-height: 1.5; }
+.phoenix-business-subpage .page-heading h1 em { color: #b94d13; font-style: normal; }
+.phoenix-business-subpage .page-heading p { max-width: 620px; margin: 0; color: #777; font-size: 12px; line-height: 2; }
+.phoenix-business-subpage .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: #995027; font-size: 11px; font-weight: 750; }
+.phoenix-business-subpage .eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: #d66c2c; }
+.phoenix-business-subpage .heading-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.phoenix-business-subpage .business-subpage-card { min-width: 0; padding: clamp(16px, 2.5vw, 24px); border: 1px solid #ececec; border-radius: 18px; background: #fff; }
+.phoenix-business-subpage .card-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.phoenix-business-subpage .card-section-heading h2 { margin: 4px 0; color: #252525; font-size: 17px; }
+.phoenix-business-subpage .card-section-heading p { margin: 6px 0 0; color: #777; font-size: 12px; line-height: 1.9; }
+.phoenix-business-subpage .section-kicker { color: #a24a17; font-size: 10px; font-weight: 800; letter-spacing: .02em; }
+.phoenix-business-subpage .business-catalog-table-wrap { width: 100%; overflow-x: auto; border: 1px solid #eee; border-radius: 13px; }
+.phoenix-business-subpage .business-catalog-table-wrap table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.phoenix-business-subpage .business-catalog-table-wrap th { padding: 12px 14px; background: #faf8f6; color: #6f6a66; text-align: start; font-size: 11px; white-space: nowrap; }
+.phoenix-business-subpage .business-catalog-table-wrap td { padding: 13px 14px; border-top: 1px solid #f0efed; color: #353535; vertical-align: middle; }
+.phoenix-business-subpage .business-catalog-table-wrap tr:hover td { background: #fffaf6; }
+.phoenix-business-subpage .phoenix-business-variant-create-form { display: grid; gap: 16px; }
+.phoenix-business-subpage .phoenix-business-variant-create-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.phoenix-business-subpage .phoenix-business-variant-create-fields > div,
+.phoenix-business-subpage .phoenix-business-variant-attributes-heading { display: grid; gap: 7px; }
+.phoenix-business-subpage .phoenix-business-variant-create-form label { color: #5f5a56; font-size: 12px; font-weight: 700; }
+.phoenix-business-subpage .phoenix-business-variant-create-form input,
+.phoenix-business-subpage .phoenix-business-variant-create-form select,
+.phoenix-business-subpage .phoenix-business-variant-create-form textarea { width: 100%; min-height: 43px; padding: 10px 12px; border: 1px solid #e6e3e0; border-radius: 11px; background: #fff; color: #292929; font: inherit; font-size: 12px; }
+.phoenix-business-subpage .phoenix-business-variant-create-form input:focus,
+.phoenix-business-subpage .phoenix-business-variant-create-form select:focus,
+.phoenix-business-subpage .phoenix-business-variant-create-form textarea:focus { outline: 3px solid #f7e1d2; border-color: #d77b45; }
+.phoenix-business-subpage .phoenix-business-variant-attributes-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.phoenix-business-subpage .phoenix-business-variant-attributes-heading > div { display: grid; gap: 4px; }
+.phoenix-business-subpage .phoenix-business-variant-attributes-heading strong { font-size: 13px; }
+.phoenix-business-subpage .phoenix-business-variant-attributes-heading small { color: #777; font-size: 11px; line-height: 1.8; }
+.phoenix-business-subpage .phoenix-business-products-state { padding: 16px; border: 1px dashed #e5e0db; border-radius: 12px; color: #777; background: #fcfbfa; font-size: 12px; line-height: 1.9; }
+.phoenix-business-subpage #business-products-variants,
+.phoenix-business-subpage #business-products-inventory { display: grid; gap: 10px; margin-top: 12px; }
+.phoenix-business-subpage [data-business-variant],
+.phoenix-business-subpage [data-business-inventory] { padding: 14px; border: 1px solid #ece8e4; border-radius: 13px; background: #fff; }
+.phoenix-business-subpage [data-inventory-adjustment] { display: grid; grid-template-columns: minmax(100px, .6fr) minmax(180px, 1.4fr) auto; align-items: end; gap: 10px; margin-top: 12px; padding: 14px; border-radius: 13px; background: #faf8f6; }
+.phoenix-business-subpage [data-inventory-adjustment] label { display: grid; gap: 6px; color: #625b55; font-size: 11px; font-weight: 700; }
+.phoenix-business-subpage [data-inventory-adjustment] input,
+.phoenix-business-subpage [data-inventory-adjustment] select { width: 100%; min-height: 40px; padding: 9px 10px; border: 1px solid #e4dfda; border-radius: 10px; background: #fff; font: inherit; font-size: 12px; }
+@media (max-width: 720px) {
+ .phoenix-business-subpage { width: 100%; padding: 0 12px; gap: 12px; }
+ .phoenix-business-subpage .page-heading { align-items: stretch; flex-direction: column; gap: 14px; padding: 20px 16px; border-radius: 16px; }
+ .phoenix-business-subpage .heading-actions { display: grid; grid-template-columns: 1fr; }
+ .phoenix-business-subpage .business-subpage-card { padding: 15px; border-radius: 15px; }
+ .phoenix-business-subpage .phoenix-business-variant-create-fields { grid-template-columns: minmax(0, 1fr); }
+ .phoenix-business-subpage [data-inventory-adjustment] { grid-template-columns: minmax(0, 1fr); }
+ .phoenix-business-subpage .card-section-heading { flex-direction: column; }
+}
