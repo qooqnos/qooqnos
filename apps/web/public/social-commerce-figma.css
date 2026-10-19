@@ -468,3 +468,67 @@ img { max-width: 100%; }
   .phoenix-reset-orders-page .phoenix-reset-orders-tabs .phoenix-reset-tab { flex: 0 0 auto; }
   .phoenix-reset-orders-page .phoenix-reset-orders-search { min-width: 0; }
 }
+
+
+/* Cart and payment review: mobile-first, honest local-cart state. */
+.phoenix-screen-wrapper { width: min(100% - 32px, 980px); margin: 0 auto 48px; color: #242424; }
+.phoenix-screen-top { display: flex; align-items: center; gap: 12px; min-height: 72px; margin-bottom: 12px; }
+.phoenix-screen-back-btn { display: grid; place-items: center; flex: 0 0 42px; width: 42px; height: 42px; border: 1px solid #ececec; border-radius: 13px; background: #fff; color: #292929; text-decoration: none; font-size: 20px; }
+.phoenix-screen-title-wrap { flex: 1; min-width: 0; }
+.phoenix-screen-title { margin: 0; font-size: clamp(21px, 3vw, 28px); line-height: 1.5; }
+.phoenix-screen-content { display: grid; gap: 16px; }
+.phoenix-checkout-preview-note { margin: 0; padding: 12px 14px; border: 1px solid #f2dfc8; border-radius: 12px; background: #fffaf3; color: #77522c; font-size: 12px; line-height: 1.9; }
+#cart-items-list { display: grid; gap: 12px; }
+.phoenix-cart-item { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px; border: 1px solid #ededed; border-radius: 18px; background: #fff; }
+.phoenix-cart-item-copy { min-width: 0; flex: 1; }
+.phoenix-cart-item-title { display: block; color: #252525; font-size: 14px; line-height: 1.8; }
+.phoenix-cart-item-meta { display: block; margin-top: 4px; color: #777; font-size: 11px; line-height: 1.8; }
+.phoenix-cart-item-subtotal { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: #777; font-size: 11px; }
+.phoenix-cart-item-subtotal strong { color: #292929; font-size: 13px; font-variant-numeric: tabular-nums; }
+.phoenix-cart-item-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.phoenix-cart-qty-ctrl { display: flex; align-items: center; gap: 10px; padding: 4px; border: 1px solid #e9e9e9; border-radius: 12px; background: #fafafa; }
+.phoenix-cart-qty-btn { display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 8px; background: #fff; color: #333; font-size: 18px; cursor: pointer; }
+.phoenix-cart-qty-value { min-width: 20px; text-align: center; color: #222; font-size: 13px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.phoenix-cart-remove-btn { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; color: #a23b30; font: inherit; font-size: 11px; cursor: pointer; }
+.phoenix-cart-summary { display: grid; gap: 12px; padding: 20px; border: 1px solid #ececec; border-radius: 18px; background: #fff; }
+.phoenix-cart-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; color: #696969; font-size: 12px; line-height: 1.9; }
+.phoenix-cart-row > :last-child { max-width: 65%; text-align: end; color: #333; }
+.phoenix-cart-total { padding-top: 12px; border-top: 1px solid #eee; color: #292929; font-weight: 750; }
+.phoenix-cart-summary .button { width: 100%; min-height: 46px; border-radius: 12px; }
+.phoenix-checkout-review-hero { padding: clamp(20px, 4vw, 32px); border: 1px solid #f1dfd0; border-radius: 20px; background: linear-gradient(135deg, #fff7ef, #fff 78%); }
+.phoenix-checkout-review-icon { display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 12px; border-radius: 14px; background: #ffeadb; color: #a84a13; font-size: 20px; }
+.phoenix-checkout-review-hero h2 { margin: 8px 0; color: #272727; font-size: clamp(18px, 2.5vw, 23px); line-height: 1.7; }
+.phoenix-checkout-review-hero p { max-width: 680px; margin: 0; color: #6d625b; font-size: 12px; line-height: 2; }
+.phoenix-checkout-local-preview { padding: 20px; border: 1px solid #ededed; border-radius: 18px; background: #fff; }
+.phoenix-checkout-local-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.phoenix-checkout-local-preview-head h2 { margin: 4px 0 0; font-size: 17px; }
+.phoenix-checkout-edit-link { color: #b64d13; font-size: 12px; font-weight: 750; text-decoration: none; }
+.phoenix-checkout-review-items { display: grid; gap: 0; margin-top: 12px; }
+.phoenix-checkout-review-item { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; }
+.phoenix-checkout-review-item-icon { display: grid; place-items: center; flex: 0 0 42px; width: 42px; height: 42px; border-radius: 12px; background: #f7f5f2; color: #9c552b; }
+.phoenix-checkout-review-item-copy { display: grid; flex: 1; min-width: 0; gap: 4px; }
+.phoenix-checkout-review-item-copy strong { overflow-wrap: anywhere; font-size: 12px; }
+.phoenix-checkout-review-item-copy small { color: #777; font-size: 11px; }
+.phoenix-checkout-review-item-total { color: #292929; font-size: 12px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.phoenix-checkout-review-total { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding-top: 16px; color: #666; font-size: 12px; }
+.phoenix-checkout-review-total strong { color: #222; text-align: end; font-size: 16px; }
+.phoenix-checkout-review-empty { display: grid; justify-items: center; gap: 10px; padding: 24px 12px; color: #777; text-align: center; }
+.phoenix-checkout-review-empty > span { font-size: 36px; }
+.phoenix-checkout-review-empty p { margin: 0; font-size: 13px; }
+.phoenix-checkout-review-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.phoenix-checkout-review-actions .button { flex: 1 1 220px; min-height: 46px; border-radius: 12px; }
+@media (max-width: 640px) {
+ .phoenix-screen-wrapper { width: 100%; margin-bottom: 32px; }
+ .phoenix-screen-top { padding: 0 16px; min-height: 64px; }
+ .phoenix-screen-content { padding: 0 12px; gap: 12px; }
+ .phoenix-cart-item { align-items: stretch; flex-direction: column; gap: 12px; padding: 15px; border-radius: 15px; }
+ .phoenix-cart-item-controls { align-items: center; flex-direction: row; justify-content: space-between; }
+ .phoenix-cart-summary, .phoenix-checkout-local-preview { padding: 16px; border-radius: 15px; }
+ .phoenix-checkout-review-hero { border-radius: 16px; }
+ .phoenix-checkout-local-preview-head { align-items: flex-start; }
+ .phoenix-checkout-review-item { align-items: flex-start; gap: 9px; }
+ .phoenix-checkout-review-item-icon { flex-basis: 36px; width: 36px; height: 36px; }
+ .phoenix-checkout-review-item-total { max-width: 38%; overflow-wrap: anywhere; }
+ .phoenix-checkout-review-actions { flex-direction: column; }
+ .phoenix-checkout-review-actions .button { flex-basis: auto; width: 100%; }
+}
